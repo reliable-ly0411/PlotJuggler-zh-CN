@@ -3073,7 +3073,7 @@ void MainWindow::on_actionAbout_triggered()
   auto ui = new Ui::AboutDialog();
   ui->setupUi(dialog);
 
-  ui->label_version->setText(QString("version: ") + QApplication::applicationVersion());
+  ui->label_version->setText(tr("Version: %1").arg(QApplication::applicationVersion()));
   dialog->setAttribute(Qt::WA_DeleteOnClose);
 
   QFile fileTitle(_skin_path + "/about_window_title.html");

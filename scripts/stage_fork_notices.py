@@ -14,7 +14,7 @@ notices.mkdir(parents=True, exist_ok=True)
 plugin = root / "plotjuggler_plugins/DataLoadAPBin"
 for name in ("LICENSE", "COPYING.GPL3", "UPSTREAM.md"):
     shutil.copyfile(plugin / name, notices / name)
-shutil.copyfile(root / "LICENSE", destination / "Licenses/PlotJuggler-MPL-2.0.txt")
+shutil.copyfile(root / "LICENSE.md", destination / "Licenses/PlotJuggler-MPL-2.0.txt")
 shutil.copyfile(root / "docs/zh-CN.md", destination / "README-zh-CN.md")
 version_file = root / "build/FORK-VERSION.json"
 version_info = json.loads(version_file.read_text(encoding="utf-8"))

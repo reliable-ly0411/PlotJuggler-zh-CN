@@ -537,8 +537,8 @@ int main(int argc, char* argv[])
 
         if (PJ::isNewerSemVer(tag_name, VERSION_STRING))
         {
-          QString message = QString("New release available: <b>%1</b><br>"
-                                    "<a href=\"%2\">View on GitHub</a>")
+          QString message = QObject::tr("New release available: <b>%1</b><br>"
+                                        "<a href=\"%2\">View on GitHub</a>")
                                 .arg(name, url);
           QPixmap icon(":/resources/success_kid.png");
           window->showToast(message, icon);

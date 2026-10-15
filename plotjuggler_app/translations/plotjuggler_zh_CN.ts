@@ -2482,6 +2482,11 @@
         <translation>无法创建自定义时间序列。错误：&#10;&#10;%1</translation>
     </message>
     <message>
+        <location filename="../mainwindow.cpp" line="3076"/>
+        <source>Version: %1</source>
+        <translation>版本：%1</translation>
+    </message>
+    <message>
         <location filename="../mainwindow.cpp" line="3200"/>
         <source>No plugin was loaded to process a data file&#10;</source>
         <translation>未加载可处理数据文件的插件。&#10;</translation>
@@ -3103,6 +3108,11 @@
         <location filename="../main.cpp" line="501"/>
         <source>Don&apos;t show this again</source>
         <translation>不再显示</translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="540"/>
+        <source>New release available: &lt;b&gt;%1&lt;/b&gt;&lt;br&gt;&lt;a href=&quot;%2&quot;&gt;View on GitHub&lt;/a&gt;</source>
+        <translation>发现新版本：&lt;b&gt;%1&lt;/b&gt;&lt;br&gt;&lt;a href="%2"&gt;在 GitHub 上查看&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../plotjuggler_plugins/DataStreamSerialPort/datastream_serialport.cpp" line="74"/>
