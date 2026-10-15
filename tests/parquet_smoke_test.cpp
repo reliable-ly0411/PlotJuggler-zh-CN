@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
+// Arrow uses the identifier "signals"; parse it before Qt defines that macro.
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <parquet/arrow/writer.h>
 #include <QApplication>
 #include <QDialog>
 #include <QPluginLoader>
@@ -6,9 +10,6 @@
 #include <QSettings>
 #include <QTemporaryDir>
 #include <QTimer>
-#include <arrow/api.h>
-#include <arrow/io/api.h>
-#include <parquet/arrow/writer.h>
 #include <cmath>
 #include <iostream>
 #include "PlotJuggler/dataloader_base.h"
