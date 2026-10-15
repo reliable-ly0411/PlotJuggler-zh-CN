@@ -1,0 +1,161 @@
+name: Backfill tagged zh-CN Linux packages
+'on':
+  push:
+    branches: [release/backfill-zh-linux]
+    paths: [.github/workflows/zh-linux-backfill.yml, scripts/release-backfill/**]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: zh-linux-backfill
+  cancel-in-progress: true
+jobs:
+  build:
+    name: Build ${{ matrix.tag }} ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.image }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: [v3.18.0-zh.1, v3.18.0-zh.2]
+        target: [appimage, '24.04', bookworm, trixie]
+        include:
+          - tag: v3.18.0-zh.1
+            sha: 48d321f908d503cb90dacb1368998918fc48b14b
+          - tag: v3.18.0-zh.2
+            sha: de2821269e4fa138ff88dd5e856b111cc4942ee9
+          - target: appimage
+            runner: ubuntu-22.04-arm
+            image: ubuntu:22.04
+          - target: '24.04'
+            runner: ubuntu-24.04
+            image: ubuntu:24.04
+          - target: bookworm
+            runner: ubuntu-24.04
+            image: debian:bookworm
+          - target: trixie
+            runner: ubuntu-24.04
+            image: debian:trixie
+    env:
+      SOURCE_TAG: ${{ matrix.tag }}
+      SOURCE_SHA: ${{ matrix.sha }}
+      TARGET_DISTRO: ${{ matrix.target }}
+    steps:
+      - name: Bootstrap checkout
+        run: apt-get update && apt-get install -y git ca-certificates
+      - uses: actions/checkout@v4
+        with:
+          path: automation
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.tag }}
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Build and test unchanged release source
+        working-directory: source
+        shell: bash
+        run: bash ../automation/scripts/release-backfill/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.tag }}-${{ matrix.target }}
+          path: source/output/*
+          if-no-files-found: error
+      - name: Preserve build acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-evidence-${{ matrix.tag }}-${{ matrix.target }}
+          path: source/acceptance/
+          if-no-files-found: warn
+  verify:
+    name: Clean runtime ${{ matrix.tag }} ${{ matrix.target }}
+    needs: build
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.image }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: [v3.18.0-zh.1, v3.18.0-zh.2]
+        target: [appimage, '24.04', bookworm, trixie]
+        include:
+          - tag: v3.18.0-zh.1
+            sha: 48d321f908d503cb90dacb1368998918fc48b14b
+          - tag: v3.18.0-zh.2
+            sha: de2821269e4fa138ff88dd5e856b111cc4942ee9
+          - target: appimage
+            runner: ubuntu-22.04-arm
+            image: ubuntu:22.04
+          - target: '24.04'
+            runner: ubuntu-24.04
+            image: ubuntu:24.04
+          - target: bookworm
+            runner: ubuntu-24.04
+            image: debian:bookworm
+          - target: trixie
+            runner: ubuntu-24.04
+            image: debian:trixie
+    env:
+      SOURCE_TAG: ${{ matrix.tag }}
+      SOURCE_SHA: ${{ matrix.sha }}
+      TARGET_DISTRO: ${{ matrix.target }}
+    steps:
+      - name: Bootstrap checkout
+        run: apt-get update && apt-get install -y git ca-certificates
+      - uses: actions/checkout@v4
+        with:
+          path: automation
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.sha }}
+          path: source
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: package-${{ matrix.tag }}-${{ matrix.target }}
+          path: source/artifacts
+      - name: Verify package in clean runtime
+        working-directory: source
+        shell: bash
+        run: bash ../automation/scripts/release-backfill/verify.sh
+      - name: Preserve clean runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-evidence-${{ matrix.tag }}-${{ matrix.target }}
+          path: source/acceptance/
+          if-no-files-found: warn
+  publish:
+    name: Append four packages to ${{ matrix.tag }}
+    needs: [build, verify]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: v3.18.0-zh.1
+            sha: 48d321f908d503cb90dacb1368998918fc48b14b
+          - tag: v3.18.0-zh.2
+            sha: de2821269e4fa138ff88dd5e856b111cc4942ee9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: package-${{ matrix.tag }}-*
+          path: artifacts
+          merge-multiple: true
+      - name: Append verified assets and checksums without replacing existing files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_TAG: ${{ matrix.tag }}
+          SOURCE_SHA: ${{ matrix.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python3 scripts/release-backfill/publish.py
