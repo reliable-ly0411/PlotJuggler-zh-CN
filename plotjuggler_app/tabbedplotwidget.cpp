@@ -91,7 +91,7 @@ TabbedPlotWidget::TabbedPlotWidget(QString name, QMainWindow* mainwindow,
 
   this->addTab({});
 
-  _buttonAddTab = new QPushButton("", this);
+  _buttonAddTab = new QPushButton(QObject::tr(""), this);
   _buttonAddTab->setFlat(true);
   _buttonAddTab->setFixedSize(QSize(32, 32));
   _buttonAddTab->setFocusPolicy(Qt::NoFocus);
@@ -376,7 +376,7 @@ bool TabbedPlotWidget::eventFilter(QObject* obj, QEvent* event)
       {
         _tab_menu->exec(mouse_event->globalPos());
 
-        // QMenu* submenu = new QMenu("Move tab to...");
+        // QMenu* submenu = new QMenu(QObject::tr("Move tab to..."));
         // _tab_menu->addMenu(submenu);
 
         // QSignalMapper* signalMapper = new QSignalMapper(submenu);

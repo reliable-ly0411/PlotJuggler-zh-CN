@@ -5,6 +5,7 @@
  */
 
 #include "mainwindow.h"
+#include "app_language.h"
 #include <iostream>
 #include <QApplication>
 #include <QSplashScreen>
@@ -27,6 +28,9 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QCheckBox>
+#include <QMenu>
+#include <QJsonArray>
+#include <QFile>
 
 #include "PlotJuggler/transform_function.h"
 #include "transforms/binary_filter.h"
@@ -80,11 +84,11 @@ static std::vector<std::string> RemoveRos2Arguments(int argc, char* argv[])
 #endif
 
 static QString VERSION_STRING =
-    QString("%1.%2.%3").arg(PJ_MAJOR_VERSION).arg(PJ_MINOR_VERSION).arg(PJ_PATCH_VERSION);
+    QString("%1.%2.%3").arg(PJ_MAJOR_VERSION).arg(PJ_MINOR_VERSION).arg(PJ_PATCH_VERSION) + "+" + QStringLiteral(PJ_FORK_REVISION);
 
 inline int GetVersionNumber(QString str)
 {
-  QStringList online_version = str.split('.');
+  QStringList online_version = str.section('+', 0, 0).split('.');
   if (online_version.size() != 3)
   {
     return 0;
@@ -220,8 +224,18 @@ int main(int argc, char* argv[])
   //-------------------------
 
   QCoreApplication::setOrganizationName("PlotJuggler");
-  QCoreApplication::setApplicationName("io.plotjuggler.PlotJuggler");
+  QCoreApplication::setApplicationName("io.plotjuggler.PlotJuggler.zh-CN");
   QSettings::setDefaultFormat(QSettings::IniFormat);
+  const QStringList startup_arguments = app.arguments();
+  const int test_argument = startup_arguments.indexOf("--self-test-ui");
+  if (test_argument >= 0 && test_argument + 1 < startup_arguments.size())
+  {
+    const QString settings_path = startup_arguments[test_argument + 1] + "/settings";
+    QDir().mkpath(settings_path);
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings_path);
+  }
+
+  installApplicationLanguage(app);
 
   QSettings settings;
 
@@ -252,8 +266,12 @@ int main(int argc, char* argv[])
   QCommandLineParser parser;
   parser.setApplicationDescription("PlotJuggler: the time series visualization"
                                    " tool that you deserve ");
+  parser.addOption(QCommandLineOption("language", QObject::tr("Interface language: zh_CN or en_US"), "locale"));
   parser.addVersionOption();
   parser.addHelpOption();
+  const QCommandLineOption ui_test_option("self-test-ui", "Write UI acceptance evidence, then exit", "directory");
+  parser.addOption(ui_test_option);
+
 
   QCommandLineOption nosplash_option(QStringList() << "n"
                                                    << "nosplash",
@@ -441,6 +459,30 @@ int main(int argc, char* argv[])
   }
 
   window->show();
+  if (parser.isSet(ui_test_option))
+  {
+    const QString output = parser.value(ui_test_option);
+    QDir().mkpath(output);
+    QTimer::singleShot(1500, window, [&app, window, output]() {
+      auto* menu = window->findChild<QMenu*>("menuFile");
+      const QString expected = QCoreApplication::translate("MainWindow", "App");
+      const bool menu_ok = menu && menu->title() == expected;
+      const bool chinese = !app.arguments().contains("--language") || app.arguments().contains("zh_CN");
+      const bool language_ok = chinese ? expected == QString::fromUtf8("\xE5\xBA\x94\xE7\x94\xA8") : expected == "App";
+      const bool image_ok = window->grab().save(output + "/main-window.png");
+      QJsonObject result;
+      result["menu_title"] = menu ? menu->title() : QString();
+      result["language_ok"] = language_ok;
+      result["menu_ok"] = menu_ok;
+      result["screenshot_ok"] = image_ok;
+      result["version"] = app.applicationVersion();
+      QFile report(output + "/ui.json");
+      const bool report_ok = report.open(QIODevice::WriteOnly);
+      if (report_ok) report.write(QJsonDocument(result).toJson());
+      app.exit(menu_ok && language_ok && image_ok && report_ok ? 0 : 20);
+    });
+  }
+
 
 #ifdef PJ_HAS_PYTHON
   if (!python_ok)
@@ -514,64 +556,11 @@ int main(int argc, char* argv[])
 
   QNetworkRequest request_new_release;
   request_new_release.setUrl(
-      QUrl("https://api.github.com/repos/PlotJuggler/PlotJuggler/releases/latest"));
-
-  // Disable SSL peer verification for GitHub API (workaround for Qt5/OpenSSL 3.0 incompatibility)
-  QSslConfiguration sslConfig_release = request_new_release.sslConfiguration();
-  sslConfig_release.setPeerVerifyMode(QSslSocket::VerifyNone);
-  request_new_release.setSslConfiguration(sslConfig_release);
+      QUrl("https://api.github.com/repos/reliable-ly0411/PlotJuggler-zh-CN/releases/latest"));
 
   manager_new_release->get(request_new_release);
 
-  QNetworkAccessManager manager_message;
-  QObject::connect(
-      &manager_message, &QNetworkAccessManager::finished, [window](QNetworkReply* reply) {
-        if (reply->error())
-        {
-          qDebug() << "Telemetry reply error:" << reply->error() << reply->errorString();
-          return;
-        }
-        qDebug() << "Telemetry reply received";
-        QString answer = reply->readAll();
-        QJsonDocument document = QJsonDocument::fromJson(answer.toUtf8());
-        QJsonObject data = document.object();
-        QString message = data["message"].toString();
-        window->setStatusBarMessage(message);
-      });
-
-  // These are 100% anonymous requests; no personal data is sent.
-  // We collect your statistics to improve PlotJuggler.
-  // Create JSON payload
-  QJsonObject payload;
-  payload["user_id"] = QString::fromLatin1(QSysInfo::machineUniqueId());
-  payload["os"] = QSysInfo::productType();
-  payload["version"] = VERSION_STRING;
-  payload["installation"] = QString(PJ_INSTALLATION);
-
-  QJsonDocument doc(payload);
-  QByteArray jsonData = doc.toJson();
-
-  // Test DNS resolution first
-  QHostInfo hostInfo = QHostInfo::fromName("app.plotjuggler.io");
-  if (hostInfo.error() != QHostInfo::NoError)
-  {
-    qDebug() << "DNS lookup failed:" << hostInfo.errorString()
-             << " Addresses found:" << hostInfo.addresses();
-  }
-
-  // Create network request
-  QNetworkRequest request_message;
-  request_message.setUrl(QUrl("https://app.plotjuggler.io/telemetry"));
-  request_message.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-  // Disable SSL peer verification for telemetry (workaround for Qt5/OpenSSL 3.0 incompatibility)
-  // This is acceptable for anonymous telemetry data
-  QSslConfiguration sslConfig = request_message.sslConfiguration();
-  sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
-  request_message.setSslConfiguration(sslConfig);
-
-  // Send POST request
-  manager_message.post(request_message, jsonData);
+  // This fork does not send machine identifiers or usage telemetry.
 
   return app.exec();
 }

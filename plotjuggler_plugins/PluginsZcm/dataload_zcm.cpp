@@ -264,7 +264,7 @@ bool DataLoadZcm::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_data
   zcm::TypeDb types(_config_widget->getLibraries().toStdString());
   if (!types.good())
   {
-    QMessageBox::warning(nullptr, "Error", "Failed to load zcmtypes");
+    QMessageBox::warning(nullptr, QObject::tr("Error"), QObject::tr("Failed to load zcmtypes"));
     return false;
   }
 

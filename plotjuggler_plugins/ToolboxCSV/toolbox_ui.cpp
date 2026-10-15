@@ -58,7 +58,7 @@ ToolBoxUI::ToolBoxUI()
   auto* corner = ui->tableWidget->findChild<QAbstractButton*>();
   if (corner)
   {
-    corner->setToolTip("Click to select all topics");
+    corner->setToolTip(QObject::tr("Click to select all topics"));
   }
 
   ui->tableWidget->setStyleSheet("QTableCornerButton::section {"

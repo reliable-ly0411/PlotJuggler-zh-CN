@@ -90,7 +90,7 @@ void ReactiveLuaFunction::calculate()
     // calculate() while the dialog is visible. Setting the flag first makes
     // those re-entrant calls short-circuit instead of queueing more dialogs.
     _disabled_after_error = true;
-    QMessageBox::warning(nullptr, "Error in Reactive Script",
+    QMessageBox::warning(nullptr, QObject::tr("Error in Reactive Script"),
                          QString("%1\n\nThe script has been disabled to prevent dialog spam. "
                                  "Re-save it from the Script Editor to resume execution.")
                              .arg(err.what()),

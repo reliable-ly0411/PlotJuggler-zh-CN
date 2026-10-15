@@ -43,18 +43,18 @@ public:
 
 TopicPanel::TopicPanel(QWidget* parent) : QWidget(parent)
 {
-  header_ = new QLabel("Topics", this);
+  header_ = new QLabel(QObject::tr("Topics"), this);
   auto header_font = header_->font();
   header_font.setBold(true);
   header_->setFont(header_font);
 
   filter_ = new QLineEdit(this);
-  filter_->setPlaceholderText("Filter…");
+  filter_->setPlaceholderText(QObject::tr("Filter…"));
   connect(filter_, &QLineEdit::textChanged, this, &TopicPanel::applyFilter);
 
-  regex_btn_ = new QPushButton(".*", this);
+  regex_btn_ = new QPushButton(QObject::tr(".*"), this);
   regex_btn_->setCheckable(true);
-  regex_btn_->setToolTip("Use regular expression");
+  regex_btn_->setToolTip(QObject::tr("Use regular expression"));
   regex_btn_->setFixedSize(24, 24);
   auto regex_font = regex_btn_->font();
   regex_font.setBold(true);
@@ -125,7 +125,7 @@ void TopicPanel::populateTopics(const std::vector<TopicInfo>& infos)
 
   if (sorted.empty())
   {
-    header_->setText("Topics (none — click a topic manually)");
+    header_->setText(QObject::tr("Topics (none — click a topic manually)"));
   }
   else
   {
@@ -143,7 +143,7 @@ void TopicPanel::setLoading(bool loading)
 void TopicPanel::clear()
 {
   table_->setRowCount(0);
-  header_->setText("Topics");
+  header_->setText(QObject::tr("Topics"));
   current_sequence_.clear();
 }
 

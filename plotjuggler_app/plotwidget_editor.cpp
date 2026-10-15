@@ -442,7 +442,7 @@ void PlotwidgetEditor::on_listWidget_itemSelectionChanged()
   if (selected.size() == 0 || ui->listWidget->count() == 0)
   {
     ui->widgetColor->setEnabled(false);
-    ui->editColotText->setText("#000000");
+    ui->editColotText->setText(QObject::tr("#000000"));
     return;
   }
 

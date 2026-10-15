@@ -118,7 +118,7 @@ void QueryBar::onTextChanged()
   }
   else if (!vr.valid)
   {
-    feedback_->setText("invalid syntax");
+    feedback_->setText(QObject::tr("invalid syntax"));
     auto pal = feedback_->palette();
     pal.setColor(QPalette::WindowText, kErrorAccent);
     feedback_->setPalette(pal);
@@ -126,7 +126,7 @@ void QueryBar::onTextChanged()
   }
   else
   {
-    feedback_->setText("ok");
+    feedback_->setText(QObject::tr("ok"));
     auto pal = feedback_->palette();
     pal.setColor(QPalette::WindowText, kSuccessGreen);
     feedback_->setPalette(pal);
@@ -225,11 +225,11 @@ void QueryBar::onValComboChanged(int index)
 void QueryBar::buildUi()
 {
   key_combo_ = new QComboBox(this);
-  key_combo_->setPlaceholderText("Key");
+  key_combo_->setPlaceholderText(QObject::tr("Key"));
   key_combo_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
   op_combo_ = new QComboBox(this);
-  op_combo_->setPlaceholderText("Op");
+  op_combo_->setPlaceholderText(QObject::tr("Op"));
   op_combo_->setFixedWidth(60);
   op_combo_->setEnabled(false);
   for (const auto& op : operators())
@@ -238,7 +238,7 @@ void QueryBar::buildUi()
   }
 
   val_combo_ = new QComboBox(this);
-  val_combo_->setPlaceholderText("Value");
+  val_combo_->setPlaceholderText(QObject::tr("Value"));
   val_combo_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
   val_combo_->setEnabled(false);
 

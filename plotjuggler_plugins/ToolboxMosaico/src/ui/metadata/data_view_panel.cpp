@@ -23,7 +23,7 @@
 
 DataViewPanel::DataViewPanel(QWidget* parent) : QWidget(parent)
 {
-  header_ = new QLabel("Info", this);
+  header_ = new QLabel(QObject::tr("Info"), this);
   auto header_font = header_->font();
   header_font.setBold(true);
   header_->setFont(header_font);
@@ -41,7 +41,7 @@ DataViewPanel::DataViewPanel(QWidget* parent) : QWidget(parent)
 
 void DataViewPanel::clear()
 {
-  header_->setText("Info");
+  header_->setText(QObject::tr("Info"));
   sequence_text_.clear();
   topic_texts_.clear();
   text_view_->clear();

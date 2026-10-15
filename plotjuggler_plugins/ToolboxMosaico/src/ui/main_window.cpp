@@ -144,17 +144,17 @@ void MainWindow::buildLayout()
   constexpr int kRowH = 28;
   constexpr int kIconSz = 20;
 
-  auto* uri_label = new QLabel("Server:", this);
+  auto* uri_label = new QLabel(QObject::tr("Server:"), this);
   uri_label->setFixedWidth(50);
 
   server_uri_combo_ = new QComboBox(this);
   server_uri_combo_->setEditable(true);
   server_uri_combo_->setInsertPolicy(QComboBox::NoInsert);
-  server_uri_combo_->lineEdit()->setPlaceholderText("host:port");
+  server_uri_combo_->lineEdit()->setPlaceholderText(QObject::tr("host:port"));
   server_uri_combo_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
   server_uri_combo_->setFixedHeight(kRowH);
 
-  connect_button_ = new QPushButton("Connect", this);
+  connect_button_ = new QPushButton(QObject::tr("Connect"), this);
   // Minimum (not fixed) so the wider "Connecting…" state doesn't get clipped.
   connect_button_->setMinimumWidth(70);
   connect_button_->setFixedHeight(kRowH);
@@ -183,7 +183,7 @@ void MainWindow::buildLayout()
   cert_button_->setFixedSize(kRowH, kRowH);
   cert_button_->setIconSize(QSize(kIconSz, kIconSz));
   cert_button_->setToolTip(
-      "Certificate & API key (cert optional — system trust store used by default)");
+      QObject::tr("Certificate & API key (cert optional — system trust store used by default)"));
   QPixmap cert_pix(":/mosaico/certificate.svg");
   if (!cert_pix.isNull())
   {
@@ -191,7 +191,7 @@ void MainWindow::buildLayout()
   }
   else
   {
-    cert_button_->setText("C");
+    cert_button_->setText(QObject::tr("C"));
   }
 
   uri_row->addWidget(back_button);
@@ -237,8 +237,8 @@ void MainWindow::buildLayout()
   range_slider_->setMinimumHeight(range_slider_->minimumSizeHint().height());
   range_slider_->setEnabled(false);
 
-  fetch_button_ = new QPushButton("Download", this);
-  fetch_button_->setToolTip("Download selected topics");
+  fetch_button_ = new QPushButton(QObject::tr("Download"), this);
+  fetch_button_->setToolTip(QObject::tr("Download selected topics"));
   fetch_button_->setEnabled(false);
   fetch_button_->setMinimumWidth(80);
 
@@ -399,7 +399,7 @@ void MainWindow::onSequencesReady(const std::vector<SequenceInfo>& sequences)
     all_sequences_ = sequences;
     sequence_panel_->setLoading(false);
     connect_button_->setEnabled(true);
-    connect_button_->setText("Connect");
+    connect_button_->setText(QObject::tr("Connect"));
     refresh_button_->setEnabled(true);
 
     error_context_ = ErrorContext::None;
@@ -687,8 +687,8 @@ void MainWindow::finishFetchTopic(const QString& topic_name, bool success)
 
 void MainWindow::finishFetchBatch()
 {
-  fetch_button_->setText("Download");
-  fetch_button_->setToolTip("Download selected topics");
+  fetch_button_->setText(QObject::tr("Download"));
+  fetch_button_->setToolTip(QObject::tr("Download selected topics"));
   fetch_button_->setEnabled(!selected_topics_.isEmpty());
 
   error_context_ = ErrorContext::None;
@@ -815,8 +815,8 @@ void MainWindow::onFetchClicked()
   qint64 start_ns = sliderToNs(range_slider_->GetLowerValue());
   qint64 end_ns = sliderToNs(range_slider_->GetUpperValue());
 
-  fetch_button_->setText("Cancel");
-  fetch_button_->setToolTip("Cancel the in-flight download");
+  fetch_button_->setText(QObject::tr("Cancel"));
+  fetch_button_->setToolTip(QObject::tr("Cancel the in-flight download"));
   setStatus(QString::fromUtf8("Fetching %1 topic(s)…").arg(pending_fetches_));
   if (!download_stats_dialog_)
   {
@@ -912,7 +912,7 @@ void MainWindow::onFetchError(const QString& message)
     if (in_connect)
     {
       connect_button_->setEnabled(true);
-      connect_button_->setText("Connect");
+      connect_button_->setText(QObject::tr("Connect"));
       sequence_panel_->setLoading(false);
     }
 

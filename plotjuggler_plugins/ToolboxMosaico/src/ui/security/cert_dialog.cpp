@@ -35,9 +35,9 @@ CertDialog::CertDialog(QWidget* parent) : QDialog(parent)
 
   key_edit_ = new QLineEdit(this);
   key_edit_->setEchoMode(QLineEdit::Password);
-  key_edit_->setPlaceholderText("API key (msco_...)");
+  key_edit_->setPlaceholderText(QObject::tr("API key (msco_...)"));
 
-  show_btn_ = new QPushButton("Show", this);
+  show_btn_ = new QPushButton(QObject::tr("Show"), this);
   show_btn_->setCheckable(true);
 
   key_row->addWidget(key_tick_);
@@ -52,9 +52,9 @@ CertDialog::CertDialog(QWidget* parent) : QDialog(parent)
   cert_tick_->setAlignment(Qt::AlignCenter);
 
   cert_edit_ = new QLineEdit(this);
-  cert_edit_->setPlaceholderText("Path to CA certificate (.pem) (optional)");
+  cert_edit_->setPlaceholderText(QObject::tr("Path to CA certificate (.pem) (optional)"));
 
-  auto* browse_btn = new QPushButton("Browse", this);
+  auto* browse_btn = new QPushButton(QObject::tr("Browse"), this);
 
   cert_row->addWidget(cert_tick_);
   cert_row->addWidget(cert_edit_, 1);
@@ -70,11 +70,11 @@ CertDialog::CertDialog(QWidget* parent) : QDialog(parent)
   // Per-URL opt-in to plaintext fallback. Off by default for every server
   // the user hasn't explicitly enabled. The tooltip spells out the
   // consequences so it's harder to flip on by accident.
-  allow_insecure_ = new QCheckBox("Allow insecure (plaintext) connection", this);
+  allow_insecure_ = new QCheckBox(QObject::tr("Allow insecure (plaintext) connection"), this);
   allow_insecure_->setToolTip(
-      "When enabled, if the TLS handshake fails and no custom certificate is set, "
+      QObject::tr("When enabled, if the TLS handshake fails and no custom certificate is set, "
       "the plugin retries the connection in plaintext. API keys will be sent "
-      "unencrypted — only enable for trusted networks or local servers.");
+      "unencrypted — only enable for trusted networks or local servers."));
 
   // --- Button box ---
   auto* button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
@@ -121,7 +121,7 @@ bool CertDialog::allowInsecure() const
 void CertDialog::closeEvent(QCloseEvent* event)
 {
   show_btn_->setChecked(false);
-  show_btn_->setText("Show");
+  show_btn_->setText(QObject::tr("Show"));
   key_edit_->setEchoMode(QLineEdit::Password);
   QDialog::closeEvent(event);
 }
@@ -141,7 +141,7 @@ void CertDialog::validateCert()
   const QString path = cert_edit_->text();
   if (path.isEmpty())
   {
-    cert_tick_->setText("");
+    cert_tick_->setText(QObject::tr(""));
     cert_tick_->setStyleSheet("");
   }
   else if (isCertReadable(path))
@@ -161,7 +161,7 @@ void CertDialog::validateKey()
   const QString key = key_edit_->text();
   if (key.isEmpty())
   {
-    key_tick_->setText("");
+    key_tick_->setText(QObject::tr(""));
     key_tick_->setStyleSheet("");
   }
   else if (isValidApiKey(key))

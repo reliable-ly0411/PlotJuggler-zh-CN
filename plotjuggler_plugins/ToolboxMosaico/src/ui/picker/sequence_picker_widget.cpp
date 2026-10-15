@@ -85,7 +85,7 @@ SequencePickerWidget::SequencePickerWidget(QWidget* parent) : QWidget(parent)
   auto* date_row = new QHBoxLayout;
 
   from_edit_ = new QLineEdit;
-  from_edit_->setPlaceholderText("DD/MM/YYYY");
+  from_edit_->setPlaceholderText(QObject::tr("DD/MM/YYYY"));
 
   auto* arrow_label = new QLabel(QString::fromUtf8("\u2192"));
 
@@ -241,7 +241,7 @@ void SequencePickerWidget::repositionOverlay()
 
 void SequencePickerWidget::onPresetClicked(int id)
 {
-  all_button_->setText("All");
+  all_button_->setText(QObject::tr("All"));
   applyPreset(id);
   syncCalendarToFields();
   emitFilter();
@@ -336,12 +336,12 @@ void SequencePickerWidget::checkCustomState()
   int preset = matchingPreset();
   if (preset >= 0)
   {
-    all_button_->setText("All");
+    all_button_->setText(QObject::tr("All"));
     preset_group_->button(preset)->setChecked(true);
   }
   else
   {
-    all_button_->setText("Custom");
+    all_button_->setText(QObject::tr("Custom"));
     all_button_->setChecked(true);
   }
   syncCalendarToFields();

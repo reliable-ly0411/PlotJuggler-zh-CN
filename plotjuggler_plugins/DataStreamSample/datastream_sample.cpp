@@ -16,7 +16,7 @@ DataStreamSample::DataStreamSample()
   _dummy_notification = new QAction(this);
 
   connect(_dummy_notification, &QAction::triggered, this, [this]() {
-    QMessageBox::warning(nullptr, "Dummy Notifications",
+    QMessageBox::warning(nullptr, QObject::tr("Dummy Notifications"),
                          QString("%1 notifications").arg(_notifications_count), QMessageBox::Ok);
 
     if (_notifications_count > 0)

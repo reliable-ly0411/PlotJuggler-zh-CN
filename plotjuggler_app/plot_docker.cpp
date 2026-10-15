@@ -345,7 +345,7 @@ DockWidget::DockWidget(PlotDataMapRef& datamap, QWidget* parent)
   setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
 
   _toolbar = new DockToolbar(this);
-  _toolbar->label()->setText("...");
+  _toolbar->label()->setText(QObject::tr("..."));
   qobject_cast<QBoxLayout*>(layout())->insertWidget(0, _toolbar);
 
   connect(_toolbar->buttonSplitHorizontal(), &QPushButton::clicked, this,

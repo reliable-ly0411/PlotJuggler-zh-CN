@@ -168,7 +168,7 @@ SnippetsMap GetSnippetsFromXML(const QString& xml_text)
   int parseErrorLine;
   if (!doc.setContent(xml_text, &parseErrorMsg, &parseErrorLine))
   {
-    QMessageBox::critical(nullptr, "Error",
+    QMessageBox::critical(nullptr, QObject::tr("Error"),
                           QString("Failed to parse snippets (xml), error %1 at line %2")
                               .arg(parseErrorMsg)
                               .arg(parseErrorLine));

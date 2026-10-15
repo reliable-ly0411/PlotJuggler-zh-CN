@@ -38,7 +38,7 @@ FoxgloveDialog::FoxgloveDialog(const FoxgloveClientConfig& config)
 
   if (auto ok_btn = ui->buttonBox->button(QDialogButtonBox::Ok))
   {
-    ok_btn->setText("Subscribe");
+    ok_btn->setText(QObject::tr("Subscribe"));
     ok_btn->setEnabled(false);
   }
 

@@ -41,7 +41,7 @@ WebsocketDialog::WebsocketDialog(const WebsocketClientConfig& config)
   auto okBtn = ui->buttonBox->button(QDialogButtonBox::Ok);
   if (okBtn)
   {
-    okBtn->setText("Subscribe");
+    okBtn->setText(QObject::tr("Subscribe"));
     okBtn->setEnabled(false);
   }
 

@@ -26,3 +26,9 @@ add_subdirectory(ParserDataTamer)
 add_subdirectory(ParserLineInflux)
 
 add_subdirectory(PluginsZcm)
+
+# The loader is discovered with the other bundled shared plugins.
+option(PJ_BUILD_ARDUPILOT "Build and bundle the ArduPilot DataFlash BIN loader" ON)
+if(PJ_BUILD_ARDUPILOT)
+  add_subdirectory(DataLoadAPBin)
+endif()

@@ -341,7 +341,7 @@ DatastreamSerialPort::DatastreamSerialPort() : _running(false), _serialPort(null
   _notification_action = new QAction(this);
 
   connect(_notification_action, &QAction::triggered, this, [this]() {
-    QMessageBox::warning(nullptr, "Serial Port",
+    QMessageBox::warning(nullptr, QObject::tr("Serial Port"),
                          QString("Failed to parse %1 messages").arg(_failed_parsing),
                          QMessageBox::Ok);
 

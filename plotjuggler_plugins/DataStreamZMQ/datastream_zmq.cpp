@@ -93,7 +93,7 @@ bool DataStreamZMQ::start(QStringList*)
     else
     {
       previous_address = dialog->ui->lineEditAddress->text();
-      dialog->ui->lineEditAddress->setText("0.0.0.0");
+      dialog->ui->lineEditAddress->setText(QObject::tr("0.0.0.0"));
     }
   });
 

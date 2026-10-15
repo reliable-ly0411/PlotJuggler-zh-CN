@@ -35,7 +35,7 @@ DialogMultifilePrefix::DialogMultifilePrefix(QStringList filenames, QWidget* par
     label_file->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
     auto form_layout = new QFormLayout();
-    auto label = new QLabel("Prefix: ");
+    auto label = new QLabel(QObject::tr("Prefix: "));
     auto line_edit = new QLineEdit();
 
     form_layout->addRow(label, line_edit);

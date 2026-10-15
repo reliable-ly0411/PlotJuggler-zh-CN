@@ -79,7 +79,7 @@ void ToastNotification::setupUI()
   // Close button
   _close_button = new QPushButton(this);
   _close_button->setObjectName("toastCloseButton");
-  _close_button->setText("\u00D7");  // Unicode multiplication sign (×)
+  _close_button->setText(QObject::tr("\u00D7"));  // Unicode multiplication sign (×)
   _close_button->setFixedSize(24, 24);
   _close_button->setFlat(true);
   _close_button->setCursor(Qt::PointingHandCursor);

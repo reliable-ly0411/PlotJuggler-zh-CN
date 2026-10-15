@@ -19,6 +19,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
 # --enabled_plugins=libDataLoadCSV_0x3b_libDataStreamSample") add_definitions(
 # -DPJ_DEFAULT_ARGS="${PJ_DEFAULT_ARGS}")
 
+include(CTest)
+set(PJ_FORK_REVISION "zh.1.apbin.1" CACHE STRING "Fork build metadata")
+
 option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
 option(BASE_AS_SHARED "Build the base library as a shared library" OFF)
 option(BUILDING_WITH_CONAN "Using Conan for dependencies" OFF)

@@ -18,7 +18,7 @@ TimePickerWidget::TimePickerWidget(QWidget* parent) : QWidget(parent)
 
   auto makeTimeGroup = [&](QLabel*& dateLabel, QSpinBox*& hour, QSpinBox*& minute,
                            QComboBox*& ampm) {
-    dateLabel = new QLabel("---");
+    dateLabel = new QLabel(QObject::tr("---"));
 
     hour = new QSpinBox;
     hour->setRange(1, 12);
@@ -26,7 +26,7 @@ TimePickerWidget::TimePickerWidget(QWidget* parent) : QWidget(parent)
     hour->setFixedWidth(45);
     hour->setAlignment(Qt::AlignCenter);
 
-    auto* colon = new QLabel(":");
+    auto* colon = new QLabel(QObject::tr(":"));
 
     minute = new QSpinBox;
     minute->setRange(0, 59);
@@ -67,7 +67,7 @@ TimePickerWidget::TimePickerWidget(QWidget* parent) : QWidget(parent)
 
   // Every day checkbox
   layout->addSpacing(16);
-  every_day_ = new QCheckBox("Every day");
+  every_day_ = new QCheckBox(QObject::tr("Every day"));
   layout->addWidget(every_day_);
 
   layout->addStretch();

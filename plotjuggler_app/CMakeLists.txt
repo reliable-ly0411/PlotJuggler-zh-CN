@@ -49,6 +49,7 @@ set(PLOTJUGGLER_SRC
     curvetree_view.cpp
     dummy_data.cpp
     main.cpp
+    app_language.cpp
     mainwindow.cpp
     messageparser_base.cpp
     toast_notification.cpp
@@ -212,3 +213,12 @@ elseif(COMPILING_WITH_AMENT)
 else()
   install(TARGETS plotjuggler DESTINATION bin)
 endif()
+
+find_package(Qt5 REQUIRED COMPONENTS LinguistTools)
+qt5_add_translation(PJ_QM_FILES translations/plotjuggler_zh_CN.ts)
+set(PJ_QM_FILE "${CMAKE_CURRENT_BINARY_DIR}/plotjuggler_zh_CN.qm")
+configure_file(translations/i18n.qrc.in ${CMAKE_CURRENT_BINARY_DIR}/i18n.qrc @ONLY)
+qt5_add_resources(PJ_I18N_RESOURCES ${CMAKE_CURRENT_BINARY_DIR}/i18n.qrc)
+add_custom_target(pj_translations DEPENDS ${PJ_QM_FILES})
+add_dependencies(plotjuggler pj_translations)
+target_sources(plotjuggler PRIVATE ${PJ_I18N_RESOURCES})

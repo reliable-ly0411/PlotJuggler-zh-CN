@@ -159,7 +159,7 @@ void VideoDialog::updateSlider()
   if (_media_player->isSeekable() == false || duration_ms == 0)
   {
     QMessageBox msgBox(this);
-    msgBox.setWindowTitle("Video is not seekable");
+    msgBox.setWindowTitle(QObject::tr("Video is not seekable"));
     msgBox.setText(tr("Video is not seekable. You will need to decode the video into "
                       "individual frames.\n"));
     msgBox.addButton(QMessageBox::Cancel);
@@ -274,8 +274,8 @@ bool VideoDialog::eventFilter(QObject* obj, QEvent* ev)
 void VideoDialog::on_clearButton_clicked()
 {
   _media_player->stop();
-  ui->lineFilename->setText("");
-  ui->lineEditReference->setText("");
+  ui->lineFilename->setText(QObject::tr(""));
+  ui->lineEditReference->setText(QObject::tr(""));
   ui->timeSlider->setEnabled(false);
   ui->timeSlider->setValue(0);
   ui->decodeButton->setEnabled(false);
@@ -295,7 +295,7 @@ void VideoDialog::on_decodeButton_clicked()
 
   double fps = _media_player->statistics().video.frame_rate;
   QProgressDialog progress_dialog;
-  progress_dialog.setWindowTitle("PlotJuggler Video");
+  progress_dialog.setWindowTitle(QObject::tr("PlotJuggler Video"));
   progress_dialog.setLabelText("Decoding file");
   progress_dialog.setWindowModality(Qt::ApplicationModal);
   progress_dialog.setRange(0, _media_player->duration() * fps / 1000);

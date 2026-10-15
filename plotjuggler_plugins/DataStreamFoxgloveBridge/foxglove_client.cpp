@@ -93,7 +93,7 @@ FoxgloveBridgeClient::FoxgloveBridgeClient()
 
 void FoxgloveBridgeClient::setupSettings()
 {
-  _action_pause = new QAction("Pause", this);
+  _action_pause = new QAction(QObject::tr("Pause"), this);
   connect(_action_pause, &QAction::triggered, this, &FoxgloveBridgeClient::onPauseTriggered);
 
   _actions = { _action_pause };
@@ -167,7 +167,7 @@ bool FoxgloveBridgeClient::openDialogConnection()
   _config.url = url_str;
   saveDefaultSettings();
 
-  _dialog->connectButton()->setText("Connecting...");
+  _dialog->connectButton()->setText(QObject::tr("Connecting..."));
 
   QNetworkRequest request(_url);
   request.setRawHeader("Sec-WebSocket-Protocol", kSubprotocol);
@@ -255,7 +255,7 @@ void FoxgloveBridgeClient::shutdown()
 
   if (_action_pause)
   {
-    _action_pause->setText("Pause");
+    _action_pause->setText(QObject::tr("Pause"));
   }
 
 #ifdef PJ_BUILD
@@ -317,7 +317,7 @@ bool FoxgloveBridgeClient::subscribeSelectedChannels(
   const auto factories = parserFactories();
   if (!factories)
   {
-    QMessageBox::warning(nullptr, "Foxglove Bridge", "No parser factories are available",
+    QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"), QObject::tr("No parser factories are available"),
                          QMessageBox::Ok);
     return false;
   }
@@ -325,7 +325,7 @@ bool FoxgloveBridgeClient::subscribeSelectedChannels(
   auto parser_it = factories->find("ros2msg");
   if (parser_it == factories->end())
   {
-    QMessageBox::warning(nullptr, "Foxglove Bridge", "No parser available for encoding [ros2msg]",
+    QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"), QObject::tr("No parser available for encoding [ros2msg]"),
                          QMessageBox::Ok);
     return false;
   }
@@ -380,7 +380,7 @@ bool FoxgloveBridgeClient::subscribeSelectedChannels(
   {
     const QString msg =
         failures.isEmpty() ? "No compatible ROS 2 channels were selected" : failures.join('\n');
-    QMessageBox::warning(nullptr, "Foxglove Bridge", msg, QMessageBox::Ok);
+    QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"), msg, QMessageBox::Ok);
     return false;
   }
 
@@ -389,9 +389,9 @@ bool FoxgloveBridgeClient::subscribeSelectedChannels(
   message["subscriptions"] = subscriptions_json;
   if (!sendJsonMessage(message))
   {
-    QMessageBox::warning(nullptr, "Foxglove Bridge",
-                         "Failed to send subscribe request because the connection is no longer "
-                         "available",
+    QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"),
+                         QObject::tr("Failed to send subscribe request because the connection is no longer "
+                         "available"),
                          QMessageBox::Ok);
     return false;
   }
@@ -419,12 +419,12 @@ bool FoxgloveBridgeClient::subscribeSelectedChannels(
   _paused = false;
   if (_action_pause)
   {
-    _action_pause->setText("Pause");
+    _action_pause->setText(QObject::tr("Pause"));
   }
 
   if (!failures.isEmpty())
   {
-    QMessageBox::warning(nullptr, "Foxglove Bridge", failures.join('\n'), QMessageBox::Ok);
+    QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"), failures.join('\n'), QMessageBox::Ok);
   }
 
   return true;
@@ -503,12 +503,12 @@ void FoxgloveBridgeClient::onDisconnected()
 
   if (_action_pause)
   {
-    _action_pause->setText("Pause");
+    _action_pause->setText(QObject::tr("Pause"));
   }
 
   if (was_running && !was_closing && !_dialog && previous_state == FoxgloveState::Streaming)
   {
-    QMessageBox::warning(nullptr, "Foxglove Bridge", "Server closed the connection",
+    QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"), QObject::tr("Server closed the connection"),
                          QMessageBox::Ok);
     emit closed();
   }
@@ -524,7 +524,7 @@ void FoxgloveBridgeClient::onError(QAbstractSocket::SocketError)
       _dialog->clearChannels();
       updateOkButton();
     }
-    QMessageBox::warning(nullptr, "Foxglove Bridge", _socket.errorString(), QMessageBox::Ok);
+    QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"), _socket.errorString(), QMessageBox::Ok);
   }
 }
 
@@ -631,7 +631,7 @@ void FoxgloveBridgeClient::onTextMessageReceived(const QString& message)
     {
       if (_subscriptions.isEmpty())
       {
-        QMessageBox::warning(nullptr, "Foxglove Bridge",
+        QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"),
                              QString("All subscribed channels were removed by the server:\n%1")
                                  .arg(removed_subscribed_topics.join('\n')),
                              QMessageBox::Ok);
@@ -640,7 +640,7 @@ void FoxgloveBridgeClient::onTextMessageReceived(const QString& message)
         return;
       }
 
-      QMessageBox::warning(nullptr, "Foxglove Bridge",
+      QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"),
                            QString("The server removed subscribed channel(s):\n%1")
                                .arg(removed_subscribed_topics.join('\n')),
                            QMessageBox::Ok);
@@ -676,7 +676,7 @@ void FoxgloveBridgeClient::onTextMessageReceived(const QString& message)
 
     if (!text.isEmpty() && level >= kStatusLevelWarning)
     {
-      QMessageBox::warning(nullptr, "Foxglove Bridge", text, QMessageBox::Ok);
+      QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"), text, QMessageBox::Ok);
     }
     return;
   }

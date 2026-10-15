@@ -149,14 +149,14 @@ void PlotWidget::buildActions()
 {
   QIcon iconDeleteList;
 
-  _action_edit = new QAction("&Edit curves...", this);
+  _action_edit = new QAction(QObject::tr("&Edit curves..."), this);
   connect(_action_edit, &QAction::triggered, this, [this]() {
     auto editor_dialog = new PlotwidgetEditor(this, qwtPlot());
     editor_dialog->exec();
     editor_dialog->deleteLater();
   });
 
-  _action_formula = new QAction("&Apply filter to data...", this);
+  _action_formula = new QAction(QObject::tr("&Apply filter to data..."), this);
   connect(_action_formula, &QAction::triggered, this, [this]() {
     auto editor_dialog = new DialogTransformEditor(this);
     int res = editor_dialog->exec();
@@ -167,31 +167,31 @@ void PlotWidget::buildActions()
     }
   });
 
-  _action_split_horizontal = new QAction("&Split Horizontally", this);
+  _action_split_horizontal = new QAction(QObject::tr("&Split Horizontally"), this);
   connect(_action_split_horizontal, &QAction::triggered, this, &PlotWidget::splitHorizontal);
 
-  _action_split_vertical = new QAction("&Split Vertically", this);
+  _action_split_vertical = new QAction(QObject::tr("&Split Vertically"), this);
   connect(_action_split_vertical, &QAction::triggered, this, &PlotWidget::splitVertical);
 
-  _action_removeAllCurves = new QAction("&Remove ALL curves", this);
+  _action_removeAllCurves = new QAction(QObject::tr("&Remove ALL curves"), this);
   connect(_action_removeAllCurves, &QAction::triggered, this, &PlotWidget::removeAllCurves);
   connect(_action_removeAllCurves, &QAction::triggered, this, &PlotWidget::undoableChange);
 
-  _action_zoomOutMaximum = new QAction("&Zoom Out", this);
+  _action_zoomOutMaximum = new QAction(QObject::tr("&Zoom Out"), this);
   connect(_action_zoomOutMaximum, &QAction::triggered, this, [this]() {
     zoomOut(true);
     replot();
     emit undoableChange();
   });
 
-  _action_zoomOutHorizontally = new QAction("&Zoom Out Horizontally", this);
+  _action_zoomOutHorizontally = new QAction(QObject::tr("&Zoom Out Horizontally"), this);
   connect(_action_zoomOutHorizontally, &QAction::triggered, this, [this]() {
     on_zoomOutHorizontal_triggered(true);
     replot();
     emit undoableChange();
   });
 
-  _action_zoomOutVertically = new QAction("&Zoom Out Vertically", this);
+  _action_zoomOutVertically = new QAction(QObject::tr("&Zoom Out Vertically"), this);
   connect(_action_zoomOutVertically, &QAction::triggered, this, [this]() {
     on_zoomOutVertical_triggered(true);
     replot();
@@ -201,27 +201,27 @@ void PlotWidget::buildActions()
   QFont font;
   font.setPointSize(10);
 
-  _action_saveToFile = new QAction("&Save plot to file", this);
+  _action_saveToFile = new QAction(QObject::tr("&Save plot to file"), this);
   connect(_action_saveToFile, &QAction::triggered, this, &PlotWidget::on_savePlotToFile);
 
-  _action_copy = new QAction("&Copy", this);
+  _action_copy = new QAction(QObject::tr("&Copy"), this);
   connect(_action_copy, &QAction::triggered, this, &PlotWidget::on_copyAction_triggered);
 
-  _action_paste = new QAction("&Paste", this);
+  _action_paste = new QAction(QObject::tr("&Paste"), this);
   connect(_action_paste, &QAction::triggered, this, &PlotWidget::on_pasteAction_triggered);
 
-  _action_image_to_clipboard = new QAction("&Copy image to clipboard", this);
+  _action_image_to_clipboard = new QAction(QObject::tr("&Copy image to clipboard"), this);
   connect(_action_image_to_clipboard, &QAction::triggered, this, &PlotWidget::on_copyToClipboard);
 
-  _flip_x = new QAction("&Flip Horizontal Axis", this);
+  _flip_x = new QAction(QObject::tr("&Flip Horizontal Axis"), this);
   _flip_x->setCheckable(true);
   connect(_flip_x, &QAction::changed, this, &PlotWidget::onFlipAxis);
 
-  _flip_y = new QAction("&Flip Vertical Axis", this);
+  _flip_y = new QAction(QObject::tr("&Flip Vertical Axis"), this);
   _flip_y->setCheckable(true);
   connect(_flip_y, &QAction::changed, this, &PlotWidget::onFlipAxis);
 
-  _action_data_statistics = new QAction("&Show data statistics", this);
+  _action_data_statistics = new QAction(QObject::tr("&Show data statistics"), this);
   connect(_action_data_statistics, &QAction::triggered, this, &PlotWidget::onShowDataStatistics);
 }
 
@@ -1838,7 +1838,7 @@ QwtSeriesWrapper* PlotWidget::createCurveXY(const PlotData* data_x, const PlotDa
     if (if_xy_plot_failed_show_dialog)
     {
       QMessageBox msgBox(qwtPlot());
-      msgBox.setWindowTitle("Warnings");
+      msgBox.setWindowTitle(QObject::tr("Warnings"));
       msgBox.setText(tr("The creation of the XY plot failed with the following "
                         "message:\n %1")
                          .arg(ex.what()));

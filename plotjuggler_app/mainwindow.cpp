@@ -42,6 +42,7 @@
 #include <QXmlStreamReader>
 
 #include "mainwindow.h"
+#include <QActionGroup>
 #include "curvelist_panel.h"
 #include "tabbedplotwidget.h"
 #include "PlotJuggler/plotdata.h"
@@ -203,6 +204,22 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
   _curvelist_widget = new CurveListPanel(_mapped_plot_data, _transform_functions, this);
 
   ui->setupUi(this);
+  auto* language_menu = ui->menuHelp->addMenu(tr("Language"));
+  auto* language_group = new QActionGroup(this);
+  const QString saved_language = QSettings().value("Preferences::language", "zh_CN").toString();
+  for (const auto& entry : {qMakePair(QStringLiteral("zh_CN"), tr("Simplified Chinese")),
+                           qMakePair(QStringLiteral("en_US"), QStringLiteral("English"))})
+  {
+    QAction* action = language_menu->addAction(entry.second);
+    action->setCheckable(true);
+    action->setChecked(saved_language == entry.first);
+    language_group->addAction(action);
+    connect(action, &QAction::triggered, this, [this, locale = entry.first]() {
+      QSettings().setValue("Preferences::language", locale);
+      QMessageBox::information(this, tr("Language"), tr("Restart PlotJuggler to apply the selected language."));
+    });
+  }
+
 
   // setupUi() sets the windowTitle so the skin-based setting must be done after
   _skin_path = "://resources/skin";
@@ -409,17 +426,17 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
 
   if (settings.value("MainWindow.hiddenFileFrame", false).toBool())
   {
-    ui->buttonHideFileFrame->setText("+");
+    ui->buttonHideFileFrame->setText(QObject::tr("+"));
     ui->frameFile->setHidden(true);
   }
   if (settings.value("MainWindow.hiddenStreamingFrame", false).toBool())
   {
-    ui->buttonHideStreamingFrame->setText("+");
+    ui->buttonHideStreamingFrame->setText(QObject::tr("+"));
     ui->frameStreaming->setHidden(true);
   }
   if (settings.value("MainWindow.hiddenPublishersFrame", false).toBool())
   {
-    ui->buttonHidePublishersFrame->setText("+");
+    ui->buttonHidePublishersFrame->setText(QObject::tr("+"));
     ui->framePublishers->setHidden(true);
   }
 
@@ -678,10 +695,10 @@ void MainWindow::loadAllPlugins(QStringList command_line_plugin_folders)
   }
   catch (...)
   {
-    QMessageBox::warning(nullptr, "Missing package [plotjuggler-ros]",
-                         "If you just upgraded from PlotJuggler 2.x to 3.x , try "
+    QMessageBox::warning(nullptr, QObject::tr("Missing package [plotjuggler-ros]"),
+                         QObject::tr("If you just upgraded from PlotJuggler 2.x to 3.x , try "
                          "installing this package:\n\n"
-                         "sudo apt install ros-${ROS_DISTRO}-plotjuggler-ros",
+                         "sudo apt install ros-${ROS_DISTRO}-plotjuggler-ros"),
                          QMessageBox::Cancel, QMessageBox::Cancel);
   }
 
@@ -1114,7 +1131,7 @@ void MainWindow::checkAllCurvesFromLayout(const QDomElement& root)
   if (missing_curves.size() > 0)
   {
     QMessageBox msgBox(this);
-    msgBox.setWindowTitle("Warning");
+    msgBox.setWindowTitle(QObject::tr("Warning"));
     msgBox.setText(tr("One or more timeseries in the layout haven't been loaded yet\n"
                       "What do you want to do?"));
 
@@ -1351,9 +1368,9 @@ void MainWindow::deleteAllData()
 
   if (stopped)
   {
-    QMessageBox::warning(this, "State publishers stopped",
-                         "All the state publishers have been stopped because old data "
-                         "has been deleted.");
+    QMessageBox::warning(this, QObject::tr("State publishers stopped"),
+                         QObject::tr("All the state publishers have been stopped because old data "
+                         "has been deleted."));
   }
 }
 
@@ -1704,7 +1721,7 @@ void MainWindow::on_streamingToggled()
 void MainWindow::stopStreamingPlugin()
 {
   ui->comboStreaming->setEnabled(true);
-  ui->buttonStreamingStart->setText("Start");
+  ui->buttonStreamingStart->setText(QObject::tr("Start"));
   ui->buttonStreamingPause->setEnabled(false);
   ui->labelStreamingAnimation->setHidden(true);
   enableStreamingNotificationsButton(false);
@@ -1729,7 +1746,7 @@ void MainWindow::stopStreamingPlugin()
 
   if (!_mapped_plot_data.numeric.empty())
   {
-    ui->actionDeleteAllData->setToolTip("");
+    ui->actionDeleteAllData->setToolTip(QObject::tr(""));
   }
 
   // reset max range.
@@ -1786,9 +1803,9 @@ void MainWindow::startStreamingPlugin(QString streamer_name)
     }
 
     ui->actionClearBuffer->setEnabled(true);
-    ui->actionDeleteAllData->setToolTip("Stop streaming to be able to delete the data");
+    ui->actionDeleteAllData->setToolTip(QObject::tr("Stop streaming to be able to delete the data"));
 
-    ui->buttonStreamingStart->setText("Stop");
+    ui->buttonStreamingStart->setText(QObject::tr("Stop"));
     ui->buttonStreamingPause->setEnabled(true);
     ui->buttonStreamingPause->setChecked(false);
     ui->comboStreaming->setEnabled(false);
@@ -2179,7 +2196,7 @@ bool MainWindow::loadLayoutFromFile(QString filename, bool load_datafiles)
     QString streamer_name = previous_streamer.attribute("name");
 
     QMessageBox msgBox(this);
-    msgBox.setWindowTitle("Start Streaming?");
+    msgBox.setWindowTitle(QObject::tr("Start Streaming?"));
     msgBox.setText(
         tr("Start the previously used streaming plugin?\n\n %1 \n\n").arg(streamer_name));
     QPushButton* yes = msgBox.addButton(tr("Yes"), QMessageBox::YesRole);
@@ -2396,10 +2413,10 @@ bool MainWindow::loadLayoutFromFile(QString filename, bool load_datafiles)
     if (snippets_are_different)
     {
       QMessageBox msgBox(this);
-      msgBox.setWindowTitle("Overwrite custom transforms?");
-      msgBox.setText("Your layout file contains a set of custom transforms different "
+      msgBox.setWindowTitle(QObject::tr("Overwrite custom transforms?"));
+      msgBox.setText(QObject::tr("Your layout file contains a set of custom transforms different "
                      "from "
-                     "the last one you used.\nWant to load these transformations?");
+                     "the last one you used.\nWant to load these transformations?"));
       msgBox.addButton(QMessageBox::No);
       msgBox.addButton(QMessageBox::Yes);
       msgBox.setDefaultButton(QMessageBox::Yes);
@@ -2819,7 +2836,7 @@ void MainWindow::on_streamingNotificationsChanged(int active_count)
   else
   {
     enableStreamingNotificationsButton(false);
-    ui->buttonStreamingNotifications->setToolTip("View streaming alerts");
+    ui->buttonStreamingNotifications->setToolTip(QObject::tr("View streaming alerts"));
   }
 }
 
@@ -2941,8 +2958,8 @@ void MainWindow::onRefreshCustomPlot(const std::string& plot_name)
   }
   catch (const std::runtime_error& e)
   {
-    QMessageBox::critical(this, "error",
-                          "Failed to refresh data : " + QString::fromStdString(e.what()));
+    QMessageBox::critical(this, QObject::tr("error"),
+                          QObject::tr("Failed to refresh data : ") + QString::fromStdString(e.what()));
   }
 }
 
@@ -3145,7 +3162,7 @@ QDir::currentPath()).toString();
     if (existing_files.isEmpty() == false)
     {
       QMessageBox msgBox;
-      msgBox.setText("One or more files will be overwritten. ant to continue?");
+      msgBox.setText(QObject::tr("One or more files will be overwritten. ant to continue?"));
       QString all_files;
       for (const auto& str : existing_files)
       {
@@ -3271,19 +3288,19 @@ void MainWindow::on_buttonSaveLayout_clicked()
   frame->setLineWidth(1);
 
   QVBoxLayout* vbox = new QVBoxLayout;
-  QLabel* title = new QLabel("Save Layout options");
+  QLabel* title = new QLabel(QObject::tr("Save Layout options"));
   QFrame* separator = new QFrame;
   separator->setFrameStyle(QFrame::HLine | QFrame::Plain);
 
-  auto checkbox_datasource = new QCheckBox("Save data source");
-  checkbox_datasource->setToolTip("the layout will remember the source of your data,\n"
+  auto checkbox_datasource = new QCheckBox(QObject::tr("Save data source"));
+  checkbox_datasource->setToolTip(QObject::tr("the layout will remember the source of your data,\n"
                                   "i.e. the Datafile used or the Streaming Plugin loaded "
-                                  "?");
+                                  "?"));
   checkbox_datasource->setFocusPolicy(Qt::NoFocus);
   checkbox_datasource->setChecked(settings.value("MainWindow.saveLayoutDataSource", true).toBool());
 
-  auto checkbox_snippets = new QCheckBox("Save Scripts (transforms and colormaps)");
-  checkbox_snippets->setToolTip("Do you want the layout to save your Lua scripts?");
+  auto checkbox_snippets = new QCheckBox(QObject::tr("Save Scripts (transforms and colormaps)"));
+  checkbox_snippets->setToolTip(QObject::tr("Do you want the layout to save your Lua scripts?"));
   checkbox_snippets->setFocusPolicy(Qt::NoFocus);
   checkbox_snippets->setChecked(settings.value("MainWindow.saveLayoutSnippets", true).toBool());
 
@@ -3403,7 +3420,7 @@ void MainWindow::onActionFullscreenTriggered()
   if (first_call && !_minimized)
   {
     first_call = false;
-    QMessageBox::information(this, "Remember!", "Press F10 to switch back to the normal view");
+    QMessageBox::information(this, QObject::tr("Remember!"), QObject::tr("Press F10 to switch back to the normal view"));
   }
 
   _minimized = !_minimized;
@@ -3453,7 +3470,7 @@ void MainWindow::on_actionClearRecentLayout_triggered()
 void MainWindow::on_actionDeleteAllData_triggered()
 {
   QMessageBox msgBox(this);
-  msgBox.setWindowTitle("Warning. Can't be undone.");
+  msgBox.setWindowTitle(QObject::tr("Warning. Can't be undone."));
   msgBox.setText(tr("Do you want to remove the previously loaded data?\n"));
   msgBox.addButton(QMessageBox::No);
   msgBox.addButton(QMessageBox::Yes);

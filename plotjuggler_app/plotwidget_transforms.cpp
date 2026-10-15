@@ -187,7 +187,7 @@ void DialogTransformEditor::on_listTransforms_itemSelectionChanged()
 
   if (transform_ID.isEmpty() || selected_curves.size() > 1)
   {
-    ui->lineEditAlias->setText("");
+    ui->lineEditAlias->setText(QObject::tr(""));
     ui->lineEditAlias->setEnabled(false);
   }
 

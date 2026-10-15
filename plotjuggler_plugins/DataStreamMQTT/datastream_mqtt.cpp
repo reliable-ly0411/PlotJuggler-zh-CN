@@ -15,7 +15,7 @@ DataStreamMQTT::DataStreamMQTT() : _running(false)
   _notification_action = new QAction(this);
 
   connect(_notification_action, &QAction::triggered, this, [this]() {
-    QMessageBox::warning(nullptr, "MQTT error",
+    QMessageBox::warning(nullptr, QObject::tr("MQTT error"),
                          QString("Failed to parse %1 messages").arg(_failed_parsing),
                          QMessageBox::Ok);
 

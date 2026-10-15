@@ -88,12 +88,12 @@ bool DataStreamZcm::start(QStringList*)
     }
     catch (std::exception& ex)
     {
-      QMessageBox::warning(nullptr, "Error", tr("Exception from zcm::ZCM() :\n%1").arg(ex.what()));
+      QMessageBox::warning(nullptr, QObject::tr("Error"), tr("Exception from zcm::ZCM() :\n%1").arg(ex.what()));
       return false;
     }
     if (!_zcm->good())
     {
-      QMessageBox::warning(nullptr, "Error", "Failed to create zcm::ZCM()");
+      QMessageBox::warning(nullptr, QObject::tr("Error"), QObject::tr("Failed to create zcm::ZCM()"));
       _zcm.reset();
       return false;
     }
@@ -108,7 +108,7 @@ bool DataStreamZcm::start(QStringList*)
     _types.reset(new zcm::TypeDb(_types_library.toStdString()));
     if (!_types->good())
     {
-      QMessageBox::warning(nullptr, "Error", "Failed to create zcm::TypeDb()");
+      QMessageBox::warning(nullptr, QObject::tr("Error"), QObject::tr("Failed to create zcm::TypeDb()"));
       _types.reset();
       return false;
     }
@@ -124,7 +124,7 @@ bool DataStreamZcm::start(QStringList*)
     _subs = _zcm->subscribe(_subscribe_string.toStdString(), &DataStreamZcm::handler, this);
     if (!_subs)
     {
-      QMessageBox::warning(nullptr, "Error", "Failed to subscribe");
+      QMessageBox::warning(nullptr, QObject::tr("Error"), QObject::tr("Failed to subscribe"));
       return false;
     }
   }
@@ -260,7 +260,7 @@ void DataStreamZcm::on_pushButtonUrl_clicked()
   QString url = getenv("ZCM_DEFAULT_URL");
   if (url.isEmpty())
   {
-    QMessageBox::warning(nullptr, "Error", "Environment variable ZCM_DEFAULT_URL not set");
+    QMessageBox::warning(nullptr, QObject::tr("Error"), QObject::tr("Environment variable ZCM_DEFAULT_URL not set"));
   }
   else
   {

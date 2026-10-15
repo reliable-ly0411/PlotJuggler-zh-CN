@@ -252,7 +252,7 @@ void ToolboxLuaEditor::onSave()
   if (ui->listWidgetFunctions->findItems(name, Qt::MatchExactly).size() > 0)
   {
     QMessageBox msgBox(_widget);
-    msgBox.setWindowTitle("Warning");
+    msgBox.setWindowTitle(QObject::tr("Warning"));
     msgBox.setText(tr("A dfunction with the same name exists already.\n"
                       " Do you want to overwrite it?\n"));
     msgBox.addButton(QMessageBox::Cancel);
@@ -290,7 +290,7 @@ void ToolboxLuaEditor::onSave()
   }
   catch (std::runtime_error& err)
   {
-    QMessageBox::warning(nullptr, "Error in Lua code", QString(err.what()), QMessageBox::Cancel);
+    QMessageBox::warning(nullptr, QObject::tr("Error in Lua code"), QString(err.what()), QMessageBox::Cancel);
   }
 
   auto prev_items = ui->listWidgetRecent->findItems(name, Qt::MatchExactly);
@@ -375,7 +375,7 @@ void ToolboxLuaEditor::onLibraryUpdated()
   try
   {
     ReactiveLuaFunction tmp(_plot_data, "", "", ui->textLibrary->toPlainText());
-    ui->labelSemaphore->setToolTip("Everything is fine :)");
+    ui->labelSemaphore->setToolTip(QObject::tr("Everything is fine :)"));
     int active_series = ui->listWidgetFunctions->count();
     ui->pushButtonApplyLibrary->setEnabled(active_series > 0);
     _previous_library = ui->textLibrary->toPlainText();
@@ -418,7 +418,7 @@ void ToolboxLuaEditor::onReloadLibrary()
     }
     catch (std::runtime_error& err)
     {
-      QMessageBox::warning(nullptr, "Error in Lua code", QString(err.what()), QMessageBox::Cancel);
+      QMessageBox::warning(nullptr, QObject::tr("Error in Lua code"), QString(err.what()), QMessageBox::Cancel);
     }
   }
   ui->pushButtonApplyLibrary->setEnabled(false);

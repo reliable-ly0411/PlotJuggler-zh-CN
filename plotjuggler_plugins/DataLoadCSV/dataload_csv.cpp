@@ -203,9 +203,9 @@ void DataLoadCSV::parseHeader(QFile& file, std::vector<std::string>& column_name
 
   if (before_dedup.size() < column_names.size() && multiple_columns_warning_)
   {
-    QMessageBox::warning(nullptr, "Duplicate Column Name",
-                         "Multiple Columns have the same name.\n"
-                         "The column number will be added (as suffix) to the name.");
+    QMessageBox::warning(nullptr, QObject::tr("Duplicate Column Name"),
+                         QObject::tr("Multiple Columns have the same name.\n"
+                         "The column number will be added (as suffix) to the name."));
     multiple_columns_warning_ = false;
   }
 
@@ -532,7 +532,7 @@ bool DataLoadCSV::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_data
   }
 
   QProgressDialog progress_dialog;
-  progress_dialog.setWindowTitle("Loading the CSV file");
+  progress_dialog.setWindowTitle(QObject::tr("Loading the CSV file"));
   progress_dialog.setLabelText("Loading... please wait");
   progress_dialog.setWindowModality(Qt::ApplicationModal);
   progress_dialog.setRange(0, config.total_lines);

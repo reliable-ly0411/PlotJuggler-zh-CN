@@ -57,7 +57,7 @@ public:
 
 SequencePanel::SequencePanel(QWidget* parent) : QWidget(parent)
 {
-  header_ = new QLabel("Sequences", this);
+  header_ = new QLabel(QObject::tr("Sequences"), this);
   auto header_font = header_->font();
   header_font.setBold(true);
   header_->setFont(header_font);
@@ -70,12 +70,12 @@ SequencePanel::SequencePanel(QWidget* parent) : QWidget(parent)
   });
 
   filter_ = new QLineEdit(this);
-  filter_->setPlaceholderText("Filter\u2026");
+  filter_->setPlaceholderText(QObject::tr("Filter\u2026"));
   connect(filter_, &QLineEdit::textChanged, this, &SequencePanel::applyFilter);
 
-  regex_btn_ = new QPushButton(".*", this);
+  regex_btn_ = new QPushButton(QObject::tr(".*"), this);
   regex_btn_->setCheckable(true);
-  regex_btn_->setToolTip("Use regular expression");
+  regex_btn_->setToolTip(QObject::tr("Use regular expression"));
   regex_btn_->setFixedSize(24, 24);
   auto regex_font = regex_btn_->font();
   regex_font.setBold(true);

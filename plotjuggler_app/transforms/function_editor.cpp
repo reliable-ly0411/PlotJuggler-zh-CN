@@ -94,7 +94,7 @@ FunctionEditorWidget::FunctionEditorWidget(PlotDataMapRef& plotMapData,
 
   QSettings settings;
 
-  this->setWindowTitle("Create a custom timeseries");
+  this->setWindowTitle(QObject::tr("Create a custom timeseries"));
 
   QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
   fixedFont.setPointSize(10);
@@ -515,7 +515,7 @@ void FunctionEditorWidget::syncSourceFromRadio()
       // Set new row label
       if (auto* new_item = t->item(row, 1))
       {
-        new_item->setText("value");
+        new_item->setText(QObject::tr("value"));
       }
 
       _linked_source_row = row;
@@ -702,12 +702,12 @@ void FunctionEditorWidget::clear()
 {
   _linked_source.clear();
   _linked_source_row = -1;
-  ui->nameLineEdit->setText("");
+  ui->nameLineEdit->setText(QObject::tr(""));
   ui->listAdditionalSources->setRowCount(0);
 
-  ui->suffixLineEdit->setText("");
+  ui->suffixLineEdit->setText(QObject::tr(""));
   ui->listBatchSources->clear();
-  ui->lineEditTab2Filter->setText("");
+  ui->lineEditTab2Filter->setText(QObject::tr(""));
 }
 
 QString FunctionEditorWidget::getLinkedData() const
@@ -959,11 +959,11 @@ void FunctionEditorWidget::on_nameLineEdit_textChanged(const QString& name)
 {
   if (_plot_map_data.numeric.count(name.toStdString()) == 0)
   {
-    ui->pushButtonCreate->setText("Create New Timeseries");
+    ui->pushButtonCreate->setText(QObject::tr("Create New Timeseries"));
   }
   else
   {
-    ui->pushButtonCreate->setText("Modify Timeseries");
+    ui->pushButtonCreate->setText(QObject::tr("Modify Timeseries"));
   }
   updatePreview();
 }
@@ -985,7 +985,7 @@ void FunctionEditorWidget::on_buttonLoadFunctions_clicked()
 
   if (!file.open(QIODevice::ReadOnly))
   {
-    QMessageBox::critical(this, "Error", QString("Failed to open the file [%1]").arg(fileName));
+    QMessageBox::critical(this, QObject::tr("Error"), QString("Failed to open the file [%1]").arg(fileName));
     return;
   }
 
@@ -1016,7 +1016,7 @@ void FunctionEditorWidget::on_buttonSaveFunctions_clicked()
   QFile file(fileName);
   if (!file.open(QIODevice::WriteOnly))
   {
-    QMessageBox::critical(this, "Error", QString("Failed to open the file [%1]").arg(fileName));
+    QMessageBox::critical(this, QObject::tr("Error"), QString("Failed to open the file [%1]").arg(fileName));
     return;
   }
   auto data = exportSnippets();
@@ -1073,7 +1073,7 @@ bool FunctionEditorWidget::addToSaved(const QString& name, const SnippetData& sn
   if (_snipped_saved.count(name))
   {
     QMessageBox msgBox(this);
-    msgBox.setWindowTitle("Warning");
+    msgBox.setWindowTitle(QObject::tr("Warning"));
     msgBox.setText(
         tr("A function with the same name exists already in the list of saved functions.\n"));
     msgBox.addButton(QMessageBox::Cancel);
@@ -1112,7 +1112,7 @@ void FunctionEditorWidget::on_pushButtonCreate_clicked()
       if (_editor_mode == CREATE && _transform_maps.count(new_plot_name) != 0)
       {
         QMessageBox msgBox(this);
-        msgBox.setWindowTitle("Warning");
+        msgBox.setWindowTitle(QObject::tr("Warning"));
         msgBox.setText(tr("A custom time series with the same name exists already.\n"
                           " Do you want to overwrite it?\n"));
         msgBox.addButton(QMessageBox::Cancel);
@@ -1165,8 +1165,8 @@ void FunctionEditorWidget::on_pushButtonCreate_clicked()
   }
   catch (const std::runtime_error& e)
   {
-    QMessageBox::critical(this, "Error",
-                          "Failed to create math plot : " + QString::fromStdString(e.what()));
+    QMessageBox::critical(this, QObject::tr("Error"),
+                          QObject::tr("Failed to create math plot : ") + QString::fromStdString(e.what()));
   }
 }
 

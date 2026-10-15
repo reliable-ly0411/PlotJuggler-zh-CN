@@ -38,7 +38,7 @@ DockToolbar::~DockToolbar()
 static void setButtonIcon(QPushButton* button, QIcon icon)
 {
   button->setIcon(icon);
-  button->setText("");
+  button->setText(QObject::tr(""));
 }
 
 void DockToolbar::toggleFullscreen()

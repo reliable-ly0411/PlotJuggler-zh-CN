@@ -95,7 +95,7 @@ void CurveListPanel::clear()
   _custom_view->clear();
   _tree_view->clear();
   _tree_view_items.clear();
-  ui->labelNumberDisplayed->setText("0 of 0");
+  ui->labelNumberDisplayed->setText(QObject::tr("0 of 0"));
 }
 
 bool CurveListPanel::addCurve(const std::string& plot_name)
@@ -591,7 +591,7 @@ void CurveListPanel::on_checkBoxShowValues_toggled(bool show)
 void CurveListPanel::on_pushButtonTrash_clicked(bool)
 {
   QMessageBox msgBox(this);
-  msgBox.setWindowTitle("Warning. Can't be undone.");
+  msgBox.setWindowTitle(QObject::tr("Warning. Can't be undone."));
   msgBox.setText(tr("Delete data:\n\n"
                     "[Delete All]: remove timeseries and plots.\n"
                     "[Delete Points]: reset data points, but keep plots and "

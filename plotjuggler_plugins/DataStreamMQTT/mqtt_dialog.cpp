@@ -96,26 +96,26 @@ MQTT_Dialog::MQTT_Dialog(MQTTClient::Ptr mosq_client)
 
   connect(ui->buttonEraseServerCertificate, &QPushButton::clicked, this, [this]() {
     ui->buttonEraseServerCertificate->setEnabled(false);
-    ui->labelServerCertificate->setText("");
+    ui->labelServerCertificate->setText(QObject::tr(""));
     _server_certificate_file.clear();
   });
 
   connect(ui->buttonEraseClientCertificate, &QPushButton::clicked, this, [this]() {
     ui->buttonEraseClientCertificate->setEnabled(false);
-    ui->labelClientCertificate->setText("");
+    ui->labelClientCertificate->setText(QObject::tr(""));
     _client_certificate_file.clear();
   });
 
   connect(ui->buttonErasePrivateKey, &QPushButton::clicked, this, [this]() {
     ui->buttonErasePrivateKey->setEnabled(false);
-    ui->labelPrivateKey->setText("");
+    ui->labelPrivateKey->setText(QObject::tr(""));
     _private_key_file.clear();
   });
 
   connect(_client.get(), &MQTTClient::disconnected, this, [this]() {
     onConnectionClosed();
-    QMessageBox::warning(this, "Connection Lost",
-                         "Client disconnected. Maybe a problem with authentication?");
+    QMessageBox::warning(this, QObject::tr("Connection Lost"),
+                         QObject::tr("Client disconnected. Maybe a problem with authentication?"));
   });
 }
 

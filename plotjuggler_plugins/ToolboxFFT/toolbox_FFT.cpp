@@ -186,7 +186,7 @@ void ToolboxFFT::onClearCurves()
   ui->pushButtonCalculate->setEnabled(false);
 
   ui->lineEditSuffix->setEnabled(false);
-  ui->lineEditSuffix->setText("_FFT");
+  ui->lineEditSuffix->setText(QObject::tr("_FFT"));
 
   _curve_names.clear();
 }
@@ -256,7 +256,7 @@ void ToolboxFFT::onSaveCurve()
   auto suffix = ui->lineEditSuffix->text().toStdString();
   if (suffix.empty())
   {
-    ui->lineEditSuffix->setText("_FFT");
+    ui->lineEditSuffix->setText(QObject::tr("_FFT"));
     suffix = "_FFT";
   }
   for (const auto& curve_id : _curve_names)
