@@ -229,8 +229,10 @@ void QueryBar::buildUi()
   key_combo_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
   op_combo_ = new QComboBox(this);
+  op_combo_->setObjectName("mosaicoOperator");
   op_combo_->setPlaceholderText(QObject::tr("Op"));
-  op_combo_->setFixedWidth(60);
+  op_combo_->setFixedWidth(qMax(60, op_combo_->fontMetrics().horizontalAdvance(
+                                      op_combo_->placeholderText()) + 36));
   op_combo_->setEnabled(false);
   for (const auto& op : operators())
   {

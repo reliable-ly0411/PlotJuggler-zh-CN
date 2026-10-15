@@ -8,6 +8,7 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QPushButton>
+#include <QComboBox>
 #include <QTableWidget>
 #include <QTextBrowser>
 #include <QTimer>
@@ -99,6 +100,11 @@ QJsonObject checkLocalizedUi(QMainWindow* window, const QString& output, bool ch
       cloud_ok = cloud_ok && (chinese ? han.match(button->text()).hasMatch() : !han.match(button->text()).hasMatch());
     }
     cloud_ok = cloud_ok && presets.size() == 4;
+    auto* op = window->findChild<QComboBox*>("mosaicoOperator");
+    const bool op_fits = op && op->width() >=
+      op->fontMetrics().horizontalAdvance(op->placeholderText()) + 24;
+    cloud_ok = cloud_ok && op_fits;
+    result["mosaico_operator_fits"] = op_fits;
     result["mosaico_headers"] = headers; result["mosaico_presets"] = presets;
     result["mosaico_screenshot"] = window->grab().save(output + "/mosaico.png");
   }
