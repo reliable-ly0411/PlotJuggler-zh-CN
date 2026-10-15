@@ -2,6 +2,7 @@
     <qresource prefix="/">
         <file>resources/memes/zh_CN.json</file>
         <file>resources/memes/zh_CN/meme_00.png</file>
+        <file>resources/memes/zh_CN/meme_02.png</file>
         <file>resources/memes/zh_CN/meme_03.png</file>
         <file>resources/memes/zh_CN/meme_04.png</file>
         <file>resources/memes/zh_CN/meme_05.png</file>

@@ -46,17 +46,9 @@
         }
       ],
       "original_sha256": "64e5623c055c066ab0a75b2f746c82520f8cfd27d7a9d8b768506289a2381463",
-      "localization_status": "original-ai-unavailable",
-      "generation_error": {
-        "code": "moderation_blocked",
-        "stage": "output",
-        "categories": [
-          "other"
-        ],
-        "attempts": 2,
-        "request_id": "d9c6435b-67aa-4c6c-aa47-17a59d6ff8dc",
-        "quality_note": "The initial output omitted the existing imgflip.com attribution; the correction attempt was blocked. No acceptable localized output was selected."
-      }
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_02.png",
+      "asset_sha256": "2e90e036b5458005920f10323e4f97aebc1ee9d5ab6a48bcce168b1edc4cc340"
     },
     {
       "id": 3,
@@ -185,8 +177,9 @@
         "categories": [
           "other"
         ],
-        "attempts": 3,
-        "request_id": "e55eabe9-3ed3-434f-9b9e-f24fcbcddbf3"
+        "request_id": "2b84c196-da3d-4bf9-8633-a0b222461f76",
+        "message": "Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 2b84c196-da3d-4bf9-8633-a0b222461f76.",
+        "attempts": 4
       }
     },
     {
@@ -305,8 +298,9 @@
         "categories": [
           "other"
         ],
-        "attempts": 3,
-        "request_id": "cb45eba5-bbe1-4601-b2b7-b168a5abc62e"
+        "request_id": "b4917c91-c465-4c96-b45c-ce47643574b1",
+        "message": "Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID b4917c91-c465-4c96-b45c-ce47643574b1.",
+        "attempts": 4
       }
     },
     {
@@ -594,8 +588,9 @@
         "categories": [
           "other"
         ],
-        "attempts": 2,
-        "request_id": "5902f7b4-80d4-43a3-9c77-048714346c41"
+        "request_id": "e0fadd92-664a-42bf-a8f1-232955ccad12",
+        "message": "Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID e0fadd92-664a-42bf-a8f1-232955ccad12.",
+        "attempts": 3
       }
     },
     {
@@ -938,8 +933,9 @@
         "categories": [
           "other"
         ],
-        "attempts": 2,
-        "request_id": "40ad3cd8-6a4e-4cf3-a590-ae44c83ee53a"
+        "request_id": "13210334-78cd-45da-b9d2-5f056d8126aa",
+        "message": "Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 13210334-78cd-45da-b9d2-5f056d8126aa.",
+        "attempts": 3
       }
     },
     {
@@ -1136,8 +1132,9 @@
         "categories": [
           "other"
         ],
-        "attempts": 2,
-        "request_id": "51c55d8f-8390-4c14-b4f9-6452f54333cc"
+        "request_id": "b14f712c-3713-414e-8a5a-ed161c74f901",
+        "message": "Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID b14f712c-3713-414e-8a5a-ed161c74f901.",
+        "attempts": 3
       }
     },
     {
@@ -1415,8 +1412,9 @@
         "categories": [
           "sexual"
         ],
-        "attempts": 2,
-        "request_id": "dcc8eb4e-8a9c-4371-8f5f-0c80c08908cd"
+        "request_id": "78ebabda-1eef-467c-9f86-f3cab1579e0f",
+        "message": "Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 78ebabda-1eef-467c-9f86-f3cab1579e0f. safety_violations=[sexual].",
+        "attempts": 3
       }
     },
     {
@@ -1504,8 +1502,9 @@
         "categories": [
           "other"
         ],
-        "attempts": 2,
-        "request_id": "3c49de79-2a03-4ded-af3f-ca3e04d3d9a6"
+        "request_id": "96f9f6b3-632d-4e5e-b659-ccc9f343db7d",
+        "message": "Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 96f9f6b3-632d-4e5e-b659-ccc9f343db7d.",
+        "attempts": 3
       }
     },
     {
@@ -1584,8 +1583,9 @@
         "categories": [
           "other"
         ],
-        "attempts": 2,
-        "request_id": "5a3a0307-5460-499d-8a07-9a7f4f1c3245"
+        "request_id": "7cb55f68-3ed8-4920-bdeb-2b4045559056",
+        "message": "Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID 7cb55f68-3ed8-4920-bdeb-2b4045559056.",
+        "attempts": 3
       }
     },
     {
@@ -1950,8 +1950,9 @@
         "categories": [
           "sexual"
         ],
-        "attempts": 2,
-        "request_id": "a7126414-1402-4a72-bc94-4ae00c48462c"
+        "request_id": "bd94c1e9-aec6-4472-8a44-2c0d860395e1",
+        "message": "Your request was rejected by the safety system. If you believe this is an error, contact us at help.openai.com and include the request ID bd94c1e9-aec6-4472-8a44-2c0d860395e1. safety_violations=[sexual].",
+        "attempts": 3
       }
     },
     {
@@ -2947,7 +2948,7 @@
             2.3
           ],
           "source": "File View Tools Help",
-          "text": "应用 视图 工具 帮助",
+          "text": "文件 视图 工具 帮助",
           "style": "dark"
         },
         {
@@ -2969,7 +2970,7 @@
             2.3
           ],
           "source": "File View Tools Help",
-          "text": "应用 视图 工具 帮助",
+          "text": "文件 视图 工具 帮助",
           "style": "dark"
         },
         {
@@ -3100,8 +3101,8 @@
             36,
             3
           ],
-          "source": "Timeseries Add Drag&Drop Gallery",
-          "text": "时间序列  添加  拖放  图库",
+          "source": "Trajectory IMU Diagnostics Battery",
+          "text": "轨迹 IMU 诊断 电池",
           "style": "dark"
         },
         {
@@ -3180,27 +3181,24 @@
           "source": "Filter...",
           "text": "筛选…",
           "style": "dark"
-        },
-        {
-          "rect": [
-            4.5,
-            59.5,
-            16,
-            2.5
-          ],
-          "source": "live websocket",
-          "text": "WebSocket 实时连接",
-          "style": "dark"
         }
       ],
       "original_sha256": "71cd81245fbbcc75e59efe3c97c41faa09e8cf574235c961dbb70038ba3f67fc",
       "localization_status": "original-ai-unavailable",
       "generation_error": {
         "code": "network_error",
+        "message": "image generation failed: network error: error sending request",
         "stage": "transport",
-        "attempts": 3,
-        "message": "image generation failed: network error: error sending request"
-      }
+        "attempts": 11,
+        "quality_note": "Two headline-only intermediates returned, but no complete localized image. Subsequent plaque edits and the corrected complete PNG request returned transport errors; keep the original."
+      },
+      "preserve_identifiers": [
+        "live_websocket",
+        "PlotJuggler",
+        "IMU",
+        "/odom/pose/pose",
+        "ROS series paths, source file names, numbers and formulas"
+      ]
     }
   ],
   "rendering": "ai-localized-assets"
