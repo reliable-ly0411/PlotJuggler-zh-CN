@@ -325,10 +325,23 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/plotjuggler.svg
 # ##############################################################################
 # check the architecture (x86)
 
+# Compile the image payload once with Qt's two-pass resource compiler; avoid
+# parsing large image byte arrays as C++ in both the app and the regression test.
+qt5_add_big_resources(PJ_APP_RESOURCES plotjuggler_app/resource.qrc)
+add_custom_target(pj_app_resources DEPENDS ${PJ_APP_RESOURCES})
 add_subdirectory(plotjuggler_app)
 add_subdirectory(plotjuggler_plugins)
 
 if(PJ_BUILD_FORK_TESTS)
+  add_executable(pj_localized_meme_test tests/localized_meme_test.cpp
+    plotjuggler_app/localized_meme.cpp ${PJ_APP_RESOURCES})
+  target_include_directories(pj_localized_meme_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(pj_localized_meme_test PRIVATE Qt5::Widgets)
+  add_dependencies(pj_localized_meme_test pj_app_resources)
+  set_target_properties(pj_localized_meme_test PROPERTIES WIN32_EXECUTABLE FALSE)
+  add_test(NAME LocalizedMemes COMMAND pj_localized_meme_test)
+  set_tests_properties(LocalizedMemes PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
   add_executable(pj_time_picker_test tests/time_picker_test.cpp
     plotjuggler_plugins/ToolboxMosaico/src/ui/picker/time_picker_widget.cpp
     plotjuggler_plugins/ToolboxMosaico/src/ui/picker/time_picker_widget.h)

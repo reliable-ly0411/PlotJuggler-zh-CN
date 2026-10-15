@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Installer>
   <Name>PlotJuggler zh-CN</Name>
-  <Version>3.18.0-2</Version>
+  <Version>3.18.0-3</Version>
   <Title>PlotJuggler zh-CN installer</Title>
   <Publisher>Davide Faconti</Publisher>
   <StartMenuDir>PlotJuggler zh-CN</StartMenuDir>

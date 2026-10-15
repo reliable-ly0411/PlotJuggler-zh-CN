@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "language": "zh_CN",
-  "policy": "Translate meme prose and UI labels; preserve product/code identifiers and source attribution. English mode uses unmodified originals.",
+  "policy": "Use reviewed AI-embedded Chinese images; preserve physical lettering materials, perspective, product/code identifiers and source attribution. Keep original images when AI cannot provide an acceptable output. English mode always uses unmodified originals.",
   "images": [
     {
       "id": 0,
@@ -17,12 +17,18 @@
           "text": "你的日志",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "2a8354b9f307c53c8d5c8ad1e02a1c1de6a6ff6925b9339ee5051fe37077661b",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_00.png",
+      "asset_sha256": "0e396045799af531d6efe8911521ed544876a65478ffe3d2d23758d5d4d6066f"
     },
     {
       "id": 1,
       "regions": [],
-      "note": "Only product names PlotJuggler and MATLAB; preserved verbatim."
+      "note": "Only product names PlotJuggler and MATLAB; preserved verbatim.",
+      "original_sha256": "d95449544198a1580324801adee291d0e7fa7feb5e0ad72fda63ab8498bee87f",
+      "localization_status": "original-technical-labels"
     },
     {
       "id": 2,
@@ -38,7 +44,19 @@
           "text": "使用 PlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "64e5623c055c066ab0a75b2f746c82520f8cfd27d7a9d8b768506289a2381463",
+      "localization_status": "original-ai-unavailable",
+      "generation_error": {
+        "code": "moderation_blocked",
+        "stage": "output",
+        "categories": [
+          "other"
+        ],
+        "attempts": 2,
+        "request_id": "d9c6435b-67aa-4c6c-aa47-17a59d6ff8dc",
+        "quality_note": "The initial output omitted the existing imgflip.com attribution; the correction attempt was blocked. No acceptable localized output was selected."
+      }
     },
     {
       "id": 3,
@@ -76,7 +94,11 @@
           "text": "出口 12",
           "style": "green"
         }
-      ]
+      ],
+      "original_sha256": "9cda349eababfe4466be7f3b206b11b98f1a484519e27ac64dd77ec8ae34ecee",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_03.png",
+      "asset_sha256": "a49011490a3a1c06a76664eed4005424689ad9ee218d8005c83047d92c8865fe"
     },
     {
       "id": 4,
@@ -92,7 +114,11 @@
           "text": "这就是调试吗？",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "e6d40dd82459e1eed53410153ee44c8ee741b985140facb924ae088fe7a92f0b",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_04.png",
+      "asset_sha256": "3827608202907a91d7769db3fb8e3a23b6018aa5343ce9c61f9f7fd2030b43ca"
     },
     {
       "id": 5,
@@ -119,7 +145,11 @@
           "text": "可没那么简单",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "e681f253be4e9aea5963eec39ba0a61ef725182f39eac1399e8c6c20b698e5a2",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_05.png",
+      "asset_sha256": "0a757c785496a3c33c16f61944447cff2f9a0852e43f5aaf52c615b089b55e36"
     },
     {
       "id": 6,
@@ -146,7 +176,18 @@
           "text": "到处都是图表",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "60b7e8ac3b3d7e54c4933a2a70988ec9e2656a7eb420e54d51fef71f208ad542",
+      "localization_status": "original-ai-unavailable",
+      "generation_error": {
+        "code": "moderation_blocked",
+        "stage": "output",
+        "categories": [
+          "other"
+        ],
+        "attempts": 3,
+        "request_id": "e55eabe9-3ed3-434f-9b9e-f24fcbcddbf3"
+      }
     },
     {
       "id": 7,
@@ -173,7 +214,11 @@
           "text": "该用 PlotJuggler 了",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "a10f28e01876400e4321f22b6e49e1cc5d9ac57152d324a555c3e258ca121c7e",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_07.png",
+      "asset_sha256": "8add44a84ce415f48608fa44e428774f442c0cfa5428706658a80004f56acbea"
     },
     {
       "id": 8,
@@ -200,7 +245,11 @@
           "text": "但只要做，就用 PlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "44e2da9458fb75c25e9a493bef3f659087075094142a9dc3f2794f0e89ce2bf3",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_08.png",
+      "asset_sha256": "59a1bc646714787bd83e35f15c2f68d9c9d6dda244cf810670199bc8a0d64497"
     },
     {
       "id": 9,
@@ -227,7 +276,11 @@
           "text": "那可就太好了",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "e4aa8278fce49b32acbbf98480d2e35b85cb9223b6e5de19208086887c0003c7",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_09.png",
+      "asset_sha256": "a123cb7a5669a38223d11b161382ffb8c36017d3ca5d615ce862891630cdbbbc"
     },
     {
       "id": 10,
@@ -243,7 +296,18 @@
           "text": "我从没用过 PlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "ba81fb87b5ea8ff8b2e1e777c92f81441b2106285d544d8ebd0e3ebce3d0e1d8",
+      "localization_status": "original-ai-unavailable",
+      "generation_error": {
+        "code": "moderation_blocked",
+        "stage": "output",
+        "categories": [
+          "other"
+        ],
+        "attempts": 3,
+        "request_id": "cb45eba5-bbe1-4601-b2b7-b168a5abc62e"
+      }
     },
     {
       "id": 11,
@@ -270,7 +334,11 @@
           "text": "PlotJuggler 还能这样？",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "abfe0c622e4b455f2c6aeea5342aff49061d3d1eedf7744808d25cf65d72317e",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_11.png",
+      "asset_sha256": "353b0255edacdcf1d540dd4e336cefc19f2ad922f7f4e7990c40353d72454df2"
     },
     {
       "id": 12,
@@ -297,7 +365,11 @@
           "text": "尽情使用 PlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "8c821441722ba21dca295d2de3f7c16a3e74cd21b27591b21ab0f10f2ba20ccd",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_12.png",
+      "asset_sha256": "d78b474434f0355da6b914bfebaf56a34de54eca4e3d6b8060b7cbd4517e20c6"
     },
     {
       "id": 13,
@@ -313,7 +385,11 @@
           "text": "把所有数据都画出来",
           "style": "light"
         }
-      ]
+      ],
+      "original_sha256": "2f2daf8bb35ea0ea3917c55299619d966e5d15ba74dcdf03207e0645e3c77845",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_13.png",
+      "asset_sha256": "4d2d13bf8d7fece40f505e89639b61818aab7db04d429d298892b38c5536e87a"
     },
     {
       "id": 14,
@@ -329,7 +405,11 @@
           "text": "你的调试流程",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "3d7c6fff2bdb8e7a4cafaffc9b8701708a3fd4bda6ac4ede2563b6be5af8e5d2",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_14.png",
+      "asset_sha256": "857123b9a844e4eb07c9d522fcd7ad565f8c0bb7b1ad01f65623a3ffb94f7605"
     },
     {
       "id": 15,
@@ -345,7 +425,11 @@
           "text": "这个工具叫做…",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "71f96f8a1c700d07974e5a752caa5695793b848baeca6cccad2d695bba1b5ae7",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_15.png",
+      "asset_sha256": "09256e022a35934e030277540be39d5a00a376bbee7afa3bfe1ffb0bbbce5934"
     },
     {
       "id": 16,
@@ -372,7 +456,11 @@
           "text": "打开 PlotJuggler\n看看数据！",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "8ce9f37e6d9b4f5341d3eed230f64a634246e521796c32006a0dca13231a9b3e",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_16.png",
+      "asset_sha256": "f62cb0e40b66a9de7b70b26df4a875cb5e6462abca6c3c142a37f6ef0e224c7d"
     },
     {
       "id": 17,
@@ -432,17 +520,25 @@
           "text": "图表",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "6eb55cff9408bfe513e8fe7a4cebba71b0456928d2b8077bd5adc21a3b7d17ba",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_17.png",
+      "asset_sha256": "b802c2054ad9cd5778be6faf31511d84ab17ec702df834d8dfdc26c90db8a862"
     },
     {
       "id": 18,
       "regions": [],
-      "note": "Only the product name PlotJuggler; preserved verbatim."
+      "note": "Only the product name PlotJuggler; preserved verbatim.",
+      "original_sha256": "b5218a77b083189e9db29f9bc8d89476a25a8b208e183d2e0f8e60db4c3fac2b",
+      "localization_status": "original-technical-labels"
     },
     {
       "id": 19,
       "regions": [],
-      "note": "Product names rqt_plot and PlotJuggler; preserved verbatim."
+      "note": "Product names rqt_plot and PlotJuggler; preserved verbatim.",
+      "original_sha256": "1bedaf73bb7bfdc535f4773e6cf2f41123c8b87004983444d0839e105ce17f3f",
+      "localization_status": "original-technical-labels"
     },
     {
       "id": 20,
@@ -458,7 +554,11 @@
           "text": "你怎么绘制主题数据？",
           "style": "light"
         }
-      ]
+      ],
+      "original_sha256": "600acc8c051d7fabed055e6e0c26ebf2cd623ccbcd1da50db1f8d3e0e2b277b7",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_20.png",
+      "asset_sha256": "97b44fe32d809c80a90ba7d293a67920e2c09c0e5b8964c2139d3e279d496e36"
     },
     {
       "id": 21,
@@ -485,7 +585,18 @@
           "text": "变成图表啦！",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "010b93a677e9022987ed129a5b63a7335bb9127f554f220ea5635092f8efa4fa",
+      "localization_status": "original-ai-unavailable",
+      "generation_error": {
+        "code": "moderation_blocked",
+        "stage": "output",
+        "categories": [
+          "other"
+        ],
+        "attempts": 2,
+        "request_id": "5902f7b4-80d4-43a3-9c77-048714346c41"
+      }
     },
     {
       "id": 22,
@@ -501,7 +612,11 @@
           "text": "正在开发 PlotJuggler 的我",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "a52c8d7042a4caa71c45070e5db149e1aca6b4528b70c46661c54d825d2d8b31",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_22.png",
+      "asset_sha256": "4bf409a52d699e82ad67e7c09a032093bc2e859764669a3c3c03bba929fc499c"
     },
     {
       "id": 23,
@@ -517,7 +632,11 @@
           "text": "绝对的可视化",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "529de5a2b9b3a1297df8f90ac57adde8b585317cc3e21d236fb11918d28ac6a7",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_23.png",
+      "asset_sha256": "2d0df0f6abd7a711977b09275a025c0e5a9be272f6b58c84a321adfbfaa1dbc5"
     },
     {
       "id": 24,
@@ -544,7 +663,11 @@
           "text": "震撼我一整年",
           "style": "light"
         }
-      ]
+      ],
+      "original_sha256": "e6a2f6bb0b5e33fc963113d57c2a6376657244ac997a924ba3aed8cdf82cd850",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_24.png",
+      "asset_sha256": "41883d6cb88ce89b5f7c7249fcd428f9e6dc8ac270a4630f26c9367edb0931e4"
     },
     {
       "id": 25,
@@ -571,7 +694,11 @@
           "text": "多亏了 PlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "7cd888e8813d007ad9de74c718257e9796f99df8d91ff7e8efda893738ca73a5",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_25.png",
+      "asset_sha256": "a32954a5a2ddcdd55653286a9a9c339ee06bdaab4ac5fd70e815a41da3056317"
     },
     {
       "id": 26,
@@ -598,7 +725,11 @@
           "text": "玩得开心",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "92cb8cc1f6863498c8d38d89b3ee01b7e2c8914140460bc71afe172d69617968",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_26.png",
+      "asset_sha256": "22521fe3f7a43b700e3de2c727f06c3b2486baa494a268d946575f9d973cd99f"
     },
     {
       "id": 27,
@@ -636,12 +767,18 @@
           "text": "你得到：\n图表",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "0d9449736250136d50edf40961276d5c3f808ddcd6dc10b6f1411ecd006e8b43",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_27.png",
+      "asset_sha256": "db040fab9804c9d2a6ce40548af9529b3158638c729177a2f4e11a9d4d837083"
     },
     {
       "id": 28,
       "regions": [],
-      "note": "PlotJuggler and printf are technical names; preserved verbatim."
+      "note": "PlotJuggler and printf are technical names; preserved verbatim.",
+      "original_sha256": "e935ea24c898ed3b3551611c39cc43bfc1df03e1ec1c2d80430be0c873e6fe0e",
+      "localization_status": "original-technical-labels"
     },
     {
       "id": 29,
@@ -657,7 +794,11 @@
           "text": "我会用",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "7598b59ac646a17eee1784eab2ad6fd8255b96b9f5b5e12ed4a7622ba2cc32a0",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_29.png",
+      "asset_sha256": "c3c0380b251fc41e6428ab5014cb35ca6558cf67e0b8daa2786f5f586dd3254b"
     },
     {
       "id": 30,
@@ -695,7 +836,11 @@
           "text": "查克·诺里斯",
           "style": "red"
         }
-      ]
+      ],
+      "original_sha256": "15d036173fcda823709ed144d1bf69b228c8da53ea674cc18c62ad2a653695e6",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_30.png",
+      "asset_sha256": "f2367b1025166dc6d6addca6b016a9c2c689688313fbe181a94ec4a1ddb5c42e"
     },
     {
       "id": 31,
@@ -722,7 +867,11 @@
           "text": "这些数据是什么意思",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "185de167f4eafed370c237deeaabc4fe642cd85ddf6b7cff89d8f82c5c706224",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_31.png",
+      "asset_sha256": "0eff0a0d3e2443ab5a73dc97a62e91f822329ae4df9b510809aabcd8c115aaa5"
     },
     {
       "id": 32,
@@ -749,7 +898,11 @@
           "text": "我也用 PlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "71b0b6c874d510b7cee91ff5425cbf4dbebbe6e386da574c8fd018a62d9b27ff",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_32.png",
+      "asset_sha256": "7227c071c4456fd182ce60830c7a63ce5cb8edf8b6305308da2102663de8234e"
     },
     {
       "id": 33,
@@ -776,7 +929,18 @@
           "text": "使用 PlotJuggler",
           "style": "light"
         }
-      ]
+      ],
+      "original_sha256": "9ae56269fe720c313dd20063a67074f55d5ffd6fb4458f493eb2367f600e52e5",
+      "localization_status": "original-ai-unavailable",
+      "generation_error": {
+        "code": "moderation_blocked",
+        "stage": "output",
+        "categories": [
+          "other"
+        ],
+        "attempts": 2,
+        "request_id": "40ad3cd8-6a4e-4cf3-a590-ae44c83ee53a"
+      }
     },
     {
       "id": 34,
@@ -803,7 +967,11 @@
           "text": "你要找的图表",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "04a9a9227b2a918657c5182436d56d6e258d2824050f4ef00ae044bd522ab45b",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_34.png",
+      "asset_sha256": "8413d617db7c8d371a1db68baa766e848fd5e545e36e70f396cd67b831e0c6e0"
     },
     {
       "id": 35,
@@ -819,7 +987,11 @@
           "text": "最近火得很",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "8b88db1272c23570ff2fc7336b22a81b7d230bb86ac8b73120263b68b30b2609",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_35.png",
+      "asset_sha256": "a0ee0848a4619a547ff87e39c1e2306a9a130f71ea9d063c131acc0fe74f7a7f"
     },
     {
       "id": 36,
@@ -846,7 +1018,11 @@
           "text": "PlotJuggler 啊啊啊！",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "a56d1d48fcffcc5fa930b35b90d92e76c240a156110a54708ad6d902f6d376b1",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_36.png",
+      "asset_sha256": "4bf1b4932de83972d69f430a87a13a791f93a7919ac09da84bc9a65feee24eb9"
     },
     {
       "id": 37,
@@ -862,7 +1038,11 @@
           "text": "我该用 PlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "cc271f291e82e83773d0ac0163805e462d2044b6ac697d82acd39f7d86a9d1aa",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_37.png",
+      "asset_sha256": "9f0fed3e1a6d97ce971ea63f59eac05cf3c1da446e18fc4b0f35707b6c0837df"
     },
     {
       "id": 38,
@@ -878,7 +1058,11 @@
           "text": "再多来点图表！",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "3a43895dc1814820747d6cf2b27c5fb4809e81d29d5f0b4fa33db6fbb0cd4fb6",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_38.png",
+      "asset_sha256": "6ba950a1641c6132b2109c288dafcb05992aa5dc4a0bbd6bd108abe919c5a21a"
     },
     {
       "id": 39,
@@ -905,12 +1089,18 @@
           "text": "接受挑战",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "5e8da351e41561527bb439a1dbadd7f9b28dbfd3b2383959a48f687f9ed3cc1a",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_39.png",
+      "asset_sha256": "6dd20e68fd6456619fbdeda3fd7d7f9e688b40f994bc03b4411f3963e3f7818e"
     },
     {
       "id": 40,
       "regions": [],
-      "note": "Only product name PlotJuggler; preserved verbatim."
+      "note": "Only product name PlotJuggler; preserved verbatim.",
+      "original_sha256": "98de02eaef30e04a1e674ad394878dc343c2f7b733697c06a022ceb61c0f8f3f",
+      "localization_status": "original-technical-labels"
     },
     {
       "id": 41,
@@ -937,7 +1127,18 @@
           "text": "也太多了",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "6df63d1d060c17021b20dfc4b244cd26e4357274b87a80c3082821a5c9da4e73",
+      "localization_status": "original-ai-unavailable",
+      "generation_error": {
+        "code": "moderation_blocked",
+        "stage": "output",
+        "categories": [
+          "other"
+        ],
+        "attempts": 2,
+        "request_id": "51c55d8f-8390-4c14-b4f9-6452f54333cc"
+      }
     },
     {
       "id": 42,
@@ -972,7 +1173,11 @@
           30,
           8
         ]
-      ]
+      ],
+      "original_sha256": "31b6489b1dc0730c574e9a5bfb29a26e8ffa7d166068450237b7d2be6e8f8bcc",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_42.png",
+      "asset_sha256": "2124e47b8c6c1d3bd61bf65575296688f89403623453e451f610c09c75075e67"
     },
     {
       "id": 43,
@@ -999,7 +1204,11 @@
           "text": "怎么能看懂呢",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "648d458541302325c21b0a52c156877b784cc5a87f96d3466df32c97ac31a938",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_43.png",
+      "asset_sha256": "f72b9cef835a53c158ef154353387b2e3b8ba09b46687d94ee745d29c6242d3e"
     },
     {
       "id": 44,
@@ -1026,7 +1235,11 @@
           "text": "分析一万条时间序列",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "f1d0599d8755aa822b54f710e3b1e2a9f178ff1519c814563714a1ff85f09e82",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_44.png",
+      "asset_sha256": "19dd0ab5fb3924feb3cacc9e5fd809c01dc209dd411dc70432d347d051fd9631"
     },
     {
       "id": 45,
@@ -1053,12 +1266,18 @@
           "text": "简直太棒了",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "fb3ca1ded4d36082902d7ad0e33d1b5193cb65fda401df5b98fc077fda1014fc",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_45.png",
+      "asset_sha256": "136a30ea0fc07ea7c17ca8dc550a1e2890f416c8e9b77a52b0acaecd291176ff"
     },
     {
       "id": 46,
       "regions": [],
-      "note": "Technical names rosbags and plotjuggler; preserved verbatim."
+      "note": "Technical names rosbags and plotjuggler; preserved verbatim.",
+      "original_sha256": "724fc916c51b82b178d9a9bfc7fb7add77cafa9a2437edba691f88de8c9a718e",
+      "localization_status": "original-technical-labels"
     },
     {
       "id": 47,
@@ -1074,7 +1293,11 @@
           "text": "一万条时间序列",
           "style": "light"
         }
-      ]
+      ],
+      "original_sha256": "786998cd8e5f28548b25b18f64261d1fd0ce24277a5fdca38326ab0344c1665d",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_47.png",
+      "asset_sha256": "808a83c5e2b0725e61f35fbf481ce8ccb26d9b364446b0dd0a1249f3ef84ee36"
     },
     {
       "id": 48,
@@ -1090,7 +1313,11 @@
           "text": "这宝贝能画出\n数百条时间序列",
           "style": "light"
         }
-      ]
+      ],
+      "original_sha256": "6fed00b086ae64312cbecacfbe14d4d282c8c09f82e193889553c2106ac63fb7",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_48.png",
+      "asset_sha256": "1241a674f0ff4947cbe3c92c61f3b8958c66039a71b2e012260fb477f8a153dc"
     },
     {
       "id": 49,
@@ -1117,7 +1344,11 @@
           "text": "用 PlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "0901d07eb46f3e437984cfdc17c567ae1516d7273241552de4482cc3db41b264",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_49.png",
+      "asset_sha256": "1899867514841d799cbf9f09903ca92513e813f798e9f09b4b4034e8092a855c"
     },
     {
       "id": 50,
@@ -1144,7 +1375,11 @@
           "text": "我们可是逐点分析\n时间序列的",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "bbfd3181616ac89ce9d75aeee8f4a39476f9cee585aa2fb0be1f1b84349747f5",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_50.png",
+      "asset_sha256": "9c9ce1b975249d9ae7d4d387fbd6d677f2caa5936d3831f40f0afe8c97406f82"
     },
     {
       "id": 51,
@@ -1171,7 +1406,18 @@
           "text": "来调试",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "aac57fb36130b4711d5d8b879507281b7ba89610f004a7a75caa263bda46857b",
+      "localization_status": "original-ai-unavailable",
+      "generation_error": {
+        "code": "moderation_blocked",
+        "stage": "output",
+        "categories": [
+          "sexual"
+        ],
+        "attempts": 2,
+        "request_id": "dcc8eb4e-8a9c-4371-8f5f-0c80c08908cd"
+      }
     },
     {
       "id": 52,
@@ -1198,7 +1444,11 @@
           "text": "好家伙，我加入！",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "7fae677aa3706e1ea3774e35680980e6c9404f539650c4011404813c04eda70a",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_52.png",
+      "asset_sha256": "c0adffea910a7cbdc3f80569e5cfc34bb835a54bd6e6ac5e43217f5da560e2b3"
     },
     {
       "id": 53,
@@ -1214,7 +1464,11 @@
           "text": "孩子，这就是\nPlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "512111f2fcd91d901881e762c965f2457c368710a9f560a474f4ba8fec4fdf99",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_53.png",
+      "asset_sha256": "cd8d5fb0340dc7366c2f99bd51ba1e7c3421d50cd039ed8b203a3fa26b9c9e1c"
     },
     {
       "id": 54,
@@ -1241,7 +1495,18 @@
           "text": "…多一点图表",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "69098db6d7e9786487389b25959801af088c730cde48a425cc3197d3180e6bcf",
+      "localization_status": "original-ai-unavailable",
+      "generation_error": {
+        "code": "moderation_blocked",
+        "stage": "output",
+        "categories": [
+          "other"
+        ],
+        "attempts": 2,
+        "request_id": "3c49de79-2a03-4ded-af3f-ca3e04d3d9a6"
+      }
     },
     {
       "id": 55,
@@ -1279,7 +1544,11 @@
           "text": "图表",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "5281c1c6d23d41fd01ca1ae10575bbdf6dc3e356154eb8b184befe5ec2f4328f",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_55.png",
+      "asset_sha256": "8a4ab7c26d50e09a591542afbc304f8bf671997a3e864e7728ec75a7a090ff19"
     },
     {
       "id": 56,
@@ -1306,7 +1575,18 @@
           "text": "用上 PlotJuggler 后",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "093165ecbaf3fc5b88480701d0191b60c79e7e1356976acfb050151e92b5e739",
+      "localization_status": "original-ai-unavailable",
+      "generation_error": {
+        "code": "moderation_blocked",
+        "stage": "output",
+        "categories": [
+          "other"
+        ],
+        "attempts": 2,
+        "request_id": "5a3a0307-5460-499d-8a07-9a7f4f1c3245"
+      }
     },
     {
       "id": 57,
@@ -1333,7 +1613,11 @@
           "text": "那是什么？",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "6a0bd37fabc6c94c10440185ee412d50f40377a4e0f596d7d610a971bc4da963",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_57.png",
+      "asset_sha256": "27366ecdb30a5991db6bc608f6338b1eb9bfc1c1f96f2187a8fc4851d600abba"
     },
     {
       "id": 58,
@@ -1360,7 +1644,11 @@
           "text": "用 PlotJuggler 来做",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "cb6c634e62e8375740d2fb43b08dc3226eaead300953b362a4ad4562a0daf8a7",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_58.png",
+      "asset_sha256": "585078c101b8cb9a57c03100f74019bf77564eaa88752240a79a339576fc99a1"
     },
     {
       "id": 59,
@@ -1387,7 +1675,11 @@
           "text": "这数据量可真大",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "d7bc09d20d3a4b55cd3fcdcf49780f9827b1da4da36bb782468166c780fad559",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_59.png",
+      "asset_sha256": "5a891b6dd435fb21ea649c0a5c298cf1b3d0c9bd9440e4f0a4006f5ba7d0e82a"
     },
     {
       "id": 60,
@@ -1403,7 +1695,11 @@
           "text": "我的数据",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "3fc9682dcac46a7d4219c0fe147822fb5f1eac58fd2c2f61188d4d6dbae2b316",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_60.png",
+      "asset_sha256": "b78777f24e988cfb59625b52b1b94595939e7a1a7587afb67eb36a3e9f5b17f4"
     },
     {
       "id": 61,
@@ -1441,7 +1737,11 @@
           "text": "我的天哪",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "612fc436058472784784f9b6ae4994e15d09edd3089e62aeccbe76489cd33af5",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_61.png",
+      "asset_sha256": "eb53746890da0a22c72477fe404e53cec1de1d4ff1c7a8ac6c04deae64ae8575"
     },
     {
       "id": 62,
@@ -1468,7 +1768,11 @@
           "text": "PlotJuggler：哈哈",
           "style": "light"
         }
-      ]
+      ],
+      "original_sha256": "34b60787eff5887c667c28919ddf0750775063f0ce654081c1e91859c90843c8",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_62.png",
+      "asset_sha256": "c6a1674324df2d3ee1d5aef22e7b071add4c48338314b28f2f950df7d8aaea28"
     },
     {
       "id": 63,
@@ -1484,7 +1788,11 @@
           "text": "最好的\n数据可视化工具",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "4314d984783e87ff2039a7eb31d212373b44268bd74b78e009c1efb76fcaa2e6",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_63.png",
+      "asset_sha256": "ce8d754177a5f5d65db10b2487611f98b252929baf4b2ca1ab42bac7239110bf"
     },
     {
       "id": 64,
@@ -1500,7 +1808,11 @@
           "text": "你应该\n多记点数据",
           "style": "card"
         }
-      ]
+      ],
+      "original_sha256": "ea6d8bce5975214cb61df86263bcb1123f6123077206d9ac24589c7f18ae9244",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_64.png",
+      "asset_sha256": "4caece5a6afca15057f52335064ab7ef5f8eeb1518f83d96b22dfd403d1d1a0b"
     },
     {
       "id": 65,
@@ -1516,7 +1828,11 @@
           "text": "PlotJuggler 用户",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "b28f5071dfd57582822952e0692ea64ff9c2c9e45975136db12d820090ffe8d2",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_65.png",
+      "asset_sha256": "db3079096e67234e4206ca33bb15ff58f1a7f3087d65abb9b09e0f65b4993b5f"
     },
     {
       "id": 66,
@@ -1543,7 +1859,11 @@
           "text": "我",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "305d39a32db81b625878249ffcfd37c86226e9af3d2a996601c0490dccfc6d1d",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_66.png",
+      "asset_sha256": "b64ed8bffb3c4a2b76b49df58d00828688399c9379edd0bc0cdd10e5b40f859c"
     },
     {
       "id": 67,
@@ -1570,7 +1890,11 @@
           "text": "第一次？",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "e095be1e091d004cc7e6ec40ef4f4886f584ef8c5a3349838b30851d4432bd67",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_67.png",
+      "asset_sha256": "aecc96e0b272257f70f297ed4a111e380e17d81e3e9c8b66f6e3312961cdde88"
     },
     {
       "id": 68,
@@ -1597,7 +1921,11 @@
           "text": "乐队",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "e4b19b89f62e6ba06fd0de34e241eb112b2f150c727eea309a3c02705220ca09",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_68.png",
+      "asset_sha256": "c7348a633c463a03855ac29d5cd12e5c8ea1fb53ea022ab097ce3fb1523e013c"
     },
     {
       "id": 69,
@@ -1613,7 +1941,18 @@
           "text": "“…然后我就打开了\nPlotJuggler…”",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "06a47bf66181a43a315f7af332df876e51e89717b92bcb87baf6e4a146b5e679",
+      "localization_status": "original-ai-unavailable",
+      "generation_error": {
+        "code": "moderation_blocked",
+        "stage": "output",
+        "categories": [
+          "sexual"
+        ],
+        "attempts": 2,
+        "request_id": "a7126414-1402-4a72-bc94-4ae00c48462c"
+      }
     },
     {
       "id": 70,
@@ -1629,7 +1968,11 @@
           "text": "图表",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "b19724517102b9647fe0252ac8ff162f0006b1f0ed5b616a3071b1914221badf",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_70.png",
+      "asset_sha256": "b37568997e75ad0f8feb1d55e65af9cd0d8458e035597c58837b0d03dcb30a8e"
     },
     {
       "id": 71,
@@ -1656,7 +1999,11 @@
           "text": "图表",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "1d2a59bd09873ceeda4f57c99035141ec18f33acae0f3c7781d516aba1ac6345",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_71.png",
+      "asset_sha256": "872295f7e5c161de19969d6dd85358ef65da9006847141472877b2e2d7762047"
     },
     {
       "id": 72,
@@ -1683,7 +2030,11 @@
           "text": "我要看图——表！！！",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "3d7f73530f0b270388a716efde46185734fd79acbc91bce48c985da4fbd0a375",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_72.png",
+      "asset_sha256": "856a31aec217da870a12606079ab0cd0090e421a440896b1b8c5b8f7ed631670"
     },
     {
       "id": 73,
@@ -1710,7 +2061,11 @@
           "text": "…放进 PlotJuggler 之后",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "3108951f08c511187189a0989585aec924011fd4d58d0a1b1e093d7c023b74b3",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_73.png",
+      "asset_sha256": "f78aebde747ebc14bd324f48444647e21a51a3ba7bf85ef44c55ee5c7c1b5a73"
     },
     {
       "id": 74,
@@ -1726,7 +2081,11 @@
           "text": "现在由我来给你调试",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "a95f7676aa98d5440b25178a68327c3491882db9953f2f5df97da830e2423c29",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_74.png",
+      "asset_sha256": "7db9ce3afac3d0d113d7bfbd93849ef17473bbfc7d3cd52f743049b6ef9b897f"
     },
     {
       "id": 75,
@@ -1753,7 +2112,11 @@
           "text": "在 PlotJuggler 里",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "5160554b676bd8ac13d4a38baf4c194a3dea4f8c14800bbb8e2e2a3bd29086c1",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_75.png",
+      "asset_sha256": "5afa7ec691e08ad44b79062e06aed34640cf080899b4add0b06cfce71d2f6eda"
     },
     {
       "id": 76,
@@ -1769,7 +2132,11 @@
           "text": "专业数据分析工具",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "1e795f9907a83a600dde92868e965ff672ff13225c0cfc2dd320bd57bc44a338",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_76.png",
+      "asset_sha256": "d42be90ea2e8240c2971d5724e4ad30f2c7ba431b730f2c96fe7f281737f75d9"
     },
     {
       "id": 77,
@@ -1796,7 +2163,11 @@
           "text": "成果不多，但都是踏实干出来的",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "5d5d0f1b1224b8483eaf5e2f6a6d14d9c31a56f12a7ba53d6cc8b165613a5c7e",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_77.png",
+      "asset_sha256": "39d9be54d20190bd929a698818343d6d997f4d4cf177440c28c60c6ceabae7a1"
     },
     {
       "id": 78,
@@ -1812,7 +2183,11 @@
           "text": "老伙计，靠得住",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "5535b409dca2cb63b47538a10fa3f631cd5728f4e82f99c7aba76e4bba8d7a93",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_78.png",
+      "asset_sha256": "a1f11ceb3c7ac48d5122500d61b6764e93a6c385c04e2cd669786a64500f0c4d"
     },
     {
       "id": 79,
@@ -1839,7 +2214,11 @@
           "text": "三小时后",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "40bec7ac404b929241f96a45d4b1deb86d10b4605017be9df90b8e4872791171",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_79.png",
+      "asset_sha256": "ef79b52d13d0bf4d6c7063dc0ffc49f595e0b0efde86bad32805412c34c459a2"
     },
     {
       "id": 80,
@@ -1855,7 +2234,11 @@
           "text": "数据",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "4b88aacce3d9ac474bf2e1cff5e1b21b780fadc88f4d061b564a428b5a0de541",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_80.png",
+      "asset_sha256": "a42f021ff5d9e9313c8765729abe0ab215c0451ec6a845ff969d61dd9f9099ed"
     },
     {
       "id": 81,
@@ -1882,12 +2265,18 @@
           "text": "放进\nPlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "394260c5d74ddbfa14f71ae47a7467d4cecd2e643d44b30f57b6b8d09dcdcd47",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_81.png",
+      "asset_sha256": "c2b31ed05f8ccea42bebbdaa6737d1f80b169120ef6492140859e3f7d8a4d240"
     },
     {
       "id": 82,
       "regions": [],
-      "note": "PlotJuggler and printf are technical names; preserved verbatim."
+      "note": "PlotJuggler and printf are technical names; preserved verbatim.",
+      "original_sha256": "94523fb0e5fd9a1ad0bad5cd2c1cb0345e1e7f6ea3f3ab1c0e362507b44b844e",
+      "localization_status": "original-technical-labels"
     },
     {
       "id": 83,
@@ -1914,7 +2303,11 @@
           "text": "用上 PlotJuggler 后",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "c8d387f76a815fd6b96f977bb73c56a4ef5b165d2bbdde987f281afe93e513e4",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_83.png",
+      "asset_sha256": "4896be6df0397305040eda15a427303287baa537f8f8967612b312417947fcf2"
     },
     {
       "id": 84,
@@ -1941,7 +2334,11 @@
           "text": "我们可不一样",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "5da3ac20a6514324692c8d14d7a5dbae5dfdbb6648d52a473ddf19f64de0ad85",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_84.png",
+      "asset_sha256": "aa66eb1a58359416880584af47dff70485af72e4adf112c1047c9661da5da261"
     },
     {
       "id": 85,
@@ -1968,7 +2365,11 @@
           "text": "我自己也是 PlotJuggler 的粉丝",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "c381960df87d210ae87a3c15f96924cfdc8139d4e142db416cd5ceaf96e784c7",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_85.png",
+      "asset_sha256": "a1cb2268d0de739f2fdb88bdb55f1b030ea44bc60e8845eafe836cad2d44bb8b"
     },
     {
       "id": 86,
@@ -1995,7 +2396,11 @@
           "text": "我：用了\nPlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "606fa0f3caaf89811732b0e051dd4ab685c8415b2073376cceb563953a88872c",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_86.png",
+      "asset_sha256": "f7c393e1386698ee019ab618b7e958faf44bf5948d5d8ce8bfc57807335d9694"
     },
     {
       "id": 87,
@@ -2011,7 +2416,11 @@
           "text": "海量\n数据",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "66b2efa751159f6a408144c42e5eca3ff39fea289277bc642cee2019c5f61e25",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_87.png",
+      "asset_sha256": "32c494ab09b6c8e26fcbe274fa249addb762f387716f519b50e10babfedd5ca2"
     },
     {
       "id": 88,
@@ -2038,7 +2447,11 @@
           "text": "卧槽",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "50717da8601077d98a6166579e01f5a477494ff84be4beafdfca6306f440b05f",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_88.png",
+      "asset_sha256": "464ffeb900885c73f4fac38a51f8ab45cd74c7bb50ecdd5ecd1129b3cf1d1356"
     },
     {
       "id": 89,
@@ -2076,7 +2489,11 @@
           "text": "我知道，但他可以。",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "a181b533a812bba24374d635acb77544b69fa7295a49eb4d47c2628b668e9789",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_89.png",
+      "asset_sha256": "ba66c30f00e8bd68822cf1334939c056a2323e27b0c730e99732cde146b281d5"
     },
     {
       "id": 90,
@@ -2092,7 +2509,11 @@
           "text": "正在努力找问题的我",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "eaa56cafbc116527cff0d04b7458a8f5bde611eca5b1ed53d83cfcbf7b7881c9",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_90.png",
+      "asset_sha256": "3088d9e865798c4f2b596d961e2062cf3f3c53e2edba5ef878e0c5f47964edba"
     },
     {
       "id": 91,
@@ -2119,7 +2540,11 @@
           "text": "但我喜欢这个。",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "8f94df2190f5baa97a2b2bb856c6710049f11cb490019c2ea6c206073729efd5",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_91.png",
+      "asset_sha256": "582be4132daff5651db9d3fab548d507610e99e317dcc37d4f674fd954cf9a24"
     },
     {
       "id": 92,
@@ -2135,7 +2560,11 @@
           "text": "看看他们费多大劲，\n也只能模仿我们的一点本事",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "b28e38dc3662d9455b2c9d80d8eb6a6cea8443354bf0c0daa83423686b123354",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_92.png",
+      "asset_sha256": "0ddd2424b65a403735634c28804c4c4cb9bfb807cec84c7190feab54c9463789"
     },
     {
       "id": 93,
@@ -2162,7 +2591,11 @@
           "text": "就在 PlotJuggler 里",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "d3461c91ccac44af5156769d1a9be0ccaed8a0bcfb698ccc2251076d462f45a7",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_93.png",
+      "asset_sha256": "ad20ce7ec3e5399be5aad9634fbe6ae706121df5dbaf9aade0c131b2f5d8b5c2"
     },
     {
       "id": 94,
@@ -2178,7 +2611,11 @@
           "text": "程序缺陷",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "70be473a3c9143730d4634874bd304414a7b723a2e0dcec06733938ad92d1ec5",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_94.png",
+      "asset_sha256": "c696ec08475625764acbf22ac9bc1f61ae8d1f87bb1620d7eaae871362231982"
     },
     {
       "id": 95,
@@ -2205,7 +2642,11 @@
           "text": "…玩转图表",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "922968f66f01ebed4d3adfe77e5c984fc67d2f8321b86047b2d127991945d307",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_95.png",
+      "asset_sha256": "6f371771ad4cdc09ed431f7893e0206adc8a93888ea900f2d4b2c3f3a2aecb53"
     },
     {
       "id": 96,
@@ -2221,7 +2662,11 @@
           "text": "你的数据",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "db348a43f4512588a5fb0badcc7b20d73daa7b1bd88302e94788b045f4eb184c",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_96.png",
+      "asset_sha256": "07fe732d9112adbb36b6c6b03239431f70260527f6255c63da4428c4cad42c70"
     },
     {
       "id": 97,
@@ -2270,7 +2715,11 @@
           "text": "只要打开\nPlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "6ae68657aebdf187ed68d4795dc4b6efe2c7c7716f2b32df094d7f3369efd14a",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_97.png",
+      "asset_sha256": "3a3eaa09639ac07bef9877f27cec13f338bfdd682c425a6c6dac757af0eafeba"
     },
     {
       "id": 98,
@@ -2308,12 +2757,18 @@
           "text": "我使用 PlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "f4035947f34becfe3dd275b55abcba11a07aeabd60d677bde40cb764e3b7b4e5",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_98.png",
+      "asset_sha256": "93081f8aeffe06eb695db212d89b50267427c7cc99ef1191182442ada83c2bcd"
     },
     {
       "id": 99,
       "regions": [],
-      "note": "Product names PlotJuggler, Rerun and Foxglove; preserved verbatim."
+      "note": "Product names PlotJuggler, Rerun and Foxglove; preserved verbatim.",
+      "original_sha256": "d5ade662219cd9b9d46c091901d388fa44d4b9d81580603123c8b9bb207125ca",
+      "localization_status": "original-technical-labels"
     },
     {
       "id": 100,
@@ -2340,7 +2795,11 @@
           "text": "我用 PlotJuggler",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "0c0a0a692c3e1c8e1aa7607f573446fe878f1195ffd76bcaa94562cfdf23f6d9",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_100.png",
+      "asset_sha256": "f27aaa10e53f949c5b61451c4ce80a703770455d812a852a00fec33d29b263b3"
     },
     {
       "id": 101,
@@ -2367,7 +2826,11 @@
           "text": "又来了！！！",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "98928ed81bf1e6beec9c32c6dcffa6625a1e511eb75912570a4d875c8764046e",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_101.png",
+      "asset_sha256": "0095e3971e9981a75cd175e65427ad1abbfe9d93466abefba1eec4f5431200dc"
     },
     {
       "id": 102,
@@ -2383,7 +2846,11 @@
           "text": "机器人\n社区",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "40372249f22181b69d96627f9f4d85e13588a4e88ed1c12fdeb4e412d061a585",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_102.png",
+      "asset_sha256": "840a10ac7b9b2bc5627b4641e04f413af4093e60ac9013394fb989cbc134bbb3"
     },
     {
       "id": 103,
@@ -2399,7 +2866,11 @@
           "text": "普普通通的 PlotJuggler 用户",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "7a5b655197e2c69b72f1b66e23e8f05036f501914070536f16c5d0e6a3ce61ab",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_103.png",
+      "asset_sha256": "761a8c713c571ea1fab19dc3240239495f05492da706db947e12dec6874aa534"
     },
     {
       "id": 104,
@@ -2426,7 +2897,11 @@
           "text": "他们就这样看着你",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "e7c197859d418a9316adfc715e3496a27c668666facafcde088f9051bd29de85",
+      "localization_status": "ai-localized",
+      "asset": "zh_CN/meme_104.png",
+      "asset_sha256": "24849c21c9a68e800b10d0b5d3e8b9365ba63bc1b46f4d66fe21cc0e813207ff"
     },
     {
       "id": 105,
@@ -2717,7 +3192,16 @@
           "text": "WebSocket 实时连接",
           "style": "dark"
         }
-      ]
+      ],
+      "original_sha256": "71cd81245fbbcc75e59efe3c97c41faa09e8cf574235c961dbb70038ba3f67fc",
+      "localization_status": "original-ai-unavailable",
+      "generation_error": {
+        "code": "network_error",
+        "stage": "transport",
+        "attempts": 3,
+        "message": "image generation failed: network error: error sending request"
+      }
     }
-  ]
+  ],
+  "rendering": "ai-localized-assets"
 }

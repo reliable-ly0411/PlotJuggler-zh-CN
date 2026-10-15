@@ -1,7 +1,8 @@
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-qt5_add_resources(RES_SRC resource.qrc)
+set(RES_SRC ${PJ_APP_RESOURCES})
+set_source_files_properties(${RES_SRC} PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
 
 if(WIN32)
   # Adds icon to plotjuggler.exe
@@ -135,6 +136,7 @@ endif()
 
 add_executable(plotjuggler ${PLOTJUGGLER_SRC} ${RES_SRC} ${UI_SRC}
                            ${BACKWARD_ENABLE})
+add_dependencies(plotjuggler pj_app_resources)
 
 if(PJ_HAS_NANOBIND)
   nanobind_add_module(pj NOMINSIZE

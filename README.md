@@ -1,8 +1,9 @@
 # PlotJuggler 简体中文 / ArduPilot 分支
 
 本 fork 基于官方 Qt5 3.17.2，提供简体中文界面、English 切换及默认随包的
-ArduPilot DataFlash BIN 加载器。首个集成版本采用
-`3.18.0-zh.2+upstream.3.17.2.apbin.1.g<commit>`（SemVer 2.0.0）。
+ArduPilot DataFlash BIN 加载器。当前开发候选版本采用
+`3.18.0-zh.3+upstream.3.17.2.apbin.1.g<commit>`（SemVer 2.0.0）。
+启动图库使用离线内嵌的 AI 中文嵌字图片，修复矩形遮罩及背景留白。
 
 - [使用、解析范围、许可和同步说明](docs/zh-CN.md)
 - [Windows 安装器与 portable 构建](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-windows.yml)
