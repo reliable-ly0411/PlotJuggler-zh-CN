@@ -94,6 +94,11 @@ jobs:
         SAFE_REF="${PJ_SEMVER}"
         mv PlotJuggler-${{ matrix.arch }}.AppImage "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage"
         echo "SAFE_REF=$SAFE_REF" >> "$GITHUB_ENV"
+    - name: Validate packaged AppImage
+      env:
+        APPIMAGE_EXTRACT_AND_RUN: '1'
+      run: |
+        xvfb-run -a python3 scripts/zh_acceptance.py --app "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --plugin AppDir/usr/bin/libDataAPBin.so --out acceptance/packaged
     - name: Upload AppImage
       uses: actions/upload-artifact@v4
       with:

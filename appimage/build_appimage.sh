@@ -60,6 +60,7 @@ else
         --exclude='turtledemo' \
         --exclude='tkinter' \
         --exclude='*.pyc' \
+        --exclude='*.o' \
         -cf - . \
       | tar -C "$APPDIR/usr/lib/python${PY_VER}" -xf -
 fi
