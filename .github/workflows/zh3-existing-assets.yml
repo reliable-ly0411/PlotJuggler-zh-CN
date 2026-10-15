@@ -1,0 +1,226 @@
+name: Complete original v3.18.0-zh.3 packages
+'on':
+  push:
+    branches:
+    - release/publish-zh3-existing
+    paths:
+    - .github/workflows/zh3-existing-assets.yml
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: zh3-existing-assets
+  cancel-in-progress: false
+env:
+  PUBLISH_SCRIPT: |
+    #!/usr/bin/env python3
+    """Append verified zh.3 assets only; never edit release text or existing assets."""
+    import hashlib,json,os,pathlib,sys,urllib.request,urllib.parse
+    REPO='reliable-ly0411/PlotJuggler-zh-CN'
+    TAG='v3.18.0-zh.3'
+    SHA='3117288ce8d710bde4f7a86ca5ed5240ebb1c301'
+    VERSION=f'{TAG[1:]}+upstream.3.17.2.apbin.1.g{SHA[:12]}'
+    PREFIX='PlotJuggler-'+VERSION
+    API=f'https://api.github.com/repos/{REPO}'
+    EXISTING={PREFIX+'-x86_64.AppImage',PREFIX+'-Windows-x64.zip',PREFIX+'-Windows-x64.exe'}
+    LINUX={PREFIX+'-aarch64.AppImage'} | {PREFIX+f'-{d}-amd64.deb' for d in ['24.04','bookworm','trixie']}
+    def sha256file(path):
+        with path.open('rb') as stream: return hashlib.file_digest(stream,'sha256').hexdigest()
+
+    def request(url,data=None,method='GET',content_type='application/json'):
+        headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}
+        if data is not None:
+            headers['Content-Type']=content_type
+            if not isinstance(data,bytes): data=json.dumps(data).encode()
+        with urllib.request.urlopen(urllib.request.Request(url,data=data,headers=headers,method=method),timeout=240) as r:
+            return json.load(r)
+    def guard():
+        assert os.environ['GITHUB_REPOSITORY']==REPO
+        assert request(API+'/git/ref/heads/release/publish-zh3-existing')['object']['sha']==os.environ['GITHUB_SHA'], 'Superseded packaging run must not publish'
+        ref=request(API+'/git/ref/tags/'+TAG)['object']
+        if ref['type']=='tag': ref=request(ref['url'])['object']
+        assert ref['sha']==SHA,ref
+        release=request(API+'/releases/tags/'+TAG)
+        assert release['id']==414026871 and release['tag_name']==TAG
+        assert release['draft'] is False and release['prerelease'] is True
+        return release
+
+    def main():
+        group=sys.argv[1]
+        assert group in {'existing','linux','verify-all'}
+        release=guard()
+        if group=='verify-all':
+            assert {a['name'] for a in release['assets']}==EXISTING|LINUX
+            assert all(a['state']=='uploaded' and a['size']>0 and a.get('digest','').startswith('sha256:') for a in release['assets'])
+            print(json.dumps({'release':release['html_url'],'source':SHA,'assets':[{k:a[k] for k in ['name','id','size','digest','browser_download_url']} for a in release['assets']]},indent=2))
+            return
+        expected=EXISTING if group=='existing' else LINUX
+        files={p.name:p for p in pathlib.Path('artifacts').rglob('*') if p.is_file()}
+        assert set(files)==expected,(set(files),expected)
+        original={a['name']:(a['id'],a['size'],a.get('digest')) for a in release['assets']}
+        hashes={name:sha256file(p) for name,p in files.items()}
+        for name,p in sorted(files.items()):
+            # Re-read immediately before each upload to tolerate another approved package group.
+            fresh=guard()
+            existing={a['name']:a for a in fresh['assets']}
+            if name in existing:
+                assert existing[name]['digest']=='sha256:'+hashes[name],f'Existing asset differs: {name}'
+                continue
+            upload=release['upload_url'].split('{')[0]+'?name='+urllib.parse.quote(name)
+            result=request(upload,p.read_bytes(),'POST','application/octet-stream')
+            assert result['name']==name and result['size']==p.stat().st_size
+            assert result.get('digest')=='sha256:'+hashes[name],result
+            print('Uploaded',name,hashes[name],flush=True)
+        final=guard()
+        assets={a['name']:(a['id'],a['size'],a.get('digest')) for a in final['assets']}
+        assert all(assets.get(n)==v for n,v in original.items()),'An existing release asset changed'
+        assert all(assets[n][2]=='sha256:'+h for n,h in hashes.items())
+        print(final['html_url']);print(json.dumps(hashes,indent=2))
+    if __name__=='__main__': main()
+  PREPARE_EXISTING_SCRIPT: |
+    #!/usr/bin/env python3
+    """Validate original successful build products, then stage only final packages."""
+    import hashlib,json,pathlib,re,shutil,struct,subprocess,tempfile,zipfile,zlib
+    from publish import API,SHA,VERSION,PREFIX,EXISTING,request,guard,sha256file
+    RUNS={38751849122:[11981633034],38751849476:[11982951380,11981869494]}
+
+    def scan(root):
+        pattern=re.compile(br'@[qQ][qQ][.]com|@\x00[qQ]\x00[qQ]\x00[.]\x00c\x00o\x00m\x00')
+        for path in root.rglob('*'):
+            if path.is_file():
+                assert not pattern.search(path.read_bytes()),'Unexpected personal contact: '+str(path)
+        print('Privacy scan passed:',root,flush=True)
+
+    def buildinfo(root):
+        matches=list(root.rglob('BUILD-INFO.json'))
+        assert len(matches)==1,('Expected one BUILD-INFO',matches)
+        info=json.loads(matches[0].read_text())
+        assert info['commit']==SHA and info['version']==VERSION,info
+        assert info['repository']=='https://github.com/reliable-ly0411/PlotJuggler-zh-CN'
+        assert info['dataflash_formats']==['BIN']
+        parent=matches[0].parent
+        assert (parent/'DataAPBin.dll').is_file() or (parent/'libDataAPBin.so').is_file()
+        print('Verified build metadata:',info,flush=True)
+        return parent
+
+    def extract_zip(archive,destination):
+        with zipfile.ZipFile(archive) as z:
+            for name in z.namelist():
+                target=(destination/name).resolve()
+                assert target.is_relative_to(destination.resolve()),'Unsafe archive path'
+            z.extractall(destination)
+
+    def extract_ifw(exe,root,portable):
+        # Qt IFW embeds 7z component archives. Validate the 7z start-header CRC
+        # and bounds before carving; every valid archive must extract successfully.
+        merged=root/'payload';merged.mkdir()
+        data=exe.read_bytes(); signature=b"7z\xbc\xaf\x27\x1c"; start=0; count=0
+        while True:
+            pos=data.find(signature,start)
+            if pos<0: break
+            start=pos+len(signature)
+            if pos+32>len(data): continue
+            crc=struct.unpack_from('<I',data,pos+8)[0]
+            if zlib.crc32(data[pos+12:pos+32]) & 0xffffffff != crc: continue
+            offset,size,next_crc=struct.unpack_from('<QQI',data,pos+12)
+            end=pos+32+offset+size
+            if end>len(data) or size==0: continue
+            if zlib.crc32(data[pos+32+offset:end]) & 0xffffffff != next_crc: continue
+            archive=root/f'component-{count}.7z'; archive.write_bytes(data[pos:end])
+            target=root/f'component-{count}'; target.mkdir()
+            subprocess.run(['7z','x','-y',str(archive),'-o'+str(target)],check=True,stdout=subprocess.DEVNULL)
+            for path in target.rglob('*'):
+                if path.is_file():
+                    dest=merged/path.relative_to(target)
+                    dest.parent.mkdir(parents=True,exist_ok=True)
+                    assert not dest.exists(),'Duplicate installer payload path: '+str(dest)
+                    shutil.copyfile(path,dest)
+            count+=1
+            start=end
+        assert count>0,'No complete Qt IFW component archive extracted'
+        # Qt IFW stores already-compressed files directly instead of repacking them.
+        # Verify the embedded Python ZIP against the original portable payload byte-for-byte.
+        pyzip=portable/'python312.zip'; expected=pyzip.read_bytes()
+        pos=data.find(expected)
+        assert pos>=0 and data.find(expected,pos+1)<0,'Missing or ambiguous embedded Python ZIP'
+        assert b'3.18.0-3python312.zip' in data,'Python ZIP is not indexed in the installer'
+        (merged/'python312.zip').write_bytes(data[pos:pos+len(expected)])
+        with zipfile.ZipFile(merged/'python312.zip') as z:
+            assert z.testzip() is None,'Corrupt embedded Python ZIP'
+            for entry in z.infolist():
+                if not entry.is_dir():
+                    assert not re.search(br'@[qQ][qQ][.]com',z.read(entry)),'Unexpected contact in Python ZIP'
+        print('Extracted Qt IFW component archives:',count,'plus verified embedded Python ZIP',flush=True)
+        return merged
+
+    def main():
+        guard()
+        for run_id,ids in RUNS.items():
+            run=request(API+f'/actions/runs/{run_id}')
+            assert run['status']=='completed' and run['conclusion']=='success'
+            assert run['head_sha']==SHA and run['head_repository']['full_name']=='reliable-ly0411/PlotJuggler-zh-CN'
+            for artifact_id in ids:
+                a=request(API+f'/actions/artifacts/{artifact_id}')
+                assert not a['expired'] and a['workflow_run']['id']==run_id and a['workflow_run']['head_sha']==SHA
+                print('Verified source artifact',artifact_id,a['name'],a['digest'],flush=True)
+        files={p.name:p for p in pathlib.Path('downloads').rglob('*') if p.is_file() and p.name in EXISTING}
+        assert set(files)==EXISTING,(set(files),EXISTING)
+        assert len([p for p in pathlib.Path('downloads').rglob('*') if p.is_file() and p.name in EXISTING])==3
+        root=pathlib.Path('inspection').resolve();root.mkdir()
+        app=files[PREFIX+'-x86_64.AppImage'].resolve();app.chmod(0o755)
+        app_root=root/'appimage';app_root.mkdir()
+        subprocess.run([str(app),'--appimage-extract'],cwd=app_root,check=True,stdout=subprocess.DEVNULL)
+        app_payload=buildinfo(app_root)
+        assert subprocess.check_output(['readelf','-h',str(app_payload/'plotjuggler')],text=True).find('Advanced Micro Devices X86-64')>=0
+        portable=root/'portable';portable.mkdir();extract_zip(files[PREFIX+'-Windows-x64.zip'],portable)
+        portable_payload=buildinfo(portable)
+        installer=root/'installer';installer.mkdir()
+        installer_payload=extract_ifw(files[PREFIX+'-Windows-x64.exe'],installer,portable_payload)
+        buildinfo(installer_payload)
+        # Installer payload must exactly match the already tested portable build.
+        portable_files={str(p.relative_to(portable_payload)):p for p in portable_payload.rglob('*') if p.is_file()}
+        installed_files={str(p.relative_to(installer_payload)):p for p in installer_payload.rglob('*') if p.is_file()}
+        assert set(portable_files)==set(installed_files),(set(portable_files)^set(installed_files))
+        for name,p in portable_files.items():
+            assert sha256file(p)==sha256file(installed_files[name]),name
+        for folder in [app_root,portable,installer]:scan(folder)
+        out=pathlib.Path('artifacts');out.mkdir()
+        for name,path in files.items():shutil.copyfile(path,out/name)
+        print('PASS: all three original build products verified; installer payload matches portable exactly')
+    if __name__=='__main__':main()
+jobs:
+  publish-existing:
+    name: Verify and append existing Windows and x86_64 packages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+    - name: Install archive inspection tools
+      run: sudo apt-get update && sudo apt-get install -y p7zip-full binutils
+    - uses: actions/download-artifact@v4
+      with:
+        artifact-ids: '11981633034'
+        run-id: 38751849122
+        github-token: ${{ github.token }}
+        path: downloads/linux
+    - uses: actions/download-artifact@v4
+      with:
+        artifact-ids: 11982951380,11981869494
+        run-id: 38751849476
+        github-token: ${{ github.token }}
+        path: downloads/windows
+    - name: Verify provenance, unpacked payload, and privacy
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        printf '%s\n' "$PUBLISH_SCRIPT" > "$RUNNER_TEMP/publish.py"
+        PYTHONPATH="$RUNNER_TEMP" python3 -c "$PREPARE_EXISTING_SCRIPT"
+    - name: Append verified existing packages
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: python3 -c "$PUBLISH_SCRIPT" existing
