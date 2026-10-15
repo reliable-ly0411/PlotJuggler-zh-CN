@@ -31,20 +31,6 @@ jobs:
       with:
         persist-credentials: false
         ref: ${{ inputs.ref || github.sha }}
-    - name: Setup Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.12'
-    - name: Install Conan
-      uses: conan-io/setup-conan@v1
-      with:
-        cache_packages: false
-    - name: Restore fork Conan cache
-      uses: actions/cache/restore@v4
-      with:
-        path: ~/.conan2
-        key: pj3-conan-win194-v1-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt }}
-        restore-keys: pj3-conan-win194-v1-${{ hashFiles('conanfile.txt') }}-
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
@@ -54,10 +40,47 @@ jobs:
         cache: true
         tools: tools_ifw
         add-tools-to-path: 'true'
+    - name: Select the bundled Python ABI after Qt setup
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+    - name: Install Conan
+      uses: conan-io/setup-conan@v1
+      with:
+        cache_packages: false
+    - name: Restore complete Conan archive
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.temp }}/pj-conan-cache.tgz
+        key: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-
+    - name: Import cached Conan packages
+      shell: pwsh
+      run: |
+        $archive = Join-Path $env:RUNNER_TEMP 'pj-conan-cache.tgz'
+        if (Test-Path -LiteralPath $archive) {
+          conan cache restore $archive
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          conan cache check-integrity "*"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        }
     - name: Conan install
       shell: pwsh
       run: |
         conan install . -of build --build=missing -pr:b=default -s build_type=Release -s compiler.cppstd=17
+    - name: Export complete Conan packages
+      if: github.event_name != 'pull_request'
+      shell: pwsh
+      run: |
+        # Save only after a successful install; interrupted downloads are never cached.
+        conan cache save "*:*" --no-source --file "$env:RUNNER_TEMP/pj-conan-cache.tgz"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+    - name: Preserve complete Conan archive
+      if: github.event_name != 'pull_request'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ runner.temp }}/pj-conan-cache.tgz
+        key: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt }}
     - name: Build Plotjuggler
       shell: pwsh
       run: |
@@ -224,14 +247,3 @@ jobs:
           PlotJuggler-${{ env.PJ_SEMVER }}-Windows-x64.zip
           acceptance/
         if-no-files-found: error
-    - name: Trim Conan cache
-      if: always() && github.event_name != 'pull_request'
-      shell: pwsh
-      run: |
-        conan cache clean "*" --build --source --temp
-    - name: Preserve fork Conan cache
-      if: always() && github.event_name != 'pull_request'
-      uses: actions/cache/save@v4
-      with:
-        path: ~/.conan2
-        key: pj3-conan-win194-v1-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt }}
