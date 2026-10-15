@@ -325,27 +325,27 @@
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;删除所选时间序列&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../curvelist_panel.cpp" line="462"/>
+        <location filename="../curvelist_panel.cpp" line="461"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../curvelist_panel.cpp" line="463"/>
+        <location filename="../curvelist_panel.cpp" line="462"/>
         <source>Do you really want to remove these data?&#10;</source>
         <translation>确定要移除这些数据吗？&#10;</translation>
     </message>
     <message>
-        <location filename="../curvelist_panel.cpp" line="595"/>
+        <location filename="../curvelist_panel.cpp" line="594"/>
         <source>Delete data:&#10;&#10;[Delete All]: remove timeseries and plots.&#10;[Delete Points]: reset data points, but keep plots and timeseries.&#10;</source>
         <translation>删除数据：&#10;&#10;[全部删除]：移除时间序列和曲线图。&#10;[清空数据点]：清空数据点，保留曲线图和时间序列。&#10;</translation>
     </message>
     <message>
-        <location filename="../curvelist_panel.cpp" line="603"/>
+        <location filename="../curvelist_panel.cpp" line="602"/>
         <source>Delete All</source>
         <translation>全部删除</translation>
     </message>
     <message>
-        <location filename="../curvelist_panel.cpp" line="606"/>
+        <location filename="../curvelist_panel.cpp" line="605"/>
         <source>Delete Points</source>
         <translation>清空数据点</translation>
     </message>
@@ -2462,6 +2462,11 @@
         <translation>无法加载自定义表达式 [%1]：&#10;&#10;%2&#10;</translation>
     </message>
     <message>
+        <location filename="../mainwindow.cpp" line="2684"/>
+        <source> sec</source>
+        <translation> 秒</translation>
+    </message>
+    <message>
         <location filename="../mainwindow.cpp" line="2850"/>
         <source>Note</source>
         <translation>提示</translation>
@@ -3080,22 +3085,22 @@
         <translation>界面语言：zh_CN 或 en_US</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="489"/>
+        <location filename="../main.cpp" line="492"/>
         <source>Python disabled</source>
         <translation>Python 已禁用</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="490"/>
+        <location filename="../main.cpp" line="493"/>
         <source>PlotJuggler could not initialize the embedded Python interpreter.</source>
         <translation>PlotJuggler 无法初始化嵌入式 Python 解释器。</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="493"/>
+        <location filename="../main.cpp" line="496"/>
         <source>Python custom functions are disabled for this session. Lua custom functions remain available.&#10;&#10;This usually means the Python standard library expected by this build is not present on the host system (common when running an AppImage on a distro with a different Python version).</source>
         <translation>本次运行已禁用 Python 自定义函数，Lua 自定义函数仍然可用。&#10;&#10;通常是主机缺少此构建所需的 Python 标准库，例如在 Python 版本不同的发行版上运行 AppImage。</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="498"/>
+        <location filename="../main.cpp" line="501"/>
         <source>Don&apos;t show this again</source>
         <translation>不再显示</translation>
     </message>
@@ -3219,6 +3224,7 @@
         <translation>发生未知错误。</translation>
     </message>
     <message>
+        <location filename="../../plotjuggler_plugins/DataStreamSerialPort/datastream_serialport.cpp" line="322"/>
         <location filename="../../plotjuggler_plugins/DataStreamSerialPort/datastream_serialport.cpp" line="344"/>
         <source>Serial Port</source>
         <translation>串口</translation>
@@ -3254,7 +3260,12 @@
         <translation>0 / 0</translation>
     </message>
     <message>
-        <location filename="../curvelist_panel.cpp" line="594"/>
+        <location filename="../curvelist_panel.cpp" line="443"/>
+        <source>%1 of %2</source>
+        <translation>%1 / %2</translation>
+    </message>
+    <message>
+        <location filename="../curvelist_panel.cpp" line="593"/>
         <location filename="../mainwindow.cpp" line="3473"/>
         <source>Warning. Can&apos;t be undone.</source>
         <translation>警告：此操作无法撤销。</translation>
@@ -3356,6 +3367,11 @@
         <location filename="../mainwindow.cpp" line="2962"/>
         <source>Failed to refresh data : </source>
         <translation>刷新数据失败：</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="3257"/>
+        <source>Open Layout</source>
+        <translation>打开布局</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="3291"/>
@@ -3627,6 +3643,7 @@
         <location filename="../../plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_client.cpp" line="634"/>
         <location filename="../../plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_client.cpp" line="643"/>
         <location filename="../../plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_client.cpp" line="679"/>
+        <location filename="../../plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_dialog.cpp" line="22"/>
         <source>Foxglove Bridge</source>
         <translation>Foxglove Bridge</translation>
     </message>
@@ -3685,6 +3702,21 @@
         <translation>客户端已断开，可能是身份验证失败。</translation>
     </message>
     <message>
+        <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="248"/>
+        <source>Select Server Certificate</source>
+        <translation>选择服务器证书</translation>
+    </message>
+    <message>
+        <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="267"/>
+        <source>Select Client Certificate</source>
+        <translation>选择客户端证书</translation>
+    </message>
+    <message>
+        <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="286"/>
+        <source>Select PrivateKey</source>
+        <translation>选择私钥</translation>
+    </message>
+    <message>
         <location filename="../../plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_client.cpp" line="95"/>
         <source>Resume</source>
         <translation>继续</translation>
@@ -3693,6 +3725,7 @@
         <location filename="../../plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_client.cpp" line="360"/>
         <location filename="../../plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_client.cpp" line="377"/>
         <location filename="../../plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_client.cpp" line="426"/>
+        <location filename="../../plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_dialog.cpp" line="24"/>
         <source>WebSocket Client</source>
         <translation>WebSocket 客户端</translation>
     </message>
@@ -3740,6 +3773,16 @@
         <location filename="../../plotjuggler_plugins/ToolboxCSV/toolbox_ui.cpp" line="61"/>
         <source>Click to select all topics</source>
         <translation>点击以选择全部主题</translation>
+    </message>
+    <message>
+        <location filename="../../plotjuggler_plugins/ToolboxCSV/toolbox_ui.cpp" line="151"/>
+        <source>Export data</source>
+        <translation>导出数据</translation>
+    </message>
+    <message>
+        <location filename="../../plotjuggler_plugins/ToolboxCSV/toolbox_ui.cpp" line="167"/>
+        <source>Select export directory</source>
+        <translation>选择导出目录</translation>
     </message>
     <message>
         <location filename="../../plotjuggler_plugins/ToolboxFFT/toolbox_FFT.cpp" line="189"/>
@@ -3870,6 +3913,11 @@
         <translation>每天</translation>
     </message>
     <message>
+        <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/security/cert_dialog.cpp" line="24"/>
+        <source>Certificate &amp; API Key</source>
+        <translation>证书与 API 密钥</translation>
+    </message>
+    <message>
         <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/security/cert_dialog.cpp" line="38"/>
         <source>API key (msco_...)</source>
         <translation>API 密钥（msco_...）</translation>
@@ -3899,6 +3947,11 @@
         <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/security/cert_dialog.cpp" line="75"/>
         <source>When enabled, if the TLS handshake fails and no custom certificate is set, the plugin retries the connection in plaintext. API keys will be sent unencrypted — only enable for trusted networks or local servers.</source>
         <translation>启用后，如果 TLS 握手失败且未设置自定义证书，插件将尝试使用明文连接。API 密钥会以未加密形式发送。请仅在可信网络或本地服务器中启用。</translation>
+    </message>
+    <message>
+        <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/security/cert_dialog.cpp" line="132"/>
+        <source>Select CA Certificate</source>
+        <translation>选择 CA 证书</translation>
     </message>
     <message>
         <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/sequence/sequence_panel.cpp" line="60"/>
@@ -3948,6 +4001,31 @@
         <location filename="../../plotjuggler_plugins/VideoViewer/video_dialog.cpp" line="299"/>
         <source>Decoding file</source>
         <translation>正在解码文件</translation>
+    </message>
+    <message>
+        <location filename="../../plotjuggler_plugins/DataStreamUDP/udp_server.cpp" line="45"/>
+        <source>UDP Server</source>
+        <translation>UDP 服务器</translation>
+    </message>
+    <message>
+        <location filename="../../plotjuggler_plugins/DataStreamWebsocket/websocket_server.cpp" line="41"/>
+        <source>WebSocket Server</source>
+        <translation>WebSocket 服务器</translation>
+    </message>
+    <message>
+        <location filename="../../plotjuggler_plugins/PluginsZcm/config_zcm.cpp" line="77"/>
+        <source>Zcm libraries</source>
+        <translation>ZCM 库</translation>
+    </message>
+    <message>
+        <location filename="../curve_tracker.cpp" line="201"/>
+        <source>&lt;font color=%1&gt;time : %2 (Δ %3)&lt;/font&gt;&lt;br&gt;</source>
+        <translation>&lt;font color=%1&gt;时间： %2 (Δ %3)&lt;/font&gt;&lt;br&gt;</translation>
+    </message>
+    <message>
+        <location filename="../curve_tracker.cpp" line="209"/>
+        <source>&lt;font color=%1&gt;time : %2&lt;/font&gt;&lt;br&gt;</source>
+        <translation>&lt;font color=%1&gt;时间： %2&lt;/font&gt;&lt;br&gt;</translation>
     </message>
 </context>
 <context>
@@ -4145,6 +4223,11 @@
         <location filename="../tabbedplotwidget.cpp" line="72"/>
         <source>&amp;Save plots to file</source>
         <translation>保存曲线图到文件(&amp;S)</translation>
+    </message>
+    <message>
+        <location filename="../tabbedplotwidget.cpp" line="141"/>
+        <source>tab%1</source>
+        <translation>标签%1</translation>
     </message>
     <message>
         <location filename="../tabbedplotwidget.cpp" line="254"/>

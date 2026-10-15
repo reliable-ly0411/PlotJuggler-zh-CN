@@ -440,8 +440,7 @@ void CurveListPanel::on_lineEditFilter_textChanged(const QString& search_string)
   const auto& [hidden_count, item_count] = _tree_view->hiddenItemsCount();
   const int visible_count = item_count - hidden_count;
 
-  ui->labelNumberDisplayed->setText(QString::number(visible_count) + QString(" of ") +
-                                    QString::number(item_count));
+  ui->labelNumberDisplayed->setText(QObject::tr("%1 of %2").arg(visible_count).arg(item_count));
   if (updated)
   {
     emit hiddenItemsChanged();

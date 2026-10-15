@@ -148,7 +148,7 @@ ToolBoxUI::ToolBoxUI()
       const QString default_name =
           QDir(last_dir).filePath(is_csv ? "export.csv" : "export.parquet");
 
-      QString filename = QFileDialog::getSaveFileName(_widget, "Export data", default_name, filter);
+      QString filename = QFileDialog::getSaveFileName(_widget, QObject::tr("Export data"), default_name, filter);
       if (filename.isEmpty())
       {
         return;
@@ -164,7 +164,7 @@ ToolBoxUI::ToolBoxUI()
     else
     {
       QString dir_path =
-          QFileDialog::getExistingDirectory(_widget, "Select export directory", last_dir);
+          QFileDialog::getExistingDirectory(_widget, QObject::tr("Select export directory"), last_dir);
       if (dir_path.isEmpty())
       {
         return;

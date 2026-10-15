@@ -138,7 +138,7 @@ PlotDocker* TabbedPlotWidget::addTab(QString tab_name)
 
   if (tab_name.isEmpty())
   {
-    tab_name = QString("tab%1").arg(tab_suffix_count++);
+    tab_name = tr("tab%1").arg(tab_suffix_count++);
   }
 
   auto docker = new PlotDocker(tab_name, _mapped_data, this);

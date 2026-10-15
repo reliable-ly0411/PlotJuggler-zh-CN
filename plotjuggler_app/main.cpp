@@ -470,6 +470,9 @@ int main(int argc, char* argv[])
       QFile report(output + "/ui.json");
       const bool report_ok = report.open(QIODevice::WriteOnly);
       if (report_ok) report.write(QJsonDocument(result).toJson());
+      // Follow the same closeEvent path as a user closing the app, including
+      // stopping timers and releasing plugins while QApplication is alive.
+      window->close();
       app.exit(menu_ok && language_ok && image_ok && data_ok && report_ok ? 0 : 20);
     });
   }
@@ -516,7 +519,7 @@ int main(int argc, char* argv[])
   // Check for new releases on GitHub
   QNetworkAccessManager* manager_new_release = new QNetworkAccessManager(&app);
   QObject::connect(
-      manager_new_release, &QNetworkAccessManager::finished, [window](QNetworkReply* reply) {
+      manager_new_release, &QNetworkAccessManager::finished, window, [window](QNetworkReply* reply) {
         if (reply->error())
         {
           qDebug() << "GitHub release check error:" << reply->error() << reply->errorString();
@@ -550,5 +553,7 @@ int main(int argc, char* argv[])
 
   // This fork does not send machine identifiers or usage telemetry.
 
-  return app.exec();
+  const int exit_code = app.exec();
+  delete window;
+  return exit_code;
 }

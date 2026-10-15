@@ -19,7 +19,7 @@ FoxgloveDialog::FoxgloveDialog(const FoxgloveClientConfig& config)
   : QDialog(nullptr), ui(new Ui::FoxgloveDialog)
 {
   ui->setupUi(this);
-  setWindowTitle("Foxglove Bridge");
+  setWindowTitle(QObject::tr("Foxglove Bridge"));
 
   ui->lineEditURL->setText(config.url);
   ui->lineEditURL->setValidator(

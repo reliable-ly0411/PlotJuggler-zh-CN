@@ -21,7 +21,7 @@
 
 CertDialog::CertDialog(QWidget* parent) : QDialog(parent)
 {
-  setWindowTitle("Certificate & API Key");
+  setWindowTitle(QObject::tr("Certificate & API Key"));
   setMinimumWidth(450);
 
   auto* layout = new QVBoxLayout(this);
@@ -129,7 +129,7 @@ void CertDialog::closeEvent(QCloseEvent* event)
 void CertDialog::onBrowse()
 {
   QString path =
-      QFileDialog::getOpenFileName(this, "Select CA Certificate", QString(), "PEM files (*.pem)");
+      QFileDialog::getOpenFileName(this, QObject::tr("Select CA Certificate"), QString(), "PEM files (*.pem)");
   if (!path.isEmpty())
   {
     cert_edit_->setText(path);

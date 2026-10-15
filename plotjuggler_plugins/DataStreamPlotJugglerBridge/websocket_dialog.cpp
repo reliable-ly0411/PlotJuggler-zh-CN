@@ -21,7 +21,7 @@ WebsocketDialog::WebsocketDialog(const WebsocketClientConfig& config)
   : QDialog(nullptr), ui(new Ui::WebSocketDialog)
 {
   ui->setupUi(this);
-  setWindowTitle("WebSocket Client");
+  setWindowTitle(QObject::tr("WebSocket Client"));
 
   ui->lineEditURL->setText(config.url);
   ui->lineEditURL->setValidator(

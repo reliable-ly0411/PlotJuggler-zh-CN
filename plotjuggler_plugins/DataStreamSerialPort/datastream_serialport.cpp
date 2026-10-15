@@ -319,7 +319,7 @@ public:
   DatastreamSerialPortDialog() : QDialog(nullptr), ui(new Ui::SerialPortDialog)
   {
     ui->setupUi(this);
-    setWindowTitle("Serial Port");
+    setWindowTitle(QObject::tr("Serial Port"));
 
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);

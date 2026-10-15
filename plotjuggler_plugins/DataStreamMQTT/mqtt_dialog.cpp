@@ -245,7 +245,7 @@ void MQTT_Dialog::onLoadServerCertificate()
   QString directory = settings.value("MQTT_Dialog.loadDirectory", QDir::currentPath()).toString();
 
   QString filename =
-      QFileDialog::getOpenFileName(this, "Select Server Certificate", directory, tr("CRT (*.crt)"));
+      QFileDialog::getOpenFileName(this, QObject::tr("Select Server Certificate"), directory, tr("CRT (*.crt)"));
 
   if (!filename.isEmpty())
   {
@@ -264,7 +264,7 @@ void MQTT_Dialog::onLoadClientCertificate()
   QString directory = settings.value("MQTT_Dialog.loadDirectory", QDir::currentPath()).toString();
 
   QString filename =
-      QFileDialog::getOpenFileName(this, "Select Client Certificate", directory, tr("CRT (*.crt)"));
+      QFileDialog::getOpenFileName(this, QObject::tr("Select Client Certificate"), directory, tr("CRT (*.crt)"));
 
   if (!filename.isEmpty())
   {
@@ -283,7 +283,7 @@ void MQTT_Dialog::onLoadPrivateKey()
   QString directory = settings.value("MQTT_Dialog.loadDirectory", QDir::currentPath()).toString();
 
   QString filename =
-      QFileDialog::getOpenFileName(this, "Select PrivateKey", directory, tr("Key (*.key)"));
+      QFileDialog::getOpenFileName(this, QObject::tr("Select PrivateKey"), directory, tr("Key (*.key)"));
 
   if (!filename.isEmpty())
   {

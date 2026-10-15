@@ -2681,7 +2681,7 @@ void MainWindow::on_streamingSpinBox_valueChanged(int value)
   else
   {
     ui->streamingSpinBox->setStyleSheet("QSpinBox { color: black; }");
-    ui->streamingSpinBox->setSuffix(" sec");
+    ui->streamingSpinBox->setSuffix(tr(" sec"));
   }
 
   if (isStreamingActive() == false)
@@ -3254,7 +3254,7 @@ void MainWindow::on_buttonLoadLayout_clicked()
 
   QString directory_path =
       settings.value("MainWindow.lastLayoutDirectory", QDir::currentPath()).toString();
-  QString filename = QFileDialog::getOpenFileName(this, "Open Layout", directory_path, "*.xml");
+  QString filename = QFileDialog::getOpenFileName(this, QObject::tr("Open Layout"), directory_path, "*.xml");
   if (filename.isEmpty())
   {
     return;
