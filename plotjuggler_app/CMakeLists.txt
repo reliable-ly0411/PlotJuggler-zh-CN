@@ -50,6 +50,8 @@ set(PLOTJUGGLER_SRC
     dummy_data.cpp
     main.cpp
     app_language.cpp
+    localized_meme.cpp
+    localization_checks.cpp
     mainwindow.cpp
     messageparser_base.cpp
     toast_notification.cpp

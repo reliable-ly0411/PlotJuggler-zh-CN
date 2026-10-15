@@ -17,11 +17,11 @@ pattern = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0
 match = pattern.fullmatch(version["version"])
 assert match, version
 assert ".".join(match.groups()[:3]) == core, version
-assert match[4] == "zh.1", version
+assert match[4] == "zh.2", version
 assert match[5] == f"upstream.{version['upstream_version']}.apbin.{version['ardupilot_revision']}.g{version['source_revision']}", version
 for identifier in match[4].split("."):
     assert not (identifier.isdigit() and len(identifier) > 1 and identifier.startswith("0"))
 for path in ("installer/config.xml", "installer/io.plotjuggler.application/meta/package.xml"):
-    assert ET.parse(root / path).getroot().findtext("Version") == core + "-1", path
+    assert ET.parse(root / path).getroot().findtext("Version") == core + "-2", path
 assert ET.parse(root / "package.xml").getroot().findtext("version") == core
 print("PASS: SemVer product, upstream metadata, installer and package versions: " + version["version"])

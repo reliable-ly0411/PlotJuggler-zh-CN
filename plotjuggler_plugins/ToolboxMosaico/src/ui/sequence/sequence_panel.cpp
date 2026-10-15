@@ -70,7 +70,7 @@ SequencePanel::SequencePanel(QWidget* parent) : QWidget(parent)
   });
 
   filter_ = new QLineEdit(this);
-  filter_->setPlaceholderText(QObject::tr("Filter\u2026"));
+  filter_->setPlaceholderText(QObject::tr("Filter..."));
   connect(filter_, &QLineEdit::textChanged, this, &SequencePanel::applyFilter);
 
   regex_btn_ = new QPushButton(QObject::tr(".*"), this);
@@ -92,8 +92,9 @@ SequencePanel::SequencePanel(QWidget* parent) : QWidget(parent)
   connect(picker_, &SequencePickerWidget::filterChanged, this, &SequencePanel::onFilterChanged);
 
   table_ = new QTableWidget(this);
+  table_->setObjectName("mosaicoSequences");
   table_->setColumnCount(3);
-  table_->setHorizontalHeaderLabels({ "Name", "Date", "Size" });
+  table_->setHorizontalHeaderLabels({ QObject::tr("Name"), QObject::tr("Date"), QObject::tr("Size") });
   table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   table_->setSelectionMode(QAbstractItemView::SingleSelection);
   table_->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -176,21 +177,21 @@ void SequencePanel::updateHeader()
   if (list_loading_)
   {
     header_->setText(
-        QStringLiteral("Sequences (loading%1)").arg(QString(loading_frame_ + 1, QLatin1Char('.'))));
+        QObject::tr("Sequences (loading%1)").arg(QString(loading_frame_ + 1, QLatin1Char('.'))));
     return;
   }
 
   if (total_count_ == 0)
   {
-    header_->setText(sequence_list_populated_ ? QStringLiteral("Sequences (none found)") :
-                                                QStringLiteral("Sequences"));
+    header_->setText(sequence_list_populated_ ? QObject::tr("Sequences (none found)") :
+                                                QObject::tr("Sequences"));
     return;
   }
 
-  QString text = QStringLiteral("Sequences (%1/%2)").arg(visible_count_).arg(total_count_);
+  QString text = QObject::tr("Sequences (%1/%2)").arg(visible_count_).arg(total_count_);
   if (metadata_loading_)
   {
-    text += QStringLiteral(" - loading details%1 %2/%3")
+    text += QObject::tr(" - loading details%1 %2/%3")
                 .arg(QString(loading_frame_ + 1, QLatin1Char('.')))
                 .arg(metadata_loaded_)
                 .arg(metadata_total_);
@@ -509,7 +510,7 @@ void SequencePanel::contextMenuEvent(QContextMenuEvent* event)
   QString name = name_item->text();
 
   QMenu menu(this);
-  auto* copy = menu.addAction("Copy name");
+  auto* copy = menu.addAction(QObject::tr("Copy name"));
   connect(copy, &QAction::triggered, this, [name]() { QApplication::clipboard()->setText(name); });
 
   menu.exec(event->globalPos());

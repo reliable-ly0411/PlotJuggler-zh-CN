@@ -2,7 +2,7 @@
 <Package>
     <DisplayName>PlotJuggler zh-CN</DisplayName>
     <Description>Simplified Chinese UI and bundled ArduPilot DataFlash BIN loader.</Description>
-    <Version>3.18.0-1</Version>
+    <Version>3.18.0-2</Version>
     <ReleaseDate>2026-10-15</ReleaseDate>
     <Licenses>
         <License name="MPL-2.0" file="license_mpl.txt" />

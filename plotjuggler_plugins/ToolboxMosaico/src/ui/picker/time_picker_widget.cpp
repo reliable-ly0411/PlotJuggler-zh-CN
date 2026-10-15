@@ -36,8 +36,9 @@ TimePickerWidget::TimePickerWidget(QWidget* parent) : QWidget(parent)
     minute->setSpecialValueText("00");
 
     ampm = new QComboBox;
-    ampm->addItems({ "AM", "PM" });
-    ampm->setFixedWidth(50);
+    ampm->addItem(QObject::tr("AM"), "AM");
+    ampm->addItem(QObject::tr("PM"), "PM");
+    ampm->setMinimumWidth(60);
 
     layout->addWidget(dateLabel);
     layout->addWidget(hour);
@@ -105,12 +106,12 @@ QTime TimePickerWidget::timeFrom12Hour(int hour12, int minute, const QString& am
 
 QTime TimePickerWidget::fromTime() const
 {
-  return timeFrom12Hour(from_hour_->value(), from_minute_->value(), from_am_pm_->currentText());
+  return timeFrom12Hour(from_hour_->value(), from_minute_->value(), from_am_pm_->currentData().toString());
 }
 
 QTime TimePickerWidget::toTime() const
 {
-  return timeFrom12Hour(to_hour_->value(), to_minute_->value(), to_am_pm_->currentText());
+  return timeFrom12Hour(to_hour_->value(), to_minute_->value(), to_am_pm_->currentData().toString());
 }
 
 bool TimePickerWidget::isEveryDay() const

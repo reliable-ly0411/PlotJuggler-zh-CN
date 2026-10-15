@@ -9,6 +9,9 @@ include(cmake/ForkVersion.cmake)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(MSVC)
+  add_compile_options(/utf-8)
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -324,6 +327,18 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/plotjuggler.svg
 
 add_subdirectory(plotjuggler_app)
 add_subdirectory(plotjuggler_plugins)
+
+if(PJ_BUILD_FORK_TESTS)
+  add_executable(pj_time_picker_test tests/time_picker_test.cpp
+    plotjuggler_plugins/ToolboxMosaico/src/ui/picker/time_picker_widget.cpp
+    plotjuggler_plugins/ToolboxMosaico/src/ui/picker/time_picker_widget.h)
+  target_include_directories(pj_time_picker_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(pj_time_picker_test PRIVATE Qt5::Widgets)
+  add_dependencies(pj_time_picker_test pj_translations)
+  add_test(NAME LocalizedTimePicker COMMAND pj_time_picker_test
+    ${CMAKE_CURRENT_BINARY_DIR}/plotjuggler_app/plotjuggler_zh_CN.qm)
+  set_tests_properties(LocalizedTimePicker PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
 
 # # Install targets
 

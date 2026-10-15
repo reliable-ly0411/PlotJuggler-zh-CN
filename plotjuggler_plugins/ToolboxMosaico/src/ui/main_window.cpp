@@ -67,7 +67,7 @@ void guardedSlot(ElidedLabel* status, const char* where, Fn&& fn)
     qWarning() << "[Mosaico]" << where << "exception:" << e.what();
     if (status)
     {
-      status->setText(QStringLiteral("Mosaico error (%1): %2")
+      status->setText(QObject::tr("Mosaico error (%1): %2")
                           .arg(QString::fromUtf8(where), QString::fromUtf8(e.what())));
     }
   }
@@ -76,7 +76,7 @@ void guardedSlot(ElidedLabel* status, const char* where, Fn&& fn)
     qWarning() << "[Mosaico]" << where << "exception: unknown";
     if (status)
     {
-      status->setText(QStringLiteral("Mosaico error (%1): unknown").arg(QString::fromUtf8(where)));
+      status->setText(QObject::tr("Mosaico error (%1): unknown").arg(QString::fromUtf8(where)));
     }
   }
 }
@@ -90,7 +90,7 @@ void showCopyableWarning(QWidget* parent, const QString& title, const QString& m
 {
   QMessageBox box(QMessageBox::Warning, title, message, QMessageBox::Ok, parent);
   box.setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
-  auto* copy_btn = box.addButton("Copy to clipboard", QMessageBox::ActionRole);
+  auto* copy_btn = box.addButton(QObject::tr("Copy to clipboard"), QMessageBox::ActionRole);
   QObject::connect(copy_btn, &QPushButton::clicked,
                    [message]() { QApplication::clipboard()->setText(message); });
   box.setDefaultButton(QMessageBox::Ok);
@@ -256,7 +256,7 @@ void MainWindow::buildLayout()
   status_label_ = new ElidedLabel(this);
   vlayout->addWidget(status_label_);
 
-  setStatus("Click Connect to load sequences");
+  setStatus(QObject::tr("Click Connect to load sequences"));
 }
 
 // ---------------------------------------------------------------------------
@@ -354,7 +354,7 @@ void MainWindow::onSequenceListStarted(const std::vector<SequenceInfo>& sequence
     all_sequences_ = sequences;
     sequence_panel_->populateSequences(sequences);
     sequence_panel_->setMetadataLoadingProgress(0, static_cast<qint64>(sequences.size()));
-    setStatus(QString("Connected - loading details for %1 sequence(s)").arg(sequences.size()));
+    setStatus(QObject::tr("Connected - loading details for %1 sequence(s)").arg(sequences.size()));
   });
 }
 
@@ -380,7 +380,7 @@ void MainWindow::onSequenceInfoReady(const SequenceInfo& sequence, qint64 comple
 
     sequence_panel_->updateSequence(sequence);
     sequence_panel_->setMetadataLoadingProgress(completed, total);
-    setStatus(QString("Loading sequence details %1/%2").arg(completed).arg(total));
+    setStatus(QObject::tr("Loading sequence details %1/%2").arg(completed).arg(total));
   });
 }
 
@@ -405,7 +405,7 @@ void MainWindow::onSequencesReady(const std::vector<SequenceInfo>& sequences)
     error_context_ = ErrorContext::None;
     connection_mode_ =
         attempted_plaintext_fallback_ ? ConnectionMode::Insecure : ConnectionMode::Secure;
-    setStatus(QString("Connected \u2014 %1 sequence(s)").arg(sequences.size()));
+    setStatus(QObject::tr("Connected \u2014 %1 sequence(s)").arg(sequences.size()));
 
     // Build metadata schema for the query bar.
     std::map<std::string, std::set<std::string>> key_values_set;
@@ -460,7 +460,7 @@ void MainWindow::onSequenceSelected(const QString& sequence_name)
     }
   }
 
-  setStatus("Loading topics for " + sequence_name + QString::fromUtf8("\u2026"));
+  setStatus(QObject::tr("Loading topics for %1...").arg(sequence_name));
   QMetaObject::invokeMethod(worker_, "fetchTopics", Qt::QueuedConnection,
                             Q_ARG(QString, sequence_name));
 }
@@ -473,11 +473,11 @@ void MainWindow::onTopicsReady(const QStringList& names, const std::vector<Topic
     topic_panel_->populateTopics(infos);
     if (names.isEmpty())
     {
-      setStatus("No topics returned \u2014 enter a topic name manually if needed");
+      setStatus(QObject::tr("No topics returned \u2014 enter a topic name manually if needed"));
     }
     else
     {
-      setStatus(QString("%1 topic(s) available").arg(names.size()));
+      setStatus(QObject::tr("%1 topic(s) available").arg(names.size()));
     }
   });
 }
@@ -535,13 +535,12 @@ void MainWindow::onTopicsSelected(const QString& /*sequence_name*/, const QStrin
 
   if (topic_names.size() == 1)
   {
-    setStatus("Selected " + topic_names.first() +
-              QString::fromUtf8(" \u2014 adjust range and click Fetch"));
+    setStatus(QObject::tr("Selected %1 - adjust range and click Download").arg(topic_names.first()));
   }
   else
   {
     setStatus(
-        QString("Selected %1 topics \u2014 adjust range and click Fetch").arg(topic_names.size()));
+        QObject::tr("Selected %1 topics \u2014 adjust range and click Fetch").arg(topic_names.size()));
   }
 }
 
@@ -651,7 +650,7 @@ void MainWindow::requestFetchCancel()
     download_stats_dialog_->markCancelling();
   }
   fetch_button_->setEnabled(false);
-  setStatus(QStringLiteral("Cancelling..."));
+  setStatus(QObject::tr("Cancelling..."));
 }
 
 void MainWindow::finishFetchTopic(const QString& topic_name, bool success)
@@ -711,12 +710,12 @@ void MainWindow::finishFetchBatch()
     {
       worker_->resetCancel();
     }
-    setStatus(QStringLiteral("Download cancelled"));
+    setStatus(QObject::tr("Download cancelled"));
     emit fetchCancelled();
   }
   else
   {
-    setStatus(QStringLiteral("Loaded selected data"));
+    setStatus(QObject::tr("Loaded selected data"));
     emit allFetchesComplete();
   }
 
@@ -731,11 +730,11 @@ void MainWindow::finishFetchBatch()
       lines << (it.value() > 1 ? QStringLiteral("  [%1x] %2").arg(it.value()).arg(it.key()) :
                                  QStringLiteral("  %1").arg(it.key()));
     }
-    const QString title = total == 1 ? QStringLiteral("Fetch Error") :
-                                       QStringLiteral("Fetch Errors (%1 topics)").arg(total);
+    const QString title = total == 1 ? QObject::tr("Fetch Error") :
+                                       QObject::tr("Fetch Errors (%1 topics)").arg(total);
     const QString body =
         total == 1 ? lines.first().trimmed() :
-                     QStringLiteral("%1 topic(s) failed:\n\n%2").arg(total).arg(lines.join("\n"));
+                     QObject::tr("%1 topic(s) failed:\n\n%2").arg(total).arg(lines.join("\n"));
     showCopyableWarning(this, title, body);
     pending_fetch_errors_.clear();
   }
@@ -759,10 +758,10 @@ void MainWindow::onFetchProgress(const QString& topic_name, qint64 bytes, qint64
   }
   else
   {
-    body = QStringLiteral("%1 decoded").arg(formatBytes(bytes));
+    body = QObject::tr("%1 decoded").arg(formatBytes(bytes));
   }
   setStatus(
-      QStringLiteral("Fetching %1 (%2/%3): %4").arg(topic_name).arg(idx).arg(total).arg(body));
+      QObject::tr("Fetching %1 (%2/%3): %4").arg(topic_name).arg(idx).arg(total).arg(body));
 }
 
 void MainWindow::onTopicFetchError(const QString& topic_name, const QString& message)
@@ -777,7 +776,7 @@ void MainWindow::onTopicFetchError(const QString& topic_name, const QString& mes
     const bool cancel_drain = cancelling_fetch_;
     if (!cancel_drain)
     {
-      setStatus("Error: " + message);
+      setStatus(QObject::tr("Error: ") + message);
       pending_fetch_errors_[message]++;
     }
     finishFetchTopic(topic_name, false);
@@ -817,7 +816,7 @@ void MainWindow::onFetchClicked()
 
   fetch_button_->setText(QObject::tr("Cancel"));
   fetch_button_->setToolTip(QObject::tr("Cancel the in-flight download"));
-  setStatus(QString::fromUtf8("Fetching %1 topic(s)…").arg(pending_fetches_));
+  setStatus(QObject::tr("Fetching %1 topic(s)...").arg(pending_fetches_));
   if (!download_stats_dialog_)
   {
     download_stats_dialog_ = new DownloadStatsDialog(this);
@@ -873,7 +872,7 @@ void MainWindow::onFetchError(const QString& message)
         in_connect && !attempted_plaintext_fallback_ && cert_path_.isEmpty() && !allow_insecure_;
     if (insecure_blocked)
     {
-      display_msg = "Connectivity to insecure channels is disabled, visit certificate settings";
+      display_msg = QObject::tr("Connectivity to insecure channels is disabled, visit certificate settings");
     }
 
     const bool cancel_drain = cancelling_fetch_ && error_context_ == ErrorContext::Fetch;
@@ -888,14 +887,14 @@ void MainWindow::onFetchError(const QString& message)
 
     if (!cancel_drain)
     {
-      setStatus("Error: " + display_msg);
+      setStatus(QObject::tr("Error: ") + display_msg);
     }
 
     // Popup on explicit clicks and on the insecure-blocked case — but never
     // during a cancel drain; each drained topic would otherwise spam a popup.
     if (!cancel_drain && (error_context_ == ErrorContext::ExplicitConnect || insecure_blocked))
     {
-      showCopyableWarning(this, "Connection Error", display_msg);
+      showCopyableWarning(this, QObject::tr("Connection Error"), display_msg);
     }
 
     if (error_context_ == ErrorContext::Fetch)
@@ -939,7 +938,7 @@ void MainWindow::onRefreshClicked()
 
   refresh_button_->setEnabled(false);
   sequence_panel_->setLoading(true);
-  setStatus(QString::fromUtf8("Refreshing\u2026"));
+  setStatus(QObject::tr("Refreshing\u2026"));
   error_context_ = ErrorContext::ExplicitConnect;
   QMetaObject::invokeMethod(worker_, "fetchSequences", Qt::QueuedConnection);
 }
@@ -989,26 +988,26 @@ void MainWindow::connectToServer(bool explicit_connect)
     // Stale connection_mode_ from a previous session could misleadingly
     // suffix this error with "(secure connection)". Clear it first.
     connection_mode_ = ConnectionMode::None;
-    setStatus("Error: " + message);
+    setStatus(QObject::tr("Error: ") + message);
     if (explicit_connect)
     {
-      showCopyableWarning(this, "Invalid input", message);
+      showCopyableWarning(this, QObject::tr("Invalid input"), message);
     }
   };
 
   if (!isPrintableAscii(host_port) || !host_port.contains(QLatin1Char(':')))
   {
-    fail("Server must be host:port in printable ASCII.");
+    fail(QObject::tr("Server must be host:port in printable ASCII."));
     return;
   }
   if (!isPrintableAscii(cert_path_))
   {
-    fail("TLS certificate path contains invalid characters.");
+    fail(QObject::tr("TLS certificate path contains invalid characters."));
     return;
   }
   if (!api_key_.isEmpty() && !isPrintableAscii(api_key_.trimmed()))
   {
-    fail("API key contains invalid characters (control or non-ASCII bytes).");
+    fail(QObject::tr("API key contains invalid characters (control or non-ASCII bytes)."));
     return;
   }
 
@@ -1038,9 +1037,9 @@ void MainWindow::connectToServer(bool explicit_connect)
 
   error_context_ = explicit_connect ? ErrorContext::ExplicitConnect : ErrorContext::AutoConnect;
   connect_button_->setEnabled(false);
-  connect_button_->setText(QString::fromUtf8("Connecting\u2026"));
+  connect_button_->setText(QObject::tr("Connecting\u2026"));
   sequence_panel_->setLoading(true);
-  setStatus(QString::fromUtf8("Connecting\u2026"));
+  setStatus(QObject::tr("Connecting\u2026"));
   QMetaObject::invokeMethod(worker_, "fetchSequences", Qt::QueuedConnection);
 }
 
@@ -1252,10 +1251,10 @@ void MainWindow::setStatus(const QString& message)
   switch (connection_mode_)
   {
     case ConnectionMode::Secure:
-      status_label_->setText(message + QStringLiteral(" (secure connection)"));
+      status_label_->setText(message + QObject::tr(" (secure connection)"));
       return;
     case ConnectionMode::Insecure:
-      status_label_->setText(message + QStringLiteral(" (insecure connection)"));
+      status_label_->setText(message + QObject::tr(" (insecure connection)"));
       return;
     case ConnectionMode::None:
       status_label_->setText(message);

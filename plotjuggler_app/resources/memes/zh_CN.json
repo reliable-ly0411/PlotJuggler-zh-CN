@@ -1,0 +1,2723 @@
+{
+  "schema": 1,
+  "language": "zh_CN",
+  "policy": "Translate meme prose and UI labels; preserve product/code identifiers and source attribution. English mode uses unmodified originals.",
+  "images": [
+    {
+      "id": 0,
+      "regions": [
+        {
+          "rect": [
+            37,
+            26,
+            43,
+            7
+          ],
+          "source": "YOUR LOG",
+          "text": "你的日志",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "regions": [],
+      "note": "Only product names PlotJuggler and MATLAB; preserved verbatim."
+    },
+    {
+      "id": 2,
+      "regions": [
+        {
+          "rect": [
+            26,
+            85,
+            50,
+            12
+          ],
+          "source": "USING PLOTJUGGLER",
+          "text": "使用 PlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "regions": [
+        {
+          "rect": [
+            24,
+            14,
+            15,
+            18
+          ],
+          "source": "debug with printf",
+          "text": "用 printf\n调试",
+          "style": "green"
+        },
+        {
+          "rect": [
+            27,
+            3,
+            8,
+            4
+          ],
+          "source": "LEFT",
+          "text": "左侧",
+          "style": "yellow"
+        },
+        {
+          "rect": [
+            23,
+            7,
+            13,
+            4
+          ],
+          "source": "EXIT 12",
+          "text": "出口 12",
+          "style": "green"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "regions": [
+        {
+          "rect": [
+            3,
+            10,
+            53,
+            8
+          ],
+          "source": "IS THIS DEBUGGING?",
+          "text": "这就是调试吗？",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "regions": [
+        {
+          "rect": [
+            16,
+            0,
+            68,
+            15
+          ],
+          "source": "ONE DOES NOT SIMPLY",
+          "text": "绘制数据",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            32,
+            83,
+            36,
+            15
+          ],
+          "source": "PLOT DATA",
+          "text": "可没那么简单",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "regions": [
+        {
+          "rect": [
+            39,
+            1,
+            23,
+            15
+          ],
+          "source": "PLOTS,",
+          "text": "图表，",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            18,
+            81,
+            62,
+            15
+          ],
+          "source": "PLOTS EVERYWHERE",
+          "text": "到处都是图表",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "regions": [
+        {
+          "rect": [
+            26,
+            1,
+            48,
+            13
+          ],
+          "source": "LOT OF DATA...",
+          "text": "好多数据…",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            2,
+            83,
+            96,
+            15
+          ],
+          "source": "I SHOULD USE PLOTJUGGLER",
+          "text": "该用 PlotJuggler 了",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "regions": [
+        {
+          "rect": [
+            16,
+            2,
+            66,
+            17
+          ],
+          "source": "I DON'T ALWAYS VISUALIZE DATA",
+          "text": "我不常做数据可视化",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            9,
+            82,
+            82,
+            16
+          ],
+          "source": "BUT WHEN I DO, I USE PLOTJUGGLER",
+          "text": "但只要做，就用 PlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "regions": [
+        {
+          "rect": [
+            16,
+            2,
+            67,
+            15
+          ],
+          "source": "IF YOU CAN FINALLY LEARN TO USE PLOTJUGGLER",
+          "text": "要是你终于学会用 PlotJuggler",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            7,
+            85,
+            86,
+            13
+          ],
+          "source": "THAT WOULD BE GREAT",
+          "text": "那可就太好了",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "regions": [
+        {
+          "rect": [
+            4,
+            28,
+            92,
+            6
+          ],
+          "source": "I HAVE NEVER USED PLOTJUGGLER",
+          "text": "我从没用过 PlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "regions": [
+        {
+          "rect": [
+            21,
+            1,
+            58,
+            9
+          ],
+          "source": "SO YOU TELLING ME...",
+          "text": "所以你的意思是…",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            0,
+            87,
+            99,
+            12
+          ],
+          "source": "PLOTJUGGLER DOES THAT?",
+          "text": "PlotJuggler 还能这样？",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "regions": [
+        {
+          "rect": [
+            38,
+            1,
+            24,
+            10
+          ],
+          "source": "WELCOME",
+          "text": "欢迎",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            17,
+            84,
+            66,
+            15
+          ],
+          "source": "ENJOY PLOTJUGGLER",
+          "text": "尽情使用 PlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "regions": [
+        {
+          "rect": [
+            16,
+            7,
+            67,
+            25
+          ],
+          "source": "PLOT ALL THE DATA",
+          "text": "把所有数据都画出来",
+          "style": "light"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "regions": [
+        {
+          "rect": [
+            13,
+            2,
+            75,
+            19
+          ],
+          "source": "YOUR DEBUGGING WORKFLOW",
+          "text": "你的调试流程",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "regions": [
+        {
+          "rect": [
+            10,
+            5,
+            85,
+            11
+          ],
+          "source": "THIS TOOL CALLED...",
+          "text": "这个工具叫做…",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "regions": [
+        {
+          "rect": [
+            32,
+            1,
+            36,
+            13
+          ],
+          "source": "COME ON!",
+          "text": "来吧！",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            10,
+            72,
+            81,
+            26
+          ],
+          "source": "OPEN PLOTJUGGLER AND CHECK THE DATA!",
+          "text": "打开 PlotJuggler\n看看数据！",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "regions": [
+        {
+          "rect": [
+            2,
+            5,
+            93,
+            20
+          ],
+          "source": "PLOTJUGGLER IS A MACHINE",
+          "text": "PlotJuggler 是台机器",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            5,
+            35,
+            53,
+            12
+          ],
+          "source": "THAT TURNS",
+          "text": "能把",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            52,
+            48,
+            33,
+            11
+          ],
+          "source": "DATA",
+          "text": "数据",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            9,
+            63,
+            23,
+            12
+          ],
+          "source": "INTO",
+          "text": "变成",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            42,
+            80,
+            42,
+            12
+          ],
+          "source": "PLOTS",
+          "text": "图表",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "regions": [],
+      "note": "Only the product name PlotJuggler; preserved verbatim."
+    },
+    {
+      "id": 19,
+      "regions": [],
+      "note": "Product names rqt_plot and PlotJuggler; preserved verbatim."
+    },
+    {
+      "id": 20,
+      "regions": [
+        {
+          "rect": [
+            55,
+            4,
+            44,
+            18
+          ],
+          "source": "How do you plot topics?",
+          "text": "你怎么绘制主题数据？",
+          "style": "light"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "regions": [
+        {
+          "rect": [
+            41,
+            3,
+            18,
+            12
+          ],
+          "source": "DATA",
+          "text": "数据",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            33,
+            84,
+            34,
+            13
+          ],
+          "source": "IN PLOTS!",
+          "text": "变成图表啦！",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "regions": [
+        {
+          "rect": [
+            2,
+            6,
+            96,
+            12
+          ],
+          "source": "ME, DEVELOPING PLOTJUGGLER",
+          "text": "正在开发 PlotJuggler 的我",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "regions": [
+        {
+          "rect": [
+            10,
+            87,
+            79,
+            11
+          ],
+          "source": "ABSOLUTE VISUALIZATION",
+          "text": "绝对的可视化",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "regions": [
+        {
+          "rect": [
+            15,
+            0,
+            70,
+            14
+          ],
+          "source": "USING PLOTJUGGLER",
+          "text": "使用 PlotJuggler",
+          "style": "light"
+        },
+        {
+          "rect": [
+            23,
+            82,
+            52,
+            16
+          ],
+          "source": "MIND BLOWED",
+          "text": "震撼我一整年",
+          "style": "light"
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "regions": [
+        {
+          "rect": [
+            13,
+            1,
+            74,
+            13
+          ],
+          "source": "I HAVE FOUND THE BUG",
+          "text": "我找到问题了",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            16,
+            84,
+            67,
+            13
+          ],
+          "source": "WITH PLOTJUGGLER",
+          "text": "多亏了 PlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "regions": [
+        {
+          "rect": [
+            6,
+            0,
+            88,
+            11
+          ],
+          "source": "USING PLOTJUGGLER?",
+          "text": "在用 PlotJuggler？",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            27,
+            87,
+            40,
+            11
+          ],
+          "source": "HAVE FUN",
+          "text": "玩得开心",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "regions": [
+        {
+          "rect": [
+            19,
+            3,
+            62,
+            10
+          ],
+          "source": "TRADE OFFER",
+          "text": "交易提议",
+          "style": "red"
+        },
+        {
+          "rect": [
+            8,
+            17,
+            25,
+            15
+          ],
+          "source": "i receive: Data",
+          "text": "我收到：\n数据",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            57,
+            17,
+            34,
+            15
+          ],
+          "source": "you receive: Plots",
+          "text": "你得到：\n图表",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "regions": [],
+      "note": "PlotJuggler and printf are technical names; preserved verbatim."
+    },
+    {
+      "id": 29,
+      "regions": [
+        {
+          "rect": [
+            40,
+            4,
+            19,
+            12
+          ],
+          "source": "I KNOW",
+          "text": "我会用",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "regions": [
+        {
+          "rect": [
+            11,
+            4,
+            80,
+            14
+          ],
+          "source": "PLOTJUGGLER APPROVED",
+          "text": "PlotJuggler 获得认可",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            6,
+            78,
+            11,
+            14
+          ],
+          "source": "BY",
+          "text": "来自",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            20,
+            82,
+            34,
+            9
+          ],
+          "source": "Chuck Norris",
+          "text": "查克·诺里斯",
+          "style": "red"
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "regions": [
+        {
+          "rect": [
+            24,
+            0,
+            53,
+            13
+          ],
+          "source": "I HAVE NO IDEA",
+          "text": "我完全不知道",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            7,
+            84,
+            86,
+            14
+          ],
+          "source": "WHAT THIS DATA MEANS",
+          "text": "这些数据是什么意思",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "regions": [
+        {
+          "rect": [
+            6,
+            4,
+            89,
+            12
+          ],
+          "source": "MY NAME IS IÑIGO MONTOYA",
+          "text": "我叫伊尼戈·蒙托亚",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            5,
+            87,
+            91,
+            12
+          ],
+          "source": "I USE PLOTJUGGLER, TOO",
+          "text": "我也用 PlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "regions": [
+        {
+          "rect": [
+            44,
+            2,
+            56,
+            47
+          ],
+          "source": "downloading the log",
+          "text": "下载日志",
+          "style": "light"
+        },
+        {
+          "rect": [
+            44,
+            51,
+            56,
+            48
+          ],
+          "source": "using PlotJuggler",
+          "text": "使用 PlotJuggler",
+          "style": "light"
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "regions": [
+        {
+          "rect": [
+            22,
+            1,
+            56,
+            16
+          ],
+          "source": "THESE ARE THE PLOTS",
+          "text": "这些就是",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            18,
+            77,
+            64,
+            18
+          ],
+          "source": "YOU WERE LOOKING FOR",
+          "text": "你要找的图表",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "regions": [
+        {
+          "rect": [
+            18,
+            86,
+            64,
+            12
+          ],
+          "source": "SO HOT RIGHT NOW",
+          "text": "最近火得很",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "regions": [
+        {
+          "rect": [
+            39,
+            1,
+            23,
+            15
+          ],
+          "source": "THIS IS",
+          "text": "这就是",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            25,
+            80,
+            51,
+            16
+          ],
+          "source": "PLOTJUGGLEEER",
+          "text": "PlotJuggler 啊啊啊！",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "regions": [
+        {
+          "rect": [
+            3,
+            8,
+            94,
+            14
+          ],
+          "source": "I SHOULD USE PLOTJUGGLER",
+          "text": "我该用 PlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "regions": [
+        {
+          "rect": [
+            27,
+            83,
+            47,
+            15
+          ],
+          "source": "MORE PLOTS!",
+          "text": "再多来点图表！",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "regions": [
+        {
+          "rect": [
+            22,
+            0,
+            57,
+            9
+          ],
+          "source": "LOT OF DATA?",
+          "text": "数据很多？",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            6,
+            90,
+            89,
+            8
+          ],
+          "source": "CHALLENGE ACCEPTED",
+          "text": "接受挑战",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "regions": [],
+      "note": "Only product name PlotJuggler; preserved verbatim."
+    },
+    {
+      "id": 41,
+      "regions": [
+        {
+          "rect": [
+            36,
+            0,
+            28,
+            14
+          ],
+          "source": "THERE IS",
+          "text": "这数据",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            24,
+            81,
+            53,
+            17
+          ],
+          "source": "TOO MUCH DATA",
+          "text": "也太多了",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "regions": [
+        {
+          "rect": [
+            27,
+            5,
+            46,
+            13
+          ],
+          "source": "MY COLLEAGUES",
+          "text": "我的同事们",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            16,
+            79,
+            69,
+            14
+          ],
+          "source": "DON'T USE PLOTJUGGLER",
+          "text": "居然不用 PlotJuggler",
+          "style": "dark"
+        }
+      ],
+      "preserve": [
+        [
+          2,
+          90,
+          30,
+          8
+        ]
+      ]
+    },
+    {
+      "id": 43,
+      "regions": [
+        {
+          "rect": [
+            8,
+            7,
+            85,
+            10
+          ],
+          "source": "YOU CAN'T UNDERSTAND DATA",
+          "text": "不把数据画出来",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            10,
+            83,
+            80,
+            12
+          ],
+          "source": "IF YOU DON'T PLOT IT",
+          "text": "怎么能看懂呢",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "regions": [
+        {
+          "rect": [
+            16,
+            1,
+            70,
+            7
+          ],
+          "source": "OPENING PLOTJUGGLER",
+          "text": "打开 PlotJuggler",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            9,
+            92,
+            86,
+            7
+          ],
+          "source": "ANALYZING 10.000 TIME SERIES",
+          "text": "分析一万条时间序列",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "regions": [
+        {
+          "rect": [
+            16,
+            1,
+            68,
+            14
+          ],
+          "source": "I TRIED PLOTJUGGLER",
+          "text": "我试了 PlotJuggler",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            14,
+            83,
+            73,
+            15
+          ],
+          "source": "AND IT WAS GLORIOUS",
+          "text": "简直太棒了",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "regions": [],
+      "note": "Technical names rosbags and plotjuggler; preserved verbatim."
+    },
+    {
+      "id": 47,
+      "regions": [
+        {
+          "rect": [
+            14,
+            0,
+            71,
+            14
+          ],
+          "source": "10.000 TIME SERIES",
+          "text": "一万条时间序列",
+          "style": "light"
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "regions": [
+        {
+          "rect": [
+            1,
+            2,
+            59,
+            23
+          ],
+          "source": "THIS BEAUTY CAN PLOT HUNDREDS OF TIME SERIES",
+          "text": "这宝贝能画出\n数百条时间序列",
+          "style": "light"
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "regions": [
+        {
+          "rect": [
+            19,
+            0,
+            62,
+            8
+          ],
+          "source": "Tuning the PID",
+          "text": "调节 PID",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            10,
+            91,
+            80,
+            7
+          ],
+          "source": "WITH PLOTJUGGLER",
+          "text": "用 PlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "regions": [
+        {
+          "rect": [
+            16,
+            3,
+            68,
+            10
+          ],
+          "source": "BACK IN MY DAY...",
+          "text": "想当年…",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            1,
+            81,
+            98,
+            17
+          ],
+          "source": "WE ANALYZED EACH POINT OF THE TIME SERIES",
+          "text": "我们可是逐点分析\n时间序列的",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 51,
+      "regions": [
+        {
+          "rect": [
+            10,
+            4,
+            80,
+            11
+          ],
+          "source": "I USE PLOTJUGGLER",
+          "text": "我用 PlotJuggler",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            21,
+            87,
+            51,
+            11
+          ],
+          "source": "TO DEBUG",
+          "text": "来调试",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "regions": [
+        {
+          "rect": [
+            15,
+            7,
+            70,
+            12
+          ],
+          "source": "NEW PLOTJUGGLER USER",
+          "text": "PlotJuggler 新用户",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            19,
+            89,
+            62,
+            8
+          ],
+          "source": "You son of a bitch, I'm in",
+          "text": "好家伙，我加入！",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 53,
+      "regions": [
+        {
+          "rect": [
+            13,
+            1,
+            73,
+            26
+          ],
+          "source": "AND THIS, MY SON, IS PLOTJUGGLER",
+          "text": "孩子，这就是\nPlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 54,
+      "regions": [
+        {
+          "rect": [
+            30,
+            0,
+            40,
+            14
+          ],
+          "source": "CAN I HAVE...",
+          "text": "能不能再给我…",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            28,
+            83,
+            44,
+            14
+          ],
+          "source": "...MORE PLOTS",
+          "text": "…多一点图表",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 55,
+      "regions": [
+        {
+          "rect": [
+            17,
+            10,
+            22,
+            14
+          ],
+          "source": "so",
+          "text": "好",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            53,
+            22,
+            47,
+            21
+          ],
+          "source": "many",
+          "text": "多",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            50,
+            60,
+            49,
+            22
+          ],
+          "source": "plots",
+          "text": "图表",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 56,
+      "regions": [
+        {
+          "rect": [
+            27,
+            43,
+            42,
+            7
+          ],
+          "source": "DEBUGGING...",
+          "text": "调试中…",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            21,
+            90,
+            58,
+            7
+          ],
+          "source": "WITH PLOTJUGGLER",
+          "text": "用上 PlotJuggler 后",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 57,
+      "regions": [
+        {
+          "rect": [
+            8,
+            10,
+            83,
+            12
+          ],
+          "source": "(visualizing data)",
+          "text": "（数据可视化）",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            15,
+            87,
+            71,
+            11
+          ],
+          "source": "WHAT IS THAT?",
+          "text": "那是什么？",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 58,
+      "regions": [
+        {
+          "rect": [
+            20,
+            0,
+            60,
+            13
+          ],
+          "source": "VISUALIZING DATA",
+          "text": "数据可视化",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            17,
+            82,
+            66,
+            15
+          ],
+          "source": "WITH PLOTJUGGLER",
+          "text": "用 PlotJuggler 来做",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 59,
+      "regions": [
+        {
+          "rect": [
+            40,
+            0,
+            21,
+            13
+          ],
+          "source": "WELL",
+          "text": "嗯…",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            12,
+            85,
+            76,
+            13
+          ],
+          "source": "THAT IS A LOT OF DATA",
+          "text": "这数据量可真大",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 60,
+      "regions": [
+        {
+          "rect": [
+            35,
+            38,
+            34,
+            20
+          ],
+          "source": "my data",
+          "text": "我的数据",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 61,
+      "regions": [
+        {
+          "rect": [
+            31,
+            3,
+            68,
+            6
+          ],
+          "source": "WHAT IS MY PURPOSE MASTER?",
+          "text": "主人，我的使命是什么？",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            40,
+            40,
+            44,
+            11
+          ],
+          "source": "PLOT TIME SERIES",
+          "text": "绘制时间序列",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            50,
+            69,
+            43,
+            9
+          ],
+          "source": "OH MY GOD",
+          "text": "我的天哪",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 62,
+      "regions": [
+        {
+          "rect": [
+            0,
+            1,
+            50,
+            20
+          ],
+          "source": "it's too much data",
+          "text": "“数据太多了”",
+          "style": "light"
+        },
+        {
+          "rect": [
+            50,
+            1,
+            50,
+            20
+          ],
+          "source": "PlotJuggler: LOL",
+          "text": "PlotJuggler：哈哈",
+          "style": "light"
+        }
+      ]
+    },
+    {
+      "id": 63,
+      "regions": [
+        {
+          "rect": [
+            1,
+            34,
+            48,
+            11
+          ],
+          "source": "THE BEST DATA VISUALIZATION TOOL",
+          "text": "最好的\n数据可视化工具",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 64,
+      "regions": [
+        {
+          "rect": [
+            42,
+            17,
+            28,
+            21
+          ],
+          "source": "You should log more data",
+          "text": "你应该\n多记点数据",
+          "style": "card"
+        }
+      ]
+    },
+    {
+      "id": 65,
+      "regions": [
+        {
+          "rect": [
+            17,
+            84,
+            66,
+            13
+          ],
+          "source": "PLOTJUGGLER USERS",
+          "text": "PlotJuggler 用户",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 66,
+      "regions": [
+        {
+          "rect": [
+            6,
+            4,
+            21,
+            4
+          ],
+          "source": "SQUID GAME",
+          "text": "鱿鱼游戏",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            22,
+            59,
+            13,
+            11
+          ],
+          "source": "ME",
+          "text": "我",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 67,
+      "regions": [
+        {
+          "rect": [
+            14,
+            2,
+            66,
+            8
+          ],
+          "source": "ANALYZING HUNDREDS OF TIME SERIES",
+          "text": "分析数百条时间序列",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            40,
+            92,
+            25,
+            7
+          ],
+          "source": "First time?",
+          "text": "第一次？",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 68,
+      "regions": [
+        {
+          "rect": [
+            12,
+            89,
+            77,
+            8
+          ],
+          "source": "HI, FELLOW PROFESSIONAL TOOLS",
+          "text": "嗨，专业工具的朋友们",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            38,
+            68,
+            33,
+            14
+          ],
+          "source": "MUSIC BAND",
+          "text": "乐队",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 69,
+      "regions": [
+        {
+          "rect": [
+            56,
+            50,
+            41,
+            18
+          ],
+          "source": "...AND THEN I OPENED PLOTJUGGLER...",
+          "text": "“…然后我就打开了\nPlotJuggler…”",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 70,
+      "regions": [
+        {
+          "rect": [
+            57,
+            85,
+            27,
+            11
+          ],
+          "source": "PLOTS",
+          "text": "图表",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 71,
+      "regions": [
+        {
+          "rect": [
+            15,
+            32,
+            22,
+            7
+          ],
+          "source": "DATA",
+          "text": "数据",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            61,
+            31,
+            27,
+            8
+          ],
+          "source": "PLOTS",
+          "text": "图表",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 72,
+      "regions": [
+        {
+          "rect": [
+            36,
+            44,
+            42,
+            7
+          ],
+          "source": "SHOW ME THE PLOTS",
+          "text": "把图表给我看",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            27,
+            93,
+            63,
+            7
+          ],
+          "source": "SHOW ME THE PLOOOOOTS !!!",
+          "text": "我要看图——表！！！",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 73,
+      "regions": [
+        {
+          "rect": [
+            32,
+            40,
+            36,
+            10
+          ],
+          "source": "MY LOG...",
+          "text": "我的日志…",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            13,
+            89,
+            71,
+            11
+          ],
+          "source": "...IN PLOTJUGGLER",
+          "text": "…放进 PlotJuggler 之后",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 74,
+      "regions": [
+        {
+          "rect": [
+            1,
+            6,
+            98,
+            11
+          ],
+          "source": "I AM YOUR DEBUGGER NOW",
+          "text": "现在由我来给你调试",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 75,
+      "regions": [
+        {
+          "rect": [
+            29,
+            0,
+            46,
+            13
+          ],
+          "source": "analysing data",
+          "text": "分析数据",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            26,
+            84,
+            48,
+            12
+          ],
+          "source": "IN PLOTJUGGLER",
+          "text": "在 PlotJuggler 里",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 76,
+      "regions": [
+        {
+          "rect": [
+            24,
+            31,
+            56,
+            16
+          ],
+          "source": "professional data analysis tools",
+          "text": "专业数据分析工具",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 77,
+      "regions": [
+        {
+          "rect": [
+            9,
+            5,
+            81,
+            13
+          ],
+          "source": "PLOTJUGGLER DEVELOPER",
+          "text": "PlotJuggler 开发者",
+          "style": "light"
+        },
+        {
+          "rect": [
+            0,
+            90,
+            99,
+            9
+          ],
+          "source": "It ain't much, but it's honest work",
+          "text": "成果不多，但都是踏实干出来的",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 78,
+      "regions": [
+        {
+          "rect": [
+            13,
+            18,
+            56,
+            25
+          ],
+          "source": "OL RELIABLE",
+          "text": "老伙计，靠得住",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 79,
+      "regions": [
+        {
+          "rect": [
+            9,
+            40,
+            81,
+            7
+          ],
+          "source": "Let's go. In and out. 20 minute adventure.",
+          "text": "走吧，速去速回，二十分钟的小冒险。",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            20,
+            91,
+            62,
+            8
+          ],
+          "source": "3 HOURS LATER",
+          "text": "三小时后",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 80,
+      "regions": [
+        {
+          "rect": [
+            12,
+            25,
+            23,
+            7
+          ],
+          "source": "DATA",
+          "text": "数据",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 81,
+      "regions": [
+        {
+          "rect": [
+            4,
+            4,
+            43,
+            18
+          ],
+          "source": "THOUSANDS OF TIME SERIES",
+          "text": "数千条\n时间序列",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            54,
+            4,
+            44,
+            21
+          ],
+          "source": "IN PLOTJUGGLER",
+          "text": "放进\nPlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 82,
+      "regions": [],
+      "note": "PlotJuggler and printf are technical names; preserved verbatim."
+    },
+    {
+      "id": 83,
+      "regions": [
+        {
+          "rect": [
+            27,
+            38,
+            47,
+            8
+          ],
+          "source": "DEBUGGING",
+          "text": "调试",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            11,
+            92,
+            80,
+            7
+          ],
+          "source": "WITH PLOTJUGGLER",
+          "text": "用上 PlotJuggler 后",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 84,
+      "regions": [
+        {
+          "rect": [
+            11,
+            55,
+            77,
+            7
+          ],
+          "source": "I USE PLOTJUGGLER",
+          "text": "我用 PlotJuggler",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            20,
+            80,
+            60,
+            15
+          ],
+          "source": "WE ARE NOT THE SAME",
+          "text": "我们可不一样",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 85,
+      "regions": [
+        {
+          "rect": [
+            36,
+            1,
+            26,
+            12
+          ],
+          "source": "You know,",
+          "text": "你知道吗，",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            14,
+            82,
+            72,
+            12
+          ],
+          "source": "I am a PlotJuggler fan myself",
+          "text": "我自己也是 PlotJuggler 的粉丝",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 86,
+      "regions": [
+        {
+          "rect": [
+            2,
+            29,
+            44,
+            21
+          ],
+          "source": "my boss, congratulating for finding the bug",
+          "text": "老板祝贺我\n找到了问题",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            52,
+            73,
+            36,
+            15
+          ],
+          "source": "me, using PlotJuggler",
+          "text": "我：用了\nPlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 87,
+      "regions": [
+        {
+          "rect": [
+            20,
+            37,
+            29,
+            20
+          ],
+          "source": "Large amount of data",
+          "text": "海量\n数据",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 88,
+      "regions": [
+        {
+          "rect": [
+            61,
+            44,
+            38,
+            5
+          ],
+          "source": "UNEXPECTED DATA",
+          "text": "意料之外的数据",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            38,
+            95,
+            21,
+            5
+          ],
+          "source": "F**K",
+          "text": "卧槽",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 89,
+      "regions": [
+        {
+          "rect": [
+            35,
+            16,
+            21,
+            9
+          ],
+          "source": "BUG",
+          "text": "程序缺陷",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            29,
+            28,
+            42,
+            5
+          ],
+          "source": "You can't defeat me.",
+          "text": "你打不过我。",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            30,
+            61,
+            39,
+            5
+          ],
+          "source": "I know, but he can.",
+          "text": "我知道，但他可以。",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 90,
+      "regions": [
+        {
+          "rect": [
+            6,
+            2,
+            86,
+            10
+          ],
+          "source": "me, trying to find a bug",
+          "text": "正在努力找问题的我",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 91,
+      "regions": [
+        {
+          "rect": [
+            28,
+            43,
+            37,
+            7
+          ],
+          "source": "This is brilliant.",
+          "text": "这个很棒。",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            28,
+            93,
+            36,
+            7
+          ],
+          "source": "But I like this.",
+          "text": "但我喜欢这个。",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 92,
+      "regions": [
+        {
+          "rect": [
+            9,
+            88,
+            81,
+            11
+          ],
+          "source": "Look what they need to mimic a fraction of our power",
+          "text": "看看他们费多大劲，\n也只能模仿我们的一点本事",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 93,
+      "regions": [
+        {
+          "rect": [
+            12,
+            0,
+            77,
+            11
+          ],
+          "source": "SPOTTING THE BUG",
+          "text": "发现问题",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            15,
+            87,
+            67,
+            11
+          ],
+          "source": "IN PLOTJUGGLER",
+          "text": "就在 PlotJuggler 里",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 94,
+      "regions": [
+        {
+          "rect": [
+            44,
+            21,
+            35,
+            10
+          ],
+          "source": "THE BUG",
+          "text": "程序缺陷",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 95,
+      "regions": [
+        {
+          "rect": [
+            1,
+            0,
+            98,
+            11
+          ],
+          "source": "THE PERFECT, DELICATE ART OF JUGGLING",
+          "text": "完美而精妙的杂耍艺术",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            36,
+            82,
+            30,
+            14
+          ],
+          "source": "... PLOTS",
+          "text": "…玩转图表",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 96,
+      "regions": [
+        {
+          "rect": [
+            44,
+            9,
+            44,
+            11
+          ],
+          "source": "YOUR DATA",
+          "text": "你的数据",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 97,
+      "regions": [
+        {
+          "rect": [
+            47,
+            12,
+            17,
+            22
+          ],
+          "source": "C BLOCK",
+          "text": "C 区",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            47,
+            62,
+            17,
+            22
+          ],
+          "source": "C BLOCK",
+          "text": "C 区",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            37,
+            0,
+            27,
+            10
+          ],
+          "source": "Carl...",
+          "text": "卡尔…",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            41,
+            51,
+            38,
+            20
+          ],
+          "source": "...just open PlotJuggler",
+          "text": "只要打开\nPlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 98,
+      "regions": [
+        {
+          "rect": [
+            38,
+            23,
+            33,
+            16
+          ],
+          "source": "DAYS",
+          "text": "天",
+          "style": "card"
+        },
+        {
+          "rect": [
+            14,
+            38,
+            61,
+            17
+          ],
+          "source": "SINCE LAST",
+          "text": "距离上次",
+          "style": "card"
+        },
+        {
+          "rect": [
+            11,
+            60,
+            70,
+            12
+          ],
+          "source": "I used PlotJuggler",
+          "text": "我使用 PlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 99,
+      "regions": [],
+      "note": "Product names PlotJuggler, Rerun and Foxglove; preserved verbatim."
+    },
+    {
+      "id": 100,
+      "regions": [
+        {
+          "rect": [
+            13,
+            0,
+            74,
+            15
+          ],
+          "source": "THAT'S MY SECRET CAP",
+          "text": "队长，这就是我的秘诀",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            20,
+            81,
+            62,
+            14
+          ],
+          "source": "I USE PLOTJUGGLER",
+          "text": "我用 PlotJuggler",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "regions": [
+        {
+          "rect": [
+            12,
+            0,
+            74,
+            12
+          ],
+          "source": "OPENING PLOTJUGGLER",
+          "text": "打开 PlotJuggler",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            35,
+            87,
+            32,
+            11
+          ],
+          "source": "AGAIN!!!",
+          "text": "又来了！！！",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "regions": [
+        {
+          "rect": [
+            24,
+            83,
+            53,
+            12
+          ],
+          "source": "ROBOTICS COMMUNITY",
+          "text": "机器人\n社区",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "regions": [
+        {
+          "rect": [
+            4,
+            4,
+            93,
+            8
+          ],
+          "source": "Average PlotJuggler user",
+          "text": "普普通通的 PlotJuggler 用户",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 104,
+      "regions": [
+        {
+          "rect": [
+            14,
+            1,
+            73,
+            21
+          ],
+          "source": "ENGINEERS DONT EVEN TRY TO DEBUG TIMESERIES ANYMORE",
+          "text": "工程师们现在都懒得\n调试时间序列了",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            14,
+            86,
+            73,
+            12
+          ],
+          "source": "THEY JUST LOOK AT YOU LIKE THIS",
+          "text": "他们就这样看着你",
+          "style": "dark"
+        }
+      ]
+    },
+    {
+      "id": 105,
+      "regions": [
+        {
+          "rect": [
+            59,
+            65,
+            35,
+            23
+          ],
+          "source": "PLOTS MIXED, NOT STIRRED.",
+          "text": "图表要混合，\n不要搅拌。",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            8,
+            78,
+            8,
+            13
+          ],
+          "source": "Shaken? Stirred? I juggle.",
+          "text": "摇匀？\n搅拌？\n我玩转！",
+          "style": "card"
+        },
+        {
+          "rect": [
+            40,
+            82,
+            7,
+            8
+          ],
+          "source": "DATA. OUR MOST VALUABLE ASSET.",
+          "text": "数据：\n最宝贵的\n资产。",
+          "style": "green"
+        },
+        {
+          "rect": [
+            1.3,
+            3.7,
+            14,
+            2.3
+          ],
+          "source": "File View Tools Help",
+          "text": "应用 视图 工具 帮助",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            1.5,
+            6,
+            8,
+            2.3
+          ],
+          "source": "TIMESERIES",
+          "text": "时间序列",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            1.5,
+            53.2,
+            14,
+            2.3
+          ],
+          "source": "File View Tools Help",
+          "text": "应用 视图 工具 帮助",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            1.5,
+            56.2,
+            14,
+            2.5
+          ],
+          "source": "DATA SOURCES",
+          "text": "数据源",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            1.3,
+            66,
+            16,
+            3
+          ],
+          "source": "Selected source",
+          "text": "所选数据源",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            1.2,
+            71.1,
+            5.5,
+            6.3
+          ],
+          "source": "Start End Duration",
+          "text": "开始\n结束\n时长",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            1.4,
+            78.6,
+            12,
+            2.7
+          ],
+          "source": "Add Source",
+          "text": "添加源",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            52,
+            6.5,
+            16,
+            2.5
+          ],
+          "source": "Transform Axes Display Advanced",
+          "text": "变换  坐标轴  显示  高级",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            51.5,
+            10,
+            5,
+            8
+          ],
+          "source": "Operation Scale Offset",
+          "text": "运算\n缩放\n偏移",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            55.5,
+            10,
+            12,
+            3
+          ],
+          "source": "Scale",
+          "text": "缩放",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            51.8,
+            23,
+            9,
+            3
+          ],
+          "source": "Enabled",
+          "text": "启用",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            58.5,
+            26.5,
+            4,
+            2.5
+          ],
+          "source": "Reset",
+          "text": "重置",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            62.5,
+            26.5,
+            4.2,
+            2.5
+          ],
+          "source": "Cancel",
+          "text": "取消",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            66.5,
+            26.5,
+            4.4,
+            2.5
+          ],
+          "source": "Apply",
+          "text": "应用",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            49.5,
+            33,
+            36,
+            3
+          ],
+          "source": "Timeseries Add Drag&Drop Gallery",
+          "text": "时间序列  添加  拖放  图库",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            49.5,
+            36,
+            9,
+            2.8
+          ],
+          "source": "TIMESERIES",
+          "text": "时间序列",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            88,
+            61,
+            6.5,
+            3
+          ],
+          "source": "Streaming",
+          "text": "流式数据",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            1,
+            8.5,
+            11,
+            2.7
+          ],
+          "source": "Filter...",
+          "text": "筛选…",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            18,
+            45,
+            9,
+            2.4
+          ],
+          "source": "Streaming",
+          "text": "流式数据",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            51,
+            3,
+            35,
+            2.8
+          ],
+          "source": "PlotJuggler - Transform (curve:/odom/pose/pose)",
+          "text": "PlotJuggler - 变换（曲线:/odom/pose/pose）",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            51.8,
+            18.6,
+            7.5,
+            2.8
+          ],
+          "source": "Invert",
+          "text": "反向",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            49.5,
+            38.4,
+            9,
+            2.8
+          ],
+          "source": "Filter...",
+          "text": "筛选…",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            4.5,
+            59.5,
+            16,
+            2.5
+          ],
+          "source": "live websocket",
+          "text": "WebSocket 实时连接",
+          "style": "dark"
+        }
+      ]
+    }
+  ]
+}

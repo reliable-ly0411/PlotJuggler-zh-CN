@@ -278,6 +278,7 @@ public slots:
   void onActionFullscreenTriggered();
 
   void on_actionReportBug_triggered();
+  void on_actionTranslationReport_triggered();
   void on_actionCheatsheet_triggered();
   void on_actionSupportPlotJuggler_triggered();
   // TODO ?  void on_actionSaveAllPlotTabs_triggered();

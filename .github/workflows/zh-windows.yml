@@ -96,6 +96,8 @@ jobs:
         $env:PATH = "$env:QT_ROOT_DIR\bin;$env:PATH"
         python tests/check_translations.py --fresh
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        python tests/check_memes.py
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
         python tests/check_version.py
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         ctest --test-dir build -C Release --output-on-failure --no-tests=error

@@ -204,6 +204,7 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
   _curvelist_widget = new CurveListPanel(_mapped_plot_data, _transform_functions, this);
 
   ui->setupUi(this);
+  ui->actionTranslationReport->setData(QUrl("https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/new?template=translation.yml"));
   auto* language_menu = ui->menuHelp->addMenu(tr("Language"));
   auto* language_group = new QActionGroup(this);
   const QString selected_language = qApp->property("interfaceLanguage").toString();
@@ -824,15 +825,27 @@ void MainWindow::initializePlugins()
 
     QAction* action = nullptr;
     const QString toolbox_name = QString::fromUtf8(toolbox->name());
+    // Keep name() stable for plugins and saved layouts; translate only the label.
+    static const char* const toolboxLabels[] = {
+      QT_TRANSLATE_NOOP("ToolboxMenu", "CSV/Parquet Exporter"),
+      QT_TRANSLATE_NOOP("ToolboxMenu", "Fast Fourier Transform"),
+      QT_TRANSLATE_NOOP("ToolboxMenu", "Quaternion to RPY"),
+      QT_TRANSLATE_NOOP("ToolboxMenu", "Reactive Script Editor"),
+      QT_TRANSLATE_NOOP("ToolboxMenu", "Mosaico Cloud Server")
+    };
+    Q_UNUSED(toolboxLabels);
+    const QString label = QCoreApplication::translate("ToolboxMenu", toolbox->name());
     if (isMosaicoToolbox(toolbox_name))
     {
-      action = ui->menuCloudData->addAction(toolbox_name);
+      action = ui->menuCloudData->addAction(label);
     }
     else
     {
-      action = ui->menuTools->addAction(toolbox_name);
+      action = ui->menuTools->addAction(label);
     }
 
+    action->setObjectName("toolbox:" + toolbox_name);
+    action->setProperty("pluginId", toolbox_name);
     int new_index = ui->widgetStack->count();
     auto provided = toolbox->providedWidget();
     auto widget = provided.first;
@@ -3061,6 +3074,11 @@ void MainWindow::on_actionReportBug_triggered()
   QDesktopServices::openUrl(QUrl("https://github.com/PlotJuggler/PlotJuggler/issues"));
 }
 
+void MainWindow::on_actionTranslationReport_triggered()
+{
+  QDesktopServices::openUrl(ui->actionTranslationReport->data().toUrl());
+}
+
 void MainWindow::on_actionShare_the_love_triggered()
 {
   QDesktopServices::openUrl(QUrl("https://twitter.com/intent/"
@@ -3073,7 +3091,8 @@ void MainWindow::on_actionAbout_triggered()
   auto ui = new Ui::AboutDialog();
   ui->setupUi(dialog);
 
-  ui->label_version->setText(tr("Version: %1").arg(QApplication::applicationVersion()));
+  ui->label_version->setText(QString::fromUtf8("版本 / Version: %1").arg(QApplication::applicationVersion()));
+  ui->label_version->setWordWrap(true);
   dialog->setAttribute(Qt::WA_DeleteOnClose);
 
   QFile fileTitle(_skin_path + "/about_window_title.html");
@@ -3082,7 +3101,7 @@ void MainWindow::on_actionAbout_triggered()
     ui->titleTextBrowser->setHtml(fileTitle.readAll());
   }
 
-  QFile fileBody(_skin_path + "/about_window_body.html");
+  QFile fileBody(":/resources/skin/about_window_body.html");
   if (fileBody.open(QIODevice::ReadOnly))
   {
     ui->bodyTextBrowser->setHtml(fileBody.readAll());

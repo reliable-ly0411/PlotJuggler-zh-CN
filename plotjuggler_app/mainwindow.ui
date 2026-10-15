@@ -2098,6 +2098,7 @@
     <addaction name="actionSupportPlotJuggler"/>
     <addaction name="actionShare_the_love"/>
     <addaction name="actionReportBug"/>
+    <addaction name="actionTranslationReport"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
@@ -2132,7 +2133,10 @@
     <string>About</string>
    </property>
   </action>
-  <action name="actionReportBug">
+  <action name="actionTranslationReport">
+  <property name="text"><string>Report a translation issue</string></property>
+ </action>
+ <action name="actionReportBug">
    <property name="icon">
     <iconset resource="resource.qrc">
      <normaloff>:/resources/github.png</normaloff>:/resources/github.png</iconset>

@@ -65,15 +65,16 @@ SequencePickerWidget::SequencePickerWidget(QWidget* parent) : QWidget(parent)
     auto* btn = new QPushButton(text);
     btn->setCheckable(true);
     btn->setCursor(Qt::PointingHandCursor);
+    btn->setObjectName(QString("mosaicoPreset%1").arg(id));
     preset_group_->addButton(btn, id);
     preset_row->addWidget(btn);
     return btn;
   };
 
-  all_button_ = add_preset(kPresetAll, "All");
-  add_preset(kPresetPast24h, "Past 24h");
-  add_preset(kPresetLast7Days, "Last 7 Days");
-  add_preset(kPresetLastMonth, "Last Month");
+  all_button_ = add_preset(kPresetAll, QObject::tr("All"));
+  add_preset(kPresetPast24h, QObject::tr("Past 24h"));
+  add_preset(kPresetLast7Days, QObject::tr("Last 7 Days"));
+  add_preset(kPresetLastMonth, QObject::tr("Last Month"));
 
   all_button_->setChecked(true);
 
@@ -87,7 +88,7 @@ SequencePickerWidget::SequencePickerWidget(QWidget* parent) : QWidget(parent)
   from_edit_ = new QLineEdit;
   from_edit_->setPlaceholderText(QObject::tr("DD/MM/YYYY"));
 
-  auto* arrow_label = new QLabel(QString::fromUtf8("\u2192"));
+  auto* arrow_label = new QLabel(QStringLiteral("\u2192"));
 
   to_edit_ = new QLineEdit;
   // Placeholder is today's date — hints "up to now" when the user doesn't
@@ -122,7 +123,7 @@ SequencePickerWidget::~SequencePickerWidget()
 void SequencePickerWidget::setEarliestDate(const QDate& date)
 {
   from_edit_->setPlaceholderText(date.isValid() ? date.toString("dd/MM/yyyy") :
-                                                  QStringLiteral("DD/MM/YYYY"));
+                                                  QObject::tr("DD/MM/YYYY"));
 }
 
 // --- Overlay creation (deferred until first show, so window() is valid) ---

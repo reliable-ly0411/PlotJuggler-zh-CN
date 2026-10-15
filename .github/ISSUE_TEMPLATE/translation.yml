@@ -1,0 +1,27 @@
+name: 汉化与集成问题 / Translation or fork issue
+description: 报告漏译、误译、布局、启动图片或本分支集成问题。
+title: "[汉化] "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: 版本 / Version
+      description: 从「帮助 → 关于」复制完整版本号。
+    validations:
+      required: true
+  - type: textarea
+    id: location
+    attributes:
+      label: 位置与重现步骤 / Location and steps
+      description: 写明菜单、插件、图片编号或出现提示的操作。
+    validations:
+      required: true
+  - type: textarea
+    id: translation
+    attributes:
+      label: 原文、当前译文与建议 / Text and suggestion
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: 截图或脱敏附件 / Screenshots or sanitized attachments
+      description: 请移除私人飞行日志、GPS 轨迹、机器标识和凭据。

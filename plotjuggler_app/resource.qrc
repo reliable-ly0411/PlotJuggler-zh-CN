@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>resources/memes/zh_CN.json</file>
         <file>cheatsheet/img/tutorial_colormap.png</file>
         <file>cheatsheet/img/tutorial_custom.png</file>
         <file>cheatsheet/img/tutorial_drag_drop.png</file>

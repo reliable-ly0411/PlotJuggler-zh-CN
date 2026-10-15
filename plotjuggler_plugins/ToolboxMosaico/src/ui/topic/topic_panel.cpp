@@ -67,8 +67,9 @@ TopicPanel::TopicPanel(QWidget* parent) : QWidget(parent)
   filter_row->addWidget(regex_btn_);
 
   table_ = new QTableWidget(this);
+  table_->setObjectName("mosaicoTopics");
   table_->setColumnCount(2);
-  table_->setHorizontalHeaderLabels({ "Name", "Size" });
+  table_->setHorizontalHeaderLabels({ QObject::tr("Name"), QObject::tr("Size") });
   table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   table_->setSelectionMode(QAbstractItemView::ExtendedSelection);
   table_->setEditTriggers(QAbstractItemView::NoEditTriggers);

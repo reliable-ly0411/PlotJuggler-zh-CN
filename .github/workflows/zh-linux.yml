@@ -76,6 +76,7 @@ jobs:
     - name: Test DataFlash and translations
       run: |
         python3 tests/check_translations.py --fresh
+        python3 tests/check_memes.py
         python3 tests/check_version.py
         ctest --test-dir build --output-on-failure --no-tests=error
         xvfb-run -a python3 scripts/zh_acceptance.py --app build/bin/plotjuggler --plugin build/bin/libDataAPBin.so --out acceptance

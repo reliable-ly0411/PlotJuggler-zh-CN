@@ -6,6 +6,12 @@
 
 #include "mainwindow.h"
 #include "app_language.h"
+#include "localized_meme.h"
+#include "localization_checks.h"
+#include <QTableWidget>
+#include <QTextBrowser>
+#include <QDialogButtonBox>
+#include <QLabel>
 #include "semver.h"
 #include <iostream>
 #include <QApplication>
@@ -126,8 +132,7 @@ QPixmap getFunnySplashscreen()
   }
 
   settings.setValue("previousFunnyMemesList", new_list);
-  auto filename = QString("://resources/memes/meme_%1.jpg").arg(n, 2, 10, QChar('0'));
-  return QPixmap(filename);
+  return localizedMeme(n, qApp->property("interfaceLanguage").toString() == "zh_CN");
 }
 
 std::vector<std::string> MergeArguments(const std::vector<std::string>& args)
@@ -258,6 +263,8 @@ int main(int argc, char* argv[])
   parser.addHelpOption();
   const QCommandLineOption ui_test_option("self-test-ui", "Write UI acceptance evidence, then exit", "directory");
   parser.addOption(ui_test_option);
+  const QCommandLineOption meme_export_option("export-memes", "Export all startup images in the selected language", "directory");
+  parser.addOption(meme_export_option);
 
 
   QCommandLineOption nosplash_option(QStringList() << "n"
@@ -334,6 +341,10 @@ int main(int argc, char* argv[])
   parser.addOption(auto_prefix_option);
 
   parser.process(*qApp);
+  app.setProperty("uiAcceptance", parser.isSet(ui_test_option));
+  if (parser.isSet(meme_export_option))
+    return exportLocalizedMemes(parser.value(meme_export_option),
+        app.property("interfaceLanguage").toString() == "zh_CN") ? 0 : 21;
 
   if (parser.isSet(publish_option) && !parser.isSet(layout_option))
   {
@@ -457,6 +468,8 @@ int main(int argc, char* argv[])
       const bool chinese = app.property("interfaceLanguage").toString() == "zh_CN";
       const bool language_ok = chinese ? expected == QString::fromUtf8("\xE5\xBA\x94\xE7\x94\xA8") : expected == "App";
       const bool image_ok = window->grab().save(output + "/main-window.png");
+      const auto details = checkLocalizedUi(window, output, chinese);
+      const bool details_ok = details.value("ok").toBool();
       const auto numeric_series = window->dataMap().numeric.size();
       const bool data_ok = numeric_series > 0;
       QJsonObject result;
@@ -467,13 +480,14 @@ int main(int argc, char* argv[])
       result["data_ok"] = data_ok;
       result["numeric_series"] = static_cast<int>(numeric_series);
       result["version"] = app.applicationVersion();
+      result["localization"] = details;
       QFile report(output + "/ui.json");
       const bool report_ok = report.open(QIODevice::WriteOnly);
       if (report_ok) report.write(QJsonDocument(result).toJson());
       // Follow the same closeEvent path as a user closing the app, including
       // stopping timers and releasing plugins while QApplication is alive.
       window->close();
-      app.exit(menu_ok && language_ok && image_ok && data_ok && report_ok ? 0 : 20);
+      app.exit(menu_ok && language_ok && image_ok && data_ok && details_ok && report_ok ? 0 : 20);
     });
   }
 

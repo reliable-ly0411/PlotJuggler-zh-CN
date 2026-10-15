@@ -81,27 +81,27 @@ void DataViewPanel::showSequenceInfo(const SequenceInfo& info)
   topic_texts_.clear();
 
   QString text;
-  text += QString("Sequence : %1\n").arg(QString::fromStdString(info.name));
+  text += QObject::tr("Sequence : %1\n").arg(QString::fromStdString(info.name));
 
   if (info.max_ts_ns > 0)
   {
     auto dt = QDateTime::fromMSecsSinceEpoch(info.max_ts_ns / 1'000'000LL, QTimeZone::utc());
-    text += QString("Date     : %1\n").arg(dt.toString("dd/MM/yyyy"));
+    text += QObject::tr("Date     : %1\n").arg(dt.toString("dd/MM/yyyy"));
   }
 
   if (info.total_size_bytes > 0)
   {
-    text += QString("Size     : %1\n").arg(formatBytes(info.total_size_bytes));
+    text += QObject::tr("Size     : %1\n").arg(formatBytes(info.total_size_bytes));
   }
 
   if (!info.user_metadata.empty())
   {
-    text += "\nMetadata:\n";
+    text += QObject::tr("\nMetadata:\n");
     text += formatMetadata(info.user_metadata);
   }
 
   sequence_text_ = text;
-  header_->setText(QString("Info \u2014 %1").arg(QString::fromStdString(info.name)));
+  header_->setText(QObject::tr("Info \u2014 %1").arg(QString::fromStdString(info.name)));
   rebuildText();
 }
 
@@ -152,7 +152,7 @@ static QString formatSchemaFields(const std::shared_ptr<arrow::Schema>& schema)
   {
     return text;
   }
-  text += QString("Fields (%1):\n").arg(schema->num_fields());
+  text += QObject::tr("Fields (%1):\n").arg(schema->num_fields());
   for (int i = 0; i < schema->num_fields(); ++i)
   {
     formatFieldType(schema->field(i), "  ", text);
@@ -169,42 +169,42 @@ static QString formatDateTime(int64_t ts_ns)
 void DataViewPanel::showTopicInfo(const TopicInfo& info)
 {
   QString text;
-  text += QString("Topic    : %1\n").arg(QString::fromStdString(info.topic_name));
-  text += QString("Tag      : %1\n").arg(QString::fromStdString(info.ontology_tag));
+  text += QObject::tr("Topic    : %1\n").arg(QString::fromStdString(info.topic_name));
+  text += QObject::tr("Tag      : %1\n").arg(QString::fromStdString(info.ontology_tag));
 
   if (info.created_at_ns > 0)
   {
-    text += QString("Created  : %1\n").arg(formatDateTime(info.created_at_ns));
+    text += QObject::tr("Created  : %1\n").arg(formatDateTime(info.created_at_ns));
   }
   if (info.locked)
   {
     if (info.completed_at_ns.has_value() && *info.completed_at_ns > 0)
     {
-      text += QString("Status   : sealed (%1)\n").arg(formatDateTime(*info.completed_at_ns));
+      text += QObject::tr("Status   : sealed (%1)\n").arg(formatDateTime(*info.completed_at_ns));
     }
     else
     {
-      text += "Status   : sealed\n";
+      text += QObject::tr("Status   : sealed\n");
     }
   }
   else
   {
-    text += "Status   : live\n";
+    text += QObject::tr("Status   : live\n");
   }
   if (info.chunks_number > 0)
   {
-    text += QString("Chunks   : %1\n").arg(info.chunks_number);
+    text += QObject::tr("Chunks   : %1\n").arg(info.chunks_number);
   }
   if (!info.resource_locator.empty())
   {
-    text += QString("Resource : %1\n").arg(QString::fromStdString(info.resource_locator));
+    text += QObject::tr("Resource : %1\n").arg(QString::fromStdString(info.resource_locator));
   }
 
   text += formatSchemaFields(info.schema);
 
   if (!info.user_metadata.empty())
   {
-    text += "\nMetadata:\n";
+    text += QObject::tr("\nMetadata:\n");
     text += formatMetadata(info.user_metadata);
   }
 

@@ -9,6 +9,18 @@
 #include "format_utils.h"
 
 #include <QDialogButtonBox>
+#include <QCoreApplication>
+
+// Stable status keys are also used for colors and worker messages.
+static const char* const translatedStatusKeys[] = {
+  QT_TRANSLATE_NOOP("MosaicoStatus", "Cancelled"),
+  QT_TRANSLATE_NOOP("MosaicoStatus", "Cancelling"),
+  QT_TRANSLATE_NOOP("MosaicoStatus", "Complete"),
+  QT_TRANSLATE_NOOP("MosaicoStatus", "Done"),
+  QT_TRANSLATE_NOOP("MosaicoStatus", "Downloading"),
+  QT_TRANSLATE_NOOP("MosaicoStatus", "Failed"),
+  QT_TRANSLATE_NOOP("MosaicoStatus", "Waiting"),
+};
 #include <QGridLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -43,7 +55,7 @@ QLabel* makeHeaderLabel(const QString& text, QWidget* parent)
 
 DownloadStatsDialog::DownloadStatsDialog(QWidget* parent) : QDialog(parent)
 {
-  setWindowTitle(QStringLiteral("Download Statistics"));
+  setWindowTitle(QObject::tr("Download Statistics"));
   setWindowModality(Qt::WindowModal);
   resize(720, 360);
 
@@ -57,14 +69,14 @@ DownloadStatsDialog::DownloadStatsDialog(QWidget* parent) : QDialog(parent)
   grid_->setColumnStretch(1, 1);
   grid_->setColumnStretch(2, 1);
   grid_->setColumnStretch(3, 1);
-  grid_->addWidget(makeHeaderLabel(QStringLiteral("Topic"), this), 0, 0);
-  grid_->addWidget(makeHeaderLabel(QStringLiteral("Bytes"), this), 0, 1);
-  grid_->addWidget(makeHeaderLabel(QStringLiteral("Speed"), this), 0, 2);
-  grid_->addWidget(makeHeaderLabel(QStringLiteral("Status"), this), 0, 3);
+  grid_->addWidget(makeHeaderLabel(QObject::tr("Topic"), this), 0, 0);
+  grid_->addWidget(makeHeaderLabel(QObject::tr("Bytes"), this), 0, 1);
+  grid_->addWidget(makeHeaderLabel(QObject::tr("Speed"), this), 0, 2);
+  grid_->addWidget(makeHeaderLabel(QObject::tr("Status"), this), 0, 3);
   root->addLayout(grid_);
 
   auto* buttons = new QDialogButtonBox(this);
-  cancel_button_ = buttons->addButton(QStringLiteral("Cancel"), QDialogButtonBox::RejectRole);
+  cancel_button_ = buttons->addButton(QObject::tr("Cancel"), QDialogButtonBox::RejectRole);
   root->addWidget(buttons);
   connect(cancel_button_, &QPushButton::clicked, this, &DownloadStatsDialog::reject);
 
@@ -80,7 +92,7 @@ void DownloadStatsDialog::start(const QStringList& topics)
   cancelling_ = false;
   total_speed_samples_.clear();
   elapsed_.restart();
-  cancel_button_->setText(QStringLiteral("Cancel"));
+  cancel_button_->setText(QObject::tr("Cancel"));
   cancel_button_->setEnabled(true);
 
   int row = 1;
@@ -161,7 +173,7 @@ void DownloadStatsDialog::markCancelling()
 {
   cancelling_ = true;
   cancel_button_->setEnabled(false);
-  cancel_button_->setText(QStringLiteral("Cancelling..."));
+  cancel_button_->setText(QObject::tr("Cancelling..."));
   for (auto it = rows_.begin(); it != rows_.end(); ++it)
   {
     if (!it->finished)
@@ -184,7 +196,7 @@ void DownloadStatsDialog::markComplete(const QString& unfinished_status)
   cancelling_ = false;
   timer_->stop();
   cancel_button_->setEnabled(true);
-  cancel_button_->setText(QStringLiteral("Close"));
+  cancel_button_->setText(QObject::tr("Close"));
   refreshStats();
   // Force a synchronous repaint. The per-row "Done" / "0 B/s" setText
   // calls above queue paint events, but those events sit behind the
@@ -226,8 +238,9 @@ void DownloadStatsDialog::refreshStats()
                         active_     ? QStringLiteral("Downloading") :
                                       QStringLiteral("Complete");
   summary_label_->setText(
-      QStringLiteral("%1 - decoded %2, speed %3")
-          .arg(state, formatByteCount(decoded_total), formatSpeed(total_speed)));
+      QObject::tr("%1 - decoded %2, speed %3")
+          .arg(QCoreApplication::translate("MosaicoStatus", state.toUtf8().constData()),
+               formatByteCount(decoded_total), formatSpeed(total_speed)));
 }
 
 DownloadStatsDialog::Row* DownloadStatsDialog::rowForTopic(const QString& topic)
@@ -272,7 +285,7 @@ void DownloadStatsDialog::finishRow(Row& row, const QString& status)
 
 void DownloadStatsDialog::setRowStatus(Row& row, const QString& status)
 {
-  row.status->setText(status);
+  row.status->setText(QCoreApplication::translate("MosaicoStatus", status.toUtf8().constData()));
 
   QString color = QStringLiteral("#57606a");
   if (status == QStringLiteral("Downloading"))

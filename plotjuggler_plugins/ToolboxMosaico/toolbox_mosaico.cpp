@@ -9,6 +9,7 @@
 #include "src/ui/theme_utils.h"
 
 #include <QDebug>
+#include <QApplication>
 #include <QMetaType>
 #include <QSettings>
 #include <arrow/api.h>
@@ -257,7 +258,8 @@ bool ToolboxMosaico::onShowWidget()
           main_window_->restoreState(settings);
 
           // Auto-connect with saved URI — errors go to status label only (no popup).
-          main_window_->connectToServer(/*explicit_connect=*/false);
+          if (!qApp->property("uiAcceptance").toBool())
+            main_window_->connectToServer(/*explicit_connect=*/false);
           initialized_ = true;
         }
       },

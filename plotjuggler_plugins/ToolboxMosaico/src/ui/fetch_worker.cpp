@@ -81,7 +81,7 @@ void FetchWorker::fetchSequences()
   }
   catch (const std::exception& e)
   {
-    emit errorOccurred(QStringLiteral("listSequences failed: ") + QString::fromUtf8(e.what()));
+    emit errorOccurred(QObject::tr("listSequences failed: ") + QString::fromUtf8(e.what()));
   }
   catch (...)
   {
@@ -125,7 +125,7 @@ void FetchWorker::fetchTopics(const QString& sequence_name)
   }
   catch (const std::exception& e)
   {
-    emit errorOccurred(QStringLiteral("listTopics failed: ") + QString::fromUtf8(e.what()));
+    emit errorOccurred(QObject::tr("listTopics failed: ") + QString::fromUtf8(e.what()));
   }
   catch (...)
   {
@@ -166,7 +166,7 @@ void FetchWorker::fetchDataMulti(const QString& sequence_name, const QStringList
       // Surface one error per topic so pending_fetches_ drains cleanly.
       for (const auto& topic : topic_names)
       {
-        emit topicErrorOccurred(topic, QStringLiteral("Not connected"));
+        emit topicErrorOccurred(topic, QObject::tr("Not connected"));
       }
       return;
     }
@@ -177,7 +177,7 @@ void FetchWorker::fetchDataMulti(const QString& sequence_name, const QStringList
     {
       for (const auto& topic : topic_names)
       {
-        emit topicErrorOccurred(topic, QStringLiteral("cancelled"));
+        emit topicErrorOccurred(topic, QObject::tr("cancelled"));
       }
       return;
     }
@@ -289,7 +289,7 @@ void FetchWorker::fetchDataMulti(const QString& sequence_name, const QStringList
   }
   catch (const std::exception& e)
   {
-    const QString msg = QStringLiteral("pullTopics failed: ") + QString::fromUtf8(e.what());
+    const QString msg = QObject::tr("pullTopics failed: ") + QString::fromUtf8(e.what());
     for (const auto& topic : topic_names)
     {
       emit topicErrorOccurred(topic, msg);
@@ -299,7 +299,7 @@ void FetchWorker::fetchDataMulti(const QString& sequence_name, const QStringList
   {
     for (const auto& topic : topic_names)
     {
-      emit topicErrorOccurred(topic, QStringLiteral("pullTopics failed: unknown error"));
+      emit topicErrorOccurred(topic, QObject::tr("pullTopics failed: unknown error"));
     }
   }
 }

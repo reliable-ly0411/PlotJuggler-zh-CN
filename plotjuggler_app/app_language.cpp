@@ -29,3 +29,25 @@ void installApplicationLanguage(QApplication& app)
   if (catalog->load(":/i18n/plotjuggler_zh_CN.qm")) app.installTranslator(catalog);
   else qWarning() << "Simplified Chinese translation catalog is missing";
 }
+
+// Qt 5.15 standard button keys; our own translations also work without qtbase_zh_CN.qm.
+static const char* const standardButtonKeys[] = {
+  QT_TRANSLATE_NOOP("QPlatformTheme", "OK"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Save"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Save All"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Open"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "&Yes"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Yes to &All"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "&No"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "N&o to All"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Abort"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Retry"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Ignore"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Close"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Cancel"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Discard"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Help"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Apply"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Reset"),
+  QT_TRANSLATE_NOOP("QPlatformTheme", "Restore Defaults"),
+};
