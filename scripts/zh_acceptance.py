@@ -17,6 +17,7 @@ assert app.is_file(), app
 assert plugin.is_file(), plugin
 root = Path(__file__).resolve().parents[1]
 fixture = root / "plotjuggler_plugins/DataLoadAPBin/tests/synthetic.BIN"
+expected_version = json.loads((root / "build/FORK-VERSION.json").read_text(encoding="utf-8"))["version"]
 reports = []
 for language in ("zh_CN", "en_US"):
     out = Path(a.out).resolve() / language
@@ -29,6 +30,7 @@ for language in ("zh_CN", "en_US"):
     if result.returncode:
         raise SystemExit(f"{language} UI acceptance failed: {result.returncode}\n{result.stdout.decode('utf-8', errors='replace')}")
     report = json.loads((out / "ui.json").read_text(encoding="utf-8"))
+    assert report["version"] == expected_version, report
     assert report["language_ok"] and report["menu_ok"] and report["screenshot_ok"], report
     reports.append({"language": language, **report})
 Path(a.out, "summary.json").write_text(json.dumps(reports, ensure_ascii=False, indent=2), encoding="utf-8")

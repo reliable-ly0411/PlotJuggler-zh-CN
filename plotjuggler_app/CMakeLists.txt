@@ -161,7 +161,7 @@ if(APPIMAGE_BUILD)
   target_compile_definitions(plotjuggler PRIVATE APPIMAGE_BUILD)
 endif()
 
-target_compile_definitions(plotjuggler PRIVATE PJ_INSTALLATION="${PJ_INSTALLATION}")
+target_compile_definitions(plotjuggler PRIVATE PJ_INSTALLATION="${PJ_INSTALLATION}" PJ_FORK_SEMVER="${PJ_FORK_SEMVER}")
 
 target_include_directories(
   plotjuggler
@@ -222,3 +222,11 @@ qt5_add_resources(PJ_I18N_RESOURCES ${CMAKE_CURRENT_BINARY_DIR}/i18n.qrc)
 add_custom_target(pj_translations DEPENDS ${PJ_QM_FILES})
 add_dependencies(plotjuggler pj_translations)
 target_sources(plotjuggler PRIVATE ${PJ_I18N_RESOURCES})
+
+if(PJ_BUILD_ARDUPILOT_TESTS)
+  add_executable(semver_test ${CMAKE_SOURCE_DIR}/tests/semver_test.cpp)
+  target_include_directories(semver_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(semver_test PRIVATE Qt5::Core)
+  set_target_properties(semver_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests_bin")
+  add_test(NAME SemanticVersioning COMMAND semver_test)
+endif()

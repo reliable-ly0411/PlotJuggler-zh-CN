@@ -1,14 +1,17 @@
 name: snap_core24
-true:
+on:
   push:
     tags:
-    - '*'
-  workflow_dispatch: null
+      - '*'
+  workflow_dispatch:
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
   build:
+    if: github.repository == 'PlotJuggler/PlotJuggler'
     runs-on: ubuntu-latest
     outputs:
       snap-file: ${{ steps.build-snap24.outputs.snap }}
@@ -16,21 +19,25 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v6
       with:
+        # full history for latest tag name
         fetch-depth: 0
     - name: Rename snap_core24 to snap
       run: mv snap_core24 snap
     - name: Build Snap (Core24)
       uses: snapcore/action-build@v1
       id: build-snap24
+
+    # Make sure the snap is installable
     - name: Install snap
       run: |
         sudo snap install --dangerous ${{ steps.build-snap24.outputs.snap }}
+
     - name: Upload artifact
       uses: actions/upload-artifact@v7
       with:
         name: plotjuggler-snap24
         path: ${{ steps.build-snap24.outputs.snap }}
-    if: github.repository == 'PlotJuggler/PlotJuggler' && (true)
+
   publish:
     if: github.repository == 'PlotJuggler/PlotJuggler' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-latest

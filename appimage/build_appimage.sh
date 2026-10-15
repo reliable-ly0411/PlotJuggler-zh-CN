@@ -33,6 +33,7 @@ echo "==> Staging AppDir"
 rm -rf "$APPDIR"
 mkdir -p "$APPDIR/usr/bin"
 cp -v "$BUILD_DIR"/bin/* "$APPDIR/usr/bin/"
+python3 "$REPO_ROOT/scripts/stage_fork_notices.py" "$APPDIR/usr/bin"
 
 # Discover the Python ABI the binary was linked against.
 PY_LINK="$(ldd "$APPDIR/usr/bin/plotjuggler" | awk '/libpython3/ {print $1; exit}')"

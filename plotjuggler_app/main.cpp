@@ -6,6 +6,7 @@
 
 #include "mainwindow.h"
 #include "app_language.h"
+#include "semver.h"
 #include <iostream>
 #include <QApplication>
 #include <QSplashScreen>
@@ -83,21 +84,7 @@ static std::vector<std::string> RemoveRos2Arguments(int argc, char* argv[])
 }
 #endif
 
-static QString VERSION_STRING =
-    QString("%1.%2.%3").arg(PJ_MAJOR_VERSION).arg(PJ_MINOR_VERSION).arg(PJ_PATCH_VERSION) + "+" + QStringLiteral(PJ_FORK_REVISION);
-
-inline int GetVersionNumber(QString str)
-{
-  QStringList online_version = str.section('+', 0, 0).split('.');
-  if (online_version.size() != 3)
-  {
-    return 0;
-  }
-  int major = online_version[0].toInt();
-  int minor = online_version[1].toInt();
-  int patch = online_version[2].toInt();
-  return major * 10000 + minor * 100 + patch;
-}
+static const QString VERSION_STRING = QStringLiteral(PJ_FORK_SEMVER);
 
 QPixmap getFunnySplashscreen()
 {
@@ -539,12 +526,9 @@ int main(int argc, char* argv[])
         QString name = data["name"].toString();
         QString tag_name = data["tag_name"].toString();
 
-        int online_number = GetVersionNumber(tag_name);
-        int current_number = GetVersionNumber(VERSION_STRING);
-
         qDebug() << "Current version:" << VERSION_STRING << ". Latest release version:" << tag_name;
 
-        if (online_number > current_number)
+        if (PJ::isNewerSemVer(tag_name, VERSION_STRING))
         {
           QString message = QString("New release available: <b>%1</b><br>"
                                     "<a href=\"%2\">View on GitHub</a>")

@@ -93,13 +93,19 @@ jobs:
     - name: Build Plotjuggler
       shell: pwsh
       run: |
-        cmake --preset conan-default -S . -B build -DCMAKE_BUILD_TYPE=Release -DPJ_INSTALLATION="windows" -DPJ_PLUGINS_DIRECTORY="bin" -DBUILD_TESTING=ON
+        cmake --preset conan-default -S . -B build -DCMAKE_BUILD_TYPE=Release -DPJ_INSTALLATION="windows" -DPJ_PLUGINS_DIRECTORY="bin" -DBUILD_TESTING=OFF
         cmake --build build --config Release
+
+        $version = (Get-Content build/FORK-VERSION.json -Raw | ConvertFrom-Json).version
+        "PJ_SEMVER=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
     - name: Test DataFlash and translations
       shell: pwsh
       run: |
-        python tests/check_translations.py
         $env:PATH = "$env:QT_ROOT_DIR\bin;$env:PATH"
+        python tests/check_translations.py --fresh
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        python tests/check_version.py
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
         ctest --test-dir build -C Release --output-on-failure --no-tests=error
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Prepare installer directory
@@ -108,6 +114,9 @@ jobs:
         New-Item -ItemType Directory -Force -Path installer\io.plotjuggler.application\data
         Copy-Item -Path build\bin\Release\*.* -Destination installer\io.plotjuggler.application\data -Recurse -Force
         cmd /c installer\windeploy_pj.bat
+
+        python scripts/stage_fork_notices.py installer/io.plotjuggler.application/data
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Bundle embeddable Python
       shell: pwsh
       run: |
@@ -204,14 +213,14 @@ jobs:
       run: |
         python scripts/zh_acceptance.py --app installer/io.plotjuggler.application/data/plotjuggler.exe --plugin installer/io.plotjuggler.application/data/DataAPBin.dll --out acceptance
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        Compress-Archive -Path installer/io.plotjuggler.application/data/* -DestinationPath PlotJuggler-zh-CN-Windows-x64.zip
+        Compress-Archive -Path installer/io.plotjuggler.application/data/* -DestinationPath PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip
     - name: Create installer using QT Installation Framework
       shell: pwsh
       run: |
         # Sanitize ref_name to replace / with - for valid Windows filename.
         # Also export to GITHUB_ENV so subsequent upload / release steps reuse
         # the same name without independently re-sanitizing.
-        $ref_name = "${{ github.ref_name }}" -replace '/', '-'
+        $ref_name = $env:PJ_SEMVER
         "SAFE_REF=$ref_name" | Out-File -FilePath $env:GITHUB_ENV -Append
         $installer_name = "PlotJuggler-$ref_name-Windows-x64.exe"
 
@@ -236,14 +245,14 @@ jobs:
     - name: Upload installer
       uses: actions/upload-artifact@v4
       with:
-        name: PlotJuggler-zh-CN-Windows-x64
+        name: PlotJuggler-${{ env.PJ_SEMVER }}-Windows-installer
         path: PlotJuggler-${{ env.SAFE_REF }}-Windows-x64.exe
         if-no-files-found: error
     - name: Upload portable package and evidence
       uses: actions/upload-artifact@v4
       with:
-        name: PlotJuggler-zh-CN-Windows-portable
+        name: PlotJuggler-${{ env.PJ_SEMVER }}-Windows-portable
         path: |-
-          PlotJuggler-zh-CN-Windows-x64.zip
+          PlotJuggler-${{ env.PJ_SEMVER }}-Windows-x64.zip
           acceptance/
         if-no-files-found: error

@@ -61,12 +61,15 @@ jobs:
       run: |
         cmake . -B build -DCMAKE_BUILD_TYPE=Release -DPJ_INSTALLATION="appimage" \
               -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-              -DPJ_PLUGINS_DIRECTORY="bin" -DBUILD_TESTING=ON
+              -DPJ_PLUGINS_DIRECTORY="bin" -DBUILD_TESTING=OFF
         grep -R "PJ_HAS_PYTHON" build/CMakeCache.txt build/plotjuggler_app/CMakeFiles  || true
         cmake --build build --parallel 2
+
+        python3 -c 'import json,os; v=json.load(open("build/FORK-VERSION.json"))["version"]; open(os.environ["GITHUB_ENV"],"a").write("PJ_SEMVER="+v+"\n")'
     - name: Test DataFlash and translations
       run: |
-        python3 tests/check_translations.py
+        python3 tests/check_translations.py --fresh
+        python3 tests/check_version.py
         ctest --test-dir build --output-on-failure --no-tests=error
         xvfb-run -a python3 scripts/zh_acceptance.py --app build/bin/plotjuggler --plugin build/bin/libDataAPBin.so --out acceptance
     - name: Build AppImage
@@ -81,7 +84,7 @@ jobs:
         # hosts whose system Python differs from the builder's.
         bash appimage/build_appimage.sh
         # ref_name contains '/' on feature branches; replace with '-' so it's a valid filename
-        SAFE_REF="${GITHUB_REF_NAME//\//-}"
+        SAFE_REF="${PJ_SEMVER}"
         mv PlotJuggler-${{ matrix.arch }}.AppImage "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage"
         echo "SAFE_REF=$SAFE_REF" >> "$GITHUB_ENV"
     - name: Upload AppImage

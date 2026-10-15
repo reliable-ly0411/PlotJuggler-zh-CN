@@ -3,7 +3,9 @@ cmake_minimum_required(VERSION 3.16)
 project(
   plotjuggler
   LANGUAGES C CXX
-  VERSION 3.17.2)
+  VERSION 3.18.0)
+
+include(cmake/ForkVersion.cmake)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -19,8 +21,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
 # --enabled_plugins=libDataLoadCSV_0x3b_libDataStreamSample") add_definitions(
 # -DPJ_DEFAULT_ARGS="${PJ_DEFAULT_ARGS}")
 
-include(CTest)
-set(PJ_FORK_REVISION "zh.1.apbin.1" CACHE STRING "Fork build metadata")
+enable_testing()
+option(PJ_BUILD_ARDUPILOT_TESTS "Build ArduPilot integration tests" ON)
 
 option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
 option(BASE_AS_SHARED "Build the base library as a shared library" OFF)

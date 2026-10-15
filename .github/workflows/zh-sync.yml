@@ -1,0 +1,73 @@
+name: zh-CN upstream sync
+
+on:
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zh-upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'reliable-ly0411/PlotJuggler-zh-CN'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      changed: ${{ steps.merge.outputs.changed }}
+      ref: ${{ steps.merge.outputs.ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: zh-CN
+          fetch-depth: 0
+      - name: Install translation validation tool
+        run: sudo apt-get update && sudo apt-get install -y qttools5-dev-tools
+      - name: Verify conflict and version protection
+        run: python3 tests/test_sync_upstream.py
+      - name: Merge official Qt5 upstream
+        id: merge
+        run: >-
+          python3 scripts/sync_upstream.py
+          --repo . --branch zh-CN --upstream-ref main
+          --validate --push
+          --report "${{ runner.temp }}/upstream-sync.json"
+      - name: Preserve sync result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-sync-report
+          path: ${{ runner.temp }}/upstream-sync.json
+          if-no-files-found: error
+      - name: Publish readable result
+        if: always()
+        run: |
+          if [ -f "${{ runner.temp }}/upstream-sync.json" ]; then
+            printf '### Upstream sync result\n\n```json\n' >> "$GITHUB_STEP_SUMMARY"
+            cat "${{ runner.temp }}/upstream-sync.json" >> "$GITHUB_STEP_SUMMARY"
+            printf '\n```\n' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  windows:
+    needs: sync
+    if: needs.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/zh-windows.yml
+    with:
+      ref: ${{ needs.sync.outputs.ref }}
+    permissions:
+      contents: read
+
+  linux:
+    needs: sync
+    if: needs.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/zh-linux.yml
+    with:
+      ref: ${{ needs.sync.outputs.ref }}
+    permissions:
+      contents: read
