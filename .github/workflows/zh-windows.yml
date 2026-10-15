@@ -17,7 +17,8 @@ permissions:
   contents: read
 concurrency:
   group: zh-windows-${{ github.ref }}
-  cancel-in-progress: true
+  # Let trusted builds finish dependency installation and preserve their cache.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   windows:
     runs-on: windows-2022

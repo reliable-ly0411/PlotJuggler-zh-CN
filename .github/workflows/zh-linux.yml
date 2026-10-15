@@ -48,11 +48,12 @@ jobs:
       shell: bash
       run: |
         mkdir -p ${{ runner.temp }}/ccache/tmp
-    - name: Save ccache folder
-      uses: actions/cache@v5
+    - name: Restore compiler cache
+      uses: actions/cache/restore@v4
       with:
         path: ${{ runner.temp }}/ccache
-        key: ${{ runner.os }}-${{ matrix.ubuntu-distro }}
+        key: pj3-ccache-ubuntu22-v1-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: pj3-ccache-ubuntu22-v1-
     - name: Build Plotjuggler
       shell: bash
       working-directory: ${{ github.workspace }}
@@ -66,6 +67,12 @@ jobs:
         cmake --build build --parallel 2
 
         python3 -c 'import json,os; v=json.load(open("build/FORK-VERSION.json"))["version"]; open(os.environ["GITHUB_ENV"],"a").write("PJ_SEMVER="+v+"\n")'
+    - name: Preserve compiler cache
+      if: always() && github.event_name != 'pull_request'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ runner.temp }}/ccache
+        key: pj3-ccache-ubuntu22-v1-${{ github.run_id }}-${{ github.run_attempt }}
     - name: Test DataFlash and translations
       run: |
         python3 tests/check_translations.py --fresh
@@ -94,8 +101,9 @@ jobs:
         path: PlotJuggler-${{ env.SAFE_REF }}-${{ matrix.arch }}.AppImage
         if-no-files-found: error
     - name: Upload acceptance evidence
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: PlotJuggler-zh-CN-Linux-evidence
         path: acceptance/
-        if-no-files-found: error
+        if-no-files-found: warn

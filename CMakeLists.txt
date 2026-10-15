@@ -22,7 +22,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
 # -DPJ_DEFAULT_ARGS="${PJ_DEFAULT_ARGS}")
 
 enable_testing()
-option(PJ_BUILD_ARDUPILOT_TESTS "Build ArduPilot integration tests" ON)
+option(PJ_BUILD_FORK_TESTS "Build focused fork acceptance tests" ON)
+if(DEFINED PJ_BUILD_ARDUPILOT_TESTS)
+  set(PJ_BUILD_FORK_TESTS ${PJ_BUILD_ARDUPILOT_TESTS})
+endif()
 
 option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
 option(BASE_AS_SHARED "Build the base library as a shared library" OFF)

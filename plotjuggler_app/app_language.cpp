@@ -17,7 +17,9 @@ void installApplicationLanguage(QApplication& app)
     if (arguments[i].startsWith("--language=")) language = arguments[i].mid(11);
     else if (arguments[i] == "--language" && i + 1 < arguments.size()) language = arguments[++i];
   }
-  if (language != "zh_CN" && language != "zh-CN") return;
+  language = (language == "zh_CN" || language == "zh-CN") ? "zh_CN" : "en_US";
+  app.setProperty("interfaceLanguage", language);
+  if (language != "zh_CN") return;
   QLocale::setDefault(QLocale(QLocale::Chinese, QLocale::China));
   auto* qt = new QTranslator(&app);
   if (qt->load("qtbase_zh_CN", app.applicationDirPath() + "/translations") ||

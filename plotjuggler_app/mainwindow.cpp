@@ -206,13 +206,13 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
   ui->setupUi(this);
   auto* language_menu = ui->menuHelp->addMenu(tr("Language"));
   auto* language_group = new QActionGroup(this);
-  const QString saved_language = QSettings().value("Preferences::language", "zh_CN").toString();
+  const QString selected_language = qApp->property("interfaceLanguage").toString();
   for (const auto& entry : {qMakePair(QStringLiteral("zh_CN"), tr("Simplified Chinese")),
                            qMakePair(QStringLiteral("en_US"), QStringLiteral("English"))})
   {
     QAction* action = language_menu->addAction(entry.second);
     action->setCheckable(true);
-    action->setChecked(saved_language == entry.first);
+    action->setChecked(selected_language == entry.first);
     language_group->addAction(action);
     connect(action, &QAction::triggered, this, [this, locale = entry.first]() {
       QSettings().setValue("Preferences::language", locale);

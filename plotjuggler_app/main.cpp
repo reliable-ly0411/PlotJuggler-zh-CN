@@ -454,7 +454,7 @@ int main(int argc, char* argv[])
       auto* menu = window->findChild<QMenu*>("menuFile");
       const QString expected = QCoreApplication::translate("MainWindow", "App");
       const bool menu_ok = menu && menu->title() == expected;
-      const bool chinese = !app.arguments().contains("--language") || app.arguments().contains("zh_CN");
+      const bool chinese = app.property("interfaceLanguage").toString() == "zh_CN";
       const bool language_ok = chinese ? expected == QString::fromUtf8("\xE5\xBA\x94\xE7\x94\xA8") : expected == "App";
       const bool image_ok = window->grab().save(output + "/main-window.png");
       const auto numeric_series = window->dataMap().numeric.size();

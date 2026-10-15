@@ -350,7 +350,7 @@ bool DataLoadParquet::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_
 
   QProgressDialog progress_dialog;
   progress_dialog.setWindowTitle(QObject::tr("Loading the Parquet file"));
-  progress_dialog.setLabelText("Loading... please wait");
+  progress_dialog.setLabelText(QObject::tr("Loading... please wait"));
   progress_dialog.setWindowModality(Qt::ApplicationModal);
   progress_dialog.setRange(0, columns_info.size());
   progress_dialog.setAutoClose(true);

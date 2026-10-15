@@ -11,14 +11,14 @@ target_include_directories(mosaico_sdk PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# Plugins always link Arrow Flight statically.
-if(NOT TARGET ArrowFlight::arrow_flight_static)
-    message(FATAL_ERROR "[MosaicoSDK] ArrowFlight::arrow_flight_static target not found.")
+# The parent selects a consistent Arrow runtime for all plugins.
+if(NOT TARGET ${MOSAICO_ARROW_FLIGHT_TARGET})
+    message(FATAL_ERROR "[MosaicoSDK] Selected ArrowFlight target not found.")
 endif()
 
 target_link_libraries(mosaico_sdk PUBLIC
     arrow::arrow
-    ArrowFlight::arrow_flight_static
+    ${MOSAICO_ARROW_FLIGHT_TARGET}
     nlohmann_json::nlohmann_json
 )
 
@@ -28,6 +28,8 @@ target_link_libraries(mosaico_sdk PUBLIC
 # __declspec(dllimport) on MSVC, producing LNK2019 on inline/implicit ctors.
 # Pin the defines directly so they reach this target's .cpp files and
 # propagate (PUBLIC) to consumers like ToolboxMosaico.
-target_compile_definitions(mosaico_sdk PUBLIC ARROW_STATIC ARROW_FLIGHT_STATIC)
+if(MOSAICO_ARROW_STATIC)
+    target_compile_definitions(mosaico_sdk PUBLIC ARROW_STATIC ARROW_FLIGHT_STATIC)
+endif()
 
 target_compile_features(mosaico_sdk PUBLIC cxx_std_17)

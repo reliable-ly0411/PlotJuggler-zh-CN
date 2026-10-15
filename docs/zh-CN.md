@@ -37,12 +37,13 @@ Qt Installer Framework 内部组件版本采用数字先行版 3.18.0-1；程序
 - 支持 DataFlash 二进制 BIN 的 FMT、FMTU、UNIT、MULT、TimeUS 和字节实例标记。
 - TimeUS 统一转换为秒；有有效 GNSS 时间信息时沿用官方插件的时间同步逻辑。
 - GNSS 同步先使用原始 GMS 毫秒值，再应用显示倍率，避免时间被重复换算；使用合成 GPS 周/周内时间验证，不包含坐标。
+- GPS/UTC 闰秒差沿用官方插件的固定 18 秒，2017 年以前的绝对时间需要另行校正；相对 TimeUS 不受影响。
 - 默认显示单位，按 FMTU/MULT 应用倍率。没有单位/倍率元数据的旧日志保留原始数值。
 - 保留官方参数、状态文本和消息说明功能；参数序列使用真实 TimeUS 时间，兼容无 Default 字段的旧 PARM；增加重复加载时的完整状态清理、
   FMT 长度检查以及 128～255 实例编号的处理。
 - 不支持 DataFlash 文本 `.log`、仅有 TimeMS 的旧记录，以及 ISBH/ISBD
   批量惯性数组波形。字符串/数组字段不会伪装成数值曲线。
-- 64 位整数作为 double 曲线显示，超过 52 个有效二进制位可能损失精度。
+- 64 位整数作为 double 曲线显示，绝对值超过 2^53 时可能损失整数精度。
 
 可以关闭此插件，其他格式的加载器保留：
 
@@ -82,6 +83,9 @@ Actions 标红并上传 JSON 报告及冲突文件列表。
 `held_workflows` 供人工审核，因而无需额外的 workflows 权限或 PAT。没有上游变化时成功返回 `up_to_date`。
 推送竞争通过普通 Git push 拒绝处理，需查看报告后重试。
 
+GitHub 调度可能延迟；公共仓库连续 60 天无活动时，GitHub 会暂停定时工作流，
+届时需在 Actions 页面重新启用，详见 [GitHub 调度说明](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)。
+
 同步任务只使用仓库临时 `GITHUB_TOKEN` 的 `contents:write`。构建任务仅需
 `contents:read`，不使用 PAT，不向第三方授予权限，不运行外部 PR 的特权脚本。
 官方其他工作流保留在源码中，但仅在官方仓库运行。
@@ -97,7 +101,8 @@ GITHUB_TOKEN 推送无法再次触发工作流的行为。
 ## 本地构建和验收
 
 沿用上游 CMake/Qt5 工具链，额外需要 Qt LinguistTools 与 Python3。
-ArduPilot 测试默认开启，可用 `-DPJ_BUILD_ARDUPILOT_TESTS=OFF` 关闭。
+fork 验收测试默认开启，可用 `-DPJ_BUILD_FORK_TESTS=OFF` 关闭（兼容早期的 `PJ_BUILD_ARDUPILOT_TESTS` 开关）。
+覆盖 DataFlash、SemVer 和合成 Parquet 读取；Linux 统一使用共享 Arrow/Flight，避免插件间重复注册 Protobuf 描述符。
 
 ```text
 cmake --build build --config Release

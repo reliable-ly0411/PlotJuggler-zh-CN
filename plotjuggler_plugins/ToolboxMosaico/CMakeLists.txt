@@ -1,14 +1,23 @@
 find_package(Arrow QUIET CONFIG)
-if(NOT TARGET ArrowFlight::arrow_flight_static)
+if(NOT TARGET ArrowFlight::arrow_flight_static AND NOT TARGET ArrowFlight::arrow_flight_shared)
     find_package(ArrowFlight QUIET CONFIG)
 endif()
 
-# Plugins always link Arrow/Flight statically (see CLAUDE / project policy).
-set(MOSAICO_ARROW_FLIGHT_TARGET ArrowFlight::arrow_flight_static)
-set(MOSAICO_ARROW_TARGET Arrow::arrow_static)
+# Linux distro packages expose shared Arrow/Flight. Use that same runtime in
+# every plugin to prevent duplicate Protobuf/OpenTelemetry registration.
+# Conan Windows/macOS packages continue to use their static targets.
+if(UNIX AND NOT APPLE AND TARGET Arrow::arrow_shared AND TARGET ArrowFlight::arrow_flight_shared)
+    set(MOSAICO_ARROW_FLIGHT_TARGET ArrowFlight::arrow_flight_shared)
+    set(MOSAICO_ARROW_TARGET Arrow::arrow_shared)
+    set(MOSAICO_ARROW_STATIC OFF)
+else()
+    set(MOSAICO_ARROW_FLIGHT_TARGET ArrowFlight::arrow_flight_static)
+    set(MOSAICO_ARROW_TARGET Arrow::arrow_static)
+    set(MOSAICO_ARROW_STATIC ON)
+endif()
 
 if(NOT Arrow_FOUND OR NOT TARGET ${MOSAICO_ARROW_FLIGHT_TARGET} OR NOT TARGET ${MOSAICO_ARROW_TARGET})
-    message("[ToolboxMosaico] Arrow/Flight static targets not found. Skipping plugin.")
+    message("[ToolboxMosaico] Arrow/Flight targets not found. Skipping plugin.")
     return()
 endif()
 
@@ -49,9 +58,9 @@ if(NOT TARGET arrow::arrow)
     target_link_libraries(arrow_combined INTERFACE
         ${MOSAICO_ARROW_TARGET}
         ${MOSAICO_ARROW_FLIGHT_TARGET})
-    target_compile_definitions(arrow_combined INTERFACE
-        ARROW_STATIC
-        ARROW_FLIGHT_STATIC)
+    if(MOSAICO_ARROW_STATIC)
+        target_compile_definitions(arrow_combined INTERFACE ARROW_STATIC ARROW_FLIGHT_STATIC)
+    endif()
     add_library(arrow::arrow ALIAS arrow_combined)
 endif()
 

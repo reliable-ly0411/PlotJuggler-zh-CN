@@ -77,7 +77,7 @@ static int processInputLog(const string& logpath,
     fseeko(inlog.getFilePtr(), 0, SEEK_SET);
 
     QProgressDialog progress_dialog;
-    progress_dialog.setLabelText("Loading... please wait");
+    progress_dialog.setLabelText(QObject::tr("Loading... please wait"));
     progress_dialog.setWindowModality(Qt::ApplicationModal);
     progress_dialog.setRange(0, 100);
     progress_dialog.setAutoClose(true);

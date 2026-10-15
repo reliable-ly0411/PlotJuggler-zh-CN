@@ -533,7 +533,7 @@ bool DataLoadCSV::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_data
 
   QProgressDialog progress_dialog;
   progress_dialog.setWindowTitle(QObject::tr("Loading the CSV file"));
-  progress_dialog.setLabelText("Loading... please wait");
+  progress_dialog.setLabelText(QObject::tr("Loading... please wait"));
   progress_dialog.setWindowModality(Qt::ApplicationModal);
   progress_dialog.setRange(0, config.total_lines);
   progress_dialog.setAutoClose(true);
