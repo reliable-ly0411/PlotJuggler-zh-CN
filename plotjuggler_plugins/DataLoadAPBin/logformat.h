@@ -162,6 +162,7 @@ struct Parameter
 {
   std::string name;
   double value;
+  double time_seconds = 0.0;
 };
 
 struct StatusText

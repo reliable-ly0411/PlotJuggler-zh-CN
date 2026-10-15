@@ -57,6 +57,8 @@ public:
 
   void setStatusBarMessage(QString message);
 
+  const PlotDataMapRef& dataMap() const { return _mapped_plot_data; }
+
   /// Show a toast notification in the bottom-right corner
   /// @param message The text/HTML to display (supports rich text with clickable links)
   /// @param icon Optional 56x56 icon to show on the left

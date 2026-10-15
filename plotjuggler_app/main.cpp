@@ -457,16 +457,20 @@ int main(int argc, char* argv[])
       const bool chinese = !app.arguments().contains("--language") || app.arguments().contains("zh_CN");
       const bool language_ok = chinese ? expected == QString::fromUtf8("\xE5\xBA\x94\xE7\x94\xA8") : expected == "App";
       const bool image_ok = window->grab().save(output + "/main-window.png");
+      const auto numeric_series = window->dataMap().numeric.size();
+      const bool data_ok = numeric_series > 0;
       QJsonObject result;
       result["menu_title"] = menu ? menu->title() : QString();
       result["language_ok"] = language_ok;
       result["menu_ok"] = menu_ok;
       result["screenshot_ok"] = image_ok;
+      result["data_ok"] = data_ok;
+      result["numeric_series"] = static_cast<int>(numeric_series);
       result["version"] = app.applicationVersion();
       QFile report(output + "/ui.json");
       const bool report_ok = report.open(QIODevice::WriteOnly);
       if (report_ok) report.write(QJsonDocument(result).toJson());
-      app.exit(menu_ok && language_ok && image_ok && report_ok ? 0 : 20);
+      app.exit(menu_ok && language_ok && image_ok && data_ok && report_ok ? 0 : 20);
     });
   }
 

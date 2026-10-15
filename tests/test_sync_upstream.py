@@ -99,6 +99,18 @@ class SyncTest(unittest.TestCase):
         self.assertEqual(self.git(self.fork, "rev-parse", "HEAD").strip(), self.before)
         self.assertEqual(self.git(self.fork, "status", "--porcelain").strip(), "")
 
+    def test_upstream_workflow_is_reported_but_not_changed(self):
+        workflows = self.upstream / ".github/workflows"
+        workflows.mkdir(parents=True)
+        (workflows / "upstream.yml").write_text("name: upstream-only\n")
+        (self.upstream / "new.txt").write_text("upstream source\n")
+        self.commit(self.upstream)
+        code, report = self.run_sync()
+        self.assertEqual(code, 0)
+        self.assertIn(".github/workflows/upstream.yml", report["held_workflows"])
+        self.assertFalse((self.fork / ".github/workflows/upstream.yml").exists())
+        self.assertTrue((self.fork / "new.txt").exists())
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

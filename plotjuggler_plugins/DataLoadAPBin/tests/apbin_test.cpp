@@ -32,6 +32,10 @@ int main(int argc, char** argv)
     }
     if (!found) return 6;
   }
+  const auto parameter = data.numeric.find("/1. Parameters/TEST_PARAM");
+  if (parameter == data.numeric.end() || parameter->second.size() != 1 ||
+      std::abs(parameter->second.at(0).x - 1.5) > 1e-8 ||
+      std::abs(parameter->second.at(0).y - 7.5) > 1e-8) return 10;
   data.numeric.clear();
   const QString directory = QFileInfo(info.filename).absolutePath();
   info.filename = directory + "/second.BIN";
@@ -42,6 +46,14 @@ int main(int argc, char** argv)
   data.numeric.clear();
   info.filename = directory + "/invalid.BIN";
   if (loader->readDataFromFile(&info, data) || !data.numeric.empty()) return 9;
-  std::cout << "PASS: BIN, FMT/FMTU, UNIT/MULT, TimeUS, instances 0/1/200, repeat-load and truncated input\n";
+  for (const auto& filename : {"invalid_fmt.BIN", "invalid_fmtu.BIN"})
+  {
+    info.filename = directory + "/" + filename;
+    bool rejected = false;
+    try { loader->readDataFromFile(&info, data); }
+    catch (const std::exception&) { rejected = true; }
+    if (!rejected || !data.numeric.empty()) return 11;
+  }
+  std::cout << "PASS: BIN, FMT/FMTU, UNIT/MULT, TimeUS, instances 0/1/200, legacy PARM timestamps, repeat-load and malformed input\n";
   return 0;
 }

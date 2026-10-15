@@ -37,7 +37,7 @@ Qt Installer Framework 内部组件版本采用数字先行版 3.18.0-1；程序
 - 支持 DataFlash 二进制 BIN 的 FMT、FMTU、UNIT、MULT、TimeUS 和字节实例标记。
 - TimeUS 统一转换为秒；有有效 GNSS 时间信息时沿用官方插件的时间同步逻辑。
 - 默认显示单位，按 FMTU/MULT 应用倍率。没有单位/倍率元数据的旧日志保留原始数值。
-- 保留官方参数、状态文本和消息说明功能；增加重复加载时的完整状态清理、
+- 保留官方参数、状态文本和消息说明功能；参数序列使用真实 TimeUS 时间，兼容无 Default 字段的旧 PARM；增加重复加载时的完整状态清理、
   FMT 长度检查以及 128～255 实例编号的处理。
 - 不支持 DataFlash 文本 `.log`、仅有 TimeMS 的旧记录，以及 ISBH/ISBD
   批量惯性数组波形。字符串/数组字段不会伪装成数值曲线。
@@ -76,7 +76,9 @@ python tests/check_translations.py --fresh
 `zh-sync.yml` 每日 03:23 UTC 以及手动触发。它将官方 `main` 合并到 `zh-CN`，
 保留定制提交，不使用强推、重置或自动选择冲突一方。
 冲突、版本跨代或翻译校验失败时，取消本次合并，保留远端定制分支，
-Actions 标红并上传 JSON 报告及冲突文件列表。没有上游变化时成功返回 `up_to_date`。
+Actions 标红并上传 JSON 报告及冲突文件列表。
+上游 `.github/workflows` 的变化不会自动导入：本 fork 的自动化保持独立，变化会列入
+`held_workflows` 供人工审核，因而无需额外的 workflows 权限或 PAT。没有上游变化时成功返回 `up_to_date`。
 推送竞争通过普通 Git push 拒绝处理，需查看报告后重试。
 
 同步任务只使用仓库临时 `GITHUB_TOKEN` 的 `contents:write`。构建任务仅需

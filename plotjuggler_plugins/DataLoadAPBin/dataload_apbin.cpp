@@ -175,27 +175,18 @@ bool DataLoadAPBIN::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_da
       {
         if (code == '\0') break;
         auto size = format_types.find(code);
-        if (size == format_types.end()) throw std::runtime_error("Unsupported DataFlash format code");
+        if (size == format_types.end()) throw std::runtime_error(tr("Unsupported DataFlash format code").toStdString());
         payload_size += size->second;
         ++field_count;
       }
       const std::string bounded_labels(fmt.labels, strnlen(fmt.labels, MAX_LABELS_SIZE));
       const size_t label_count = 1 + std::count(bounded_labels.begin(), bounded_labels.end(), ',');
       if (fmt.length != payload_size || field_count == 0 || label_count != field_count)
-        throw std::runtime_error("Invalid DataFlash FMT length or field count");
+        throw std::runtime_error(tr("Invalid DataFlash FMT length or field count").toStdString());
 
-      for (char i : fmt.name)
-      {
-        if (!isprint(i) && i != '\0')
-        {
-          // double check that this is a message
-          // name is assumed to be printable ascii; it
-          // looked like a format message, but wasn't.
-          total_bytes_used++;
-          bytes_skipped++;
-          continue;
-        }
-      }
+      for (char character : fmt.name)
+        if (character != '\0' && !std::isprint(static_cast<unsigned char>(character)))
+          throw std::runtime_error(tr("Invalid DataFlash message name").toStdString());
 
       // store message name <-> message id mapping
       uint8_t name_length = 0;
@@ -289,7 +280,7 @@ bool DataLoadAPBIN::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_da
       #endif
 
       if (fmt.length < sizeof(log_Format_Units))
-        throw std::runtime_error("Truncated DataFlash FMTU message");
+        throw std::runtime_error(tr("Truncated DataFlash FMTU message").toStdString());
 
       // extract the message-id for which the FMTU-message is defined and store FMTU
       const uint8_t msg_id = ((struct log_Format_Units*)(&(buf[total_bytes_used])))->format_type;
@@ -343,7 +334,10 @@ bool DataLoadAPBIN::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_da
 
       // todo: data type is hardcoded here, change that?!
       const unsigned char multiplier_char = *reinterpret_cast<const uint8_t*>(buf + total_bytes_used + id_offset);
-      const double multiplier = *reinterpret_cast<const double*>(buf + total_bytes_used + mult_offset);
+      if (id_offset >= fmt.length || mult_offset + sizeof(double) > fmt.length)
+        throw std::runtime_error(tr("Invalid DataFlash MULT record").toStdString());
+      double multiplier = 0.0;
+      memcpy(&multiplier, buf + total_bytes_used + mult_offset, sizeof(multiplier));
 
       multipliers[multiplier_char] = multiplier;
       
@@ -372,7 +366,7 @@ bool DataLoadAPBIN::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_da
       const unsigned char unit_char = *reinterpret_cast<const uint8_t*>(buf + total_bytes_used + id_offset);
       const char* unit = reinterpret_cast<const char*>(buf + total_bytes_used + label_offset);
 
-      units[unit_char] = std::string(unit);
+      units[unit_char] = std::string(unit, strnlen(unit, fmt.length - label_offset));
 
       total_bytes_used += fmt.length;
       msgs_read++;
@@ -429,15 +423,29 @@ bool DataLoadAPBIN::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_da
     }
     if ( memcmp(fmt.name, "PARM", 4) == 0 )
     {
-      const auto* param = reinterpret_cast<const log_param*>(&buf[total_bytes_used]);
-      // Check if the parameter name string is null-terminated. It will not be
-      // in the case where the name fills in the full 16-char space.
-      const void* name_nul = memchr(param->name, '\0', sizeof(param->name));
-      const size_t name_length = name_nul != nullptr
-          ? static_cast<const char*>(name_nul) - param->name
-          : sizeof(param->name);
-      std::string name = std::string(param->name, name_length);
-      _parameters.push_back({name + "          Default: " + format_default_value(param->default_value) , param->value});
+      const uint32_t name_offset = get_field_byte_offset(type, "Name");
+      const uint32_t value_offset = get_field_byte_offset(type, "Value");
+      const uint32_t time_offset = get_field_byte_offset(type, "TimeUS");
+      if (name_offset + 16 > fmt.length || value_offset + sizeof(float) > fmt.length ||
+          time_offset + sizeof(uint64_t) > fmt.length)
+        throw std::runtime_error(tr("Invalid DataFlash PARM record").toStdString());
+      const char* parameter_name = reinterpret_cast<const char*>(buf + total_bytes_used + name_offset);
+      const std::string name(parameter_name, strnlen(parameter_name, 16));
+      float parameter_value = 0.0f;
+      uint64_t parameter_time = 0;
+      memcpy(&parameter_value, buf + total_bytes_used + value_offset, sizeof(parameter_value));
+      memcpy(&parameter_time, buf + total_bytes_used + time_offset, sizeof(parameter_time));
+      std::string parameter_label = name;
+      if (field_name2idx[msg_id2name[type]].count("Default"))
+      {
+        const uint32_t default_offset = get_field_byte_offset(type, "Default");
+        if (default_offset + sizeof(float) > fmt.length)
+          throw std::runtime_error(tr("Invalid DataFlash PARM record").toStdString());
+        float default_value = 0.0f;
+        memcpy(&default_value, buf + total_bytes_used + default_offset, sizeof(default_value));
+        parameter_label += "          Default: " + format_default_value(default_value);
+      }
+      _parameters.push_back({parameter_label, parameter_value, static_cast<double>(parameter_time) * 1e-6});
 
       #ifdef LABEL_RCOU_FUNCTION
       // save servo functions
@@ -447,7 +455,7 @@ bool DataLoadAPBIN::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_da
         int servo_idx = rx.cap(1).toInt(&is_int);
 
         if (is_int && servo_idx > 0 && servo_idx <= 32) {
-          const int function_id = static_cast<int>(param->value);
+          const int function_id = static_cast<int>(parameter_value);
           // skip over the "disabled" ones
           if (function_id != 0) {
             auto it = SERVO_FUNCTION_MAP.find(function_id);
@@ -770,7 +778,7 @@ bool DataLoadAPBIN::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_da
   for (const auto& param : _parameters)
   {
     auto series = plot_data.addNumeric(std::string("/1. Parameters/") + param.name);
-    series->second.pushBack({300, param.value});
+    series->second.pushBack({param.time_seconds + _time_offset, param.value});
   }
 
 
@@ -1007,12 +1015,14 @@ uint32_t DataLoadAPBIN::get_field_byte_offset(const uint8_t& msg_id, const uint8
   {
     // raise error, because fmt does not exist!
     std::fprintf(stderr, "ERROR: FMT for message %u does not exist!\n", msg_id);
-    throw std::runtime_error("Invalid DataFlash field offset");
+    throw std::runtime_error(tr("Invalid DataFlash field offset").toStdString());
   }
 
   // get information from FMT
   const struct log_Format& fmt = formats[msg_id];
   const char* format = fmt.format;
+  if (field_idx >= strnlen(fmt.format, MAX_FORMAT_SIZE))
+    throw std::runtime_error(tr("Invalid DataFlash field offset").toStdString());
 
   // calculate offsets:
 
@@ -1028,7 +1038,7 @@ uint32_t DataLoadAPBIN::get_field_byte_offset(const uint8_t& msg_id, const uint8
     {
       // raise error, because format type definition is missing
       std::fprintf(stderr, "ERROR: format type '%c' is not defined!\n", format[idx]);
-      throw std::runtime_error("Invalid DataFlash field offset");
+      throw std::runtime_error(tr("Invalid DataFlash field offset").toStdString());
     }
     data_offset += format_types_it->second;
   }
@@ -1041,7 +1051,10 @@ uint32_t DataLoadAPBIN::get_field_byte_offset(const uint8_t& msg_id, const uint8
 uint32_t DataLoadAPBIN::get_field_byte_offset(const uint8_t& msg_id, const std::string& field_name)
 {
   const std::string& msg_name = msg_id2name[msg_id];
-  const uint8_t field_idx = field_name2idx[msg_name][field_name];
+  const auto field = field_name2idx[msg_name].find(field_name);
+  if (field == field_name2idx[msg_name].end())
+    throw std::runtime_error(tr("Required DataFlash field is missing").toStdString());
+  const uint8_t field_idx = field->second;
 
   return get_field_byte_offset(msg_id, field_idx);
 }

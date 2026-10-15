@@ -612,6 +612,52 @@ p, li { white-space: pre-wrap; }
         </message>
     </context>
     <context>
+        <name>DataLoadAPBIN</name>
+        <message>
+            <location filename="../../plotjuggler_plugins/DataLoadAPBin/dataload_apbin.cpp" line="178" />
+            <source>Unsupported DataFlash format code</source>
+            <translation>不支持的 DataFlash 格式代码</translation>
+        </message>
+        <message>
+            <location filename="../../plotjuggler_plugins/DataLoadAPBin/dataload_apbin.cpp" line="185" />
+            <source>Invalid DataFlash FMT length or field count</source>
+            <translation>DataFlash FMT 长度或字段数量无效</translation>
+        </message>
+        <message>
+            <location filename="../../plotjuggler_plugins/DataLoadAPBin/dataload_apbin.cpp" line="189" />
+            <source>Invalid DataFlash message name</source>
+            <translation>DataFlash 消息名称无效</translation>
+        </message>
+        <message>
+            <location filename="../../plotjuggler_plugins/DataLoadAPBin/dataload_apbin.cpp" line="283" />
+            <source>Truncated DataFlash FMTU message</source>
+            <translation>DataFlash FMTU 消息被截断</translation>
+        </message>
+        <message>
+            <location filename="../../plotjuggler_plugins/DataLoadAPBin/dataload_apbin.cpp" line="338" />
+            <source>Invalid DataFlash MULT record</source>
+            <translation>DataFlash MULT 记录无效</translation>
+        </message>
+        <message>
+            <location filename="../../plotjuggler_plugins/DataLoadAPBin/dataload_apbin.cpp" line="431" />
+            <location filename="../../plotjuggler_plugins/DataLoadAPBin/dataload_apbin.cpp" line="443" />
+            <source>Invalid DataFlash PARM record</source>
+            <translation>DataFlash PARM 记录无效</translation>
+        </message>
+        <message>
+            <location filename="../../plotjuggler_plugins/DataLoadAPBin/dataload_apbin.cpp" line="1018" />
+            <location filename="../../plotjuggler_plugins/DataLoadAPBin/dataload_apbin.cpp" line="1025" />
+            <location filename="../../plotjuggler_plugins/DataLoadAPBin/dataload_apbin.cpp" line="1041" />
+            <source>Invalid DataFlash field offset</source>
+            <translation>DataFlash 字段偏移无效</translation>
+        </message>
+        <message>
+            <location filename="../../plotjuggler_plugins/DataLoadAPBin/dataload_apbin.cpp" line="1056" />
+            <source>Required DataFlash field is missing</source>
+            <translation>缺少必需的 DataFlash 字段</translation>
+        </message>
+    </context>
+    <context>
         <name>DataLoadCSV</name>
         <message>
             <location filename="../../plotjuggler_plugins/DataLoadCSV/dataload_csv.cpp" line="269" />
@@ -2701,6 +2747,7 @@ p, li { white-space: pre-wrap; }
         </message>
         <message>
             <location filename="../mainwindow.ui" line="2081" />
+            <location filename="../main.cpp" line="455" />
             <source>App</source>
             <translation>应用</translation>
         </message>
@@ -3663,22 +3710,22 @@ ColorMap [%1] not found.</source>
     <context>
         <name>QObject</name>
         <message>
-            <location filename="../main.cpp" line="257" />
+            <location filename="../main.cpp" line="256" />
             <source>Interface language: zh_CN or en_US</source>
             <translation>界面语言：zh_CN 或 en_US</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="459" />
+            <location filename="../main.cpp" line="485" />
             <source>Python disabled</source>
             <translation>Python 已禁用</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="460" />
+            <location filename="../main.cpp" line="486" />
             <source>PlotJuggler could not initialize the embedded Python interpreter.</source>
             <translation>PlotJuggler 无法初始化嵌入式 Python 解释器。</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="463" />
+            <location filename="../main.cpp" line="489" />
             <source>Python custom functions are disabled for this session. Lua custom functions remain available.
 
 This usually means the Python standard library expected by this build is not present on the host system (common when running an AppImage on a distro with a different Python version).</source>
@@ -3687,7 +3734,7 @@ This usually means the Python standard library expected by this build is not pre
 通常是主机缺少此构建所需的 Python 标准库，例如在 Python 版本不同的发行版上运行 AppImage。</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="468" />
+            <location filename="../main.cpp" line="494" />
             <source>Don't show this again</source>
             <translation>不再显示</translation>
         </message>
@@ -5341,12 +5388,12 @@ p, li { white-space: pre-wrap; }
     <context>
         <name>main</name>
         <message>
-            <location filename="../main.cpp" line="296" />
+            <location filename="../main.cpp" line="298" />
             <source>Change the maximum size of the streaming buffer (minimum: 10 default: 60)</source>
             <translation>修改数据流缓冲区最大长度（最小 10 秒，默认 60 秒）</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="298" />
+            <location filename="../main.cpp" line="300" />
             <source>seconds</source>
             <translation>秒</translation>
         </message>

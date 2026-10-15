@@ -39,44 +39,12 @@ jobs:
       uses: conan-io/setup-conan@v1
       with:
         cache_packages: false
-    - name: Setup oras (OCI Registry As Storage)
-      id: setup_oras
-      uses: oras-project/setup-oras@v1
-      continue-on-error: true
-    - name: Compute Conan cache tag
-      id: conan_cache
-      shell: pwsh
-      run: |
-        $hash = (Get-FileHash conanfile.txt -Algorithm SHA256).Hash.Substring(0, 16).ToLower()
-        $owner = "plotjuggler"
-        $tag = "ghcr.io/$owner/plotjuggler-conan-cache:windows-msvc-$hash"
-        "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-        Write-Host "Cache tag: $tag"
-    - name: Restore Conan cache from ghcr.io
-      if: steps.setup_oras.outcome == 'success'
-      shell: pwsh
-      run: |
-        $tag = "${{ steps.conan_cache.outputs.tag }}"
-        $pullDir = Join-Path $env:RUNNER_TEMP "conan-cache-pull"
-        New-Item -ItemType Directory -Force -Path $pullDir | Out-Null
-        Push-Location $pullDir
-        try {
-          oras pull $tag 2>&1 | Out-Host
-          $pulled = $LASTEXITCODE
-        } finally {
-          Pop-Location
-        }
-        $tarball = Join-Path $pullDir "conan-cache.tar.zst"
-        if ($pulled -eq 0 -and (Test-Path $tarball)) {
-          Write-Host "Cache HIT: extracting $tarball"
-          New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.conan2" | Out-Null
-          tar --zstd -xf $tarball -C $env:USERPROFILE
-          "CONAN_CACHE_HIT=1" | Out-File -FilePath $env:GITHUB_ENV -Append
-        } else {
-          Write-Host "Cache MISS for $tag (cold start or first build of this conanfile)"
-        }
-        # Reset exit code so a missing tag doesn't fail the step
-        $global:LASTEXITCODE = 0
+    - name: Restore fork Conan cache
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.conan2
+        key: pj3-conan-win194-v1-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: pj3-conan-win194-v1-${{ hashFiles('conanfile.txt') }}-
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
@@ -256,3 +224,14 @@ jobs:
           PlotJuggler-${{ env.PJ_SEMVER }}-Windows-x64.zip
           acceptance/
         if-no-files-found: error
+    - name: Trim Conan cache
+      if: always() && github.event_name != 'pull_request'
+      shell: pwsh
+      run: |
+        conan cache clean "*" --build --source --temp
+    - name: Preserve fork Conan cache
+      if: always() && github.event_name != 'pull_request'
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.conan2
+        key: pj3-conan-win194-v1-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt }}
