@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 import re
+import xml.etree.ElementTree as ET
 root = Path(__file__).resolve().parents[1]
 directory = root / "plotjuggler_app/resources/memes"
 catalog = json.loads((directory / "zh_CN.json").read_text(encoding="utf-8"))
@@ -10,6 +11,8 @@ assert catalog["schema"] == 1
 images = catalog["images"]
 assert [image["id"] for image in images] == list(range(106))
 assert {p.name for p in directory.glob("meme_*.jpg")} == {f"meme_{i:02d}.jpg" for i in range(106)}
+resource_files = {entry.text for entry in ET.parse(root / "plotjuggler_app/resource.qrc").findall(".//file")}
+assert {"resources/memes/" + f"meme_{i:02d}.jpg" for i in range(106)} <= resource_files
 count = 0
 for image in images:
     assert image["regions"] or image.get("note"), image["id"]
