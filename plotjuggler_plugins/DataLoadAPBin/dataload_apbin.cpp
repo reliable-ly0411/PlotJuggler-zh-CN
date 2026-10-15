@@ -533,16 +533,6 @@ bool DataLoadAPBIN::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_da
     process_units_ms += (process_units_end - process_units_start);
   #endif
 
-  // -------------------- apply multipliers -------------------- //
-  #ifdef DEBUG_RUNTIME
-    auto apply_mult_start = std::chrono::high_resolution_clock::now();
-  #endif
-  apply_multipliers();
-  #ifdef DEBUG_RUNTIME
-    auto apply_mult_end = std::chrono::high_resolution_clock::now();
-    apply_mult_ms += (apply_mult_end - apply_mult_start);
-  #endif
-
   for (auto& message : messages_map)
     for (auto& instance : message.second)
       for (auto& field : instance.second)
@@ -557,6 +547,17 @@ bool DataLoadAPBIN::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_da
   #ifdef DEBUG_RUNTIME
     auto apply_tsync_end = std::chrono::high_resolution_clock::now();
     apply_tsync_ms += (apply_tsync_end - apply_tsync_start);
+  #endif
+
+  // GPS GMS must still contain its raw milliseconds during time synchronization.
+  // Applying FMTU multiplier C first would convert it to seconds twice.
+  #ifdef DEBUG_RUNTIME
+    auto apply_mult_start = std::chrono::high_resolution_clock::now();
+  #endif
+  apply_multipliers();
+  #ifdef DEBUG_RUNTIME
+    auto apply_mult_end = std::chrono::high_resolution_clock::now();
+    apply_mult_ms += (apply_mult_end - apply_mult_start);
   #endif
 
   #ifdef DEBUG_MESSAGES

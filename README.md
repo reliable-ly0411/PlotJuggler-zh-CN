@@ -5,9 +5,9 @@ ArduPilot DataFlash BIN 加载器。首个集成版本采用
 `3.18.0-zh.1+upstream.3.17.2.apbin.1.g<commit>`（SemVer 2.0.0）。
 
 - [使用、解析范围、许可和同步说明](docs/zh-CN.md)
-- [Windows 安装器与 portable 构建](../../actions/workflows/zh-windows.yml)
-- [Linux AppImage 构建](../../actions/workflows/zh-linux.yml)
-- [每日上游同步及冲突报告](../../actions/workflows/zh-sync.yml)
+- [Windows 安装器与 portable 构建](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-windows.yml)
+- [Linux AppImage 构建](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-linux.yml)
+- [每日上游同步及冲突报告](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-sync.yml)
 
 以下保留官方项目说明与作者信息。
 
