@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 #include "resource_image.h"
 
-#include <QApplication>
+#include <QGuiApplication>
 #include <QJsonArray>
 #include <QTemporaryDir>
 #include <iostream>
 
 int main(int argc, char** argv)
 {
-  QApplication app(argc, argv);
+  QGuiApplication app(argc, argv);
   QTemporaryDir directory;
   if (!directory.isValid())
   {

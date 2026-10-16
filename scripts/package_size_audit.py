@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 from package_metadata import package_metadata
+from package_privacy import check_metadata, load_public_records
 
 p = argparse.ArgumentParser()
 p.add_argument("--payload", required=True)
@@ -18,37 +19,15 @@ p.add_argument("--out", required=True)
 a = p.parse_args()
 root = Path(a.payload)
 files = []
-contacts = re.compile(br"@[qQ][qQ]\.com|@\x00[qQ]\x00[qQ]\x00\.\x00c\x00o\x00m\x00", re.I)
-private_path = re.compile(r"[A-Z]:\\Users\\(?!Public\\|Default\\|runneradmin\\)[^\\\x00\r\n]+", re.I)
-qt_public_pdb = re.compile(r"[A-Z]:\\Users\\qt\\work\\qt\\[^\x00\r\n]*?\.pdb", re.I)
 upstream_markers = []
-
-def check_paths(data, name):
-    # Check ASCII and both UTF-16 alignments. Do not exempt a whole dependency:
-    # only the specific published Qt builder record / CPython example is classified.
-    representations = [data.decode("latin1"), data.decode("utf-16le", errors="ignore"),
-                       data[1:].decode("utf-16le", errors="ignore")]
-    for text in representations:
-        if name.lower().endswith(".dll"):
-            text, count = qt_public_pdb.subn("<published Qt PDB record>", text)
-            if count:
-                upstream_markers.append({"path": name, "kind": "published Qt builder PDB path", "count": count})
-        if re.search(r"(^|/)python3\.\d+/venv/scripts/common/Activate\.ps1$", name):
-            # Literal documented example in python/cpython v3.10.12, not host data.
-            example = "C:\\Users\\MyUser\\Common\\.venv"
-            count = text.count(example)
-            text = text.replace(example, "<published CPython documentation example>")
-            if count:
-                upstream_markers.append({"path": name, "kind": "CPython venv documentation example", "count": count})
-        assert not private_path.search(text), "Unexpected private path in " + name
+public_records = load_public_records()
 for path in sorted(root.rglob("*")):
     if not path.is_file() or path.is_symlink():
         continue
     name = path.relative_to(root).as_posix()
     assert not re.search(r"(^|/)(pj_.*_test|.*_test\.exe)(\.|$)", name), name
     data = path.read_bytes()
-    assert not contacts.search(data), "Unexpected personal contact in " + name
-    check_paths(data, name)
+    upstream_markers.extend(check_metadata(data, name, public_records))
     files.append({"path": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()})
 packages = []
 for filename in a.package:

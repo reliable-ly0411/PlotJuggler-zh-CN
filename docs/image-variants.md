@@ -102,6 +102,33 @@ downloaded applications. Package inventories include per-file sizes and
 hashes. Build metadata uses project GitHub noreply addresses. This branch
 creates CI artifacts only; it does not publish a Release or install itself.
 Each package audit also measures its current resources with the production
-Qt5 RCC. Privacy checks classify only the specific published Qt builder PDB
-records and the CPython venv documentation example; unrelated private paths
-and contact patterns still fail, including UTF-16 representations.
+Qt5 RCC. Privacy checks classify only exact public Qt builder PDB literals and
+the CPython venv documentation example in files whose relative names and full
+SHA-256 match `tests/data/public-build-records.json`. CPython's LF reference and
+CRLF distributed file are both documented; only the distributed hash is accepted.
+Other paths in an approved file still fail. GitHub credential families, PEM
+private-key bodies, and private contact patterns are checked before any path
+classification, including both UTF-16 byte alignments. This is a focused
+regression check, not a claim to detect every kind of secret.
+
+The previous blanket exclusion for GitHub's `runneradmin` user directory is
+removed. The Windows Parquet and Mosaico plugins retain 32 and 312 public
+dependency build-source paths from restored Conan libraries. These are listed
+with the verified CI artifact provenance and accepted only as exact
+NUL-terminated literals in the corresponding plugin;
+another filename, path suffix, or any other runneradmin path fails. The linked
+plugin's whole-file hash changes with build metadata, so this narrowly scoped
+source-record classification does not use a dependency DLL hash. Credential,
+private-key and contact checks still inspect all its bytes first.
+
+The immutable Python 3.12.7 DLL's ntpath documentation example and Wasmer DLL's
+public runneradmin source-build prefix additionally require the complete DLL's
+SHA-256 and exact filename. This prefix classification applies to that one
+immutable public binary; changed bytes or another filename fail. Other user
+paths and secret material still fail even if a synthetic test approves a hash.
+
+`python tests/check_package_privacy.py` runs synthetic positive and negative
+cases for approved records, changed files, wrong filenames, unrelated personal
+paths, GitHub tokens (including variable-length installation JWTs), private-key
+bodies, and UTF-16. Even a hash-approved dependency containing a synthetic token
+must fail. CTest registers this as `PackagePrivacy` when Python is available.

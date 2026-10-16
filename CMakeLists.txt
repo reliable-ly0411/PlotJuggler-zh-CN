@@ -364,9 +364,15 @@ if(PJ_BUILD_FORK_TESTS)
   set_tests_properties(LocalizedTimePicker PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
   add_executable(pj_resource_image_test tests/resource_image_test.cpp)
-  target_link_libraries(pj_resource_image_test PRIVATE Qt5::Widgets pj_resource_images)
+  target_link_libraries(pj_resource_image_test PRIVATE Qt5::Gui pj_resource_images)
   add_test(NAME ResourceImageVariants COMMAND pj_resource_image_test)
   set_tests_properties(ResourceImageVariants PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+  find_package(Python3 COMPONENTS Interpreter QUIET)
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME PackagePrivacy COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_package_privacy.py)
+  endif()
 
   # Keep regression executables outside bin: packaging stages that entire directory.
   set_target_properties(pj_localized_meme_test pj_time_picker_test pj_resource_image_test
