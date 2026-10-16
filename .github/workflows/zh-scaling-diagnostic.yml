@@ -50,17 +50,21 @@ jobs:
         for profile in default no-sse41 no-avx2 serial; do
           export QT_NO_CPU_FEATURE=''
           export PJ_SCALE_THREADS=0
-                  export PJ_MEME_REFERENCE_DIR="$PWD/reference"
+          export PJ_MEME_REFERENCE_DIR="$PWD/reference"
           case "$profile" in
             no-sse41) export QT_NO_CPU_FEATURE='sse4.1 avx2' ;;
             no-avx2) export QT_NO_CPU_FEATURE='avx2' ;;
             serial) export PJ_SCALE_THREADS=1 ;;
           esac
           probe-build/scaling_probe plotjuggler_app/resources/memes reference "diagnostic/$profile/single" 37 || failed=1
-                  for attempt in 1 2 3 4; do
-                    export PJ_MEME_AUDIT_DIR="$PWD/diagnostic/$profile/full-$attempt"
-                    probe-build/meme_scaling_regression || failed=1
-                  done
+          for attempt in 1 2 3 4; do
+            export PJ_MEME_AUDIT_DIR="$PWD/diagnostic/$profile/full-$attempt"
+            probe-build/meme_scaling_regression || failed=1
+          done
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            export PJ_MEME_AUDIT_DIR="$PWD/diagnostic/$profile/hash-$attempt"
+            PJ_MEME_DIAG_HASH_ONLY=1 probe-build/meme_scaling_regression || failed=1
+          done
         done
         exit "$failed"
     - uses: actions/upload-artifact@v4

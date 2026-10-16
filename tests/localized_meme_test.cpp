@@ -23,6 +23,8 @@
 namespace
 {
 int diagnostic_image = -1;
+int diagnostic_hash_call = 0;
+QString diagnostic_directory;
 QString pixelHash(const QImage& input, QImage* converted = nullptr, QByteArray* consumed = nullptr)
 {
   const auto image = input.convertToFormat(QImage::Format_RGBA8888);
@@ -41,6 +43,53 @@ QString pixelHash(const QImage& input, QImage* converted = nullptr, QByteArray* 
     hash.addData(reinterpret_cast<const char*>(image.constScanLine(y)), image.width() * 4);
   }
   return QString::fromLatin1(hash.result().toHex());
+}
+bool verifyPixelHash(const QImage& input, const QString& expected, const QString& context,
+                     int failure_code)
+{
+  QImage converted;
+  QByteArray consumed;
+  ++diagnostic_hash_call;
+  const bool capture = !diagnostic_directory.isEmpty();
+  const QString actual = pixelHash(input, capture ? &converted : nullptr,
+                                  capture ? &consumed : nullptr);
+  if (actual == expected)
+    return true;
+  std::cerr << "Hash mismatch: " << context.toStdString() << " initial="
+            << actual.toStdString() << " expected=" << expected.toStdString() << '\n';
+  if (!capture)
+    return false;
+  const QString path = diagnostic_directory + QString("/hash_failure_%1").arg(diagnostic_hash_call);
+  QDir().mkpath(path);
+  const auto save = [&](const QString& name, const QByteArray& data) {
+    QFile file(path + '/' + name);
+    if (file.open(QIODevice::WriteOnly))
+      file.write(data);
+  };
+  save("consumed.rgba", consumed);
+  QByteArray rows;
+  for (int y = 0; y < converted.height(); ++y)
+    rows.append(reinterpret_cast<const char*>(converted.constScanLine(y)), converted.width() * 4);
+  save("converted.rgba", rows);
+  QByteArray source;
+  for (int y = 0; y < input.height(); ++y)
+    source.append(reinterpret_cast<const char*>(input.constScanLine(y)), input.bytesPerLine());
+  save("source-native.bin", source);
+  const auto digest = [](const QByteArray& data) {
+    return QString::fromLatin1(QCryptographicHash::hash(data, QCryptographicHash::Sha256).toHex());
+  };
+  const QJsonObject report{{"context", context}, {"failure_code", failure_code},
+      {"image", diagnostic_image}, {"qt", qVersion()}, {"initial_sha256", actual},
+      {"expected_sha256", expected}, {"consumed_sha256", digest(consumed)},
+      {"converted_sha256", digest(rows)}, {"repeated_pixel_sha256", pixelHash(converted)},
+      {"source_format", int(input.format())}, {"source_depth", input.depth()},
+      {"source_stride", input.bytesPerLine()}, {"converted_stride", converted.bytesPerLine()},
+      {"width", input.width()}, {"height", input.height()},
+      {"cpu_disabled", qEnvironmentVariable("QT_NO_CPU_FEATURE")}};
+  save("hash-counterexample.json", QJsonDocument(report).toJson());
+  input.save(path + "/source.png");
+  converted.save(path + "/converted.png");
+  return false;
 }
 QRect rect(const QJsonArray& a)
 {
@@ -158,6 +207,7 @@ int runTests(int argc, char** argv)
   }
   const auto images = root["images"].toArray();
   const auto assets = root["assets"].toObject();
+  diagnostic_directory = qEnvironmentVariable("PJ_MEME_AUDIT_DIR");
   qint64 stored_bytes = 0, uncompressed_bytes = 0;
   for (auto it = assets.begin(); it != assets.end(); ++it)
   {
@@ -170,13 +220,18 @@ int runTests(int argc, char** argv)
       return 4;
     }
     const QImage image(":/resources/memes/" + it.key());
-    if (pixelHash(image) != meta["rgba_sha256"].toString())
+    if (!verifyPixelHash(image, meta["rgba_sha256"].toString(), it.key(), 5))
     {
       return 5;
     }
     const QResource resource(":/resources/memes/" + it.key());
     stored_bytes += resource.size();
     uncompressed_bytes += meta["bytes"].toDouble();
+  }
+  if (qEnvironmentVariableIsSet("PJ_MEME_DIAG_HASH_ONLY"))
+  {
+    std::cout << "PASS: exact asset pixels (diagnostic; rendering tests not requested)\n";
+    return 0;
   }
   const QString reference_dir = qEnvironmentVariable("PJ_MEME_REFERENCE_DIR");
   const QString audit_dir = qEnvironmentVariable("PJ_MEME_AUDIT_DIR");
@@ -216,7 +271,8 @@ int runTests(int argc, char** argv)
       const auto reference = entry["reference"].toObject();
       if (variant.contains("image"))
       {
-        if (pixelHash(native) != reference["rgba_sha256"].toString())
+        if (!verifyPixelHash(native, reference["rgba_sha256"].toString(),
+                             QString("full-image-%1").arg(i), 9))
         {
           return 9;
         }
@@ -229,7 +285,8 @@ int runTests(int argc, char** argv)
         {
           const auto patch = patches[n].toObject();
           const auto area = rect(references[n].toObject()["rect"].toArray());
-          if (pixelHash(native.copy(area)) != references[n].toObject()["rgba_sha256"].toString())
+          if (!verifyPixelHash(native.copy(area), references[n].toObject()["rgba_sha256"].toString(),
+                               QString("native-caption-%1-%2").arg(i).arg(n), 10))
           {
             std::cerr << "Caption pixels changed in image " << i << '\n';
             return 10;
