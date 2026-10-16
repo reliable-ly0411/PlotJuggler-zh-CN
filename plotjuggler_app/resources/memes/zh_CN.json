@@ -3547,65 +3547,14 @@
           1575,
           998
         ],
-        "rgba_sha256": "f49ac73d815fe02cb58f630bfbd8d12215b6436942278a5113de19a04c0f786d",
-        "patches": [
-          {
-            "rect": [
-              189,
-              39,
-              1197,
-              181
-            ],
-            "rgba_sha256": "61d2af008d795d0e73eb55ca87442d0f07447511a7bc313c64168dc30c3ff178"
-          },
-          {
-            "rect": [
-              252,
-              858,
-              1071,
-              140
-            ],
-            "rgba_sha256": "bf8df33bf920a371223975dfe97fa35c0eb43dbae008299941350f1e9594197e"
-          }
-        ]
+        "rgba_sha256": "f49ac73d815fe02cb58f630bfbd8d12215b6436942278a5113de19a04c0f786d"
       },
       "variant_review": {
-        "mode": "patches",
-        "reason": "Reviewed native-resolution caption crops on the intact original background."
+        "mode": "full",
+        "reason": "Actual Qt5 display review found clipped top strokes in the footer caption."
       },
       "variant": {
-        "canvas": [
-          1575,
-          998
-        ],
-        "patches": [
-          {
-            "file": "zh_CN/patches/atlas_52.png",
-            "source": [
-              0,
-              0,
-              1197,
-              181
-            ],
-            "at": [
-              189,
-              39
-            ]
-          },
-          {
-            "file": "zh_CN/patches/atlas_52.png",
-            "source": [
-              0,
-              181,
-              1071,
-              140
-            ],
-            "at": [
-              252,
-              858
-            ]
-          }
-        ]
+        "image": "zh_CN/meme_52.png"
       }
     },
     {
@@ -6394,65 +6343,14 @@
           1240,
           1268
         ],
-        "rgba_sha256": "4afffb4cc83de752bb6623ad0884934276c9e24a62dab5902cc3daeb51791049",
-        "patches": [
-          {
-            "rect": [
-              111,
-              0,
-              1030,
-              178
-            ],
-            "rgba_sha256": "1fe7812edd079b89a46e41b0b689e2df5b3545070e46c061a79fcc8437929a93"
-          },
-          {
-            "rect": [
-              148,
-              1065,
-              906,
-              203
-            ],
-            "rgba_sha256": "de48c3b594af9cbf874e0481c5c9b0e1eb246c0046db26923acfc7b6b1bf77b0"
-          }
-        ]
+        "rgba_sha256": "4afffb4cc83de752bb6623ad0884934276c9e24a62dab5902cc3daeb51791049"
       },
       "variant_review": {
-        "mode": "patches",
-        "reason": "Reviewed native-resolution caption crops on the intact original background."
+        "mode": "full",
+        "reason": "Actual Qt5 display review found clipped rightmost strokes in the final Chinese glyph."
       },
       "variant": {
-        "canvas": [
-          1240,
-          1268
-        ],
-        "patches": [
-          {
-            "file": "zh_CN/patches/atlas_93.png",
-            "source": [
-              0,
-              0,
-              1030,
-              178
-            ],
-            "at": [
-              111,
-              0
-            ]
-          },
-          {
-            "file": "zh_CN/patches/atlas_93.png",
-            "source": [
-              0,
-              178,
-              906,
-              203
-            ],
-            "at": [
-              148,
-              1065
-            ]
-          }
-        ]
+        "image": "zh_CN/meme_93.png"
       }
     },
     {
@@ -7881,13 +7779,13 @@
         522
       ]
     },
-    "zh_CN/patches/atlas_52.png": {
-      "bytes": 378554,
-      "sha256": "2c0fbf8f338a847e6d0d243536a961ff3dc84a8b124954179bc7035456d635b8",
-      "rgba_sha256": "3ae8c31019b16168659defbde1cfd298a2681ae58be3991f96dcf4260ca680cf",
+    "zh_CN/meme_52.png": {
+      "bytes": 1396009,
+      "sha256": "5cd9eae8f1d55f021ef89caf533480091c0756de228e5922ed336b17b5723f24",
+      "rgba_sha256": "f49ac73d815fe02cb58f630bfbd8d12215b6436942278a5113de19a04c0f786d",
       "size": [
-        1197,
-        321
+        1575,
+        998
       ]
     },
     "zh_CN/patches/atlas_53.png": {
@@ -8214,13 +8112,13 @@
         199
       ]
     },
-    "zh_CN/patches/atlas_93.png": {
-      "bytes": 296448,
-      "sha256": "34a293ed9d4659a3e82feef1fb65c4c555560068ba3267ba3fccfd557ea0b561",
-      "rgba_sha256": "f6d00fe35163c7aa28f3a14c924dc1d5c83e466803f8627a5444fd2b75cb702d",
+    "zh_CN/meme_93.png": {
+      "bytes": 1239113,
+      "sha256": "833c448bcce0b103f071c6a7f0401daa2ce9e3a58a77ebead61c1eed680888ea",
+      "rgba_sha256": "4afffb4cc83de752bb6623ad0884934276c9e24a62dab5902cc3daeb51791049",
       "size": [
-        1030,
-        381
+        1240,
+        1268
       ]
     },
     "zh_CN/patches/atlas_94.png": {

@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import urllib.request
 import zipfile
+from package_metadata import package_metadata
 
 p = argparse.ArgumentParser()
 p.add_argument("--manifest", required=True)
@@ -32,6 +33,7 @@ with tempfile.TemporaryDirectory() as temp:
                 shutil.copyfileobj(response, out)
             assert archive.stat().st_size == asset["bytes"]
             assert hashlib.file_digest(archive.open("rb"), "sha256").hexdigest() == asset["sha256"]
+            container = package_metadata(archive)
             members = []
             payload = work / "payload"
             if name.endswith(".zip"):
@@ -61,6 +63,7 @@ with tempfile.TemporaryDirectory() as temp:
                         members.append({"path": file.relative_to(payload).as_posix(), "bytes": file.stat().st_size})
                 shutil.rmtree(payload)
             results.append({"tag": release["tag"], "name": name, "package_bytes": asset["bytes"],
+                            "container": container,
                             "sha256": asset["sha256"], "payload_bytes": sum(m["bytes"] for m in members),
                             "main_executable_bytes": sum(m["bytes"] for m in members if Path(m["path"]).name in {"plotjuggler", "plotjuggler.exe"}),
                             "test_executable_bytes": sum(m["bytes"] for m in members if Path(m["path"]).name.startswith("pj_") and "_test" in m["path"]),

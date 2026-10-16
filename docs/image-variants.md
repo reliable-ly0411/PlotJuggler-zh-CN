@@ -11,8 +11,8 @@ now live in `tests_bin`, with a packaging check to prevent recurrence.
 The source image payload also matters: zh.3 added 88 full-resolution Chinese
 PNGs (152,789,965 bytes), while retaining 106 English JPEGs (6,745,002 bytes).
 Simply re-encoding the complete PNGs losslessly produced 138,409,497 bytes.
-The zh.4 variants instead occupy 46,143,582 bytes: 73 native-resolution caption
-atlases and 15 complete-image fallbacks. These are **resource bytes**, not a
+The zh.4 variants instead occupy 48,103,702 bytes: 71 native-resolution caption
+atlases and 17 complete-image fallbacks. These are **resource bytes**, not a
 claim about compressed installer size. CI records actual ZIP, Qt IFW EXE,
 AppImage, and native Ubuntu 24.04 DEB sizes separately. The same Qt5 RCC audit
 measures zh.2, zh.3, and zh.4 with the real compiler's default compression.
@@ -67,14 +67,17 @@ Whole-image fallbacks preserve every decoded pixel of the reviewed zh.3 PNG:
 |---|---|
 | 0 | Cropping produced a visible armor/arm seam. |
 | 8, 73 | Right-edge Chinese characters could be clipped. |
+| 52 | Actual Qt5 display review found clipped top strokes in the footer caption. |
 | 17, 55, 60, 64, 68, 75, 78, 84, 87, 97, 98 | Distributed captions, transformed/transparent text, diagrams, or altered composition make a local crop unreliable. |
 | 67 | Moving the footer left a product-label ghost. |
+| 93 | Actual Qt5 display review found clipped rightmost strokes in the final Chinese character. |
 
 The existing 10 untranslated image fallbacks and 8 technical-only originals
 are retained. This optimization does not claim to finish those translations.
 All 88 translated candidates were reviewed for caption completeness, English
-coverage, edges, credits, and native resolution; CI exports actual Qt5
-before/after images for final visual review.
+coverage, edges, credits, and native resolution. Actual Qt5 before/after images
+and every crop boundary were reviewed as well. The final whole-image fallbacks
+52 and 93 correct stroke clipping that the smaller contact sheets did not expose.
 
 ## Reproduce and verify
 
@@ -98,3 +101,7 @@ hashes and inventories ZIP, SquashFS, and DEB payloads without executing the
 downloaded applications. Package inventories include per-file sizes and
 hashes. Build metadata uses project GitHub noreply addresses. This branch
 creates CI artifacts only; it does not publish a Release or install itself.
+Each package audit also measures its current resources with the production
+Qt5 RCC. Privacy checks classify only the specific published Qt builder PDB
+records and the CPython venv documentation example; unrelated private paths
+and contact patterns still fail, including UTF-16 representations.

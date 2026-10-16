@@ -11,10 +11,13 @@ import xml.etree.ElementTree as ET
 p = argparse.ArgumentParser()
 p.add_argument("--rcc", default="rcc")
 p.add_argument("--out", required=True)
+p.add_argument("--current-only", action="store_true", help="Measure only this checkout; no Git baseline objects required")
 a = p.parse_args()
 root = Path(__file__).resolve().parents[1]
 versions = [("zh.2", "de2821269e4fa138ff88dd5e856b111cc4942ee9"),
             ("zh.3", "3117288ce8d710bde4f7a86ca5ed5240ebb1c301"), ("zh.4", None)]
+if a.current_only:
+    versions = [("zh.4", None)]
 
 def read(revision, name):
     return (root / name).read_bytes() if revision is None else subprocess.check_output(

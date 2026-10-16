@@ -4,6 +4,7 @@
     <file>resources/memes/zh_CN/meme_00.png</file>
     <file>resources/memes/zh_CN/meme_08.png</file>
     <file>resources/memes/zh_CN/meme_17.png</file>
+    <file>resources/memes/zh_CN/meme_52.png</file>
     <file>resources/memes/zh_CN/meme_55.png</file>
     <file>resources/memes/zh_CN/meme_60.png</file>
     <file>resources/memes/zh_CN/meme_64.png</file>
@@ -14,6 +15,7 @@
     <file>resources/memes/zh_CN/meme_78.png</file>
     <file>resources/memes/zh_CN/meme_84.png</file>
     <file>resources/memes/zh_CN/meme_87.png</file>
+    <file>resources/memes/zh_CN/meme_93.png</file>
     <file>resources/memes/zh_CN/meme_97.png</file>
     <file>resources/memes/zh_CN/meme_98.png</file>
     <file>resources/memes/zh_CN/patches/atlas_02.png</file>
@@ -58,7 +60,6 @@
     <file>resources/memes/zh_CN/patches/atlas_48.png</file>
     <file>resources/memes/zh_CN/patches/atlas_49.png</file>
     <file>resources/memes/zh_CN/patches/atlas_50.png</file>
-    <file>resources/memes/zh_CN/patches/atlas_52.png</file>
     <file>resources/memes/zh_CN/patches/atlas_53.png</file>
     <file>resources/memes/zh_CN/patches/atlas_57.png</file>
     <file>resources/memes/zh_CN/patches/atlas_58.png</file>
@@ -85,7 +86,6 @@
     <file>resources/memes/zh_CN/patches/atlas_90.png</file>
     <file>resources/memes/zh_CN/patches/atlas_91.png</file>
     <file>resources/memes/zh_CN/patches/atlas_92.png</file>
-    <file>resources/memes/zh_CN/patches/atlas_93.png</file>
     <file>resources/memes/zh_CN/patches/atlas_94.png</file>
     <file>resources/memes/zh_CN/patches/atlas_95.png</file>
     <file>resources/memes/zh_CN/patches/atlas_96.png</file>
