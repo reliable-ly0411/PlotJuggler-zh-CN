@@ -22,9 +22,11 @@
 
 namespace
 {
-QString pixelHash(const QImage& input)
+QString pixelHash(const QImage& input, QImage* converted = nullptr)
 {
   const auto image = input.convertToFormat(QImage::Format_RGBA8888);
+  if (converted)
+    *converted = image;
   QCryptographicHash hash(QCryptographicHash::Sha256);
   for (int y = 0; y < image.height(); ++y)
   {
@@ -38,7 +40,8 @@ QRect rect(const QJsonArray& a)
 }
 void saveScaledFailure(const QString& directory, int id, const QPixmap& original,
                        const QPixmap& reference, const QImage& native,
-                       const QImage& before, const QImage& after, const QRect& area)
+                       const QImage& before, const QImage& after, const QRect& area,
+                       const QImage& before_rgba, const QImage& after_rgba)
 {
   if (directory.isEmpty())
     return;
@@ -48,6 +51,26 @@ void saveScaledFailure(const QString& directory, int id, const QPixmap& original
   after.save(path + "/after.png");
   native.save(path + "/native.png");
   reference.save(path + "/reference.png");
+  QJsonArray converted_channel_differences;
+  for (int channel = 0; channel < 4; ++channel)
+  {
+    int differences = 0;
+    for (int y = 0; y < before_rgba.height(); ++y)
+      for (int x = 0; x < before_rgba.width(); ++x)
+        differences += before_rgba.constScanLine(y)[4 * x + channel] !=
+                       after_rgba.constScanLine(y)[4 * x + channel];
+    converted_channel_differences.append(differences);
+  }
+  const auto saveBytes = [&](const QString& name, const QImage& image) {
+    QFile out(path + '/' + name);
+    if (out.open(QIODevice::WriteOnly))
+      for (int y = 0; y < image.height(); ++y)
+        out.write(reinterpret_cast<const char*>(image.constScanLine(y)), image.width() * 4);
+  };
+  saveBytes("before-converted.rgba", before_rgba);
+  saveBytes("after-converted.rgba", after_rgba);
+  saveBytes("before-source.rgb32", before.copy(area));
+  saveBytes("after-source.rgb32", after.copy(area));
   QImage diff(after.size(), QImage::Format_RGB32);
   diff.fill(Qt::black);
   int changed = 0, maximum = 0;
@@ -79,6 +102,9 @@ void saveScaledFailure(const QString& directory, int id, const QPixmap& original
         {"platform", QGuiApplication::platformName()},
         {"cpu_disabled", qEnvironmentVariable("QT_NO_CPU_FEATURE")},
         {"protected_rect", QJsonArray{area.x(), area.y(), area.width(), area.height()}},
+        {"converted_channel_differences", converted_channel_differences},
+        {"compared_before_sha256", pixelHash(before_rgba)},
+        {"compared_after_sha256", pixelHash(after_rgba)},
         {"changed_pixels", changed}, {"max_channel_delta", maximum}, {"examples", examples},
         {"original", imageInfo(original.toImage())}, {"reference", imageInfo(reference.toImage())},
         {"native", imageInfo(native)}, {"before", imageInfo(before)}, {"after", imageInfo(after)}}).toJson());
@@ -226,12 +252,13 @@ int main(int argc, char** argv)
             const int right = int(std::floor((r.x() + r.width() - 4) * sx));
             const int bottom = int(std::floor((r.y() + r.height() - 4) * sy));
             const QRect protected_area(left, top, right - left, bottom - top);
-            if (protected_area.isEmpty() ||
-                pixelHash(before_scaled.copy(protected_area)) !=
-                    pixelHash(chinese.toImage().copy(protected_area)))
+            QImage before_rgba, after_rgba;
+            const auto before_hash = pixelHash(before_scaled.copy(protected_area), &before_rgba);
+            const auto after_hash = pixelHash(chinese.toImage().copy(protected_area), &after_rgba);
+            if (protected_area.isEmpty() || before_hash != after_hash)
             {
               saveScaledFailure(audit_dir, i, original, before, native, before_scaled,
-                                chinese.toImage(), protected_area);
+                                chinese.toImage(), protected_area, before_rgba, after_rgba);
               std::cerr << "Scaled caption pixels changed in image " << i << '\n';
               return 15;
             }
@@ -276,6 +303,11 @@ int main(int argc, char** argv)
     {
       return 19;
     }
+  }
+  if (qEnvironmentVariableIsSet("PJ_MEME_DIAG_NO_EXPORTS"))
+  {
+    std::cout << "PASS: exact native and scaled pixels (diagnostic; export tests disabled)\n";
+    return 0;
   }
   QTemporaryDir output;
   for (bool chinese : {false, true})

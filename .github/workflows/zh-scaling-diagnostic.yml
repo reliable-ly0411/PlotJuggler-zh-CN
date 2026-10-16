@@ -5,6 +5,7 @@ name: Isolated Qt5 caption scaling diagnostic
     - fix/scaled-caption-determinism
     paths:
     - tests/image-tools/**
+    - tests/localized_meme_test.cpp
     - plotjuggler_app/resource_image.*
     - .github/workflows/zh-scaling-diagnostic.yml
   workflow_dispatch: {}
@@ -43,6 +44,7 @@ jobs:
       env:
         QT_QPA_PLATFORM: offscreen
         PJ_MEME_FAILURES_ONLY: '1'
+        PJ_MEME_DIAG_NO_EXPORTS: '1'
       run: |
         failed=0
         for profile in default no-sse41 no-avx2 serial; do
