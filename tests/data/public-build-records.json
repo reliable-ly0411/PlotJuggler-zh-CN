@@ -580,7 +580,9 @@
     "usr/lib/libgnutls.so.30": {
       "file_sha256": [
         "90b9926b88dbf2c82df1b7ee1d1ed4735b4ce2c2648b06a0bfff72761c1d7ea2",
-        "dcadda7f0f82c54ca157b6ca0a5fdc8e1128db4d778109c8e197e2f84c2ac9ba"
+        "dcadda7f0f82c54ca157b6ca0a5fdc8e1128db4d778109c8e197e2f84c2ac9ba",
+        "3a8b752e1d2b0a49f723d088895a2bbed5166157ee42affeef61e26f5a037ed4",
+        "87b80530f32fcd234b235e80a810942fe7d570112d2b134fc5e2aa6794cd35a3"
       ],
       "source_archive": "https://www.gnupg.org/ftp/gcrypt/gnutls/v3.7/gnutls-3.7.3.tar.xz",
       "source_archive_sha256": "fc59c43bc31ab20a6977ff083029277a31935b8355ce387b634fa433f8f6c49a",
@@ -614,7 +616,21 @@
           "kind": "PRIVATE KEY",
           "der_sha256": "87e288dc7dbc29a24241b596ec8c84f949d9f09f34fc0cf69242481fb2274770"
         }
-      ]
+      ],
+      "arm64_provenance": {
+        "package": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/gnutls28/libgnutls30_3.7.3-4ubuntu1.9_arm64.deb",
+        "package_sha256": "cce4bf33fa79446ddee42a992e569f12a57c1a6f8916a2e8349249be0f7ad655",
+        "package_index": "https://ports.ubuntu.com/ubuntu-ports/dists/jammy-updates/main/binary-arm64/Packages.xz",
+        "index_package_sha256_matches": true,
+        "official_library_sha256": "3a8b752e1d2b0a49f723d088895a2bbed5166157ee42affeef61e26f5a037ed4",
+        "official_library_six_keys_match_existing_source": true,
+        "observed_packaged_sha256": "87b80530f32fcd234b235e80a810942fe7d570112d2b134fc5e2aa6794cd35a3",
+        "observed_commit": "80ba4a56cb405f9d85ba7684d67986ab89a2ba36",
+        "evidence_run": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/38881596154",
+        "metadata_artifact_id": 12038052390,
+        "metadata_archive_sha256": "ce71b38eccda5c8d8226896d8dc1fa7f7ea89a708460746e5f5d298624931462",
+        "acceptance_requirement": "Actual packaged ARM64 bytes must pass the existing per-key DER fingerprints and all remaining secret/path/contact checks. No new key fingerprint or filename exemption is added."
+      }
     }
   }
 }

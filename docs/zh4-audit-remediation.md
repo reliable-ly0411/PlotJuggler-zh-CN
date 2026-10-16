@@ -39,6 +39,16 @@ rejects code changes, appended data, synthetic known-literal files, another user
 path, a token and an unknown private key. Failures log rule/file identities rather
 than matched secret material.
 
+The ARM64 GnuTLS package is independently read from Ubuntu's official Jammy
+package index: `libgnutls30_3.7.3-4ubuntu1.9_arm64.deb`, package SHA-256
+`cce4bf33fa79446ddee42a992e569f12a57c1a6f8916a2e8349249be0f7ad655`.
+Its six embedded private-key test vectors match the same six published GnuTLS
+3.7.3 source fingerprints already used on x64. The manifest adds only the exact
+official ARM64 library hash and the observed linuxdeploy-modified ARM64 library
+hash, with CI/artifact provenance. The actual packaged file must still pass all
+six existing DER classifications and every unrelated credential/path check.
+No key fingerprint or general GnuTLS filename exception is added.
+
 ## Seven native packages
 
 `zh-release.yml` orchestrates the reusable Windows/Linux workflows, then collects
