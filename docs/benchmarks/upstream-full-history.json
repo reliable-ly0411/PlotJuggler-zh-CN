@@ -1,0 +1,105 @@
+{
+  "remote": "https://github.com/PlotJuggler/PlotJuggler.git",
+  "fetch": "full history; --filter=tree:0; no --depth; standalone bare metadata repository",
+  "shallow_file_exists": false,
+  "results": [
+    {
+      "args": [
+        "rev-parse",
+        "--is-shallow-repository"
+      ],
+      "exit_code": 0,
+      "stdout": "false",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "show-ref"
+      ],
+      "exit_code": 0,
+      "stdout": "3458f7827732d28db341833fb973612b0c2e3de2 refs/heads/upstream-main\n0345ec513bde7f05ad3148548ac30401f2b6f7a7 refs/heads/upstream-main-4.x\n034a5cc919909aebb124e0dc1abbe2029c3eed0f refs/tags/3.17.2\nd278b1fe98f699d27b820867f454a697e50def2e refs/tags/4.0.0",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "rev-list",
+        "--count",
+        "upstream-main"
+      ],
+      "exit_code": 0,
+      "stdout": "2835",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "rev-list",
+        "--count",
+        "upstream-main-4.x"
+      ],
+      "exit_code": 0,
+      "stdout": "620",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "rev-list",
+        "--max-parents=0",
+        "upstream-main"
+      ],
+      "exit_code": 0,
+      "stdout": "fad0cdf47616857ff8f5cc5377763f3df84d4ac5",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "rev-list",
+        "--max-parents=0",
+        "upstream-main-4.x"
+      ],
+      "exit_code": 0,
+      "stdout": "7ace14a581abebddb72c530d97ca3a708d081071",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "merge-base",
+        "3.17.2",
+        "4.0.0"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "merge-base",
+        "3.17.2",
+        "upstream-main-4.x"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "merge-base",
+        "3.17.2",
+        "upstream-main"
+      ],
+      "exit_code": 0,
+      "stdout": "034a5cc919909aebb124e0dc1abbe2029c3eed0f",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "merge-base",
+        "--is-ancestor",
+        "4.0.0",
+        "upstream-main-4.x"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

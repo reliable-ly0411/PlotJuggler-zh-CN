@@ -1,0 +1,96 @@
+[
+  {
+    "tag": "v3.18.0-zh.3",
+    "assets": [
+      {
+        "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-24.04-amd64.deb",
+        "bytes": 152432002,
+        "sha256": "748dd883b1c979548c8eea37919ba30147c2c511bed880b27e11949c58684e31",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.3/PlotJuggler-3.18.0-zh.3%2Bupstream.3.17.2.apbin.1.g3117288ce8d7-24.04-amd64.deb"
+      },
+      {
+        "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-aarch64.AppImage",
+        "bytes": 368589320,
+        "sha256": "3637a75310e4087283ff38512e5a5c64a47e8b145a292c854b3d67cc978351ef",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.3/PlotJuggler-3.18.0-zh.3%2Bupstream.3.17.2.apbin.1.g3117288ce8d7-aarch64.AppImage"
+      },
+      {
+        "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-bookworm-amd64.deb",
+        "bytes": 150238528,
+        "sha256": "ab6c671f24ee98fc69937868c1e9b81622dd38cad887f5f5183b1beaebd9d500",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.3/PlotJuggler-3.18.0-zh.3%2Bupstream.3.17.2.apbin.1.g3117288ce8d7-bookworm-amd64.deb"
+      },
+      {
+        "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-trixie-amd64.deb",
+        "bytes": 150308224,
+        "sha256": "0e9a05474a21fd272152191eb5af697ed26af343ab8764b88ea5db5d7ffa79c9",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.3/PlotJuggler-3.18.0-zh.3%2Bupstream.3.17.2.apbin.1.g3117288ce8d7-trixie-amd64.deb"
+      },
+      {
+        "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-Windows-x64.exe",
+        "bytes": 339074842,
+        "sha256": "a7a1b4bba6037a9db1ef1669e9495923003a4c863cd4784c4af5098ef5023008",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.3/PlotJuggler-3.18.0-zh.3%2Bupstream.3.17.2.apbin.1.g3117288ce8d7-Windows-x64.exe"
+      },
+      {
+        "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-Windows-x64.zip",
+        "bytes": 359724860,
+        "sha256": "afe4f9ae76b77d5304e928d4e3969652e770f14cd618436268f16a355a430957",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.3/PlotJuggler-3.18.0-zh.3%2Bupstream.3.17.2.apbin.1.g3117288ce8d7-Windows-x64.zip"
+      },
+      {
+        "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-x86_64.AppImage",
+        "bytes": 370395640,
+        "sha256": "3a21adfc5925e8b519a5958cc96a32f11db175acfd1a8566e27f29b13d9d8427",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.3/PlotJuggler-3.18.0-zh.3%2Bupstream.3.17.2.apbin.1.g3117288ce8d7-x86_64.AppImage"
+      }
+    ]
+  },
+  {
+    "tag": "v3.18.0-zh.2",
+    "assets": [
+      {
+        "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-24.04-amd64.deb",
+        "bytes": 27807226,
+        "sha256": "c6b1f119675e4b157200854fe15e2ad29c580a32277356715910349d1fe2740e",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.2/PlotJuggler-3.18.0-zh.2%2Bupstream.3.17.2.apbin.1.gde2821269e4f-24.04-amd64.deb"
+      },
+      {
+        "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-aarch64.AppImage",
+        "bytes": 90544648,
+        "sha256": "990ce7836234370f915394d4ce16cd072bd280edc30524f05710413d1977c56d",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.2/PlotJuggler-3.18.0-zh.2%2Bupstream.3.17.2.apbin.1.gde2821269e4f-aarch64.AppImage"
+      },
+      {
+        "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-bookworm-amd64.deb",
+        "bytes": 26180188,
+        "sha256": "eccd48a771c04b4904f297f3dbf80594407aa300311d542139d750986864ec7b",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.2/PlotJuggler-3.18.0-zh.2%2Bupstream.3.17.2.apbin.1.gde2821269e4f-bookworm-amd64.deb"
+      },
+      {
+        "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-trixie-amd64.deb",
+        "bytes": 26256120,
+        "sha256": "d605c14bc32a34f3dfe75a11037c2bb514e3b24aae2984cb90cda14e372441c9",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.2/PlotJuggler-3.18.0-zh.2%2Bupstream.3.17.2.apbin.1.gde2821269e4f-trixie-amd64.deb"
+      },
+      {
+        "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-Windows-x64.exe",
+        "bytes": 84776930,
+        "sha256": "4c54c3403bdbc6dcb69c66263b9977781a579a855707476354046a4424bf2b3c",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.2/PlotJuggler-3.18.0-zh.2%2Bupstream.3.17.2.apbin.1.gde2821269e4f-Windows-x64.exe"
+      },
+      {
+        "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-Windows-x64.zip",
+        "bytes": 74160328,
+        "sha256": "14c7841aeb992410d674327865b61077d89f84d258601a7c97bbfc19fb2117d1",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.2/PlotJuggler-3.18.0-zh.2%2Bupstream.3.17.2.apbin.1.gde2821269e4f-Windows-x64.zip"
+      },
+      {
+        "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-x86_64.AppImage",
+        "bytes": 92338680,
+        "sha256": "bfa0b3240d6e42f571b04298e20084ba2ee0a0fa0f767ca44cf4403b742e8c49",
+        "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v3.18.0-zh.2/PlotJuggler-3.18.0-zh.2%2Bupstream.3.17.2.apbin.1.gde2821269e4f-x86_64.AppImage"
+      }
+    ]
+  }
+]

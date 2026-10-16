@@ -166,6 +166,9 @@ if(APPIMAGE_BUILD)
 endif()
 
 target_compile_definitions(plotjuggler PRIVATE PJ_INSTALLATION="${PJ_INSTALLATION}" PJ_FORK_SEMVER="${PJ_FORK_SEMVER}")
+target_compile_definitions(plotjuggler PRIVATE
+  PJ_ENABLE_LOCALIZED_IMAGES=$<BOOL:${PJ_ENABLE_LOCALIZED_IMAGES}>)
+target_link_libraries(plotjuggler PRIVATE pj_resource_images)
 
 target_include_directories(
   plotjuggler

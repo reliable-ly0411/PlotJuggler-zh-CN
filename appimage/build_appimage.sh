@@ -72,6 +72,13 @@ LDPLOY_QT="${REPO_ROOT}/linuxdeploy-plugin-qt-${ARCH}.AppImage"
 [[ -f "$LDPLOY_QT" ]] || wget -q "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-${ARCH}.AppImage" -O "$LDPLOY_QT"
 chmod +x "$LDPLOY" "$LDPLOY_QT"
 
+# linuxdeploy starts the Qt/output plugins itself, without forwarding its own
+# --appimage-extract-and-run flag. Inherit extraction mode in every child so
+# containers need neither FUSE mounts nor additional host privileges.
+export APPIMAGE_EXTRACT_AND_RUN=1
+echo "==> Checking Qt plugin API without FUSE"
+"$LDPLOY_QT" --plugin-api-version
+
 echo "==> Running linuxdeploy (Qt + base)"
 "$LDPLOY" --appimage-extract-and-run \
     --appdir "$APPDIR" \

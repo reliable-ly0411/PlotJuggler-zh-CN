@@ -1,0 +1,149 @@
+name: Isolated image compatibility and benchmark tools
+'on':
+  push:
+    branches: [zh4/resource-overlays]
+    paths:
+    - .github/workflows/zh-image-tools.yml
+    - tests/image-tools/**
+    - tests/resource_image_test.cpp
+    - plotjuggler_app/resource_image.*
+    - scripts/prepare_image_benchmarks.py
+    - scripts/export_generic_resource_patch.py
+    - scripts/check_upstream_resource_patch.py
+  pull_request:
+    branches: [zh-CN]
+    paths:
+    - .github/workflows/zh-image-tools.yml
+    - tests/image-tools/**
+    - tests/resource_image_test.cpp
+    - plotjuggler_app/resource_image.*
+    - scripts/prepare_image_benchmarks.py
+    - scripts/export_generic_resource_patch.py
+    - scripts/check_upstream_resource_patch.py
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  upstream-3172-qt5:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - name: Install the baseline Qt5 Core/Gui development tools
+      run: sudo apt-get update && sudo apt-get install -y qtbase5-dev
+    - name: Apply and compile the minimal patch on clean official 3.17.2
+      run: |
+        python3 scripts/export_generic_resource_patch.py --out generic-resource-variant-3172.patch
+        git clone --depth=1 --single-branch --branch 3.17.2 https://github.com/PlotJuggler/PlotJuggler.git upstream-proof-3172
+        test "$(git -C upstream-proof-3172 rev-parse HEAD)" = 034a5cc919909aebb124e0dc1abbe2029c3eed0f
+        test -z "$(git -C upstream-proof-3172 status --porcelain)"
+        git -C upstream-proof-3172 apply --index --check "$PWD/generic-resource-variant-3172.patch"
+        git -C upstream-proof-3172 apply --index "$PWD/generic-resource-variant-3172.patch"
+        python3 scripts/check_upstream_resource_patch.py --root upstream-proof-3172 --out upstream-3172-proof.json
+        cmake -S upstream-proof-3172/tests/resource_image_variant -B upstream-3172-generic -DCMAKE_BUILD_TYPE=Release -DPJ_UPSTREAM_ENGLISH_DIR="$PWD/upstream-proof-3172/plotjuggler_app/resources/memes"
+        cmake --build upstream-3172-generic --parallel 2
+        ctest --test-dir upstream-3172-generic --output-on-failure --no-tests=error
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: Official-3.17.2-Qt5-CoreGui-proof-${{ github.sha }}
+        path: |
+          upstream-3172-generic/Testing/Temporary/
+          upstream-3172-proof.json
+          generic-resource-variant-3172.patch
+        if-no-files-found: warn
+  qt6-generic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - name: Qt GUI dependencies
+      run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev libxcb-cursor0
+    - uses: jurplel/install-qt-action@v4
+      with:
+        version: 6.11.1
+        cache: true
+    - name: Compile generic helper with upstream Qt and C++ standard
+      run: |
+        cmake -S tests/image-tools -B build-image-qt6 -DCMAKE_BUILD_TYPE=Release -DPJ_IMAGE_TOOLS_QT_MAJOR=6
+        cmake --build build-image-qt6 --parallel 2
+        ctest --test-dir build-image-qt6 --output-on-failure --no-tests=error
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: Qt6-CoreGui-compatibility-${{ github.sha }}
+        path: |
+          build-image-qt6/Testing/Temporary/
+        if-no-files-found: warn
+  windows-benchmark-tools:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - uses: jurplel/install-qt-action@v4
+      with:
+        version: 5.15.2
+        arch: win64_msvc2019_64
+        cache: true
+    - uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+    - name: Validate the same minimal patch against official 3.17.2 on Windows
+      shell: pwsh
+      run: |
+        python scripts/export_generic_resource_patch.py --out generic-resource-variant-3172.patch
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        git clone --depth=1 --single-branch --branch 3.17.2 https://github.com/PlotJuggler/PlotJuggler.git upstream-proof-3172
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        if ((git -C upstream-proof-3172 rev-parse HEAD).Trim() -ne '034a5cc919909aebb124e0dc1abbe2029c3eed0f') { throw 'Wrong official baseline' }
+        if (git -C upstream-proof-3172 status --porcelain) { throw 'Baseline is not clean' }
+        git -C upstream-proof-3172 apply --index --check "$PWD/generic-resource-variant-3172.patch"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        git -C upstream-proof-3172 apply --index "$PWD/generic-resource-variant-3172.patch"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        python scripts/check_upstream_resource_patch.py --root upstream-proof-3172 --out upstream-3172-windows-proof.json
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        cmake -S upstream-proof-3172/tests/resource_image_variant -B upstream-3172-generic "-DPJ_UPSTREAM_ENGLISH_DIR=$PWD/upstream-proof-3172/plotjuggler_app/resources/memes"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        cmake --build upstream-3172-generic --config Release --parallel 2
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        ctest --test-dir upstream-3172-generic -C Release --output-on-failure --no-tests=error
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+    - name: Prepare exact pinned image implementations and resources
+      shell: pwsh
+      run: |
+        git fetch --no-tags --depth=1 https://github.com/reliable-ly0411/PlotJuggler-zh-CN.git 3117288ce8d710bde4f7a86ca5ed5240ebb1c301
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        python scripts/prepare_image_benchmarks.py --out bench-inputs
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+    - name: Compile standalone Qt5 benchmark executables
+      shell: pwsh
+      run: |
+        cmake -S tests/image-tools -B build-image-qt5 -DPJ_IMAGE_TOOLS_QT_MAJOR=5 -DPJ_BUILD_IMAGE_BENCHMARKS=ON "-DPJ_IMAGE_INPUTS=$PWD/bench-inputs"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        cmake --build build-image-qt5 --config Release --parallel 2
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        ctest --test-dir build-image-qt5 -C Release --output-on-failure --no-tests=error
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        $env:QT_QPA_PLATFORM='offscreen'
+        foreach ($version in 'zh3','zh4') {
+          & "build-image-qt5/Release/image_bench_$version.exe" --out "bench-inputs/smoke-$version.json" --rounds 1
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        }
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Isolated-Windows-image-benchmarks-${{ github.sha }}
+        path: |
+          build-image-qt5/Release/image_bench_*.exe
+          bench-inputs/inputs.json
+          bench-inputs/smoke-*.json
+          generic-resource-variant-3172.patch
+          upstream-3172-windows-proof.json
+          upstream-3172-generic/Testing/Temporary/
+        if-no-files-found: error

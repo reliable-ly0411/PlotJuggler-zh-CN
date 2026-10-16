@@ -1,11 +1,5 @@
 name: zh-CN Windows build
 'on':
-  push:
-    branches:
-    - zh-CN
-  pull_request:
-    branches:
-    - zh-CN
   workflow_dispatch: {}
   workflow_call:
     inputs:
@@ -17,7 +11,6 @@ permissions:
   contents: read
 concurrency:
   group: zh-windows-${{ github.ref }}
-  # Let trusted builds finish dependency installation and preserve their cache.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   windows:
@@ -53,7 +46,8 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ runner.temp }}/pj-conan-cache.tgz
-        key: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt }}
+        key: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt
+          }}
         restore-keys: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-
     - name: Import cached Conan packages
       shell: pwsh
@@ -81,7 +75,8 @@ jobs:
       uses: actions/cache/save@v4
       with:
         path: ${{ runner.temp }}/pj-conan-cache.tgz
-        key: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt }}
+        key: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt
+          }}
     - name: Build Plotjuggler
       shell: pwsh
       run: |
@@ -94,9 +89,15 @@ jobs:
       shell: pwsh
       run: |
         $env:PATH = "$env:QT_ROOT_DIR\bin;$env:PATH"
+        python -m pip install --disable-pip-version-check Pillow==11.3.0
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        git fetch --no-tags --depth=1 https://github.com/reliable-ly0411/PlotJuggler-zh-CN.git 3117288ce8d710bde4f7a86ca5ed5240ebb1c301
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        $env:PJ_MEME_REFERENCE_DIR = "$env:GITHUB_WORKSPACE/reference-memes"
+        $env:PJ_MEME_AUDIT_DIR = "$env:GITHUB_WORKSPACE/acceptance/image-variants"
         python tests/check_translations.py --fresh
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        python tests/check_memes.py
+        python tests/check_memes.py --reference-rev 3117288ce8d710bde4f7a86ca5ed5240ebb1c301 --export-reference reference-memes --pixel-report acceptance/image-pixels.json
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         python tests/check_version.py
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
@@ -113,54 +114,27 @@ jobs:
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Bundle embeddable Python
       shell: pwsh
-      run: |
-        # Ship a self-contained Python next to plotjuggler.exe so the app
-        # works on any Windows host, regardless of whether (or which) Python
-        # the user has installed. This mirrors what the Linux AppImage does
-        # by bundling /usr/lib/python3.X. See:
-        #   https://docs.python.org/3/using/windows.html#the-embeddable-package
-        #
-        # The embeddable distribution is FLATTENED directly into the data
-        # dir (next to plotjuggler.exe), not into a python\ subfolder.
-        # Reason: when CPython initializes, it locates pythonXY._pth (which
-        # tells it where the stdlib zip lives) by looking next to the
-        # LOADED pythonXY.dll. plotjuggler.exe statically imports
-        # pythonXY.dll, so the OS loader resolves it from the EXE
-        # directory — meaning pythonXY._pth must also live there.
-        $pyVersion = "${{ env.PJ_PYTHON_EMBED_VERSION }}"
-        $pyXY = ($pyVersion -split '\.')[0..1] -join '.'        # "3.12"
-        $pyTag = $pyXY -replace '\.', ''                          # "312"
-        $url = "https://www.python.org/ftp/python/$pyVersion/python-$pyVersion-embed-amd64.zip"
-        $zip = Join-Path $env:RUNNER_TEMP "python-embed.zip"
-        $dataDir = "installer\io.plotjuggler.application\data"
-
-        Write-Host "Downloading $url"
-        Invoke-WebRequest -Uri $url -OutFile $zip -UseBasicParsing
-        Expand-Archive -Path $zip -DestinationPath $dataDir -Force
-
-        # python.exe is the standalone CLI launcher; we only need the
-        # embedded interpreter so drop it (saves ~5 MB).
-        Remove-Item (Join-Path $dataDir "python.exe") -ErrorAction Ignore
-        Remove-Item (Join-Path $dataDir "pythonw.exe") -ErrorAction Ignore
-
-        # python._pth's presence is what enables "isolated mode": Python
-        # ignores PYTHONHOME / PYTHONPATH / registry / user site-packages
-        # and only walks the paths listed in this file. Default is fine
-        # (it lists pythonXY.zip + ".") — ensure `import site` stays off.
-        $pthFile = Join-Path $dataDir "python$pyTag._pth"
-        if (Test-Path $pthFile) {
-          (Get-Content $pthFile) -replace '^\s*import site', '#import site' |
-            Set-Content $pthFile
-        } else {
-          Write-Error "python$pyTag._pth not found at $pthFile after extraction"
-          exit 1
-        }
-
-        # Sanity check: list what we shipped (Python files only)
-        Write-Host "Bundled Python contents in $dataDir :"
-        Get-ChildItem $dataDir |
-          Where-Object { $_.Name -match '^(python|vcruntime|_)|_pth$' } |
-          Format-Table Name, Length
+      run: "# Ship a self-contained Python next to plotjuggler.exe so the app\n# works on any Windows host, regardless\
+        \ of whether (or which) Python\n# the user has installed. This mirrors what the Linux AppImage does\n# by bundling\
+        \ /usr/lib/python3.X. See:\n#   https://docs.python.org/3/using/windows.html#the-embeddable-package\n#\n# The\
+        \ embeddable distribution is FLATTENED directly into the data\n# dir (next to plotjuggler.exe), not into a python\\\
+        \ subfolder.\n# Reason: when CPython initializes, it locates pythonXY._pth (which\n# tells it where the stdlib\
+        \ zip lives) by looking next to the\n# LOADED pythonXY.dll. plotjuggler.exe statically imports\n# pythonXY.dll,\
+        \ so the OS loader resolves it from the EXE\n# directory \u2014 meaning pythonXY._pth must also live there.\n\
+        $pyVersion = \"${{ env.PJ_PYTHON_EMBED_VERSION }}\"\n$pyXY = ($pyVersion -split '\\.')[0..1] -join '.'      \
+        \  # \"3.12\"\n$pyTag = $pyXY -replace '\\.', ''                          # \"312\"\n$url = \"https://www.python.org/ftp/python/$pyVersion/python-$pyVersion-embed-amd64.zip\"\
+        \n$zip = Join-Path $env:RUNNER_TEMP \"python-embed.zip\"\n$dataDir = \"installer\\io.plotjuggler.application\\\
+        data\"\n\nWrite-Host \"Downloading $url\"\nInvoke-WebRequest -Uri $url -OutFile $zip -UseBasicParsing\nExpand-Archive\
+        \ -Path $zip -DestinationPath $dataDir -Force\n\n# python.exe is the standalone CLI launcher; we only need the\n\
+        # embedded interpreter so drop it (saves ~5 MB).\nRemove-Item (Join-Path $dataDir \"python.exe\") -ErrorAction\
+        \ Ignore\nRemove-Item (Join-Path $dataDir \"pythonw.exe\") -ErrorAction Ignore\n\n# python._pth's presence is\
+        \ what enables \"isolated mode\": Python\n# ignores PYTHONHOME / PYTHONPATH / registry / user site-packages\n\
+        # and only walks the paths listed in this file. Default is fine\n# (it lists pythonXY.zip + \".\") \u2014 ensure\
+        \ `import site` stays off.\n$pthFile = Join-Path $dataDir \"python$pyTag._pth\"\nif (Test-Path $pthFile) {\n\
+        \  (Get-Content $pthFile) -replace '^\\s*import site', '#import site' |\n    Set-Content $pthFile\n} else {\n\
+        \  Write-Error \"python$pyTag._pth not found at $pthFile after extraction\"\n  exit 1\n}\n\n# Sanity check: list\
+        \ what we shipped (Python files only)\nWrite-Host \"Bundled Python contents in $dataDir :\"\nGet-ChildItem $dataDir\
+        \ |\n  Where-Object { $_.Name -match '^(python|vcruntime|_)|_pth$' } |\n  Format-Table Name, Length\n"
     - name: Bundle MSVC C++ runtime
       shell: pwsh
       run: |
@@ -236,17 +210,50 @@ jobs:
         }
 
         Write-Host "Installer created successfully: $installer_name"
+    - name: Verify real public DLL identities and mutation rejection
+      shell: pwsh
+      run: |
+        python scripts/verify_public_binary_records.py --payload installer/io.plotjuggler.application/data --out acceptance/public-binary-regressions.json
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+    - name: Audit packaged payload and sizes
+      shell: pwsh
+      run: |
+        python scripts/package_size_audit.py --payload installer/io.plotjuggler.application/data --package "PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip" --package "PlotJuggler-$env:PJ_SEMVER-Windows-x64.exe" --out acceptance/package-size.json
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+    - name: Test build without localized images
+      shell: pwsh
+      run: |
+        $env:PATH = "$env:QT_ROOT_DIR\bin;$env:PATH"
+        cmake --preset conan-default -S . -B build -DPJ_ENABLE_LOCALIZED_IMAGES=OFF
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        cmake --build build --config Release --target pj_localized_meme_test pj_resource_image_test
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        ctest --test-dir build -C Release -R "LocalizedMemes|ResourceImageVariants" --output-on-failure --no-tests=error
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Upload installer
       uses: actions/upload-artifact@v4
       with:
-        name: PlotJuggler-${{ env.PJ_SEMVER }}-Windows-installer
+        name: Software-Windows-installer
         path: PlotJuggler-${{ env.SAFE_REF }}-Windows-x64.exe
         if-no-files-found: error
-    - name: Upload portable package and evidence
+    - name: Upload portable software package
       uses: actions/upload-artifact@v4
       with:
-        name: PlotJuggler-${{ env.PJ_SEMVER }}-Windows-portable
-        path: |-
-          PlotJuggler-${{ env.PJ_SEMVER }}-Windows-x64.zip
-          acceptance/
+        name: Software-Windows-portable
+        path: PlotJuggler-${{ env.PJ_SEMVER }}-Windows-x64.zip
         if-no-files-found: error
+    - name: Upload package identity and audit metadata
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Metadata-Windows
+        path: acceptance/package-size.json
+        if-no-files-found: error
+    - name: Upload Windows acceptance evidence
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Evidence-Windows
+        path: acceptance/
+        if-no-files-found: warn
+        retention-days: 14

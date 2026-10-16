@@ -1,0 +1,591 @@
+{
+  "date_utc": "2026-10-16",
+  "production": [
+    {
+      "version": "zh3",
+      "mode": "no-splash",
+      "main_window_visible_ms": {
+        "n": 8,
+        "median": 880.56925,
+        "min": 837.0314,
+        "max": 1031.1952,
+        "p10": 842.4214,
+        "p90": 984.48973
+      },
+      "peak_working_set_before_main_bytes": {
+        "n": 8,
+        "median": 75317248.0,
+        "min": 75169792,
+        "max": 75382784,
+        "p10": 75238604.8,
+        "p90": 75354112.0
+      },
+      "peak_working_set_through_acceptance_bytes": {
+        "n": 8,
+        "median": 79228928.0,
+        "min": 78921728,
+        "max": 79482880,
+        "p10": 79036416.0,
+        "p90": 79408332.8
+      }
+    },
+    {
+      "version": "zh3",
+      "mode": "splash",
+      "main_window_visible_ms": {
+        "n": 8,
+        "median": 4412.6170999999995,
+        "min": 4319.8498,
+        "max": 4457.6562,
+        "p10": 4360.06417,
+        "p90": 4435.508970000001
+      },
+      "first_splash_window_visible_ms": {
+        "n": 8,
+        "median": 227.71755000000002,
+        "min": 189.955,
+        "max": 304.6929,
+        "p10": 210.91034000000002,
+        "p90": 261.26126
+      },
+      "peak_working_set_before_main_bytes": {
+        "n": 8,
+        "median": 91504640.0,
+        "min": 83140608,
+        "max": 91951104,
+        "p10": 83169280.0,
+        "p90": 91945369.6
+      },
+      "peak_working_set_through_acceptance_bytes": {
+        "n": 8,
+        "median": 91504640.0,
+        "min": 83140608,
+        "max": 91951104,
+        "p10": 83169280.0,
+        "p90": 91945369.6
+      }
+    },
+    {
+      "version": "zh4",
+      "mode": "no-splash",
+      "main_window_visible_ms": {
+        "n": 8,
+        "median": 858.54655,
+        "min": 817.4426,
+        "max": 901.1531,
+        "p10": 822.84121,
+        "p90": 895.51005
+      },
+      "peak_working_set_before_main_bytes": {
+        "n": 8,
+        "median": 75292672.0,
+        "min": 75235328,
+        "max": 75403264,
+        "p10": 75246796.8,
+        "p90": 75377459.2
+      },
+      "peak_working_set_through_acceptance_bytes": {
+        "n": 8,
+        "median": 79075328.0,
+        "min": 78704640,
+        "max": 79331328,
+        "p10": 78833664.0,
+        "p90": 79308390.4
+      }
+    },
+    {
+      "version": "zh4",
+      "mode": "splash",
+      "main_window_visible_ms": {
+        "n": 8,
+        "median": 4380.76455,
+        "min": 4346.5116,
+        "max": 4493.4475,
+        "p10": 4349.62807,
+        "p90": 4467.06632
+      },
+      "first_splash_window_visible_ms": {
+        "n": 8,
+        "median": 228.6796,
+        "min": 205.1173,
+        "max": 304.9525,
+        "p10": 207.17292,
+        "p90": 295.04168999999996
+      },
+      "peak_working_set_before_main_bytes": {
+        "n": 8,
+        "median": 84625408.0,
+        "min": 83312640,
+        "max": 85872640,
+        "p10": 83533414.4,
+        "p90": 85709209.6
+      },
+      "peak_working_set_through_acceptance_bytes": {
+        "n": 8,
+        "median": 84625408.0,
+        "min": 83312640,
+        "max": 85872640,
+        "p10": 83533414.4,
+        "p90": 85709209.6
+      }
+    }
+  ],
+  "render": [
+    {
+      "version": "zh3",
+      "language": "zh_CN",
+      "cache": "primed round-robin",
+      "id": 1,
+      "render_ms": {
+        "n": 48,
+        "median": 2.1162,
+        "min": 2.0356,
+        "max": 3.1512,
+        "p10": 2.05231,
+        "p90": 2.52552
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "zh_CN",
+      "cache": "primed round-robin",
+      "id": 26,
+      "render_ms": {
+        "n": 48,
+        "median": 30.950650000000003,
+        "min": 29.9903,
+        "max": 35.0156,
+        "p10": 30.17371,
+        "p90": 33.34472
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "zh_CN",
+      "cache": "primed round-robin",
+      "id": 52,
+      "render_ms": {
+        "n": 48,
+        "median": 31.0195,
+        "min": 29.9852,
+        "max": 35.834,
+        "p10": 30.30188,
+        "p90": 34.04365
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "zh_CN",
+      "cache": "primed round-robin",
+      "id": 93,
+      "render_ms": {
+        "n": 48,
+        "median": 28.412,
+        "min": 27.1,
+        "max": 33.5404,
+        "p10": 27.519270000000002,
+        "p90": 31.12726
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "zh_CN",
+      "cache": "primed round-robin",
+      "id": 1,
+      "render_ms": {
+        "n": 48,
+        "median": 0.0761,
+        "min": 0.0707,
+        "max": 0.1417,
+        "p10": 0.07377,
+        "p90": 0.08587
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "zh_CN",
+      "cache": "primed round-robin",
+      "id": 26,
+      "render_ms": {
+        "n": 48,
+        "median": 10.97925,
+        "min": 10.3677,
+        "max": 12.4959,
+        "p10": 10.59696,
+        "p90": 11.43262
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "zh_CN",
+      "cache": "primed round-robin",
+      "id": 52,
+      "render_ms": {
+        "n": 48,
+        "median": 24.2793,
+        "min": 23.4348,
+        "max": 28.1475,
+        "p10": 23.73066,
+        "p90": 26.61305
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "zh_CN",
+      "cache": "primed round-robin",
+      "id": 93,
+      "render_ms": {
+        "n": 48,
+        "median": 24.36625,
+        "min": 23.5017,
+        "max": 26.9434,
+        "p10": 23.75205,
+        "p90": 26.06306
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "zh_CN",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 1,
+      "render_ms": {
+        "n": 48,
+        "median": 2.2331,
+        "min": 2.0883,
+        "max": 3.0488,
+        "p10": 2.13034,
+        "p90": 2.7057100000000003
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "zh_CN",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 26,
+      "render_ms": {
+        "n": 48,
+        "median": 31.139,
+        "min": 29.5823,
+        "max": 34.8545,
+        "p10": 29.84259,
+        "p90": 33.60681
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "zh_CN",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 52,
+      "render_ms": {
+        "n": 48,
+        "median": 30.8157,
+        "min": 29.4136,
+        "max": 34.2893,
+        "p10": 29.78754,
+        "p90": 32.79739000000001
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "zh_CN",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 93,
+      "render_ms": {
+        "n": 48,
+        "median": 28.11925,
+        "min": 26.6435,
+        "max": 38.2081,
+        "p10": 27.177120000000002,
+        "p90": 30.084550000000004
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "zh_CN",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 1,
+      "render_ms": {
+        "n": 48,
+        "median": 2.2306999999999997,
+        "min": 2.1078,
+        "max": 2.9338,
+        "p10": 2.16126,
+        "p90": 2.6355400000000007
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "zh_CN",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 26,
+      "render_ms": {
+        "n": 48,
+        "median": 14.4824,
+        "min": 13.4818,
+        "max": 17.7223,
+        "p10": 13.86882,
+        "p90": 15.987070000000001
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "zh_CN",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 52,
+      "render_ms": {
+        "n": 48,
+        "median": 28.7205,
+        "min": 27.3014,
+        "max": 32.5561,
+        "p10": 27.61198,
+        "p90": 30.97849
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "zh_CN",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 93,
+      "render_ms": {
+        "n": 48,
+        "median": 26.41185,
+        "min": 25.66,
+        "max": 29.7462,
+        "p10": 25.78267,
+        "p90": 28.891710000000003
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "en_US",
+      "cache": "primed round-robin",
+      "id": 1,
+      "render_ms": {
+        "n": 48,
+        "median": 0.00455,
+        "min": 0.0041,
+        "max": 0.0116,
+        "p10": 0.0042,
+        "p90": 0.005680000000000003
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "en_US",
+      "cache": "primed round-robin",
+      "id": 26,
+      "render_ms": {
+        "n": 48,
+        "median": 0.0044,
+        "min": 0.004,
+        "max": 0.0466,
+        "p10": 0.0041,
+        "p90": 0.005490000000000002
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "en_US",
+      "cache": "primed round-robin",
+      "id": 52,
+      "render_ms": {
+        "n": 48,
+        "median": 0.0044,
+        "min": 0.0039,
+        "max": 0.0172,
+        "p10": 0.0041,
+        "p90": 0.005260000000000001
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "en_US",
+      "cache": "primed round-robin",
+      "id": 93,
+      "render_ms": {
+        "n": 48,
+        "median": 0.0044,
+        "min": 0.004,
+        "max": 0.0138,
+        "p10": 0.00417,
+        "p90": 0.005130000000000001
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "en_US",
+      "cache": "primed round-robin",
+      "id": 1,
+      "render_ms": {
+        "n": 48,
+        "median": 0.0042,
+        "min": 0.004,
+        "max": 0.0182,
+        "p10": 0.004,
+        "p90": 0.004660000000000001
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "en_US",
+      "cache": "primed round-robin",
+      "id": 26,
+      "render_ms": {
+        "n": 48,
+        "median": 0.0041,
+        "min": 0.0038,
+        "max": 0.0231,
+        "p10": 0.004,
+        "p90": 0.00453
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "en_US",
+      "cache": "primed round-robin",
+      "id": 52,
+      "render_ms": {
+        "n": 48,
+        "median": 0.0041,
+        "min": 0.0039,
+        "max": 0.029,
+        "p10": 0.004,
+        "p90": 0.004620000000000002
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "en_US",
+      "cache": "primed round-robin",
+      "id": 93,
+      "render_ms": {
+        "n": 48,
+        "median": 0.0042,
+        "min": 0.0038,
+        "max": 0.0213,
+        "p10": 0.004,
+        "p90": 0.0046
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "en_US",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 1,
+      "render_ms": {
+        "n": 48,
+        "median": 2.0759,
+        "min": 1.9809,
+        "max": 3.2809,
+        "p10": 2.00939,
+        "p90": 2.7663000000000006
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "en_US",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 26,
+      "render_ms": {
+        "n": 48,
+        "median": 3.0286999999999997,
+        "min": 2.6506,
+        "max": 3.8867,
+        "p10": 2.82884,
+        "p90": 3.62513
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "en_US",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 52,
+      "render_ms": {
+        "n": 48,
+        "median": 4.2447,
+        "min": 3.7831,
+        "max": 5.5894,
+        "p10": 3.85973,
+        "p90": 4.77884
+      }
+    },
+    {
+      "version": "zh3",
+      "language": "en_US",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 93,
+      "render_ms": {
+        "n": 48,
+        "median": 1.9496,
+        "min": 1.733,
+        "max": 3.196,
+        "p10": 1.75354,
+        "p90": 2.43511
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "en_US",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 1,
+      "render_ms": {
+        "n": 48,
+        "median": 2.10965,
+        "min": 1.985,
+        "max": 3.4642,
+        "p10": 2.00039,
+        "p90": 2.98581
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "en_US",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 26,
+      "render_ms": {
+        "n": 48,
+        "median": 3.0765000000000002,
+        "min": 2.6821,
+        "max": 4.5793,
+        "p10": 2.77922,
+        "p90": 3.5478400000000003
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "en_US",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 52,
+      "render_ms": {
+        "n": 48,
+        "median": 4.1032,
+        "min": 3.7223,
+        "max": 5.1181,
+        "p10": 3.86531,
+        "p90": 4.785690000000001
+      }
+    },
+    {
+      "version": "zh4",
+      "language": "en_US",
+      "cache": "Qt pixmap cache cleared per image",
+      "id": 93,
+      "render_ms": {
+        "n": 48,
+        "median": 1.9652,
+        "min": 1.718,
+        "max": 3.1218,
+        "p10": 1.8195000000000001,
+        "p90": 2.532970000000001
+      }
+    }
+  ],
+  "sources": {
+    "zh3": "3117288ce8d710bde4f7a86ca5ed5240ebb1c301",
+    "zh4": "eb7ff9d1f50c43fc1c95516667d2ea770e2059ff"
+  },
+  "render_sources": {
+    "baseline": "3117288ce8d710bde4f7a86ca5ed5240ebb1c301",
+    "candidate": "a5ca274dbc5f82c2df4dbf230e4e1757ff68533b"
+  }
+}

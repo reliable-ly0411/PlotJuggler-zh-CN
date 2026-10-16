@@ -10,6 +10,7 @@ p = argparse.ArgumentParser()
 p.add_argument("--app", required=True)
 p.add_argument("--plugin", required=True)
 p.add_argument("--out", required=True)
+p.add_argument("--original-images", action="store_true", help="Expect a build with localized image resources disabled")
 a = p.parse_args()
 app = Path(a.app).resolve()
 plugin = Path(a.plugin).resolve()
@@ -17,7 +18,9 @@ assert app.is_file(), app
 assert plugin.is_file(), plugin
 root = Path(__file__).resolve().parents[1]
 catalog = json.loads((root / "plotjuggler_app/resources/memes/zh_CN.json").read_text(encoding="utf-8"))
-localized_count = sum(bool(m.get("asset")) for m in catalog["images"])
+localized_count = sum(bool(m.get("variant")) for m in catalog["images"])
+if a.original_images:
+    localized_count = 0
 fixture = root / "plotjuggler_plugins/DataLoadAPBin/tests/synthetic.BIN"
 expected_version = json.loads((root / "build/FORK-VERSION.json").read_text(encoding="utf-8"))["version"]
 reports = []
@@ -42,7 +45,7 @@ for language in ("zh_CN", "en_US"):
     assert exported.returncode == 0, exported.stdout.decode("utf-8", errors="replace")
     memes = json.loads((meme_out / "memes.json").read_text(encoding="utf-8"))
     assert len(memes) == 106 and all(m["text_fits"] and m["saved"] and m["english_original"] for m in memes), memes
-    assert sum(m["rendering"] == "ai-localized-asset" for m in memes) == (localized_count if language == "zh_CN" else 0), memes
+    assert sum(m["rendering"] in ("localized-overlay", "localized-full-image") for m in memes) == (localized_count if language == "zh_CN" else 0), memes
     reports.append({"language": language, **report, "meme_images": len(memes)})
 Path(a.out, "summary.json").write_text(json.dumps(reports, ensure_ascii=False, indent=2), encoding="utf-8")
 print("PASS: Chinese default catalog, English override, real UI screenshots, bundled DataFlash loader")

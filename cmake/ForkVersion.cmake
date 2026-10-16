@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # Public product version policy: additive Qt5 functionality is a minor release.
 set(PJ_UPSTREAM_VERSION "3.17.2")
-set(PJ_FORK_PRERELEASE "zh.3")
+set(PJ_FORK_PRERELEASE "zh.4")
 set(PJ_ARDUPILOT_REVISION "1")
 find_package(Git QUIET)
 set(PJ_FORK_GIT_REVISION "source")

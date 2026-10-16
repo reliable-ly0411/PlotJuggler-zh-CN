@@ -1,0 +1,777 @@
+{
+  "protocol": "Win32 first-visible window state on a private desktop; never activated",
+  "sources": {
+    "zh3": "3117288ce8d710bde4f7a86ca5ed5240ebb1c301",
+    "zh4": "eb7ff9d1f50c43fc1c95516667d2ea770e2059ff"
+  },
+  "matching_runtime_hashes": {
+    "Qt5Core.dll": "8d2ff4ce9096ddccc4f4cd62c2e41fc854cfd1b0d6e8d296645a7f5fd4ae565a",
+    "Qt5Gui.dll": "5e7d2d41b8b92a880e83b8cc0ca173f5da61218604186196787ee1600956be1e",
+    "Qt5Widgets.dll": "3788c669d4b645e5a576de9fc77fca776bf516d43c89143dc2ca28291ba14358",
+    "python312.dll": "93488fa7e631cc0a2bd808b9eee8617280ee9b6ff499ab424a1a1cbf24d77dc7",
+    "python312.zip": "b321b802f5c37d2b45a5d2a79645f223143ffa778666135148871b7b8cbb7fe4"
+  },
+  "samples": [
+    {
+      "version": "zh3",
+      "mode": "no-splash",
+      "sample": 0,
+      "meme_id": 1,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 876.2285,
+      "peak_working_set_before_main_bytes": 75382784,
+      "peak_working_set_through_acceptance_bytes": 79376384,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 876.2285
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "no-splash",
+      "sample": 0,
+      "meme_id": 1,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 844.3614,
+      "peak_working_set_before_main_bytes": 75366400,
+      "peak_working_set_through_acceptance_bytes": 79175680,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 844.3614
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "no-splash",
+      "sample": 1,
+      "meme_id": 26,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 817.4426,
+      "peak_working_set_before_main_bytes": 75296768,
+      "peak_working_set_through_acceptance_bytes": 78704640,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 817.4426
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "no-splash",
+      "sample": 1,
+      "meme_id": 26,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 884.91,
+      "peak_working_set_before_main_bytes": 75268096,
+      "peak_working_set_through_acceptance_bytes": 79183872,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 884.91
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "no-splash",
+      "sample": 2,
+      "meme_id": 52,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 964.4731,
+      "peak_working_set_before_main_bytes": 75341824,
+      "peak_working_set_through_acceptance_bytes": 79273984,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 964.4731
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "no-splash",
+      "sample": 2,
+      "meme_id": 52,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 868.5227,
+      "peak_working_set_before_main_bytes": 75300864,
+      "peak_working_set_through_acceptance_bytes": 79298560,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 868.5227
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "no-splash",
+      "sample": 3,
+      "meme_id": 93,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 893.0916,
+      "peak_working_set_before_main_bytes": 75288576,
+      "peak_working_set_through_acceptance_bytes": 78934016,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 893.0916
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "no-splash",
+      "sample": 3,
+      "meme_id": 93,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 844.7314,
+      "peak_working_set_before_main_bytes": 75276288,
+      "peak_working_set_through_acceptance_bytes": 78921728,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 844.7314
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "no-splash",
+      "sample": 4,
+      "meme_id": 1,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 1031.1952,
+      "peak_working_set_before_main_bytes": 75341824,
+      "peak_working_set_through_acceptance_bytes": 79167488,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 1031.1952
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "no-splash",
+      "sample": 4,
+      "meme_id": 1,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 901.1531,
+      "peak_working_set_before_main_bytes": 75251712,
+      "peak_working_set_through_acceptance_bytes": 79036416,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 901.1531
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "no-splash",
+      "sample": 5,
+      "meme_id": 26,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 848.5704,
+      "peak_working_set_before_main_bytes": 75251712,
+      "peak_working_set_through_acceptance_bytes": 79114240,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 848.5704
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "no-splash",
+      "sample": 5,
+      "meme_id": 26,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 837.0314,
+      "peak_working_set_before_main_bytes": 75169792,
+      "peak_working_set_through_acceptance_bytes": 79085568,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 837.0314
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "no-splash",
+      "sample": 6,
+      "meme_id": 52,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 893.2822,
+      "peak_working_set_before_main_bytes": 75309056,
+      "peak_working_set_through_acceptance_bytes": 79278080,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 893.2822
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "no-splash",
+      "sample": 6,
+      "meme_id": 52,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 825.1549,
+      "peak_working_set_before_main_bytes": 75403264,
+      "peak_working_set_through_acceptance_bytes": 79331328,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 825.1549
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "no-splash",
+      "sample": 7,
+      "meme_id": 93,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 885.1764,
+      "peak_working_set_before_main_bytes": 75235328,
+      "peak_working_set_through_acceptance_bytes": 78888960,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 885.1764
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "no-splash",
+      "sample": 7,
+      "meme_id": 93,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": null,
+      "main_window_visible_ms": 874.5459,
+      "peak_working_set_before_main_bytes": 75325440,
+      "peak_working_set_through_acceptance_bytes": 79482880,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 874.5459
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "splash",
+      "sample": 0,
+      "meme_id": 1,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 304.6929,
+      "main_window_visible_ms": 4457.6562,
+      "peak_working_set_before_main_bytes": 83140608,
+      "peak_working_set_through_acceptance_bytes": 83140608,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 304.6929,
+          "width": 750,
+          "height": 500
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4457.6562
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "splash",
+      "sample": 0,
+      "meme_id": 1,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 290.7942,
+      "main_window_visible_ms": 4455.7601,
+      "peak_working_set_before_main_bytes": 83312640,
+      "peak_working_set_through_acceptance_bytes": 83312640,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 290.7942,
+          "width": 750,
+          "height": 500
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4455.7601
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "splash",
+      "sample": 1,
+      "meme_id": 26,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 304.9525,
+      "main_window_visible_ms": 4493.4475,
+      "peak_working_set_before_main_bytes": 84180992,
+      "peak_working_set_through_acceptance_bytes": 84180992,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 304.9525,
+          "width": 500,
+          "height": 500
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4493.4475
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "splash",
+      "sample": 1,
+      "meme_id": 26,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 239.2327,
+      "main_window_visible_ms": 4425.2083,
+      "peak_working_set_before_main_bytes": 91561984,
+      "peak_working_set_through_acceptance_bytes": 91561984,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 239.2327,
+          "width": 500,
+          "height": 500
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4425.2083
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "splash",
+      "sample": 2,
+      "meme_id": 52,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 223.3099,
+      "main_window_visible_ms": 4400.0259,
+      "peak_working_set_before_main_bytes": 91942912,
+      "peak_working_set_through_acceptance_bytes": 91942912,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 223.3099,
+          "width": 680,
+          "height": 431
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4400.0259
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "splash",
+      "sample": 2,
+      "meme_id": 52,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 233.2751,
+      "main_window_visible_ms": 4412.2665,
+      "peak_working_set_before_main_bytes": 85872640,
+      "peak_working_set_through_acceptance_bytes": 85872640,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 233.2751,
+          "width": 680,
+          "height": 431
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4412.2665
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "splash",
+      "sample": 3,
+      "meme_id": 93,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 228.0403,
+      "main_window_visible_ms": 4350.9637,
+      "peak_working_set_before_main_bytes": 85069824,
+      "peak_working_set_through_acceptance_bytes": 85069824,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 228.0403,
+          "width": 499,
+          "height": 511
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4350.9637
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "splash",
+      "sample": 3,
+      "meme_id": 93,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 242.6477,
+      "main_window_visible_ms": 4425.7071,
+      "peak_working_set_before_main_bytes": 91443200,
+      "peak_working_set_through_acceptance_bytes": 91443200,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 242.6477,
+          "width": 499,
+          "height": 511
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4425.7071
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "splash",
+      "sample": 4,
+      "meme_id": 1,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 189.955,
+      "main_window_visible_ms": 4319.8498,
+      "peak_working_set_before_main_bytes": 83181568,
+      "peak_working_set_through_acceptance_bytes": 83181568,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 189.955,
+          "width": 750,
+          "height": 500
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4319.8498
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "splash",
+      "sample": 4,
+      "meme_id": 1,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 208.0539,
+      "main_window_visible_ms": 4369.0627,
+      "peak_working_set_before_main_bytes": 83628032,
+      "peak_working_set_through_acceptance_bytes": 83628032,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 208.0539,
+          "width": 750,
+          "height": 500
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4369.0627
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "splash",
+      "sample": 5,
+      "meme_id": 26,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 205.1173,
+      "main_window_visible_ms": 4346.5116,
+      "peak_working_set_before_main_bytes": 83976192,
+      "peak_working_set_through_acceptance_bytes": 83976192,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 205.1173,
+          "width": 500,
+          "height": 500
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4346.5116
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "splash",
+      "sample": 5,
+      "meme_id": 26,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 222.2983,
+      "main_window_visible_ms": 4377.2989,
+      "peak_working_set_before_main_bytes": 91639808,
+      "peak_working_set_through_acceptance_bytes": 91639808,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 222.2983,
+          "width": 500,
+          "height": 500
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4377.2989
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "splash",
+      "sample": 6,
+      "meme_id": 52,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 232.1252,
+      "main_window_visible_ms": 4426.0173,
+      "peak_working_set_before_main_bytes": 91951104,
+      "peak_working_set_through_acceptance_bytes": 91951104,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 232.1252,
+          "width": 680,
+          "height": 431
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4426.0173
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "splash",
+      "sample": 6,
+      "meme_id": 52,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 214.8324,
+      "main_window_visible_ms": 4392.4664,
+      "peak_working_set_before_main_bytes": 85639168,
+      "peak_working_set_through_acceptance_bytes": 85639168,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 214.8324,
+          "width": 680,
+          "height": 431
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4392.4664
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh4",
+      "mode": "splash",
+      "sample": 7,
+      "meme_id": 93,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 229.3189,
+      "main_window_visible_ms": 4366.5853,
+      "peak_working_set_before_main_bytes": 85102592,
+      "peak_working_set_through_acceptance_bytes": 85102592,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 229.3189,
+          "width": 499,
+          "height": 511
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4366.5853
+        }
+      ],
+      "exit_code": 0
+    },
+    {
+      "version": "zh3",
+      "mode": "splash",
+      "sample": 7,
+      "meme_id": 93,
+      "condition": "fresh process after one prime; OS cache not flushed",
+      "first_splash_window_visible_ms": 219.8912,
+      "main_window_visible_ms": 4380.6465,
+      "peak_working_set_before_main_bytes": 91447296,
+      "peak_working_set_through_acceptance_bytes": 91447296,
+      "numeric_series": 116,
+      "windows": [
+        {
+          "kind": "splash",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 219.8912,
+          "width": 499,
+          "height": 511
+        },
+        {
+          "kind": "main",
+          "class": "Qt5152QWindowIcon",
+          "observed_ms": 4380.6465
+        }
+      ],
+      "exit_code": 0
+    }
+  ],
+  "installed_zh3_unchanged": true,
+  "user_settings_unchanged": true,
+  "limitations": [
+    "2ms polling plus scheduler error; visible state is not photon/presentation timing",
+    "No OS cache flush or reboot; fresh processes and primed file cache",
+    "Splash main-window timing includes intentional 500ms + 3000ms holds",
+    "Through-exit memory includes UI acceptance captures after the 1500ms timer",
+    "Private inactive desktop; no user desktop activation or hardware identity collected"
+  ]
+}
