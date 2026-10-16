@@ -132,3 +132,13 @@ cases for approved records, changed files, wrong filenames, unrelated personal
 paths, GitHub tokens (including variable-length installation JWTs), private-key
 bodies, and UTF-16. Even a hash-approved dependency containing a synthetic token
 must fail. CTest registers this as `PackagePrivacy` when Python is available.
+
+GnuTLS embeds public known-answer self-test private keys. Their classification
+requires the exact library filename and whole-file SHA-256, **and** an exact
+key type plus DER fingerprint taken from the official 3.7.3 source archive's
+`lib/crypto-selftests-pk.c` (LGPL-2.1-or-later). The Ubuntu original and the
+packaged ELF have separately recorded hashes; CI independently
+checks each embedded key. No entire library or key-header pattern is exempt.
+Synthetic cases prove that a changed file, another filename, an unrelated key,
+token or personal path still fails, including UTF-16. Public self-test vectors
+are published fixtures, not user or deployment secrets.

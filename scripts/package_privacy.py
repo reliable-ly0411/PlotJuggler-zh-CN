@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 """Offline package checks. Diagnostics identify the file/rule, never the matched secret."""
+import base64
+import binascii
 import hashlib
 import json
 from pathlib import Path
@@ -32,6 +34,11 @@ def check_metadata(data, relative_name, records):
     ci = records.get("public_ci_source_records", {}).get(name, {})
     immutable = records.get("immutable_public_records", {}).get(name, {})
     immutable = immutable if immutable.get("sha256") == digest else {}
+    selftest = records.get("public_selftest_keys", {}).get(name, {})
+    approved_keys = {(item["kind"], item["der_sha256"])
+                     for item in selftest.get("public_key_fingerprints", [])}
+    if digest not in selftest.get("file_sha256", []):
+        approved_keys = set()
     example = records.get("cpython_venv_example", {})
     python_example = bool(PYTHON_EXAMPLE_FILE.search(name) and digest == example.get("sha256"))
     markers = []
@@ -44,7 +51,14 @@ def check_metadata(data, relative_name, records):
         for match in PRIVATE_KEY.finditer(text):
             body = re.sub(r"\s+", "", match[2].replace("\\n", "").replace("\\r", ""))
             if len(body) >= 64 and re.fullmatch(r"[A-Za-z0-9+/=]+", body):
-                raise ValueError("Unexpected private-key material in " + name)
+                try:
+                    fingerprint = hashlib.sha256(base64.b64decode(body, validate=True)).hexdigest()
+                except (ValueError, binascii.Error):
+                    fingerprint = "invalid base64"
+                if (match[1], fingerprint) not in approved_keys:
+                    raise ValueError("Unexpected private-key material in " + name)
+                markers.append({"path": name, "kind": "hash-verified published self-test key",
+                                "der_sha256": fingerprint})
         if PERSONAL_CONTACT.search(text):
             raise ValueError("Unexpected personal contact in " + name)
         count = 0

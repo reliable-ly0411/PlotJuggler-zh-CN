@@ -540,5 +540,46 @@
       "observed_public_source_occurrences": 1422,
       "reason": "Immutable public Wasmer DLL; all matching user paths are CI Cargo/Rust/build sources. Full bytes remain scanned for tokens, keys, contacts and other user paths."
     }
+  },
+  "public_selftest_keys": {
+    "usr/lib/libgnutls.so.30": {
+      "file_sha256": [
+        "90b9926b88dbf2c82df1b7ee1d1ed4735b4ce2c2648b06a0bfff72761c1d7ea2",
+        "dcadda7f0f82c54ca157b6ca0a5fdc8e1128db4d778109c8e197e2f84c2ac9ba"
+      ],
+      "source_archive": "https://www.gnupg.org/ftp/gcrypt/gnutls/v3.7/gnutls-3.7.3.tar.xz",
+      "source_archive_sha256": "fc59c43bc31ab20a6977ff083029277a31935b8355ce387b634fa433f8f6c49a",
+      "source_file": "lib/crypto-selftests-pk.c",
+      "source_file_sha256": "c3d79122e072177f55dc30a98f68b949c0f36f6159a363aae9512a22a9280ed0",
+      "source_license": "LGPL-2.1-or-later; existing GnuTLS public self-test vectors",
+      "ubuntu_package": "https://archive.ubuntu.com/ubuntu/pool/main/g/gnutls28/libgnutls30_3.7.3-4ubuntu1.9_amd64.deb",
+      "ubuntu_package_sha256": "65e08f0b5d1e620cc5cc9478cd1035f83ea752a6fae23141afd2d111a8f6c555",
+      "public_key_fingerprints": [
+        {
+          "kind": "RSA PRIVATE KEY",
+          "der_sha256": "2859ff03b44c8f0e4f96604b8cced325ef4d01ca935422b2041d88d8809f8fa1"
+        },
+        {
+          "kind": "DSA PRIVATE KEY",
+          "der_sha256": "09f1c1a4680df80b9e8e6e587d3a787de7402a919e366426ad807a1c0f8c98c1"
+        },
+        {
+          "kind": "EC PRIVATE KEY",
+          "der_sha256": "458022ddcb5598b39253bc027eb02c4f3dba00e2bdbaef239a35bc91c9bd4f3a"
+        },
+        {
+          "kind": "PRIVATE KEY",
+          "der_sha256": "0294b4406902e33bb02f89eaf4c691328790d7a9cd01b873d68edac994f310a1"
+        },
+        {
+          "kind": "PRIVATE KEY",
+          "der_sha256": "d245e52c341a76645e1b0e56c58dc964cd4f3ecaea64a9c6d6db9897d4948a8a"
+        },
+        {
+          "kind": "PRIVATE KEY",
+          "der_sha256": "87e288dc7dbc29a24241b596ec8c84f949d9f09f34fc0cf69242481fb2274770"
+        }
+      ]
+    }
   }
 }

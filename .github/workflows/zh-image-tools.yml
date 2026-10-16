@@ -8,6 +8,7 @@ name: Isolated image compatibility and benchmark tools
     - tests/resource_image_test.cpp
     - plotjuggler_app/resource_image.*
     - scripts/prepare_image_benchmarks.py
+    - scripts/export_generic_resource_patch.py
   pull_request:
     branches: [zh-CN]
     paths:
@@ -16,6 +17,7 @@ name: Isolated image compatibility and benchmark tools
     - tests/resource_image_test.cpp
     - plotjuggler_app/resource_image.*
     - scripts/prepare_image_benchmarks.py
+    - scripts/export_generic_resource_patch.py
   workflow_dispatch: {}
 permissions:
   contents: read
@@ -38,11 +40,25 @@ jobs:
         cmake -S tests/image-tools -B build-image-qt6 -DCMAKE_BUILD_TYPE=Release -DPJ_IMAGE_TOOLS_QT_MAJOR=6
         cmake --build build-image-qt6 --parallel 2
         ctest --test-dir build-image-qt6 --output-on-failure --no-tests=error
+    - name: Apply and compile the minimal patch on pinned real upstream
+      run: |
+        python3 scripts/export_generic_resource_patch.py --out generic-resource-variant.patch
+        git clone --depth=1 --filter=blob:none --no-checkout --single-branch --branch main-4.x https://github.com/PlotJuggler/PlotJuggler.git upstream-proof
+        git -C upstream-proof fetch --depth=1 origin 0345ec513bde7f05ad3148548ac30401f2b6f7a7
+        git -C upstream-proof read-tree 0345ec513bde7f05ad3148548ac30401f2b6f7a7
+        git -C upstream-proof apply --index --check "$PWD/generic-resource-variant.patch"
+        git -C upstream-proof apply --index "$PWD/generic-resource-variant.patch"
+        cmake -S upstream-proof/pj_app/tests/resource_image_variant -B upstream-generic -DCMAKE_BUILD_TYPE=Release
+        cmake --build upstream-generic --parallel 2
+        ctest --test-dir upstream-generic --output-on-failure --no-tests=error
     - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: Qt6-CoreGui-compatibility-${{ github.sha }}
-        path: build-image-qt6/Testing/Temporary/
+        path: |
+          build-image-qt6/Testing/Temporary/
+          upstream-generic/Testing/Temporary/
+          generic-resource-variant.patch
         if-no-files-found: warn
   windows-benchmark-tools:
     runs-on: windows-2022

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 """Synthetic leak regressions; never use real credentials or contact an API."""
+import base64
 import hashlib
 from pathlib import Path
 import sys
@@ -67,7 +68,7 @@ class PackagePrivacy(unittest.TestCase):
                     self.rejected(token.encode(encoding))
 
     def test_private_key_material_and_json_escapes(self):
-        for kind in ("PRIVATE KEY", "RSA PRIVATE KEY", "EC PRIVATE KEY", "OPENSSH PRIVATE KEY", "ENCRYPTED PRIVATE KEY"):
+        for kind in ("PRIVATE KEY", "RSA PRIVATE KEY", "DSA PRIVATE KEY", "EC PRIVATE KEY", "OPENSSH PRIVATE KEY", "ENCRYPTED PRIVATE KEY"):
             key = "-" * 5 + "BEGIN " + kind + "-" * 5 + "\n" + "A" * 64 + "\n" + "B" * 64 + "\n" + "-" * 5 + "END " + kind + "-" * 5
             for value in (key, key.replace("\n", "\\n"), key.replace("\n", "\\r\\n")):
                 for encoding in ("ascii", "utf-16le"):
@@ -106,6 +107,25 @@ class PackagePrivacy(unittest.TestCase):
         token = data + ("gh" + "p_" + "x" * 36).encode()
         self.records["immutable_public_records"]["dependency.dll"]["sha256"] = self.sha(token)
         self.rejected(token, "dependency.dll")
+
+    def test_public_selftest_keys_require_file_and_key_fingerprints(self):
+        def key(body):
+            return '-'*5+'BEGIN PRIVATE KEY'+'-'*5+'\n'+body+'\n'+'-'*5+'END PRIVATE KEY'+'-'*5
+        public = key('A'*128)
+        name = 'lib-public-selftest.so'
+        fingerprint = self.sha(base64.b64decode('A'*128))
+        for encoding in ('ascii', 'utf-16le'):
+            data = public.encode(encoding)
+            record = {'file_sha256': [self.sha(data)],
+                      'public_key_fingerprints': [{'kind': 'PRIVATE KEY', 'der_sha256': fingerprint}]}
+            self.records['public_selftest_keys'] = {name: record}
+            self.assertTrue(check_metadata(data, name, self.records))
+            self.rejected(data, 'other.so')
+            self.rejected(data+b'changed', name)
+            for appended in (key('B'*128), 'gh'+'p_'+'z'*36, 'C:\\Users\\PrivateUser\\secret.bin'):
+                leaked = data+b'\0'+appended.encode(encoding)
+                record['file_sha256'] = [self.sha(leaked)]
+                self.rejected(leaked, name)
 
 
 if __name__ == "__main__":
