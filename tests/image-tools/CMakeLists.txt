@@ -27,6 +27,12 @@ add_executable(scaling_probe scaling_probe.cpp
 target_include_directories(scaling_probe PRIVATE ${PJ_SOURCE_ROOT}/plotjuggler_app)
 target_link_libraries(scaling_probe PRIVATE ${QT_GUI})
 
+add_executable(hash_buffer_probe hash_probe.cpp)
+target_link_libraries(hash_buffer_probe PRIVATE Qt${PJ_IMAGE_TOOLS_QT_MAJOR}::Core)
+add_executable(hash_image_probe hash_probe.cpp)
+target_compile_definitions(hash_image_probe PRIVATE PJ_HASH_IMAGES=1)
+target_link_libraries(hash_image_probe PRIVATE ${QT_GUI})
+
 option(PJ_BUILD_LOCALIZED_MEME_DIAGNOSTIC "Build the exact full-catalog scaling regression" OFF)
 if(PJ_BUILD_LOCALIZED_MEME_DIAGNOSTIC)
   find_package(Qt${PJ_IMAGE_TOOLS_QT_MAJOR} REQUIRED COMPONENTS Widgets)
