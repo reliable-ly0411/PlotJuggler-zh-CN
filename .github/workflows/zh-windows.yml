@@ -3,6 +3,7 @@ name: zh-CN Windows build
   push:
     branches:
     - zh-CN
+    - zh4/resource-overlays
   pull_request:
     branches:
     - zh-CN
@@ -94,9 +95,15 @@ jobs:
       shell: pwsh
       run: |
         $env:PATH = "$env:QT_ROOT_DIR\bin;$env:PATH"
+        python -m pip install --disable-pip-version-check Pillow==11.3.0
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        git fetch --no-tags --depth=1 https://github.com/reliable-ly0411/PlotJuggler-zh-CN.git 3117288ce8d710bde4f7a86ca5ed5240ebb1c301
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        $env:PJ_MEME_REFERENCE_DIR = "$env:GITHUB_WORKSPACE/reference-memes"
+        $env:PJ_MEME_AUDIT_DIR = "$env:GITHUB_WORKSPACE/acceptance/image-variants"
         python tests/check_translations.py --fresh
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        python tests/check_memes.py
+        python tests/check_memes.py --reference-rev 3117288ce8d710bde4f7a86ca5ed5240ebb1c301 --export-reference reference-memes --pixel-report acceptance/image-pixels.json
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         python tests/check_version.py
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
@@ -236,6 +243,21 @@ jobs:
         }
 
         Write-Host "Installer created successfully: $installer_name"
+    - name: Audit packaged payload and sizes
+      shell: pwsh
+      run: |
+        python scripts/package_size_audit.py --payload installer/io.plotjuggler.application/data --package "PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip" --package "PlotJuggler-$env:PJ_SEMVER-Windows-x64.exe" --out acceptance/package-size.json
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+    - name: Test build without localized images
+      shell: pwsh
+      run: |
+        $env:PATH = "$env:QT_ROOT_DIR\bin;$env:PATH"
+        cmake --preset conan-default -S . -B build -DPJ_ENABLE_LOCALIZED_IMAGES=OFF
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        cmake --build build --config Release --target pj_localized_meme_test pj_resource_image_test
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        ctest --test-dir build -C Release -R "LocalizedMemes|ResourceImageVariants" --output-on-failure --no-tests=error
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Upload installer
       uses: actions/upload-artifact@v4
       with:

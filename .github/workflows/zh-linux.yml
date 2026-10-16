@@ -3,6 +3,7 @@ name: zh-CN Linux build
   push:
     branches:
     - zh-CN
+    - zh4/resource-overlays
   pull_request:
     branches:
     - zh-CN
@@ -20,13 +21,18 @@ concurrency:
   cancel-in-progress: true
 jobs:
   linux:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 90
+    runs-on: ${{ matrix.ubuntu-distro }}
+    timeout-minutes: 120
     strategy:
+      fail-fast: false
       matrix:
         include:
         - ubuntu-distro: ubuntu-22.04
           arch: x86_64
+          target: appimage
+        - ubuntu-distro: ubuntu-24.04
+          arch: x86_64
+          target: '24.04'
     steps:
     - name: Sync repository
       uses: actions/checkout@v6
@@ -36,7 +42,7 @@ jobs:
     - name: Install build dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y ninja-build python3 python3-dev qtbase5-dev qttools5-dev-tools qttools5-dev libqt5svg5-dev libqt5websockets5-dev libqt5opengl5-dev libqt5x11extras5-dev libqt5serialport5-dev libprotoc-dev ccache libmosquitto-dev ca-certificates lsb-release wget libcurl4-openssl-dev libzmq3-dev libprotobuf-dev protobuf-compiler xvfb fonts-noto-cjk
+        sudo apt-get install -y ninja-build python3 python3-dev python3-pil qtbase5-dev qttools5-dev-tools qttools5-dev libqt5svg5-dev libqt5websockets5-dev libqt5opengl5-dev libqt5x11extras5-dev libqt5serialport5-dev libprotoc-dev ccache libmosquitto-dev ca-certificates lsb-release wget libcurl4-openssl-dev libzmq3-dev libprotobuf-dev protobuf-compiler libgrpc++-dev pkg-config xvfb fonts-noto-cjk dpkg-dev
     - name: Install Apache Arrow for Parquet support
       shell: bash
       run: |
@@ -52,15 +58,15 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ runner.temp }}/ccache
-        key: pj3-ccache-ubuntu22-v1-${{ github.run_id }}-${{ github.run_attempt }}
-        restore-keys: pj3-ccache-ubuntu22-v1-
+        key: pj3-ccache-${{ matrix.ubuntu-distro }}-v1-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: pj3-ccache-${{ matrix.ubuntu-distro }}-v1-
     - name: Build Plotjuggler
       shell: bash
       working-directory: ${{ github.workspace }}
       env:
         CCACHE_DIR: ${{ runner.temp }}/ccache
       run: |
-        cmake . -B build -DCMAKE_BUILD_TYPE=Release -DPJ_INSTALLATION="appimage" \
+        cmake . -B build -DCMAKE_BUILD_TYPE=Release -DPJ_INSTALLATION="${{ matrix.target }}" \
               -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
               -DPJ_PLUGINS_DIRECTORY="bin" -DBUILD_TESTING=OFF
         grep -R "PJ_HAS_PYTHON" build/CMakeCache.txt build/plotjuggler_app/CMakeFiles  || true
@@ -72,15 +78,19 @@ jobs:
       uses: actions/cache/save@v4
       with:
         path: ${{ runner.temp }}/ccache
-        key: pj3-ccache-ubuntu22-v1-${{ github.run_id }}-${{ github.run_attempt }}
+        key: pj3-ccache-${{ matrix.ubuntu-distro }}-v1-${{ github.run_id }}-${{ github.run_attempt }}
     - name: Test DataFlash and translations
       run: |
+        git fetch --no-tags --depth=1 https://github.com/reliable-ly0411/PlotJuggler-zh-CN.git 3117288ce8d710bde4f7a86ca5ed5240ebb1c301
+        export PJ_MEME_REFERENCE_DIR="$PWD/reference-memes"
+        export PJ_MEME_AUDIT_DIR="$PWD/acceptance/image-variants"
         python3 tests/check_translations.py --fresh
-        python3 tests/check_memes.py
+        python3 tests/check_memes.py --reference-rev 3117288ce8d710bde4f7a86ca5ed5240ebb1c301 --export-reference reference-memes --pixel-report acceptance/image-pixels.json
         python3 tests/check_version.py
         ctest --test-dir build --output-on-failure --no-tests=error
         xvfb-run -a python3 scripts/zh_acceptance.py --app build/bin/plotjuggler --plugin build/bin/libDataAPBin.so --out acceptance
     - name: Build AppImage
+      if: matrix.target == 'appimage'
       working-directory: ${{ github.workspace }}
       env:
         ARCH: ${{ matrix.arch }}
@@ -96,20 +106,42 @@ jobs:
         mv PlotJuggler-${{ matrix.arch }}.AppImage "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage"
         echo "SAFE_REF=$SAFE_REF" >> "$GITHUB_ENV"
     - name: Validate packaged AppImage
+      if: matrix.target == 'appimage'
       env:
         APPIMAGE_EXTRACT_AND_RUN: '1'
       run: |
         xvfb-run -a python3 scripts/zh_acceptance.py --app "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --plugin AppDir/usr/bin/libDataAPBin.so --out acceptance/packaged
+        python3 scripts/package_size_audit.py --payload AppDir --package "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --out acceptance/package-size.json
+    - name: Build and validate native Ubuntu package
+      if: matrix.target == '24.04'
+      run: |
+        bash scripts/build_native_deb.sh
+        sudo apt-get install -y "$PWD"/output/*.deb
+        xvfb-run -a python3 scripts/zh_acceptance.py --app /usr/bin/plotjuggler --plugin /usr/lib/plotjuggler/libDataAPBin.so --out acceptance/packaged
+    - name: Test build without localized images
+      run: |
+        cmake -S . -B build -DPJ_ENABLE_LOCALIZED_IMAGES=OFF
+        cmake --build build --parallel 2 --target pj_localized_meme_test pj_resource_image_test plotjuggler
+        ctest --test-dir build -R 'LocalizedMemes|ResourceImageVariants' --output-on-failure --no-tests=error
+        xvfb-run -a python3 scripts/zh_acceptance.py --original-images --app build/bin/plotjuggler --plugin build/bin/libDataAPBin.so --out acceptance/images-disabled
     - name: Upload AppImage
+      if: matrix.target == 'appimage'
       uses: actions/upload-artifact@v4
       with:
         name: PlotJuggler-${{ env.SAFE_REF }}-${{ matrix.arch }}.AppImage
         path: PlotJuggler-${{ env.SAFE_REF }}-${{ matrix.arch }}.AppImage
         if-no-files-found: error
+    - name: Upload native Ubuntu package
+      if: matrix.target == '24.04'
+      uses: actions/upload-artifact@v4
+      with:
+        name: PlotJuggler-${{ env.PJ_SEMVER }}-24.04-amd64.deb
+        path: output/*.deb
+        if-no-files-found: error
     - name: Upload acceptance evidence
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: PlotJuggler-zh-CN-Linux-evidence
+        name: PlotJuggler-zh-CN-${{ matrix.ubuntu-distro }}-evidence
         path: acceptance/
         if-no-files-found: warn

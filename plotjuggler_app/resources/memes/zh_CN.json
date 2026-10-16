@@ -1,7 +1,7 @@
 {
-  "schema": 1,
+  "schema": 2,
   "language": "zh_CN",
-  "policy": "Use reviewed AI-embedded Chinese images; preserve physical lettering materials, perspective, product/code identifiers and source attribution. Keep original images when AI cannot provide an acceptable output. English mode always uses unmodified originals.",
+  "policy": "Native-resolution lossless caption crops over unchanged original backgrounds; complete lossless localized images when boundaries or perspective require them. English originals remain byte-identical.",
   "images": [
     {
       "id": 0,
@@ -20,8 +20,22 @@
       ],
       "original_sha256": "2a8354b9f307c53c8d5c8ad1e02a1c1de6a6ff6925b9339ee5051fe37077661b",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_00.png",
-      "asset_sha256": "0e396045799af531d6efe8911521ed544876a65478ffe3d2d23758d5d4d6066f"
+      "reference": {
+        "file": "zh_CN/meme_00.png",
+        "sha256": "0e396045799af531d6efe8911521ed544876a65478ffe3d2d23758d5d4d6066f",
+        "size": [
+          966,
+          1629
+        ],
+        "rgba_sha256": "c52ee2837577de0c6a447a7a069cec47f860256757d90f51d7cc15f4e2252765"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "Subject geometry changes across the crop boundary."
+      },
+      "variant": {
+        "image": "zh_CN/meme_00.png"
+      }
     },
     {
       "id": 1,
@@ -47,8 +61,51 @@
       ],
       "original_sha256": "64e5623c055c066ab0a75b2f746c82520f8cfd27d7a9d8b768506289a2381463",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_02.png",
-      "asset_sha256": "2e90e036b5458005920f10323e4f97aebc1ee9d5ab6a48bcce168b1edc4cc340"
+      "reference": {
+        "file": "zh_CN/meme_02.png",
+        "sha256": "2e90e036b5458005920f10323e4f97aebc1ee9d5ab6a48bcce168b1edc4cc340",
+        "size": [
+          1642,
+          958
+        ],
+        "rgba_sha256": "7bddf2c993d2c8436e2104c7fa3ec6aada9a715f0cb35207d3b59fe60358685f",
+        "patches": [
+          {
+            "rect": [
+              377,
+              785,
+              921,
+              173
+            ],
+            "rgba_sha256": "27c982586722085adbac0469beb437860b3ce6effffb2acd53264b7c5e5323a0"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1642,
+          958
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_02.png",
+            "source": [
+              0,
+              0,
+              921,
+              173
+            ],
+            "at": [
+              377,
+              785
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 3,
@@ -89,8 +146,51 @@
       ],
       "original_sha256": "9cda349eababfe4466be7f3b206b11b98f1a484519e27ac64dd77ec8ae34ecee",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_03.png",
-      "asset_sha256": "a49011490a3a1c06a76664eed4005424689ad9ee218d8005c83047d92c8865fe"
+      "reference": {
+        "file": "zh_CN/meme_03.png",
+        "sha256": "a49011490a3a1c06a76664eed4005424689ad9ee218d8005c83047d92c8865fe",
+        "size": [
+          1285,
+          1224
+        ],
+        "rgba_sha256": "aee1dc3471ea5a61a771de6769b957803973f514f28f1eb2cffe5cbc0b73317f",
+        "patches": [
+          {
+            "rect": [
+              257,
+              0,
+              283,
+              429
+            ],
+            "rgba_sha256": "8db67f3503013706b4e59ef5bec128d5e68e3c6f5913931f8f9071b430e304dd"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1285,
+          1224
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_03.png",
+            "source": [
+              0,
+              0,
+              283,
+              429
+            ],
+            "at": [
+              257,
+              0
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 4,
@@ -109,8 +209,51 @@
       ],
       "original_sha256": "e6d40dd82459e1eed53410153ee44c8ee741b985140facb924ae088fe7a92f0b",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_04.png",
-      "asset_sha256": "3827608202907a91d7769db3fb8e3a23b6018aa5343ce9c61f9f7fd2030b43ca"
+      "reference": {
+        "file": "zh_CN/meme_04.png",
+        "sha256": "3827608202907a91d7769db3fb8e3a23b6018aa5343ce9c61f9f7fd2030b43ca",
+        "size": [
+          1323,
+          1189
+        ],
+        "rgba_sha256": "b65159224c15fe7e9280ad7a1967c808241d4f581167a505e50d7b8dda4dd2f5",
+        "patches": [
+          {
+            "rect": [
+              0,
+              83,
+              781,
+              167
+            ],
+            "rgba_sha256": "11fc8f8950826a01d6b7e436b7cb94892961c6c3210a3a6e7731496cc3a28a08"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1323,
+          1189
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_04.png",
+            "source": [
+              0,
+              0,
+              781,
+              167
+            ],
+            "at": [
+              0,
+              83
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 5,
@@ -140,8 +283,73 @@
       ],
       "original_sha256": "e681f253be4e9aea5963eec39ba0a61ef725182f39eac1399e8c6c20b698e5a2",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_05.png",
-      "asset_sha256": "0a757c785496a3c33c16f61944447cff2f9a0852e43f5aaf52c615b089b55e36"
+      "reference": {
+        "file": "zh_CN/meme_05.png",
+        "sha256": "0a757c785496a3c33c16f61944447cff2f9a0852e43f5aaf52c615b089b55e36",
+        "size": [
+          1635,
+          962
+        ],
+        "rgba_sha256": "2184c21ddd22bc3f9ebed0a0edcd317fd38da8afc7f0954a630955557efb9d4d",
+        "patches": [
+          {
+            "rect": [
+              212,
+              0,
+              1211,
+              174
+            ],
+            "rgba_sha256": "2113a9340c7fc078187dcf698cc9adf8f0e196438aae13201db85c139e0ea40e"
+          },
+          {
+            "rect": [
+              474,
+              769,
+              687,
+              193
+            ],
+            "rgba_sha256": "fae346ab5e8b8e39af560acd17a56e182f88b8c61d9a1668a021e4db7b1c0385"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1635,
+          962
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_05.png",
+            "source": [
+              0,
+              0,
+              1211,
+              174
+            ],
+            "at": [
+              212,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_05.png",
+            "source": [
+              0,
+              174,
+              687,
+              193
+            ],
+            "at": [
+              474,
+              769
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 6,
@@ -210,8 +418,73 @@
       ],
       "original_sha256": "a10f28e01876400e4321f22b6e49e1cc5d9ac57152d324a555c3e258ca121c7e",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_07.png",
-      "asset_sha256": "8add44a84ce415f48608fa44e428774f442c0cfa5428706658a80004f56acbea"
+      "reference": {
+        "file": "zh_CN/meme_07.png",
+        "sha256": "8add44a84ce415f48608fa44e428774f442c0cfa5428706658a80004f56acbea",
+        "size": [
+          1448,
+          1086
+        ],
+        "rgba_sha256": "ca73543dce31ff0feca56329e1263f6abe6dda77c48c4be44a7d6427908c0130",
+        "patches": [
+          {
+            "rect": [
+              333,
+              0,
+              782,
+              185
+            ],
+            "rgba_sha256": "ec7a5aa3355660b29614db9a489228e8b02791888f861b42a1194997959598df"
+          },
+          {
+            "rect": [
+              0,
+              868,
+              1448,
+              218
+            ],
+            "rgba_sha256": "7a7ae441b6f369188794db79184297395263e5f170e9f4efb32b0ecb9f92da76"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1448,
+          1086
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_07.png",
+            "source": [
+              0,
+              0,
+              782,
+              185
+            ],
+            "at": [
+              333,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_07.png",
+            "source": [
+              0,
+              185,
+              1448,
+              218
+            ],
+            "at": [
+              0,
+              868
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 8,
@@ -241,8 +514,22 @@
       ],
       "original_sha256": "44e2da9458fb75c25e9a493bef3f659087075094142a9dc3f2794f0e89ce2bf3",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_08.png",
-      "asset_sha256": "59a1bc646714787bd83e35f15c2f68d9c9d6dda244cf810670199bc8a0d64497"
+      "reference": {
+        "file": "zh_CN/meme_08.png",
+        "sha256": "59a1bc646714787bd83e35f15c2f68d9c9d6dda244cf810670199bc8a0d64497",
+        "size": [
+          1120,
+          1405
+        ],
+        "rgba_sha256": "3a66cf6e22b33e1cca37c284dcf4b475cac3cfe061f4be50e5cae28e21c0fdc2"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "The proposed crop clips caption glyphs at the right edge."
+      },
+      "variant": {
+        "image": "zh_CN/meme_08.png"
+      }
     },
     {
       "id": 9,
@@ -272,8 +559,73 @@
       ],
       "original_sha256": "e4aa8278fce49b32acbbf98480d2e35b85cb9223b6e5de19208086887c0003c7",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_09.png",
-      "asset_sha256": "a123cb7a5669a38223d11b161382ffb8c36017d3ca5d615ce862891630cdbbbc"
+      "reference": {
+        "file": "zh_CN/meme_09.png",
+        "sha256": "a123cb7a5669a38223d11b161382ffb8c36017d3ca5d615ce862891630cdbbbc",
+        "size": [
+          1371,
+          1147
+        ],
+        "rgba_sha256": "eb5300dfb99637c21fe0f1dcaf824d2938853ab545ec7deac486b30eff3c84e7",
+        "patches": [
+          {
+            "rect": [
+              178,
+              0,
+              1002,
+              230
+            ],
+            "rgba_sha256": "17b9f1c6de685192bdfbc111162f873063d6e8e308e0b251eb27d76dfc844be6"
+          },
+          {
+            "rect": [
+              54,
+              940,
+              1263,
+              207
+            ],
+            "rgba_sha256": "46fc95f89f40b058a50ce826fde47032a8ec86cdbfc9a1d18ff8f40e79a1466f"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1371,
+          1147
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_09.png",
+            "source": [
+              0,
+              0,
+              1002,
+              230
+            ],
+            "at": [
+              178,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_09.png",
+            "source": [
+              0,
+              230,
+              1263,
+              207
+            ],
+            "at": [
+              54,
+              940
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 10,
@@ -331,8 +683,73 @@
       ],
       "original_sha256": "abfe0c622e4b455f2c6aeea5342aff49061d3d1eedf7744808d25cf65d72317e",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_11.png",
-      "asset_sha256": "353b0255edacdcf1d540dd4e336cefc19f2ad922f7f4e7990c40353d72454df2"
+      "reference": {
+        "file": "zh_CN/meme_11.png",
+        "sha256": "353b0255edacdcf1d540dd4e336cefc19f2ad922f7f4e7990c40353d72454df2",
+        "size": [
+          1254,
+          1254
+        ],
+        "rgba_sha256": "368346658a3aeadb3a9e9886dcb6d902e62ac3aa44039b78af6cfd56600db09b",
+        "patches": [
+          {
+            "rect": [
+              225,
+              0,
+              804,
+              164
+            ],
+            "rgba_sha256": "065612e9d40dbdd098ee8970e08512b8b6a8e0f5e16defb90b8e0b5b96b585c4"
+          },
+          {
+            "rect": [
+              0,
+              1053,
+              1254,
+              201
+            ],
+            "rgba_sha256": "7e125449ffb59d50b947132d1e3cfbf9d2c5378fcf60bee98011c0505320dfbe"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1254,
+          1254
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_11.png",
+            "source": [
+              0,
+              0,
+              804,
+              164
+            ],
+            "at": [
+              225,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_11.png",
+            "source": [
+              0,
+              164,
+              1254,
+              201
+            ],
+            "at": [
+              0,
+              1053
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 12,
@@ -362,8 +779,73 @@
       ],
       "original_sha256": "8c821441722ba21dca295d2de3f7c16a3e74cd21b27591b21ab0f10f2ba20ccd",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_12.png",
-      "asset_sha256": "d78b474434f0355da6b914bfebaf56a34de54eca4e3d6b8060b7cbd4517e20c6"
+      "reference": {
+        "file": "zh_CN/meme_12.png",
+        "sha256": "d78b474434f0355da6b914bfebaf56a34de54eca4e3d6b8060b7cbd4517e20c6",
+        "size": [
+          1536,
+          1024
+        ],
+        "rgba_sha256": "48b704e8cc9ed4b349a47380ec749a05d6209d59642ab8d7ef56b37252126d1d",
+        "patches": [
+          {
+            "rect": [
+              537,
+              0,
+              462,
+              144
+            ],
+            "rgba_sha256": "b882d0b73a742d631f75f7614704542933f05f450e1c0745a55bdcb3df7111fc"
+          },
+          {
+            "rect": [
+              215,
+              829,
+              1106,
+              195
+            ],
+            "rgba_sha256": "e373adada03d36b7a4688a14d81a8182343463dff79a132f02799a15c9578a93"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1536,
+          1024
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_12.png",
+            "source": [
+              0,
+              0,
+              462,
+              144
+            ],
+            "at": [
+              537,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_12.png",
+            "source": [
+              0,
+              144,
+              1106,
+              195
+            ],
+            "at": [
+              215,
+              829
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 13,
@@ -382,8 +864,51 @@
       ],
       "original_sha256": "2f2daf8bb35ea0ea3917c55299619d966e5d15ba74dcdf03207e0645e3c77845",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_13.png",
-      "asset_sha256": "4d2d13bf8d7fece40f505e89639b61818aab7db04d429d298892b38c5536e87a"
+      "reference": {
+        "file": "zh_CN/meme_13.png",
+        "sha256": "4d2d13bf8d7fece40f505e89639b61818aab7db04d429d298892b38c5536e87a",
+        "size": [
+          1489,
+          1056
+        ],
+        "rgba_sha256": "e7263562212d51b4c4a1c2dd2ae19c917dfc5858c89b291ad187b52188e63148",
+        "patches": [
+          {
+            "rect": [
+              190,
+              50,
+              1110,
+              230
+            ],
+            "rgba_sha256": "8d85799e1a2a0f732f4b8249b468266c800a328f6b1741e76ca9eb66f8916cfc"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1489,
+          1056
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_13.png",
+            "source": [
+              0,
+              0,
+              1110,
+              230
+            ],
+            "at": [
+              190,
+              50
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 14,
@@ -402,8 +927,51 @@
       ],
       "original_sha256": "3d7c6fff2bdb8e7a4cafaffc9b8701708a3fd4bda6ac4ede2563b6be5af8e5d2",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_14.png",
-      "asset_sha256": "857123b9a844e4eb07c9d522fcd7ad565f8c0bb7b1ad01f65623a3ffb94f7605"
+      "reference": {
+        "file": "zh_CN/meme_14.png",
+        "sha256": "857123b9a844e4eb07c9d522fcd7ad565f8c0bb7b1ad01f65623a3ffb94f7605",
+        "size": [
+          1162,
+          1354
+        ],
+        "rgba_sha256": "79b29e4a48dc2ba443411ecb2ea911203b18e7d9d7a234b8076657a05452a0cd",
+        "patches": [
+          {
+            "rect": [
+              116,
+              0,
+              942,
+              325
+            ],
+            "rgba_sha256": "61be3153460c30390615f65ab665705f4cde45181fa8208b0e88986cbae10a84"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1162,
+          1354
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_14.png",
+            "source": [
+              0,
+              0,
+              942,
+              325
+            ],
+            "at": [
+              116,
+              0
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 15,
@@ -422,8 +990,51 @@
       ],
       "original_sha256": "71f96f8a1c700d07974e5a752caa5695793b848baeca6cccad2d695bba1b5ae7",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_15.png",
-      "asset_sha256": "09256e022a35934e030277540be39d5a00a376bbee7afa3bfe1ffb0bbbce5934"
+      "reference": {
+        "file": "zh_CN/meme_15.png",
+        "sha256": "09256e022a35934e030277540be39d5a00a376bbee7afa3bfe1ffb0bbbce5934",
+        "size": [
+          1393,
+          1129
+        ],
+        "rgba_sha256": "47d3f0ba671cd59ac52f8857100fa7785279d6f30ca65d2fea25d0bcfd394843",
+        "patches": [
+          {
+            "rect": [
+              97,
+              22,
+              1269,
+              193
+            ],
+            "rgba_sha256": "34a50d901e44fa6f2d8bb924e4f390e6603d2b861859d3440c2b9edf77effdbd"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1393,
+          1129
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_15.png",
+            "source": [
+              0,
+              0,
+              1269,
+              193
+            ],
+            "at": [
+              97,
+              22
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 16,
@@ -453,8 +1064,73 @@
       ],
       "original_sha256": "8ce9f37e6d9b4f5341d3eed230f64a634246e521796c32006a0dca13231a9b3e",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_16.png",
-      "asset_sha256": "f62cb0e40b66a9de7b70b26df4a875cb5e6462abca6c3c142a37f6ef0e224c7d"
+      "reference": {
+        "file": "zh_CN/meme_16.png",
+        "sha256": "f62cb0e40b66a9de7b70b26df4a875cb5e6462abca6c3c142a37f6ef0e224c7d",
+        "size": [
+          1500,
+          1049
+        ],
+        "rgba_sha256": "35d3baa4bf0e7d1a79d3e6d591ac0c8067353946af3b67ccfd5a4d703372150c",
+        "patches": [
+          {
+            "rect": [
+              435,
+              0,
+              630,
+              179
+            ],
+            "rgba_sha256": "b3e48c91ad117f5c8ba9316b3989e136e8a2001034aa3f574ee9b6881036c05d"
+          },
+          {
+            "rect": [
+              105,
+              723,
+              1305,
+              326
+            ],
+            "rgba_sha256": "65270f05d6742fa630058a3ef16e2603337f808b8227a1d270aa71135d918145"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1500,
+          1049
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_16.png",
+            "source": [
+              0,
+              0,
+              630,
+              179
+            ],
+            "at": [
+              435,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_16.png",
+            "source": [
+              0,
+              179,
+              1305,
+              326
+            ],
+            "at": [
+              105,
+              723
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 17,
@@ -517,8 +1193,22 @@
       ],
       "original_sha256": "6eb55cff9408bfe513e8fe7a4cebba71b0456928d2b8077bd5adc21a3b7d17ba",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_17.png",
-      "asset_sha256": "b802c2054ad9cd5778be6faf31511d84ab17ec702df834d8dfdc26c90db8a862"
+      "reference": {
+        "file": "zh_CN/meme_17.png",
+        "sha256": "b802c2054ad9cd5778be6faf31511d84ab17ec702df834d8dfdc26c90db8a862",
+        "size": [
+          1151,
+          1366
+        ],
+        "rgba_sha256": "8d57f529dcf7c0e3160c72a24a3a1b80f2900d13fd454466e1a73c67d2c89869"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "Text is dispersed across most of the subject."
+      },
+      "variant": {
+        "image": "zh_CN/meme_17.png"
+      }
     },
     {
       "id": 18,
@@ -551,8 +1241,51 @@
       ],
       "original_sha256": "600acc8c051d7fabed055e6e0c26ebf2cd623ccbcd1da50db1f8d3e0e2b277b7",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_20.png",
-      "asset_sha256": "97b44fe32d809c80a90ba7d293a67920e2c09c0e5b8964c2139d3e279d496e36"
+      "reference": {
+        "file": "zh_CN/meme_20.png",
+        "sha256": "97b44fe32d809c80a90ba7d293a67920e2c09c0e5b8964c2139d3e279d496e36",
+        "size": [
+          1130,
+          1392
+        ],
+        "rgba_sha256": "1a4529bb07ccea93d4b7c2b2c9a46cc0384ccd818124c5af62cbb180801497d7",
+        "patches": [
+          {
+            "rect": [
+              587,
+              13,
+              543,
+              335
+            ],
+            "rgba_sha256": "6b6b20fcdff9c2e77a418e2a1ad8d1888e1badeee18e26550348b796a0a5ed9a"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1130,
+          1392
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_20.png",
+            "source": [
+              0,
+              0,
+              543,
+              335
+            ],
+            "at": [
+              587,
+              13
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 21,
@@ -610,8 +1343,51 @@
       ],
       "original_sha256": "a52c8d7042a4caa71c45070e5db149e1aca6b4528b70c46661c54d825d2d8b31",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_22.png",
-      "asset_sha256": "4bf409a52d699e82ad67e7c09a032093bc2e859764669a3c3c03bba929fc499c"
+      "reference": {
+        "file": "zh_CN/meme_22.png",
+        "sha256": "4bf409a52d699e82ad67e7c09a032093bc2e859764669a3c3c03bba929fc499c",
+        "size": [
+          1427,
+          1102
+        ],
+        "rgba_sha256": "3d55083eb20c88272dc38f3dc7873da2b524d4a17d1188a3962aa9a7beb3da0c",
+        "patches": [
+          {
+            "rect": [
+              0,
+              33,
+              1427,
+              199
+            ],
+            "rgba_sha256": "d9a6fefe6c480d1e2b5cf28a31f352a5279afaef4d9ff59a24d75c6eb587197e"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1427,
+          1102
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_22.png",
+            "source": [
+              0,
+              0,
+              1427,
+              199
+            ],
+            "at": [
+              0,
+              33
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 23,
@@ -630,8 +1406,51 @@
       ],
       "original_sha256": "529de5a2b9b3a1297df8f90ac57adde8b585317cc3e21d236fb11918d28ac6a7",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_23.png",
-      "asset_sha256": "2d0df0f6abd7a711977b09275a025c0e5a9be272f6b58c84a321adfbfaa1dbc5"
+      "reference": {
+        "file": "zh_CN/meme_23.png",
+        "sha256": "2d0df0f6abd7a711977b09275a025c0e5a9be272f6b58c84a321adfbfaa1dbc5",
+        "size": [
+          1425,
+          1104
+        ],
+        "rgba_sha256": "d37c0553591186fa9acf0e6e760a142a7870b4d964164e55b5b66d263128d115",
+        "patches": [
+          {
+            "rect": [
+              99,
+              927,
+              1212,
+              177
+            ],
+            "rgba_sha256": "18087b9d5cb61e28755bdf80730682fa861620b531730a5786523ac65ba7097a"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1425,
+          1104
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_23.png",
+            "source": [
+              0,
+              0,
+              1212,
+              177
+            ],
+            "at": [
+              99,
+              927
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 24,
@@ -661,8 +1480,73 @@
       ],
       "original_sha256": "e6a2f6bb0b5e33fc963113d57c2a6376657244ac997a924ba3aed8cdf82cd850",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_24.png",
-      "asset_sha256": "41883d6cb88ce89b5f7c7249fcd428f9e6dc8ac270a4630f26c9367edb0931e4"
+      "reference": {
+        "file": "zh_CN/meme_24.png",
+        "sha256": "41883d6cb88ce89b5f7c7249fcd428f9e6dc8ac270a4630f26c9367edb0931e4",
+        "size": [
+          1448,
+          1086
+        ],
+        "rgba_sha256": "501f13f2618f3730036306af13e671f6663918ab1b69c4546a9112b35fba47fc",
+        "patches": [
+          {
+            "rect": [
+              173,
+              0,
+              1102,
+              185
+            ],
+            "rgba_sha256": "75af3f5a11382d50f5659d8785bb69ab53201e76ccb76adaebcecbc4a1c2537f"
+          },
+          {
+            "rect": [
+              289,
+              857,
+              841,
+              229
+            ],
+            "rgba_sha256": "8cd5301c04040a8bb499790a893ff06823f5b5031285d9bc99a1830c2f16daf6"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1448,
+          1086
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_24.png",
+            "source": [
+              0,
+              0,
+              1102,
+              185
+            ],
+            "at": [
+              173,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_24.png",
+            "source": [
+              0,
+              185,
+              841,
+              229
+            ],
+            "at": [
+              289,
+              857
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 25,
@@ -692,8 +1576,73 @@
       ],
       "original_sha256": "7cd888e8813d007ad9de74c718257e9796f99df8d91ff7e8efda893738ca73a5",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_25.png",
-      "asset_sha256": "a32954a5a2ddcdd55653286a9a9c339ee06bdaab4ac5fd70e815a41da3056317"
+      "reference": {
+        "file": "zh_CN/meme_25.png",
+        "sha256": "a32954a5a2ddcdd55653286a9a9c339ee06bdaab4ac5fd70e815a41da3056317",
+        "size": [
+          1536,
+          1024
+        ],
+        "rgba_sha256": "876c0b55e86380d7917468612f13f48886bb95896cfc4a18be76a438df9f4677",
+        "patches": [
+          {
+            "rect": [
+              153,
+              0,
+              1230,
+              175
+            ],
+            "rgba_sha256": "a84891b505b150956560d6614bbb705cd4b1734b6070eb36c87f654de70ecf93"
+          },
+          {
+            "rect": [
+              199,
+              829,
+              1122,
+              195
+            ],
+            "rgba_sha256": "fe3fad3d220ca18be2515a31e763785aea2e847bced0d6d750884f0992ca6d27"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1536,
+          1024
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_25.png",
+            "source": [
+              0,
+              0,
+              1230,
+              175
+            ],
+            "at": [
+              153,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_25.png",
+            "source": [
+              0,
+              175,
+              1122,
+              195
+            ],
+            "at": [
+              199,
+              829
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 26,
@@ -723,8 +1672,73 @@
       ],
       "original_sha256": "92cb8cc1f6863498c8d38d89b3ee01b7e2c8914140460bc71afe172d69617968",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_26.png",
-      "asset_sha256": "22521fe3f7a43b700e3de2c727f06c3b2486baa494a268d946575f9d973cd99f"
+      "reference": {
+        "file": "zh_CN/meme_26.png",
+        "sha256": "22521fe3f7a43b700e3de2c727f06c3b2486baa494a268d946575f9d973cd99f",
+        "size": [
+          1254,
+          1254
+        ],
+        "rgba_sha256": "9f27f2bc608261b101904ad5a7def0d3f5a2ef7ac5884819d11cc5e0fc202791",
+        "patches": [
+          {
+            "rect": [
+              37,
+              0,
+              1180,
+              176
+            ],
+            "rgba_sha256": "bb0f3e2dacd6759f84352c97f60821935958eaf4568e98deea875dcd32954b70"
+          },
+          {
+            "rect": [
+              300,
+              1053,
+              578,
+              201
+            ],
+            "rgba_sha256": "62e7ed6d846c5b3d5639614bcb1a2c9d206f53cf18bd198aaca82adef0e68a00"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1254,
+          1254
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_26.png",
+            "source": [
+              0,
+              0,
+              1180,
+              176
+            ],
+            "at": [
+              37,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_26.png",
+            "source": [
+              0,
+              176,
+              578,
+              201
+            ],
+            "at": [
+              300,
+              1053
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 27,
@@ -765,8 +1779,51 @@
       ],
       "original_sha256": "0d9449736250136d50edf40961276d5c3f808ddcd6dc10b6f1411ecd006e8b43",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_27.png",
-      "asset_sha256": "db040fab9804c9d2a6ce40548af9529b3158638c729177a2f4e11a9d4d837083"
+      "reference": {
+        "file": "zh_CN/meme_27.png",
+        "sha256": "db040fab9804c9d2a6ce40548af9529b3158638c729177a2f4e11a9d4d837083",
+        "size": [
+          1096,
+          1435
+        ],
+        "rgba_sha256": "f41d744010e49548466a1e76c2a3a1e6ac9166c8414c769bbff07b8bf8948731",
+        "patches": [
+          {
+            "rect": [
+              54,
+              0,
+              977,
+              503
+            ],
+            "rgba_sha256": "d7ce296c42189001bbf037032f389c4fe005f9126e64c22354c8b813ed2e704e"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1096,
+          1435
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_27.png",
+            "source": [
+              0,
+              0,
+              977,
+              503
+            ],
+            "at": [
+              54,
+              0
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 28,
@@ -792,8 +1849,51 @@
       ],
       "original_sha256": "7598b59ac646a17eee1784eab2ad6fd8255b96b9f5b5e12ed4a7622ba2cc32a0",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_29.png",
-      "asset_sha256": "c3c0380b251fc41e6428ab5014cb35ca6558cf67e0b8daa2786f5f586dd3254b"
+      "reference": {
+        "file": "zh_CN/meme_29.png",
+        "sha256": "c3c0380b251fc41e6428ab5014cb35ca6558cf67e0b8daa2786f5f586dd3254b",
+        "size": [
+          1671,
+          941
+        ],
+        "rgba_sha256": "10d6cdbd44bee90fa1fd895ee72a8aa1979b222cf8756c036f2c2bbfef862c9f",
+        "patches": [
+          {
+            "rect": [
+              618,
+              9,
+              419,
+              170
+            ],
+            "rgba_sha256": "edb70d709174ca1dba9b7ecc1dc3a69cee7a23104da6ab84e13de7472309d5bd"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1671,
+          941
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_29.png",
+            "source": [
+              0,
+              0,
+              419,
+              170
+            ],
+            "at": [
+              618,
+              9
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 30,
@@ -834,8 +1934,73 @@
       ],
       "original_sha256": "15d036173fcda823709ed144d1bf69b228c8da53ea674cc18c62ad2a653695e6",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_30.png",
-      "asset_sha256": "f2367b1025166dc6d6addca6b016a9c2c689688313fbe181a94ec4a1ddb5c42e"
+      "reference": {
+        "file": "zh_CN/meme_30.png",
+        "sha256": "f2367b1025166dc6d6addca6b016a9c2c689688313fbe181a94ec4a1ddb5c42e",
+        "size": [
+          1555,
+          1012
+        ],
+        "rgba_sha256": "f6f5c85b3c1ccf6656062f1f7dab85cb34f5cc9d7af5bbe5b5a9f1221f48b0aa",
+        "patches": [
+          {
+            "rect": [
+              124,
+              10,
+              1338,
+              203
+            ],
+            "rgba_sha256": "248e97e81e45d6e84d0a4dc0c2376820843c94b392b29893ec140477e4454d7a"
+          },
+          {
+            "rect": [
+              46,
+              758,
+              841,
+              204
+            ],
+            "rgba_sha256": "540a100a74a690e49513383a0fb7de27ea4e018931719076e97225d52a14a8ad"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1555,
+          1012
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_30.png",
+            "source": [
+              0,
+              0,
+              1338,
+              203
+            ],
+            "at": [
+              124,
+              10
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_30.png",
+            "source": [
+              0,
+              203,
+              841,
+              204
+            ],
+            "at": [
+              46,
+              758
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 31,
@@ -865,8 +2030,73 @@
       ],
       "original_sha256": "185de167f4eafed370c237deeaabc4fe642cd85ddf6b7cff89d8f82c5c706224",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_31.png",
-      "asset_sha256": "0eff0a0d3e2443ab5a73dc97a62e91f822329ae4df9b510809aabcd8c115aaa5"
+      "reference": {
+        "file": "zh_CN/meme_31.png",
+        "sha256": "0eff0a0d3e2443ab5a73dc97a62e91f822329ae4df9b510809aabcd8c115aaa5",
+        "size": [
+          1448,
+          1086
+        ],
+        "rgba_sha256": "23a5059d51055595e80e92374196b9dace538fc0096f03d5364c9ae4cf62a58a",
+        "patches": [
+          {
+            "rect": [
+              304,
+              0,
+              855,
+              174
+            ],
+            "rgba_sha256": "242ae909dc4fe3c16a8d85e3237ff25bd804833985a3fd30921ca793554fa8be"
+          },
+          {
+            "rect": [
+              57,
+              879,
+              1334,
+              207
+            ],
+            "rgba_sha256": "a0fc3d38c4714920c465a0e756a671a6a285511d5603fda0f20c12d329433d1d"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1448,
+          1086
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_31.png",
+            "source": [
+              0,
+              0,
+              855,
+              174
+            ],
+            "at": [
+              304,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_31.png",
+            "source": [
+              0,
+              174,
+              1334,
+              207
+            ],
+            "at": [
+              57,
+              879
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 32,
@@ -896,8 +2126,73 @@
       ],
       "original_sha256": "71b0b6c874d510b7cee91ff5425cbf4dbebbe6e386da574c8fd018a62d9b27ff",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_32.png",
-      "asset_sha256": "7227c071c4456fd182ce60830c7a63ce5cb8edf8b6305308da2102663de8234e"
+      "reference": {
+        "file": "zh_CN/meme_32.png",
+        "sha256": "7227c071c4456fd182ce60830c7a63ce5cb8edf8b6305308da2102663de8234e",
+        "size": [
+          1351,
+          1164
+        ],
+        "rgba_sha256": "ca09b9b9c6ef976e13b82dd1fc1ce311034e893089d1b443a292ac946ce14c9a",
+        "patches": [
+          {
+            "rect": [
+              40,
+              11,
+              1284,
+              211
+            ],
+            "rgba_sha256": "1727f3e22d1c79554e78e3029a4ed1cd237aa5afafd2e98dc5893b75d7ea206a"
+          },
+          {
+            "rect": [
+              27,
+              977,
+              1311,
+              187
+            ],
+            "rgba_sha256": "9eb10464b9d9bf4c2658a0cb79b022253de2f06f959ab2b92e4d1a669116486a"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1351,
+          1164
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_32.png",
+            "source": [
+              0,
+              0,
+              1284,
+              211
+            ],
+            "at": [
+              40,
+              11
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_32.png",
+            "source": [
+              0,
+              211,
+              1311,
+              187
+            ],
+            "at": [
+              27,
+              977
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 33,
@@ -966,8 +2261,73 @@
       ],
       "original_sha256": "04a9a9227b2a918657c5182436d56d6e258d2824050f4ef00ae044bd522ab45b",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_34.png",
-      "asset_sha256": "8413d617db7c8d371a1db68baa766e848fd5e545e36e70f396cd67b831e0c6e0"
+      "reference": {
+        "file": "zh_CN/meme_34.png",
+        "sha256": "8413d617db7c8d371a1db68baa766e848fd5e545e36e70f396cd67b831e0c6e0",
+        "size": [
+          1900,
+          828
+        ],
+        "rgba_sha256": "c4dc741a883efa895fccf9886e24c59f7f32f1ab6f30164874f1a09f63eb99c6",
+        "patches": [
+          {
+            "rect": [
+              361,
+              0,
+              1178,
+              166
+            ],
+            "rgba_sha256": "c4c74053ed0aab4db626dd033acbca8b2b9d10b3e2acf05184c3155cc1803776"
+          },
+          {
+            "rect": [
+              285,
+              612,
+              1330,
+              200
+            ],
+            "rgba_sha256": "2845e7299a55be44d44b204a944245a31f5b5ba1cd9018e54175fd15e986bbd3"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1900,
+          828
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_34.png",
+            "source": [
+              0,
+              0,
+              1178,
+              166
+            ],
+            "at": [
+              361,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_34.png",
+            "source": [
+              0,
+              166,
+              1330,
+              200
+            ],
+            "at": [
+              285,
+              612
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 35,
@@ -986,8 +2346,51 @@
       ],
       "original_sha256": "8b88db1272c23570ff2fc7336b22a81b7d230bb86ac8b73120263b68b30b2609",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_35.png",
-      "asset_sha256": "a0ee0848a4619a547ff87e39c1e2306a9a130f71ea9d063c131acc0fe74f7a7f"
+      "reference": {
+        "file": "zh_CN/meme_35.png",
+        "sha256": "a0ee0848a4619a547ff87e39c1e2306a9a130f71ea9d063c131acc0fe74f7a7f",
+        "size": [
+          1402,
+          1122
+        ],
+        "rgba_sha256": "22f2c5f5a7d27d9e7157272d33fc7c2a615e515cd768244562e7b285c2f35fe3",
+        "patches": [
+          {
+            "rect": [
+              210,
+              931,
+              982,
+              191
+            ],
+            "rgba_sha256": "ad6a9c577f98d5290c999919fef7c90917b3fc1d27e8c68b6dcad2ebf023d383"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1402,
+          1122
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_35.png",
+            "source": [
+              0,
+              0,
+              982,
+              191
+            ],
+            "at": [
+              210,
+              931
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 36,
@@ -1017,8 +2420,73 @@
       ],
       "original_sha256": "a56d1d48fcffcc5fa930b35b90d92e76c240a156110a54708ad6d902f6d376b1",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_36.png",
-      "asset_sha256": "4bf1b4932de83972d69f430a87a13a791f93a7919ac09da84bc9a65feee24eb9"
+      "reference": {
+        "file": "zh_CN/meme_36.png",
+        "sha256": "4bf1b4932de83972d69f430a87a13a791f93a7919ac09da84bc9a65feee24eb9",
+        "size": [
+          1727,
+          911
+        ],
+        "rgba_sha256": "af63e9dcb77f0ffac0f172cebaa7bd9cdd0de0db870c627882f748907d28232d",
+        "patches": [
+          {
+            "rect": [
+              621,
+              0,
+              502,
+              174
+            ],
+            "rgba_sha256": "bbb1fabc0e9efab37ad35e6ebc9866857a432029b5c7061fe301c4dfbac5ebf5"
+          },
+          {
+            "rect": [
+              379,
+              701,
+              986,
+              201
+            ],
+            "rgba_sha256": "ca5090c2aa3f675d5264c764d5caa15d25a7bb132771b715cdece72d60a0bbf3"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1727,
+          911
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_36.png",
+            "source": [
+              0,
+              0,
+              502,
+              174
+            ],
+            "at": [
+              621,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_36.png",
+            "source": [
+              0,
+              174,
+              986,
+              201
+            ],
+            "at": [
+              379,
+              701
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 37,
@@ -1037,8 +2505,51 @@
       ],
       "original_sha256": "cc271f291e82e83773d0ac0163805e462d2044b6ac697d82acd39f7d86a9d1aa",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_37.png",
-      "asset_sha256": "9f0fed3e1a6d97ce971ea63f59eac05cf3c1da446e18fc4b0f35707b6c0837df"
+      "reference": {
+        "file": "zh_CN/meme_37.png",
+        "sha256": "9f0fed3e1a6d97ce971ea63f59eac05cf3c1da446e18fc4b0f35707b6c0837df",
+        "size": [
+          1463,
+          1075
+        ],
+        "rgba_sha256": "5b60dc1f1afbc7913635e3b9641363adfd0e83ce84ff7b937c947276430fc536",
+        "patches": [
+          {
+            "rect": [
+              0,
+              53,
+              1463,
+              216
+            ],
+            "rgba_sha256": "97d17d50ca1932f9c6237af6463d415dcfc82dbf2b54b560dae8f6da1fbcd693"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1463,
+          1075
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_37.png",
+            "source": [
+              0,
+              0,
+              1463,
+              216
+            ],
+            "at": [
+              0,
+              53
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 38,
@@ -1057,8 +2568,51 @@
       ],
       "original_sha256": "3a43895dc1814820747d6cf2b27c5fb4809e81d29d5f0b4fa33db6fbb0cd4fb6",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_38.png",
-      "asset_sha256": "6ba950a1641c6132b2109c288dafcb05992aa5dc4a0bbd6bd108abe919c5a21a"
+      "reference": {
+        "file": "zh_CN/meme_38.png",
+        "sha256": "6ba950a1641c6132b2109c288dafcb05992aa5dc4a0bbd6bd108abe919c5a21a",
+        "size": [
+          1448,
+          1086
+        ],
+        "rgba_sha256": "c73b45400cb7e2bc6075fa76c61b0f1f1bdeba82168421b5970ffd00a656991c",
+        "patches": [
+          {
+            "rect": [
+              347,
+              868,
+              768,
+              218
+            ],
+            "rgba_sha256": "636772c3d4b928014a577ba29a6cf1a41e55910a3c92300b7d09c00d3a0e8090"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1448,
+          1086
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_38.png",
+            "source": [
+              0,
+              0,
+              768,
+              218
+            ],
+            "at": [
+              347,
+              868
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 39,
@@ -1088,8 +2642,73 @@
       ],
       "original_sha256": "5e8da351e41561527bb439a1dbadd7f9b28dbfd3b2383959a48f687f9ed3cc1a",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_39.png",
-      "asset_sha256": "6dd20e68fd6456619fbdeda3fd7d7f9e688b40f994bc03b4411f3963e3f7818e"
+      "reference": {
+        "file": "zh_CN/meme_39.png",
+        "sha256": "6dd20e68fd6456619fbdeda3fd7d7f9e688b40f994bc03b4411f3963e3f7818e",
+        "size": [
+          1086,
+          1448
+        ],
+        "rgba_sha256": "fe20429643b53b2d53fb7a47fbc08db23b134fa508444a622063a7080d703b6c",
+        "patches": [
+          {
+            "rect": [
+              206,
+              0,
+              685,
+              174
+            ],
+            "rgba_sha256": "00000e46ffc507171491401a6a7bfaf35b4861165de70c4d1bb71851614cd4ed"
+          },
+          {
+            "rect": [
+              32,
+              1259,
+              1033,
+              189
+            ],
+            "rgba_sha256": "71a7a5f14481ac40e58d77c2c8e1a45f08f72bc58d7d04a08605dacd33a42cf7"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1086,
+          1448
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_39.png",
+            "source": [
+              0,
+              0,
+              685,
+              174
+            ],
+            "at": [
+              206,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_39.png",
+            "source": [
+              0,
+              174,
+              1033,
+              189
+            ],
+            "at": [
+              32,
+              1259
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 40,
@@ -1173,8 +2792,73 @@
       ],
       "original_sha256": "31b6489b1dc0730c574e9a5bfb29a26e8ffa7d166068450237b7d2be6e8f8bcc",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_42.png",
-      "asset_sha256": "2124e47b8c6c1d3bd61bf65575296688f89403623453e451f610c09c75075e67"
+      "reference": {
+        "file": "zh_CN/meme_42.png",
+        "sha256": "2124e47b8c6c1d3bd61bf65575296688f89403623453e451f610c09c75075e67",
+        "size": [
+          1532,
+          1026
+        ],
+        "rgba_sha256": "fdb634c9e5a68653936a68512dd63a1cfb4bb0f1731ac1205b48fbb8a5045b8c",
+        "patches": [
+          {
+            "rect": [
+              367,
+              20,
+              798,
+              196
+            ],
+            "rgba_sha256": "f975750e5ef3f5c1b9a56188ed20d2fb9d1bd2b9bd80dd107e2339749ea05d6d"
+          },
+          {
+            "rect": [
+              199,
+              779,
+              1150,
+              206
+            ],
+            "rgba_sha256": "125aa4bbfdf41cfa1fa64f045aa617bd0f332c24415c073742199bbbd96e5d06"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1532,
+          1026
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_42.png",
+            "source": [
+              0,
+              0,
+              798,
+              196
+            ],
+            "at": [
+              367,
+              20
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_42.png",
+            "source": [
+              0,
+              196,
+              1150,
+              206
+            ],
+            "at": [
+              199,
+              779
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 43,
@@ -1204,8 +2888,73 @@
       ],
       "original_sha256": "648d458541302325c21b0a52c156877b784cc5a87f96d3466df32c97ac31a938",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_43.png",
-      "asset_sha256": "f72b9cef835a53c158ef154353387b2e3b8ba09b46687d94ee745d29c6242d3e"
+      "reference": {
+        "file": "zh_CN/meme_43.png",
+        "sha256": "f72b9cef835a53c158ef154353387b2e3b8ba09b46687d94ee745d29c6242d3e",
+        "size": [
+          1254,
+          1254
+        ],
+        "rgba_sha256": "ec17edf8067e6c241bdd6f1cb555bb42cd74675ad3192812302131cb7b0fe72e",
+        "patches": [
+          {
+            "rect": [
+              62,
+              50,
+              1142,
+              201
+            ],
+            "rgba_sha256": "bfa29d4f8ab80bee934c3ce8ad87124949b9f0390f9f435196b1d803526d2752"
+          },
+          {
+            "rect": [
+              87,
+              1003,
+              1080,
+              226
+            ],
+            "rgba_sha256": "99ef33fa9352409c3ff8ddcc349095a7ab5618826c27f356a093c70203a2d8a2"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1254,
+          1254
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_43.png",
+            "source": [
+              0,
+              0,
+              1142,
+              201
+            ],
+            "at": [
+              62,
+              50
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_43.png",
+            "source": [
+              0,
+              201,
+              1080,
+              226
+            ],
+            "at": [
+              87,
+              1003
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 44,
@@ -1235,8 +2984,73 @@
       ],
       "original_sha256": "f1d0599d8755aa822b54f710e3b1e2a9f178ff1519c814563714a1ff85f09e82",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_44.png",
-      "asset_sha256": "19dd0ab5fb3924feb3cacc9e5fd809c01dc209dd411dc70432d347d051fd9631"
+      "reference": {
+        "file": "zh_CN/meme_44.png",
+        "sha256": "19dd0ab5fb3924feb3cacc9e5fd809c01dc209dd411dc70432d347d051fd9631",
+        "size": [
+          1120,
+          1404
+        ],
+        "rgba_sha256": "17fd9ff4f2faa36c574e17248d14e088ae28c0cd04f598a395a1b886b0330e5b",
+        "patches": [
+          {
+            "rect": [
+              145,
+              0,
+              852,
+              155
+            ],
+            "rgba_sha256": "6ba5ebfc2598daff0936792e6146a6374601c9c360dc806a0114b5894dc23575"
+          },
+          {
+            "rect": [
+              67,
+              1249,
+              1031,
+              155
+            ],
+            "rgba_sha256": "73b560099c892bc7e786729bc8695ac91d58f8210506c6ec95234306354ea499"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1120,
+          1404
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_44.png",
+            "source": [
+              0,
+              0,
+              852,
+              155
+            ],
+            "at": [
+              145,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_44.png",
+            "source": [
+              0,
+              155,
+              1031,
+              155
+            ],
+            "at": [
+              67,
+              1249
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 45,
@@ -1266,8 +3080,73 @@
       ],
       "original_sha256": "fb3ca1ded4d36082902d7ad0e33d1b5193cb65fda401df5b98fc077fda1014fc",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_45.png",
-      "asset_sha256": "136a30ea0fc07ea7c17ca8dc550a1e2890f416c8e9b77a52b0acaecd291176ff"
+      "reference": {
+        "file": "zh_CN/meme_45.png",
+        "sha256": "136a30ea0fc07ea7c17ca8dc550a1e2890f416c8e9b77a52b0acaecd291176ff",
+        "size": [
+          1539,
+          1022
+        ],
+        "rgba_sha256": "76eed165b60fc6aa7008d66af098c4cafef6ec6a9ad5a19406823a81c71d1f42",
+        "patches": [
+          {
+            "rect": [
+              200,
+              0,
+              1139,
+              184
+            ],
+            "rgba_sha256": "bd3717e52ad6fc8ed279d5faafa1da8a2c9fddd66cea3cf590f2ac8d08912064"
+          },
+          {
+            "rect": [
+              169,
+              817,
+              1217,
+              205
+            ],
+            "rgba_sha256": "6a8227f612297695f26a3d6de4bd0f7c4f57942f1793495e9f9d3e2856ae138b"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1539,
+          1022
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_45.png",
+            "source": [
+              0,
+              0,
+              1139,
+              184
+            ],
+            "at": [
+              200,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_45.png",
+            "source": [
+              0,
+              184,
+              1217,
+              205
+            ],
+            "at": [
+              169,
+              817
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 46,
@@ -1293,8 +3172,51 @@
       ],
       "original_sha256": "786998cd8e5f28548b25b18f64261d1fd0ce24277a5fdca38326ab0344c1665d",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_47.png",
-      "asset_sha256": "808a83c5e2b0725e61f35fbf481ce8ccb26d9b364446b0dd0a1249f3ef84ee36"
+      "reference": {
+        "file": "zh_CN/meme_47.png",
+        "sha256": "808a83c5e2b0725e61f35fbf481ce8ccb26d9b364446b0dd0a1249f3ef84ee36",
+        "size": [
+          1448,
+          1086
+        ],
+        "rgba_sha256": "f72f5b837c2941dac40267176afef7f80811720d336123552b76d076382add0b",
+        "patches": [
+          {
+            "rect": [
+              159,
+              0,
+              1116,
+              185
+            ],
+            "rgba_sha256": "a950fadf146fe5fde3ba20e1604687442538e9375ffb81d652b605968e3ff8ad"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1448,
+          1086
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_47.png",
+            "source": [
+              0,
+              0,
+              1116,
+              185
+            ],
+            "at": [
+              159,
+              0
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 48,
@@ -1313,8 +3235,51 @@
       ],
       "original_sha256": "6fed00b086ae64312cbecacfbe14d4d282c8c09f82e193889553c2106ac63fb7",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_48.png",
-      "asset_sha256": "1241a674f0ff4947cbe3c92c61f3b8958c66039a71b2e012260fb477f8a153dc"
+      "reference": {
+        "file": "zh_CN/meme_48.png",
+        "sha256": "1241a674f0ff4947cbe3c92c61f3b8958c66039a71b2e012260fb477f8a153dc",
+        "size": [
+          1672,
+          941
+        ],
+        "rgba_sha256": "c82c4cd369714587ee2555e010fa8000340f2c49dee8ce6eba8ab835c518dc3f",
+        "patches": [
+          {
+            "rect": [
+              0,
+              0,
+              1054,
+              264
+            ],
+            "rgba_sha256": "07ffe4822094247c8121b2428dd239b99b6692fc4620ecabc1b305035fa7159f"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1672,
+          941
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_48.png",
+            "source": [
+              0,
+              0,
+              1054,
+              264
+            ],
+            "at": [
+              0,
+              0
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 49,
@@ -1344,8 +3309,73 @@
       ],
       "original_sha256": "0901d07eb46f3e437984cfdc17c567ae1516d7273241552de4482cc3db41b264",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_49.png",
-      "asset_sha256": "1899867514841d799cbf9f09903ca92513e813f798e9f09b4b4034e8092a855c"
+      "reference": {
+        "file": "zh_CN/meme_49.png",
+        "sha256": "1899867514841d799cbf9f09903ca92513e813f798e9f09b4b4034e8092a855c",
+        "size": [
+          1042,
+          1509
+        ],
+        "rgba_sha256": "544f83fb9331cc381f2f0eca9f25938215bb4414231b491e149bb28aa601fb64",
+        "patches": [
+          {
+            "rect": [
+              166,
+              0,
+              710,
+              166
+            ],
+            "rgba_sha256": "d61548644db56aa301d7a8adaf822e7ce2a67e15cfd218b30c4d6ab6baed9f30"
+          },
+          {
+            "rect": [
+              72,
+              1327,
+              898,
+              182
+            ],
+            "rgba_sha256": "95da559720900ca064e3b6b5d4bc8b1f59b419a3e5a1ebebdf9cfed141a7355d"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1042,
+          1509
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_49.png",
+            "source": [
+              0,
+              0,
+              710,
+              166
+            ],
+            "at": [
+              166,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_49.png",
+            "source": [
+              0,
+              166,
+              898,
+              182
+            ],
+            "at": [
+              72,
+              1327
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 50,
@@ -1375,8 +3405,73 @@
       ],
       "original_sha256": "bbfd3181616ac89ce9d75aeee8f4a39476f9cee585aa2fb0be1f1b84349747f5",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_50.png",
-      "asset_sha256": "9c9ce1b975249d9ae7d4d387fbd6d677f2caa5936d3831f40f0afe8c97406f82"
+      "reference": {
+        "file": "zh_CN/meme_50.png",
+        "sha256": "9c9ce1b975249d9ae7d4d387fbd6d677f2caa5936d3831f40f0afe8c97406f82",
+        "size": [
+          1147,
+          1372
+        ],
+        "rgba_sha256": "e3deebc8b8c2125de619a0520b437229364b3c9d0b7b8ac002f67afbc42c7dc2",
+        "patches": [
+          {
+            "rect": [
+              149,
+              0,
+              849,
+              220
+            ],
+            "rgba_sha256": "2fd0f92b41cbc529777211f56f18a0e113d7d98cfad2ce081d54db300a8a2f60"
+          },
+          {
+            "rect": [
+              0,
+              1070,
+              1147,
+              302
+            ],
+            "rgba_sha256": "83b1b7543a14dd6c2cf517ffaba6ab775d96f3947df9e36315b339b308bdf0ff"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1147,
+          1372
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_50.png",
+            "source": [
+              0,
+              0,
+              849,
+              220
+            ],
+            "at": [
+              149,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_50.png",
+            "source": [
+              0,
+              220,
+              1147,
+              302
+            ],
+            "at": [
+              0,
+              1070
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 51,
@@ -1445,8 +3540,73 @@
       ],
       "original_sha256": "7fae677aa3706e1ea3774e35680980e6c9404f539650c4011404813c04eda70a",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_52.png",
-      "asset_sha256": "c0adffea910a7cbdc3f80569e5cfc34bb835a54bd6e6ac5e43217f5da560e2b3"
+      "reference": {
+        "file": "zh_CN/meme_52.png",
+        "sha256": "c0adffea910a7cbdc3f80569e5cfc34bb835a54bd6e6ac5e43217f5da560e2b3",
+        "size": [
+          1575,
+          998
+        ],
+        "rgba_sha256": "f49ac73d815fe02cb58f630bfbd8d12215b6436942278a5113de19a04c0f786d",
+        "patches": [
+          {
+            "rect": [
+              189,
+              39,
+              1197,
+              181
+            ],
+            "rgba_sha256": "61d2af008d795d0e73eb55ca87442d0f07447511a7bc313c64168dc30c3ff178"
+          },
+          {
+            "rect": [
+              252,
+              858,
+              1071,
+              140
+            ],
+            "rgba_sha256": "bf8df33bf920a371223975dfe97fa35c0eb43dbae008299941350f1e9594197e"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1575,
+          998
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_52.png",
+            "source": [
+              0,
+              0,
+              1197,
+              181
+            ],
+            "at": [
+              189,
+              39
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_52.png",
+            "source": [
+              0,
+              181,
+              1071,
+              140
+            ],
+            "at": [
+              252,
+              858
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 53,
@@ -1465,8 +3625,51 @@
       ],
       "original_sha256": "512111f2fcd91d901881e762c965f2457c368710a9f560a474f4ba8fec4fdf99",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_53.png",
-      "asset_sha256": "cd8d5fb0340dc7366c2f99bd51ba1e7c3421d50cd039ed8b203a3fa26b9c9e1c"
+      "reference": {
+        "file": "zh_CN/meme_53.png",
+        "sha256": "cd8d5fb0340dc7366c2f99bd51ba1e7c3421d50cd039ed8b203a3fa26b9c9e1c",
+        "size": [
+          1463,
+          1075
+        ],
+        "rgba_sha256": "cd41429f3cb281b6bd684894f7d60964310e07cf49a902a3a8b02802a1d6685c",
+        "patches": [
+          {
+            "rect": [
+              146,
+              0,
+              1157,
+              323
+            ],
+            "rgba_sha256": "566b5df1df070b234a95524327d577bcf642dc47a223d307b3ddf371783cd975"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1463,
+          1075
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_53.png",
+            "source": [
+              0,
+              0,
+              1157,
+              323
+            ],
+            "at": [
+              146,
+              0
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 54,
@@ -1546,8 +3749,22 @@
       ],
       "original_sha256": "5281c1c6d23d41fd01ca1ae10575bbdf6dc3e356154eb8b184befe5ec2f4328f",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_55.png",
-      "asset_sha256": "8a4ab7c26d50e09a591542afbc304f8bf671997a3e864e7728ec75a7a090ff19"
+      "reference": {
+        "file": "zh_CN/meme_55.png",
+        "sha256": "8a4ab7c26d50e09a591542afbc304f8bf671997a3e864e7728ec75a7a090ff19",
+        "size": [
+          1254,
+          1254
+        ],
+        "rgba_sha256": "005eb67294972f4b5d1f6a146bd95137356ecfcb674ce4e7e778ce08db25c9f5"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "Scattered colored lettering crosses textured fur."
+      },
+      "variant": {
+        "image": "zh_CN/meme_55.png"
+      }
     },
     {
       "id": 56,
@@ -1616,8 +3833,73 @@
       ],
       "original_sha256": "6a0bd37fabc6c94c10440185ee412d50f40377a4e0f596d7d610a971bc4da963",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_57.png",
-      "asset_sha256": "27366ecdb30a5991db6bc608f6338b1eb9bfc1c1f96f2187a8fc4851d600abba"
+      "reference": {
+        "file": "zh_CN/meme_57.png",
+        "sha256": "27366ecdb30a5991db6bc608f6338b1eb9bfc1c1f96f2187a8fc4851d600abba",
+        "size": [
+          1238,
+          1271
+        ],
+        "rgba_sha256": "a7b70be39959a6753ad6938e7bd3a5e98492b655b403199ac482a98a922615d2",
+        "patches": [
+          {
+            "rect": [
+              61,
+              88,
+              1103,
+              230
+            ],
+            "rgba_sha256": "9eebfb06547f4b53178197dad2307239ce5b271b0394d906b0f6a5392e783d53"
+          },
+          {
+            "rect": [
+              148,
+              1067,
+              954,
+              204
+            ],
+            "rgba_sha256": "a61d3495b3046c8855b9b9a76015f986f701cff583f316b86b3cdde8fd775670"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1238,
+          1271
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_57.png",
+            "source": [
+              0,
+              0,
+              1103,
+              230
+            ],
+            "at": [
+              61,
+              88
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_57.png",
+            "source": [
+              0,
+              230,
+              954,
+              204
+            ],
+            "at": [
+              148,
+              1067
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 58,
@@ -1647,8 +3929,73 @@
       ],
       "original_sha256": "cb6c634e62e8375740d2fb43b08dc3226eaead300953b362a4ad4562a0daf8a7",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_58.png",
-      "asset_sha256": "585078c101b8cb9a57c03100f74019bf77564eaa88752240a79a339576fc99a1"
+      "reference": {
+        "file": "zh_CN/meme_58.png",
+        "sha256": "585078c101b8cb9a57c03100f74019bf77564eaa88752240a79a339576fc99a1",
+        "size": [
+          1535,
+          1024
+        ],
+        "rgba_sha256": "8158136bddd354b23585aac78dce38ce350d140caba12b48ea0d74d608bb9c2d",
+        "patches": [
+          {
+            "rect": [
+              260,
+              0,
+              1015,
+              164
+            ],
+            "rgba_sha256": "ad08baf4259ed91375f25e04add925cdcbd0daaee153bf9fcb3c2f67c7864ba9"
+          },
+          {
+            "rect": [
+              214,
+              808,
+              1107,
+              216
+            ],
+            "rgba_sha256": "bbcb07915a822681eb94bc756fe5b8621bea701d97a53f991cbee632affbc6ea"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1535,
+          1024
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_58.png",
+            "source": [
+              0,
+              0,
+              1015,
+              164
+            ],
+            "at": [
+              260,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_58.png",
+            "source": [
+              0,
+              164,
+              1107,
+              216
+            ],
+            "at": [
+              214,
+              808
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 59,
@@ -1678,8 +4025,73 @@
       ],
       "original_sha256": "d7bc09d20d3a4b55cd3fcdcf49780f9827b1da4da36bb782468166c780fad559",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_59.png",
-      "asset_sha256": "5a891b6dd435fb21ea649c0a5c298cf1b3d0c9bd9440e4f0a4006f5ba7d0e82a"
+      "reference": {
+        "file": "zh_CN/meme_59.png",
+        "sha256": "5a891b6dd435fb21ea649c0a5c298cf1b3d0c9bd9440e4f0a4006f5ba7d0e82a",
+        "size": [
+          1448,
+          1086
+        ],
+        "rgba_sha256": "59f4a5deb3ceb15a51286c462c4e5cda9315c787e541e3bc12e61ef8c78d28b0",
+        "patches": [
+          {
+            "rect": [
+              535,
+              0,
+              392,
+              174
+            ],
+            "rgba_sha256": "de89caa2eb788d638f0209999d5852541c38f1e4a6d3055547d35f6c6f97953d"
+          },
+          {
+            "rect": [
+              130,
+              890,
+              1188,
+              196
+            ],
+            "rgba_sha256": "1b0a1730101c3007298402a8c64b591e4b042934bfae7c3f778b3814c5bfa505"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1448,
+          1086
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_59.png",
+            "source": [
+              0,
+              0,
+              392,
+              174
+            ],
+            "at": [
+              535,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_59.png",
+            "source": [
+              0,
+              174,
+              1188,
+              196
+            ],
+            "at": [
+              130,
+              890
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 60,
@@ -1698,8 +4110,22 @@
       ],
       "original_sha256": "3fc9682dcac46a7d4219c0fe147822fb5f1eac58fd2c2f61188d4d6dbae2b316",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_60.png",
-      "asset_sha256": "b78777f24e988cfb59625b52b1b94595939e7a1a7587afb67eb36a3e9f5b17f4"
+      "reference": {
+        "file": "zh_CN/meme_60.png",
+        "sha256": "b78777f24e988cfb59625b52b1b94595939e7a1a7587afb67eb36a3e9f5b17f4",
+        "size": [
+          1351,
+          1164
+        ],
+        "rgba_sha256": "7ac3df8aaed0b8ba630bfc6f22c3bfbe77b89a233db1636512208c72f7e9936b"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "Lettering follows a curved weapon."
+      },
+      "variant": {
+        "image": "zh_CN/meme_60.png"
+      }
     },
     {
       "id": 61,
@@ -1740,8 +4166,95 @@
       ],
       "original_sha256": "612fc436058472784784f9b6ae4994e15d09edd3089e62aeccbe76489cd33af5",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_61.png",
-      "asset_sha256": "eb53746890da0a22c72477fe404e53cec1de1d4ff1c7a8ac6c04deae64ae8575"
+      "reference": {
+        "file": "zh_CN/meme_61.png",
+        "sha256": "eb53746890da0a22c72477fe404e53cec1de1d4ff1c7a8ac6c04deae64ae8575",
+        "size": [
+          1025,
+          1534
+        ],
+        "rgba_sha256": "e7bad354818c56f1079a75b8722f6ed784684cbac112bd9ac9bc5610c3a90bd3",
+        "patches": [
+          {
+            "rect": [
+              287,
+              0,
+              738,
+              185
+            ],
+            "rgba_sha256": "f3a648a75dcb34d7cd8d1be197fe9cf33a4f19eb168fdef9a756b628a7c8b532"
+          },
+          {
+            "rect": [
+              379,
+              567,
+              513,
+              262
+            ],
+            "rgba_sha256": "d72376d2d06589906a73c5cc5b4a656dc09e4f29eaa7def58b0359750de05579"
+          },
+          {
+            "rect": [
+              481,
+              1012,
+              503,
+              231
+            ],
+            "rgba_sha256": "f91d32d055d9278d1509fbf8fb19d689cfc4c87d69e3b1c542e9357dab97321d"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1025,
+          1534
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_61.png",
+            "source": [
+              0,
+              0,
+              738,
+              185
+            ],
+            "at": [
+              287,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_61.png",
+            "source": [
+              0,
+              185,
+              513,
+              262
+            ],
+            "at": [
+              379,
+              567
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_61.png",
+            "source": [
+              0,
+              447,
+              503,
+              231
+            ],
+            "at": [
+              481,
+              1012
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 62,
@@ -1771,8 +4284,51 @@
       ],
       "original_sha256": "34b60787eff5887c667c28919ddf0750775063f0ce654081c1e91859c90843c8",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_62.png",
-      "asset_sha256": "c6a1674324df2d3ee1d5aef22e7b071add4c48338314b28f2f950df7d8aaea28"
+      "reference": {
+        "file": "zh_CN/meme_62.png",
+        "sha256": "c6a1674324df2d3ee1d5aef22e7b071add4c48338314b28f2f950df7d8aaea28",
+        "size": [
+          1563,
+          1006
+        ],
+        "rgba_sha256": "00ae6d42ef40f22ea5353b49c8eac588f4cae4fc9941331a675812c7d92e2585",
+        "patches": [
+          {
+            "rect": [
+              0,
+              0,
+              1563,
+              242
+            ],
+            "rgba_sha256": "b79ebdc67a0f6caf55ec1f361f5f44a5a8cb478c41f39d5fbec7136b6642f579"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1563,
+          1006
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_62.png",
+            "source": [
+              0,
+              0,
+              1563,
+              242
+            ],
+            "at": [
+              0,
+              0
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 63,
@@ -1791,8 +4347,51 @@
       ],
       "original_sha256": "4314d984783e87ff2039a7eb31d212373b44268bd74b78e009c1efb76fcaa2e6",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_63.png",
-      "asset_sha256": "ce8d754177a5f5d65db10b2487611f98b252929baf4b2ca1ab42bac7239110bf"
+      "reference": {
+        "file": "zh_CN/meme_63.png",
+        "sha256": "ce8d754177a5f5d65db10b2487611f98b252929baf4b2ca1ab42bac7239110bf",
+        "size": [
+          1086,
+          1448
+        ],
+        "rgba_sha256": "52faea4a89c3f3ff9c69de6c6e8663b0ce6974b65d4f4ee2d07c18404f5d9dce",
+        "patches": [
+          {
+            "rect": [
+              0,
+              448,
+              565,
+              248
+            ],
+            "rgba_sha256": "990782d7bb589460adb8ac87627ef43c9714a5749d3715ef8cce8111eef65f24"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1086,
+          1448
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_63.png",
+            "source": [
+              0,
+              0,
+              565,
+              248
+            ],
+            "at": [
+              0,
+              448
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 64,
@@ -1811,8 +4410,22 @@
       ],
       "original_sha256": "ea6d8bce5975214cb61df86263bcb1123f6123077206d9ac24589c7f18ae9244",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_64.png",
-      "asset_sha256": "4caece5a6afca15057f52335064ab7ef5f8eeb1518f83d96b22dfd403d1d1a0b"
+      "reference": {
+        "file": "zh_CN/meme_64.png",
+        "sha256": "4caece5a6afca15057f52335064ab7ef5f8eeb1518f83d96b22dfd403d1d1a0b",
+        "size": [
+          1254,
+          1254
+        ],
+        "rgba_sha256": "dae2f55afd32bee669b33f6fb0b849f63ab91b8079b98ac76d2716a82d01a37a"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "Perspective lettering is printed on a held sign."
+      },
+      "variant": {
+        "image": "zh_CN/meme_64.png"
+      }
     },
     {
       "id": 65,
@@ -1831,8 +4444,51 @@
       ],
       "original_sha256": "b28f5071dfd57582822952e0692ea64ff9c2c9e45975136db12d820090ffe8d2",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_65.png",
-      "asset_sha256": "db3079096e67234e4206ca33bb15ff58f1a7f3087d65abb9b09e0f65b4993b5f"
+      "reference": {
+        "file": "zh_CN/meme_65.png",
+        "sha256": "db3079096e67234e4206ca33bb15ff58f1a7f3087d65abb9b09e0f65b4993b5f",
+        "size": [
+          1562,
+          1007
+        ],
+        "rgba_sha256": "2d76cebcab7df4e8431a379f5a63cad7d1ca91f6fef7dba5b18feccc87893911",
+        "patches": [
+          {
+            "rect": [
+              218,
+              815,
+              1126,
+              192
+            ],
+            "rgba_sha256": "a88449de3d5a2f171fff9eafe48231f435587077673cd3dedb7b67e69792bff3"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1562,
+          1007
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_65.png",
+            "source": [
+              0,
+              0,
+              1126,
+              192
+            ],
+            "at": [
+              218,
+              815
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 66,
@@ -1862,8 +4518,73 @@
       ],
       "original_sha256": "305d39a32db81b625878249ffcfd37c86226e9af3d2a996601c0490dccfc6d1d",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_66.png",
-      "asset_sha256": "b64ed8bffb3c4a2b76b49df58d00828688399c9379edd0bc0cdd10e5b40f859c"
+      "reference": {
+        "file": "zh_CN/meme_66.png",
+        "sha256": "b64ed8bffb3c4a2b76b49df58d00828688399c9379edd0bc0cdd10e5b40f859c",
+        "size": [
+          1254,
+          1254
+        ],
+        "rgba_sha256": "bd4ae8e26970a17b313bd677c9b83c6b6edcc5bf0e91a8d230d723316828f1f6",
+        "patches": [
+          {
+            "rect": [
+              37,
+              12,
+              340,
+              126
+            ],
+            "rgba_sha256": "b1002cf1bcac7ece934b37850abdc549824f784c4fc5483639de2e1f360c2664"
+          },
+          {
+            "rect": [
+              238,
+              702,
+              239,
+              214
+            ],
+            "rgba_sha256": "25da0f3ea11fa76fa9acdc699c7b229cbb6159aa10ad363e2d8f08ff067be22f"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1254,
+          1254
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_66.png",
+            "source": [
+              0,
+              0,
+              340,
+              126
+            ],
+            "at": [
+              37,
+              12
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_66.png",
+            "source": [
+              0,
+              126,
+              239,
+              214
+            ],
+            "at": [
+              238,
+              702
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 67,
@@ -1893,8 +4614,22 @@
       ],
       "original_sha256": "e095be1e091d004cc7e6ec40ef4f4886f584ef8c5a3349838b30851d4432bd67",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_67.png",
-      "asset_sha256": "aecc96e0b272257f70f297ed4a111e380e17d81e3e9c8b66f6e3312961cdde88"
+      "reference": {
+        "file": "zh_CN/meme_67.png",
+        "sha256": "aecc96e0b272257f70f297ed4a111e380e17d81e3e9c8b66f6e3312961cdde88",
+        "size": [
+          1590,
+          989
+        ],
+        "rgba_sha256": "579231f76107b0a7ea0531c54949924e6df28032080d76412749247e95d0a748"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "Repositioned footer lettering overlaps the original product label."
+      },
+      "variant": {
+        "image": "zh_CN/meme_67.png"
+      }
     },
     {
       "id": 68,
@@ -1924,8 +4659,22 @@
       ],
       "original_sha256": "e4b19b89f62e6ba06fd0de34e241eb112b2f150c727eea309a3c02705220ca09",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_68.png",
-      "asset_sha256": "c7348a633c463a03855ac29d5cd12e5c8ea1fb53ea022ab097ce3fb1523e013c"
+      "reference": {
+        "file": "zh_CN/meme_68.png",
+        "sha256": "c7348a633c463a03855ac29d5cd12e5c8ea1fb53ea022ab097ce3fb1523e013c",
+        "size": [
+          1402,
+          1122
+        ],
+        "rgba_sha256": "79a55113c2b6c14123cee828bf18b1347b914a00da3d021c5cdd2d5d8fe105cb"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "Printed shirt lettering and captions cross fabric detail."
+      },
+      "variant": {
+        "image": "zh_CN/meme_68.png"
+      }
     },
     {
       "id": 69,
@@ -1972,8 +4721,51 @@
       ],
       "original_sha256": "b19724517102b9647fe0252ac8ff162f0006b1f0ed5b616a3071b1914221badf",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_70.png",
-      "asset_sha256": "b37568997e75ad0f8feb1d55e65af9cd0d8458e035597c58837b0d03dcb30a8e"
+      "reference": {
+        "file": "zh_CN/meme_70.png",
+        "sha256": "b37568997e75ad0f8feb1d55e65af9cd0d8458e035597c58837b0d03dcb30a8e",
+        "size": [
+          1254,
+          1254
+        ],
+        "rgba_sha256": "cea8d826542a7c52726755372af787d3598aad1c111c8271c2efd9d12429a913",
+        "patches": [
+          {
+            "rect": [
+              677,
+              1028,
+              414,
+              214
+            ],
+            "rgba_sha256": "8d5335d79073018228b8ca7bc05907712bb045c5f15a6e5d619e41a335e8bb05"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1254,
+          1254
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_70.png",
+            "source": [
+              0,
+              0,
+              414,
+              214
+            ],
+            "at": [
+              677,
+              1028
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 71,
@@ -2003,8 +4795,73 @@
       ],
       "original_sha256": "1d2a59bd09873ceeda4f57c99035141ec18f33acae0f3c7781d516aba1ac6345",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_71.png",
-      "asset_sha256": "872295f7e5c161de19969d6dd85358ef65da9006847141472877b2e2d7762047"
+      "reference": {
+        "file": "zh_CN/meme_71.png",
+        "sha256": "872295f7e5c161de19969d6dd85358ef65da9006847141472877b2e2d7762047",
+        "size": [
+          1058,
+          1487
+        ],
+        "rgba_sha256": "773ba540bdfbf10d13f22aee03cfd86d5cb587b8a2165aa642bbeade50000740",
+        "patches": [
+          {
+            "rect": [
+              126,
+              431,
+              298,
+              194
+            ],
+            "rgba_sha256": "cbc949272fbb4c9825a089f607a32a9da1ace6185f520deed82cbc9bb1da33a0"
+          },
+          {
+            "rect": [
+              613,
+              416,
+              350,
+              209
+            ],
+            "rgba_sha256": "a2b93a554a16020577e49b193883bafca0736637efc44fc61e852f8f16a68c72"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1058,
+          1487
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_71.png",
+            "source": [
+              0,
+              0,
+              298,
+              194
+            ],
+            "at": [
+              126,
+              431
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_71.png",
+            "source": [
+              0,
+              194,
+              350,
+              209
+            ],
+            "at": [
+              613,
+              416
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 72,
@@ -2034,8 +4891,73 @@
       ],
       "original_sha256": "3d7f73530f0b270388a716efde46185734fd79acbc91bce48c985da4fbd0a375",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_72.png",
-      "asset_sha256": "856a31aec217da870a12606079ab0cd0090e421a440896b1b8c5b8f7ed631670"
+      "reference": {
+        "file": "zh_CN/meme_72.png",
+        "sha256": "856a31aec217da870a12606079ab0cd0090e421a440896b1b8c5b8f7ed631670",
+        "size": [
+          1254,
+          1254
+        ],
+        "rgba_sha256": "1cdf5522f914377862bb03cc86a7d70b390a96ae98d9c427cfc8c4668f702682",
+        "patches": [
+          {
+            "rect": [
+              413,
+              514,
+              603,
+              164
+            ],
+            "rgba_sha256": "56b325ab3e7965a7b8f060a7d92a307b871d44a246daba34b9ab425b90e08893"
+          },
+          {
+            "rect": [
+              300,
+              1128,
+              867,
+              126
+            ],
+            "rgba_sha256": "130187148fd26df889ba3a0c06f7b97c2b146591a287938f1b8d6113f5e7c446"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1254,
+          1254
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_72.png",
+            "source": [
+              0,
+              0,
+              603,
+              164
+            ],
+            "at": [
+              413,
+              514
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_72.png",
+            "source": [
+              0,
+              164,
+              867,
+              126
+            ],
+            "at": [
+              300,
+              1128
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 73,
@@ -2065,8 +4987,22 @@
       ],
       "original_sha256": "3108951f08c511187189a0989585aec924011fd4d58d0a1b1e093d7c023b74b3",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_73.png",
-      "asset_sha256": "f78aebde747ebc14bd324f48444647e21a51a3ba7bf85ef44c55ee5c7c1b5a73"
+      "reference": {
+        "file": "zh_CN/meme_73.png",
+        "sha256": "f78aebde747ebc14bd324f48444647e21a51a3ba7bf85ef44c55ee5c7c1b5a73",
+        "size": [
+          1254,
+          1254
+        ],
+        "rgba_sha256": "2d5584ec0514f8596222d7bc5175f94e3a196bff5d00424dce0f394e20c5f830"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "The proposed footer crop clips the final caption glyph."
+      },
+      "variant": {
+        "image": "zh_CN/meme_73.png"
+      }
     },
     {
       "id": 74,
@@ -2085,8 +5021,51 @@
       ],
       "original_sha256": "a95f7676aa98d5440b25178a68327c3491882db9953f2f5df97da830e2423c29",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_74.png",
-      "asset_sha256": "7db9ce3afac3d0d113d7bfbd93849ef17473bbfc7d3cd52f743049b6ef9b897f"
+      "reference": {
+        "file": "zh_CN/meme_74.png",
+        "sha256": "7db9ce3afac3d0d113d7bfbd93849ef17473bbfc7d3cd52f743049b6ef9b897f",
+        "size": [
+          1254,
+          1254
+        ],
+        "rgba_sha256": "8c408fb4309dc764b26d345190b1df5f057050e3521e600943649c7983b0c6ef",
+        "patches": [
+          {
+            "rect": [
+              0,
+              37,
+              1254,
+              214
+            ],
+            "rgba_sha256": "e68f90e45c0ee66fb8b09df900d9492e92a0008cc03bb2b26aa5abe16b3357a2"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1254,
+          1254
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_74.png",
+            "source": [
+              0,
+              0,
+              1254,
+              214
+            ],
+            "at": [
+              0,
+              37
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 75,
@@ -2116,8 +5095,22 @@
       ],
       "original_sha256": "5160554b676bd8ac13d4a38baf4c194a3dea4f8c14800bbb8e2e2a3bd29086c1",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_75.png",
-      "asset_sha256": "5afa7ec691e08ad44b79062e06aed34640cf080899b4add0b06cfce71d2f6eda"
+      "reference": {
+        "file": "zh_CN/meme_75.png",
+        "sha256": "5afa7ec691e08ad44b79062e06aed34640cf080899b4add0b06cfce71d2f6eda",
+        "size": [
+          1550,
+          1014
+        ],
+        "rgba_sha256": "741d385e3385d60480e055920b937ed491d5c0fd5bd7b619dff9d6f4375f7463"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "Caption boundaries overlap mathematical annotations."
+      },
+      "variant": {
+        "image": "zh_CN/meme_75.png"
+      }
     },
     {
       "id": 76,
@@ -2136,8 +5129,51 @@
       ],
       "original_sha256": "1e795f9907a83a600dde92868e965ff672ff13225c0cfc2dd320bd57bc44a338",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_76.png",
-      "asset_sha256": "d42be90ea2e8240c2971d5724e4ad30f2c7ba431b730f2c96fe7f281737f75d9"
+      "reference": {
+        "file": "zh_CN/meme_76.png",
+        "sha256": "d42be90ea2e8240c2971d5724e4ad30f2c7ba431b730f2c96fe7f281737f75d9",
+        "size": [
+          1265,
+          1243
+        ],
+        "rgba_sha256": "9bde7e02974bab84ce1f76a9a1e9e6c9f0b9bab6f6550193543b068cfea4402e",
+        "patches": [
+          {
+            "rect": [
+              265,
+              348,
+              785,
+              274
+            ],
+            "rgba_sha256": "5621e4140e0995383b67deff7e1ff6007466a6a6cf7d2f7642b3d7f3f03edb2f"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1265,
+          1243
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_76.png",
+            "source": [
+              0,
+              0,
+              785,
+              274
+            ],
+            "at": [
+              265,
+              348
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 77,
@@ -2167,8 +5203,73 @@
       ],
       "original_sha256": "5d5d0f1b1224b8483eaf5e2f6a6d14d9c31a56f12a7ba53d6cc8b165613a5c7e",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_77.png",
-      "asset_sha256": "39d9be54d20190bd929a698818343d6d997f4d4cf177440c28c60c6ceabae7a1"
+      "reference": {
+        "file": "zh_CN/meme_77.png",
+        "sha256": "39d9be54d20190bd929a698818343d6d997f4d4cf177440c28c60c6ceabae7a1",
+        "size": [
+          1430,
+          1100
+        ],
+        "rgba_sha256": "22a9467093176e7cdcb7d612148f24b35be3391fd968830f69b8ad1dbd4a4708",
+        "patches": [
+          {
+            "rect": [
+              85,
+              22,
+              1245,
+              209
+            ],
+            "rgba_sha256": "665031dfbcf9575a9517bc087681de12215f74785169a812593874a881145230"
+          },
+          {
+            "rect": [
+              0,
+              957,
+              1430,
+              143
+            ],
+            "rgba_sha256": "bbe03f4a0da4a501f3b36b03c191cc205312a45a2505a8c70585bb064beb089a"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1430,
+          1100
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_77.png",
+            "source": [
+              0,
+              0,
+              1245,
+              209
+            ],
+            "at": [
+              85,
+              22
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_77.png",
+            "source": [
+              0,
+              209,
+              1430,
+              143
+            ],
+            "at": [
+              0,
+              957
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 78,
@@ -2187,8 +5288,22 @@
       ],
       "original_sha256": "5535b409dca2cb63b47538a10fa3f631cd5728f4e82f99c7aba76e4bba8d7a93",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_78.png",
-      "asset_sha256": "a1f11ceb3c7ac48d5122500d61b6764e93a6c385c04e2cd669786a64500f0c4d"
+      "reference": {
+        "file": "zh_CN/meme_78.png",
+        "sha256": "a1f11ceb3c7ac48d5122500d61b6764e93a6c385c04e2cd669786a64500f0c4d",
+        "size": [
+          1022,
+          1539
+        ],
+        "rgba_sha256": "2109e5ad9ebb10700dfc2329838ec0a9b970554b897b6ce57c449d4208c6d6ee"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "Perspective lettering is printed on a briefcase."
+      },
+      "variant": {
+        "image": "zh_CN/meme_78.png"
+      }
     },
     {
       "id": 79,
@@ -2218,8 +5333,73 @@
       ],
       "original_sha256": "40bec7ac404b929241f96a45d4b1deb86d10b4605017be9df90b8e4872791171",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_79.png",
-      "asset_sha256": "ef79b52d13d0bf4d6c7063dc0ffc49f595e0b0efde86bad32805412c34c459a2"
+      "reference": {
+        "file": "zh_CN/meme_79.png",
+        "sha256": "ef79b52d13d0bf4d6c7063dc0ffc49f595e0b0efde86bad32805412c34c459a2",
+        "size": [
+          1211,
+          1299
+        ],
+        "rgba_sha256": "6820caa9ab035c47d02635861e2651cd47d6f9f7bec6e0592374756500ccd70a",
+        "patches": [
+          {
+            "rect": [
+              72,
+              480,
+              1055,
+              170
+            ],
+            "rgba_sha256": "951c48be0bc28c4fe517afde429e4aef4b830d2b0d32a8bbb66a97fea2d96ec1"
+          },
+          {
+            "rect": [
+              205,
+              1143,
+              825,
+              156
+            ],
+            "rgba_sha256": "03f2aac81b040e80455e12ab9491ca6216d012ba38e7b734db7229153ab59710"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1211,
+          1299
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_79.png",
+            "source": [
+              0,
+              0,
+              1055,
+              170
+            ],
+            "at": [
+              72,
+              480
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_79.png",
+            "source": [
+              0,
+              170,
+              825,
+              156
+            ],
+            "at": [
+              205,
+              1143
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 80,
@@ -2238,8 +5418,51 @@
       ],
       "original_sha256": "4b88aacce3d9ac474bf2e1cff5e1b21b780fadc88f4d061b564a428b5a0de541",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_80.png",
-      "asset_sha256": "a42f021ff5d9e9313c8765729abe0ab215c0451ec6a845ff969d61dd9f9099ed"
+      "reference": {
+        "file": "zh_CN/meme_80.png",
+        "sha256": "a42f021ff5d9e9313c8765729abe0ab215c0451ec6a845ff969d61dd9f9099ed",
+        "size": [
+          1014,
+          1550
+        ],
+        "rgba_sha256": "1ebf515f1cfaf67bcafc8482a531fc40ca25170f4206fd561c8149121e19a619",
+        "patches": [
+          {
+            "rect": [
+              91,
+              341,
+              295,
+              202
+            ],
+            "rgba_sha256": "2c7bc75ca7af4ecc639ae7417c7a165afff25eeb1405aad9a866a47f3c2f7e4a"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1014,
+          1550
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_80.png",
+            "source": [
+              0,
+              0,
+              295,
+              202
+            ],
+            "at": [
+              91,
+              341
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 81,
@@ -2269,8 +5492,73 @@
       ],
       "original_sha256": "394260c5d74ddbfa14f71ae47a7467d4cecd2e643d44b30f57b6b8d09dcdcd47",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_81.png",
-      "asset_sha256": "c2b31ed05f8ccea42bebbdaa6737d1f80b169120ef6492140859e3f7d8a4d240"
+      "reference": {
+        "file": "zh_CN/meme_81.png",
+        "sha256": "c2b31ed05f8ccea42bebbdaa6737d1f80b169120ef6492140859e3f7d8a4d240",
+        "size": [
+          1355,
+          1161
+        ],
+        "rgba_sha256": "f8605fdaf4cff578173f9c034821b7ffb5846a29cfe58e4cfea37c15d5b363af",
+        "patches": [
+          {
+            "rect": [
+              13,
+              11,
+              665,
+              280
+            ],
+            "rgba_sha256": "314ed15a8bd43243b89061ee1a838f41edea20722522b37b72ae4916130a9f24"
+          },
+          {
+            "rect": [
+              691,
+              11,
+              664,
+              315
+            ],
+            "rgba_sha256": "d0f63f2014cb5b78cd364eed59b07f901532fa6d707a661f876f3635ed61109d"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1355,
+          1161
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_81.png",
+            "source": [
+              0,
+              0,
+              665,
+              280
+            ],
+            "at": [
+              13,
+              11
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_81.png",
+            "source": [
+              0,
+              280,
+              664,
+              315
+            ],
+            "at": [
+              691,
+              11
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 82,
@@ -2307,8 +5595,73 @@
       ],
       "original_sha256": "c8d387f76a815fd6b96f977bb73c56a4ef5b165d2bbdde987f281afe93e513e4",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_83.png",
-      "asset_sha256": "4896be6df0397305040eda15a427303287baa537f8f8967612b312417947fcf2"
+      "reference": {
+        "file": "zh_CN/meme_83.png",
+        "sha256": "4896be6df0397305040eda15a427303287baa537f8f8967612b312417947fcf2",
+        "size": [
+          1010,
+          1557
+        ],
+        "rgba_sha256": "5338fdd8f4e59f5f9f5bda51c8587afd661c3da49644956312788391935acff0",
+        "patches": [
+          {
+            "rect": [
+              242,
+              544,
+              536,
+              219
+            ],
+            "rgba_sha256": "290bf92ed7d9c5de94502c238a7d08a5a7f889728846897d4e030a2b2b8db2f5"
+          },
+          {
+            "rect": [
+              80,
+              1385,
+              870,
+              172
+            ],
+            "rgba_sha256": "cff0e16b9ac045da3100b7164469b476e55327f96001a0a5a92d508459d61027"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1010,
+          1557
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_83.png",
+            "source": [
+              0,
+              0,
+              536,
+              219
+            ],
+            "at": [
+              242,
+              544
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_83.png",
+            "source": [
+              0,
+              219,
+              870,
+              172
+            ],
+            "at": [
+              80,
+              1385
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 84,
@@ -2338,8 +5691,22 @@
       ],
       "original_sha256": "5da3ac20a6514324692c8d14d7a5dbae5dfdbb6648d52a473ddf19f64de0ad85",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_84.png",
-      "asset_sha256": "aa66eb1a58359416880584af47dff70485af72e4adf112c1047c9661da5da261"
+      "reference": {
+        "file": "zh_CN/meme_84.png",
+        "sha256": "aa66eb1a58359416880584af47dff70485af72e4adf112c1047c9661da5da261",
+        "size": [
+          1050,
+          1498
+        ],
+        "rgba_sha256": "f3643ee5be137857bf4ab0839035e0e113d1ead70fd5804bdffec051f94601d2"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "Caption patches cross detailed jacket folds."
+      },
+      "variant": {
+        "image": "zh_CN/meme_84.png"
+      }
     },
     {
       "id": 85,
@@ -2369,8 +5736,73 @@
       ],
       "original_sha256": "c381960df87d210ae87a3c15f96924cfdc8139d4e142db416cd5ceaf96e784c7",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_85.png",
-      "asset_sha256": "a1cb2268d0de739f2fdb88bdb55f1b030ea44bc60e8845eafe836cad2d44bb8b"
+      "reference": {
+        "file": "zh_CN/meme_85.png",
+        "sha256": "a1cb2268d0de739f2fdb88bdb55f1b030ea44bc60e8845eafe836cad2d44bb8b",
+        "size": [
+          1774,
+          887
+        ],
+        "rgba_sha256": "c1414fe5c3ce94b270b55bab099cae1404bc702fa77f4f64e75b23c2fdf40572",
+        "patches": [
+          {
+            "rect": [
+              585,
+              0,
+              569,
+              142
+            ],
+            "rgba_sha256": "243339ca33e35eaa8bfe215c32f8cba368cb1245835a347c056417644dd0ce7b"
+          },
+          {
+            "rect": [
+              195,
+              700,
+              1384,
+              161
+            ],
+            "rgba_sha256": "e4b30afd3bc657adf441264915b6c2b927f0fa320e325a1766d4cb584929e096"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1774,
+          887
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_85.png",
+            "source": [
+              0,
+              0,
+              569,
+              142
+            ],
+            "at": [
+              585,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_85.png",
+            "source": [
+              0,
+              142,
+              1384,
+              161
+            ],
+            "at": [
+              195,
+              700
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 86,
@@ -2400,8 +5832,73 @@
       ],
       "original_sha256": "606fa0f3caaf89811732b0e051dd4ab685c8415b2073376cceb563953a88872c",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_86.png",
-      "asset_sha256": "f7c393e1386698ee019ab618b7e958faf44bf5948d5d8ce8bfc57807335d9694"
+      "reference": {
+        "file": "zh_CN/meme_86.png",
+        "sha256": "f7c393e1386698ee019ab618b7e958faf44bf5948d5d8ce8bfc57807335d9694",
+        "size": [
+          1286,
+          1223
+        ],
+        "rgba_sha256": "53eee2bef7ea2f15edf20be0d57116eff0ae9b7d7b4e459a775655e9fc0ec77b",
+        "patches": [
+          {
+            "rect": [
+              0,
+              317,
+              631,
+              332
+            ],
+            "rgba_sha256": "2ea2ddaff6cd74bee6c6d960af10b9e02ae034156c297f9d718ef94f3d780717"
+          },
+          {
+            "rect": [
+              630,
+              856,
+              541,
+              257
+            ],
+            "rgba_sha256": "8990fcb263ab7b3f8a62a447fce02b3299289cc892f2c50f94742fa1f3168800"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1286,
+          1223
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_86.png",
+            "source": [
+              0,
+              0,
+              631,
+              332
+            ],
+            "at": [
+              0,
+              317
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_86.png",
+            "source": [
+              0,
+              332,
+              541,
+              257
+            ],
+            "at": [
+              630,
+              856
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 87,
@@ -2420,8 +5917,22 @@
       ],
       "original_sha256": "66b2efa751159f6a408144c42e5eca3ff39fea289277bc642cee2019c5f61e25",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_87.png",
-      "asset_sha256": "32c494ab09b6c8e26fcbe274fa249addb762f387716f519b50e10babfedd5ca2"
+      "reference": {
+        "file": "zh_CN/meme_87.png",
+        "sha256": "32c494ab09b6c8e26fcbe274fa249addb762f387716f519b50e10babfedd5ca2",
+        "size": [
+          1062,
+          1482
+        ],
+        "rgba_sha256": "0aa14edb9bfa81ca66cebf7c5fcc5bdb6df5b6d8a30cbd72c89b261946110d1a"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "The subject silhouette changes across crop boundaries."
+      },
+      "variant": {
+        "image": "zh_CN/meme_87.png"
+      }
     },
     {
       "id": 88,
@@ -2451,8 +5962,73 @@
       ],
       "original_sha256": "50717da8601077d98a6166579e01f5a477494ff84be4beafdfca6306f440b05f",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_88.png",
-      "asset_sha256": "464ffeb900885c73f4fac38a51f8ab45cd74c7bb50ecdd5ecd1129b3cf1d1356"
+      "reference": {
+        "file": "zh_CN/meme_88.png",
+        "sha256": "464ffeb900885c73f4fac38a51f8ab45cd74c7bb50ecdd5ecd1129b3cf1d1356",
+        "size": [
+          1035,
+          1520
+        ],
+        "rgba_sha256": "2f507a65c1470df5cd11811b50988f4e559930af27b3c5d32cf882acb49940d8",
+        "patches": [
+          {
+            "rect": [
+              600,
+              623,
+              435,
+              168
+            ],
+            "rgba_sha256": "66c7dfaf58c8f32da53acf47a0750ff27d133a80242c76a928ba35c49fa06f3f"
+          },
+          {
+            "rect": [
+              362,
+              1398,
+              280,
+              122
+            ],
+            "rgba_sha256": "2ce228917d1547e78fbb79e4259825b7c2c68c015aabc415c94edeb6d3b979f8"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1035,
+          1520
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_88.png",
+            "source": [
+              0,
+              0,
+              435,
+              168
+            ],
+            "at": [
+              600,
+              623
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_88.png",
+            "source": [
+              0,
+              168,
+              280,
+              122
+            ],
+            "at": [
+              362,
+              1398
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 89,
@@ -2493,8 +6069,73 @@
       ],
       "original_sha256": "a181b533a812bba24374d635acb77544b69fa7295a49eb4d47c2628b668e9789",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_89.png",
-      "asset_sha256": "ba66c30f00e8bd68822cf1334939c056a2323e27b0c730e99732cde146b281d5"
+      "reference": {
+        "file": "zh_CN/meme_89.png",
+        "sha256": "ba66c30f00e8bd68822cf1334939c056a2323e27b0c730e99732cde146b281d5",
+        "size": [
+          1135,
+          1386
+        ],
+        "rgba_sha256": "f96c7a511c80faa0d4b0a34d10df3d31970b3a0ceba93d261df2b1e486c8ea43",
+        "patches": [
+          {
+            "rect": [
+              295,
+              180,
+              545,
+              319
+            ],
+            "rgba_sha256": "8ee88387ff59d933f7059849d0462a518f9ab0f6ff67b45e1409331218928a24"
+          },
+          {
+            "rect": [
+              306,
+              803,
+              512,
+              154
+            ],
+            "rgba_sha256": "59578cc759e7b5ee4265bebccd3d7c30453eecd05546b400247654c8bb7c2d9b"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1135,
+          1386
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_89.png",
+            "source": [
+              0,
+              0,
+              545,
+              319
+            ],
+            "at": [
+              295,
+              180
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_89.png",
+            "source": [
+              0,
+              319,
+              512,
+              154
+            ],
+            "at": [
+              306,
+              803
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 90,
@@ -2513,8 +6154,51 @@
       ],
       "original_sha256": "eaa56cafbc116527cff0d04b7458a8f5bde611eca5b1ed53d83cfcbf7b7881c9",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_90.png",
-      "asset_sha256": "3088d9e865798c4f2b596d961e2062cf3f3c53e2edba5ef878e0c5f47964edba"
+      "reference": {
+        "file": "zh_CN/meme_90.png",
+        "sha256": "3088d9e865798c4f2b596d961e2062cf3f3c53e2edba5ef878e0c5f47964edba",
+        "size": [
+          1254,
+          1254
+        ],
+        "rgba_sha256": "199d731a8eba86439d0cacac38ab56933a0ddafd6679af48d850474f88cbd9f4",
+        "patches": [
+          {
+            "rect": [
+              37,
+              0,
+              1155,
+              189
+            ],
+            "rgba_sha256": "10bfeafb882a58b4173f1c566a2baf2df02713ef5daaa15df049b2a56805d961"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1254,
+          1254
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_90.png",
+            "source": [
+              0,
+              0,
+              1155,
+              189
+            ],
+            "at": [
+              37,
+              0
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 91,
@@ -2544,8 +6228,73 @@
       ],
       "original_sha256": "8f94df2190f5baa97a2b2bb856c6710049f11cb490019c2ea6c206073729efd5",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_91.png",
-      "asset_sha256": "582be4132daff5651db9d3fab548d507610e99e317dcc37d4f674fd954cf9a24"
+      "reference": {
+        "file": "zh_CN/meme_91.png",
+        "sha256": "582be4132daff5651db9d3fab548d507610e99e317dcc37d4f674fd954cf9a24",
+        "size": [
+          1234,
+          1274
+        ],
+        "rgba_sha256": "569de2de09d93c7b97a8678fa685b023179567bc05bba26381e6ef8a612db502",
+        "patches": [
+          {
+            "rect": [
+              308,
+              509,
+              532,
+              167
+            ],
+            "rgba_sha256": "e52487a33b380911788e4d3d2d3ccc87e46b0ac789dc659218d5b097ae3deb38"
+          },
+          {
+            "rect": [
+              308,
+              1146,
+              519,
+              128
+            ],
+            "rgba_sha256": "7701dc0414fe48963529ff81193753966faf31ab6115643c20a0bd6cd9d23f3b"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1234,
+          1274
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_91.png",
+            "source": [
+              0,
+              0,
+              532,
+              167
+            ],
+            "at": [
+              308,
+              509
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_91.png",
+            "source": [
+              0,
+              167,
+              519,
+              128
+            ],
+            "at": [
+              308,
+              1146
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 92,
@@ -2564,8 +6313,51 @@
       ],
       "original_sha256": "b28e38dc3662d9455b2c9d80d8eb6a6cea8443354bf0c0daa83423686b123354",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_92.png",
-      "asset_sha256": "0ddd2424b65a403735634c28804c4c4cb9bfb807cec84c7190feab54c9463789"
+      "reference": {
+        "file": "zh_CN/meme_92.png",
+        "sha256": "0ddd2424b65a403735634c28804c4c4cb9bfb807cec84c7190feab54c9463789",
+        "size": [
+          1187,
+          1325
+        ],
+        "rgba_sha256": "f7c791b219c2d8c30bc569283c3c5e63196ef1b4f58ae1d99fbdeea3e7656ec6",
+        "patches": [
+          {
+            "rect": [
+              71,
+              1126,
+              1033,
+              199
+            ],
+            "rgba_sha256": "5d95fc5af5f4872b823d3ba69838ad36c17164a65f1d142fe09d5229e5d01dee"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1187,
+          1325
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_92.png",
+            "source": [
+              0,
+              0,
+              1033,
+              199
+            ],
+            "at": [
+              71,
+              1126
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 93,
@@ -2595,8 +6387,73 @@
       ],
       "original_sha256": "d3461c91ccac44af5156769d1a9be0ccaed8a0bcfb698ccc2251076d462f45a7",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_93.png",
-      "asset_sha256": "ad20ce7ec3e5399be5aad9634fbe6ae706121df5dbaf9aade0c131b2f5d8b5c2"
+      "reference": {
+        "file": "zh_CN/meme_93.png",
+        "sha256": "ad20ce7ec3e5399be5aad9634fbe6ae706121df5dbaf9aade0c131b2f5d8b5c2",
+        "size": [
+          1240,
+          1268
+        ],
+        "rgba_sha256": "4afffb4cc83de752bb6623ad0884934276c9e24a62dab5902cc3daeb51791049",
+        "patches": [
+          {
+            "rect": [
+              111,
+              0,
+              1030,
+              178
+            ],
+            "rgba_sha256": "1fe7812edd079b89a46e41b0b689e2df5b3545070e46c061a79fcc8437929a93"
+          },
+          {
+            "rect": [
+              148,
+              1065,
+              906,
+              203
+            ],
+            "rgba_sha256": "de48c3b594af9cbf874e0481c5c9b0e1eb246c0046db26923acfc7b6b1bf77b0"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1240,
+          1268
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_93.png",
+            "source": [
+              0,
+              0,
+              1030,
+              178
+            ],
+            "at": [
+              111,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_93.png",
+            "source": [
+              0,
+              178,
+              906,
+              203
+            ],
+            "at": [
+              148,
+              1065
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 94,
@@ -2615,8 +6472,51 @@
       ],
       "original_sha256": "70be473a3c9143730d4634874bd304414a7b723a2e0dcec06733938ad92d1ec5",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_94.png",
-      "asset_sha256": "c696ec08475625764acbf22ac9bc1f61ae8d1f87bb1620d7eaae871362231982"
+      "reference": {
+        "file": "zh_CN/meme_94.png",
+        "sha256": "c696ec08475625764acbf22ac9bc1f61ae8d1f87bb1620d7eaae871362231982",
+        "size": [
+          1154,
+          1363
+        ],
+        "rgba_sha256": "eb0a177932222e9e5b6b92df72828921526b544b94f0bfcf231758236ee6d256",
+        "patches": [
+          {
+            "rect": [
+              473,
+              245,
+              474,
+              219
+            ],
+            "rgba_sha256": "90a93bb09ec93924b71c46ef541896a3c4bd6973ffed8e1ddc639763104b9d7e"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1154,
+          1363
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_94.png",
+            "source": [
+              0,
+              0,
+              474,
+              219
+            ],
+            "at": [
+              473,
+              245
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 95,
@@ -2646,8 +6546,73 @@
       ],
       "original_sha256": "922968f66f01ebed4d3adfe77e5c984fc67d2f8321b86047b2d127991945d307",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_95.png",
-      "asset_sha256": "6f371771ad4cdc09ed431f7893e0206adc8a93888ea900f2d4b2c3f3a2aecb53"
+      "reference": {
+        "file": "zh_CN/meme_95.png",
+        "sha256": "6f371771ad4cdc09ed431f7893e0206adc8a93888ea900f2d4b2c3f3a2aecb53",
+        "size": [
+          1536,
+          1024
+        ],
+        "rgba_sha256": "97255e177f4fae07e9830291985d25580a7f6f12e24cfe68d0df2dc4ae96acf3",
+        "patches": [
+          {
+            "rect": [
+              0,
+              0,
+              1536,
+              144
+            ],
+            "rgba_sha256": "686092bc37bc7a70a84424762d7c7edee1af184868c3b6b2a3c40af5eb99c711"
+          },
+          {
+            "rect": [
+              506,
+              808,
+              554,
+              206
+            ],
+            "rgba_sha256": "c0b95533493f5db0b6bd5b95b385fc45551c9e843bed9bc59c874385176b95cd"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1536,
+          1024
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_95.png",
+            "source": [
+              0,
+              0,
+              1536,
+              144
+            ],
+            "at": [
+              0,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_95.png",
+            "source": [
+              0,
+              144,
+              554,
+              206
+            ],
+            "at": [
+              506,
+              808
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 96,
@@ -2666,8 +6631,51 @@
       ],
       "original_sha256": "db348a43f4512588a5fb0badcc7b20d73daa7b1bd88302e94788b045f4eb184c",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_96.png",
-      "asset_sha256": "07fe732d9112adbb36b6c6b03239431f70260527f6255c63da4428c4cad42c70"
+      "reference": {
+        "file": "zh_CN/meme_96.png",
+        "sha256": "07fe732d9112adbb36b6c6b03239431f70260527f6255c63da4428c4cad42c70",
+        "size": [
+          1254,
+          1254
+        ],
+        "rgba_sha256": "10754969c87207f1c18eef79b4a86dafa21e6dcceaa6bd692370e1f470dea2d9",
+        "patches": [
+          {
+            "rect": [
+              514,
+              75,
+              628,
+              214
+            ],
+            "rgba_sha256": "9ebf88fffca34d5d14cecd33af1359e096b766989cbc196dc1e058043a99d8a4"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1254,
+          1254
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_96.png",
+            "source": [
+              0,
+              0,
+              628,
+              214
+            ],
+            "at": [
+              514,
+              75
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 97,
@@ -2719,8 +6727,22 @@
       ],
       "original_sha256": "6ae68657aebdf187ed68d4795dc4b6efe2c7c7716f2b32df094d7f3369efd14a",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_97.png",
-      "asset_sha256": "3a3eaa09639ac07bef9877f27cec13f338bfdd682c425a6c6dac757af0eafeba"
+      "reference": {
+        "file": "zh_CN/meme_97.png",
+        "sha256": "3a3eaa09639ac07bef9877f27cec13f338bfdd682c425a6c6dac757af0eafeba",
+        "size": [
+          1186,
+          1327
+        ],
+        "rgba_sha256": "3f5b6da1ecafbabdbedc98a733518cbc1939eee277547da2d57416e4e4f183d3"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "Perspective wall lettering and subtitles span multiple panels."
+      },
+      "variant": {
+        "image": "zh_CN/meme_97.png"
+      }
     },
     {
       "id": 98,
@@ -2761,8 +6783,22 @@
       ],
       "original_sha256": "f4035947f34becfe3dd275b55abcba11a07aeabd60d677bde40cb764e3b7b4e5",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_98.png",
-      "asset_sha256": "93081f8aeffe06eb695db212d89b50267427c7cc99ef1191182442ada83c2bcd"
+      "reference": {
+        "file": "zh_CN/meme_98.png",
+        "sha256": "93081f8aeffe06eb695db212d89b50267427c7cc99ef1191182442ada83c2bcd",
+        "size": [
+          1333,
+          1180
+        ],
+        "rgba_sha256": "1a8300548c7869ca08f5cb484f59a32ffe84b679e17e70e79d911de2877b3334"
+      },
+      "variant_review": {
+        "mode": "full",
+        "reason": "Perspective lettering occupies most of the sign."
+      },
+      "variant": {
+        "image": "zh_CN/meme_98.png"
+      }
     },
     {
       "id": 99,
@@ -2799,8 +6835,73 @@
       ],
       "original_sha256": "0c0a0a692c3e1c8e1aa7607f573446fe878f1195ffd76bcaa94562cfdf23f6d9",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_100.png",
-      "asset_sha256": "f27aaa10e53f949c5b61451c4ce80a703770455d812a852a00fec33d29b263b3"
+      "reference": {
+        "file": "zh_CN/meme_100.png",
+        "sha256": "f27aaa10e53f949c5b61451c4ce80a703770455d812a852a00fec33d29b263b3",
+        "size": [
+          1672,
+          941
+        ],
+        "rgba_sha256": "e9faffc9015e80a769d6a807189fae7a72ccf444e448e637d228ef3f76092370",
+        "patches": [
+          {
+            "rect": [
+              167,
+              0,
+              1338,
+              170
+            ],
+            "rgba_sha256": "9d56a71698134915f629bb8a5fe64003dd09fbc58e93b2bb92d0d61d525aae41"
+          },
+          {
+            "rect": [
+              284,
+              733,
+              1138,
+              190
+            ],
+            "rgba_sha256": "f859f3abb2f1c8d6679d0d60735b2d644283c7c116d52bd62c6ca9b2849b9ee8"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1672,
+          941
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_100.png",
+            "source": [
+              0,
+              0,
+              1338,
+              170
+            ],
+            "at": [
+              167,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_100.png",
+            "source": [
+              0,
+              170,
+              1138,
+              190
+            ],
+            "at": [
+              284,
+              733
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 101,
@@ -2830,8 +6931,73 @@
       ],
       "original_sha256": "98928ed81bf1e6beec9c32c6dcffa6625a1e511eb75912570a4d875c8764046e",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_101.png",
-      "asset_sha256": "0095e3971e9981a75cd175e65427ad1abbfe9d93466abefba1eec4f5431200dc"
+      "reference": {
+        "file": "zh_CN/meme_101.png",
+        "sha256": "0095e3971e9981a75cd175e65427ad1abbfe9d93466abefba1eec4f5431200dc",
+        "size": [
+          1391,
+          1131
+        ],
+        "rgba_sha256": "b157e136364613be3f7cf4a08ee4d694448b5cd020dfa7a9c5e228e7c0cf7c5d",
+        "patches": [
+          {
+            "rect": [
+              125,
+              0,
+              1113,
+              170
+            ],
+            "rgba_sha256": "369f9ab0960d60a242aa8d28e54a178862a3a4fe9e092f0b17ea00aac5f52601"
+          },
+          {
+            "rect": [
+              445,
+              950,
+              529,
+              181
+            ],
+            "rgba_sha256": "a2946a4e0d58ff21485c2cf475fdd036eeafcea034b7e0266547e9f6f972337e"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1391,
+          1131
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_101.png",
+            "source": [
+              0,
+              0,
+              1113,
+              170
+            ],
+            "at": [
+              125,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_101.png",
+            "source": [
+              0,
+              170,
+              529,
+              181
+            ],
+            "at": [
+              445,
+              950
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 102,
@@ -2850,8 +7016,51 @@
       ],
       "original_sha256": "40372249f22181b69d96627f9f4d85e13588a4e88ed1c12fdeb4e412d061a585",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_102.png",
-      "asset_sha256": "840a10ac7b9b2bc5627b4641e04f413af4093e60ac9013394fb989cbc134bbb3"
+      "reference": {
+        "file": "zh_CN/meme_102.png",
+        "sha256": "840a10ac7b9b2bc5627b4641e04f413af4093e60ac9013394fb989cbc134bbb3",
+        "size": [
+          943,
+          1668
+        ],
+        "rgba_sha256": "39259fd7a5a3cdbb33284fa9fb68689e568655fdbf2ccdbc30c0b2626e4e95bf",
+        "patches": [
+          {
+            "rect": [
+              198,
+              1334,
+              557,
+              301
+            ],
+            "rgba_sha256": "4749cfff09286c127c3e1b405f22319a01ac19beb5599385cbf17f19ea293d92"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          943,
+          1668
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_102.png",
+            "source": [
+              0,
+              0,
+              557,
+              301
+            ],
+            "at": [
+              198,
+              1334
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 103,
@@ -2870,8 +7079,51 @@
       ],
       "original_sha256": "7a5b655197e2c69b72f1b66e23e8f05036f501914070536f16c5d0e6a3ce61ab",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_103.png",
-      "asset_sha256": "761a8c713c571ea1fab19dc3240239495f05492da706db947e12dec6874aa534"
+      "reference": {
+        "file": "zh_CN/meme_103.png",
+        "sha256": "761a8c713c571ea1fab19dc3240239495f05492da706db947e12dec6874aa534",
+        "size": [
+          943,
+          1668
+        ],
+        "rgba_sha256": "02238f1bf00e0fa259445d1112cf87ddfa5c46b04d0112ee65f7eb3e3d044c83",
+        "patches": [
+          {
+            "rect": [
+              9,
+              16,
+              934,
+              235
+            ],
+            "rgba_sha256": "f5c6a1e52a5362169f6d3b9c7b3e33b11704078648e9f9b7993361115c3420da"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          943,
+          1668
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_103.png",
+            "source": [
+              0,
+              0,
+              934,
+              235
+            ],
+            "at": [
+              9,
+              16
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 104,
@@ -2901,8 +7153,73 @@
       ],
       "original_sha256": "e7c197859d418a9316adfc715e3496a27c668666facafcde088f9051bd29de85",
       "localization_status": "ai-localized",
-      "asset": "zh_CN/meme_104.png",
-      "asset_sha256": "24849c21c9a68e800b10d0b5d3e8b9365ba63bc1b46f4d66fe21cc0e813207ff"
+      "reference": {
+        "file": "zh_CN/meme_104.png",
+        "sha256": "24849c21c9a68e800b10d0b5d3e8b9365ba63bc1b46f4d66fe21cc0e813207ff",
+        "size": [
+          1614,
+          974
+        ],
+        "rgba_sha256": "ddf973cc7e29975cbe1a78705c484a78f99a0c06750e7c569003f39c15ffd5d0",
+        "patches": [
+          {
+            "rect": [
+              177,
+              0,
+              1276,
+              244
+            ],
+            "rgba_sha256": "64760140f85ea362a26b3a898ef91ed1de823091d9da390c99b4fc0530b3994d"
+          },
+          {
+            "rect": [
+              177,
+              808,
+              1276,
+              166
+            ],
+            "rgba_sha256": "64d781febe9fdacc0d710a81033f70f86a00d37664693bb45ad1234a9cc115dd"
+          }
+        ]
+      },
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1614,
+          974
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_104.png",
+            "source": [
+              0,
+              0,
+              1276,
+              244
+            ],
+            "at": [
+              177,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_104.png",
+            "source": [
+              0,
+              244,
+              1276,
+              166
+            ],
+            "at": [
+              177,
+              808
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 105,
@@ -3201,5 +7518,800 @@
       ]
     }
   ],
-  "rendering": "ai-localized-assets"
+  "rendering": "lossless-native-variants",
+  "reference_commit": "3117288ce8d710bde4f7a86ca5ed5240ebb1c301",
+  "assets": {
+    "zh_CN/meme_00.png": {
+      "bytes": 2119578,
+      "sha256": "ebf66bc1df513f3226a0429b37fcff452ada4d12406e944b76bdcb6443d20d15",
+      "rgba_sha256": "c52ee2837577de0c6a447a7a069cec47f860256757d90f51d7cc15f4e2252765",
+      "size": [
+        966,
+        1629
+      ]
+    },
+    "zh_CN/patches/atlas_02.png": {
+      "bytes": 159270,
+      "sha256": "7bbe1c75cca32ed8fb95fea6b36cdeb58f35b2d151658397676b6c01f5e3a516",
+      "rgba_sha256": "27c982586722085adbac0469beb437860b3ce6effffb2acd53264b7c5e5323a0",
+      "size": [
+        921,
+        173
+      ]
+    },
+    "zh_CN/patches/atlas_03.png": {
+      "bytes": 123327,
+      "sha256": "be429cb2667e0e4168c5303c6e25a51933f8c32c363364b5c5c9461b7cf5cfd3",
+      "rgba_sha256": "8db67f3503013706b4e59ef5bec128d5e68e3c6f5913931f8f9071b430e304dd",
+      "size": [
+        283,
+        429
+      ]
+    },
+    "zh_CN/patches/atlas_04.png": {
+      "bytes": 144239,
+      "sha256": "c6924db94d3a8dc5ae757487dd89d4c8e9575da35d92df2a198f44c351ab3945",
+      "rgba_sha256": "11fc8f8950826a01d6b7e436b7cb94892961c6c3210a3a6e7731496cc3a28a08",
+      "size": [
+        781,
+        167
+      ]
+    },
+    "zh_CN/patches/atlas_05.png": {
+      "bytes": 349510,
+      "sha256": "bc7b370e1db1e62b412d9ea285008e42ff2851325afe7e34d66055510f934f16",
+      "rgba_sha256": "d861b2f88a1ec8d95df4e89e1cf343130a76ee706850ac87130c0f93895609ec",
+      "size": [
+        1211,
+        367
+      ]
+    },
+    "zh_CN/patches/atlas_07.png": {
+      "bytes": 427412,
+      "sha256": "45448fd7db5e190dc32754e7cc4ef3348e875e8638713cb521009459378cb609",
+      "rgba_sha256": "e0ba81a65e5a160e741c67f496634eaa089bfcb8e4a1e31868156bb9bb0310fe",
+      "size": [
+        1448,
+        403
+      ]
+    },
+    "zh_CN/meme_08.png": {
+      "bytes": 1468085,
+      "sha256": "0c2585d93f01e23bb7249e38d5c0671b66fddee2de370c990e235aa9538f1f84",
+      "rgba_sha256": "3a66cf6e22b33e1cca37c284dcf4b475cac3cfe061f4be50e5cae28e21c0fdc2",
+      "size": [
+        1120,
+        1405
+      ]
+    },
+    "zh_CN/patches/atlas_09.png": {
+      "bytes": 511274,
+      "sha256": "fa157f54188eefc744263c011ba666139e560ddcd832e27c897e03e23c52d420",
+      "rgba_sha256": "8568a4280cb89c76d9b34936c602371ed025b980e74bda7d76b7f8eabfe240c0",
+      "size": [
+        1263,
+        437
+      ]
+    },
+    "zh_CN/patches/atlas_11.png": {
+      "bytes": 439445,
+      "sha256": "26cb2b81e5d5b7b6f801e817b99b0b969de24d056a54f1b8b27858fcff95845f",
+      "rgba_sha256": "fe62892c8a9eb7bdc5e77f2fbac9e01278c5197c10c408ba875d8ab70152b0cc",
+      "size": [
+        1254,
+        365
+      ]
+    },
+    "zh_CN/patches/atlas_12.png": {
+      "bytes": 276290,
+      "sha256": "3e5d40bd3b1a00ff42d71115c646b5d2a8d3a8ae7aa37de3d89ea3e3bab8ad93",
+      "rgba_sha256": "57400e8519ea7c6a40a404d3da682342882d062357cb4941975a83eebcff7a28",
+      "size": [
+        1106,
+        339
+      ]
+    },
+    "zh_CN/patches/atlas_13.png": {
+      "bytes": 197006,
+      "sha256": "6c84d7d2dcd118d2349351bb3c1dc1ff28c67a382da02d71773e0430aa183367",
+      "rgba_sha256": "8d85799e1a2a0f732f4b8249b468266c800a328f6b1741e76ca9eb66f8916cfc",
+      "size": [
+        1110,
+        230
+      ]
+    },
+    "zh_CN/patches/atlas_14.png": {
+      "bytes": 308253,
+      "sha256": "9ea55dc8146dec1ff4d7103165b2bf4dda24da947dc659fdb8523a9e95b7c532",
+      "rgba_sha256": "61be3153460c30390615f65ab665705f4cde45181fa8208b0e88986cbae10a84",
+      "size": [
+        942,
+        325
+      ]
+    },
+    "zh_CN/patches/atlas_15.png": {
+      "bytes": 221097,
+      "sha256": "16b65834f5c577924fd83139601af99d6baba703140b3730391a56cb50beaafd",
+      "rgba_sha256": "34a50d901e44fa6f2d8bb924e4f390e6603d2b861859d3440c2b9edf77effdbd",
+      "size": [
+        1269,
+        193
+      ]
+    },
+    "zh_CN/patches/atlas_16.png": {
+      "bytes": 476944,
+      "sha256": "62b9267004faef9083db174c985db6cbd21af4742f0b93f7384f7080e9a05364",
+      "rgba_sha256": "a6504fa3a276849808dc658c38ce580ba03400d0dcff8ffb743cf6ebd6b66a98",
+      "size": [
+        1305,
+        505
+      ]
+    },
+    "zh_CN/meme_17.png": {
+      "bytes": 1396368,
+      "sha256": "d771365d918cb107273997e822b2ed1a3d6c5ebe51cb20d7db40311073e5785a",
+      "rgba_sha256": "8d57f529dcf7c0e3160c72a24a3a1b80f2900d13fd454466e1a73c67d2c89869",
+      "size": [
+        1151,
+        1366
+      ]
+    },
+    "zh_CN/patches/atlas_20.png": {
+      "bytes": 177342,
+      "sha256": "91b7b143189b4391091fefb3b9f12ac37e9bc3c1e66bf0d0dab9aafd0f30de25",
+      "rgba_sha256": "6b6b20fcdff9c2e77a418e2a1ad8d1888e1badeee18e26550348b796a0a5ed9a",
+      "size": [
+        543,
+        335
+      ]
+    },
+    "zh_CN/patches/atlas_22.png": {
+      "bytes": 270990,
+      "sha256": "af7aa131dd19ba712f722ad33b59e6a4f08408d0e927a61d7ab4d0efd8e7c5ed",
+      "rgba_sha256": "d9a6fefe6c480d1e2b5cf28a31f352a5279afaef4d9ff59a24d75c6eb587197e",
+      "size": [
+        1427,
+        199
+      ]
+    },
+    "zh_CN/patches/atlas_23.png": {
+      "bytes": 179400,
+      "sha256": "af9b530e4d2b82ae2435622e137775246e3f7c3592fd159ca06d81469b03d37e",
+      "rgba_sha256": "18087b9d5cb61e28755bdf80730682fa861620b531730a5786523ac65ba7097a",
+      "size": [
+        1212,
+        177
+      ]
+    },
+    "zh_CN/patches/atlas_24.png": {
+      "bytes": 353343,
+      "sha256": "5cccbfa14c1f6e4fe5669e18d3d49b80682e55ca4b33afec46e9a86f6b4e1b29",
+      "rgba_sha256": "ea17009631aa1a6e4a13fe83e912a7ff4975a7bca69b95228ed0c66e8a601b39",
+      "size": [
+        1102,
+        414
+      ]
+    },
+    "zh_CN/patches/atlas_25.png": {
+      "bytes": 412665,
+      "sha256": "4ccdcee7c8303b59e63da54ea20aa72c6add6185bc8de22735b1680434f45452",
+      "rgba_sha256": "2088670f19bed56cc910cc19a1f09caa88d27ba2671d52bfbff2424700bb7152",
+      "size": [
+        1230,
+        370
+      ]
+    },
+    "zh_CN/patches/atlas_26.png": {
+      "bytes": 342052,
+      "sha256": "b8d9cbcc8f7e132ef7e0c9b40f5218b9b90870656470d76ae602a9f76ace56b3",
+      "rgba_sha256": "beef038c368ff17d8e74d96e58e3c6c5329a3f63c15f75bf2a185fb9fd1afbf2",
+      "size": [
+        1180,
+        377
+      ]
+    },
+    "zh_CN/patches/atlas_27.png": {
+      "bytes": 488130,
+      "sha256": "c178ea954a80ecad9d68abeac15059e48465d48a2c88963e2c4d45c75bca3282",
+      "rgba_sha256": "d7ce296c42189001bbf037032f389c4fe005f9126e64c22354c8b813ed2e704e",
+      "size": [
+        977,
+        503
+      ]
+    },
+    "zh_CN/patches/atlas_29.png": {
+      "bytes": 57746,
+      "sha256": "1ea8fdf8d711d3f058144bb736b0df8c13c7997875befa167f3b0091717343cd",
+      "rgba_sha256": "edb70d709174ca1dba9b7ecc1dc3a69cee7a23104da6ab84e13de7472309d5bd",
+      "size": [
+        419,
+        170
+      ]
+    },
+    "zh_CN/patches/atlas_30.png": {
+      "bytes": 444945,
+      "sha256": "33119b3c5d8cd642e22330609ccb6ca5026c78b2543d5aa12e93e29b4b4483f9",
+      "rgba_sha256": "598c0522bfce9339b117ff7fb332ad0c92c8ebb47e5099b5fcd2075216cfad16",
+      "size": [
+        1338,
+        407
+      ]
+    },
+    "zh_CN/patches/atlas_31.png": {
+      "bytes": 478932,
+      "sha256": "e2b87aeddf9e9d075d071d47646d4c8af29a191d5d61bb0edee24d9194b682b9",
+      "rgba_sha256": "399b3c5798c816e9dca4079c2ddda6fa78a24dd8d3e915f5f462eec3169c7839",
+      "size": [
+        1334,
+        381
+      ]
+    },
+    "zh_CN/patches/atlas_32.png": {
+      "bytes": 476044,
+      "sha256": "fdd2a758a39cdac3a866199dce8e23ea4fbc87b2dca9da0ea06b89ea509d48ea",
+      "rgba_sha256": "f2d1825e4700d0784963df1dfb03b4e814c7daec3d7b2803f160da746ed06823",
+      "size": [
+        1311,
+        398
+      ]
+    },
+    "zh_CN/patches/atlas_34.png": {
+      "bytes": 462678,
+      "sha256": "683dc92ea77792bdd50f5e200bce5b2f91efc9b18f556f8a4e690f58a4101b24",
+      "rgba_sha256": "da49c33ba54f833378c6b91057cdeb5995da7fe1fc9a1ba092fdd84609d01fa1",
+      "size": [
+        1330,
+        366
+      ]
+    },
+    "zh_CN/patches/atlas_35.png": {
+      "bytes": 229695,
+      "sha256": "b6c8f0a9d11807c24b788be7ac1f9ff21753a3e908d8c74381a77b47fa5516ce",
+      "rgba_sha256": "ad6a9c577f98d5290c999919fef7c90917b3fc1d27e8c68b6dcad2ebf023d383",
+      "size": [
+        982,
+        191
+      ]
+    },
+    "zh_CN/patches/atlas_36.png": {
+      "bytes": 306255,
+      "sha256": "3b2df7dc4adbf6fe8b5e14d8ebf88243150bd974f2138dc32dc121ea5307b7d1",
+      "rgba_sha256": "04eb0748eded526aa06ab7178d345fc2a407f5c5d1fa29a4b53cfd612fc29520",
+      "size": [
+        986,
+        375
+      ]
+    },
+    "zh_CN/patches/atlas_37.png": {
+      "bytes": 274262,
+      "sha256": "cee34d32dd143a21bdcd6d1e814b5be3b4d3c1fd6ec8bf7f5186855257b361a6",
+      "rgba_sha256": "97d17d50ca1932f9c6237af6463d415dcfc82dbf2b54b560dae8f6da1fbcd693",
+      "size": [
+        1463,
+        216
+      ]
+    },
+    "zh_CN/patches/atlas_38.png": {
+      "bytes": 177477,
+      "sha256": "e199d974f2b262e42249d7c14cfb75f427e7ff6268798c714ea59509893d7781",
+      "rgba_sha256": "636772c3d4b928014a577ba29a6cf1a41e55910a3c92300b7d09c00d3a0e8090",
+      "size": [
+        768,
+        218
+      ]
+    },
+    "zh_CN/patches/atlas_39.png": {
+      "bytes": 310028,
+      "sha256": "25396befe87e37bdb22f5b9e1be93f5d52dbe7f035222d5ed646aa6155bc842b",
+      "rgba_sha256": "db946f21431480d35660c9b477fa1efc3829b575f3dacb8bab6760c449966989",
+      "size": [
+        1033,
+        363
+      ]
+    },
+    "zh_CN/patches/atlas_42.png": {
+      "bytes": 397104,
+      "sha256": "9a780150f0b32ac15941391ec6da409483fda6832854deecb97d3af17421a1fe",
+      "rgba_sha256": "41c4c9f1373af11850574260acae842e248df5d091e4d85fbeabae350153b82c",
+      "size": [
+        1150,
+        402
+      ]
+    },
+    "zh_CN/patches/atlas_43.png": {
+      "bytes": 456201,
+      "sha256": "d7c8c7dd9392f320d5321e3b2de24af12aa2b7a382c45b339e4447c96678f59a",
+      "rgba_sha256": "92ec2e4bc3ee0a8926a9725a51909b3e5636ffbbb5bfb50a8b6261c8819732e1",
+      "size": [
+        1142,
+        427
+      ]
+    },
+    "zh_CN/patches/atlas_44.png": {
+      "bytes": 301058,
+      "sha256": "60fa9ea10cb00ddfe32f939761b5048431488624754fffb8fb41641ea69e61a0",
+      "rgba_sha256": "05d3ec8ca2ac9e46f3ba4db64ae03fff9c47419f671763b8745f96be15ee0522",
+      "size": [
+        1031,
+        310
+      ]
+    },
+    "zh_CN/patches/atlas_45.png": {
+      "bytes": 468990,
+      "sha256": "6f6a9731df29f3c7113d826c82e8e4a71398ee8aae5db9f61d4a8fb34e248402",
+      "rgba_sha256": "2607e0cda95dd5ee18af530a5ab03c28fda7f2161afe10d7881a7ce39f50c518",
+      "size": [
+        1217,
+        389
+      ]
+    },
+    "zh_CN/patches/atlas_47.png": {
+      "bytes": 170762,
+      "sha256": "ba39b7281aed7922d27682096bb8894694d7100c08ef915be55b804f949d5209",
+      "rgba_sha256": "a950fadf146fe5fde3ba20e1604687442538e9375ffb81d652b605968e3ff8ad",
+      "size": [
+        1116,
+        185
+      ]
+    },
+    "zh_CN/patches/atlas_48.png": {
+      "bytes": 224416,
+      "sha256": "5c167f4e48d26e640dcff517cdbfac41d8d4544a634a4ccbe028d69bf7801e26",
+      "rgba_sha256": "07ffe4822094247c8121b2428dd239b99b6692fc4620ecabc1b305035fa7159f",
+      "size": [
+        1054,
+        264
+      ]
+    },
+    "zh_CN/patches/atlas_49.png": {
+      "bytes": 264591,
+      "sha256": "b513b06735cb9f0da97e848e66ab7d229f03dc2e270c33d1a7adc42f86547f43",
+      "rgba_sha256": "35aa3b11e2dda7276ee5b538922fe434d62f93ac61dea99bd3323fb162134cd4",
+      "size": [
+        898,
+        348
+      ]
+    },
+    "zh_CN/patches/atlas_50.png": {
+      "bytes": 533724,
+      "sha256": "2fd6fa8e845878f5f51c3b3b25e6b2bab3a724634e6459c90edb5bc8423c3fa4",
+      "rgba_sha256": "84caa5ec185a278b2ab5e98ca26cbe575ee51d9405090205a1a2a8745e3ee2a8",
+      "size": [
+        1147,
+        522
+      ]
+    },
+    "zh_CN/patches/atlas_52.png": {
+      "bytes": 378554,
+      "sha256": "2c0fbf8f338a847e6d0d243536a961ff3dc84a8b124954179bc7035456d635b8",
+      "rgba_sha256": "3ae8c31019b16168659defbde1cfd298a2681ae58be3991f96dcf4260ca680cf",
+      "size": [
+        1197,
+        321
+      ]
+    },
+    "zh_CN/patches/atlas_53.png": {
+      "bytes": 329213,
+      "sha256": "6591070fbc7fc1020fc025b2e04d1ba22c5e66cdf7697934b6189534fbdcb034",
+      "rgba_sha256": "566b5df1df070b234a95524327d577bcf642dc47a223d307b3ddf371783cd975",
+      "size": [
+        1157,
+        323
+      ]
+    },
+    "zh_CN/meme_55.png": {
+      "bytes": 1280947,
+      "sha256": "5ef1afc0e6326abbb1bfde5e164f61525aa79e8687c3403d6740e6ee66b8f7c0",
+      "rgba_sha256": "005eb67294972f4b5d1f6a146bd95137356ecfcb674ce4e7e778ce08db25c9f5",
+      "size": [
+        1254,
+        1254
+      ]
+    },
+    "zh_CN/patches/atlas_57.png": {
+      "bytes": 444351,
+      "sha256": "5988575e2defb332995090a803ef1f96529ed6c0befd74ebf71248415345b792",
+      "rgba_sha256": "46f4c03e03368e2ff6ed3226fa449e39b4e96576dd846543eec2ae0c4e0b86e7",
+      "size": [
+        1103,
+        434
+      ]
+    },
+    "zh_CN/patches/atlas_58.png": {
+      "bytes": 427855,
+      "sha256": "2cac74e1386764d3005048ddd47019e7fb1d4a5cf591ee0611eaf9b9aefd2893",
+      "rgba_sha256": "01835aab87f8dcd75d64f799b7163e1e0548fd2e0f70512a27069fb2389b848c",
+      "size": [
+        1107,
+        380
+      ]
+    },
+    "zh_CN/patches/atlas_59.png": {
+      "bytes": 212572,
+      "sha256": "f62a73b803709e6e96aa8e0972dc1a4f634c490b5aec3705c257d80426e6aa6b",
+      "rgba_sha256": "c69246e18f0dda90c9b9e9a0e68584b641a024f31eb8e0183feaf36657069dd8",
+      "size": [
+        1188,
+        370
+      ]
+    },
+    "zh_CN/meme_60.png": {
+      "bytes": 1211869,
+      "sha256": "3cd561a6ecd100b499023fd452149290eea1ad37f113fe5f7dc7c76144ad5ece",
+      "rgba_sha256": "7ac3df8aaed0b8ba630bfc6f22c3bfbe77b89a233db1636512208c72f7e9936b",
+      "size": [
+        1351,
+        1164
+      ]
+    },
+    "zh_CN/patches/atlas_61.png": {
+      "bytes": 474242,
+      "sha256": "b80d204d45f72d23c320d63b514a2454118bcce1d7119998a9ccb6bdefced43e",
+      "rgba_sha256": "ba5b33f2f7e1824dc4b7eb8da5c436f973ff790ccc714d8984691e562bdceac4",
+      "size": [
+        738,
+        678
+      ]
+    },
+    "zh_CN/patches/atlas_62.png": {
+      "bytes": 245444,
+      "sha256": "9f93c4b4d36ca93f12666388d6da48fedb5c684bddd90d748ba3719ea1d6da85",
+      "rgba_sha256": "b79ebdc67a0f6caf55ec1f361f5f44a5a8cb478c41f39d5fbec7136b6642f579",
+      "size": [
+        1563,
+        242
+      ]
+    },
+    "zh_CN/patches/atlas_63.png": {
+      "bytes": 153938,
+      "sha256": "9f2c7558ce5e405271e374edfe1869f015813231f509d7dd37d0bf8d0e538d5d",
+      "rgba_sha256": "990782d7bb589460adb8ac87627ef43c9714a5749d3715ef8cce8111eef65f24",
+      "size": [
+        565,
+        248
+      ]
+    },
+    "zh_CN/meme_64.png": {
+      "bytes": 1739405,
+      "sha256": "834ce8b04eae94d2f86fcadec4f18c03b510d86a3a2afe40d21da675d863869c",
+      "rgba_sha256": "dae2f55afd32bee669b33f6fb0b849f63ab91b8079b98ac76d2716a82d01a37a",
+      "size": [
+        1254,
+        1254
+      ]
+    },
+    "zh_CN/patches/atlas_65.png": {
+      "bytes": 205697,
+      "sha256": "63cabac7068cb902cd40aef9b193604328887f50330320806388ecd6dfeff78d",
+      "rgba_sha256": "a88449de3d5a2f171fff9eafe48231f435587077673cd3dedb7b67e69792bff3",
+      "size": [
+        1126,
+        192
+      ]
+    },
+    "zh_CN/patches/atlas_66.png": {
+      "bytes": 107220,
+      "sha256": "74cd6eada0ad3e9d39365a9f2fd474725e7cc9b3f01f59b9dc22b7812bc011fe",
+      "rgba_sha256": "ecf34fbccec7a61daa76355630ae7810d9ddcf0ad8ad424cf0e8c713c4ea0c0a",
+      "size": [
+        340,
+        340
+      ]
+    },
+    "zh_CN/meme_67.png": {
+      "bytes": 1557362,
+      "sha256": "ea8bc630dd04cab4af8c705b31cbf4fc595d0abb293bc0c3297ae05e5c857673",
+      "rgba_sha256": "579231f76107b0a7ea0531c54949924e6df28032080d76412749247e95d0a748",
+      "size": [
+        1590,
+        989
+      ]
+    },
+    "zh_CN/meme_68.png": {
+      "bytes": 1471771,
+      "sha256": "99fa18ed251c619e0c6758edbd9c4c007fca926f107138e157f9585482c6598f",
+      "rgba_sha256": "79a55113c2b6c14123cee828bf18b1347b914a00da3d021c5cdd2d5d8fe105cb",
+      "size": [
+        1402,
+        1122
+      ]
+    },
+    "zh_CN/patches/atlas_70.png": {
+      "bytes": 84614,
+      "sha256": "dd95822f0b359cf83ef9d205ee85c06c8a0b3a4cb5ee5d9258c1fd272b116856",
+      "rgba_sha256": "8d5335d79073018228b8ca7bc05907712bb045c5f15a6e5d619e41a335e8bb05",
+      "size": [
+        414,
+        214
+      ]
+    },
+    "zh_CN/patches/atlas_71.png": {
+      "bytes": 176215,
+      "sha256": "b41772bb0cc79b1ddba06b48b4681adef5aab8f1e89150788b444e117a39f9f7",
+      "rgba_sha256": "ea441372f1c49e0e957f2afd1fe6ea13d05329f9390df71059d6880797b471eb",
+      "size": [
+        350,
+        403
+      ]
+    },
+    "zh_CN/patches/atlas_72.png": {
+      "bytes": 239745,
+      "sha256": "3e96fde6f05f06736c042f2b2f6d5479581f49ef2f23c0a6cae48016993f0c1b",
+      "rgba_sha256": "2b4e429fb753d18d48c82098215f3ce5f3bc3b40d1fb93492a14e4934f15b8c3",
+      "size": [
+        867,
+        290
+      ]
+    },
+    "zh_CN/meme_73.png": {
+      "bytes": 1512149,
+      "sha256": "073ade6e6815ed7d772ec766152b4c48185a6d6e86256ebe02519ed8688787b9",
+      "rgba_sha256": "2d5584ec0514f8596222d7bc5175f94e3a196bff5d00424dce0f394e20c5f830",
+      "size": [
+        1254,
+        1254
+      ]
+    },
+    "zh_CN/patches/atlas_74.png": {
+      "bytes": 247209,
+      "sha256": "94b978e6f99f5f69d651ca1200e6cbd1181baeed91cf6d2d69a350a6b18b4efd",
+      "rgba_sha256": "e68f90e45c0ee66fb8b09df900d9492e92a0008cc03bb2b26aa5abe16b3357a2",
+      "size": [
+        1254,
+        214
+      ]
+    },
+    "zh_CN/meme_75.png": {
+      "bytes": 1926912,
+      "sha256": "88402231a3427858b0b2d9f64529e3b2e522e769fad1861ef1bdcbc75c3cd7fc",
+      "rgba_sha256": "741d385e3385d60480e055920b937ed491d5c0fd5bd7b619dff9d6f4375f7463",
+      "size": [
+        1550,
+        1014
+      ]
+    },
+    "zh_CN/patches/atlas_76.png": {
+      "bytes": 262777,
+      "sha256": "fa33d7995d4f017926298087fdaeb4eb20b27c2d77e51f400d90c0cd10f14d9a",
+      "rgba_sha256": "5621e4140e0995383b67deff7e1ff6007466a6a6cf7d2f7642b3d7f3f03edb2f",
+      "size": [
+        785,
+        274
+      ]
+    },
+    "zh_CN/patches/atlas_77.png": {
+      "bytes": 456391,
+      "sha256": "804d7170aae2660ab539d99fc77d2c434613f40f3bd7ba7f0d068222ad018994",
+      "rgba_sha256": "b0fba16db53e2b94aeb357de878ea0342dca196bd7aac1cb7c176d85d2e85327",
+      "size": [
+        1430,
+        352
+      ]
+    },
+    "zh_CN/meme_78.png": {
+      "bytes": 1813394,
+      "sha256": "88ed0fbd66070e15030a39328b7f4dc51b98f3c0238c31ac80b7fe43b721e2a2",
+      "rgba_sha256": "2109e5ad9ebb10700dfc2329838ec0a9b970554b897b6ce57c449d4208c6d6ee",
+      "size": [
+        1022,
+        1539
+      ]
+    },
+    "zh_CN/patches/atlas_79.png": {
+      "bytes": 384609,
+      "sha256": "69973a866e2a778f75544196d17da3e6a27511b018f55a88a323ec186274e3d4",
+      "rgba_sha256": "ea185fc66fe011f0ea42dbeeb53658d68424acdca3445bfacde178493731e373",
+      "size": [
+        1055,
+        326
+      ]
+    },
+    "zh_CN/patches/atlas_80.png": {
+      "bytes": 75957,
+      "sha256": "0481a33b390413807810f9028526098dce20ab5bc61badab0759d17d29774cc0",
+      "rgba_sha256": "2c7bc75ca7af4ecc639ae7417c7a165afff25eeb1405aad9a866a47f3c2f7e4a",
+      "size": [
+        295,
+        202
+      ]
+    },
+    "zh_CN/patches/atlas_81.png": {
+      "bytes": 388106,
+      "sha256": "0c0b038f6739bc1dad932ed278c611b1641c0e60fb807234d4337d05a6f7b0ff",
+      "rgba_sha256": "21ac25c3891daa9b7342537e500186e14ad0fae9ef5692d5f0f3f57cfc96c4ec",
+      "size": [
+        665,
+        595
+      ]
+    },
+    "zh_CN/patches/atlas_83.png": {
+      "bytes": 254692,
+      "sha256": "34c024c1272298ea3e80245cd8d8208a6b42caba521f322e7e2538f007eb5afb",
+      "rgba_sha256": "e81ed3554d313078d463c6b23965ab6a5a2a433e5639f59534ee72359ed01c75",
+      "size": [
+        870,
+        391
+      ]
+    },
+    "zh_CN/meme_84.png": {
+      "bytes": 1795441,
+      "sha256": "d8ddaf32f34e5eff7210fd63388326bc118b417d79d60d0f86b0ae553e0950a2",
+      "rgba_sha256": "f3643ee5be137857bf4ab0839035e0e113d1ead70fd5804bdffec051f94601d2",
+      "size": [
+        1050,
+        1498
+      ]
+    },
+    "zh_CN/patches/atlas_85.png": {
+      "bytes": 384089,
+      "sha256": "3fc6e7ac25a3dd371e131dbe4fb34f877211050ba4494477fb3612762e2a8a32",
+      "rgba_sha256": "7d0c74f224785f3509194ff271310af51f81dd34a0d5957e07c138399f0d00b2",
+      "size": [
+        1384,
+        303
+      ]
+    },
+    "zh_CN/patches/atlas_86.png": {
+      "bytes": 356059,
+      "sha256": "6939f9bc64d59384286786993efc0b645183773f5489f71d5f2cccce9cfa2187",
+      "rgba_sha256": "477548580102172d67292f32a862e593d9e67d82a99c4084dab104209734a484",
+      "size": [
+        631,
+        589
+      ]
+    },
+    "zh_CN/meme_87.png": {
+      "bytes": 1912895,
+      "sha256": "98623702e7658441e0a391386115f6f82ef98a39c96cd4bcde5431b48e62c105",
+      "rgba_sha256": "0aa14edb9bfa81ca66cebf7c5fcc5bdb6df5b6d8a30cbd72c89b261946110d1a",
+      "size": [
+        1062,
+        1482
+      ]
+    },
+    "zh_CN/patches/atlas_88.png": {
+      "bytes": 128245,
+      "sha256": "7646a794de90b4e147b2fed566cc9a11e2bb4a2ec7c69febe3991e3ead3806ab",
+      "rgba_sha256": "229811c06da82b0365792481ca713ea120f415af94a1c24cbaa070ae1bdc0881",
+      "size": [
+        435,
+        290
+      ]
+    },
+    "zh_CN/patches/atlas_89.png": {
+      "bytes": 280072,
+      "sha256": "f8b8fc34543d7969b4c2a4ebeda3343b368dabc0e05afa85794147432dff5f1d",
+      "rgba_sha256": "cf5327f877d53646ef6b7a94105a2b70ba1915bae19b5b866559b21b2ad678ea",
+      "size": [
+        545,
+        473
+      ]
+    },
+    "zh_CN/patches/atlas_90.png": {
+      "bytes": 193994,
+      "sha256": "e5b0ec03a0e919ed8b8fc136c5adeda17a1e0ef35b542da1de5d1ee1c9f1907a",
+      "rgba_sha256": "10bfeafb882a58b4173f1c566a2baf2df02713ef5daaa15df049b2a56805d961",
+      "size": [
+        1155,
+        189
+      ]
+    },
+    "zh_CN/patches/atlas_91.png": {
+      "bytes": 181901,
+      "sha256": "4ea8370c94e26b0e210d306d70cafd1e180a9e1fac1af935aa9da2bdf82f79b0",
+      "rgba_sha256": "5c0eb5a54a95a48f55ff8db53d98e8a82bee1c608ded66e8e563779674f5353e",
+      "size": [
+        532,
+        295
+      ]
+    },
+    "zh_CN/patches/atlas_92.png": {
+      "bytes": 270566,
+      "sha256": "c6424aded3a091f60eec2b80ec964b8fc97f439cacdce7a56dc40cd81427cdf0",
+      "rgba_sha256": "5d95fc5af5f4872b823d3ba69838ad36c17164a65f1d142fe09d5229e5d01dee",
+      "size": [
+        1033,
+        199
+      ]
+    },
+    "zh_CN/patches/atlas_93.png": {
+      "bytes": 296448,
+      "sha256": "34a293ed9d4659a3e82feef1fb65c4c555560068ba3267ba3fccfd557ea0b561",
+      "rgba_sha256": "f6d00fe35163c7aa28f3a14c924dc1d5c83e466803f8627a5444fd2b75cb702d",
+      "size": [
+        1030,
+        381
+      ]
+    },
+    "zh_CN/patches/atlas_94.png": {
+      "bytes": 115150,
+      "sha256": "1bd01fffc493aabcb9439973f28e22a38d4314e83c4dc28b829479427928bd80",
+      "rgba_sha256": "90a93bb09ec93924b71c46ef541896a3c4bd6973ffed8e1ddc639763104b9d7e",
+      "size": [
+        474,
+        219
+      ]
+    },
+    "zh_CN/patches/atlas_95.png": {
+      "bytes": 378544,
+      "sha256": "b37ab611cd74b02e4005aaa63cb40a5ea87951d37feef4deb5bfb7794278b8f0",
+      "rgba_sha256": "640ef6ee816b12f3b5b4dae5c8e5ce6e7fd6a86150f2812d567119903cb66690",
+      "size": [
+        1536,
+        350
+      ]
+    },
+    "zh_CN/patches/atlas_96.png": {
+      "bytes": 158852,
+      "sha256": "c9633c16f13a939ea222fad13c95aa928ace15d76f8f62432c3c7fbbb9448347",
+      "rgba_sha256": "9ebf88fffca34d5d14cecd33af1359e096b766989cbc196dc1e058043a99d8a4",
+      "size": [
+        628,
+        214
+      ]
+    },
+    "zh_CN/meme_97.png": {
+      "bytes": 1561770,
+      "sha256": "e3d3ba7fbc94ad59f89734d1d47ca89b399d470ed45ef3950ecde2724fb3af33",
+      "rgba_sha256": "3f5b6da1ecafbabdbedc98a733518cbc1939eee277547da2d57416e4e4f183d3",
+      "size": [
+        1186,
+        1327
+      ]
+    },
+    "zh_CN/meme_98.png": {
+      "bytes": 1437205,
+      "sha256": "e9a5e1011d1ae318cd61fbbb31140c7fe1d9884103cfabfb757a2a2f5131f6c8",
+      "rgba_sha256": "1a8300548c7869ca08f5cb484f59a32ffe84b679e17e70e79d911de2877b3334",
+      "size": [
+        1333,
+        1180
+      ]
+    },
+    "zh_CN/patches/atlas_100.png": {
+      "bytes": 501475,
+      "sha256": "50ad8e7cb0fb3dc094e19b01377ce3fdbba1e985f9186ca4312297aa04da0c3f",
+      "rgba_sha256": "9badbf76990f58c6c38721aab930b75cb1aaf207143da6e206f9c6bf8e655c58",
+      "size": [
+        1338,
+        360
+      ]
+    },
+    "zh_CN/patches/atlas_101.png": {
+      "bytes": 294791,
+      "sha256": "244d845513c7223fbe4a2d2566ce377281480d5782c4bdb610047897b1366bfd",
+      "rgba_sha256": "ecbae358f642abf52cfe990a310bf0ece48071a6ba8ac342ac281d772866d227",
+      "size": [
+        1113,
+        351
+      ]
+    },
+    "zh_CN/patches/atlas_102.png": {
+      "bytes": 156073,
+      "sha256": "c5eb387ca65131aa46fae22714c8fedcd5d69163dc44df31c22230c78ea132b9",
+      "rgba_sha256": "4749cfff09286c127c3e1b405f22319a01ac19beb5599385cbf17f19ea293d92",
+      "size": [
+        557,
+        301
+      ]
+    },
+    "zh_CN/patches/atlas_103.png": {
+      "bytes": 276252,
+      "sha256": "4bb62a74a598044d379788f6a8662a9437bda145cfb35d3fc3e954f3f4496794",
+      "rgba_sha256": "f5c6a1e52a5362169f6d3b9c7b3e33b11704078648e9f9b7993361115c3420da",
+      "size": [
+        934,
+        235
+      ]
+    },
+    "zh_CN/patches/atlas_104.png": {
+      "bytes": 523622,
+      "sha256": "4e8cd1ac7bd23160a531f2292d9c907a0816267eb996f47cfd6ce05aea48a6cb",
+      "rgba_sha256": "790194c9b079cf063bc2856073825bdc431ad142834d50ba7be8131cb4ecd5e1",
+      "size": [
+        1276,
+        410
+      ]
+    }
+  }
 }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 #include "localized_meme.h"
+#include "resource_image.h"
 #include <QDebug>
 #include <QDir>
 #include <QFile>
@@ -7,10 +8,15 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#ifndef PJ_ENABLE_LOCALIZED_IMAGES
+#define PJ_ENABLE_LOCALIZED_IMAGES 1
+#endif
+
 namespace
 {
 QJsonArray catalog()
 {
+#if PJ_ENABLE_LOCALIZED_IMAGES
   static const QJsonArray images = [] {
     QFile file(":/resources/memes/zh_CN.json");
     if (!file.open(QIODevice::ReadOnly))
@@ -20,6 +26,9 @@ QJsonArray catalog()
     return QJsonDocument::fromJson(file.readAll()).object().value("images").toArray();
   }();
   return images;
+#else
+  return {};
+#endif
 }
 
 QString originalPath(int index)
@@ -32,31 +41,42 @@ QPixmap localizedMeme(int index, bool chinese, bool* text_fits)
 {
   const QPixmap original(originalPath(index));
   const auto images = catalog();
-  bool ok = !original.isNull() && images.size() == 106 && index >= 0 && index < images.size();
+  bool ok = !original.isNull() && index >= 0 && index < 106;
   QJsonObject entry;
-  if (ok)
+  if (ok && chinese && PJ_ENABLE_LOCALIZED_IMAGES)
   {
-    entry = images[index].toObject();
-    ok = entry.value("id").toInt(-1) == index;
+    ok = images.size() == 106;
+    if (ok)
+    {
+      entry = images[index].toObject();
+      ok = entry.value("id").toInt(-1) == index;
+    }
   }
 
   QPixmap image = original;
-  if (ok && chinese && !entry.value("regions").toArray().isEmpty() &&
-      entry.value("localization_status").toString() != "original-ai-unavailable")
+  if (ok && chinese && PJ_ENABLE_LOCALIZED_IMAGES)
   {
-    const QString asset = entry.value("asset").toString();
-    QPixmap localized;
-    ok = asset.startsWith("zh_CN/") && !asset.contains("..") &&
-         localized.load(":/resources/memes/" + asset);
-    if (ok)
+    QJsonObject variant = entry.value("variant").toObject();
+    // Keep compatibility with existing full-image catalogs.
+    if (variant.isEmpty() && !entry.value("asset").toString().isEmpty())
     {
-      // Captions and restored backgrounds are baked into the reviewed asset.
-      // Match the original splash footprint without changing glyph proportions.
-      image = localized.scaled(original.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+      variant["image"] = entry.value("asset").toString();
     }
-    else
+    if (!variant.isEmpty())
     {
-      qWarning() << "Localized meme asset missing or invalid:" << index << asset;
+      QString error;
+      const auto localized = PJ::resourceImageVariant(original.toImage(), variant,
+                                                       ":/resources/memes", &ok, &error);
+      if (ok)
+      {
+        // Retain the zh.3 display footprint and the same final smooth scaling.
+        image = QPixmap::fromImage(localized).scaled(original.size(), Qt::KeepAspectRatio,
+                                                    Qt::SmoothTransformation);
+      }
+      else
+      {
+        qWarning() << "Localized meme variant missing or invalid:" << index << error;
+      }
     }
   }
   // Retain the existing export/API field for compatibility. With baked assets
@@ -81,7 +101,8 @@ bool exportLocalizedMemes(const QString& directory, bool chinese)
     const QString filename = QString("meme_%1.png").arg(i, 2, 10, QChar('0'));
     const bool saved = image.save(directory + "/" + filename);
     const auto entry = i < images.size() ? images[i].toObject() : QJsonObject();
-    const bool translated = chinese && !entry.value("asset").toString().isEmpty();
+    const auto variant = entry.value("variant").toObject();
+    const bool translated = chinese && !variant.isEmpty();
     const bool unavailable =
         chinese && entry.value("localization_status").toString() == "original-ai-unavailable";
     const bool english_original = chinese || image.toImage() == QPixmap(originalPath(i)).toImage();
@@ -91,9 +112,10 @@ bool exportLocalizedMemes(const QString& directory, bool chinese)
     result["text_fits"] = fits;
     result["saved"] = saved;
     result["english_original"] = english_original;
-    result["asset"] = translated ? entry.value("asset").toString() : originalPath(i);
+    result["variant"] = translated ? variant : QJsonObject();
     result["rendering"] =
-        translated ? "ai-localized-asset" : (unavailable ? "original-ai-unavailable" : "original");
+        translated ? (variant.contains("patches") ? "localized-overlay" : "localized-full-image") :
+        (unavailable ? "original-ai-unavailable" : "original");
     result["width"] = image.width();
     result["height"] = image.height();
     results.append(result);

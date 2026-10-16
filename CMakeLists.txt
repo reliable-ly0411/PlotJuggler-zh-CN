@@ -26,6 +26,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 enable_testing()
 option(PJ_BUILD_FORK_TESTS "Build focused fork acceptance tests" ON)
+option(PJ_ENABLE_LOCALIZED_IMAGES "Embed optional localized image variants" ON)
 if(DEFINED PJ_BUILD_ARDUPILOT_TESTS)
   set(PJ_BUILD_FORK_TESTS ${PJ_BUILD_ARDUPILOT_TESTS})
 endif()
@@ -327,7 +328,15 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/plotjuggler.svg
 
 # Compile the image payload once with Qt's two-pass resource compiler; avoid
 # parsing large image byte arrays as C++ in both the app and the regression test.
-qt5_add_big_resources(PJ_APP_RESOURCES plotjuggler_app/resource.qrc)
+add_library(pj_resource_images STATIC plotjuggler_app/resource_image.cpp)
+target_include_directories(pj_resource_images PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/plotjuggler_app)
+target_link_libraries(pj_resource_images PUBLIC Qt5::Gui Qt5::Core)
+
+set(PJ_APP_RESOURCE_FILES plotjuggler_app/resource.qrc)
+if(PJ_ENABLE_LOCALIZED_IMAGES)
+  list(APPEND PJ_APP_RESOURCE_FILES plotjuggler_app/localized_resources.qrc)
+endif()
+qt5_add_big_resources(PJ_APP_RESOURCES ${PJ_APP_RESOURCE_FILES})
 add_custom_target(pj_app_resources DEPENDS ${PJ_APP_RESOURCES})
 add_subdirectory(plotjuggler_app)
 add_subdirectory(plotjuggler_plugins)
@@ -336,7 +345,9 @@ if(PJ_BUILD_FORK_TESTS)
   add_executable(pj_localized_meme_test tests/localized_meme_test.cpp
     plotjuggler_app/localized_meme.cpp ${PJ_APP_RESOURCES})
   target_include_directories(pj_localized_meme_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-  target_link_libraries(pj_localized_meme_test PRIVATE Qt5::Widgets)
+  target_link_libraries(pj_localized_meme_test PRIVATE Qt5::Widgets pj_resource_images)
+  target_compile_definitions(pj_localized_meme_test PRIVATE
+    PJ_ENABLE_LOCALIZED_IMAGES=$<BOOL:${PJ_ENABLE_LOCALIZED_IMAGES}>)
   add_dependencies(pj_localized_meme_test pj_app_resources)
   set_target_properties(pj_localized_meme_test PROPERTIES WIN32_EXECUTABLE FALSE)
   add_test(NAME LocalizedMemes COMMAND pj_localized_meme_test)
@@ -351,6 +362,15 @@ if(PJ_BUILD_FORK_TESTS)
   add_test(NAME LocalizedTimePicker COMMAND pj_time_picker_test
     ${CMAKE_CURRENT_BINARY_DIR}/plotjuggler_app/plotjuggler_zh_CN.qm)
   set_tests_properties(LocalizedTimePicker PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+  add_executable(pj_resource_image_test tests/resource_image_test.cpp)
+  target_link_libraries(pj_resource_image_test PRIVATE Qt5::Widgets pj_resource_images)
+  add_test(NAME ResourceImageVariants COMMAND pj_resource_image_test)
+  set_tests_properties(ResourceImageVariants PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+  # Keep regression executables outside bin: packaging stages that entire directory.
+  set_target_properties(pj_localized_meme_test pj_time_picker_test pj_resource_image_test
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests_bin")
 endif()
 
 # # Install targets
