@@ -62,6 +62,11 @@ duplicate or extra files prevent collection. Evidence is uploaded separately
 from software. It cannot become a Release attachment through a wildcard over
 the evidence directories.
 
+Container jobs scope Git's directory trust to the exact checked-out CI workspace
+through that job's environment. Before compiling, the configured source revision
+must match Git HEAD, preventing a silent `gsource` archive-version fallback when
+Git cannot read the checkout. No host Git configuration is changed.
+
 ## Build-only validation and future tag publication
 
 PRs, default-branch pushes and manual runs build and verify only. They cannot

@@ -96,6 +96,11 @@ jobs:
         fi
         gh release create v3.18.0-zh.4 --verify-tag --draft --prerelease \
           --title 'PlotJuggler 简体中文 v3.18.0-zh.4' --notes-file release-report/notes.md release-software/*
-        gh api "repos/$GITHUB_REPOSITORY/releases/tags/v3.18.0-zh.4" > release-report/uploaded.json
+        # The tag endpoint retrieves published releases. List with the write
+        # token to resolve this newly created draft, then inspect it by ID.
+        RELEASE_ID="$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+          --jq '.[] | select(.tag_name == "v3.18.0-zh.4" and .draft == true) | .id')"
+        [[ "$RELEASE_ID" =~ ^[1-9][0-9]*$ ]]
+        gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > release-report/uploaded.json
         python3 scripts/release_assets.py verify-upload --manifest release-report/seven-packages.json --release release-report/uploaded.json
         gh release edit v3.18.0-zh.4 --draft=false --prerelease
