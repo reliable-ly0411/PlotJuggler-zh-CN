@@ -22,6 +22,11 @@ target_link_libraries(resource_image_smoke PRIVATE ${QT_GUI})
 add_test(NAME GenericResourceImage COMMAND resource_image_smoke)
 set_tests_properties(GenericResourceImage PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+add_executable(scaling_probe scaling_probe.cpp
+  ${PJ_SOURCE_ROOT}/plotjuggler_app/resource_image.cpp)
+target_include_directories(scaling_probe PRIVATE ${PJ_SOURCE_ROOT}/plotjuggler_app)
+target_link_libraries(scaling_probe PRIVATE ${QT_GUI})
+
 option(PJ_BUILD_IMAGE_BENCHMARKS "Build isolated, non-shipping image timing tools" OFF)
 set(PJ_IMAGE_INPUTS "" CACHE PATH "Output of prepare_image_benchmarks.py")
 if(PJ_BUILD_IMAGE_BENCHMARKS)
