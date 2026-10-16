@@ -4,10 +4,12 @@ import base64
 import hashlib
 from pathlib import Path
 import sys
+import struct
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from package_privacy import check_metadata
+from pe_content_fingerprint import fingerprint, METHOD
 
 
 class PackagePrivacy(unittest.TestCase):
@@ -86,13 +88,70 @@ class PackagePrivacy(unittest.TestCase):
     def test_ci_source_records_have_no_directory_exemption(self):
         literal = "C:\\Users\\runneradmin\\.conan2\\p\\b\\arrow_public\\b\\src\\cpp\\src\\arrow\\array.cc"
         self.records["public_ci_source_records"] = {
-            "DataLoadParquet.dll": {"nul_terminated_literals": [literal]}}
+            "DataLoadParquet.dll": {"observed_plugin_sha256": self.sha((literal + "\0").encode()),
+                                    "nul_terminated_literals": [literal]}}
         data = (literal + "\0").encode()
         self.assertTrue(check_metadata(data, "DataLoadParquet.dll", self.records))
         self.rejected(data, "another.dll")
         self.rejected((literal + "/private.bin\0").encode(), "DataLoadParquet.dll")
         self.rejected(data + b"C:\\Users\\runneradmin\\private.bin\0", "DataLoadParquet.dll")
         self.rejected(data + ("gh" + "p_" + "x" * 36).encode(), "DataLoadParquet.dll")
+
+    def test_ci_content_identity_blocks_auditor_synthetic_reproduction(self):
+        literal = "C:\\Users\\runneradmin\\.conan2\\public\\source.cc"
+        for name in ("DataLoadParquet.dll", "ToolboxMosaico.dll"):
+            data = (literal + "\0").encode()
+            record = {"observed_plugin_sha256": "0" * 64, "artifact_sha256": self.sha(data),
+                      "nul_terminated_literals": [literal]}
+            self.records["public_ci_source_records"] = {name: record}
+            self.rejected(data, name)
+            self.rejected(data + b"changed", name)
+            # Missing identity fields must also fail closed.
+            record.pop("observed_plugin_sha256")
+            self.rejected(data, name)
+
+    def test_ci_pe_content_fingerprint_is_narrow(self):
+        literal = "C:\\Users\\runneradmin\\.conan2\\public\\source.cc"
+        data = bytearray(1024)
+        data[:2] = b"MZ"
+        struct.pack_into("<I", data, 60, 128)
+        data[128:132] = b"PE\0\0"
+        struct.pack_into("<HHI", data, 132, 0x8664, 1, 123456)
+        struct.pack_into("<HH", data, 148, 240, 0x2000)
+        struct.pack_into("<H", data, 152, 0x20b)
+        struct.pack_into("<I", data, 260, 16)
+        struct.pack_into("<II", data, 312, 4096, 28)
+        data[392:400] = b".rdata\0\0"
+        struct.pack_into("<IIII", data, 400, 512, 4096, 512, 512)
+        struct.pack_into("<I", data, 524, 13)
+        data[600:600 + len(literal) + 1] = (literal + "\0").encode()
+        struct.pack_into(">Q", data, 900, 1792127804307)
+        content = {"method": METHOD, "file_bytes": len(data), "qt_rcc_mtime_offsets": [900]}
+        content["sha256"] = fingerprint(data, content)
+        self.assertIsNotNone(content["sha256"])
+        record = {"observed_plugin_sha256": "0" * 64, "content_fingerprint": content,
+                  "nul_terminated_literals": [literal]}
+        self.records["public_ci_source_records"] = {"DataLoadParquet.dll": record}
+        self.assertTrue(check_metadata(data, "DataLoadParquet.dll", self.records))
+        changed_time = bytearray(data)
+        struct.pack_into("<I", changed_time, 136, 999999)
+        struct.pack_into("<I", changed_time, 516, 999999)
+        struct.pack_into(">Q", changed_time, 900, 1792127805307)
+        self.assertTrue(check_metadata(changed_time, "DataLoadParquet.dll", self.records))
+        self.rejected(data, "another.dll")
+        self.rejected(data + b"changed", "DataLoadParquet.dll")
+        changed_content = bytearray(data)
+        changed_content[800] = 1
+        self.rejected(changed_content, "DataLoadParquet.dll")
+        invalid_time = bytearray(data)
+        invalid_time[900:908] = b"private!"
+        self.rejected(invalid_time, "DataLoadParquet.dll")
+        for extra in ("C:\\Users\\AnotherUser\\private.bin", "gh" + "p_" + "x" * 36,
+                      "-----BEGIN PRIVATE KEY-----\n" + "A" * 128 + "\n-----END PRIVATE KEY-----"):
+            leaked = data + b"\0" + extra.encode()
+            # Even explicitly approved file identity cannot suppress these checks.
+            record["observed_plugin_sha256"] = self.sha(leaked)
+            self.rejected(leaked, "DataLoadParquet.dll")
 
     def test_immutable_public_dependency_requires_exact_hash_and_filename(self):
         data = b"C:\\Users\\runneradmin\\.cargo\\public.rs"

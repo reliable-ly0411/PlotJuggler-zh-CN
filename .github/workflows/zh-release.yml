@@ -1,0 +1,101 @@
+name: zh-CN seven-platform build and controlled release
+'on':
+  pull_request:
+    branches: [zh-CN]
+  push:
+    branches: [zh-CN]
+    tags: [v3.18.0-zh.4]
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: zh-seven-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  policy:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        persist-credentials: false
+    - run: |
+        python3 tests/check_package_privacy.py -v
+        python3 tests/check_release_assets.py -v
+  windows:
+    needs: policy
+    uses: ./.github/workflows/zh-windows.yml
+    with:
+      ref: ${{ github.event.pull_request.head.sha || github.sha }}
+  linux:
+    needs: policy
+    uses: ./.github/workflows/zh-linux.yml
+    with:
+      ref: ${{ github.event.pull_request.head.sha || github.sha }}
+  verify-seven:
+    needs: [windows, linux]
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        persist-credentials: false
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: Software-*
+        path: downloaded/software
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: Metadata-*
+        path: downloaded/metadata
+    - name: Verify seven source-matched packages without publishing
+      env:
+        SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      run: |
+        python3 scripts/release_assets.py collect --software downloaded/software --metadata downloaded/metadata \
+          --source "$SOURCE_SHA" --output release-software --report release-report
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Release-software
+        path: release-software/*
+        if-no-files-found: error
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Release-metadata
+        path: release-report/
+        if-no-files-found: error
+  publish:
+    # PRs and manual runs can only build/verify. A separately created exact tag
+    # is the sole publication trigger; this workflow never creates or moves tags.
+    if: github.event_name == 'push' && github.ref == 'refs/tags/v3.18.0-zh.4' && github.repository == 'reliable-ly0411/PlotJuggler-zh-CN'
+    needs: verify-seven
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        ref: ${{ github.sha }}
+        persist-credentials: false
+    - uses: actions/download-artifact@v4
+      with:
+        name: Release-software
+        path: release-software
+    - uses: actions/download-artifact@v4
+      with:
+        name: Release-metadata
+        path: release-report
+    - name: Publish only the verified seven-file draft
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        python3 -c 'import sys; sys.path.insert(0,"scripts"); from release_assets import inventory; inventory("release-software", "${{ github.sha }}")'
+        if gh release view v3.18.0-zh.4 >/dev/null 2>&1; then
+          echo 'Release already exists; refusing to modify it.' >&2
+          exit 1
+        fi
+        gh release create v3.18.0-zh.4 --verify-tag --draft --prerelease \
+          --title 'PlotJuggler 简体中文 v3.18.0-zh.4' --notes-file release-report/notes.md release-software/*
+        gh api "repos/$GITHUB_REPOSITORY/releases/tags/v3.18.0-zh.4" > release-report/uploaded.json
+        python3 scripts/release_assets.py verify-upload --manifest release-report/seven-packages.json --release release-report/uploaded.json
+        gh release edit v3.18.0-zh.4 --draft=false --prerelease

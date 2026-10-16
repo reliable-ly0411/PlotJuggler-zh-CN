@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MPL-2.0
-# Same native Ubuntu 24.04 payload/compression recipe as zh.3, without release writes.
+# Native Debian/Ubuntu payload, dependency generation and compression; no release writes.
 set -euo pipefail
+distribution="${PJ_DEB_DISTRO:?Set PJ_DEB_DISTRO to 24.04, bookworm or trixie}"
+case "$distribution" in 24.04|bookworm|trixie) ;; *) exit 2 ;; esac
+. /etc/os-release
+test "$VERSION_CODENAME" = "${distribution/24.04/noble}"
+test "$(dpkg --print-architecture)" = amd64
 version="$(python3 -c 'import json; print(json.load(open("build/FORK-VERSION.json"))["version"])')"
 stage="$PWD/package"
 mkdir -p "$stage/usr/lib/plotjuggler" "$stage/usr/bin" "$stage/DEBIAN" \
@@ -23,7 +28,7 @@ deps="$(cd package-metadata && dpkg-shlibdeps -O -l"$stage/usr/lib/plotjuggler" 
 test -n "$deps"
 deb_version="${version/-zh./~zh.}"
 printf 'Package: plotjuggler\nVersion: %s\nArchitecture: amd64\nSection: science\nPriority: optional\nMaintainer: PlotJuggler zh-CN <125791929+reliable-ly0411@users.noreply.github.com>\nDepends: %s, ca-certificates, fonts-noto-cjk\nHomepage: https://github.com/reliable-ly0411/PlotJuggler-zh-CN\nDescription: PlotJuggler zh-CN with ArduPilot DataFlash BIN support\n' "$deb_version" "$deps" > "$stage/DEBIAN/control"
-dpkg-deb --root-owner-group --build "$stage" "output/PlotJuggler-${version}-24.04-amd64.deb"
+dpkg-deb --root-owner-group --build "$stage" "output/PlotJuggler-${version}-${distribution}-amd64.deb"
 test "$(dpkg-deb -f output/*.deb Version)" = "$deb_version"
 test "$(dpkg-deb -f output/*.deb Architecture)" = amd64
 python3 scripts/package_size_audit.py --payload package --package output/*.deb --out acceptance/package-size.json

@@ -191,7 +191,21 @@
         "C:\\Users\\runneradmin\\.conan2\\p\\b\\arrow5bfe34ade08ff\\b\\src\\cpp\\src\\arrow\\util\\memory.cc",
         "C:\\Users\\runneradmin\\.conan2\\p\\b\\arrow5bfe34ade08ff\\b\\src\\cpp\\src\\arrow\\util\\thread_pool.cc",
         "C:\\Users\\runneradmin\\.conan2\\p\\b\\arrow5bfe34ade08ff\\b\\src\\cpp\\src\\parquet\\column_reader.cc"
-      ]
+      ],
+      "content_fingerprint": {
+        "method": "pe-x64-reviewed-timestamps-v1",
+        "file_bytes": 11290624,
+        "qt_rcc_mtime_offsets": [],
+        "sha256": "9a81c69db19cad03828511c79be05f26a35fccee5298501089a62098c5814b88"
+      },
+      "fingerprint_provenance": {
+        "commit": "e340265ea84c487a32351786f462e3b172aafcda",
+        "run": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/38854915510",
+        "artifact_id": 12027207348,
+        "artifact_sha256": "7f5d3820b7cde0f4d33059e7facf061c8c461f4b8d6a6e035209ff51fcc7a978",
+        "plugin_sha256": "efc42a0750869250a026391ce0705118fb7889f6597eecb0ce625b1b9e379623",
+        "eb7_binary_matches_same_fingerprint": true
+      }
     },
     "ToolboxMosaico.dll": {
       "observed_commit": "eb7ff9d1f50c43fc1c95516667d2ea770e2059ff",
@@ -512,7 +526,28 @@
         "C:\\Users\\runneradmin\\.conan2\\p\\b\\grpc720a9b30e12e3\\b\\src\\src\\cpp\\common\\tls_certificate_provider.cc",
         "C:\\Users\\runneradmin\\.conan2\\p\\b\\grpc720a9b30e12e3\\b\\src\\src\\cpp\\common\\tls_certificate_verifier.cc",
         "C:\\Users\\runneradmin\\.conan2\\p\\b\\grpc720a9b30e12e3\\b\\src\\src\\cpp\\common\\tls_credentials_options.cc"
-      ]
+      ],
+      "content_fingerprint": {
+        "method": "pe-x64-reviewed-timestamps-v1",
+        "file_bytes": 21191168,
+        "qt_rcc_mtime_offsets": [
+          13568954,
+          13593178,
+          13593200,
+          13593222,
+          13593244,
+          13593266
+        ],
+        "sha256": "4442db4b37b07c4d76f875d4be048a4c8e8387ac0cebb5f47241b978a591106b"
+      },
+      "fingerprint_provenance": {
+        "commit": "e340265ea84c487a32351786f462e3b172aafcda",
+        "run": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/38854915510",
+        "artifact_id": 12027207348,
+        "artifact_sha256": "7f5d3820b7cde0f4d33059e7facf061c8c461f4b8d6a6e035209ff51fcc7a978",
+        "plugin_sha256": "259c92ee473690c59bc073b8bdc1872b641b63c54a6df03919a770f9a606499a",
+        "eb7_binary_matches_same_fingerprint": true
+      }
     }
   },
   "immutable_public_records": {

@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+from pe_content_fingerprint import fingerprint as pe_fingerprint
 
 # Prefix families, including variable-length installation JWTs, are documented at:
 # https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#githubs-token-formats
@@ -32,6 +33,12 @@ def check_metadata(data, relative_name, records):
     qt = {key.casefold(): value for key, value in records.get("qt_records", {}).items()}.get(name.casefold())
     qt = qt if qt and qt["sha256"] == digest else None
     ci = records.get("public_ci_source_records", {}).get(name, {})
+    if ci:
+        content = ci.get("content_fingerprint", {})
+        exact = digest == ci.get("observed_plugin_sha256")
+        equivalent = bool(content.get("sha256") and pe_fingerprint(data, content) == content["sha256"])
+        if not (exact or equivalent):
+            raise ValueError("Unapproved public-source binary content in " + name)
     immutable = records.get("immutable_public_records", {}).get(name, {})
     immutable = immutable if immutable.get("sha256") == digest else {}
     selftest = records.get("public_selftest_keys", {}).get(name, {})
@@ -67,15 +74,15 @@ def check_metadata(data, relative_name, records):
             text = text.replace(literal, "<hash-verified public dependency record>")
         if count:
             markers.append({"path": name, "kind": "hash-verified public dependency record", "count": count})
-        # Unlike dependency DLLs, our linked plugin changes its PE build fields
-        # between runs. Accept only complete NUL-terminated, previously observed
-        # public Arrow __FILE__ records, never the runneradmin directory generally.
+        # Require complete binary identity above, then replace only previously
+        # reviewed, NUL-terminated Arrow __FILE__ records. No directory exemption.
         count = 0
         for literal in ci.get("nul_terminated_literals", []):
             count += text.count(literal + "\0")
             text = text.replace(literal + "\0", "<verified public CI source record>\0")
         if count:
-            markers.append({"path": name, "kind": "exact public CI source record", "count": count})
+            markers.append({"path": name, "kind": "content-verified public CI source record", "count": count,
+                            "file_sha256": digest, "content_sha256": content.get("sha256")})
         if qt:
             count = 0
             for literal in qt["public_pdb_records"]:
