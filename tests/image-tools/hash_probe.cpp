@@ -138,7 +138,7 @@ int main(int argc, char** argv)
       {"threads", qEnvironmentVariable("PJ_SCALE_THREADS")}};
   if (!save(output + "/report.json", QJsonDocument(report).toJson()))
     return 10;
-  std::cout << (failure.isEmpty() ? "PASS" : "FAIL") << " mode=" << mode
+  std::cout << (failure.isEmpty() ? "PASS" : "FAIL") << " mode=" << mode.toStdString()
             << " completed=" << completed << " initial="
             << failure["initial_sha256"].toString().toStdString() << '\n';
   return failure.isEmpty() ? 0 : 15;
