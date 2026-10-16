@@ -1,7 +1,8 @@
 name: Isolated Qt5 caption scaling diagnostic
 'on':
   push:
-    branches: [fix/scaled-caption-determinism]
+    branches:
+    - fix/scaled-caption-determinism
     paths:
     - tests/image-tools/**
     - plotjuggler_app/resource_image.*
@@ -16,45 +17,48 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        replica: [1, 2]
+        replica:
+        - 1
+        - 2
     defaults:
       run:
         shell: bash
     steps:
     - run: |
         apt-get update
-        DEBIAN_FRONTEND=noninteractive apt-get install -y cmake build-essential git ca-certificates python3 qtbase5-dev
+        DEBIAN_FRONTEND=noninteractive apt-get install -y cmake build-essential git ca-certificates python3 python3-pil qtbase5-dev
     - uses: actions/checkout@v6
       with:
         persist-credentials: false
-    - name: Fetch exact image37 reference without running any package
+    - name: Fetch and validate all exact zh.3 reference images
       run: |
-        python3 - <<'PY'
-        from pathlib import Path
-        import urllib.request,hashlib
-        p=Path('reference/zh_CN/meme_37.png');p.parent.mkdir(parents=True,exist_ok=True)
-        data=urllib.request.urlopen('https://raw.githubusercontent.com/reliable-ly0411/PlotJuggler-zh-CN/3117288ce8d710bde4f7a86ca5ed5240ebb1c301/plotjuggler_app/resources/memes/zh_CN/meme_37.png',timeout=60).read()
-        assert hashlib.sha256(data).hexdigest()=='9f0fed3e1a6d97ce971ea63f59eac05cf3c1da446e18fc4b0f35707b6c0837df'
-        p.write_bytes(data)
-        PY
+        git -c safe.directory="$GITHUB_WORKSPACE" fetch --depth=1 --no-tags https://github.com/reliable-ly0411/PlotJuggler-zh-CN.git 3117288ce8d710bde4f7a86ca5ed5240ebb1c301
+        export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$GITHUB_WORKSPACE"
+        python3 tests/check_memes.py --reference-rev 3117288ce8d710bde4f7a86ca5ed5240ebb1c301 --export-reference reference --pixel-report diagnostic/source-pixels.json
     - name: Compile standalone production Qt5 helper and probe
       run: |
-        cmake -S tests/image-tools -B probe-build -DPJ_IMAGE_TOOLS_QT_MAJOR=5 -DCMAKE_BUILD_TYPE=Release
-        cmake --build probe-build --target scaling_probe --parallel 2
+        cmake -S tests/image-tools -B probe-build -DPJ_IMAGE_TOOLS_QT_MAJOR=5 -DCMAKE_BUILD_TYPE=Release -DPJ_BUILD_LOCALIZED_MEME_DIAGNOSTIC=ON
+        cmake --build probe-build --target scaling_probe meme_scaling_regression --parallel 2
     - name: Reproduce exact pixels across CPU and thread paths
       env:
         QT_QPA_PLATFORM: offscreen
+        PJ_MEME_FAILURES_ONLY: '1'
       run: |
         failed=0
         for profile in default no-sse41 no-avx2 serial; do
           export QT_NO_CPU_FEATURE=''
           export PJ_SCALE_THREADS=0
+                  export PJ_MEME_REFERENCE_DIR="$PWD/reference"
           case "$profile" in
             no-sse41) export QT_NO_CPU_FEATURE='sse4.1 avx2' ;;
             no-avx2) export QT_NO_CPU_FEATURE='avx2' ;;
             serial) export PJ_SCALE_THREADS=1 ;;
           esac
-          probe-build/scaling_probe plotjuggler_app/resources/memes reference "diagnostic/$profile" 37 || failed=1
+          probe-build/scaling_probe plotjuggler_app/resources/memes reference "diagnostic/$profile/single" 37 || failed=1
+                  for attempt in 1 2 3 4; do
+                    export PJ_MEME_AUDIT_DIR="$PWD/diagnostic/$profile/full-$attempt"
+                    probe-build/meme_scaling_regression || failed=1
+                  done
         done
         exit "$failed"
     - uses: actions/upload-artifact@v4

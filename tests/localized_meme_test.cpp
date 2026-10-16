@@ -2,6 +2,7 @@
 #include "plotjuggler_app/localized_meme.h"
 #include "resource_image.h"
 #include <QApplication>
+#include <QColor>
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
@@ -11,6 +12,7 @@
 #include <QJsonObject>
 #include <QResource>
 #include <QTemporaryDir>
+#include <QThreadPool>
 #include <cmath>
 #include <iostream>
 
@@ -34,11 +36,60 @@ QRect rect(const QJsonArray& a)
 {
   return QRect(a[0].toInt(), a[1].toInt(), a[2].toInt(), a[3].toInt());
 }
+void saveScaledFailure(const QString& directory, int id, const QPixmap& original,
+                       const QPixmap& reference, const QImage& native,
+                       const QImage& before, const QImage& after, const QRect& area)
+{
+  if (directory.isEmpty())
+    return;
+  const QString path = directory + QString("/failure_%1").arg(id);
+  QDir().mkpath(path);
+  before.save(path + "/before.png");
+  after.save(path + "/after.png");
+  native.save(path + "/native.png");
+  reference.save(path + "/reference.png");
+  QImage diff(after.size(), QImage::Format_RGB32);
+  diff.fill(Qt::black);
+  int changed = 0, maximum = 0;
+  QJsonArray examples;
+  for (int y = area.top(); y <= area.bottom(); ++y)
+    for (int x = area.left(); x <= area.right(); ++x)
+    {
+      const QColor a = before.pixelColor(x, y), b = after.pixelColor(x, y);
+      if (a != b)
+      {
+        ++changed;
+        maximum = qMax(maximum, qMax(qMax(qAbs(a.red() - b.red()), qAbs(a.green() - b.green())),
+                                   qMax(qAbs(a.blue() - b.blue()), qAbs(a.alpha() - b.alpha()))));
+        diff.setPixelColor(x, y, Qt::magenta);
+        if (examples.size() < 32)
+          examples.append(QJsonObject{{"x", x}, {"y", y}, {"before", a.name(QColor::HexArgb)},
+                                      {"after", b.name(QColor::HexArgb)}});
+      }
+    }
+  diff.save(path + "/diff.png");
+  const auto imageInfo = [](const QImage& image) {
+    return QJsonObject{{"format", int(image.format())}, {"alpha", image.hasAlphaChannel()},
+                       {"width", image.width()}, {"height", image.height()},
+                       {"dpr", image.devicePixelRatio()}, {"rgba_sha256", pixelHash(image)}};
+  };
+  QFile report(path + "/counterexample.json");
+  if (report.open(QIODevice::WriteOnly))
+    report.write(QJsonDocument(QJsonObject{{"qt", qVersion()}, {"image", id},
+        {"platform", QGuiApplication::platformName()},
+        {"cpu_disabled", qEnvironmentVariable("QT_NO_CPU_FEATURE")},
+        {"protected_rect", QJsonArray{area.x(), area.y(), area.width(), area.height()}},
+        {"changed_pixels", changed}, {"max_channel_delta", maximum}, {"examples", examples},
+        {"original", imageInfo(original.toImage())}, {"reference", imageInfo(reference.toImage())},
+        {"native", imageInfo(native)}, {"before", imageInfo(before)}, {"after", imageInfo(after)}}).toJson());
+}
 }  // namespace
 
 int main(int argc, char** argv)
 {
   QApplication app(argc, argv);
+  if (qEnvironmentVariableIntValue("PJ_SCALE_THREADS") > 0)
+    QThreadPool::globalInstance()->setMaxThreadCount(qEnvironmentVariableIntValue("PJ_SCALE_THREADS"));
   QFile catalog(":/resources/memes/zh_CN.json");
   QJsonObject root;
   if (PJ_ENABLE_LOCALIZED_IMAGES)
@@ -179,12 +230,14 @@ int main(int argc, char** argv)
                 pixelHash(before_scaled.copy(protected_area)) !=
                     pixelHash(chinese.toImage().copy(protected_area)))
             {
+              saveScaledFailure(audit_dir, i, original, before, native, before_scaled,
+                                chinese.toImage(), protected_area);
               std::cerr << "Scaled caption pixels changed in image " << i << '\n';
               return 15;
             }
           }
         }
-        if (!audit_dir.isEmpty())
+        if (!audit_dir.isEmpty() && !qEnvironmentVariableIsSet("PJ_MEME_FAILURES_ONLY"))
         {
           const QString name = QString("/meme_%1.png").arg(i, 2, 10, QChar('0'));
           before_scaled.save(audit_dir + "/before" + name);
