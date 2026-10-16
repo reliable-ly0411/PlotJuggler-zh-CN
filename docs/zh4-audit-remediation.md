@@ -67,6 +67,12 @@ through that job's environment. Before compiling, the configured source revision
 must match Git HEAD, preventing a silent `gsource` archive-version fallback when
 Git cannot read the checkout. No host Git configuration is changed.
 
+AppImage build tools run with inherited `APPIMAGE_EXTRACT_AND_RUN=1`, including
+the Qt/output plugins spawned by linuxdeploy. A direct Qt plugin API probe is
+logged before deployment. This avoids FUSE mounts and privileged container
+settings; the parent tool's command-line extraction flag alone is not inherited
+by its plugin subprocesses.
+
 ## Build-only validation and future tag publication
 
 PRs, default-branch pushes and manual runs build and verify only. They cannot
