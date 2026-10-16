@@ -37,7 +37,7 @@ for label, revision in [('zh3', baseline), ('zh4', None)]:
         path.write_bytes(data)
         ET.SubElement(prefix, 'file').text = 'resources/memes/' + name
         hashes[name] = hashlib.sha256(data).hexdigest()
-    ET.ElementTree(resource).write(output / 'images.qrc', encoding='utf-8', xml_declaration=True)
+    ET.ElementTree(resource).write(output / f'images_{label}.qrc', encoding='utf-8', xml_declaration=True)
     for name in ('localized_meme.cpp', 'localized_meme.h'):
         (output / name).write_bytes(read(revision, 'plotjuggler_app/' + name))
     report['datasets'][label] = hashes
