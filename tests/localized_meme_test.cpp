@@ -22,14 +22,22 @@
 
 namespace
 {
-QString pixelHash(const QImage& input, QImage* converted = nullptr)
+int diagnostic_image = -1;
+QString pixelHash(const QImage& input, QImage* converted = nullptr, QByteArray* consumed = nullptr)
 {
   const auto image = input.convertToFormat(QImage::Format_RGBA8888);
   if (converted)
     *converted = image;
+  if (consumed)
+  {
+    consumed->clear();
+    consumed->reserve(image.width() * image.height() * 4);
+  }
   QCryptographicHash hash(QCryptographicHash::Sha256);
   for (int y = 0; y < image.height(); ++y)
   {
+    if (consumed)
+      consumed->append(reinterpret_cast<const char*>(image.constScanLine(y)), image.width() * 4);
     hash.addData(reinterpret_cast<const char*>(image.constScanLine(y)), image.width() * 4);
   }
   return QString::fromLatin1(hash.result().toHex());
@@ -41,12 +49,21 @@ QRect rect(const QJsonArray& a)
 void saveScaledFailure(const QString& directory, int id, const QPixmap& original,
                        const QPixmap& reference, const QImage& native,
                        const QImage& before, const QImage& after, const QRect& area,
-                       const QImage& before_rgba, const QImage& after_rgba)
+                       const QImage& before_rgba, const QImage& after_rgba,
+                       const QString& initial_before, const QString& initial_after,
+                       const QByteArray& before_consumed, const QByteArray& after_consumed)
 {
   if (directory.isEmpty())
     return;
   const QString path = directory + QString("/failure_%1").arg(id);
   QDir().mkpath(path);
+  const auto saveArray = [&](const QString& name, const QByteArray& data) {
+    QFile out(path + '/' + name);
+    if (out.open(QIODevice::WriteOnly))
+      out.write(data);
+  };
+  saveArray("before-consumed.rgba", before_consumed);
+  saveArray("after-consumed.rgba", after_consumed);
   before.save(path + "/before.png");
   after.save(path + "/after.png");
   native.save(path + "/native.png");
@@ -102,6 +119,11 @@ void saveScaledFailure(const QString& directory, int id, const QPixmap& original
         {"platform", QGuiApplication::platformName()},
         {"cpu_disabled", qEnvironmentVariable("QT_NO_CPU_FEATURE")},
         {"protected_rect", QJsonArray{area.x(), area.y(), area.width(), area.height()}},
+        {"protected_empty", area.isEmpty()},
+        {"initial_before_sha256", initial_before}, {"initial_after_sha256", initial_after},
+        {"consumed_before_sha256", QString::fromLatin1(QCryptographicHash::hash(before_consumed, QCryptographicHash::Sha256).toHex())},
+        {"consumed_after_sha256", QString::fromLatin1(QCryptographicHash::hash(after_consumed, QCryptographicHash::Sha256).toHex())},
+        {"before_stride", before_rgba.bytesPerLine()}, {"after_stride", after_rgba.bytesPerLine()},
         {"converted_channel_differences", converted_channel_differences},
         {"compared_before_sha256", pixelHash(before_rgba)},
         {"compared_after_sha256", pixelHash(after_rgba)},
@@ -111,7 +133,7 @@ void saveScaledFailure(const QString& directory, int id, const QPixmap& original
 }
 }  // namespace
 
-int main(int argc, char** argv)
+int runTests(int argc, char** argv)
 {
   QApplication app(argc, argv);
   if (qEnvironmentVariableIntValue("PJ_SCALE_THREADS") > 0)
@@ -167,6 +189,7 @@ int main(int argc, char** argv)
   int translated_count = 0, unavailable_count = 0, checked_crops = 0;
   for (int i = 0; i < 106; ++i)
   {
+    diagnostic_image = i;
     const auto entry = i < images.size() ? images[i].toObject() : QJsonObject();
     const QString original_path = QString(":/resources/memes/meme_%1.jpg").arg(i, 2, 10, QChar('0'));
     const QPixmap original(original_path);
@@ -253,12 +276,19 @@ int main(int argc, char** argv)
             const int bottom = int(std::floor((r.y() + r.height() - 4) * sy));
             const QRect protected_area(left, top, right - left, bottom - top);
             QImage before_rgba, after_rgba;
-            const auto before_hash = pixelHash(before_scaled.copy(protected_area), &before_rgba);
-            const auto after_hash = pixelHash(chinese.toImage().copy(protected_area), &after_rgba);
+            QByteArray before_consumed, after_consumed;
+            const auto before_hash = pixelHash(before_scaled.copy(protected_area), &before_rgba,
+                                               &before_consumed);
+            const auto after_hash = pixelHash(chinese.toImage().copy(protected_area), &after_rgba,
+                                              &after_consumed);
             if (protected_area.isEmpty() || before_hash != after_hash)
             {
+              std::cerr << "Initial comparison: empty=" << protected_area.isEmpty()
+                        << " before=" << before_hash.toStdString()
+                        << " after=" << after_hash.toStdString() << '\n';
               saveScaledFailure(audit_dir, i, original, before, native, before_scaled,
-                                chinese.toImage(), protected_area, before_rgba, after_rgba);
+                                chinese.toImage(), protected_area, before_rgba, after_rgba,
+                                before_hash, after_hash, before_consumed, after_consumed);
               std::cerr << "Scaled caption pixels changed in image " << i << '\n';
               return 15;
             }
@@ -361,4 +391,12 @@ int main(int argc, char** argv)
   std::cout << "PASS: " << translated_count << " localized variants, " << checked_crops
             << " native caption crops, 106 intact English originals, reference scaling and exports\n";
   return 0;
+}
+
+int main(int argc, char** argv)
+{
+  const int result = runTests(argc, argv);
+  if (result)
+    std::cerr << "LocalizedMemes exit=" << result << " last_image=" << diagnostic_image << '\n';
+  return result;
 }
