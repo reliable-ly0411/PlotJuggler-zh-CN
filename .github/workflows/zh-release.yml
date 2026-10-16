@@ -1,44 +1,77 @@
-name: zh-CN seven-platform build and controlled release
+name: zh.4 seven-platform release
 'on':
-  pull_request:
-    branches: [zh-CN]
-  push:
-    branches: [zh-CN]
-    tags: [v3.18.0-zh.4]
   workflow_dispatch: {}
 permissions:
   contents: read
 concurrency:
-  group: zh-seven-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: zh4-fixed-release-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
+  tag-source:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/automation/release-v3.18.0-zh.4' && github.repository == 'reliable-ly0411/PlotJuggler-zh-CN'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      actions: read
+    steps:
+    - name: Require merged source and passing exact-source seven-platform build
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        python3 - <<'PY'
+        import json,subprocess
+        repo='reliable-ly0411/PlotJuggler-zh-CN';source='572fb8443fcb3376f2f35b36f78794242e5ce8f9';tag='v3.18.0-zh.4'
+        def api(path,payload=None):
+            args=['gh','api','repos/'+repo+'/'+path]
+            if payload is not None:args+=['--method','POST','--input','-']
+            return json.loads(subprocess.check_output(args,input=None if payload is None else json.dumps(payload).encode()))
+        pr=api('pulls/2')
+        assert pr['merged'] and pr['head']['sha']==source and pr['base']['ref']=='zh-CN'
+        ci=api('actions/runs/38882790702')
+        assert ci['head_sha']==source and ci['status']=='completed' and ci['conclusion']=='success'
+        jobs=api('actions/runs/38882790702/jobs?per_page=100')['jobs']
+        assert len(jobs)==9 and any(j['name']=='verify-seven' for j in jobs)
+        assert all(j['conclusion']==('skipped' if j['name']=='publish' else 'success') for j in jobs)
+        releases=api('releases?per_page=100')
+        assert not any(r['tag_name']==tag for r in releases),'Release already exists; refusing to modify it'
+        refs=api('git/matching-refs/tags/'+tag)
+        assert not any(r['ref']=='refs/tags/'+tag for r in refs),'Tag already exists; inspect it before another run'
+        obj=api('git/tags',{'tag':tag,'message':'PlotJuggler 3.18.0-zh.4: Simplified Chinese + ArduPilot BIN\n\nSource: '+source+'\nUpstream baseline: 3.17.2\n',
+             'object':source,'type':'commit','tagger':{'name':'reliable-ly0411','email':'125791929+reliable-ly0411@users.noreply.github.com'}})
+        assert obj['object']['sha']==source and obj['object']['type']=='commit'
+        ref=api('git/refs',{'ref':'refs/tags/'+tag,'sha':obj['sha']})
+        assert ref['ref']=='refs/tags/'+tag and ref['object']['sha']==obj['sha']
+        print('Created annotated tag',tag,'at',source)
+        PY
   policy:
+    needs: tag-source
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v6
       with:
-        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        ref: 572fb8443fcb3376f2f35b36f78794242e5ce8f9
         persist-credentials: false
     - run: |
         python3 tests/check_package_privacy.py -v
         python3 tests/check_release_assets.py -v
   windows:
     needs: policy
-    uses: ./.github/workflows/zh-windows.yml
+    uses: reliable-ly0411/PlotJuggler-zh-CN/.github/workflows/zh-windows.yml@572fb8443fcb3376f2f35b36f78794242e5ce8f9
     with:
-      ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      ref: 572fb8443fcb3376f2f35b36f78794242e5ce8f9
   linux:
     needs: policy
-    uses: ./.github/workflows/zh-linux.yml
+    uses: reliable-ly0411/PlotJuggler-zh-CN/.github/workflows/zh-linux.yml@572fb8443fcb3376f2f35b36f78794242e5ce8f9
     with:
-      ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      ref: 572fb8443fcb3376f2f35b36f78794242e5ce8f9
   verify-seven:
     needs: [windows, linux]
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v6
       with:
-        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        ref: 572fb8443fcb3376f2f35b36f78794242e5ce8f9
         persist-credentials: false
     - uses: actions/download-artifact@v4
       with:
@@ -50,10 +83,50 @@ jobs:
         path: downloaded/metadata
     - name: Verify seven source-matched packages without publishing
       env:
-        SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        SOURCE_SHA: 572fb8443fcb3376f2f35b36f78794242e5ce8f9
       run: |
         python3 scripts/release_assets.py collect --software downloaded/software --metadata downloaded/metadata \
           --source "$SOURCE_SHA" --output release-software --report release-report
+        python3 - <<'PY'
+        from pathlib import Path
+        import json,os
+        m=json.loads(Path('release-report/seven-packages.json').read_text())
+        assert m['source_commit']=='572fb8443fcb3376f2f35b36f78794242e5ce8f9' and m['asset_count']==7
+        s="""## 更新内容
+
+        - 中文启动图库改用 71 张原生像素叠图和 17 张完整图回退，保留 113 处中文裁片；52/93 使用完整图避免笔画裁切。
+        - 从生产包排除回归测试程序，缩减包体积。106 张英文原图不变；保留 10 张未译回退和 8 张技术原图。
+        - 默认简体中文，可在“帮助 → 语言”切换英文；随包提供 ArduPilot DataFlash BIN 加载器。
+
+        ## 下载与使用
+
+        - Windows x64：安装器 EXE 或便携 ZIP；便携版解压后运行 `plotjuggler.exe`。
+        - Linux：x86_64 / aarch64 AppImage，添加执行权限后运行；打包基线为 Ubuntu 22.04。
+        - DEB：分别适用于 Ubuntu 24.04、Debian 12 bookworm、Debian 13 trixie 的 amd64 系统。先配置对应发行版的 [Apache Arrow 官方 APT 仓库](https://arrow.apache.org/install/)，再用 `sudo apt install ./对应文件.deb` 安装，三个 DEB 不可跨发行版混装。
+
+        ## 兼容性与限制
+
+        此版本为预发布版，基于上游 Qt 5 / 3.17.2 维护线。完整程序版本为 `VERSION`；DEB 使用 `3.18.0~zh.4` 前缀保持预发布排序。
+
+        DataFlash 加载器支持 BIN，不支持文本 LOG、仅 TimeMS 的旧记录及 ISBH/ISBD 批量采样。应用 MPL-2.0、解析器 LGPL-3.0，版权和许可证随包保留。
+
+        包体积缩减不代表全面提速。[性能方法与限制](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/blob/572fb8443fcb3376f2f35b36f78794242e5ce8f9/docs/zh4-performance.md)保留英文首图渲染 6.851→8.210 ms 的增加；未清空操作系统缓存，暖缓存及独立桌面测量限制仍适用。
+
+        ## 构建与验证
+
+        源码标签：`v3.18.0-zh.4`；提交：`572fb8443fcb3376f2f35b36f78794242e5ce8f9`。
+
+        [七平台构建与测试](RUN_URL)：Windows、两个 AppImage 架构和三个原生 DEB 均完成构建、CTest 7/7、中英文界面及合成 BIN 四序列验收；关闭中文图片的构建测试为 2/2。七包的版本、来源、组成、隐私扫描及上传 SHA256 已核验。
+
+        ## SHA256
+
+        | 文件 | SHA256 |
+        | --- | --- |
+        """
+        s=s.replace('VERSION',m['version']).replace('RUN_URL','https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'])
+        s+='\n'.join('| `'+a['name']+'` | '+a['sha256']+' |' for a in m['software_assets'])+'\n'
+        Path('release-report/notes.md').write_text(s,encoding='utf-8')
+        PY
     - uses: actions/upload-artifact@v4
       with:
         name: Release-software
@@ -65,9 +138,8 @@ jobs:
         path: release-report/
         if-no-files-found: error
   publish:
-    # PRs and manual runs can only build/verify. A separately created exact tag
-    # is the sole publication trigger; this workflow never creates or moves tags.
-    if: github.event_name == 'push' && github.ref == 'refs/tags/v3.18.0-zh.4' && github.repository == 'reliable-ly0411/PlotJuggler-zh-CN'
+    # This isolated maintenance branch publishes only the fixed source/tag below.
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/automation/release-v3.18.0-zh.4' && github.repository == 'reliable-ly0411/PlotJuggler-zh-CN'
     needs: verify-seven
     permissions:
       contents: write
@@ -75,7 +147,7 @@ jobs:
     steps:
     - uses: actions/checkout@v6
       with:
-        ref: ${{ github.sha }}
+        ref: 572fb8443fcb3376f2f35b36f78794242e5ce8f9
         persist-credentials: false
     - uses: actions/download-artifact@v4
       with:
@@ -89,13 +161,21 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        python3 -c 'import sys; sys.path.insert(0,"scripts"); from release_assets import inventory; inventory("release-software", "${{ github.sha }}")'
+        python3 -c 'import sys; sys.path.insert(0,"scripts"); from release_assets import inventory; inventory("release-software", "572fb8443fcb3376f2f35b36f78794242e5ce8f9")'
+        python3 - <<'PY'
+        import json,subprocess
+        repo='reliable-ly0411/PlotJuggler-zh-CN'
+        def api(p):return json.loads(subprocess.check_output(['gh','api','repos/'+repo+'/'+p]))
+        r=api('git/ref/tags/v3.18.0-zh.4');assert r['object']['type']=='tag'
+        t=api('git/tags/'+r['object']['sha'])
+        assert t['tag']=='v3.18.0-zh.4' and t['object']==dict(t['object'],type='commit',sha='572fb8443fcb3376f2f35b36f78794242e5ce8f9')
+        PY
         if gh release view v3.18.0-zh.4 >/dev/null 2>&1; then
           echo 'Release already exists; refusing to modify it.' >&2
           exit 1
         fi
         gh release create v3.18.0-zh.4 --verify-tag --draft --prerelease \
-          --title 'PlotJuggler 简体中文 v3.18.0-zh.4' --notes-file release-report/notes.md release-software/*
+          --title 'PlotJuggler 3.18.0-zh.4 · 简体中文 + ArduPilot BIN' --notes-file release-report/notes.md release-software/*
         # The tag endpoint retrieves published releases. List with the write
         # token to resolve this newly created draft, then inspect it by ID.
         RELEASE_ID="$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
