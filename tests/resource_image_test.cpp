@@ -2,6 +2,7 @@
 #include "resource_image.h"
 
 #include <QGuiApplication>
+#include <QDir>
 #include <QJsonArray>
 #include <QTemporaryDir>
 #include <iostream>
@@ -111,6 +112,27 @@ int main(int argc, char** argv)
   if (ok)
   {
     return 12;
+  }
+  if (argc > 1)
+  {
+    const QDir english(QString::fromLocal8Bit(argv[1]));
+    const auto names = english.entryList({"meme_*.jpg"}, QDir::Files);
+    if (names.size() != 106)
+    {
+      return 13;
+    }
+    for (const auto& name : names)
+    {
+      const QImage input(english.filePath(name));
+      const auto unchanged = PJ::resourceImageVariant(input, {}, english.path(), &ok);
+      if (input.isNull() || !ok || unchanged != input ||
+          unchanged.devicePixelRatio() != input.devicePixelRatio())
+      {
+        return 14;
+      }
+    }
+    std::cout << "PASS: all 106 official 3.17.2 English images remain pixel-identical "
+                 "with the default empty variant\n";
   }
   std::cout << "PASS: native atlas pixels, high DPI, alpha, full-image/empty fallbacks, "
                "atomic failure and invalid geometry/path rejection\n";
