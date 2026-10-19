@@ -98,6 +98,34 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./scripts/windows/install_qt6.ps1
+      - name: Provide pinned fonts for Windows offscreen tests
+        if: runner.os == 'Windows'
+        # Qt's offscreen QFreeTypeFontDatabase uses QT_QPA_FONTDIR rather than
+        # the native Windows font database. Keep this test-only dependency out
+        # of the application and pin both its upstream revision and bytes.
+        run: |
+          python - <<'PYFONT'
+          from pathlib import Path
+          import hashlib
+          import os
+          import urllib.request
+          base = 'https://raw.githubusercontent.com/notofonts/noto-cjk/523d033d6cb47f4a80c58a35753646f5c3608a78/'
+          target = Path('build/ci-fonts').resolve()
+          target.mkdir(parents=True, exist_ok=True)
+          files = {
+              'Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf':
+                  '2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b',
+              'LICENSE': '6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2',
+          }
+          for path, expected in files.items():
+              with urllib.request.urlopen(base + path, timeout=120) as response:
+                  data = response.read()
+              if hashlib.sha256(data).hexdigest() != expected:
+                  raise SystemExit(f'CI font checksum mismatch: {path}')
+              (target / Path(path).name).write_bytes(data)
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as output:
+              output.write(f'QT_QPA_FONTDIR={target.as_posix()}\n')
+          PYFONT
       - name: Focused language build and tests
         run: |
           qt_dir="$PWD/.qt/$PJ_QT_VERSION/${{ matrix.qt_arch }}"

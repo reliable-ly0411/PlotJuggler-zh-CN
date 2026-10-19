@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QComboBox>
 #include <QDir>
+#include <QFontMetrics>
 #include <QImage>
 #include <QLabel>
 #include <QMenu>
@@ -11,6 +12,7 @@
 #include <QSettings>
 #include <QTemporaryDir>
 #include <QTest>
+#include <iomanip>
 
 #include "AppLanguage.h"
 #include "MainWindow.h"
@@ -35,6 +37,12 @@ void captureAcceptance(QWidget& widget, const QString& name) {
   if (!directory.isEmpty()) {
     ASSERT_TRUE(QDir().mkpath(directory));
     EXPECT_TRUE(image.save(QDir(directory).filePath(name + u".png"_s), "PNG"));
+  }
+  // A nonempty screenshot and correct translated strings can still contain
+  // only missing-glyph boxes when a headless platform has no font database.
+  const QFontMetrics metrics(widget.font());
+  for (const auto codepoint : u"PlotJuggler中文文件语言首选项"_s.toUcs4()) {
+    EXPECT_TRUE(metrics.inFontUcs4(codepoint)) << "Missing UI glyph U+" << std::hex << codepoint;
   }
 }
 
