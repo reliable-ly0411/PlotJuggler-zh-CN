@@ -55,6 +55,8 @@ jobs:
         ldd hash-build/hash_buffer_probe > diagnostic/buffer-dependencies.txt
         ldd hash-build/hash_image_probe > diagnostic/image-dependencies.txt
         ! grep -q Qt5Gui diagnostic/buffer-dependencies.txt
+    - name: Verify diagnostic success and mismatch exit codes
+      run: python3 tests/image-tools/test_hash_probe.py hash-build/hash_buffer_probe hash-build/hash_image_probe
     - name: Native independent buffer and image loops
       id: native
       continue-on-error: true

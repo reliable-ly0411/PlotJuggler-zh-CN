@@ -140,6 +140,6 @@ int main(int argc, char** argv)
     return 10;
   std::cout << (failure.isEmpty() ? "PASS" : "FAIL") << " mode=" << mode.toStdString()
             << " completed=" << completed << " initial="
-            << failure["initial_sha256"].toString().toStdString() << '\n';
+            << failure.value("initial_sha256").toString().toStdString() << '\n';
   return failure.isEmpty() ? 0 : 15;
 }
