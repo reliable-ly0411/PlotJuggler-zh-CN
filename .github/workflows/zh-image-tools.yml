@@ -1,7 +1,7 @@
 name: Isolated image compatibility and benchmark tools
 'on':
   push:
-    branches: [zh4/resource-overlays]
+    branches: [zh-CN, zh-CN-dev, 'zh-CN-*/**']
     paths:
     - .github/workflows/zh-image-tools.yml
     - tests/image-tools/**
@@ -11,7 +11,7 @@ name: Isolated image compatibility and benchmark tools
     - scripts/export_generic_resource_patch.py
     - scripts/check_upstream_resource_patch.py
   pull_request:
-    branches: [zh-CN]
+    branches: [zh-CN, zh-CN-dev]
     paths:
     - .github/workflows/zh-image-tools.yml
     - tests/image-tools/**

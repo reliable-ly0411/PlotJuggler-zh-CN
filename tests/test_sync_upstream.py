@@ -24,7 +24,7 @@ class SyncTest(unittest.TestCase):
         (self.upstream / "shared.txt").write_text("baseline\n")
         self.commit(self.upstream)
         self.git(self.root, "clone", str(self.upstream), str(self.fork))
-        self.git(self.fork, "switch", "-c", "zh-CN")
+        self.git(self.fork, "switch", "-c", "zh-CN-dev")
         (self.fork / "custom.txt").write_text("Chinese UI and bundled parser\n")
         self.commit(self.fork)
         self.before = self.git(self.fork, "rev-parse", "HEAD").strip()
@@ -49,6 +49,13 @@ class SyncTest(unittest.TestCase):
              str(self.upstream), "--report", str(self.report), *extra], capture_output=True,
         )
         return result.returncode, json.loads(self.report.read_text(encoding="utf-8"))
+
+    def test_default_refuses_stable_branch(self):
+        self.git(self.fork, "switch", "-c", "zh-CN")
+        code, report = self.run_sync("--push")
+        self.assertNotEqual(code, 0)
+        self.assertIn("Expected branch 'zh-CN-dev'", report["error"])
+        self.assertEqual(self.git(self.fork, "rev-parse", "HEAD").strip(), self.before)
 
     def test_no_change_is_success(self):
         code, report = self.run_sync()

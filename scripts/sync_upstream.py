@@ -102,7 +102,7 @@ def sync(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", default=".")
-    parser.add_argument("--branch", default="zh-CN")
+    parser.add_argument("--branch", default="zh-CN-dev")
     parser.add_argument("--upstream-url", default="https://github.com/PlotJuggler/PlotJuggler.git")
     parser.add_argument("--upstream-ref", default="main")
     parser.add_argument("--report", required=True)
