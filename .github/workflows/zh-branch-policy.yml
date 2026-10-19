@@ -1,0 +1,27 @@
+name: Localization branch policy
+'on':
+  pull_request:
+    branches: [zh-CN, zh-CN-dev]
+  push:
+    branches: [zh-CN, zh-CN-dev, 'zh-CN-*/**']
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  branch-policy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Check branch naming
+        env:
+          SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: python3 scripts/check_branch_name.py "$SOURCE_BRANCH"
+      - name: Check workflow and branch-policy regressions
+        run: |
+          python3 tests/test_branch_policy.py -v
+          python3 tests/test_sync_upstream.py -v
+          python3 tests/check_release_assets.py -v
+          python3 tests/check_package_privacy.py -v
+          python3 scripts/release-tools/test_release_review.py -v

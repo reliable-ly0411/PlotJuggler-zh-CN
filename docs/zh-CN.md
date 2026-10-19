@@ -80,8 +80,9 @@ python tests/check_translations.py --fresh
 
 ## 同步和自动构建
 
-`zh-sync.yml` 每日 03:23 UTC 以及手动触发。它将官方 `main` 合并到 `zh-CN`，
+`zh-sync.yml` 每日 03:23 UTC 以及手动触发。它将官方 `main` 合并到 `zh-CN-dev`，
 保留定制提交，不使用强推、重置或自动选择冲突一方。
+稳定线 `zh-CN` 通过审阅 PR 接收开发线成果，详见 [分支与发布规则](BRANCHING.zh-CN.md)。
 冲突、版本跨代或翻译校验失败时，取消本次合并，保留远端定制分支，
 Actions 标红并上传 JSON 报告及冲突文件列表。
 上游 `.github/workflows` 的变化不会自动导入：本 fork 的自动化保持独立，变化会列入

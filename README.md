@@ -5,6 +5,7 @@ ArduPilot DataFlash BIN 加载器。当前开发候选版本采用
 `3.18.0-zh.3+upstream.3.17.2.apbin.1.g<commit>`（SemVer 2.0.0）。
 启动图库使用离线内嵌的 AI 中文嵌字图片，修复矩形遮罩及背景留白。
 
+- [汉化分支命名、开发流程与发布规则](docs/BRANCHING.zh-CN.md)
 - [使用、解析范围、许可和同步说明](docs/zh-CN.md)
 - [Windows 安装器与 portable 构建](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-windows.yml)
 - [Linux AppImage 构建](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-linux.yml)
