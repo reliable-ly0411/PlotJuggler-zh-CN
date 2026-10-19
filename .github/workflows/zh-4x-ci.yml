@@ -155,20 +155,29 @@ jobs:
             -o 'cpython/*:shared=True' -s 'cpython/*:build_type=Release' `
             -s compiler.version=194 -c 'tools.cmake.cmaketoolchain:generator=Ninja Multi-Config'
           exit $LASTEXITCODE
-      - name: Preserve FFmpeg configure diagnostics
+      - name: Preserve FFmpeg dav1d probe diagnostics
         if: failure() && (steps.conan-linux.outcome == 'failure' || steps.conan-windows.outcome == 'failure')
         run: |
           python - <<'PYLOG'
           from pathlib import Path
-          import shutil
           import subprocess
           home = Path(subprocess.check_output(['conan', 'config', 'home'], text=True).strip())
           output = Path('build/diagnostics')
           output.mkdir(parents=True, exist_ok=True)
           for index, path in enumerate(home.glob('p/b/ffmpe*/b/build-*/ffbuild/config.log')):
-              shutil.copyfile(path, output / f'ffmpeg-{index}-config.log')
+              # configure starts this log with `set`, including the complete
+              # process environment. Never publish that preamble as an artifact.
+              lines = path.read_text(errors='replace').splitlines()
+              probes = [i for i, line in enumerate(lines)
+                        if line.startswith(('require_pkg_config libdav1d ',
+                                            'check_pkg_config libdav1d '))]
+              if not probes:
+                  print('No dav1d probe found; the environment-bearing log is omitted.')
+                  continue
+              diagnostic = '\n'.join(lines[probes[-1]:][:400]) + '\n'
+              (output / f'ffmpeg-{index}-dav1d-probe.log').write_text(diagnostic)
               print(f'--- {path.name}: {path.parent.parent.name} ---')
-              print('\n'.join(path.read_text(errors='replace').splitlines()[-160:]))
+              print(diagnostic)
           PYLOG
       - name: Trim incomplete Conan cache
         if: failure() && (steps.conan-linux.outcome == 'failure' || steps.conan-windows.outcome == 'failure')
