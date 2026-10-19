@@ -149,6 +149,10 @@ jobs:
         # https://github.com/conan-io/conan-center-index/issues/30348
         shell: pwsh
         run: |
+          # setup-python injects a native path which conflicts with Conan's
+          # MSYS pkg-config search path. Let the locked dependency graph own it.
+          # https://github.com/conan-io/setup-conan#using-setup-python-action-alongside-setup-conan
+          Remove-Item Env:PKG_CONFIG_PATH -ErrorAction SilentlyContinue
           conan install . --output-folder=build --build=missing `
             -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial `
             -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 `
@@ -219,7 +223,9 @@ jobs:
                 done < "$list"
               fi
             done
-            QT_QPA_PLATFORM=offscreen ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120
+            # Widget runners choose offscreen themselves; leave GL runners on
+            # the native platform, matching upstream Windows CI.
+            ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120
           else
             PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120
           fi
