@@ -22,6 +22,9 @@ on:
   # when shared code calls a native-only API), so run on PRs that can plausibly
   # affect the browser build. Not a required check; ~20-30 min on warm caches.
   pull_request:
+    # The localization line has separate native CI; WASM remains an explicit
+    # follow-up target until its translation/resource pipeline is validated.
+    branches: [main, main-4.x, development]
     paths:
       - '**/wasm/**'
       - 'tests/wasm/**'

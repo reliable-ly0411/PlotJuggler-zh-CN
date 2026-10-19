@@ -61,3 +61,7 @@ build_local/
 # wasm-reboot local build dirs
 build-desktop/
 build-wasm*/
+
+# Python validation helper bytecode
+__pycache__/
+*.py[cod]
