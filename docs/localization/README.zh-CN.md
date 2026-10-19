@@ -46,7 +46,7 @@ DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.dev.1`**，不是稳定�
 
 本工程用 Git 子模块的**固定提交**引用 SDK 适配版本，在构建时编译独立的共享插件，
 不把 LGPL 解析器静态链接到 MPL 应用，也不在运行时下载或追踪插件分支的最新内容。
-当前固定提交为 `27fd24606610418962bd5c76f9629f23c2b016a9`，插件版本为
+当前固定提交为 `f257cede2e7bcac8bd04422ef4e59e2efa8a0c77`，插件版本为
 `1.0.0-dev.1`。对应源代码及许可证随子模块保留。SDK 目前没有旧版的逐字段 tooltip setter，
 原始字段说明保留在数据集元数据中；界面展示的差异见插件 `sdk4/UPSTREAM.md`。
 
@@ -78,7 +78,9 @@ ctest --test-dir build-i18n --output-on-failure
 ```
 
 完整原生构建启用 `PJ_BUILD_TESTS=ON`，会额外注册应用首选项、浏览器设置白名单、
-BIN 解析及动态插件 ABI 回归。Linux 的渲染测试需要有效的 OpenGL/X11 环境；
+BIN 解析及动态插件 ABI 回归。`ArduPilotFileLoaderTest` 还通过真实 `FileLoader`、
+数据存储及曲线目录验证中文路径、重复导入、多个文件间的状态隔离、损坏格式回滚，
+以及上游真实日志。Linux 的渲染测试需要有效的 OpenGL/X11 环境；
 CI 使用 Xvfb 并要求 GPU 测试实际运行。Windows CI 使用相同 SDK 与 MSVC 版本。
 
 翻译更新只在显式执行下列命令时改写目录，普通构建不会修改源文件：

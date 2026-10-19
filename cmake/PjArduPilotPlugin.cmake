@@ -41,4 +41,16 @@ add_subdirectory("${_pj_apbin_dir}/sdk4" "${CMAKE_BINARY_DIR}/ardupilot-dataflas
 if(TARGET pj_app)
     add_dependencies(pj_app ardupilot_source_plugin)
 endif()
+if(PJ_BUILD_TESTS AND TARGET pj_app_loader_testlib)
+    add_executable(ardupilot_import_test "${CMAKE_SOURCE_DIR}/pj_app/tests/ardupilot_import_test.cpp")
+    target_link_libraries(ardupilot_import_test PRIVATE pj_app_loader_testlib pj_app_language)
+    target_compile_definitions(ardupilot_import_test PRIVATE
+        PJ_ARDUPILOT_PLUGIN_PATH="$<TARGET_FILE:ardupilot_source_plugin>"
+        PJ_ARDUPILOT_FIXTURES="${_pj_apbin_dir}/sdk4/tests"
+        PJ_ARDUPILOT_REAL_LOG="${_pj_apbin_dir}/tests/logs/00000001.BIN")
+    add_dependencies(ardupilot_import_test ardupilot_source_plugin)
+    target_compile_options(ardupilot_import_test PRIVATE ${PJ_WARNING_FLAGS})
+    add_test(NAME ArduPilotFileLoaderTest COMMAND ardupilot_import_test)
+    set_tests_properties(ArduPilotFileLoaderTest PROPERTIES TIMEOUT 90)
+endif()
 unset(_pj_apbin_dir)
