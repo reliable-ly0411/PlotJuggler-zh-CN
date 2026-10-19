@@ -201,6 +201,7 @@ jobs:
       - name: Run native tests
         run: |
           export PATH="$PWD/.qt/$PJ_QT_VERSION/${{ matrix.qt_arch }}/bin:$PATH"
+          export PJ_GUI_ACCEPTANCE_DIR="$(python -c 'import os; print(os.path.abspath("build/gui-acceptance").replace(chr(92), "/"))')"
           if [[ "$RUNNER_OS" == Windows ]]; then
             for list in build/pj_ffmpeg_bin_dirs.txt build/pj_python_bin_dirs.txt; do
               if [[ -f "$list" ]]; then
@@ -222,5 +223,6 @@ jobs:
             build-i18n/Testing/Temporary/
             build/Testing/Temporary/
             build/diagnostics/
+            build/gui-acceptance/
           if-no-files-found: ignore
           retention-days: 14
