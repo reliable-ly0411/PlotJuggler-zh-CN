@@ -112,7 +112,9 @@ jobs:
         with:
           path: ~/.conan2
           key: zh4-conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt', 'conan.lock') }}
-          restore-keys: zh4-conan-${{ matrix.os }}-
+          restore-keys: |
+            zh4-conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt', 'conan.lock') }}-partial-
+            zh4-conan-${{ matrix.os }}-
       - name: Prepare Conan sources
         run: |
           conan profile detect --force
@@ -132,16 +134,52 @@ jobs:
                     'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources/"]']
           p.write_text('\n'.join(lines) + '\n')
           PY
-      - name: Resolve exact SDK and dependencies
+      - name: Resolve exact Linux SDK and dependencies
+        if: runner.os == 'Linux'
+        id: conan-linux
         run: |
-          extra=()
-          if [[ "$RUNNER_OS" == Windows ]]; then
-            extra=(-o 'cpython/*:shared=True' -s 'cpython/*:build_type=Release'
-                   -s compiler.version=194 -c 'tools.cmake.cmaketoolchain:generator=Ninja Multi-Config')
-          fi
           conan install . --output-folder=build --build=missing \
             -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial \
-            -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 "${extra[@]}"
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2
+      - name: Resolve exact Windows SDK and dependencies
+        if: runner.os == 'Windows'
+        id: conan-windows
+        # Invoke Conan outside Git Bash. Its FFmpeg recipe launches its own
+        # MSYS shell; nested shells can corrupt pkg-config's native path list.
+        # https://github.com/conan-io/conan-center-index/issues/30348
+        shell: pwsh
+        run: |
+          conan install . --output-folder=build --build=missing `
+            -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial `
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 `
+            -o 'cpython/*:shared=True' -s 'cpython/*:build_type=Release' `
+            -s compiler.version=194 -c 'tools.cmake.cmaketoolchain:generator=Ninja Multi-Config'
+          exit $LASTEXITCODE
+      - name: Preserve FFmpeg configure diagnostics
+        if: failure() && (steps.conan-linux.outcome == 'failure' || steps.conan-windows.outcome == 'failure')
+        run: |
+          python - <<'PYLOG'
+          from pathlib import Path
+          import shutil
+          import subprocess
+          home = Path(subprocess.check_output(['conan', 'config', 'home'], text=True).strip())
+          output = Path('build/diagnostics')
+          output.mkdir(parents=True, exist_ok=True)
+          for index, path in enumerate(home.glob('p/b/ffmpe*/b/build-*/ffbuild/config.log')):
+              shutil.copyfile(path, output / f'ffmpeg-{index}-config.log')
+              print(f'--- {path.name}: {path.parent.parent.name} ---')
+              print('\n'.join(path.read_text(errors='replace').splitlines()[-160:]))
+          PYLOG
+      - name: Trim incomplete Conan cache
+        if: failure() && (steps.conan-linux.outcome == 'failure' || steps.conan-windows.outcome == 'failure')
+        run: conan cache clean "*" --build --source --temp
+      - name: Retain completed dependency packages for retry
+        if: failure() && (steps.conan-linux.outcome == 'failure' || steps.conan-windows.outcome == 'failure')
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.conan2
+          # Never mark an incomplete graph as the exact, successful closure.
+          key: ${{ steps.conan-cache.outputs.cache-primary-key }}-partial-${{ github.run_id }}-${{ github.run_attempt }}
       # Save resolved packages before application compilation/tests. A failing
       # regression must not discard a successful, expensive dependency build.
       - name: Trim Conan build cache
@@ -183,5 +221,6 @@ jobs:
           path: |
             build-i18n/Testing/Temporary/
             build/Testing/Temporary/
+            build/diagnostics/
           if-no-files-found: ignore
           retention-days: 14
