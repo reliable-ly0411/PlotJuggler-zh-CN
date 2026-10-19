@@ -1,0 +1,27 @@
+{
+  "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
+  "upstream_branch": "main-4.x",
+  "upstream_commit": "0345ec513bde7f05ad3148548ac30401f2b6f7a7",
+  "upstream_version_file": "versions.env",
+  "baseline_recorded_utc": "2026-10-19",
+  "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
+  "localization_source_branch": "zh-CN",
+  "localization_source_commit": "766a88d8e689c7803f32acb315ac872a0a67a57b",
+  "port_strategy": "Module-level port, preserving English source strings and independent plugin licensing; no merge of PJ3 history.",
+  "stable_branch": "zh-CN-4.x",
+  "development_branch": "zh-CN-4.x-dev",
+  "status": "development",
+  "ardupilot_plugin": {
+    "upstream_repository": "https://github.com/ArduPilot/plotjuggler-apbin-plugins",
+    "upstream_branch": "main",
+    "upstream_commit": "3e2f9253adc2d41e17b2f0fec74f4b2487c42fb0",
+    "repository": "https://github.com/reliable-ly0411/plotjuggler-apbin-plugins",
+    "branch": "plotjuggler-4.x-sdk",
+    "commit": "27fd24606610418962bd5c76f9629f23c2b016a9",
+    "path": "3rdparty/plotjuggler-apbin-plugins",
+    "sdk_version": "0.34.1",
+    "sdk_source_commit": "4d59e7de81455afe73a77051075e8fb4b9f6b0fd",
+    "license": "LGPL-3.0-or-later",
+    "linkage": "Separate native shared library; no static embedding in the application."
+  }
+}
