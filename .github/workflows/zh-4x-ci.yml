@@ -38,6 +38,9 @@ jobs:
           git diff --check
 
   native:
+    # A topic PR already builds its head. Avoid a second cold dependency build
+    # for the same topic push; integrated branches and manual runs still build.
+    if: github.event_name != 'push' || github.ref_name == 'zh-CN-4.x' || github.ref_name == 'zh-CN-4.x-dev'
     needs: source-checks
     name: Native (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -104,7 +107,8 @@ jobs:
             -DCMAKE_PREFIX_PATH="$qt_dir" -DCMAKE_BUILD_TYPE=RelWithDebInfo
           cmake --build build-i18n --config RelWithDebInfo --parallel 2
           ctest --test-dir build-i18n --build-config RelWithDebInfo --output-on-failure --timeout 60
-      - uses: actions/cache@v5
+      - uses: actions/cache/restore@v5
+        id: conan-cache
         with:
           path: ~/.conan2
           key: zh4-conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt', 'conan.lock') }}
@@ -138,6 +142,16 @@ jobs:
           conan install . --output-folder=build --build=missing \
             -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial \
             -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 "${extra[@]}"
+      # Save resolved packages before application compilation/tests. A failing
+      # regression must not discard a successful, expensive dependency build.
+      - name: Trim Conan build cache
+        if: steps.conan-cache.outputs.cache-hit != 'true'
+        run: conan cache clean "*" --build --source --temp
+      - uses: actions/cache/save@v5
+        if: steps.conan-cache.outputs.cache-hit != 'true'
+        with:
+          path: ~/.conan2
+          key: ${{ steps.conan-cache.outputs.cache-primary-key }}
       - name: Configure and build application plus regressions
         run: |
           cmake -S . -B build -G "${{ matrix.generator }}" \
