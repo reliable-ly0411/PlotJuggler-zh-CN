@@ -4,9 +4,7 @@ name: Minimal Qt5 hash memory diagnostic
     branches: [zh-CN-dev, 'zh-CN-fix/**']
     paths:
     - tests/localized_meme_test.cpp
-    - tests/image-tools/scaling_probe.cpp
-    - tests/image-tools/hash_probe.cpp
-    - tests/image-tools/CMakeLists.txt
+    - tests/image-tools/**
     - .github/workflows/zh-scaling-diagnostic.yml
   pull_request:
     branches: [zh-CN-dev]
