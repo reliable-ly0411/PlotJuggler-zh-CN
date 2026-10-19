@@ -1,10 +1,18 @@
 name: Minimal Qt5 hash memory diagnostic
 'on':
   push:
-    branches: [fix/scaled-caption-determinism]
+    branches: [zh-CN-dev, 'zh-CN-fix/**']
     paths:
+    - tests/localized_meme_test.cpp
+    - tests/image-tools/scaling_probe.cpp
     - tests/image-tools/hash_probe.cpp
     - tests/image-tools/CMakeLists.txt
+    - .github/workflows/zh-scaling-diagnostic.yml
+  pull_request:
+    branches: [zh-CN-dev]
+    paths:
+    - tests/image-tools/**
+    - tests/localized_meme_test.cpp
     - .github/workflows/zh-scaling-diagnostic.yml
   workflow_dispatch: {}
 permissions:

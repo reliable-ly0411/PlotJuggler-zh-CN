@@ -1,5 +1,7 @@
 # zh.4 audit remediation
 
+> 历史记录：本文中的 zh.4 发布 job 与 exact-tag 触发方式已经归档，不是当前发布入口。当前稳定/开发 CI 仅构建验证；下一次发版准备与命名规范见 [分支与发布规则](BRANCHING.zh-CN.md)。
+
 ## Public CI path records
 
 The earlier policy accepted a known DLL filename plus NUL-terminated public Arrow
