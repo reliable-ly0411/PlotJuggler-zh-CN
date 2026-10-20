@@ -10,10 +10,11 @@ permissions:
 
 concurrency:
   group: zh-4x-packages-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   native:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.created)
     name: Package (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 240

@@ -14,8 +14,6 @@ name: Conan lock refresh
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 5 1 * *"   # monthly; drift is absorbed on our schedule, not upstream's
 
 permissions:
   contents: write

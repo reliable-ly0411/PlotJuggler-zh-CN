@@ -4,10 +4,6 @@ name: Sanitizers
 # they stay off the pull-request path: nightly on main, on every push to main,
 # and on demand. See docs/SANITIZERS.md and ./build.sh --sanitize.
 on:
-  schedule:
-    - cron: "0 3 * * *"
-  push:
-    branches: [main, main-4.x]
   workflow_dispatch:
 
 concurrency:
