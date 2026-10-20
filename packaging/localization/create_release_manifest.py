@@ -34,8 +34,17 @@ def main():
         assert report['release']['source_tree'] == tree
         assert report['release']['version'] == version
         assert report['plugin_count'] in [19, 21]
+        if report['plugin_count'] == 19:
+            assert report['loaded_plugin_count'] == 19 and report['unavailable_plugins'] == []
+        else:
+            assert report['loaded_plugin_count'] == 20
+            assert len(report['unavailable_plugins']) == 1
+            unavailable = report['unavailable_plugins'][0]
+            assert unavailable['id'] == 'ros2-topic-subscriber'
+            assert unavailable['status'] == 'not_tested_missing_external_dependency'
         accepted.append({'path': path.as_posix(), 'sha256': sha256(path),
-                         'plugin_count': report['plugin_count'], 'checks': report['checks']})
+                         'plugin_count': report['plugin_count'], 'loaded_plugin_count': report['loaded_plugin_count'],
+                         'unavailable_plugins': report['unavailable_plugins'], 'checks': report['checks']})
         for language in ['zh_CN', 'en_US']:
             png = path.parent / f'gui-{language}.png'
             assert png.stat().st_size > 10000

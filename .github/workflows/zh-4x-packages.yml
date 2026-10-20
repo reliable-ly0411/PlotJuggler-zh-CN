@@ -243,6 +243,7 @@ jobs:
         run: |
           python tests/check_localization_provenance.py
           python tests/test_release_versions.py -v
+          python tests/test_package_acceptance.py -v
           if [[ "$RUNNER_OS" == Linux ]]; then python tests/test_deb_dependencies.py -v; fi
           python packaging/localization/version_map.py "$PJ_VERSION"
       - name: Stage pinned BIN, licenses and CJK fallback

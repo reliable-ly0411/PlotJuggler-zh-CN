@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import signal
@@ -15,6 +16,49 @@ import time
 FONT_SHA = '2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b'
 LOG_SHA = '28dcbac522ceb75eee10f6af37b0d6e342c1dc79e2be1a9f766fe18a14336766'
 
+
+
+def windows_system_root(environment):
+    """Windows environment keys are case-insensitive before copying to dict."""
+    roots = [value for key, value in environment.items() if key.upper() == 'SYSTEMROOT']
+    assert len(roots) == 1 and roots[0], 'missing or ambiguous Windows SystemRoot'
+    return Path(roots[0])
+
+
+def optional_ros_error(message):
+    """Only the two known no-instance diagnostics belong to the ROS prerequisite."""
+    return bool(re.fullmatch(
+        r'.*[/\\]libros2_stream_plugin\.so: (?:plugin instance creation failed '
+        r'\(create\(\) returned null\)|failed to load data_source plugin)', message))
+
+
+def validate_plugin_result(returncode, combined, expected, allow_missing_ros):
+    """Keep the complete whitelist strict, with one explicit external ROS prerequisite."""
+    if returncode == 0:
+        assert f'[plugin-validation] OK: loaded all {len(expected)} whitelisted plugin(s)' in combined
+        assert '[plugin-validation][error]' not in combined
+        return []
+    optional = [spec for spec in expected if spec.startswith('ros2-topic-subscriber=')]
+    assert allow_missing_ros and returncode == 1 and len(optional) == 1, combined
+    assert '[ros2.proxy] ROS 2 not detected; source /opt/ros/<distro>/setup.bash before starting PlotJuggler.' in combined
+    missing = re.findall(r'^\[plugin-validation\] expected plugin did not load: (.+)$', combined, re.M)
+    assert missing == optional, missing
+    errors = re.findall(r'^\[plugin-validation\]\[error\] ([^:]+): (.+)$', combined, re.M)
+    assert combined.count('[plugin-validation][error]') == len(errors) == 2 and all(plugin == 'ros2-topic-subscriber' and optional_ros_error(message)
+                                    for plugin, message in errors), errors
+    loaded = re.findall(r'^\[plugin-validation\]\[info\] ([^:]+): Loaded ', combined, re.M)
+    expected_ids = [spec.split('=', 1)[0] for spec in expected if spec != optional[0]]
+    assert sorted(loaded) == sorted(expected_ids), loaded
+    assert len(loaded) == len(set(loaded)), 'duplicate loaded plugin'
+    allowed_summary = {
+        '[plugin-validation] expected plugin did not load: ' + optional[0],
+        f'[plugin-validation] FAILED: loaded {len(expected) - 1} plugin(s), expected {len(expected)}',
+    }
+    summaries = [line for line in combined.splitlines() if line.startswith('[plugin-validation] ')]
+    assert len(summaries) == 2 and set(summaries) == allowed_summary, summaries
+    return [{'id': 'ros2-topic-subscriber', 'version': optional[0].split('=', 1)[1],
+             'status': 'not_tested_missing_external_dependency',
+             'reason': 'ROS 2 is not installed in the clean acceptance image'}]
 
 def verify(prefix, executable, log, output, expected_source, expected_version, capture=False):
     """Check provenance, native plugins, Python and real BIN curve restoration."""
@@ -54,7 +98,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
     env['QT_LOGGING_RULES'] = 'pj.runtime.ingest.info=true'
     # Use the installed DLLs plus the operating system, never a Qt/Conan tree.
     if os.name == 'nt':
-        system = Path(env['SystemRoot'])
+        system = windows_system_root(env)
         env['PATH'] = os.pathsep.join(map(str, [prefix / 'bin', system / 'System32', system]))
         for name in ['vcruntime140.dll', 'vcruntime140_1.dll', 'msvcp140.dll']:
             assert (prefix / 'bin' / name).is_file(), f'missing app-local VC runtime: {name}'
@@ -77,7 +121,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
             else:
                 os.killpg(process.pid, signal.SIGKILL)
             process.wait()
-    def run(name, args):
+    def run(name, args, validate_plugins=False):
         process = subprocess.Popen([str(executable), *args], env=env, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace',
                                    start_new_session=os.name != 'nt')
@@ -89,7 +133,10 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
         combined = stdout + stderr
         (output / f'{name}.log').write_text(combined, encoding='utf-8')
         print(combined)
-        assert process.returncode == 0, f'{name}: exit {process.returncode}'
+        if validate_plugins:
+            unavailable.extend(validate_plugin_result(process.returncode, combined, expected, os.name != 'nt'))
+        else:
+            assert process.returncode == 0, f'{name}: exit {process.returncode}'
         assert 'Failed to load bundled CJK fallback font' not in combined
         return combined
     with tempfile.TemporaryDirectory(prefix='pj4-package-') as temp:
@@ -102,7 +149,8 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
         args = ['--validate-plugins', str(prefix / 'lib/plotjuggler/plugins')]
         for spec in expected:
             args.extend(['--expect-plugin', spec])
-        run('plugins', args)
+        unavailable = []
+        run('plugins', args, validate_plugins=True)
         shutil.copy2(log, work / '飞行日志.BIN')
         layout = work / '真实日志.pj4.xml'
         layout.write_text('''<root format="PlotJuggler" pj4_version="4" binding="source">
@@ -118,7 +166,9 @@ manifest_id="ardupilot-dataflash" filepath_mode="source"><![CDATA[{}]]></plugin>
                        '--exit-after-layout', '--exit-after-layout-timeout', '90', '--dump-diagnostics', str(diagnostics)])
             assert 'ArduPilot BIN: imported 1940 numeric series' in text
             records = json.loads(diagnostics.read_text(encoding='utf-8'))['records']
-            rejected = [x for x in records if x['level'] == 'error' or
+            rejected = [x for x in records if
+                        (x['level'] == 'error' and not (unavailable and x['id'] == 'ros2-topic-subscriber'
+                                                       and optional_ros_error(x['message']))) or
                         x['id'] in ['layout-import-unresolved-curves', 'layout-import-unresolved-curves-sync']]
             assert not rejected, rejected
             if capture:
@@ -140,8 +190,9 @@ manifest_id="ardupilot-dataflash" filepath_mode="source"><![CDATA[{}]]></plugin>
                         stop(process)
     summary = {'status': 'automated_checks_passed',
                'visual_review': 'required separately for the captured Chinese and English screenshots', 'release': record, 'plugin_count': len(expected),
+               'loaded_plugin_count': len(expected) - len(unavailable), 'unavailable_plugins': unavailable,
                'checks': ['embedded version', 'CJK font bytes', 'licenses', 'Python backend',
-                          'all bundled plugins', 'real BIN in Unicode path', 'Chinese and English curve restoration']}
+                          'bundled plugin inventory and explicit external dependency boundary', 'real BIN in Unicode path', 'Chinese and English curve restoration']}
     (output / 'acceptance.json').write_text(json.dumps(summary, indent=2) + '\n', encoding='utf-8')
 
 
