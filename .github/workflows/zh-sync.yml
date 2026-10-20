@@ -1,17 +1,25 @@
 name: zh-CN upstream sync
-
-on:
+'on':
   schedule:
-    - cron: '23 3 * * *'
+  - cron: 23 3 * * *
   workflow_dispatch:
-
+    inputs:
+      action:
+        description: Sync only, or sync then inspect new formal releases
+        type: choice
+        options:
+        - sync
+        - check-releases
+        default: sync
+      retry_release_id:
+        description: Retry failed recognized release ID, never historical backfill
+        type: string
+        default: ''
 permissions:
   contents: read
-
 concurrency:
   group: zh-upstream-sync
   cancel-in-progress: false
-
 jobs:
   sync:
     if: github.repository == 'reliable-ly0411/PlotJuggler-zh-CN'
@@ -22,52 +30,97 @@ jobs:
     outputs:
       changed: ${{ steps.merge.outputs.changed }}
       ref: ${{ steps.merge.outputs.ref }}
+      build: ${{ steps.release.outputs.build }}
+      release_id: ${{ steps.release.outputs.release_id }}
+      source_ref: ${{ steps.release.outputs.source_ref }}
+      manifest: ${{ steps.release.outputs.manifest }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: zh-CN-dev
-          fetch-depth: 0
-      - name: Install translation validation tool
-        run: sudo apt-get update && sudo apt-get install -y qttools5-dev-tools
-      - name: Verify conflict and version protection
-        run: python3 tests/test_sync_upstream.py
-      - name: Merge official Qt5 upstream
-        id: merge
-        run: >-
-          python3 scripts/sync_upstream.py
-          --repo . --branch zh-CN-dev --upstream-ref main
-          --validate --push
-          --report "${{ runner.temp }}/upstream-sync.json"
-      - name: Preserve sync result
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: upstream-sync-report
-          path: ${{ runner.temp }}/upstream-sync.json
-          if-no-files-found: error
-      - name: Publish readable result
-        if: always()
-        run: |
-          if [ -f "${{ runner.temp }}/upstream-sync.json" ]; then
-            printf '### Upstream sync result\n\n```json\n' >> "$GITHUB_STEP_SUMMARY"
-            cat "${{ runner.temp }}/upstream-sync.json" >> "$GITHUB_STEP_SUMMARY"
-            printf '\n```\n' >> "$GITHUB_STEP_SUMMARY"
-          fi
+    - uses: actions/checkout@v4
+      with:
+        ref: zh-CN-dev
+        fetch-depth: '0'
+    - name: Install translation validation tool
+      run: sudo apt-get update && sudo apt-get install -y qttools5-dev-tools
+    - name: Verify conflict and version protection
+      run: python3 tests/test_sync_upstream.py
+    - name: Merge official Qt5 upstream
+      id: merge
+      run: python3 scripts/sync_upstream.py --repo . --branch zh-CN-dev --upstream-ref main --validate --push --report
+        "${{ runner.temp }}/upstream-sync.json"
+    - name: Preserve sync result
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: upstream-sync-report
+        path: ${{ runner.temp }}/upstream-sync.json
+        if-no-files-found: error
+    - name: Publish readable result
+      if: always()
+      run: "if [ -f \"${{ runner.temp }}/upstream-sync.json\" ]; then\n  printf '### Upstream sync result\\n\\n```json\\\
+        n' >> \"$GITHUB_STEP_SUMMARY\"\n  cat \"${{ runner.temp }}/upstream-sync.json\" >> \"$GITHUB_STEP_SUMMARY\"\
+        \n  printf '\\n```\\n' >> \"$GITHUB_STEP_SUMMARY\"\nfi\n"
+    - name: Recognize a new formal Qt5 release only
+      id: release
+      if: github.event_name == 'schedule' || inputs.action == 'check-releases'
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RETRY_ID: ${{ inputs.retry_release_id }}
+      run: 'git config user.name github-actions[bot]
 
-  windows:
-    needs: sync
-    if: needs.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
-    uses: ./.github/workflows/zh-windows.yml
-    with:
-      ref: ${{ needs.sync.outputs.ref }}
-    permissions:
-      contents: read
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
 
-  linux:
+        python3 .github/release_policy/policy.py prepare --retry-id "$RETRY_ID"'
+  build:
     needs: sync
-    if: needs.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
-    uses: ./.github/workflows/zh-linux.yml
+    if: needs.sync.outputs.build == 'true'
+    uses: ./.github/workflows/zh-release.yml
     with:
-      ref: ${{ needs.sync.outputs.ref }}
+      ref: ${{ needs.sync.outputs.source_ref }}
+      release_manifest: ${{ needs.sync.outputs.manifest }}
+  finish:
+    needs:
+    - sync
+    - build
+    if: always() && needs.sync.outputs.build == 'true'
+    runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: zh-CN-dev
+        fetch-depth: '0'
+    - env:
+        RELEASE_ID: ${{ needs.sync.outputs.release_id }}
+        BUILD_RESULT: ${{ needs.build.result }}
+      run: 'git config user.name github-actions[bot]
+
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+        python3 .github/release_policy/policy.py finish --release-id "$RELEASE_ID" --result "$BUILD_RESULT"'
+  sync-four:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: zh-CN
+        fetch-depth: 0
+    - name: Copy trusted source-only policy, then select independent PJ4 line
+      run: 'set -euo pipefail
+
+        mkdir -p "$RUNNER_TEMP/pj4-sync"
+
+        cp .github/release_policy/sync_four.py .github/release_policy/pj4-sync.json "$RUNNER_TEMP/pj4-sync/"
+
+        git config user.name github-actions[bot]
+
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+        git fetch --no-recurse-submodules --no-tags origin refs/heads/zh-CN-4.x-dev
+
+        git checkout -B zh-CN-4.x-dev FETCH_HEAD
+
+        python3 "$RUNNER_TEMP/pj4-sync/sync_four.py" --config "$RUNNER_TEMP/pj4-sync/pj4-sync.json" --push'

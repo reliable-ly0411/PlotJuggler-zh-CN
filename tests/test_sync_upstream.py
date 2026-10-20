@@ -50,6 +50,20 @@ class SyncTest(unittest.TestCase):
         )
         return result.returncode, json.loads(self.report.read_text(encoding="utf-8"))
 
+    def test_release_policy_conflict_is_retained_locally(self):
+        local = self.fork / ".github/release_policy/config.json"
+        local.parent.mkdir(parents=True)
+        local.write_text('{"publication": "blocked"}\n')
+        self.commit(self.fork)
+        remote = self.upstream / ".github/release_policy/config.json"
+        remote.parent.mkdir(parents=True)
+        remote.write_text('{"publication": "unreviewed"}\n')
+        self.commit(self.upstream)
+        code, report = self.run_sync()
+        self.assertEqual(code, 0)
+        self.assertEqual(local.read_text(), '{"publication": "blocked"}\n')
+        self.assertIn('.github/release_policy/config.json', report['held_workflows'])
+
     def test_default_refuses_stable_branch(self):
         self.git(self.fork, "switch", "-c", "zh-CN")
         code, report = self.run_sync("--push")
