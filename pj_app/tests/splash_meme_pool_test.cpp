@@ -8,6 +8,10 @@
 #include <QDir>
 #include <QPixmap>
 #include <QStandardPaths>
+#include <QSettings>
+#include <QTemporaryDir>
+
+#include "AppLanguage.h"
 #include <QString>
 #include <QStringList>
 
@@ -36,6 +40,44 @@ QStringList sourcePool() {
 // it explicitly. A file added to the directory but left out of the manifest is
 // invisible at runtime with no build error and no warning — it simply never
 // shows, and the only symptom is a meme nobody ever sees.
+TEST(SplashLocalization, ChineseDefaultsToBannerWithoutOverwritingExplicitMemePreference) {
+  QTemporaryDir directory;
+  ASSERT_TRUE(directory.isValid());
+  QSettings settings(directory.filePath(u"settings.ini"_s), QSettings::IniFormat);
+  const AppLanguage language(*QCoreApplication::instance(), u"zh_CN"_s);
+  ASSERT_TRUE(language.catalogLoaded());
+  EXPECT_EQ(startupSplashMode(settings), kSplashModeSerious);
+  EXPECT_FALSE(settings.contains(kSplashModeKey));
+  settings.setValue(kSplashModeKey, kSplashModeMemes);
+  EXPECT_EQ(startupSplashMode(settings), kSplashModeMemes);
+}
+
+TEST(SplashLocalization, AllSubtitlesTranslateAndDoNotLeakIntoEnglish) {
+  QStringList english;
+  {
+    const AppLanguage language(*QCoreApplication::instance(), u"en_US"_s);
+    english = seriousSplashSubtitles();
+    QTemporaryDir directory;
+    const QSettings settings(directory.filePath(u"settings.ini"_s), QSettings::IniFormat);
+    EXPECT_EQ(startupSplashMode(settings), kSplashModeMemes);
+  }
+  ASSERT_EQ(english.size(), 15);
+  for (int repeat = 0; repeat < 2; ++repeat) {
+    {
+      const AppLanguage language(*QCoreApplication::instance(), u"zh_CN"_s);
+      ASSERT_TRUE(language.catalogLoaded());
+      const QStringList chinese = seriousSplashSubtitles();
+      ASSERT_EQ(chinese.size(), english.size());
+      for (qsizetype i = 0; i < chinese.size(); ++i) {
+        EXPECT_FALSE(chinese.at(i).isEmpty());
+        EXPECT_NE(chinese.at(i), english.at(i));
+      }
+    }
+    const AppLanguage language(*QCoreApplication::instance(), u"en_US"_s);
+    EXPECT_EQ(seriousSplashSubtitles(), english);
+  }
+}
+
 TEST(SplashMemePool, EveryMemeOnDiskIsListedInTheManifest) {
   const QStringList on_disk = sourcePool();
   ASSERT_FALSE(on_disk.isEmpty()) << "no memes found under " << PJ_MEMES_SOURCE_DIR;

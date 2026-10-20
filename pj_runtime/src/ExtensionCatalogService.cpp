@@ -733,7 +733,8 @@ const LoadedToolbox* ExtensionCatalogService::findToolbox(QStringView id) const 
 }
 
 QString ExtensionCatalogService::buildFileFilter() const {
-  return QString::fromStdString(plugin_catalog_->buildFileFilter());
+  return QString::fromStdString(plugin_catalog_->buildFileFilter(
+      tr("All supported files").toStdString(), tr("All files").toStdString()));
 }
 
 void ExtensionCatalogService::reportDiagnostic(DiagnosticLevel level, const QString& message, const QString& id) const {

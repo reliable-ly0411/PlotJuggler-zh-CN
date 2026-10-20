@@ -202,7 +202,8 @@ class PluginRuntimeCatalog {
   [[nodiscard]] const RuntimeMessageParserPlugin* findParserById(std::string_view id) const;
 
   // Builds a QFileDialog-compatible filter string.
-  [[nodiscard]] std::string buildFileFilter() const;
+  [[nodiscard]] std::string buildFileFilter(
+      std::string_view supported_label = "All supported files", std::string_view all_label = "All files") const;
 
   // Lists parser encodings as a JSON string array.
   [[nodiscard]] std::string listAvailableEncodings() const;

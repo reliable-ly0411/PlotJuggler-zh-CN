@@ -41,6 +41,7 @@ pj_add_test_runner(pj_plotting_widget_tests
         # auto-registered — SessionManager reads it to install the Luau filter catalogue.
         # Without it the panel would have no filters to list or apply.
         filter_editor_panel_test.cpp
+        builtin_filter_presentation_test.cpp
         parameter_form_test.cpp
     LIBS
         pj_plotting

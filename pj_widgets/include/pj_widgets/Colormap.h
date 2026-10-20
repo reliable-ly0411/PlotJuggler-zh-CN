@@ -2,6 +2,8 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
+#include <QString>
+
 #include <cstdint>
 #include <string_view>
 #include <vector>
@@ -26,6 +28,9 @@ inline constexpr int kColormapCount = 4;
 /// Untranslated display name ("Turbo", "Viridis", ...), a `tr()`-ready literal for
 /// the colormap selectors so every view lists the same names in the enum order.
 [[nodiscard]] const char* colormapName(Colormap colormap) noexcept;
+
+/// Localized presentation only; never use as a serialized colormap token.
+[[nodiscard]] QString colormapDisplayName(Colormap colormap);
 
 /// Default LUT width (samples of t per colormap row). 256 8-bit entries is the
 /// resolution the GPU LUT texture is built and uploaded at.

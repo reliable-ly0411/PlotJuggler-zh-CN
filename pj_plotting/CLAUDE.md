@@ -22,6 +22,13 @@ pj_plotting  ──►  pj_plotting_core  ──►  pj_datastore + pj_base
 
 ## Tests and benchmarks
 
+`BuiltinFilterPresentation` is the Qt-only presentation boundary for the shipped
+Luau filters. Its extractable key registry covers the actual resource's names,
+descriptions and parameter/enum labels. Only recognized bundled classes are
+localized, using copies of their display metadata; `ParameterForm` remains
+generic. Filter ids, parameter values, source text and automatically generated
+output names remain canonical in every interface language.
+
 `PJ_BUILD_TESTS` enables `pj_plotting_core_tests` (shared `QCoreApplication` main)
 and `pj_plotting_widget_tests` (shared offscreen-capable `QApplication` main, with
 `pj_resources`). `gtest_discover_tests` registers each case with its runner name

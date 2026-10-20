@@ -61,27 +61,6 @@ QPixmap getFunnySplashscreen() {
 
 // The pool of subtitles for the "serious" splashscreen; one is picked at random
 // each launch.
-const QStringList& seriousSubtitles() {
-  static const QStringList kSubtitles = {
-      u"Now you're plotting"_s,
-      u"The plot thickens"_s,
-      u"Hold my rosbag"_s,
-      u"Make your data confess"_s,
-      u"More than just curves now"_s,
-      u"Better than it has any right to be"_s,
-      u"Objectively the best. Probably."_s,
-      u"Still better than printf"_s,
-      u"Friends don't let friends use printf"_s,
-      u"Lovingly over-engineered"_s,
-      u"Suspiciously good for a free tool"_s,
-      u"Opening PlotJuggler. Again."_s,
-      u"Curves were just the beginning"_s,
-      u"Mostly written by an AI"_s,
-      u"An AI helped. Allegedly."_s,
-  };
-  return kSubtitles;
-}
-
 // Renders the "serious" splashscreen: the PlotJuggler logo + wordmark over
 // framework surface and brand-gradient tokens, with a random
 // subtitle underneath. Composed with QPainter rather than baked into an image
@@ -154,7 +133,7 @@ QPixmap makeSeriousSplashscreen() {
   subtitle_font.setWeight(QFont::Light);  // thin, airy weight to match the banner
   p.setFont(subtitle_font);
   p.setPen(wordmark_ink);
-  const QStringList& subs = seriousSubtitles();
+  const QStringList subs = seriousSplashSubtitles();
   const QString subtitle = subs.at(QRandomGenerator::global()->bounded(static_cast<int>(subs.size())));
   const qreal subtitle_width = QFontMetricsF(subtitle_font).horizontalAdvance(subtitle);
   p.drawText(QPointF(text_x + (wordmark_width - subtitle_width) / 2.0, wordmark_baseline + 56), subtitle);
@@ -173,6 +152,31 @@ QPixmap makeSeriousSplashscreen() {
 
 }  // namespace
 
+QStringList seriousSplashSubtitles() {
+  return {
+      QCoreApplication::translate("PJ::Splashscreen", "Now you're plotting"),
+      QCoreApplication::translate("PJ::Splashscreen", "The plot thickens"),
+      QCoreApplication::translate("PJ::Splashscreen", "Hold my rosbag"),
+      QCoreApplication::translate("PJ::Splashscreen", "Make your data confess"),
+      QCoreApplication::translate("PJ::Splashscreen", "More than just curves now"),
+      QCoreApplication::translate("PJ::Splashscreen", "Better than it has any right to be"),
+      QCoreApplication::translate("PJ::Splashscreen", "Objectively the best. Probably."),
+      QCoreApplication::translate("PJ::Splashscreen", "Still better than printf"),
+      QCoreApplication::translate("PJ::Splashscreen", "Friends don't let friends use printf"),
+      QCoreApplication::translate("PJ::Splashscreen", "Lovingly over-engineered"),
+      QCoreApplication::translate("PJ::Splashscreen", "Suspiciously good for a free tool"),
+      QCoreApplication::translate("PJ::Splashscreen", "Opening PlotJuggler. Again."),
+      QCoreApplication::translate("PJ::Splashscreen", "Curves were just the beginning"),
+      QCoreApplication::translate("PJ::Splashscreen", "Mostly written by an AI"),
+      QCoreApplication::translate("PJ::Splashscreen", "An AI helped. Allegedly."),
+  };
+}
+
+QString startupSplashMode(const QSettings& settings) {
+  const bool chinese = QCoreApplication::instance()->property("interfaceLanguage").toString() == "zh_CN"_L1;
+  return settings.value(kSplashModeKey, chinese ? kSplashModeSerious : kSplashModeMemes).toString();
+}
+
 QPixmap capMemeToSplashBox(const QPixmap& pixmap) {
   if (pixmap.width() <= kMaxMemeExtent && pixmap.height() <= kMaxMemeExtent) {
     return pixmap;
@@ -182,7 +186,7 @@ QPixmap capMemeToSplashBox(const QPixmap& pixmap) {
 
 QPixmap makeStartupSplash() {
   QSettings settings;
-  const QString mode = settings.value(kSplashModeKey, kSplashModeMemes).toString();
+  const QString mode = startupSplashMode(settings);
   return mode == kSplashModeSerious ? makeSeriousSplashscreen() : getFunnySplashscreen();
 }
 
