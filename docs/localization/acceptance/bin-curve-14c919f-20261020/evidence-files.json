@@ -1,8 +1,18 @@
 [
   {
+    "path": "PUBLICATION.md",
+    "size": 2694,
+    "sha256": "aff29f591939266edba1d279f392a6988c14eca761b600431e1dc61c53ccc87e"
+  },
+  {
     "path": "README.md",
-    "size": 7887,
-    "sha256": "027530917687cfb65d579d2d25b4f15ea1c04d4c7267fda3fdedb442a4777223"
+    "size": 8309,
+    "sha256": "f00bfc8d5a6f8f83def8503f285341d70f4a9e6035d31bf5538b4ab7ee079f7a"
+  },
+  {
+    "path": "checksum-verification.txt",
+    "size": 420,
+    "sha256": "cf11ad2b754481e03d778e7709eb0b81a0769051cbe88109340a56d6a77583e7"
   },
   {
     "path": "native-windows/main-window-en_US.png",
@@ -23,6 +33,11 @@
     "path": "native-windows/preferences-zh_CN.png",
     "size": 33302,
     "sha256": "91682c7a4d617bde49e7af6160a89cc400c1f65aa83a81517c0353cdceb3a7b0"
+  },
+  {
+    "path": "publication-receipt.json",
+    "size": 6366,
+    "sha256": "2c8f11dce6389e382cc5e7464f2987e0086e074d8d65bed2ee16f03546e9bdf2"
   },
   {
     "path": "release-manifest.json",
