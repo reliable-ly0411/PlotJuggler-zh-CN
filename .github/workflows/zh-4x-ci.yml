@@ -40,8 +40,8 @@ jobs:
           git diff --check
 
   native:
-    # A topic PR already builds its head. Avoid a second cold dependency build
-    # for the same topic push; integrated branches and manual runs still build.
+    # Routine pushes and PRs run source checks only. Native builds require an
+    # explicit manual dispatch or first creation of a manual-build branch.
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.created && startsWith(github.ref_name, 'zh-CN-4.x-ci/manual-build-'))
     needs: source-checks
     name: Native (${{ matrix.os }})
