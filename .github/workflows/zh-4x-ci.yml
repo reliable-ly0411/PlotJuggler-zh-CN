@@ -32,6 +32,7 @@ jobs:
         run: |
           python3 scripts/check_branch_name.py "$SOURCE_BRANCH"
           python3 tests/test_branch_policy.py -v
+          python3 tests/test_release_assets.py -v
           python3 tests/test_check_translations_4x.py -v
           python3 tests/check_translations_4x.py --catalog-only
           python3 tests/check_localization_provenance.py
