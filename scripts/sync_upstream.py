@@ -58,17 +58,18 @@ def sync(args):
         if merge.returncode:
             report["conflicts"] = git("diff", "--name-only", "--diff-filter=U").stdout.splitlines()
             report["merge_output"] = merge.stdout + merge.stderr
-            code_conflicts = [path for path in report["conflicts"] if not path.startswith(".github/workflows/")]
+            code_conflicts = [path for path in report["conflicts"] if not path.startswith((".github/workflows/", ".github/release_policy/"))]
             if code_conflicts or not report["conflicts"]:
                 report["result"] = "conflict" if code_conflicts else "merge_failed"
                 raise RuntimeError("Upstream merge conflicts; the customization branch was not updated")
         # GITHUB_TOKEN cannot update workflow files. Automation stays locally owned;
         # upstream CI changes remain visible in the report for explicit review.
         base = git("merge-base", "HEAD", upstream).stdout.strip()
-        report["held_workflows"] = git("diff", "--name-only", base, upstream, "--", ".github/workflows").stdout.splitlines()
-        protected = git("diff", "--name-only", "HEAD", "--", ".github/workflows").stdout.splitlines()
-        if protected:
-            git("restore", "--source=HEAD", "--staged", "--worktree", "--", ".github/workflows")
+        report["held_workflows"] = git("diff", "--name-only", base, upstream, "--", ".github/workflows", ".github/release_policy").stdout.splitlines()
+        protected = git("diff", "--name-only", "HEAD", "--", ".github/workflows", ".github/release_policy").stdout.splitlines()
+        for directory in (".github/workflows", ".github/release_policy"):
+            if any(path.startswith(directory + "/") for path in protected):
+                git("restore", "--source=HEAD", "--staged", "--worktree", "--", directory)
         if args.validate:
             result = subprocess.run(
                 [sys.executable, "tests/check_translations.py", "--fresh"], cwd=repo,
