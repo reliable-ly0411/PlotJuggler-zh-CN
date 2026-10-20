@@ -33,14 +33,16 @@ jobs:
           python3 scripts/check_branch_name.py "$SOURCE_BRANCH"
           python3 -m unittest discover -s .github/release_policy -p "test_*.py" -v
           python3 tests/test_branch_policy.py -v
+          python3 tests/test_release_assets.py -v
+          python3 tests/test_release_versions.py -v
           python3 tests/test_check_translations_4x.py -v
           python3 tests/check_translations_4x.py --catalog-only
           python3 tests/check_localization_provenance.py
           git diff --check
 
   native:
-    # A topic PR already builds its head. Avoid a second cold dependency build
-    # for the same topic push; integrated branches and manual runs still build.
+    # Ordinary pushes and PRs run source checks only. Native builds require
+    # an explicit manual dispatch or a new dedicated manual-build ref.
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.created && startsWith(github.ref_name, 'zh-CN-4.x-ci/manual-build-'))
     needs: source-checks
     name: Native (${{ matrix.os }})
