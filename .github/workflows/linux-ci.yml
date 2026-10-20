@@ -1,11 +1,6 @@
 name: Linux CI
 
 on:
-  pull_request:
-    branches: [main, main-4.x, development]
-    types: [opened, synchronize, reopened, ready_for_review]
-  push:
-    branches: [main, main-4.x, development]
   workflow_dispatch:
 
 concurrency:

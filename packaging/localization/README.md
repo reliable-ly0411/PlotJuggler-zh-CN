@@ -60,6 +60,27 @@ commit, run URL, exact test outcomes and final public asset sizes/SHA-256. Ordin
 merges preserve the candidate as an ancestor; a release tag anchors the exact
 accepted source commit, not an untested version bump. Old tags/assets stay intact.
 
+`release_assets.py` verifies each original candidate against its acceptance
+manifest before making publication-only copies. It maps `~` to `.` in download
+filenames, so the Debian download uses `plotjuggler4_4.0.0.zh.1.rc.1-1_amd64-zh-CN.deb`
+while its internal version remains `4.0.0~zh.1~rc.1-1`. No package is rebuilt or
+modified. Candidate manifests/checksums keep their original names; the public
+checksum list and release-note table are generated from the mapped copies.
+Only ASCII letters, digits, dots, underscores and hyphens are accepted, with
+alphanumeric ends; unknown characters and name collisions fail closed.
+
+[GitHub documents that release uploads can rename filenames](https://docs.github.com/en/rest/releases/assets#upload-a-release-asset).
+The publisher captures each upload response and checks the actual draft asset
+names, unique upload IDs, sizes, uploaded state and server SHA-256 digests,
+including `SHA256SUMS.txt`. It re-downloads all draft assets and verifies their
+bytes and checksum list before changing `draft` to false, then repeats the
+checks after publication. Unexpected renaming or missing digests stop the job
+with the draft unpublished; it never rewrites the checksum list to accept an
+unexpected upload, deletes assets, or retries with clobber. A failed draft/tag
+requires explicit review, not automatic reuse. Evidence stays in CI artifacts,
+not in the Release download area. Run `python3 tests/test_release_assets.py -v`
+for the offline regression, also required by the source-checks job.
+
 The explicit publication entry is the `zh-CN-4.x-ci/publish-accepted-v4-0-0-zh-1-rc-1-run-RUN-attempt-ATTEMPT` ref. Only
 create it for the first time to the accepted source after final screenshot review
 and ordinary stable promotion. Its push is the visual-review confirmation; it

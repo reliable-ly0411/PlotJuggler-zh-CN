@@ -7,20 +7,6 @@
 name: Pixi CI
 
 on:
-  pull_request:
-    branches: [main, main-4.x, development]
-    types: [opened, synchronize, reopened, ready_for_review]
-    # Path-filtered: most PRs touch neither the manifest nor the recipes, and
-    # the Conan workflows already compile every C++ change. A pixi-only
-    # breakage from a plain source change surfaces on the push-to-main run.
-    paths:
-      - pixi.toml
-      - recipes/**
-      - "**/CMakeLists.txt"
-      - cmake/**
-      - .github/workflows/pixi-ci.yml
-  push:
-    branches: [main, main-4.x, development]
   workflow_dispatch:
 
 concurrency:

@@ -41,9 +41,6 @@ name: Release Linux packages
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
 
 permissions:
   contents: write   # softprops/action-gh-release needs write to create/update the Release
@@ -55,6 +52,7 @@ concurrency:
 
 jobs:
   appimage:
+    if: github.repository == 'PlotJuggler/PlotJuggler'
     runs-on: depot-ubuntu-22.04-4
     timeout-minutes: 240
     outputs:
@@ -454,6 +452,7 @@ jobs:
           if-no-files-found: error
 
   smoke:
+    if: github.repository == 'PlotJuggler/PlotJuggler'
     # Install the .deb on bare distro images and RUN it, then run the AppImage
     # in the same container. `apt install` succeeding only proves the declared
     # Depends resolve; a too-new glibc or libstdc++ version symbol is burned
@@ -508,7 +507,7 @@ jobs:
     # Gated on smoke: unlike the AppImage, the .deb is only attached to the
     # Release once it has been proven to install and run on a clean machine.
     needs: [appimage, smoke]
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.repository == 'PlotJuggler/PlotJuggler' && (startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -540,7 +539,7 @@ jobs:
     # it). A fork, or this repo before the bucket exists, therefore releases
     # exactly as it did before.
     needs: [appimage, smoke, deb-release]
-    if: startsWith(github.ref, 'refs/tags/') && vars.PJ4_APT_PUBLIC_URL != ''
+    if: github.repository == 'PlotJuggler/PlotJuggler' && (startsWith(github.ref, 'refs/tags/') && vars.PJ4_APT_PUBLIC_URL != '')
     runs-on: ubuntu-latest
     # Each publish rebuilds the index from the stanza store; two tags publishing
     # at once would each drop the other's version, so they queue.
