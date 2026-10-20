@@ -38,6 +38,8 @@ else()
     set(APBIN_PLUGIN_OUTPUT_DIRECTORY "" CACHE PATH "" FORCE)
 endif()
 add_subdirectory("${_pj_apbin_dir}/sdk4" "${CMAKE_BINARY_DIR}/ardupilot-dataflash")
+file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/ardupilot-package-path-$<CONFIG>.txt"
+    CONTENT "$<TARGET_FILE:ardupilot_source_plugin>\n")
 if(TARGET pj_app)
     add_dependencies(pj_app ardupilot_source_plugin)
 endif()

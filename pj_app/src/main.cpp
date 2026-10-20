@@ -5,6 +5,7 @@
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 #include <QDateTime>
+#include <QFile>
 #include <QFont>
 #include <QFontDatabase>
 #include <QGuiApplication>
@@ -280,6 +281,14 @@ int main(int argc, char* argv[]) {
   if (QFontDatabase::addApplicationFont(u":/resources/fonts/NotoSans/NotoSans-Variable.ttf"_s) < 0) {
     qWarning("Failed to load bundled Noto Sans font");
   }
+  // Native release bundles carry a separately licensed CJK fallback, so Chinese
+  // remains legible on systems without an installed Chinese font collection.
+#ifndef PJ_TARGET_WASM
+  const QString cjk_font = QCoreApplication::applicationDirPath() + u"/fonts/NotoSansCJKsc-Regular.otf"_s;
+  if (QFile::exists(cjk_font) && QFontDatabase::addApplicationFont(cjk_font) < 0) {
+    qWarning("Failed to load bundled CJK fallback font");
+  }
+#endif
   QFont app_font = QApplication::font();
   app_font.setFamily(u"Noto Sans"_s);
   QApplication::setFont(app_font);

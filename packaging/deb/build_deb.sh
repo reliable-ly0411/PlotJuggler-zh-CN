@@ -43,6 +43,7 @@ APPDIR="${ROOT}/build/AppDir"
 BINARY_OVERRIDE=""
 OUTPUT_DIR="${SCRIPT_DIR}"
 COMMIT_HASH=""
+NAME_SUFFIX=""
 
 PACKAGE="plotjuggler4"
 # Install prefix inside the package. Bundled libraries make /opt the correct
@@ -58,6 +59,7 @@ while [[ $# -gt 0 ]]; do
     --appdir)      APPDIR="$(realpath -m -- "${2:?--appdir needs a path}")"; shift 2 ;;
     --binary)      BINARY_OVERRIDE="$(realpath -m -- "${2:?--binary needs a path}")"; shift 2 ;;
     --output-dir)  OUTPUT_DIR="$(realpath -m -- "${2:?--output-dir needs a path}")"; shift 2 ;;
+    --name-suffix) NAME_SUFFIX="${2:?--name-suffix needs a value}"; shift 2 ;;
     --commit-hash) COMMIT_HASH="${2:?--commit-hash needs a value}"; shift 2 ;;
     -h | --help)   usage; exit 0 ;;
     *) echo "build_deb: unknown argument: $1" >&2; usage >&2; exit 2 ;;
@@ -80,6 +82,9 @@ command -v dpkg-deb >/dev/null           || { echo "ERROR: dpkg-deb required (ap
 VERSION="${PJ_VERSION:-${PJ_APP_VERSION}}"
 VERSION="${VERSION#v}"
 VERSION="${VERSION#V}"
+# Preserve SemVer prerelease ordering in dpkg.
+VERSION="${VERSION/-zh./~zh.}"
+VERSION="${VERSION/.rc./~rc.}"
 [[ -n "${COMMIT_HASH}" ]] && VERSION="${VERSION}~${COMMIT_HASH}"
 DEB_VERSION="${VERSION}-1"
 # dpkg's own grammar for an upstream version, enforced here so a malformed tag
@@ -156,6 +161,14 @@ if [[ -d "${APPDIR}/usr/share/doc" ]]; then
   mkdir -p "${PREFIX_DIR}/share"
   cp -a "${APPDIR}/usr/share/doc" "${PREFIX_DIR}/share/doc"
 fi
+
+# Keep independently licensed native plugins and fonts with the private prefix.
+for extra in licenses plotjuggler4; do
+  if [[ -d "${APPDIR}/usr/share/${extra}" ]]; then
+    mkdir -p "${PREFIX_DIR}/share"
+    cp -a "${APPDIR}/usr/share/${extra}" "${PREFIX_DIR}/share/"
+  fi
+done
 
 # Only these three cross into the system tree — nothing else owns them.
 cp -a "${APPDIR}/usr/share/applications/plotjuggler4.desktop" \
@@ -315,7 +328,7 @@ chmod 0644 "${STAGE}/DEBIAN/md5sums"
 #     in the field, and this package is downloaded and installed by hand.
 # ---------------------------------------------------------------------------
 mkdir -p "${OUTPUT_DIR}"
-OUTPUT="${OUTPUT_DIR}/${PACKAGE}_${DEB_VERSION}_${DEB_ARCH}.deb"
+OUTPUT="${OUTPUT_DIR}/${PACKAGE}_${DEB_VERSION}_${DEB_ARCH}${NAME_SUFFIX}.deb"
 dpkg-deb --root-owner-group -Zxz --build "${STAGE}" "${OUTPUT}" >/dev/null
 
 echo ""

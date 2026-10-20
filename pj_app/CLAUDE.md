@@ -219,3 +219,11 @@ confirmation, floating through the window, a busy takeover folds into a
 transient tab. Replacing another busy takeover folds that panel before showing
 the incoming one. If docking cannot claim the chart slot, the live panel
 remains available as a tab.
+
+## Native package font fallback
+
+Native packages may include `bin/fonts/NotoSansCJKsc-Regular.otf`. `main.cpp` registers
+this separately licensed fallback before constructing the shell, keeping the existing
+Noto Sans UI family while allowing Chinese text on hosts without system CJK fonts.
+The native release packaging copies the pinned font and its OFL text together;
+source builds and WebAssembly do not download it at application startup.
