@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: zh-4x-ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   source-checks:
@@ -31,6 +31,7 @@ jobs:
           SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           python3 scripts/check_branch_name.py "$SOURCE_BRANCH"
+          python3 -m unittest discover -s .github/release_policy -p "test_*.py" -v
           python3 tests/test_branch_policy.py -v
           python3 tests/test_check_translations_4x.py -v
           python3 tests/check_translations_4x.py --catalog-only
@@ -40,7 +41,7 @@ jobs:
   native:
     # A topic PR already builds its head. Avoid a second cold dependency build
     # for the same topic push; integrated branches and manual runs still build.
-    if: github.event_name != 'push' || github.ref_name == 'zh-CN-4.x' || github.ref_name == 'zh-CN-4.x-dev'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.created && startsWith(github.ref_name, 'zh-CN-4.x-ci/manual-build-'))
     needs: source-checks
     name: Native (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
