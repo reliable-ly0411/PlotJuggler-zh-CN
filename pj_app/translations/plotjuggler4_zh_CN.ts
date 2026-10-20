@@ -4644,6 +4644,61 @@ Details: %1</source>
     </message>
 </context>
 <context>
+    <name>QAbstractFileIconProvider</name>
+    <message>
+        <location filename="../src/AppLanguage.cpp" line="+72"/>
+        <source>Drive</source>
+        <translation>驱动器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>File</source>
+        <translation>文件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unknown</source>
+        <translation>未知</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>File Folder</source>
+        <comment>Match Windows Explorer</comment>
+        <translation>文件夹</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Folder</source>
+        <comment>All other platforms</comment>
+        <translation>文件夹</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Alias</source>
+        <comment>macOS Finder</comment>
+        <translation>替身</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shortcut</source>
+        <comment>All other platforms</comment>
+        <translation>快捷方式</translation>
+    </message>
+</context>
+<context>
+    <name>QFileDialog</name>
+    <message>
+        <location line="-13"/>
+        <source>&amp;Look in:</source>
+        <translation>查找范围(&amp;L)：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Files of &amp;type:</source>
+        <translation>文件类型(&amp;T)：</translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <location filename="../src/DialogPresenter.cpp" line="+76"/>
@@ -4896,7 +4951,7 @@ Details: %1</source>
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../src/AppLanguage.cpp" line="+55"/>
+        <location filename="../src/AppLanguage.cpp" line="-16"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>

@@ -62,3 +62,23 @@ AppLanguage::~AppLanguage() {
     QT_TRANSLATE_NOOP("QPlatformTheme", "Help"),     QT_TRANSLATE_NOOP("QPlatformTheme", "Apply"),
     QT_TRANSLATE_NOOP("QPlatformTheme", "Reset"),    QT_TRANSLATE_NOOP("QPlatformTheme", "Restore Defaults"),
 };
+
+// Qt 6.11.1's qtbase_zh_CN still carries the older QFileDialog labels and
+// file-icon context. Keep the current runtime keys, including accelerators
+// and platform disambiguation, in the application catalog as a small override.
+[[maybe_unused]] static const char* const kQtFileDialogKeys[] = {
+    QT_TRANSLATE_NOOP("QFileDialog", "&Look in:"),
+    QT_TRANSLATE_NOOP("QFileDialog", "Files of &type:"),
+    QT_TRANSLATE_NOOP("QAbstractFileIconProvider", "Drive"),
+    QT_TRANSLATE_NOOP("QAbstractFileIconProvider", "File"),
+    QT_TRANSLATE_NOOP("QAbstractFileIconProvider", "Unknown"),
+};
+[[maybe_unused]] static const struct {
+  const char* source;
+  const char* comment;
+} kQtFileIconProviderKeys[] = {
+    QT_TRANSLATE_NOOP3("QAbstractFileIconProvider", "File Folder", "Match Windows Explorer"),
+    QT_TRANSLATE_NOOP3("QAbstractFileIconProvider", "Folder", "All other platforms"),
+    QT_TRANSLATE_NOOP3("QAbstractFileIconProvider", "Alias", "macOS Finder"),
+    QT_TRANSLATE_NOOP3("QAbstractFileIconProvider", "Shortcut", "All other platforms"),
+};

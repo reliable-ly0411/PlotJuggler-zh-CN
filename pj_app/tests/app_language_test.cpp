@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+#include <QByteArray>
 #include <QCoreApplication>
 #include <QFile>
 #include <QLocale>
@@ -77,6 +78,48 @@ class AppLanguageTest : public QObject {
     QVERIFY(!title.isEmpty());
     QVERIFY(title != "Preferences"_L1);
     QCOMPARE(QCoreApplication::translate("QPlatformTheme", "Cancel"), u"取消"_s);
+  }
+
+  void embeddedCatalogTranslatesCurrentQtFileDialogKeys_data() {
+    QTest::addColumn<QByteArray>("context");
+    QTest::addColumn<QByteArray>("source");
+    QTest::addColumn<QByteArray>("comment");
+    QTest::addColumn<QString>("expected");
+    QTest::newRow("QFileDialog-0") << QByteArray("QFileDialog") << QByteArray("&Look in:") << QByteArray("")
+                                   << u"查找范围(&L)："_s;
+    QTest::newRow("QFileDialog-1") << QByteArray("QFileDialog") << QByteArray("Files of &type:") << QByteArray("")
+                                   << u"文件类型(&T)："_s;
+    QTest::newRow("QAbstractFileIconProvider-2")
+        << QByteArray("QAbstractFileIconProvider") << QByteArray("Drive") << QByteArray("") << u"驱动器"_s;
+    QTest::newRow("QAbstractFileIconProvider-3")
+        << QByteArray("QAbstractFileIconProvider") << QByteArray("File") << QByteArray("") << u"文件"_s;
+    QTest::newRow("QAbstractFileIconProvider-4")
+        << QByteArray("QAbstractFileIconProvider") << QByteArray("Unknown") << QByteArray("") << u"未知"_s;
+    QTest::newRow("QAbstractFileIconProvider-5") << QByteArray("QAbstractFileIconProvider") << QByteArray("File Folder")
+                                                 << QByteArray("Match Windows Explorer") << u"文件夹"_s;
+    QTest::newRow("QAbstractFileIconProvider-6") << QByteArray("QAbstractFileIconProvider") << QByteArray("Folder")
+                                                 << QByteArray("All other platforms") << u"文件夹"_s;
+    QTest::newRow("QAbstractFileIconProvider-7")
+        << QByteArray("QAbstractFileIconProvider") << QByteArray("Alias") << QByteArray("macOS Finder") << u"替身"_s;
+    QTest::newRow("QAbstractFileIconProvider-8") << QByteArray("QAbstractFileIconProvider") << QByteArray("Shortcut")
+                                                 << QByteArray("All other platforms") << u"快捷方式"_s;
+  }
+
+  void embeddedCatalogTranslatesCurrentQtFileDialogKeys() {
+    QFETCH(QByteArray, context);
+    QFETCH(QByteArray, source);
+    QFETCH(QByteArray, comment);
+    QFETCH(QString, expected);
+    const char* disambiguation = comment.isEmpty() ? nullptr : comment.constData();
+    {
+      const PJ::AppLanguage chinese(*QCoreApplication::instance(), u"zh_CN"_s);
+      QVERIFY(chinese.catalogLoaded());
+      QCOMPARE(QCoreApplication::translate(context.constData(), source.constData(), disambiguation), expected);
+    }
+    const PJ::AppLanguage english(*QCoreApplication::instance(), u"en_US"_s);
+    QCOMPARE(
+        QCoreApplication::translate(context.constData(), source.constData(), disambiguation),
+        QString::fromUtf8(source));
   }
 
   void englishUsesSourceTextAndDoesNotOverwriteThePreference() {
