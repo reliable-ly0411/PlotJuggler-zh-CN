@@ -349,6 +349,8 @@ if(PJ4_BUILD_APP)
     add_subdirectory(pj_app)
 endif()
 
+include(cmake/PjArduPilotPlugin.cmake)
+
 # External GPL render helper (separate executable; PlotJuggler links none of it).
 # Opt-in (PJ_BUILD_RASTER_HELPER, off by default) and only when the vendored
 # engine source is present.

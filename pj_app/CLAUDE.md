@@ -135,6 +135,15 @@ the trust bootstrap, cache purge, the headless flow and its diagnostic ids — i
 
 ## Per-dataset load progress (curve tree)
 
+`FileLoader` publishes every successful or kept-partial terminal flush through
+`SessionManager::notifyIngest(..., live=false)`, independently of whether the
+plugin reported progress or began an ingest token. Single-instance publication
+follows the pre-catalog commit seam and load-context teardown, before
+`fileLoaded`; fan-out entry publication is queued before its ingest terminal
+and the load's `loadFinished`/`queueDrained`, so a re-entrant shutdown never
+destroys the executing coroutine frame. Failed/discarded replacements use
+`RefillGuard`'s existing restored-data publication instead.
+
 `wireIngestProgress()` (`IngestProgressWiring.{h,cpp}`) is the single definition of the connections between the three pieces below — controller attach, dataset-path resolver, `progressUpdated`/`rowKeyChanged` into the panel, and the cancel route back with its token-resolution, staleness and cancellability checks. `MainWindow` is its caller, so tests and tooling that wire through it exercise the app's real connections instead of a copy.
 
 The row itself carries the keep-or-discard choice (✕ keeps what arrived, bin discards it), so the shell acts on the `keep_partial` flag directly and does **not** prompt: `requestCancel(token, keep_partial)` and nothing else. Honouring the flag is the **producer's** job — `FileLoader` latches it into `cancel_mode_` (1 = keep, 2 = discard) for a whole-load stop, or into a slot owned by that fan-out entry's own loop iteration for a row stop, so a row can only ever stop the entry the user aimed at. Keep commits this load's partial data (on a reload that means the partial refill replaces the prior data). Discard means **as if this load had never run**, so what it leaves behind is whatever preceded it: a first-load discard real-deletes the dataset it created, while a **reload-discard rolls back** to the pre-reload data (refill-guard rollback + `TransformService::abortReplacingLoad`, which with the ingest tap active is a staging pointer reset and reads nothing back from the store); Toolbox imports forward the plugin's own `cancellable` declaration and register as `IngestStop::kStopOnly` (their ABI has no rollback), so their rows offer a live ✕ with the bin drawn greyed and inert; `HeadlessDescriptorProviderSession` registers `cancellable=false` on purpose (no UI to stop from). The three-button keep/discard prompt survives only on the title-bar strip path, whose single stop button cannot express the choice.
@@ -219,3 +228,11 @@ confirmation, floating through the window, a busy takeover folds into a
 transient tab. Replacing another busy takeover folds that panel before showing
 the incoming one. If docking cannot claim the chart slot, the live panel
 remains available as a tab.
+
+## Native package font fallback
+
+Native packages may include `bin/fonts/NotoSansCJKsc-Regular.otf`. `main.cpp` registers
+this separately licensed fallback before constructing the shell, keeping the existing
+Noto Sans UI family while allowing Chinese text on hosts without system CJK fonts.
+The native release packaging copies the pinned font and its OFL text together;
+source builds and WebAssembly do not download it at application startup.

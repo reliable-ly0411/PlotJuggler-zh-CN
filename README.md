@@ -1,3 +1,8 @@
+> **简体中文 4.x 开发线**：默认中文界面，可在首选项切换为英文。
+> 当前为 `4.0.0-zh.1.rc.1` 开发版本；构建方法、覆盖范围及已知限制见
+> [汉化开发说明](docs/localization/README.zh-CN.md)，分支流程见
+> [分支与历史规范](docs/BRANCHING.zh-CN.md)。
+
 ![](docs/plotjuggler_banner.svg)
 
 

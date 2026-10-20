@@ -59,8 +59,8 @@
   Registry platform key. The x64 Windows installer uses windows-x86_64.
 
 .PARAMETER ConanHome
-  Conan 2 cache root (default: %USERPROFILE%\.conan2). Source of the FFmpeg /
-  CPython / other shared runtime DLLs that the build linked against.
+  Legacy cache-root diagnostic label. Runtime DLL selection is restricted to
+  the active host nodes in BuildDir/conan-graph.json.
 
 .PARAMETER Version
   Installer version string, also used in the output file name. Default reads
@@ -127,7 +127,10 @@ param(
   [string]$StageDir   = "",
   [switch]$CleanReleaseName,
   [string]$UpdateUrl  = "",
-  [string]$RepoOutDir = ""
+  [string]$RepoOutDir = "",
+  [string]$ExtraPrefix = "",
+  [string]$NameSuffix = "",
+  [string]$PackageVersion = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -282,15 +285,6 @@ function Read-PluginRegistry([string]$source) {
   }
 }
 
-function Convert-Semver([string]$value, [string]$label) {
-  $numeric = ($value -split '[-+]', 2)[0]
-  try {
-    return [System.Version]::Parse($numeric)
-  } catch {
-    Die "$label is not a numeric semantic version: '$value'"
-  }
-}
-
 function Download-RegistryPlugins {
   Info "fetching plugin registry: $PluginRegistryUrl"
   $registry = Read-PluginRegistry $PluginRegistryUrl
@@ -381,14 +375,8 @@ function Download-RegistryPlugins {
     if ([string]$packageManifest.version -ne $extensionVersion) {
       Die "plugin '$id' archive version '$($packageManifest.version)' does not match registry version '$extensionVersion'"
     }
-    $minimumHostVersion = [string]$packageManifest.min_plotjuggler_version
-    if ($minimumHostVersion) {
-      $minimumParsed = Convert-Semver $minimumHostVersion "plugin '$id' minimum PlotJuggler version"
-      $hostParsed = Convert-Semver $Version "installer version"
-      if ($minimumParsed -gt $hostParsed) {
-        Die "plugin '$id' requires PlotJuggler $minimumHostVersion, but this installer is $Version"
-      }
-    }
+    # Admission follows the host's SDK/ABI contract, not the deprecated app
+    # display-version hint. The staged executable validates every plugin below.
     $resolvedPluginVersions[$id] = $extensionVersion
     Info "staged plugin: $id ($($downloadedDlls.Count) DLL(s))"
   }
@@ -405,6 +393,20 @@ if ($SkipPlugins) {
   $pluginDlls = @(Download-RegistryPlugins)
   Info "staged $($pluginDlls.Count) plugin DLL(s) from $($PluginIds.Count) registry extension(s)"
 }
+
+# Merge the pinned fork payload before validating the sealed runtime closure.
+if ($ExtraPrefix) {
+  if (-not (Test-Path -LiteralPath $ExtraPrefix -PathType Container)) { Die "extra prefix missing: $ExtraPrefix" }
+  Get-ChildItem -LiteralPath $ExtraPrefix -Force | Copy-Item -Destination $stageData -Recurse -Force
+  $extraManifest = Join-Path $stagePlugins "ardupilot-dataflash\manifest.json"
+  $m = Get-Content -LiteralPath $extraManifest -Raw | ConvertFrom-Json
+  if ($m.id -ne "ardupilot-dataflash") { Die "unexpected fork plugin id" }
+  $resolvedPluginVersions[$m.id] = [string]$m.version
+  $PluginIds += [string]$m.id
+  $pluginDlls = @(Get-ChildItem -LiteralPath $stagePlugins -Recurse -Filter "*_plugin.dll" | Sort-Object FullName)
+}
+if (-not $PackageVersion) { $PackageVersion = $Version }
+if ($PackageVersion -notmatch '^[0-9]+((\.|-)[0-9]+)*$') { Die "IFW requires a numeric PackageVersion" }
 
 # --- Qt deployment (Qt DLLs + Qt plugins + MSVC runtime) -------------------
 # windeployqt has to be run over the exe AND every plugin DLL: a plugin can
@@ -427,17 +429,34 @@ foreach ($d in $pluginDlls) {
   if ($LASTEXITCODE -ne 0) { Warn "windeployqt on $($d.Name) returned $LASTEXITCODE -- harmless if it is not a Qt-linked plugin." }
 }
 
+# App-local MSVC runtime avoids depending on a preinstalled redistributable.
+# VCToolsRedistDir is supplied by the selected official MSVC toolchain.
+$crt = Join-Path $env:VCToolsRedistDir "x64\Microsoft.VC143.CRT"
+if (-not (Test-Path $crt)) { Die "MSVC app-local runtime not found: $crt" }
+Get-ChildItem $crt -Filter "*.dll" | Copy-Item -Destination $stageBin -Force
+foreach ($name in @("msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll")) {
+  if (-not (Test-Path (Join-Path $stageBin $name))) { Die "missing app-local MSVC runtime: $name" }
+}
+
 # --- copy non-Qt runtime DLLs from the Conan cache -------------------------
 # windeployqt only knows about Qt; Conan-shared deps are copied by hand.
 #
-# Constrain the search to Conan 2 package "bin" folders: both the downloaded
+# Constrain the active graph to Conan 2 package "bin" folders: both the downloaded
 # layout (~/.conan2/p/<hash>/p/bin) and the built-from-source layout
 # (~/.conan2/p/b/<hash>/p/bin, note the extra "b" segment). WITHOUT that
 # constraint the recursive scan also picks up copies under a package's build
 # tree (~/.conan2/p/b/<hash>/build/...), the "newest by mtime" may be one of
 # those, and the sibling DLL copy pulls unrelated intermediates.
+# Only package directories in this build's resolved graph are eligible.
+$graphPath = Join-Path $BuildDir "conan-graph.json"
+$graph = Get-Content -LiteralPath $graphPath -Raw | ConvertFrom-Json
+$runtimeDirs = @($graph.graph.nodes.PSObject.Properties.Value |
+  Where-Object { $_.package_folder -and $_.context -eq "host" } |
+  ForEach-Object { Join-Path $_.package_folder "bin" } |
+  Where-Object { Test-Path $_ } | Sort-Object -Unique)
+if ($runtimeDirs.Count -eq 0) { Die "No active package runtime directories in $graphPath" }
 function Copy-ConanRuntime([string]$probeDll, [string]$label, [switch]$Required) {
-  $hit = Get-ChildItem $ConanHome -Recurse -Filter $probeDll -ErrorAction SilentlyContinue |
+  $hit = Get-ChildItem $runtimeDirs -Filter $probeDll -ErrorAction SilentlyContinue |
          Where-Object { $_.FullName -match '\\p\\(?:b\\)?[^\\]+\\p\\bin\\' } |
          Sort-Object LastWriteTime -Descending | Select-Object -First 1
   if (-not $hit) {
@@ -463,7 +482,7 @@ Copy-ConanRuntime "mcap*.dll"    "mcap"
 # initialise. Copy Lib/, DLLs/ and any python3XX._pth from the same Conan
 # package root as the python3XX.dll we just staged.
 function Copy-CPythonStdlib {
-  $pyDll = Get-ChildItem $ConanHome -Recurse -Filter "python3*.dll" -ErrorAction SilentlyContinue |
+  $pyDll = Get-ChildItem $runtimeDirs -Filter "python312.dll" -ErrorAction SilentlyContinue |
            Where-Object { $_.FullName -match '\\p\\(?:b\\)?[^\\]+\\p\\bin\\' } |
            Sort-Object LastWriteTime -Descending | Select-Object -First 1
   if (-not $pyDll) { Warn "CPython DLL missing -- stdlib bundling skipped."; return }
@@ -522,7 +541,7 @@ if ($pluginDlls.Count -gt 0) {
 # look modified" trap).
 function Render-Template([string]$src, [string]$dst) {
   (Get-Content -Raw $src) `
-    -replace '__PJ_VERSION__', $Version `
+    -replace '__PJ_VERSION__', $PackageVersion `
     -replace '__PJ_RELEASE_DATE__', (Get-Date -Format 'yyyy-MM-dd') |
     Set-Content $dst
 }
@@ -560,12 +579,16 @@ foreach ($f in Get-ChildItem (Join-Path $pkgSrc "meta") -File | Where-Object { $
   Copy-Item $f.FullName $stageMeta -Force
 }
 
+if ($ExtraPrefix) {
+  Copy-Item (Join-Path $stageData "share/licenses/Qt-LGPL.txt") (Join-Path $stageMeta "license_lgpl.txt") -Force
+}
+
 # --- build the installer ---------------------------------------------------
 if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Force -Path $OutDir | Out-Null }
 if ($CleanReleaseName) {
   # Tag releases: -Version is already the unique identifier, so name the
   # artifact to match the Linux AppImage's plain PlotJuggler-<version>-<arch>.
-  $outExe = Join-Path (Resolve-Path $OutDir) "PlotJuggler-$Version-Windows-x64.exe"
+  $outExe = Join-Path (Resolve-Path $OutDir) "PlotJuggler-$Version-Windows-x64$NameSuffix.exe"
 } else {
   # Dev/dispatch builds: stamp with the built commit's short hash so
   # otherwise-identical-looking artifacts stay distinguishable. Matches the
@@ -575,7 +598,7 @@ if ($CleanReleaseName) {
   $ErrorActionPreference = $prevEAP
   if (-not $shortHash) { Die "Could not resolve the built commit's hash in $repoRoot." }
   $shortHash = "$shortHash".Trim()
-  $outExe = Join-Path (Resolve-Path $OutDir) "PlotJuggler-$Version-Windows-x64.$shortHash.exe"
+  $outExe = Join-Path (Resolve-Path $OutDir) "PlotJuggler-$Version-Windows-x64.$shortHash$NameSuffix.exe"
 }
 Info "running binarycreator -> $outExe"
 & $binarycreator --offline-only -c (Join-Path $StageDir "config.xml") -p $stagePackages $outExe
@@ -598,7 +621,7 @@ if ($RepoOutDir) {
   if (-not (Test-Path $updatesXml)) { Die "repogen produced no Updates.xml in $repoAbs." }
   # The version in Updates.xml is what a maintenance tool compares against the
   # installed one; a mismatch here means nobody is ever offered the update.
-  if ((Get-Content -Raw $updatesXml) -notmatch [regex]::Escape("<Version>$Version</Version>")) {
+  if ((Get-Content -Raw $updatesXml) -notmatch [regex]::Escape("<Version>$PackageVersion</Version>")) {
     $found = (Select-String -Path $updatesXml -Pattern '<Version>.*?</Version>' -AllMatches).Matches.Value -join ", "
     Die "Updates.xml advertises [$found], not $Version."
   }

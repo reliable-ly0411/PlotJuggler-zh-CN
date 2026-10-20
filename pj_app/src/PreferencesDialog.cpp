@@ -6,6 +6,7 @@
 #include <QAbstractItemModel>
 #include <QBrush>
 #include <QColor>
+#include <QComboBox>
 #include <QDesktopServices>
 #include <QDir>
 #include <QFile>
@@ -14,6 +15,7 @@
 #include <QImage>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QLocale>
 #include <QNetworkAccessManager>
 #include <QNetworkInformation>
 #include <QNetworkReply>
@@ -30,6 +32,7 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
+#include "AppLanguage.h"
 #include "DebugMode.h"
 #include "MainWindow.h"
 #include "PreferencesNavRow.h"
@@ -223,8 +226,13 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
   ui_->scrubberFloatPrecision->setSingleStep(1);
   ui_->curveColorMode->setOptions(tr("global"), tr("per plot"));
   ui_->splashMode->setOptions(tr("memes"), tr("serious"));
+  // Endonyms stay recognizable in either interface language. The selection is
+  // the next launch's preference, even when --language overrides this session.
+  ui_->languageCombo->addItem(QLocale(u"zh_CN"_s).nativeLanguageName(), u"zh_CN"_s);
+  ui_->languageCombo->addItem(u"English"_s, u"en_US"_s);
   {
     QSettings settings;
+    ui_->languageCombo->setCurrentIndex(ui_->languageCombo->findData(AppLanguage::preferredLanguage(settings)));
     ui_->scrubberFloatPrecision->setValue(settings.value(u"Preferences::precision"_s, 3).toInt());
     ui_->curveColorMode->setSelectedIndex(settings.value(u"Preferences::curve_color_global"_s, true).toBool() ? 0 : 1);
     ui_->openglToggle->setChecked(
@@ -558,6 +566,7 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
       }
     }
     QSettings settings;
+    settings.setValue(AppLanguage::kPreferenceKey, ui_->languageCombo->currentData().toString());
     settings.setValue(u"Preferences::precision"_s, ui_->scrubberFloatPrecision->value());
     settings.setValue(u"Preferences::use_opengl"_s, ui_->openglToggle->isChecked());
     settings.setValue(MainWindow::kCustomTitleBarKey, ui_->customTitleBarToggle->isChecked());

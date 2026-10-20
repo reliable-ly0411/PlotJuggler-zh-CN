@@ -43,6 +43,7 @@ APPDIR="${ROOT}/build/AppDir"
 BINARY_OVERRIDE=""
 OUTPUT_DIR="${SCRIPT_DIR}"
 COMMIT_HASH=""
+NAME_SUFFIX=""
 
 PACKAGE="plotjuggler4"
 # Install prefix inside the package. Bundled libraries make /opt the correct
@@ -58,6 +59,7 @@ while [[ $# -gt 0 ]]; do
     --appdir)      APPDIR="$(realpath -m -- "${2:?--appdir needs a path}")"; shift 2 ;;
     --binary)      BINARY_OVERRIDE="$(realpath -m -- "${2:?--binary needs a path}")"; shift 2 ;;
     --output-dir)  OUTPUT_DIR="$(realpath -m -- "${2:?--output-dir needs a path}")"; shift 2 ;;
+    --name-suffix) NAME_SUFFIX="${2:?--name-suffix needs a value}"; shift 2 ;;
     --commit-hash) COMMIT_HASH="${2:?--commit-hash needs a value}"; shift 2 ;;
     -h | --help)   usage; exit 0 ;;
     *) echo "build_deb: unknown argument: $1" >&2; usage >&2; exit 2 ;;
@@ -80,6 +82,9 @@ command -v dpkg-deb >/dev/null           || { echo "ERROR: dpkg-deb required (ap
 VERSION="${PJ_VERSION:-${PJ_APP_VERSION}}"
 VERSION="${VERSION#v}"
 VERSION="${VERSION#V}"
+# Preserve SemVer prerelease ordering in dpkg.
+VERSION="${VERSION/-zh./~zh.}"
+VERSION="${VERSION/.rc./~rc.}"
 [[ -n "${COMMIT_HASH}" ]] && VERSION="${VERSION}~${COMMIT_HASH}"
 DEB_VERSION="${VERSION}-1"
 # dpkg's own grammar for an upstream version, enforced here so a malformed tag
@@ -113,6 +118,9 @@ declare -A SONAME_PKG=(
   # One package provides both ncursesw and panelw.
   [libncursesw.so.6]=libncursesw6   [libpanelw.so.6]=libncursesw6
   [libtinfo.so.6]=libtinfo6
+  # Embedded CPython readline extension; Jammy provides libreadline8,
+  # Noble provides the same SONAME through the time64 package.
+  [libreadline.so.8]="libreadline8 | libreadline8t64"
   # Needed by the bundled libgcrypt (jammy's libsystemd links it); libgpg-error
   # itself is on linuxdeploy's excludelist, so the system must provide it.
   [libgpg-error.so.0]=libgpg-error0
@@ -156,6 +164,14 @@ if [[ -d "${APPDIR}/usr/share/doc" ]]; then
   mkdir -p "${PREFIX_DIR}/share"
   cp -a "${APPDIR}/usr/share/doc" "${PREFIX_DIR}/share/doc"
 fi
+
+# Keep independently licensed native plugins and fonts with the private prefix.
+for extra in licenses plotjuggler4; do
+  if [[ -d "${APPDIR}/usr/share/${extra}" ]]; then
+    mkdir -p "${PREFIX_DIR}/share"
+    cp -a "${APPDIR}/usr/share/${extra}" "${PREFIX_DIR}/share/"
+  fi
+done
 
 # Only these three cross into the system tree — nothing else owns them.
 cp -a "${APPDIR}/usr/share/applications/plotjuggler4.desktop" \
@@ -259,10 +275,10 @@ fi
 # libc6 carries the glibc floor the builder container enforces; the rest are
 # unversioned because every one has been present and ABI-stable since 22.04.
 DEPENDS="libc6 (>= 2.35)"
-for pkg in $(printf '%s\n' "${!WANTED_PKGS[@]}" | LC_ALL=C sort); do
+while IFS= read -r pkg; do
   [[ "${pkg}" == "libc6" ]] && continue
   DEPENDS="${DEPENDS}, ${pkg}"
-done
+done < <(printf '%s\n' "${!WANTED_PKGS[@]}" | LC_ALL=C sort)
 # Non-ELF runtime requirements the DT_NEEDED scan structurally cannot see:
 # the wrapper points gRPC at the system CA bundle, and Qt TLS (marketplace
 # downloads, update check, telemetry) needs it too.
@@ -298,7 +314,7 @@ INSTALLED_SIZE="$(du -sk --exclude=DEBIAN "${STAGE}" | cut -f1)"
 sed -e "s|@PACKAGE@|${PACKAGE}|g" \
     -e "s|@VERSION@|${DEB_VERSION}|g" \
     -e "s|@ARCH@|${DEB_ARCH}|g" \
-    -e "s|@DEPENDS@|${DEPENDS}|g" \
+    -e "s#@DEPENDS@#${DEPENDS}#g" \
     -e "s|@INSTALLED_SIZE@|${INSTALLED_SIZE}|g" \
     "${SCRIPT_DIR}/control.in" > "${STAGE}/DEBIAN/control"
 
@@ -315,7 +331,7 @@ chmod 0644 "${STAGE}/DEBIAN/md5sums"
 #     in the field, and this package is downloaded and installed by hand.
 # ---------------------------------------------------------------------------
 mkdir -p "${OUTPUT_DIR}"
-OUTPUT="${OUTPUT_DIR}/${PACKAGE}_${DEB_VERSION}_${DEB_ARCH}.deb"
+OUTPUT="${OUTPUT_DIR}/${PACKAGE}_${DEB_VERSION}_${DEB_ARCH}${NAME_SUFFIX}.deb"
 dpkg-deb --root-owner-group -Zxz --build "${STAGE}" "${OUTPUT}" >/dev/null
 
 echo ""

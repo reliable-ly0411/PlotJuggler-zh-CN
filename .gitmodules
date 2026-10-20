@@ -5,3 +5,6 @@
 [submodule "3rdparty/doomgeneric"]
 	path = 3rdparty/doomgeneric
 	url = https://github.com/ozkl/doomgeneric.git
+[submodule "3rdparty/plotjuggler-apbin-plugins"]
+	path = 3rdparty/plotjuggler-apbin-plugins
+	url = https://github.com/reliable-ly0411/plotjuggler-apbin-plugins.git

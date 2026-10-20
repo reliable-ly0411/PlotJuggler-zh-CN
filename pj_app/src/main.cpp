@@ -5,6 +5,7 @@
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 #include <QDateTime>
+#include <QFile>
 #include <QFont>
 #include <QFontDatabase>
 #include <QGuiApplication>
@@ -12,6 +13,7 @@
 #include <QImage>
 #include <QPixmap>
 #include <QScreen>
+#include <QSettings>
 #include <QSplashScreen>
 #include <QThread>
 #include <QTimer>
@@ -33,6 +35,7 @@
 #include <string>
 #endif
 
+#include "AppLanguage.h"
 #include "BrowserPersistence.h"
 #include "DebugMode.h"
 #ifndef PJ_TARGET_WASM
@@ -41,6 +44,8 @@
 #include "KeySequence.h"
 #ifndef PJ_TARGET_WASM
 #include "LayoutExitWatch.h"
+#include "PlotStateDump.h"
+#include "pj_plotting/PlotWidget.h"
 #endif
 #include "MainWindow.h"
 #include "Splashscreen.h"
@@ -278,6 +283,14 @@ int main(int argc, char* argv[]) {
   if (QFontDatabase::addApplicationFont(u":/resources/fonts/NotoSans/NotoSans-Variable.ttf"_s) < 0) {
     qWarning("Failed to load bundled Noto Sans font");
   }
+  // Native release bundles carry a separately licensed CJK fallback, so Chinese
+  // remains legible on systems without an installed Chinese font collection.
+#ifndef PJ_TARGET_WASM
+  const QString cjk_font = QCoreApplication::applicationDirPath() + u"/fonts/NotoSansCJKsc-Regular.otf"_s;
+  if (QFile::exists(cjk_font) && QFontDatabase::addApplicationFont(cjk_font) < 0) {
+    qWarning("Failed to load bundled CJK fallback font");
+  }
+#endif
   QFont app_font = QApplication::font();
   app_font.setFamily(u"Noto Sans"_s);
   QApplication::setFont(app_font);
@@ -292,6 +305,11 @@ int main(int argc, char* argv[]) {
   parser.setApplicationDescription(u"PlotJuggler 4"_s);
   parser.addHelpOption();
   parser.addVersionOption();
+  const QCommandLineOption language_option(
+      u"language"_s,
+      QCoreApplication::translate("AppLanguage", "Interface language for this session (zh_CN or en_US)."),
+      u"language"_s);
+  parser.addOption(language_option);
   const QCommandLineOption test_data_option(
       u"test-data"_s, u"Populate the datastore with generated sin/cos samples."_s);
   parser.addOption(test_data_option);
@@ -356,6 +374,11 @@ int main(int argc, char* argv[]) {
       u"Write every diagnostic reported during this run to a JSON file on exit (full run, never truncated)."_s,
       u"json-path"_s);
   parser.addOption(dump_diagnostics_option);
+  const QCommandLineOption dump_plot_state_option(
+      u"dump-plot-state"_s,
+      u"With --exit-after-layout: write plotted sample counts, bounds and viewports at successful settlement."_s,
+      u"json-path"_s);
+  parser.addOption(dump_plot_state_option);
   const QCommandLineOption exit_after_layout_option(
       u"exit-after-layout"_s,
       QStringLiteral(
@@ -370,6 +393,14 @@ int main(int argc, char* argv[]) {
 #endif
   parser.process(app);
 
+  // The browser's settings boundary is already installed. Keep translators
+  // alive until every window is destroyed; a CLI override never changes the
+  // saved preference or the locale used to parse and format numeric data.
+  const QSettings language_settings;
+  const PJ::AppLanguage app_language(
+      app, parser.isSet(language_option) ? parser.value(language_option)
+                                         : PJ::AppLanguage::preferredLanguage(language_settings));
+
 #ifndef PJ_TARGET_WASM
   if (parser.isSet(validate_plugins_option)) {
     return validatePlugins(parser.value(validate_plugins_option), parser.values(expect_plugin_option));
@@ -380,6 +411,10 @@ int main(int argc, char* argv[]) {
   // errors exit 64 (EX_USAGE, the sysexits convention) so scripts can always
   // distinguish them from the run's own codes (1 = load failed, 2 = timeout).
   constexpr int kExitUsage = 64;
+  if (parser.isSet(dump_plot_state_option) && !parser.isSet(exit_after_layout_option)) {
+    std::fprintf(stderr, "[dump-plot-state] --dump-plot-state requires --exit-after-layout\n");
+    return kExitUsage;
+  }
   int exit_after_layout_timeout_s = 0;
   if (parser.isSet(exit_after_layout_option)) {
     if (!parser.isSet(layout_option)) {
@@ -522,11 +557,17 @@ int main(int argc, char* argv[]) {
   // exit code for that).
   if (parser.isSet(exit_after_layout_option)) {
     const int timeout_s = exit_after_layout_timeout_s;
+    const QString plot_state_path = parser.value(dump_plot_state_option);
     new PJ::LayoutExitWatch(
         window, std::chrono::seconds(timeout_s),
-        [timeout_s](int code) {
+        [timeout_s, plot_state_path, &window](int code) {
           if (code == PJ::LayoutExitWatch::kExitCodeSuccess) {
             std::printf("[exit-after-layout] layout restore settled: success\n");
+            if (!plot_state_path.isEmpty() &&
+                !PJ::writePlotStateDump(window.findChildren<PJ::PlotWidget*>(), plot_state_path)) {
+              std::fprintf(stderr, "[dump-plot-state] write FAILED: %s\n", qPrintable(plot_state_path));
+              code = EXIT_FAILURE;
+            }
           } else if (code == PJ::LayoutExitWatch::kExitCodeLoadFailed) {
             std::fprintf(stderr, "[exit-after-layout] layout load FAILED\n");
           } else {

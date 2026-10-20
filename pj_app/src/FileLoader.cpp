@@ -648,9 +648,12 @@ void openScrollableMessageDialog(
     const char* role;
   };
   const BtnSpec specs[] = {
-      {PJ_MSG_BTN_OK, QT_TR_NOOP("OK"), "primary"},      {PJ_MSG_BTN_YES, QT_TR_NOOP("Yes"), "primary"},
-      {PJ_MSG_BTN_NO, QT_TR_NOOP("No"), "neutral"},      {PJ_MSG_BTN_CONTINUE, QT_TR_NOOP("Continue"), "primary"},
-      {PJ_MSG_BTN_ABORT, QT_TR_NOOP("Abort"), "cancel"}, {PJ_MSG_BTN_CANCEL, QT_TR_NOOP("Cancel"), "cancel"},
+      {PJ_MSG_BTN_OK, QT_TRANSLATE_NOOP("QObject", "OK"), "primary"},
+      {PJ_MSG_BTN_YES, QT_TRANSLATE_NOOP("QObject", "Yes"), "primary"},
+      {PJ_MSG_BTN_NO, QT_TRANSLATE_NOOP("QObject", "No"), "neutral"},
+      {PJ_MSG_BTN_CONTINUE, QT_TRANSLATE_NOOP("QObject", "Continue"), "primary"},
+      {PJ_MSG_BTN_ABORT, QT_TRANSLATE_NOOP("QObject", "Abort"), "cancel"},
+      {PJ_MSG_BTN_CANCEL, QT_TRANSLATE_NOOP("QObject", "Cancel"), "cancel"},
   };
   // Fall back to a lone OK when the plugin passed no button we render
   // (mirrors the QMessageBox path in the caller); specs[0] is that OK entry.
@@ -1096,7 +1099,8 @@ void FileLoader::loadFromBrowserPicker(QWidget* dialog_parent, LoadHints hints) 
           return;  // loader destroyed, or picker cancelled.
         }
         if (!staged.input.has_value()) {
-          const QString reason = staged.error.isEmpty() ? self->tr("Could not stage the selected file.") : staged.error;
+          const QString reason =
+              staged.error.isEmpty() ? FileLoader::tr("Could not stage the selected file.") : staged.error;
           qCWarning(lcFileLoader).noquote() << reason;
           self->reportLoadWarning(guarded_parent.data(), reason);
           emit self->fileLoadFailed(staged.browser_name, reason);
@@ -1967,6 +1971,22 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
         capture_loader_metadata();
       }
 
+      if (outcome == EntryOutcome::kCompleted || outcome == EntryOutcome::kKept) {
+        // Publish the final flush even when the producer never sent a progress
+        // tick. Queue before the entry's terminal: a synchronous observer may
+        // shut down the loader, which must only destroy a suspended/done frame.
+        QMetaObject::invokeMethod(
+            this,
+            [this, fanout_generation, iter_dataset_id]() {
+              if (fanout_generation != load_generation_) {
+                return;
+              }
+              const auto ids = session_.dataEngine().listTopics(iter_dataset_id);
+              session_.notifyIngest(QVector<TopicId>(ids.begin(), ids.end()), /*live=*/false);
+            },
+            Qt::QueuedConnection);
+      }
+
       const IngestOutcome ingest_outcome =
           outcome == EntryOutcome::kCompleted
               ? IngestOutcome::kCompleted
@@ -2399,6 +2419,11 @@ void FileLoader::onWorkerFinished(std::uint64_t generation) {
   if (ingest_token.id != 0) {
     session_.endIngest(ingest_token, ingest_outcome);
   }
+  // Publication/terminal observers may shut down and immediately reuse this
+  // loader. The completed generation must not reset its successor's state.
+  if (generation != load_generation_) {
+    return;
+  }
   cancel_mode_.store(0);
   active_load_ = false;
   startNext();
@@ -2556,6 +2581,13 @@ void FileLoader::finishLoadOnGui(bool fully_loaded) {
   // post-import cold-reader state rather than borrowing either load context.
   probeColdObjectFetch(session_.objectStore(), dataset_id);
 #endif
+  // The plugin's terminal flush writes straight to DataEngine. Publish every
+  // surviving topic after commit/catalog finalization so already-bound adapters
+  // invalidate their sample and bounds caches. No lifecycle token is required.
+  // ctx_ is already gone: a publication observer may re-enter joinForShutdown
+  // without discarding the completed dataset or destroying a live load context.
+  const auto ids = session_.dataEngine().listTopics(dataset_id);
+  session_.notifyIngest(QVector<TopicId>(ids.begin(), ids.end()), /*live=*/false);
   emit fileLoaded(path, QString(), source_name, QString::fromStdString(captured_config), source_manifest_id);
 }
 
