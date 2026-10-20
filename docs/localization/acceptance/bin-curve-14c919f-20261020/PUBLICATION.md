@@ -24,3 +24,9 @@ Windows EXE、AppImage、DEB 和原校验文件均已通过公开地址无凭据
 - 本版仍为预发布；Latest API 在前后均返回 404，未将开发候选设为正式版 Latest。
 - 原发布说明内容（包括上游 4.0.0 全文）完整保留。网页表单将 LF 换行为 CRLF，除此以外只增加预定说明段落。
 - 完整机器可读记录见 [publication-receipt.json](publication-receipt.json)。候选截图、原始报告、采样和裁切限制仍见 [README.md](README.md)，不将裁切截图冒充全窗口截图，也不将 ROS 2 未验项记为通过。
+
+## 已合并临时分支清理
+
+已删除且通过远端 ref 清单确认不存在的普通临时分支仅有两条：`zh-CN-4.x-ci/release-candidate`（PR #8，原头 `14c919f903936130c151818dbf1a0144ea6a6050`）与 `zh-CN-4.x-feat/localization-foundation`（PR #7，原头 `bfb110d7542a6d90f95d0ebb4b640b05f70ea7db`）。两者均已完整合入开发线和发布线，原提交仍可达；没有删除未合并成果。
+
+保留版本／run 专属 publish 审计 ref、未合并的文件名预防修复、最终验收证据及原始空图复现证据分支。清理后的全部 tag 与清理前完全相同，未修改任何 Release 或附件。完整头 SHA、保留理由及远端不存在确认见 [cleanup-receipt.json](cleanup-receipt.json)。

@@ -1,8 +1,8 @@
 [
   {
     "path": "PUBLICATION.md",
-    "size": 2694,
-    "sha256": "aff29f591939266edba1d279f392a6988c14eca761b600431e1dc61c53ccc87e"
+    "size": 3446,
+    "sha256": "5be10fbc06fdb1fd36386fdfb13ed17eb67f5ae1293d9b7902229f685d727c41"
   },
   {
     "path": "README.md",
@@ -13,6 +13,11 @@
     "path": "checksum-verification.txt",
     "size": 420,
     "sha256": "cf11ad2b754481e03d778e7709eb0b81a0769051cbe88109340a56d6a77583e7"
+  },
+  {
+    "path": "cleanup-receipt.json",
+    "size": 1646,
+    "sha256": "b9d82947158aaa072095b77bc3d675a64fd2f6a423fb4105f7437d569f4b750c"
   },
   {
     "path": "native-windows/main-window-en_US.png",
