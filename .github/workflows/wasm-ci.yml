@@ -21,26 +21,6 @@ on:
   # Wasm breakage is invisible to the standard PR checks (native CI stays green
   # when shared code calls a native-only API), so run on PRs that can plausibly
   # affect the browser build. Not a required check; ~20-30 min on warm caches.
-  pull_request:
-    # The localization line has separate native CI; WASM remains an explicit
-    # follow-up target until its translation/resource pipeline is validated.
-    branches: [main, main-4.x, development]
-    paths:
-      - '**/wasm/**'
-      - 'tests/wasm/**'
-      - 'cmake/PjWasm*'
-      # Packaging, serving and size-gate scripts: this job is their only
-      # consumer, and '**/wasm/**' does not match a file whose name — not
-      # directory — carries the wasm token.
-      - 'scripts/*wasm*'
-      - '.github/workflows/wasm-ci.yml'
-      - 'pj_app/**'
-      - 'pj_widgets/**'
-      - 'pj_scene2D/**'
-      - 'pj_scene3D/**'
-      - 'pj_scene_common/**'
-      - 'pj_runtime/**'
-      - 'conanfile.txt'
 
 concurrency:
   group: wasm-ci-${{ github.ref }}

@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "upstream": "PlotJuggler/PlotJuggler",
+  "upstream_branch": "main-4.x",
+  "release_family": "4.x formal only; never 3.999 betas",
+  "baseline_release_id": 392868482,
+  "baseline_tag": "4.0.0",
+  "automatic_publication": false,
+  "automatic_build": "blocked until default-branch controller can invoke an immutable reviewed PJ4 recipe and preserve version/provenance mapping",
+  "manual_native_ref": "zh-CN-4.x-ci/manual-build-<unique-request>",
+  "manual_candidate_ref": "zh-CN-4.x-ci/release-candidate",
+  "manual_promote_ref": "existing publish-accepted version/run/attempt branch; first creation only"
+}

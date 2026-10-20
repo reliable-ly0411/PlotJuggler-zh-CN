@@ -42,9 +42,6 @@ on:
           updated from the repository this run publishes.
         type: string
         default: ""
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
 
 permissions:
   contents: write     # softprops/action-gh-release needs write to create/update the Release
@@ -55,6 +52,7 @@ concurrency:
 
 jobs:
   windows-installer:
+    if: github.repository == 'PlotJuggler/PlotJuggler'
     # Match windows-ci.yml and the toolchain used for the published plugin artifacts.
     runs-on: depot-windows-2022-4
     # Backstop against hangs — app build plus registry download/validation/packaging.
@@ -454,7 +452,7 @@ jobs:
     # in components.xml is the assertion; check-updates output is only logged,
     # since IFW's console output from a GUI-subsystem binary is best-effort.
     needs: windows-installer
-    if: inputs.update_check_from_run != '' && needs.windows-installer.outputs.update_url != ''
+    if: github.repository == 'PlotJuggler/PlotJuggler' && (inputs.update_check_from_run != '' && needs.windows-installer.outputs.update_url != '')
     runs-on: windows-2022
     timeout-minutes: 30
     permissions:
