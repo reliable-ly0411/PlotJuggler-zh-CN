@@ -41,12 +41,14 @@
 #include <thread>
 #include <utility>
 #include <vector>
+#include <qwt_plot_curve.h>
 
 #include "FileLoader.h"
 #include "pj_base/sdk/data_source_plugin_base.hpp"
 #include "pj_datastore/engine.hpp"
 #include "pj_datastore/reader.hpp"
 #include "pj_plugins/sdk/object_ingest_policy.hpp"
+#include "pj_plotting/PlotWidget.h"
 #include "pj_runtime/AppSession.h"
 #include "pj_runtime/CatalogModel.h"
 #include "pj_runtime/ExtensionCatalogService.h"
@@ -189,6 +191,16 @@ bool waitForFanoutProbeProgressStep(int step) {
       lock, std::chrono::seconds(5), [&state, step]() { return state.released_progress_step >= step; });
 }
 
+// A worker-side marker exposes the pending-row state before the GUI releases
+// the terminal flush, without relying on the progress throttle or a timer.
+bool fanoutProbeHasCall(std::string_view slot) {
+  FanoutProbeState& state = fanoutProbeState();
+  const std::lock_guard lock(state.mutex);
+  return std::any_of(state.calls.begin(), state.calls.end(), [slot](const FanoutProbeCall& call) {
+    return call.slot == slot;
+  });
+}
+
 std::vector<std::string> fanoutProbeStartedSuffixes() {
   FanoutProbeState& state = fanoutProbeState();
   const std::lock_guard lock(state.mutex);
@@ -283,7 +295,7 @@ class FanoutProbeSource final : public PJ::DataSourcePluginBase {
     // progress_update are independent slots and the host synthesizes no start,
     // so this is a real producer shape the host must survive.
     const std::string title = "fanout-probe:" + suffix_;
-    if (suffix_ != "nostart") {
+    if (suffix_ != "nostart" && suffix_ != "terminal_nostart") {
       if (auto status = runtimeHost().progressStart(title, 3, true); !status) {
         return fail(status.error());
       }
@@ -331,7 +343,15 @@ class FanoutProbeSource final : public PJ::DataSourcePluginBase {
       if (auto status = append(index); !status) {
         return fail(status.error());
       }
-      if (!runtimeHost().progressUpdate(index)) {
+      if (suffix_ == "terminal_tail" && index == 1) {
+        recordFanoutProbeCall("tail_ready", suffix_);
+        if (!waitForFanoutProbeProgressStep(1)) {
+          return fail("timed out waiting for the unflushed-tail rendezvous");
+        }
+      }
+      // Terminal-only producers leave all rows pending and never call the
+      // host's progress flush, independent of scheduler timing.
+      if (!suffix_.starts_with("terminal") && !runtimeHost().progressUpdate(index)) {
         return fail("cancelled via progress");
       }
     }
@@ -1625,8 +1645,19 @@ TEST_F(FileLoaderTest, FanoutRowKeepRetainsThatEntryAndContinues) {
   ASSERT_TRUE(installFanoutProbe());
   const QString path = makeMockFile(u"rowkeep.fanoutprobe"_s);
   const PJ::LoadHints hints = fanoutProbeHints(
-      uR"({"__pj_fanout":["{\"display_suffix\":\"first\"}","{\"display_suffix\":\"cancel\"}","{\"display_suffix\":\"third\"}"]})"_s);
+      uR"({"__pj_fanout":["{\"display_suffix\":\"terminal_first\"}","{\"display_suffix\":\"cancel\"}",)"
+      uR"("{\"display_suffix\":\"terminal_third\"}"]})"_s);
   IngestLifecycleRecorder ingest_lifecycle(session());
+  std::vector<int64_t> published_rows;
+  const auto publication_connection = QObject::connect(
+      &session(), &PJ::SessionManager::samplesIngested, loader_.get(),
+      [this, &published_rows](const QVector<PJ::TopicId>& ids, bool live) {
+        EXPECT_FALSE(live);
+        ASSERT_EQ(ids.size(), 1);
+        const auto metadata = session().createReader().getMetadata(ids.front());
+        ASSERT_TRUE(metadata.has_value());
+        published_rows.push_back(static_cast<int64_t>(metadata->total_row_count));
+      });
 
   bool cancel_sent = false;
   const auto cancel_connection = QObject::connect(
@@ -1643,16 +1674,19 @@ TEST_F(FileLoaderTest, FanoutRowKeepRetainsThatEntryAndContinues) {
   (void)loadAndWait(path, hints);
   QObject::disconnect(cancel_connection);
   pj_app_test::flushQueuedEvents(2);
+  QObject::disconnect(publication_connection);
 
   ASSERT_TRUE(cancel_sent) << "the second fanout entry never reached its cancellation rendezvous";
-  const std::vector<std::string> expected_starts{"first", "cancel", "third"};
+  const std::vector<std::string> expected_starts{"terminal_first", "cancel", "terminal_third"};
   EXPECT_EQ(fanoutProbeStartedSuffixes(), expected_starts);
+  EXPECT_EQ(published_rows, (std::vector<int64_t>{3, 1, 3}))
+      << "every terminal flush, including the kept partial entry, must be published";
 
   const PJ::DatasetId partial = datasetNamed("rowkeep/cancel");
   ASSERT_NE(partial, 0u);
   EXPECT_EQ(singleTopicRowCount(partial), 1) << "the stopped row keeps exactly what arrived";
-  EXPECT_EQ(singleTopicRowCount(datasetNamed("rowkeep/first")), 3);
-  EXPECT_EQ(singleTopicRowCount(datasetNamed("rowkeep/third")), 3);
+  EXPECT_EQ(singleTopicRowCount(datasetNamed("rowkeep/terminal_first")), 3);
+  EXPECT_EQ(singleTopicRowCount(datasetNamed("rowkeep/terminal_third")), 3);
   EXPECT_EQ(session().createReader().listDatasets().size(), 3u);
   EXPECT_FALSE(session().hasActiveIngests());
 }
@@ -1937,6 +1971,218 @@ TEST_F(FileLoaderTest, ProgressiveFlushNotifiesStableTopicAndRefreshesRangeEachT
   EXPECT_EQ(ingest_lifecycle.beginCountForDataset(began.token.dataset_id), 1u);
   EXPECT_EQ(ingest_lifecycle.endCountForDataset(began.token.dataset_id), 1u);
   EXPECT_FALSE(session().hasActiveIngests());
+}
+
+TEST_F(FileLoaderTest, TerminalFlushPublishesWithoutProgressUpdatesOrIngestToken) {
+  ASSERT_TRUE(installFanoutProbe());
+  const QString path = makeMockFile(u"terminal.fanoutprobe"_s);
+  IngestLifecycleRecorder lifecycle(session());
+  QStringList sequence;
+  std::vector<int64_t> published_rows;
+  QObject::connect(
+      loader_.get(), &PJ::FileLoader::loadCommitting, loader_.get(),
+      [this, &sequence](quint64, const QVector<PJ::DatasetId>&, const QString&, const QString&) {
+        EXPECT_TRUE(catalog().items().empty()) << "publication must follow the pre-catalog commit seam";
+        sequence << u"committing"_s;
+      });
+  QObject::connect(
+      &session(), &PJ::SessionManager::samplesIngested, loader_.get(),
+      [this, &sequence, &published_rows](const QVector<PJ::TopicId>& ids, bool live) {
+        EXPECT_FALSE(live);
+        ASSERT_EQ(ids.size(), 1);
+        const auto metadata = session().createReader().getMetadata(ids.front());
+        ASSERT_TRUE(metadata.has_value());
+        published_rows.push_back(static_cast<int64_t>(metadata->total_row_count));
+        EXPECT_EQ(catalog().items().size(), 1u);
+        sequence << u"published"_s;
+      });
+  QObject::connect(
+      loader_.get(), &PJ::FileLoader::fileLoaded, loader_.get(),
+      [&sequence](const QString&, const QString&, const QString&, const QString&) { sequence << u"fileLoaded"_s; });
+
+  ASSERT_TRUE(loadAndWait(path, fanoutProbeHints(uR"({"display_suffix":"terminal_nostart"})"_s)));
+  EXPECT_EQ(published_rows, (std::vector<int64_t>{3}));
+  EXPECT_EQ(sequence, (QStringList{u"committing"_s, u"published"_s, u"fileLoaded"_s}));
+  EXPECT_TRUE(lifecycle.began.empty());
+  EXPECT_TRUE(lifecycle.progressed.empty());
+  EXPECT_TRUE(lifecycle.ended.empty());
+}
+
+TEST_F(FileLoaderTest, TerminalFlushPublishesPreviouslyCataloguedEmptyTopic) {
+  ASSERT_TRUE(installFanoutProbe());
+  const QString path = makeMockFile(u"terminal_tail.fanoutprobe"_s);
+  ASSERT_NE(
+      loader_->loadFileTicketed(
+          PJ::LoadInput::fromNativePath(path), nullptr, fanoutProbeHints(uR"({"display_suffix":"terminal_tail"})"_s)),
+      0u);
+  ASSERT_TRUE(pj_app_test::pumpUntil([]() { return fanoutProbeHasCall("tail_ready"); }));
+
+  // A field descriptor can be catalog-visible before its open chunk is
+  // committed. A layout binder may attach and cache empty bounds at this point.
+  catalog().rebuildFromDatastore();
+  const auto curves = catalog().curves();
+  ASSERT_EQ(curves.size(), 1u);
+  const PJ::TopicId topic_id = curves.front().topic_id;
+  {
+    // SeriesReader owns the engine's shared lock. Release it before the worker
+    // resumes appending and the GUI commits its terminal flush.
+    const auto before = session().createReader().series(topic_id, 0);
+    ASSERT_TRUE(before.has_value());
+    ASSERT_EQ(before->size(), 0u);
+    EXPECT_FALSE(before->bounds().has_value());
+  }
+  const QVariant prior_opengl = QSettings().value("Preferences::use_opengl");
+  QSettings().setValue("Preferences::use_opengl", false);
+  const auto restore_opengl = qScopeGuard([prior_opengl]() {
+    if (prior_opengl.isValid()) {
+      QSettings().setValue("Preferences::use_opengl", prior_opengl);
+    } else {
+      QSettings().remove("Preferences::use_opengl");
+    }
+  });
+  PJ::PlotWidget plot(&session(), &catalog());
+  const auto* const info = plot.addCurve(curves.front().name);
+  ASSERT_NE(info, nullptr);
+  auto* const curve = info->curve;
+  ASSERT_EQ(curve->data()->size(), 0u);
+  EXPECT_LT(curve->data()->boundingRect().width(), 0.0);
+
+  std::vector<int64_t> published_rows;
+  const auto connection = QObject::connect(
+      &session(), &PJ::SessionManager::samplesIngested, loader_.get(),
+      [this, topic_id, &published_rows](const QVector<PJ::TopicId>& ids, bool live) {
+        EXPECT_FALSE(live);
+        EXPECT_EQ(ids, QVector<PJ::TopicId>{topic_id});
+        const auto metadata = session().createReader().getMetadata(topic_id);
+        ASSERT_TRUE(metadata.has_value());
+        published_rows.push_back(static_cast<int64_t>(metadata->total_row_count));
+      });
+  releaseFanoutProbeProgressStep(1);
+  ASSERT_TRUE(pj_app_test::pumpUntil([this]() { return !loader_->isBusy(); }));
+  pj_app_test::flushQueuedEvents();
+  QObject::disconnect(connection);
+  EXPECT_EQ(published_rows, (std::vector<int64_t>{3}));
+  EXPECT_EQ(catalog().curves().size(), 1u) << "the final flush must not need a new catalog key";
+  ASSERT_EQ(plot.curveList().size(), 1);
+  EXPECT_EQ(plot.curveList().front().curve, curve) << "the original curve must update without rebinding";
+  ASSERT_EQ(curve->data()->size(), 3u);
+  EXPECT_DOUBLE_EQ(curve->data()->sample(0).y(), 1.0);
+  EXPECT_DOUBLE_EQ(curve->data()->sample(2).y(), 3.0);
+  EXPECT_GT(curve->data()->boundingRect().width(), 0.0);
+  EXPECT_DOUBLE_EQ(curve->data()->boundingRect().height(), 2.0);
+}
+
+TEST_F(FileLoaderTest, FanoutTerminalFlushPublishesEveryKeptEntryBeforeItsTerminal) {
+  ASSERT_TRUE(installFanoutProbe());
+  const QString path = makeMockFile(u"terminal_fanout.fanoutprobe"_s);
+  LoadFinishedRecorder recorder(*loader_);
+  std::vector<PJ::DatasetId> published;
+  QObject::connect(
+      &session(), &PJ::SessionManager::samplesIngested, loader_.get(),
+      [this, &published](const QVector<PJ::TopicId>& ids, bool live) {
+        EXPECT_FALSE(live);
+        ASSERT_EQ(ids.size(), 1);
+        const auto metadata = session().createReader().getMetadata(ids.front());
+        ASSERT_TRUE(metadata.has_value());
+        EXPECT_EQ(metadata->total_row_count, 3u);
+        const auto datasets = session().createReader().listDatasets();
+        for (const PJ::DatasetId id : datasets) {
+          const auto topics = session().createReader().listTopics(id);
+          if (std::find(topics.begin(), topics.end(), ids.front()) != topics.end()) {
+            published.push_back(id);
+          }
+        }
+      });
+  QObject::connect(
+      &session(), &PJ::SessionManager::ingestEnded, loader_.get(),
+      [&published](PJ::IngestToken token, PJ::IngestOutcome outcome) {
+        EXPECT_EQ(outcome, PJ::IngestOutcome::kCompleted);
+        EXPECT_NE(std::find(published.begin(), published.end(), token.dataset_id), published.end());
+      });
+  QObject::connect(
+      loader_.get(), &PJ::FileLoader::loadFinished, loader_.get(),
+      [&published](quint64, PJ::LoadOutcome, const QString&, PJ::DatasetId, const QVector<PJ::DatasetId>& produced) {
+        for (const PJ::DatasetId id : produced) {
+          EXPECT_NE(std::find(published.begin(), published.end(), id), published.end());
+        }
+      });
+  const PJ::LoadHints hints = fanoutProbeHints(
+      uR"({"__pj_fanout":["{\"display_suffix\":\"terminal_first\"}","{\"display_suffix\":\"terminal_second\"}"]})"_s);
+  ASSERT_NE(loader_->loadFileTicketed(PJ::LoadInput::fromNativePath(path), nullptr, hints), 0u);
+  ASSERT_TRUE(pj_app_test::pumpUntil([this]() { return !loader_->isBusy(); }));
+  pj_app_test::flushQueuedEvents();
+  ASSERT_EQ(recorder.events.size(), 1u);
+  EXPECT_EQ(recorder.events.front().outcome, PJ::LoadOutcome::kLoaded);
+  EXPECT_EQ(published.size(), 2u);
+  EXPECT_NE(datasetNamed("terminal_fanout/terminal_first"), 0u);
+  EXPECT_NE(datasetNamed("terminal_fanout/terminal_second"), 0u);
+}
+
+TEST_F(FileLoaderTest, TerminalPublicationCanShutDownAndImmediatelyReuseLoader) {
+  ASSERT_TRUE(installFanoutProbe());
+  const QString path = makeMockFile(u"terminal_shutdown.fanoutprobe"_s);
+  const QString successor_path = makeMockFile(u"terminal_successor.fanoutprobe"_s);
+  LoadFinishedRecorder recorder(*loader_);
+  quint64 successor = 0;
+  QObject::connect(
+      loader_.get(), &PJ::FileLoader::loadFinished, loader_.get(),
+      [this, &successor, &successor_path, &path](
+          quint64, PJ::LoadOutcome, const QString& completed_path, PJ::DatasetId, const QVector<PJ::DatasetId>&) {
+        if (completed_path == path) {
+          successor = loader_->loadFileTicketed(
+              PJ::LoadInput::fromNativePath(successor_path), nullptr,
+              fanoutProbeHints(uR"({"display_suffix":"terminal"})"_s));
+          EXPECT_NE(successor, 0u);
+        }
+      });
+  int shutdowns = 0;
+  const auto connection = QObject::connect(
+      &session(), &PJ::SessionManager::samplesIngested, loader_.get(),
+      [this, &shutdowns](const QVector<PJ::TopicId>&, bool) {
+        if (shutdowns == 0) {
+          ++shutdowns;
+          EXPECT_EQ(loader_->activeLoadDatasetId(), 0u) << "the committed context must be retired before publication";
+          loader_->joinForShutdown();
+        }
+      });
+  ASSERT_NE(
+      loader_->loadFileTicketed(
+          PJ::LoadInput::fromNativePath(path), nullptr, fanoutProbeHints(uR"({"display_suffix":"terminal"})"_s)),
+      0u);
+  ASSERT_TRUE(pj_app_test::pumpUntil(
+      [this, &recorder]() { return recorder.events.size() == 2u && !loader_->isBusy(); }));
+  pj_app_test::flushQueuedEvents();
+  QObject::disconnect(connection);
+  EXPECT_EQ(shutdowns, 1);
+  ASSERT_EQ(recorder.events.size(), 2u);
+  EXPECT_EQ(recorder.events.front().outcome, PJ::LoadOutcome::kLoaded);
+  EXPECT_EQ(singleTopicRowCount(recorder.events.front().dataset_id), 3);
+  EXPECT_EQ(recorder.events.back().ticket, successor);
+  EXPECT_EQ(recorder.events.back().outcome, PJ::LoadOutcome::kLoaded);
+  EXPECT_EQ(singleTopicRowCount(recorder.events.back().dataset_id), 3);
+  EXPECT_FALSE(session().hasActiveIngests());
+}
+
+TEST_F(FileLoaderTest, FanoutTerminalPublicationCanShutDownFromASuspendedFrame) {
+  ASSERT_TRUE(installFanoutProbe());
+  const QString path = makeMockFile(u"fanout_publish_shutdown.fanoutprobe"_s);
+  int shutdowns = 0;
+  const auto connection = QObject::connect(
+      &session(), &PJ::SessionManager::samplesIngested, loader_.get(),
+      [this, &shutdowns](const QVector<PJ::TopicId>&, bool) {
+        if (shutdowns++ == 0) {
+          loader_->joinForShutdown();
+        }
+      });
+  const PJ::LoadHints hints = fanoutProbeHints(
+      uR"({"__pj_fanout":["{\"display_suffix\":\"terminal_first\"}","{\"display_suffix\":\"terminal_second\"}"]})"_s);
+  ASSERT_NE(loader_->loadFileTicketed(PJ::LoadInput::fromNativePath(path), nullptr, hints), 0u);
+  ASSERT_TRUE(pj_app_test::pumpUntil([this, &shutdowns]() { return shutdowns > 0 && !loader_->isBusy(); }));
+  QObject::disconnect(connection);
+  pj_app_test::flushQueuedEvents();
+  EXPECT_EQ(shutdowns, 1);
+  EXPECT_FALSE(session().hasActiveIngests());
+  EXPECT_TRUE(loadAndWait(path, fanoutProbeHints(uR"({"display_suffix":"terminal"})"_s)));
 }
 
 TEST_F(FileLoaderTest, FailedFirstLoadErasesAbandonedLiveDatasetBeforePreferReuseReload) {

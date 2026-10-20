@@ -4,6 +4,7 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 from pathlib import Path
@@ -72,6 +73,46 @@ def validate_plugin_result(returncode, combined, expected, allow_missing_ros):
     return [{'id': 'ros2-topic-subscriber', 'version': optional[0].split('=', 1)[1],
              'status': 'not_tested_missing_external_dependency',
              'reason': 'ROS 2 is not installed in the clean acceptance image'}]
+
+
+def validate_bin_plot_state(state):
+    """Require real attached, visible samples, not merely an import message."""
+    assert state['version'] == 1, 'unsupported plot snapshot schema'
+    plots = [plot for plot in state['plots'] if plot['id'] == 'p1']
+    assert len(plots) == 1, 'the expected BIN plot was not restored exactly once'
+    plot = plots[0]
+    curves = [curve for curve in plot['curves']
+              if curve.get('topic') == '/RCOU' and curve.get('field') == 'C1\t[us]']
+    assert len(curves) == len(plot['curves']) == 1, 'the exact BIN curve is not attached'
+    curve = curves[0]
+    assert curve['visible'] is True, 'the BIN curve is hidden'
+    assert curve['sample_count'] == curve['finite_sample_count'] >= 100, 'missing real finite BIN samples'
+    assert curve['finite_samples_in_view'] >= 100, 'the restored viewport does not show the BIN waveform'
+    view, data = plot['viewport'], curve['sample_bounds']
+    for bounds in [view, data]:
+        assert all(isinstance(bounds[key], (int, float)) and math.isfinite(bounds[key])
+                   for key in ['x_min', 'x_max', 'y_min', 'y_max']), bounds
+        assert bounds['x_min'] < bounds['x_max'] and bounds['y_min'] < bounds['y_max'], bounds
+    # The pinned real log's servo waveform spans about 53 s and 1000..1440 us.
+    # Use broad physical bounds rather than pixel-dependent axis padding.
+    assert 40 < data['x_max'] - data['x_min'] < 70, data
+    assert 900 <= data['y_min'] <= 1050 and 1300 <= data['y_max'] <= 1600, data
+    assert view['x_min'] <= data['x_min'] < data['x_max'] <= view['x_max'], (view, data)
+    assert view['y_min'] <= data['y_min'] < data['y_max'] <= view['y_max'], (view, data)
+
+
+def write_bin_layout(work, log):
+    """Use the same Unicode-path real-data fixture in native and package checks."""
+    shutil.copy2(log, work / '飞行日志.BIN')
+    layout = work / '真实日志.pj4.xml'
+    layout.write_text('''<root format="PlotJuggler" pj4_version="4" binding="source">
+<tabbed_widget parent="main_window"><Tab id="t1" tab_name="BIN" containers="1">
+<Container><DockArea id="a1" name="BIN"><plot id="p1" mode="TimeSeries">
+<curve topic="/RCOU" field="C1&#9;[us]"/></plot></DockArea></Container></Tab></tabbed_widget>
+<previouslyLoaded_Datafiles><fileInfo filename="飞行日志.BIN"><plugin ID="ArduPilot BIN"
+manifest_id="ardupilot-dataflash" filepath_mode="source"><![CDATA[{}]]></plugin></fileInfo>
+</previouslyLoaded_Datafiles></root>''', encoding='utf-8')
+    return layout
 
 def verify(prefix, executable, log, output, expected_source, expected_version, capture=False):
     """Check provenance, native plugins, Python and real BIN curve restoration."""
@@ -159,20 +200,15 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
             args.extend(['--expect-plugin', spec])
         unavailable = []
         run('plugins', args, validate_plugins=True)
-        shutil.copy2(log, work / '飞行日志.BIN')
-        layout = work / '真实日志.pj4.xml'
-        layout.write_text('''<root format="PlotJuggler" pj4_version="4" binding="source">
-<tabbed_widget parent="main_window"><Tab id="t1" tab_name="BIN" containers="1">
-<Container><DockArea id="a1" name="BIN"><plot id="p1" mode="TimeSeries">
-<curve topic="/RCOU" field="C1&#9;[us]"/></plot></DockArea></Container></Tab></tabbed_widget>
-<previouslyLoaded_Datafiles><fileInfo filename="飞行日志.BIN"><plugin ID="ArduPilot BIN"
-manifest_id="ardupilot-dataflash" filepath_mode="source"><![CDATA[{}]]></plugin></fileInfo>
-</previouslyLoaded_Datafiles></root>''', encoding='utf-8')
+        layout = write_bin_layout(work, log)
         for language in ['zh_CN', 'en_US']:
             diagnostics = output / f'bin-{language}.json'
+            plot_state = output / f'plot-state-{language}.json'
             text = run('bin-' + language, ['--language', language, '--nosplash', '--layout', str(layout),
-                       '--exit-after-layout', '--exit-after-layout-timeout', '90', '--dump-diagnostics', str(diagnostics)])
+                       '--exit-after-layout', '--exit-after-layout-timeout', '90', '--dump-diagnostics', str(diagnostics),
+                       '--dump-plot-state', str(plot_state)])
             assert 'ArduPilot BIN: imported 1940 numeric series' in text
+            validate_bin_plot_state(json.loads(plot_state.read_text(encoding='utf-8')))
             records = json.loads(diagnostics.read_text(encoding='utf-8'))['records']
             rejected = [x for x in records if
                         (x['level'] == 'error' and not (unavailable and x['id'] == 'ros2-topic-subscriber'
@@ -200,7 +236,8 @@ manifest_id="ardupilot-dataflash" filepath_mode="source"><![CDATA[{}]]></plugin>
                'visual_review': 'required separately for the captured Chinese and English screenshots', 'release': record, 'plugin_count': len(expected),
                'loaded_plugin_count': len(expected) - len(unavailable), 'unavailable_plugins': unavailable,
                'checks': ['embedded version', 'CJK font bytes', 'licenses', 'Python backend',
-                          'bundled plugin inventory and explicit external dependency boundary', 'real BIN in Unicode path', 'Chinese and English curve restoration']}
+                          'bundled plugin inventory and explicit external dependency boundary', 'real BIN in Unicode path',
+                          'Chinese and English curve restoration with finite visible samples and non-default viewport']}
     (output / 'acceptance.json').write_text(json.dumps(summary, indent=2) + '\n', encoding='utf-8')
 
 

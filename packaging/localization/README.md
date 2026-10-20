@@ -37,10 +37,19 @@ the runner's existing VC installation is not used as proof that they shipped.
 real app `--version`, Python, and every expected plugin/version. It then restores
 a real BIN from a Chinese path in each language, requiring a successful exit,
 1,940 imported numeric series, and no unresolved-curve or error diagnostic.
+The opt-in `--dump-plot-state` snapshot reads the actual attached Qwt adapters
+after layout settlement, without invalidating caches, reattaching curves, or
+changing the viewport. Acceptance additionally requires the exact `/RCOU`
+`C1\t[us]` curve to contain at least 100 finite samples in view, a non-default
+viewport enclosing the waveform, and the pinned log's expected physical range.
+An import message, resolved catalog key, or attached-but-empty curve cannot
+satisfy this gate. `ArduPilotLayoutRestoreTest` applies the same fixture and
+state checks to each native build in both languages.
 Acceptance processes set `QT_FORCE_STDERR_LOGGING=1` so Qt's Windows debugger
 sink cannot hide import messages from the captured stdout/stderr pipes. This
 changes only the test process's log destination, not the import requirements.
-Screenshots of the installed/extracted app are separate visual-review evidence.
+Screenshots of the installed/extracted app remain separate required
+visual-review evidence; sample-state assertions do not replace visual review.
 The real upstream log contains a truncated tail warning; that is not hidden.
 Hashes are rechecked afterwards. Reports and screenshots remain CI artifacts,
 not Release download attachments.

@@ -54,5 +54,16 @@ if(PJ_BUILD_TESTS AND TARGET pj_app_loader_testlib)
     target_compile_options(ardupilot_import_test PRIVATE ${PJ_WARNING_FLAGS})
     add_test(NAME ArduPilotFileLoaderTest COMMAND ardupilot_import_test)
     set_tests_properties(ArduPilotFileLoaderTest PROPERTIES TIMEOUT 90)
+    # pj_app's interpreter lookup is directory-scoped; resolve the host tool
+    # here too, rather than silently omitting this full-application regression.
+    find_package(Python3 REQUIRED MODULE COMPONENTS Interpreter)
+    if(Python3_Interpreter_FOUND AND TARGET pj_app)
+        add_test(NAME ArduPilotLayoutRestoreTest
+            COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/tests/check_ardupilot_layout.py"
+                --app "$<TARGET_FILE:pj_app>"
+                --plugins "$<TARGET_FILE_DIR:ardupilot_source_plugin>"
+                --real-bin "${_pj_apbin_dir}/tests/logs/00000001.BIN")
+        set_tests_properties(ArduPilotLayoutRestoreTest PROPERTIES TIMEOUT 180)
+    endif()
 endif()
 unset(_pj_apbin_dir)
