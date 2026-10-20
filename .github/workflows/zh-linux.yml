@@ -7,11 +7,15 @@ name: zh-CN Linux build
         type: string
         required: false
         default: ''
+      release_manifest:
+        type: string
+        required: false
+        default: ''
 permissions:
   contents: read
 concurrency:
   group: zh-linux-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   linux:
     runs-on: ${{ matrix.runner }}
@@ -56,6 +60,7 @@ jobs:
       with:
         persist-credentials: false
         ref: ${{ inputs.ref || github.sha }}
+        fetch-depth: 0
     - name: Trust only this checked-out CI directory
       run: |
         # Container root differs from the checkout mount owner. Scope this to
@@ -64,6 +69,10 @@ jobs:
         echo 'GIT_CONFIG_KEY_0=safe.directory' >> "$GITHUB_ENV"
         echo "GIT_CONFIG_VALUE_0=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
         git -c safe.directory="$GITHUB_WORKSPACE" rev-parse --verify HEAD
+    - name: Reconstruct exact formal upstream tag plus pinned downstream patch
+      env:
+        RELEASE_MANIFEST: ${{ inputs.release_manifest }}
+      run: python3 .github/release_policy/policy.py materialize
     - name: Install Apache Arrow for Parquet support
       shell: bash
       run: |
