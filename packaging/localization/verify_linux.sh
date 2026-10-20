@@ -17,7 +17,7 @@ mkdir /tmp/appimage
 cp /pkg/*.AppImage /tmp/appimage/app.AppImage
 chmod +x /tmp/appimage/app.AppImage
 cd /tmp/appimage
-./app.AppImage --appimage-extract >/dev/null
+env -u APPIMAGE_EXTRACT_AND_RUN ./app.AppImage --appimage-extract >/dev/null
 xvfb-run -a --server-args='-screen 0 1440x1000x24' python3 /src/packaging/localization/verify_package.py \
   --prefix /tmp/appimage/squashfs-root/usr --executable /tmp/appimage/app.AppImage \
   --real-bin "$real" --output /reports/appimage --expected-source "$EXPECTED_SOURCE_SHA" --expected-version "$EXPECTED_VERSION" --capture

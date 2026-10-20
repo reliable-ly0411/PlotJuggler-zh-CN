@@ -48,11 +48,10 @@ commit, run URL, exact test outcomes and final public asset sizes/SHA-256. Ordin
 merges preserve the candidate as an ancestor; a release tag anchors the exact
 accepted source commit, not an untested version bump. Old tags/assets stay intact.
 
-The explicit publication entry is the `zh-CN-4.x-ci/publish-accepted-v4.0.0-zh.1.rc.1` ref. Only
+The explicit publication entry is the `zh-CN-4.x-ci/publish-accepted-v4-0-0-zh-1-rc-1-run-RUN-attempt-ATTEMPT` ref. Only
 create it for the first time to the accepted source after final screenshot review
 and ordinary stable promotion. Its push is the visual-review confirmation; it
-must never be part of candidate generation. The publisher looks up the latest
-candidate run for that exact SHA and promotes only its original assets after validating
+must never be part of candidate generation. The publisher accepts only the explicitly named run ID and attempt for that exact SHA and promotes only its original assets after validating
 its release manifest. Each version uses a new ref; never reuse or force-update a
 previous promotion ref. Only its first creation triggers publication. This
 keeps the default 3.x branch independent of the 4.x publication mechanism.

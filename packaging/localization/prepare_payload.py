@@ -72,12 +72,15 @@ def stage(build, prefix, config, linux_tools):
     values = dict(x.split('=', 1) for x in (ROOT / 'versions.env').read_text(encoding='utf-8').splitlines()
                   if x and not x.startswith('#'))
     baseline = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
+    plugin_manifest = json.loads(manifest.read_text(encoding='utf-8'))
+    assert plugin_manifest['license'] == baseline['ardupilot_plugin']['license'] == 'LGPL-3.0-only'
+    assert plugin_manifest['version'] == baseline['ardupilot_plugin']['version']
     revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     tree = subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], cwd=ROOT, text=True).strip()
     record = {'version': values['PJ_APP_VERSION'], 'source_commit': revision, 'source_tree': tree,
               'upstream_commit': baseline['upstream_commit'], 'sdk_version': '0.34.1',
               'bin_plugin_commit': baseline['ardupilot_plugin']['commit'],
-              'bin_plugin_version': json.loads(manifest.read_text(encoding='utf-8'))['version'],
+              'bin_plugin_version': plugin_manifest['version'], 'bin_plugin_license': plugin_manifest['license'],
               'registry_commit': REGISTRY_REV, 'cjk_font_sha256': FONT_SHA,
               'ifw_package_version': versions(values['PJ_APP_VERSION'])['ifw'],
               'debian_version': versions(values['PJ_APP_VERSION'])['deb']}

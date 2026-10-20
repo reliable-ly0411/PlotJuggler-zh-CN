@@ -118,6 +118,9 @@ declare -A SONAME_PKG=(
   # One package provides both ncursesw and panelw.
   [libncursesw.so.6]=libncursesw6   [libpanelw.so.6]=libncursesw6
   [libtinfo.so.6]=libtinfo6
+  # Embedded CPython readline extension; Jammy provides libreadline8,
+  # Noble provides the same SONAME through the time64 package.
+  [libreadline.so.8]="libreadline8 | libreadline8t64"
   # Needed by the bundled libgcrypt (jammy's libsystemd links it); libgpg-error
   # itself is on linuxdeploy's excludelist, so the system must provide it.
   [libgpg-error.so.0]=libgpg-error0
@@ -272,10 +275,10 @@ fi
 # libc6 carries the glibc floor the builder container enforces; the rest are
 # unversioned because every one has been present and ABI-stable since 22.04.
 DEPENDS="libc6 (>= 2.35)"
-for pkg in $(printf '%s\n' "${!WANTED_PKGS[@]}" | LC_ALL=C sort); do
+while IFS= read -r pkg; do
   [[ "${pkg}" == "libc6" ]] && continue
   DEPENDS="${DEPENDS}, ${pkg}"
-done
+done < <(printf '%s\n' "${!WANTED_PKGS[@]}" | LC_ALL=C sort)
 # Non-ELF runtime requirements the DT_NEEDED scan structurally cannot see:
 # the wrapper points gRPC at the system CA bundle, and Qt TLS (marketplace
 # downloads, update check, telemetry) needs it too.
@@ -311,7 +314,7 @@ INSTALLED_SIZE="$(du -sk --exclude=DEBIAN "${STAGE}" | cut -f1)"
 sed -e "s|@PACKAGE@|${PACKAGE}|g" \
     -e "s|@VERSION@|${DEB_VERSION}|g" \
     -e "s|@ARCH@|${DEB_ARCH}|g" \
-    -e "s|@DEPENDS@|${DEPENDS}|g" \
+    -e "s#@DEPENDS@#${DEPENDS}#g" \
     -e "s|@INSTALLED_SIZE@|${INSTALLED_SIZE}|g" \
     "${SCRIPT_DIR}/control.in" > "${STAGE}/DEBIAN/control"
 

@@ -39,7 +39,10 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
         assert hashlib.sha256((prefix / 'share/licenses' / item['path']).read_bytes()).hexdigest() == item['sha256']
     assert hashlib.sha256(log.read_bytes()).hexdigest() == LOG_SHA, 'unexpected real BIN fixture'
     manifests = sorted((prefix / 'lib/plotjuggler/plugins').glob('*/manifest.json'))
-    expected = [f"{m['id']}={m['version']}" for m in [json.loads(p.read_text(encoding='utf-8')) for p in manifests]]
+    plugin_records = [json.loads(p.read_text(encoding='utf-8')) for p in manifests]
+    bin_manifest = next(m for m in plugin_records if m['id'] == 'ardupilot-dataflash')
+    assert bin_manifest['license'] == record['bin_plugin_license'] == 'LGPL-3.0-only'
+    expected = [f"{m['id']}={m['version']}" for m in plugin_records]
     assert f"ardupilot-dataflash={record['bin_plugin_version']}" in expected
     assert sorted(expected) == sorted(record['expected_plugins']), expected
     assert len(expected) == (19 if os.name == 'nt' else 21), expected

@@ -8,7 +8,7 @@ import re
 
 def versions(value):
     """IFW is numeric; dpkg uses tilde to keep each prerelease below its final."""
-    match = re.fullmatch(r'(4\.\d+\.\d+)-zh\.([1-9]\d*)(?:\.rc\.([1-9]\d*))?', value)
+    match = re.fullmatch(r'(4\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))-zh\.([1-9][0-9]*)(?:\.rc\.([1-9][0-9]*))?', value)
     if not match:
         raise ValueError(f'Not a release-ready Chinese 4.x SemVer: {value}')
     core, revision, candidate = match.groups()

@@ -50,6 +50,7 @@ def main():
         subprocess.run(['sha256sum', '-c', sums.name], cwd=sums.parent, check=True)
     result = {'schema_version': 1, 'source_commit': source, 'source_tree': tree,
               'workflow_sha': os.environ['GITHUB_WORKFLOW_SHA'], 'run_id': os.environ['GITHUB_RUN_ID'],
+              'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
               'version': version, 'tag': 'v' + version, 'automated_acceptance': 'passed',
               'visual_review': 'required before creating the version-specific promotion ref',
               'assets': [{'name': p.name, 'size': p.stat().st_size, 'sha256': sha256(p)} for p in files],

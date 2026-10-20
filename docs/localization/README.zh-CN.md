@@ -37,7 +37,7 @@ DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.rc.1`**，为首个发�
 
 ## ArduPilot BIN 插件
 
-原始项目是 LGPL-3.0-or-later 的
+原始项目是 LGPLv3 的
 [ArduPilot/plotjuggler-apbin-plugins](https://github.com/ArduPilot/plotjuggler-apbin-plugins)。
 独立的真实 fork 位于
 [reliable-ly0411/plotjuggler-apbin-plugins](https://github.com/reliable-ly0411/plotjuggler-apbin-plugins)：
@@ -46,7 +46,7 @@ DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.rc.1`**，为首个发�
 
 本工程用 Git 子模块的**固定提交**引用 SDK 适配版本，在构建时编译独立的共享插件，
 不把 LGPL 解析器静态链接到 MPL 应用，也不在运行时下载或追踪插件分支的最新内容。
-当前固定提交为 `2ce8f06cbbb5282d501885d6ff15974166b33254`，插件版本为
+当前固定提交为 `b6ada410d24551e8218cbcde5eaa9c598a7bde5b`，插件版本为
 `2.0.0-rc.1`。对应源代码及许可证随子模块保留。SDK 目前没有旧版的逐字段 tooltip setter，
 原始字段说明保留在数据集元数据中；界面展示的差异见插件 `sdk4/UPSTREAM.md`。
 
