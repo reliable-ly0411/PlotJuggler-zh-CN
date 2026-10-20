@@ -20,6 +20,24 @@ MISSING_ROS = '''[plugin-validation][info] ardupilot-dataflash: Loaded DataSourc
 '''
 
 class CleanAcceptanceTests(unittest.TestCase):
+    def test_acceptance_forces_qt_logs_to_stderr(self):
+        for inherited in [{}, {'QT_FORCE_STDERR_LOGGING': '0', 'QT_LOGGING_RULES': '*.info=false'}]:
+            env = module.acceptance_environment(inherited)
+            self.assertEqual(env['QT_FORCE_STDERR_LOGGING'], '1')
+            self.assertEqual(env['QT_LOGGING_RULES'], 'pj.runtime.ingest.info=true')
+
+    def test_acceptance_environment_remains_isolated(self):
+        development = ['QT_PLUGIN_PATH', 'QML2_IMPORT_PATH', 'QT_QPA_FONTDIR',
+                       'PYTHONHOME', 'PYTHONPATH', 'LD_LIBRARY_PATH']
+        inherited = {name: '/development/runtime' for name in development}
+        inherited.update(SystemRoot='C:/Windows', PJ_DISABLE_TELEMETRY='0')
+        original = inherited.copy()
+        env = module.acceptance_environment(inherited)
+        self.assertTrue(all(name not in env for name in development))
+        self.assertEqual(env['PJ_DISABLE_TELEMETRY'], '1')
+        self.assertEqual(env['SystemRoot'], 'C:/Windows')
+        self.assertEqual(inherited, original)
+
     def test_windows_key_case(self):
         for key in ['SYSTEMROOT', 'SystemRoot', 'systemroot']:
             self.assertEqual(module.windows_system_root({key: 'C:/Windows'}), Path('C:/Windows'))

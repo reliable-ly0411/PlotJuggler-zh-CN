@@ -37,6 +37,9 @@ the runner's existing VC installation is not used as proof that they shipped.
 real app `--version`, Python, and every expected plugin/version. It then restores
 a real BIN from a Chinese path in each language, requiring a successful exit,
 1,940 imported numeric series, and no unresolved-curve or error diagnostic.
+Acceptance processes set `QT_FORCE_STDERR_LOGGING=1` so Qt's Windows debugger
+sink cannot hide import messages from the captured stdout/stderr pipes. This
+changes only the test process's log destination, not the import requirements.
 Screenshots of the installed/extracted app are separate visual-review evidence.
 The real upstream log contains a truncated tail warning; that is not hidden.
 Hashes are rechecked afterwards. Reports and screenshots remain CI artifacts,

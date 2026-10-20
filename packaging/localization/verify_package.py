@@ -17,6 +17,19 @@ FONT_SHA = '2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b'
 LOG_SHA = '28dcbac522ceb75eee10f6af37b0d6e342c1dc79e2be1a9f766fe18a14336766'
 
 
+def acceptance_environment(environment):
+    """Capture Qt logs through pipes without inheriting development runtimes."""
+    env = environment.copy()
+    for name in ['QT_PLUGIN_PATH', 'QML2_IMPORT_PATH', 'QT_QPA_FONTDIR', 'PYTHONHOME',
+                 'PYTHONPATH', 'LD_LIBRARY_PATH']:
+        env.pop(name, None)
+    env['PJ_DISABLE_TELEMETRY'] = '1'
+    env['QT_LOGGING_RULES'] = 'pj.runtime.ingest.info=true'
+    # Windows Qt otherwise sends logs to OutputDebugString when no console is
+    # attached; subprocess.PIPE alone does not make the BIN import observable.
+    env['QT_FORCE_STDERR_LOGGING'] = '1'
+    return env
+
 
 def windows_system_root(environment):
     """Windows environment keys are case-insensitive before copying to dict."""
@@ -90,12 +103,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
     assert f"ardupilot-dataflash={record['bin_plugin_version']}" in expected
     assert sorted(expected) == sorted(record['expected_plugins']), expected
     assert len(expected) == (19 if os.name == 'nt' else 21), expected
-    env = os.environ.copy()
-    for name in ['QT_PLUGIN_PATH', 'QML2_IMPORT_PATH', 'QT_QPA_FONTDIR', 'PYTHONHOME',
-                 'PYTHONPATH', 'LD_LIBRARY_PATH']:
-        env.pop(name, None)
-    env['PJ_DISABLE_TELEMETRY'] = '1'
-    env['QT_LOGGING_RULES'] = 'pj.runtime.ingest.info=true'
+    env = acceptance_environment(os.environ)
     # Use the installed DLLs plus the operating system, never a Qt/Conan tree.
     if os.name == 'nt':
         system = windows_system_root(env)
