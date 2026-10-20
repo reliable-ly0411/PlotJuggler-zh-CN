@@ -7,11 +7,6 @@ name: AppImage builder image
 # builder target is NOT built here — build_in_docker.sh builds it on demand.
 
 on:
-  push:
-    branches: [main, main-4.x]
-    paths:
-      - packaging/appimage/Dockerfile.build
-      - .github/workflows/appimage-builder-image.yml
   workflow_dispatch:
 
 permissions:
@@ -28,6 +23,7 @@ env:
 
 jobs:
   build-push:
+    if: github.repository == 'PlotJuggler/PlotJuggler'
     runs-on: depot-ubuntu-22.04-4
     timeout-minutes: 30
     steps:
