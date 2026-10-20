@@ -1,7 +1,7 @@
 # PlotJuggler 4 简体中文开发说明
 
 本开发线在官方 `main-4.x` 的真实 Git 历史上实现中文界面及 ArduPilot
-DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.dev.1`**，不是稳定发布。
+DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.rc.1`**，为首个发布候选，不是稳定发布。
 `zh-CN-4.x` 为稳定线，`zh-CN-4.x-dev` 为开发集成线；主题变更通过保留提交的
 合并进入开发线，验证及发布准备完成后再晋级稳定线。初始化为空白上游基线的稳定分支
 不表示已经交付汉化版本。参见[分支规范](../BRANCHING.zh-CN.md)。
@@ -33,11 +33,11 @@ DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.dev.1`**，不是稳定�
 **1,228 条 Qt 可提取消息**，未完成条目为 0。其中 97 条精确复用了 3.x 中文翻译。
 这个数字是指定提取范围的目录覆盖率，不代表所有可见内容均已汉化。
 内置 Lua 滤波器元数据、外部插件自带界面、启动画面的随机英文文案和部分浏览器上传错误
-仍有英文；WebAssembly、macOS 和完整发布包还需单独验证。
+仍有英文；WebAssembly、macOS 仍需单独验证；原生候选包的独立验收入口见下文。
 
 ## ArduPilot BIN 插件
 
-原始项目是 LGPL-3.0-or-later 的
+原始项目是 LGPLv3 的
 [ArduPilot/plotjuggler-apbin-plugins](https://github.com/ArduPilot/plotjuggler-apbin-plugins)。
 独立的真实 fork 位于
 [reliable-ly0411/plotjuggler-apbin-plugins](https://github.com/reliable-ly0411/plotjuggler-apbin-plugins)：
@@ -46,8 +46,8 @@ DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.dev.1`**，不是稳定�
 
 本工程用 Git 子模块的**固定提交**引用 SDK 适配版本，在构建时编译独立的共享插件，
 不把 LGPL 解析器静态链接到 MPL 应用，也不在运行时下载或追踪插件分支的最新内容。
-当前固定提交为 `f257cede2e7bcac8bd04422ef4e59e2efa8a0c77`，插件版本为
-`1.0.0-dev.1`。对应源代码及许可证随子模块保留。SDK 目前没有旧版的逐字段 tooltip setter，
+当前固定提交为 `0cc7cc10a25af3cb2ab122861b9be4fc01c99da5`，插件版本为
+`1.2.0-pj4.rc.1`。对应源代码及许可证随子模块保留。SDK 目前没有旧版的逐字段 tooltip setter，
 原始字段说明保留在数据集元数据中；界面展示的差异见插件 `sdk4/UPSTREAM.md`。
 
 ## 构建与回归
@@ -81,14 +81,18 @@ ctest --test-dir build-i18n --output-on-failure
 BIN 解析及动态插件 ABI 回归。`ArduPilotFileLoaderTest` 还通过真实 `FileLoader`、
 数据存储及曲线目录验证中文路径、重复导入、多个文件间的状态隔离、损坏格式回滚，
 以及上游真实日志。Linux 的渲染测试需要有效的 OpenGL/X11 环境；
+`ArduPilotLayoutRestoreTest` 还启动真实应用，在中英文下恢复同一中文路径日志与
+曲线布局，要求实际绘图适配器提供有限样本、正确的物理范围及可见视口；
+不会用重新绑定曲线、重置缓存或手动缩放掩盖首次恢复失败。
 CI 使用 Xvfb 并要求 GPU 测试实际运行。Windows CI 使用相同 SDK 与 MSVC 版本。
 `PreferencesLanguageTest` 还构造真实主窗口和首选项窗口，分别检查中文、英文菜单与语言控件，
 并执行窗口像素抓取。CI 将这些仅含合成数据与独立测试配置的截图保存到测试报告中，
 供检查文字缺字、截断和布局；自动断言通过不能替代截图的人工视觉检查。
 截图用例还要求 Latin 与常用中文字形实际可用，避免只有方框的图片被误判为通过。
-Windows 的 Qt offscreen 平台不读取原生系统字体数据库；CI 仅为测试下载固定提交及
+Windows 的 Qt offscreen 平台不读取原生系统字体数据库；CI 为测试下载固定提交及
 SHA-256 校验的 Noto Sans CJK SC 2.004（SIL OFL-1.1），通过 `QT_QPA_FONTDIR`
-提供字体，不改应用的原生字体选择，也不将该测试字体打入产品。
+提供字体。发布包另行暂存并校验同源字体及许可，应用启动时从包内 `bin/fonts` 注册
+CJK 回退；原生产品不依赖测试专用环境变量，也不改变用户选择的字体族。
 
 翻译更新只在显式执行下列命令时改写目录，普通构建不会修改源文件：
 
@@ -110,3 +114,17 @@ python3 tests/check_translations_4x.py --lupdate /path/to/lupdate --update-ts
 启动图像诊断仍未解决，未作为修复移植到 Qt6 的 4.x 生产代码。
 4.x 保留本代启动图像管线；专项语言测试通过不等于该历史问题已修复，也不等于所有平台
 完整应用与安装包均已验收。
+
+## 发布候选与最终包验收
+
+发布规范见根目录 [RELEASING.md](../../RELEASING.md)。
+`zh-4x-packages.yml` 在标准 Linux/Windows runner 上构建候选，保留与开发回归
+相同的 SDK、Qt 和工具链约束，额外暂存固定 BIN DSO、许可及中文字体。它不写标签或 Release。
+最终 IFW 安装、AppImage 原包运行及 .deb 安装在独立环境中检查实际内嵌版本、全部插件、
+Python、中文文件名真实 BIN、实际曲线样本与视口及中英文截图。导入日志及绑定存在
+不等于曲线可见，自动样本断言也不替代最终截图的视觉审阅。详情见
+[包装验收说明](../../packaging/localization/README.md)。
+
+候选不启用上游 APT/Windows 自动更新发布，不冒充上游正式发布。
+
+原包干净环境验收区分插件清单与运行状态：Linux 包含 21 个插件，其中 ROS 2 订阅插件需要外部 ROS 安装及环境设置。无 ROS 的验收环境要求其给出明确的未安装诊断，其余 20 个插件仍须全部加载并匹配版本；不将该边界视为 ROS 功能通过。Windows 包含并验证 19 个插件。

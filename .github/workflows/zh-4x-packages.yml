@@ -1,0 +1,385 @@
+name: Chinese 4.x candidate packages
+
+on:
+  push:
+    branches: ['zh-CN-4.x-ci/release-candidate']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zh-4x-packages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: Package (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            qt_arch: gcc_64
+            generator: Ninja
+            installation: appimage
+          - os: windows-2022
+            qt_arch: msvc2022_64
+            generator: Ninja Multi-Config
+            installation: windows
+    defaults:
+      run:
+        shell: bash
+    env:
+      PJ_DISABLE_TELEMETRY: '1'
+      APPIMAGE_EXTRACT_AND_RUN: '1'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Read pinned versions
+        id: versions
+        run: |
+          source ./versions.env
+          echo "PJ_VERSION=$PJ_APP_VERSION" >> "$GITHUB_ENV"
+          echo "PJ_QT_VERSION=$PJ_QT_VERSION" >> "$GITHUB_ENV"
+          echo "qt_version=$PJ_QT_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Build tools
+        run: python -m pip install 'conan>=2,<3' 'cmake>=3.28,<4' 'ninja!=1.13.0' 'aqtinstall>=3.3'
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 \
+            libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 libva-dev libdrm-dev \
+            xvfb zstd pkg-config ccache fonts-noto-cjk patchelf file unzip wget libfuse2 imagemagick
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+        with:
+          arch: x64
+      - uses: actions/cache@v5
+        with:
+          path: .qt
+          key: zh4-qt-${{ matrix.os }}-${{ steps.versions.outputs.qt_version }}
+      - name: Install pinned Linux Qt
+        if: runner.os == 'Linux'
+        run: ./scripts/install_qt6.sh
+      - name: Install pinned Windows Qt
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/windows/install_qt6.ps1
+      - name: Provide pinned fonts for Windows offscreen tests
+        if: runner.os == 'Windows'
+        # Qt's offscreen QFreeTypeFontDatabase uses QT_QPA_FONTDIR rather than
+        # the native Windows font database. Keep this test-only dependency out
+        # of the application and pin both its upstream revision and bytes.
+        run: |
+          python - <<'PYFONT'
+          from pathlib import Path
+          import hashlib
+          import os
+          import urllib.request
+          base = 'https://raw.githubusercontent.com/notofonts/noto-cjk/523d033d6cb47f4a80c58a35753646f5c3608a78/'
+          target = Path('build/ci-fonts').resolve()
+          target.mkdir(parents=True, exist_ok=True)
+          files = {
+              'Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf':
+                  '2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b',
+              'LICENSE': '6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2',
+          }
+          for path, expected in files.items():
+              with urllib.request.urlopen(base + path, timeout=120) as response:
+                  data = response.read()
+              if hashlib.sha256(data).hexdigest() != expected:
+                  raise SystemExit(f'CI font checksum mismatch: {path}')
+              (target / Path(path).name).write_bytes(data)
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as output:
+              output.write(f'QT_QPA_FONTDIR={target.as_posix()}\n')
+          PYFONT
+      - name: Focused language build and tests
+        run: |
+          qt_dir="$PWD/.qt/$PJ_QT_VERSION/${{ matrix.qt_arch }}"
+          export PATH="$qt_dir/bin:$PATH"
+          python tests/check_translations_4x.py --lupdate "$qt_dir/bin/lupdate"
+          cmake -S pj_app/tests/i18n -B build-i18n -G "${{ matrix.generator }}" \
+            -DCMAKE_PREFIX_PATH="$qt_dir" -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          cmake --build build-i18n --config RelWithDebInfo --parallel 2
+          ctest --test-dir build-i18n --build-config RelWithDebInfo --output-on-failure --timeout 60
+      - uses: actions/cache/restore@v5
+        id: conan-cache
+        with:
+          path: ~/.conan2
+          key: zh4-conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt', 'conan.lock') }}
+          restore-keys: |
+            zh4-conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt', 'conan.lock') }}-partial-
+            zh4-conan-${{ matrix.os }}-
+      - name: Prepare Conan sources
+        run: |
+          conan profile detect --force
+          ./scripts/configure_conan_remote.sh
+          cache_dir="$(python -c 'import os; print(os.path.abspath(".conan-source-cache").replace(chr(92), "/"))')"
+          mkdir -p "$cache_dir/s"
+          find .github/conan/source-backup -maxdepth 1 -type f ! -name README.md -exec cp {} "$cache_dir/s/" \;
+          conan_home="$(conan config home)"
+          mkdir -p "$conan_home"
+          python - "$conan_home/global.conf" "$cache_dir" <<'PY'
+          from pathlib import Path
+          import sys
+          p = Path(sys.argv[1])
+          lines = p.read_text().splitlines() if p.exists() else []
+          lines = [s for s in lines if not s.startswith(('core.sources:download_cache=', 'core.sources:download_urls='))]
+          lines += [f'core.sources:download_cache={sys.argv[2]}',
+                    'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources/"]']
+          p.write_text('\n'.join(lines) + '\n')
+          PY
+      - name: Resolve exact Linux SDK and dependencies
+        if: runner.os == 'Linux'
+        id: conan-linux
+        run: |
+          conan install . --output-folder=build --build=missing \
+            -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial \
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 \
+            --format=json --out-file=build/conan-graph.json
+      - name: Resolve exact Windows SDK and dependencies
+        if: runner.os == 'Windows'
+        id: conan-windows
+        # Invoke Conan outside Git Bash. Its FFmpeg recipe launches its own
+        # MSYS shell; nested shells can corrupt pkg-config's native path list.
+        # https://github.com/conan-io/conan-center-index/issues/30348
+        shell: pwsh
+        run: |
+          # setup-python injects a native path which conflicts with Conan's
+          # MSYS pkg-config search path. Let the locked dependency graph own it.
+          # https://github.com/conan-io/setup-conan#using-setup-python-action-alongside-setup-conan
+          Remove-Item Env:PKG_CONFIG_PATH -ErrorAction SilentlyContinue
+          conan install . --output-folder=build --build=missing `
+            -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial `
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 `
+            -o 'cpython/*:shared=True' -s 'cpython/*:build_type=Release' `
+            -s compiler.version=194 -c 'tools.cmake.cmaketoolchain:generator=Ninja Multi-Config' `
+            --format=json --out-file=build/conan-graph.json
+          exit $LASTEXITCODE
+      - name: Preserve FFmpeg dav1d probe diagnostics
+        if: failure() && (steps.conan-linux.outcome == 'failure' || steps.conan-windows.outcome == 'failure')
+        run: |
+          python - <<'PYLOG'
+          from pathlib import Path
+          import subprocess
+          home = Path(subprocess.check_output(['conan', 'config', 'home'], text=True).strip())
+          output = Path('build/diagnostics')
+          output.mkdir(parents=True, exist_ok=True)
+          for index, path in enumerate(home.glob('p/b/ffmpe*/b/build-*/ffbuild/config.log')):
+              # configure starts this log with `set`, including the complete
+              # process environment. Never publish that preamble as an artifact.
+              lines = path.read_text(errors='replace').splitlines()
+              probes = [i for i, line in enumerate(lines)
+                        if line.startswith(('require_pkg_config libdav1d ',
+                                            'check_pkg_config libdav1d '))]
+              if not probes:
+                  print('No dav1d probe found; the environment-bearing log is omitted.')
+                  continue
+              diagnostic = '\n'.join(lines[probes[-1]:][:400]) + '\n'
+              (output / f'ffmpeg-{index}-dav1d-probe.log').write_text(diagnostic)
+              print(f'--- {path.name}: {path.parent.parent.name} ---')
+              print(diagnostic)
+          PYLOG
+      - name: Trim incomplete Conan cache
+        if: failure() && (steps.conan-linux.outcome == 'failure' || steps.conan-windows.outcome == 'failure')
+        run: conan cache clean "*" --build --source --temp
+      - name: Retain completed dependency packages for retry
+        if: failure() && (steps.conan-linux.outcome == 'failure' || steps.conan-windows.outcome == 'failure')
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.conan2
+          # Never mark an incomplete graph as the exact, successful closure.
+          key: ${{ steps.conan-cache.outputs.cache-primary-key }}-partial-${{ github.run_id }}-${{ github.run_attempt }}
+      # Save resolved packages before application compilation/tests. A failing
+      # regression must not discard a successful, expensive dependency build.
+      - name: Trim Conan build cache
+        if: steps.conan-cache.outputs.cache-hit != 'true'
+        run: conan cache clean "*" --build --source --temp
+      - uses: actions/cache/save@v5
+        if: steps.conan-cache.outputs.cache-hit != 'true'
+        with:
+          path: ~/.conan2
+          key: ${{ steps.conan-cache.outputs.cache-primary-key }}
+      - name: Configure and build application plus regressions
+        run: |
+          cmake -S . -B build -G "${{ matrix.generator }}" \
+            -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+            -DCMAKE_PREFIX_PATH="$PWD/.qt/$PJ_QT_VERSION/${{ matrix.qt_arch }}" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPJ_BUILD_TESTS=ON -DPJ_BUILD_DEMOS=OFF \
+            -DPJ_INSTALLATION=${{ matrix.installation }} \
+            -DCMAKE_POLICY_DEFAULT_CMP0141=NEW -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+          cmake --build build --config RelWithDebInfo --parallel 2
+      - name: Run native tests
+        run: |
+          export PATH="$PWD/.qt/$PJ_QT_VERSION/${{ matrix.qt_arch }}/bin:$PATH"
+          export PJ_GUI_ACCEPTANCE_DIR="$(python -c 'import os; print(os.path.abspath("build/gui-acceptance").replace(chr(92), "/"))')"
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            for list in build/pj_ffmpeg_bin_dirs.txt build/pj_python_bin_dirs.txt; do
+              if [[ -f "$list" ]]; then
+                while IFS= read -r dir; do
+                  [[ -z "$dir" ]] || export PATH="$(cygpath -u "$dir"):$PATH"
+                done < "$list"
+              fi
+            done
+            # Widget runners choose offscreen themselves; leave GL runners on
+            # the native platform, matching upstream Windows CI.
+            ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120
+          else
+            PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120
+          fi
+      - name: Validate release identity
+        run: |
+          python tests/check_localization_provenance.py
+          python tests/test_release_versions.py -v
+          python tests/test_package_acceptance.py -v
+          if [[ "$RUNNER_OS" == Linux ]]; then python tests/test_deb_dependencies.py -v; fi
+          python packaging/localization/version_map.py "$PJ_VERSION"
+      - name: Stage pinned BIN, licenses and CJK fallback
+        run: |
+          args=()
+          if [[ "$RUNNER_OS" == Linux ]]; then args+=(--linux-tools); fi
+          python packaging/localization/prepare_payload.py --prefix build/fork-prefix "${args[@]}"
+      - name: Package Linux artifacts
+        if: runner.os == 'Linux'
+        run: |
+          registry="https://raw.githubusercontent.com/PlotJuggler/pj-plugin-registry/2696403e106c6960541b8da19987ece35a24597e/registry.json"
+          bash packaging/appimage/build_appimage.sh --plugins-registry "$registry"             --extra-prefix build/fork-prefix --name-suffix -zh-CN
+          # Every directly loaded ELF must respect the Ubuntu 22.04 floor.
+          python packaging/localization/audit_glibc.py build/AppDir
+          # Only the channel stamp changes; each final package is verified separately.
+          cmake -S . -B build -DPJ_INSTALLATION=deb
+          cmake --build build --target pj_app --parallel 2
+          bash packaging/deb/build_deb.sh --binary build/pj_app/plotjuggler4 --name-suffix -zh-CN
+          mkdir -p dist
+          cp packaging/appimage/PlotJuggler-*.AppImage packaging/deb/plotjuggler4_*.deb dist/
+      - name: Install pinned Windows IFW
+        if: runner.os == 'Windows'
+        run: aqt install-tool --outputdir .qt windows desktop tools_ifw qt.tools.ifw.47
+      - name: Package Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $packageVersion = python packaging/localization/version_map.py $env:PJ_VERSION --format ifw
+          ./packaging/installer/build_windows_installer.ps1 `
+            -QtDir ".qt/$env:PJ_QT_VERSION/msvc2022_64" `
+            -Version $env:PJ_VERSION -PackageVersion $packageVersion `
+            -ExtraPrefix build/fork-prefix -NameSuffix '-zh-CN' -CleanReleaseName -OutDir dist `
+            -PluginRegistryUrl "packaging/localization/registry-lock.json"
+      - name: Record original package hashes
+        run: |
+          python packaging/localization/hash_packages.py dist --output "SHA256SUMS-${RUNNER_OS}.txt"
+          git diff --exit-code
+      - name: Retain candidate packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: zh4-candidate-${{ runner.os }}
+          path: dist/*
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
+      - name: Retain native test and provenance reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zh4-candidate-reports-${{ runner.os }}
+          path: |
+            build/Testing/Temporary/
+            build-i18n/Testing/Temporary/
+            build/diagnostics/
+            build/gui-acceptance/
+            build/fork-prefix/share/plotjuggler4/release.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+  linux-clean:
+    needs: native
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['ubuntu:22.04', 'ubuntu:24.04']
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: zh4-candidate-Linux
+          path: pkg
+      - name: Install and verify both final packages without build dependencies
+        run: |
+          mkdir -p reports
+          source versions.env
+          docker run --rm -e EXPECTED_SOURCE_SHA="$GITHUB_SHA" -e EXPECTED_VERSION="$PJ_APP_VERSION" -v "$PWD:/src:ro" -v "$PWD/pkg:/pkg:ro" -v "$PWD/reports:/reports"             "${{ matrix.image }}" bash /src/packaging/localization/verify_linux.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zh4-final-linux-${{ strategy.job-index }}
+          path: reports/
+          if-no-files-found: error
+
+  windows-clean:
+    needs: native
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: zh4-candidate-Windows
+          path: pkg
+      - name: Install screenshot helper
+        run: python -m pip install 'Pillow>=11,<12'
+      - name: Install and verify the final installer
+        shell: pwsh
+        run: ./packaging/localization/verify_windows.ps1 -Packages pkg -Output reports
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zh4-final-Windows
+          path: reports/
+          if-no-files-found: error
+
+  release-manifest:
+    needs: [native, linux-clean, windows-clean]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: zh4-candidate-*
+          path: candidate
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: zh4-final-*
+          path: reports
+      - name: Bind exact original packages to all clean acceptance reports
+        run: python3 packaging/localization/create_release_manifest.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zh4-release-manifest
+          path: release-manifest.json
+          if-no-files-found: error

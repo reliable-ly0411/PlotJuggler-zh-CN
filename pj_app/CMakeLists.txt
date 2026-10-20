@@ -54,6 +54,8 @@ add_library(pj_app_shell OBJECT
     src/DatasetMergeActions.h
     src/DiagnosticDump.cpp
     src/DiagnosticDump.h
+    src/PlotStateDump.cpp
+    src/PlotStateDump.h
     src/LayoutExitWatch.cpp
     src/LayoutExitWatch.h
     src/LayoutXml.cpp
@@ -372,6 +374,7 @@ if(PJ_BUILD_TESTS)
     # resolve. MainWindow teardown leaks process-global state, so discovery
     # runs each case in its own process while sharing one linked executable.
     set(PJ_APP_GUI_TEST_SOURCES
+        tests/plot_state_dump_test.cpp
         tests/preferences_language_test.cpp
         tests/slider_states_test.cpp)
 
@@ -667,7 +670,7 @@ if(PJ_BUILD_TESTS)
         dialog_probe_source_plugin
         progress_shutdown_source_plugin
     )
-    target_link_libraries(file_loader_test PRIVATE pj_app_loader_testlib)
+    target_link_libraries(file_loader_test PRIVATE pj_app_loader_testlib pj_plotting pj_resources)
     if(DEFINED PJ_WARNING_FLAGS)
         target_compile_options(file_loader_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
