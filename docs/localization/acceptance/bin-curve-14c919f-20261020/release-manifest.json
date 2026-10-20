@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "source_commit": "14c919f903936130c151818dbf1a0144ea6a6050",
+  "source_tree": "b35df58b136a50c19026bd2cd866bcf8c082f866",
+  "workflow_sha": "14c919f903936130c151818dbf1a0144ea6a6050",
+  "run_id": "39390859457",
+  "run_attempt": "1",
+  "version": "4.0.0-zh.1.rc.1",
+  "tag": "v4.0.0-zh.1.rc.1",
+  "automated_acceptance": "passed",
+  "visual_review": "required before creating the version-specific promotion ref",
+  "assets": [
+    {
+      "name": "PlotJuggler-4.0.0-zh.1.rc.1-x86_64-zh-CN.AppImage",
+      "size": 159988216,
+      "sha256": "8718593df9ede797dfadfc0e6668771af354cae785b2752dbb50da4363e39cca"
+    },
+    {
+      "name": "plotjuggler4_4.0.0~zh.1~rc.1-1_amd64-zh-CN.deb",
+      "size": 121232444,
+      "sha256": "db846729c41a629ba5991b7f7eeae115d168da6ddcc36afbd352a7412ff7417c"
+    },
+    {
+      "name": "PlotJuggler-4.0.0-zh.1.rc.1-Windows-x64-zh-CN.exe",
+      "size": 135239901,
+      "sha256": "1a9433c13c3ecc845910a419fe237fffa0986b3a0bdbcb58b1011f5969085cc7"
+    }
+  ],
+  "acceptance_reports": [
+    {
+      "path": "reports/zh4-final-Windows/runtime/acceptance.json",
+      "sha256": "04c977349b0cec8ac256b0b03c850f006e0db242c7de07a0a3ce7a5245cf3176",
+      "plugin_count": 19,
+      "loaded_plugin_count": 19,
+      "unavailable_plugins": [],
+      "checks": [
+        "embedded version",
+        "CJK font bytes",
+        "licenses",
+        "Python backend",
+        "bundled plugin inventory and explicit external dependency boundary",
+        "real BIN in Unicode path",
+        "Chinese and English curve restoration with finite visible samples and non-default viewport"
+      ]
+    },
+    {
+      "path": "reports/zh4-final-linux-0/appimage/acceptance.json",
+      "sha256": "1f9aa1584c76c0feb550f9579f5bf6382b4d65b904584a3c860dd2660643f7cf",
+      "plugin_count": 21,
+      "loaded_plugin_count": 20,
+      "unavailable_plugins": [
+        {
+          "id": "ros2-topic-subscriber",
+          "version": "1.1.1",
+          "status": "not_tested_missing_external_dependency",
+          "reason": "ROS 2 is not installed in the clean acceptance image"
+        }
+      ],
+      "checks": [
+        "embedded version",
+        "CJK font bytes",
+        "licenses",
+        "Python backend",
+        "bundled plugin inventory and explicit external dependency boundary",
+        "real BIN in Unicode path",
+        "Chinese and English curve restoration with finite visible samples and non-default viewport"
+      ]
+    },
+    {
+      "path": "reports/zh4-final-linux-0/deb/acceptance.json",
+      "sha256": "1f9aa1584c76c0feb550f9579f5bf6382b4d65b904584a3c860dd2660643f7cf",
+      "plugin_count": 21,
+      "loaded_plugin_count": 20,
+      "unavailable_plugins": [
+        {
+          "id": "ros2-topic-subscriber",
+          "version": "1.1.1",
+          "status": "not_tested_missing_external_dependency",
+          "reason": "ROS 2 is not installed in the clean acceptance image"
+        }
+      ],
+      "checks": [
+        "embedded version",
+        "CJK font bytes",
+        "licenses",
+        "Python backend",
+        "bundled plugin inventory and explicit external dependency boundary",
+        "real BIN in Unicode path",
+        "Chinese and English curve restoration with finite visible samples and non-default viewport"
+      ]
+    },
+    {
+      "path": "reports/zh4-final-linux-1/appimage/acceptance.json",
+      "sha256": "1f9aa1584c76c0feb550f9579f5bf6382b4d65b904584a3c860dd2660643f7cf",
+      "plugin_count": 21,
+      "loaded_plugin_count": 20,
+      "unavailable_plugins": [
+        {
+          "id": "ros2-topic-subscriber",
+          "version": "1.1.1",
+          "status": "not_tested_missing_external_dependency",
+          "reason": "ROS 2 is not installed in the clean acceptance image"
+        }
+      ],
+      "checks": [
+        "embedded version",
+        "CJK font bytes",
+        "licenses",
+        "Python backend",
+        "bundled plugin inventory and explicit external dependency boundary",
+        "real BIN in Unicode path",
+        "Chinese and English curve restoration with finite visible samples and non-default viewport"
+      ]
+    },
+    {
+      "path": "reports/zh4-final-linux-1/deb/acceptance.json",
+      "sha256": "1f9aa1584c76c0feb550f9579f5bf6382b4d65b904584a3c860dd2660643f7cf",
+      "plugin_count": 21,
+      "loaded_plugin_count": 20,
+      "unavailable_plugins": [
+        {
+          "id": "ros2-topic-subscriber",
+          "version": "1.1.1",
+          "status": "not_tested_missing_external_dependency",
+          "reason": "ROS 2 is not installed in the clean acceptance image"
+        }
+      ],
+      "checks": [
+        "embedded version",
+        "CJK font bytes",
+        "licenses",
+        "Python backend",
+        "bundled plugin inventory and explicit external dependency boundary",
+        "real BIN in Unicode path",
+        "Chinese and English curve restoration with finite visible samples and non-default viewport"
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "reports/zh4-final-Windows/runtime/gui-zh_CN.png",
+      "sha256": "153c79713bc560890fe022e8b7f9ae11032d84b64ecd9b5e6acaa06227ab2ea4",
+      "size": 34110
+    },
+    {
+      "path": "reports/zh4-final-Windows/runtime/gui-en_US.png",
+      "sha256": "1e8dabfbef8f5efaa476aa3aafb9535d468952fa47d76da65479e42dd3ee35a8",
+      "size": 35454
+    },
+    {
+      "path": "reports/zh4-final-linux-0/appimage/gui-zh_CN.png",
+      "sha256": "edbf7f9a30762f190822d4bee97da2636b73a375ab2b292dbd58003a6edebaf0",
+      "size": 36582
+    },
+    {
+      "path": "reports/zh4-final-linux-0/appimage/gui-en_US.png",
+      "sha256": "a7eb9611f7cc55277e8c3da31cfa1be23ba36cb903310607a80940a2e95fda38",
+      "size": 33503
+    },
+    {
+      "path": "reports/zh4-final-linux-0/deb/gui-zh_CN.png",
+      "sha256": "edbf7f9a30762f190822d4bee97da2636b73a375ab2b292dbd58003a6edebaf0",
+      "size": 36582
+    },
+    {
+      "path": "reports/zh4-final-linux-0/deb/gui-en_US.png",
+      "sha256": "a7eb9611f7cc55277e8c3da31cfa1be23ba36cb903310607a80940a2e95fda38",
+      "size": 33503
+    },
+    {
+      "path": "reports/zh4-final-linux-1/appimage/gui-zh_CN.png",
+      "sha256": "5bc520bf9eacae8cb5c70adb27fe6a98a9869fc2e8ddb7dced3ca0513e545d91",
+      "size": 36566
+    },
+    {
+      "path": "reports/zh4-final-linux-1/appimage/gui-en_US.png",
+      "sha256": "55c922660aacaac6e7e4c46e1680b233fbaa1860857581da9e1c76fc51c8900a",
+      "size": 33487
+    },
+    {
+      "path": "reports/zh4-final-linux-1/deb/gui-zh_CN.png",
+      "sha256": "5bc520bf9eacae8cb5c70adb27fe6a98a9869fc2e8ddb7dced3ca0513e545d91",
+      "size": 36566
+    },
+    {
+      "path": "reports/zh4-final-linux-1/deb/gui-en_US.png",
+      "sha256": "55c922660aacaac6e7e4c46e1680b233fbaa1860857581da9e1c76fc51c8900a",
+      "size": 33487
+    }
+  ]
+}

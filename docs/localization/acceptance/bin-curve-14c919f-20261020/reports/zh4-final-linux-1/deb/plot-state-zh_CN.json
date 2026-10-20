@@ -1,0 +1,30 @@
+{
+    "plots": [
+        {
+            "curves": [
+                {
+                    "field": "C1\t[us]",
+                    "finite_sample_count": 1318,
+                    "finite_samples_in_view": 1318,
+                    "sample_bounds": {
+                        "x_max": 81.095877,
+                        "x_min": 28.416489,
+                        "y_max": 1442,
+                        "y_min": 1000
+                    },
+                    "sample_count": 1318,
+                    "topic": "/RCOU",
+                    "visible": true
+                }
+            ],
+            "id": "p1",
+            "viewport": {
+                "x_max": 81.095877,
+                "x_min": 28.416489,
+                "y_max": 1453.05,
+                "y_min": 988.95
+            }
+        }
+    ],
+    "version": 1
+}
