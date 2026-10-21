@@ -15,7 +15,7 @@ def replace(extra, destination):
     for item in record['localized_plugin_rebuilds']:
         identifier = item['id']
         assert identifier in {'protobuf-parser', 'toolbox-assistant-agent',
-                              'toolbox-transform-editor', 'webrtc-client'}
+                              'toolbox-transform-editor', 'webrtc-client', 'mcap-loader'}
         relative = Path('lib/plotjuggler/plugins') / identifier
         source = extra / relative
         assert source.is_dir() and not source.is_symlink()

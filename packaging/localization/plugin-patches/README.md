@@ -9,7 +9,9 @@ The deferred Mosaico patch is not built or distributed in rc.2.
 
 The patches translate only fixed prose at its construction site:
 
-- Protobuf: preview headings and source-availability notices; source bytes and
+- MCAP: fixed import/progress/error prose at its generation sites; topic names,
+  paths, encoding IDs and external parser diagnostics remain unchanged.
+- Protobuf: own fixed parser errors, preview headings and source-availability notices; source bytes and
   compiler diagnostics remain unchanged.
 - Mosaico (deferred, not applied): proposed Info/status source patch retained for
   future review only. rc.2 keeps the official original binary and remaining English.
@@ -48,7 +50,7 @@ automatic plugin update feed.
 
 Mosaico 1.3.0 remains the original official precompiled package with its original
 registry ZIP checksum and exact binary/manifest hashes. It is excluded from the
-four-plugin rebuild list, and the replacement helper refuses its ID. No standalone
+five-plugin rebuild list, and the replacement helper refuses its ID. No standalone
 Mosaico SDK source is newly redistributed or linked by this release. Safe existing
 static UI translations remain, but mixed Info/status prose keeps English because
 its user-data origin cannot be determined from final plain text.

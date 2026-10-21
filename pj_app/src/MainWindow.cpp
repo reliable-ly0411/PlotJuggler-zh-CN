@@ -4223,9 +4223,11 @@ void MainWindow::emitDiagnostic(DiagnosticLevel level, const char* source, const
 }
 
 void MainWindow::refreshStreamingCombo() {
-  QStringList names;
+  QList<QPair<QString, QString>> names;
   for (const auto* ds : session_->extensionCatalog().streamSources()) {
-    names << QString::fromStdString(ds->name);
+    const QString canonical = QString::fromStdString(ds->name);
+    names.push_back({canonical, bundledPluginText(QString::fromStdString(ds->id),
+                                                QString::fromStdString(ds->version), canonical)});
   }
   ui_->leftPanel->setStreamingSources(names);
 }
@@ -10167,7 +10169,9 @@ void MainWindow::launchToolbox(
                      .engine = engine,
                      .session = session,
                      .host = session->host.get(),
-                     .title = pin_tab_name.isEmpty() ? source : pin_tab_name,
+                     .title = pin_tab_name.isEmpty()
+                                  ? bundledPluginText(plugin_id, QString::fromStdString(toolbox->version), source)
+                                  : pin_tab_name,
                      // The presenter owns `session`, so its raw pointer outlives this closure.
                      .save_config = [session = session.get()]() -> QString {
                        std::string config_json;

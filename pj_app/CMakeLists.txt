@@ -553,7 +553,8 @@ if(PJ_BUILD_TESTS)
     # The left column's width belongs to the user: neither a window resize nor a
     # chart-area takeover may move the separator they dragged.
     list(APPEND PJ_APP_GUI_TEST_SOURCES
-        tests/main_window_panel_geometry_test.cpp)
+        tests/main_window_panel_geometry_test.cpp
+        tests/left_panel_localized_sources_test.cpp)
 
     # A toolbox panel with a download in flight folds into a background tab
     # instead of being destroyed: the banner X, the folded tab's own close, the

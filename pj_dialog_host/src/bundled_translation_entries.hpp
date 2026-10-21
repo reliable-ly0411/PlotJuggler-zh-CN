@@ -530,6 +530,8 @@ constexpr DisplayEntry kDisplayEntries[] = {
     {"241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1", "claudeModelCombo", "text", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "sonnet — fast; the measured default")},
     {"plugin:toolbox-quaternion@1.0.1", "message-source:toolbox-quaternion", "message", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "quaternion apply failed: host did not expose pj.data_processors.v1")},
     {"plugin:toolbox-quaternion@1.0.1", "message-source:toolbox-quaternion", "message", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "quaternion save failed: host did not expose pj.data_processors.v1")},
+    {"7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0", "", "text", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "Output:")},
+    {"7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0", "output_prefix", "placeholderText", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "e.g. /imu/rpy/")},
 };
 constexpr TemplateEntry kTemplateEntries[] = {
     {"31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce", "labelAnalyzeError", "text", "\\AOnly\\ MCAP\\-storage\\ ROS\\ 2\\ bags\\ are\\ supported;\\ this\\ bag\\ uses\\ '([\\s\\S]*)'\\.\\ Convert\\ it\\ with\\ 'ros2\\ bag\\ convert'\\ \\(storage_id:\\ mcap\\)\\.\\z", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "Only MCAP-storage ROS 2 bags are supported; this bag uses '%1'. Convert it with 'ros2 bag convert' (storage_id: mcap).")},

@@ -19,4 +19,17 @@ class TriggerTests(unittest.TestCase):
   for required in ('inputs.visual_reviewed','github.event.created','publish-accepted-','CANDIDATE_ATTEMPT','sha256sum -c','--downloads draft-check','--draft=false'):
    self.assertIn(required,text)
   self.assertNotIn('--clobber',text)
+ def test_plugin_preflight_has_one_creation_only_and_no_publication(self):
+  text=(ROOT/'.github/workflows/zh-4x-plugin-preflight.yml').read_text(encoding='utf-8')
+  branch='zh-CN-4.x-ci/plugin-preflight-rc2-final5'
+  self.assertIn("branches: ['"+branch+"']", text)
+  self.assertIn("github.event.created && github.ref_name == '"+branch+"'", text)
+  self.assertIn('contents: read', text)
+  self.assertIn('--preflight', text)
+  self.assertNotIn('contents: write', text)
+  self.assertNotIn('gh release', text)
+  for event,created,ref,expected in [('push',True,branch,True),('push',False,branch,False),
+      ('push',True,'zh-CN-4.x-dev',False),('pull_request',True,branch,False),
+      ('push',True,'zh-CN-4.x-ci/other',False)]:
+   self.assertEqual(event=='push' and created and ref==branch,expected)
 if __name__=='__main__':unittest.main()

@@ -3,6 +3,8 @@
 #include <QComboBox>
 #include <QCryptographicHash>
 #include <QFile>
+#include <QFileInfo>
+#include <QDir>
 #include <QLabel>
 #include <QLineEdit>
 #include <QTest>
@@ -16,6 +18,8 @@ class Translation : public QTranslator {
       return {};
     }
     const QByteArray text(source);
+    if (text == "Output:") return QStringLiteral("输出：");
+    if (text == "e.g. /imu/rpy/") return QStringLiteral("例如 /imu/rpy/");
     if (text == "CSV Loader") {
       return QStringLiteral("CSV 加载器");
     }
@@ -62,6 +66,19 @@ class BundledTranslationsTest : public QObject {
     QCoreApplication::removeTranslator(&translator);
     const auto english = PJ::localizeBundledUi(ui, &scope);
     QVERIFY(english.contains("CSV Loader"));
+  }
+  void anonymousLabelIsBoundToExactQuaternionUi() {
+    QFile file(QFileInfo(QStringLiteral(PJ_CSV_UI_FIXTURE)).dir().filePath(QStringLiteral("quaternion_1_0_1.ui")));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    const auto raw = file.readAll().replace("\r\n", "\n");
+    Translation translator;
+    QCoreApplication::installTranslator(&translator);
+    QByteArray scope;
+    const auto translated = PJ::localizeBundledUi(raw, &scope);
+    QVERIFY(translated.contains(QStringLiteral("输出：").toUtf8()));
+    QVERIFY(translated.contains(QStringLiteral("例如 /imu/rpy/").toUtf8()));
+    QCOMPARE(PJ::localizeBundledUi(raw + "\n", &scope), raw + "\n");
+    QCoreApplication::removeTranslator(&translator);
   }
   void specificDiagnosticPrecedesFallback() {
     Translation translator;

@@ -25,7 +25,9 @@ class BundledTranslationTest(unittest.TestCase):
         for row in data['exact'] + data['templates']:
             self.assertTrue(row['scope'] in hashes or re.fullmatch(r'plugin:[a-z0-9-]+@[0-9.]+', row['scope']))
             self.assertNotIn(row['property'], ['plainText', 'code', 'items', 'currentText'])
-            self.assertTrue(row['widget'])
+            if not row['widget']:
+                self.assertEqual((row['scope'], row['property'], row['source']),
+                    ('7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0', 'text', 'Output:'))
             if row['property'] == 'pickerFilter':
                 self.assertEqual(re.findall(r'\([^)]*\)', row['source']), re.findall(r'\([^)]*\)', row['translation']))
             if row['property'] == 'pj_context_actions':
@@ -41,13 +43,13 @@ class BundledTranslationTest(unittest.TestCase):
     def test_native_build_remains_explicit(self):
         workflow = (ROOT / '.github/workflows/zh-4x-packages.yml').read_text(encoding='utf-8')
         self.assertIn("github.event_name == 'push' && github.event.created", workflow)
-        self.assertIn("'zh-CN-4.x-ci/release-candidate-rc2-final4'", workflow)
+        self.assertIn("'zh-CN-4.x-ci/release-candidate-rc2-final5'", workflow)
         self.assertNotIn("branches: ['zh-CN-4.x-*", workflow)
         condition = "github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.created)"
         self.assertIn('    if: ' + condition, workflow)
         branches = re.search(r"branches: \[(.*?)\]", workflow).group(1)
         admitted = re.findall(r"'([^']+)'", branches)
-        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final4'})
+        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final5'})
         def runs(event, branch, created):
             trigger = event == 'workflow_dispatch' or (event == 'push' and branch in admitted)
             gate = event == 'workflow_dispatch' or (event == 'push' and created)

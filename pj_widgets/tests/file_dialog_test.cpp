@@ -7,6 +7,11 @@
 #include <QCheckBox>
 #include <QDir>
 #include <QFileDialog>
+#include <QFile>
+#include <QFileSystemModel>
+#include <QAbstractProxyModel>
+#include <QLocale>
+#include <QScopeGuard>
 #include <QTemporaryDir>
 #include <QTimer>
 
@@ -67,6 +72,43 @@ TEST_F(FileDialogTest, GetSaveFileNameWithOptionsCancelReturnsEmpty) {
   EXPECT_TRUE(result.path.isEmpty());
   ASSERT_EQ(result.option_states.size(), 1u);
   EXPECT_TRUE(result.option_states[0]);  // defaults preserved on cancel
+}
+
+TEST_F(FileDialogTest, LocalizedDetailsPreserveNamesRolesPathsAndSourceSorting) {
+  const QVariant previous = qApp->property("interfaceLanguage");
+  const auto restore = qScopeGuard([&] { qApp->setProperty("interfaceLanguage", previous); });
+  qApp->setProperty("interfaceLanguage", u"zh_CN"_s);
+  QTemporaryDir temp;
+  ASSERT_TRUE(temp.isValid());
+  const QString path = QDir(temp.path()).filePath(u"原始 Name %1.xml"_s);
+  QFile file(path);
+  ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+  ASSERT_EQ(file.write("<root/>", 7), 7);
+  file.close();
+  PJ::FileDialog picker;
+  picker.setDirectory(temp.path());
+  auto* inner = picker.findChild<QFileDialog*>();
+  ASSERT_NE(inner, nullptr);
+  auto* proxy = inner->proxyModel();
+  ASSERT_NE(proxy, nullptr);
+  auto* source = qobject_cast<QFileSystemModel*>(proxy->sourceModel());
+  ASSERT_NE(source, nullptr);
+  const QModelIndex original = source->index(path);
+  ASSERT_TRUE(original.isValid());
+  const QModelIndex shown = proxy->mapFromSource(original);
+  ASSERT_TRUE(shown.isValid());
+  EXPECT_EQ(proxy->data(shown).toString(), u"原始 Name %1.xml"_s);
+  EXPECT_EQ(proxy->data(shown, QFileSystemModel::FilePathRole).toString(), path);
+  EXPECT_EQ(proxy->data(shown, Qt::EditRole), source->data(original, Qt::EditRole));
+  EXPECT_EQ(proxy->data(shown.siblingAtColumn(1)).toString(),
+            QLocale(QLocale::Chinese, QLocale::China).formattedDataSize(7));
+  EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)).toString(),
+            QCoreApplication::translate("PJ::FileDialog", "XML document"));
+  picker.selectFile(path);
+  EXPECT_EQ(picker.selectedFile(), path);
+  qApp->setProperty("interfaceLanguage", u"en_US"_s);
+  EXPECT_EQ(proxy->data(shown.siblingAtColumn(1)), source->data(original.siblingAtColumn(1)));
+  EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)), source->data(original.siblingAtColumn(2)));
 }
 
 }  // namespace

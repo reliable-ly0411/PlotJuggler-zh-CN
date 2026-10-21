@@ -5,6 +5,14 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+// This focused path/prose fixture reads no compressed MCAP data. Production
+// plugin and upstream tests keep their normal LZ4/Zstd build configuration.
+#ifdef PJ_TEST_MCAP
+#define MCAP_IMPLEMENTATION
+#define MCAP_COMPRESSION_NO_LZ4
+#define MCAP_COMPRESSION_NO_ZSTD
+#include "data_load_mcap/mcap_helpers.hpp"
+#endif
 #ifdef PJ_TEST_ASSISTANT
 #include "toolbox_assistant_agent/src/chat_session.hpp"
 #endif
@@ -19,6 +27,17 @@ int main(int argc, char** argv) {
   require(pj_zh_localization::isChinese() == chinese, "startup language mismatch");
   require(std::string(pj_zh_localization::text("Ready", "就绪")) ==
               (chinese ? "就绪" : "Ready"), "fixed prose mismatch");
+#ifdef PJ_TEST_MCAP
+  const std::string missing_path = "__pj_nonexistent_raw_%1_Parser Error.yaml";
+  const auto recording = PJ::McapHelpers::resolveRecordingFiles(missing_path);
+  require(recording.paths.empty(), "invalid recording unexpectedly resolved");
+  require(recording.error == std::string(chinese ? "无法打开 " : "Cannot open ") + missing_path,
+          "MCAP fixed prose or raw path changed");
+  const std::string raw_mcap = "raw_%1_Parser Error.mcap";
+  const auto plain = PJ::McapHelpers::resolveRecordingFiles(raw_mcap);
+  require(plain.error.empty() && plain.paths == std::vector<std::string>{raw_mcap},
+          "MCAP canonical path changed");
+#endif
   const std::string raw = "**Assistant:**\nError: %1\nSOURCE NOTICE:\n用户数据 ```cpp int x=1;```";
 #ifdef PJ_TEST_ASSISTANT
   assistant_agent::ChatSession session;

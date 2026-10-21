@@ -1199,13 +1199,13 @@
         <location line="-42"/>
         <location line="+43"/>
         <source>remove suffixes from numbers (example: &quot;100ms&quot; -&gt; 100)</source>
-        <translation>移除数字的后缀（例如："100ms" -&gt; 100）</translation>
+        <translation>移除数字的后缀（例如：&quot;100ms&quot; -&gt; 100）</translation>
     </message>
     <message>
         <location line="-42"/>
         <location line="+43"/>
         <source>convert boolean strings (&quot;false&quot;/&quot;true&quot;) to numbers (0/1)</source>
-        <translation>将布尔字符串（"false"/"true"）转换为数字（0/1）</translation>
+        <translation>将布尔字符串（&quot;false&quot;/&quot;true&quot;）转换为数字（0/1）</translation>
     </message>
     <message>
         <location line="-42"/>
@@ -1309,7 +1309,7 @@
     <message>
         <location line="+1"/>
         <source>Optional. Sent as &quot;Authorization: Bearer ...&quot; on every WHEP and Control API request.</source>
-        <translation>可选。每个 WHEP 和控制 API 请求都会以 "Authorization: Bearer ..." 的形式发送此令牌。</translation>
+        <translation>可选。每个 WHEP 和控制 API 请求都会以 &quot;Authorization: Bearer ...&quot; 的形式发送此令牌。</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1781,7 +1781,7 @@
     <message>
         <location line="+1"/>
         <source>If enabled, arrays of objects carrying a string &quot;label&quot; (or &quot;name&quot;) member are keyed by that label instead of the array index, and a lone &quot;value&quot; member collapses onto it (e.g. scalars/shoulder_pan.pos instead of scalars[0]/value).</source>
-        <translation>启用后，对于含有字符串 "label"（或 "name"）成员的对象数组，将使用该标签而非数组索引作为键；如果仅有一个 "value" 成员，则将其合并到该键下（例如，使用 scalars/shoulder_pan.pos，而不是 scalars[0]/value）。</translation>
+        <translation>启用后，对于含有字符串 &quot;label&quot;（或 &quot;name&quot;）成员的对象数组，将使用该标签而非数组索引作为键；如果仅有一个 &quot;value&quot; 成员，则将其合并到该键下（例如，使用 scalars/shoulder_pan.pos，而不是 scalars[0]/value）。</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1816,7 +1816,7 @@
     <message>
         <location line="+2"/>
         <source>Name of the top-level double field containing the timestamp in seconds. Leave empty to try &quot;timestamp&quot; then &quot;ts&quot; automatically.</source>
-        <translation>包含时间戳（单位为秒）的顶层 double 类型字段名称。留空时将自动依次尝试 "timestamp" 和 "ts"。</translation>
+        <translation>包含时间戳（单位为秒）的顶层 double 类型字段名称。留空时将自动依次尝试 &quot;timestamp&quot; 和 &quot;ts&quot;。</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1897,7 +1897,7 @@
     <message>
         <location line="+1"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Visit &lt;a href=&quot;https://doc.qt.io/qt-5/qtime.html#toString&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;these&lt;/span&gt;&lt;/a&gt; &lt;a href=&quot;https://doc.qt.io/qt-5/qdate.html#fromString-2&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;links&lt;/span&gt;&lt;/a&gt; to learn more about the Date-Time format&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;访问&lt;a href="https://doc.qt.io/qt-5/qtime.html#toString"&gt;&lt;span style=" text-decoration: underline; color:#0000ff;"&gt;时间格式说明&lt;/span&gt;&lt;/a&gt;和&lt;a href="https://doc.qt.io/qt-5/qdate.html#fromString-2"&gt;&lt;span style=" text-decoration: underline; color:#0000ff;"&gt;日期格式说明&lt;/span&gt;&lt;/a&gt;，了解日期时间格式的更多信息。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;访问&lt;a href=&quot;https://doc.qt.io/qt-5/qtime.html#toString&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;时间格式说明&lt;/span&gt;&lt;/a&gt;和&lt;a href=&quot;https://doc.qt.io/qt-5/qdate.html#fromString-2&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;日期格式说明&lt;/span&gt;&lt;/a&gt;，了解日期时间格式的更多信息。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1978,7 +1978,7 @@ Overwrite it?</source>
     <message>
         <location line="-26"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Drag &amp;amp; drop timeseries here. Pick the radio to set which one is &lt;span style=&quot; font-weight:600;&quot;&gt;value&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;将时间序列拖放到此处。通过单选按钮选择用作 &lt;span style=" font-weight:600;"&gt;value&lt;/span&gt; 的序列。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;将时间序列拖放到此处。通过单选按钮选择用作 &lt;span style=&quot; font-weight:600;&quot;&gt;value&lt;/span&gt; 的序列。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2022,7 +2022,7 @@ Overwrite it?</source>
         <location line="+1"/>
         <location line="+12"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Write your function implementation here. &lt;/p&gt;&lt;p&gt;It &lt;span style=&quot; font-weight:600;&quot;&gt;must&lt;/span&gt; return a new value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在此编写函数实现。&lt;/p&gt;&lt;p&gt;函数&lt;span style=" font-weight:600;"&gt;必须&lt;/span&gt;返回一个新值。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在此编写函数实现。&lt;/p&gt;&lt;p&gt;函数&lt;span style=&quot; font-weight:600;&quot;&gt;必须&lt;/span&gt;返回一个新值。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="-11"/>
@@ -2127,47 +2127,47 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Select an additional time series and drop it in the table on the left side. Now your function definition will look like &lt;span style=&quot; font-style:italic;&quot;&gt;function(time,value,v1)&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Average of two time series:&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return (value + v1) / 2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;style type="text/css"&gt;
+        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;"&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:14pt; font-weight:600;"&gt;变换编辑器帮助&lt;/span&gt;&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:14pt; font-weight:600;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;变换编辑器使用 Lua 脚本语言。您可以先阅读&lt;a href="http://tylerneylon.com/a/learn-lua/"&gt;&lt;span style=" text-decoration: underline;"&gt;15 分钟学会 Lua&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;实际上，在 PlotJuggler 中使用它并不需要掌握太多知识。&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;您需要实现以下函数的函数体：&lt;span style=" font-style:italic;"&gt;function(time, value),&lt;/span&gt;它会对每个数据点调用一次。返回值将构成数据点 [time, your_value]。&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;单输入、无状态函数：&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;示例：&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   return (value *  2) + 1&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;也可以使用 &lt;a href="https://www.tutorialspoint.com/lua/lua_math_library.htm"&gt;&lt;span style=" text-decoration: underline;"&gt;Lua 数学库&lt;/span&gt;&lt;/a&gt;:&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   return math.log(value)&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;新数据点的时间与原数据点相同。如果需要修改时间戳，只需像下面这样返回两个值：&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   return time +1, (value *  2) &lt;/span&gt;&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;一次返回多个数据点：&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;从 3.1 版本起，还可以使用 Lua 表一次返回多个值：&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   -- Calculate t1,v1, t2, v2, etc...&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   return { {t1, v1}, {t2, v2} }&lt;/span&gt;&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;有状态函数：&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;某些变换需要某种形式的“记忆”，即需要前一个值。为此，可以使用“全局变量”文本框。&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;例如，要计算两个相邻值的有限差分，可以在&lt;span style=" font-weight:600;"&gt;全局变量&lt;/span&gt;文本框中添加以下代码：&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   prev = nil&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;并在 &lt;span style=" font-weight:600;"&gt;Function() &lt;/span&gt;文本框中添加以下代码：&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   if ( prev == nil ) then&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;        prev = value&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   end&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   diff = value - prev&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   prev = value&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   return diff  &lt;/span&gt;&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;多输入、单输出：&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;选择另一个时间序列并将其拖放到左侧表格中。此时，函数定义将变为 &lt;span style=" font-style:italic;"&gt;function(time,value,v1)&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;计算两个时间序列的平均值：&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   return (value + v1) / 2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;变换编辑器帮助&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:14pt; font-weight:600;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;变换编辑器使用 Lua 脚本语言。您可以先阅读&lt;a href=&quot;http://tylerneylon.com/a/learn-lua/&quot;&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;15 分钟学会 Lua&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;实际上，在 PlotJuggler 中使用它并不需要掌握太多知识。&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;您需要实现以下函数的函数体：&lt;span style=&quot; font-style:italic;&quot;&gt;function(time, value),&lt;/span&gt;它会对每个数据点调用一次。返回值将构成数据点 [time, your_value]。&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;单输入、无状态函数：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;示例：&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return (value *  2) + 1&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;也可以使用 &lt;a href=&quot;https://www.tutorialspoint.com/lua/lua_math_library.htm&quot;&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;Lua 数学库&lt;/span&gt;&lt;/a&gt;:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return math.log(value)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;新数据点的时间与原数据点相同。如果需要修改时间戳，只需像下面这样返回两个值：&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return time +1, (value *  2) &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;一次返回多个数据点：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;从 3.1 版本起，还可以使用 Lua 表一次返回多个值：&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   -- Calculate t1,v1, t2, v2, etc...&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return { {t1, v1}, {t2, v2} }&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;有状态函数：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;某些变换需要某种形式的“记忆”，即需要前一个值。为此，可以使用“全局变量”文本框。&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;例如，要计算两个相邻值的有限差分，可以在&lt;span style=&quot; font-weight:600;&quot;&gt;全局变量&lt;/span&gt;文本框中添加以下代码：&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   prev = nil&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;并在 &lt;span style=&quot; font-weight:600;&quot;&gt;Function() &lt;/span&gt;文本框中添加以下代码：&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   if ( prev == nil ) then&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;        prev = value&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   end&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   diff = value - prev&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   prev = value&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return diff  &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;多输入、单输出：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;选择另一个时间序列并将其拖放到左侧表格中。此时，函数定义将变为 &lt;span style=&quot; font-style:italic;&quot;&gt;function(time,value,v1)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;计算两个时间序列的平均值：&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return (value + v1) / 2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2225,25 +2225,25 @@ p, li { white-space: pre-wrap; }
         <location line="+1"/>
         <location line="+44"/>
         <source>&quot;,&quot; (comma)</source>
-        <translation>","（逗号）</translation>
+        <translation>&quot;,&quot;（逗号）</translation>
     </message>
     <message>
         <location line="-43"/>
         <location line="+44"/>
         <source>&quot;;&quot; (semicolon)</source>
-        <translation>";"（分号）</translation>
+        <translation>&quot;;&quot;（分号）</translation>
     </message>
     <message>
         <location line="-43"/>
         <location line="+44"/>
         <source>&quot; &quot; (space)</source>
-        <translation>" "（空格）</translation>
+        <translation>&quot; &quot;（空格）</translation>
     </message>
     <message>
         <location line="-43"/>
         <location line="+44"/>
         <source>&quot;\t&quot; (tab)</source>
-        <translation>"\t"（制表符）</translation>
+        <translation>&quot;\t&quot;（制表符）</translation>
     </message>
     <message>
         <location line="-43"/>
@@ -2325,12 +2325,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location line="+1"/>
         <source>The abbreviated localized day name (e.g. &apos;Mon&apos; to &apos;Sun&apos;)</source>
-        <translation>本地化的星期简称（例如 'Mon' 至 'Sun'）</translation>
+        <translation>本地化的星期简称（例如 &apos;Mon&apos; 至 &apos;Sun&apos;）</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The long localized day name (e.g. &apos;Monday&apos; to &apos;Sunday&apos;)</source>
-        <translation>本地化的星期全称（例如 'Monday' 至 'Sunday'）</translation>
+        <translation>本地化的星期全称（例如 &apos;Monday&apos; 至 &apos;Sunday&apos;）</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2345,12 +2345,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location line="+1"/>
         <source>The abbreviated localized month name (e.g. &apos;Jan&apos; to &apos;Dec&apos;)</source>
-        <translation>本地化的月份简称（例如 'Jan' 至 'Dec'）</translation>
+        <translation>本地化的月份简称（例如 &apos;Jan&apos; 至 &apos;Dec&apos;）</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The long localized month name (e.g. &apos;January&apos; to &apos;December&apos;)</source>
-        <translation>本地化的月份全称（例如 'January' 至 'December'）</translation>
+        <translation>本地化的月份全称（例如 &apos;January&apos; 至 &apos;December&apos;）</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2410,7 +2410,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location line="+1"/>
         <source>The fractional part of the second, to go after a decimal point, without trailing zeroes (0 to 999). Thus &quot;s.z&quot; reports the seconds to full available (millisecond) precision without trailing zeroes.</source>
-        <translation>秒的小数部分，位于小数点之后，不带末尾零（0 至 999）。因此，"s.z" 以完整的可用精度（毫秒）显示秒数，不带末尾零。</translation>
+        <translation>秒的小数部分，位于小数点之后，不带末尾零（0 至 999）。因此，&quot;s.z&quot; 以完整的可用精度（毫秒）显示秒数，不带末尾零。</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2894,6 +2894,16 @@ p, li { white-space: pre-wrap; }
         <translation>四元数保存失败：宿主未提供 pj.data_processors.v1</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Output:</source>
+        <translation>输出：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. /imu/rpy/</source>
+        <translation>例如 /imu/rpy/</translation>
+    </message>
+    <message>
         <location line="+15"/>
         <location line="+1"/>
         <source>Values in &quot;%1&quot; are not monotonically increasing. Will sort these automatically</source>
@@ -2935,7 +2945,7 @@ Message: %3</source>
     <message>
         <location line="-22"/>
         <source>Only MCAP-storage ROS 2 bags are supported; this bag uses &apos;%1&apos;. Convert it with &apos;ros2 bag convert&apos; (storage_id: mcap).</source>
-        <translation>仅支持使用 MCAP 存储的 ROS 2 bag；此 bag 使用“%1”。请使用 'ros2 bag convert' 转换（storage_id: mcap）。</translation>
+        <translation>仅支持使用 MCAP 存储的 ROS 2 bag；此 bag 使用“%1”。请使用 &apos;ros2 bag convert&apos; 转换（storage_id: mcap）。</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -3582,7 +3592,7 @@ Message: %3</source>
 <context>
     <name>PJ::ExtensionCatalogService</name>
     <message>
-        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+737"/>
+        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+738"/>
         <source>All supported files</source>
         <translation>所有支持的文件</translation>
     </message>
@@ -3603,7 +3613,37 @@ Message: %3</source>
 <context>
     <name>PJ::FileDialog</name>
     <message>
-        <location filename="../../pj_widgets/src/FileDialog.cpp" line="+52"/>
+        <location filename="../../pj_widgets/src/FileDialog.cpp" line="+51"/>
+        <source>Binary file</source>
+        <translation>二进制文件</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>XML document</source>
+        <translation>XML 文档</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Plain text document</source>
+        <translation>纯文本文档</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>CSV document</source>
+        <translation>CSV 文档</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>ZIP archive</source>
+        <translation>ZIP 压缩包</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 file</source>
+        <translation>%1 文件</translation>
+    </message>
+    <message>
+        <location line="+31"/>
         <source>Open File</source>
         <translation>打开文件</translation>
     </message>
@@ -3611,13 +3651,13 @@ Message: %3</source>
 <context>
     <name>PJ::FileLoader</name>
     <message>
-        <location filename="../src/FileLoader.cpp" line="+1049"/>
+        <location filename="../src/FileLoader.cpp" line="+1052"/>
         <location line="+1"/>
         <source>Load Data</source>
         <translation>加载数据</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+30"/>
         <location line="+3"/>
         <source>Replace Data</source>
         <translation>替换数据</translation>
@@ -3628,7 +3668,7 @@ Message: %3</source>
         <translation>无法暂存选中的文件。</translation>
     </message>
     <message>
-        <location line="+90"/>
+        <location line="+93"/>
         <source>File has no extension; cannot pick a plugin.</source>
         <translation>文件没有扩展名，无法选择插件。</translation>
     </message>
@@ -3648,7 +3688,7 @@ Message: %3</source>
         <translation>此布局需要数据源插件“%1”，但尚未安装用于处理 %2 文件的该插件。</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+16"/>
         <source>Plugin &apos;%1&apos;: createHandle failed.</source>
         <translation>插件“%1”：createHandle 失败。</translation>
     </message>
@@ -3714,25 +3754,25 @@ Message: %3</source>
     </message>
     <message>
         <location line="+521"/>
-        <location line="+415"/>
+        <location line="+416"/>
         <source>Plugin &apos;%1&apos;: saveConfig failed: %2 — layout save will skip plugin config</source>
         <translation>插件“%1”：saveConfig 失败：%2；保存布局时将跳过插件配置</translation>
     </message>
     <message>
-        <location line="-399"/>
-        <location line="+414"/>
+        <location line="-400"/>
+        <location line="+416"/>
         <source>Loader metadata rejected: %1</source>
         <translation>加载器元数据被拒绝：%1</translation>
     </message>
     <message>
-        <location line="-370"/>
-        <location line="+186"/>
+        <location line="-372"/>
+        <location line="+187"/>
         <location line="+8"/>
         <source>Import discarded</source>
         <translation>导入已丢弃</translation>
     </message>
     <message>
-        <location line="-189"/>
+        <location line="-190"/>
         <source>All %1 entries of &apos;%2&apos; failed to load:
 %3</source>
         <translation>“%2”的全部 %1 个条目均加载失败：
@@ -3744,7 +3784,7 @@ Message: %3</source>
         <translation>无法加载“%1”：文件不可读。</translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+146"/>
         <source>Plugin &apos;%1&apos;: start failed: %2</source>
         <translation>插件“%1”：启动失败：%2</translation>
     </message>
@@ -3754,7 +3794,7 @@ Message: %3</source>
         <translation>插件“%1”：派生序列重放失败：%2</translation>
     </message>
     <message>
-        <location line="+217"/>
+        <location line="+218"/>
         <source>%1 loads failed</source>
         <translation>%1 项加载失败</translation>
     </message>
@@ -4138,7 +4178,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>文件</translation>
     </message>
     <message>
-        <location line="+177"/>
+        <location line="+180"/>
         <source>Resume streaming</source>
         <translation>恢复接收流数据</translation>
     </message>
@@ -4316,14 +4356,14 @@ already rectified and would otherwise be undistorted twice.</source>
         <location line="+1"/>
         <location line="+1239"/>
         <location line="+162"/>
-        <location line="+1758"/>
+        <location line="+1762"/>
         <location line="+250"/>
         <location line="+3140"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-6459"/>
+        <location line="-6463"/>
         <source>Undo</source>
         <translation>撤销</translation>
     </message>
@@ -4379,12 +4419,12 @@ already rectified and would otherwise be undistorted twice.</source>
     </message>
     <message>
         <location line="+70"/>
-        <location line="+2119"/>
+        <location line="+2121"/>
         <source>The layout still contains an ephemeral browser path and was not downloaded.</source>
         <translation>布局仍包含临时浏览器路径，因此未下载。</translation>
     </message>
     <message>
-        <location line="-1993"/>
+        <location line="-1995"/>
         <source>Remove all Datasets</source>
         <translation>移除全部数据集</translation>
     </message>
@@ -4501,7 +4541,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>应用滤波器之前，请先关闭当前面板</translation>
     </message>
     <message>
-        <location line="+402"/>
+        <location line="+404"/>
         <source>Nothing to record: start a streaming source first.</source>
         <translation>没有可录制的内容：请先启动一个流数据源。</translation>
     </message>
@@ -4589,7 +4629,7 @@ already rectified and would otherwise be undistorted twice.</source>
     </message>
     <message>
         <location line="+104"/>
-        <location line="+446"/>
+        <location line="+448"/>
         <location line="+103"/>
         <location line="+705"/>
         <location line="+9"/>
@@ -4599,16 +4639,16 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>加载布局</translation>
     </message>
     <message>
-        <location line="-1981"/>
+        <location line="-1983"/>
         <location line="+25"/>
-        <location line="+2047"/>
+        <location line="+2049"/>
         <location line="+7"/>
         <location line="+5"/>
         <source>Save Layout</source>
         <translation>保存布局</translation>
     </message>
     <message>
-        <location line="-2077"/>
+        <location line="-2079"/>
         <source>Requested layout download: %1</source>
         <translation>已请求下载布局：%1</translation>
     </message>
@@ -4638,7 +4678,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>布局文件已不存在：%1</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+34"/>
         <source>(no extensions installed)</source>
         <translation>（未安装扩展）</translation>
     </message>
@@ -5323,7 +5363,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>无法创建“%1”的面板界面</translation>
     </message>
     <message>
-        <location line="+64"/>
+        <location line="+66"/>
         <source>Cannot show &apos;%1&apos;: another panel is already open</source>
         <translation>无法显示“%1”：已有另一个面板打开</translation>
     </message>
@@ -6019,12 +6059,12 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
     </message>
     <message>
         <location line="+11"/>
-        <location line="+614"/>
+        <location line="+617"/>
         <source>Marketplace diagnostic: %1</source>
         <translation>扩展市场诊断：%1</translation>
     </message>
     <message>
-        <location line="-538"/>
+        <location line="-541"/>
         <source>Update available: v%1</source>
         <translation>有可用更新：v%1</translation>
     </message>
@@ -6106,7 +6146,7 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
         <translation>访问网站</translation>
     </message>
     <message>
-        <location line="+154"/>
+        <location line="+157"/>
         <source>%1 of %2 extensions shown</source>
         <translation>已显示 %1 个扩展，共 %2 个</translation>
     </message>
@@ -7064,7 +7104,7 @@ Details: %1</source>
 <context>
     <name>PJ::StreamingSourceManager</name>
     <message>
-        <location filename="../src/StreamingSourceManager.cpp" line="+263"/>
+        <location filename="../src/StreamingSourceManager.cpp" line="+265"/>
         <source>No stream source selected.</source>
         <translation>未选择流数据源。</translation>
     </message>
@@ -7074,7 +7114,7 @@ Details: %1</source>
         <translation>未找到流数据插件“%1”。</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+11"/>
         <source>Plugin &apos;%1&apos;: createHandle failed.</source>
         <translation>插件“%1”：createHandle 失败。</translation>
     </message>
@@ -7099,7 +7139,7 @@ Details: %1</source>
         <translation>次级 createDataset 失败：%1</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+56"/>
         <source>Plugin &apos;%1&apos;: service registration failed: %2</source>
         <translation>插件“%1”：服务注册失败：%2</translation>
     </message>
@@ -7122,6 +7162,11 @@ Details: %1</source>
         <location line="+20"/>
         <source>Plugin &apos;%1&apos;: start failed: %2</source>
         <translation>插件“%1”：启动失败：%2</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>[stream] %1</source>
+        <translation>[流] %1</translation>
     </message>
 </context>
 <context>
@@ -7495,7 +7540,7 @@ Details: %1</source>
 <context>
     <name>QAbstractFileIconProvider</name>
     <message>
-        <location filename="../src/AppLanguage.cpp" line="+80"/>
+        <location filename="../src/AppLanguage.cpp" line="+83"/>
         <source>Drive</source>
         <translation>驱动器</translation>
     </message>
@@ -7561,10 +7606,10 @@ Details: %1</source>
     </message>
     <message>
         <location line="+2"/>
-        <location filename="../src/FileLoader.cpp" line="-1979"/>
+        <location filename="../src/FileLoader.cpp" line="-1991"/>
         <location line="+90"/>
         <location line="+7"/>
-        <location filename="../src/MainWindow.cpp" line="-9950"/>
+        <location filename="../src/MainWindow.cpp" line="-9956"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>

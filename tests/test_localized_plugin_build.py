@@ -17,7 +17,7 @@ spec.loader.exec_module(replacement)
 class LocalizedPluginBuildTest(unittest.TestCase):
     def test_locked_patches_and_peeled_commits(self):
         lock = json.loads((PATCHES / 'source-lock.json').read_text(encoding='utf-8'))
-        self.assertEqual(len(lock['plugins']), 4)
+        self.assertEqual(len(lock['plugins']), 5)
         self.assertIn('packaging/localization/plugin-patches/pj_display_language.hpp text eol=lf',
                       (ROOT / '.gitattributes').read_text(encoding='utf-8'))
         self.assertEqual(hashlib.sha256((PATCHES / 'pj_display_language.hpp').read_bytes()).hexdigest(), lock['helper_sha256'])
@@ -72,7 +72,9 @@ class LocalizedPluginBuildTest(unittest.TestCase):
         script = (ROOT / 'packaging/localization/build_localized_plugins.py').read_text(encoding='utf-8')
         self.assertIn("source / 'SDK_VERSION'", script)
         self.assertIn("'--lockfile-out='", script)
-        self.assertIn("'-DCMAKE_CXX_FLAGS=/utf-8'", script)
+        self.assertIn('add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")', script)
+        self.assertNotIn("-DCMAKE_CXX_FLAGS=", script)
+        self.assertNotIn("-DCMAKE_C_FLAGS=", script)
         self.assertIn('ChatSession|UsageLedger|SettingsStore|ConversationState|SeriesStats|StreamJson', script)
         self.assertNotIn('AssistantDialog|', script)
         self.assertNotIn('upload_conan_artifacts', script)

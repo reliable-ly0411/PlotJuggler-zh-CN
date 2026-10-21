@@ -92,7 +92,7 @@ keeps the default 3.x branch independent of the 4.x publication mechanism.
 
 ## rc.2 fixed-plugin display rebuilds
 
-The candidate packages rebuild the four scoped plugins documented in
+The candidate packages rebuild the five scoped plugins documented in
 [plugin-patches/README.md](plugin-patches/README.md). Mosaico remains its original official package; issue #20 records its English exception. The explicit native entry
 also permits the first creation of `zh-CN-4.x-ci/release-candidate-rc2-final3`;
 ordinary subsequent pushes and merges still skip heavy packaging. No candidate

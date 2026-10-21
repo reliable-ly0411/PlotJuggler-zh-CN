@@ -76,6 +76,9 @@ def build_one(item, lock, work, prefix, platform):
     checks += 'target_include_directories(pj_localized_display_test PRIVATE "${CMAKE_SOURCE_DIR}")\n'
     if identifier == 'toolbox-assistant-agent':
         checks += 'target_compile_definitions(pj_localized_display_test PRIVATE PJ_TEST_ASSISTANT=1)\n'
+    if identifier == 'mcap-loader':
+        checks += 'target_compile_definitions(pj_localized_display_test PRIVATE PJ_TEST_MCAP=1)\n'
+        checks += 'target_include_directories(pj_localized_display_test PRIVATE "${CMAKE_SOURCE_DIR}/data_load_mcap/contrib")\n'
     for language in ['zh_CN', 'en_US']:
         name = 'LocalizedDisplay_' + language
         checks += f'add_test(NAME {name} COMMAND pj_localized_display_test {language})\n'
@@ -84,7 +87,9 @@ def build_one(item, lock, work, prefix, platform):
         name = 'LocalizedDisplay_' + suffix
         checks += f'add_test(NAME {name} COMMAND pj_localized_display_test en_US)\n'
         checks += f'set_tests_properties({name} PROPERTIES ENVIRONMENT "PLOTJUGGLER_UI_LANGUAGE={value}")\n'
-    cmake_path.write_text(cmake_path.read_text(encoding='utf-8') + checks, encoding='utf-8')
+    # Add an option without replacing compiler/runtime/exception defaults.
+    utf8_options = 'add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")\n'
+    cmake_path.write_text(utf8_options + cmake_path.read_text(encoding='utf-8') + checks, encoding='utf-8')
     sdk = item['sdk']
     common = ['-s', 'build_type=Release', '-s', 'compiler.cppstd=20', '-s:b', 'compiler.cppstd=20']
     if platform == 'Windows':
@@ -118,8 +123,15 @@ def build_one(item, lock, work, prefix, platform):
     run(['cmake', '-S', source, '-B', build / 'native', '-G', 'Ninja',
          '-DCMAKE_TOOLCHAIN_FILE=' + str(build / 'conan_toolchain.cmake'),
          '-DCMAKE_PREFIX_PATH=' + str(build), '-DCMAKE_BUILD_TYPE=Release',
-         '-DPJ_BUILD_PLUGIN=' + item['module'],
-         *(['-DCMAKE_CXX_FLAGS=/utf-8'] if platform == 'Windows' else [])], env=env)
+         '-DPJ_BUILD_PLUGIN=' + item['module']], env=env)
+    if platform == 'Windows':
+        commands = subprocess.check_output(['ninja', '-C', str(build / 'native'), '-t', 'commands', item['target']],
+                                           text=True, encoding='utf-8')
+        (build / 'native-compile-commands.txt').write_text(commands, encoding='utf-8')
+        cpp_commands = [line for line in commands.splitlines() if 'cl.exe' in line.lower() and re.search(r'\s[-/]c\s', line)]
+        assert cpp_commands, 'no actual MSVC compilation commands found'
+        for command in cpp_commands:
+            assert '/utf-8' in command and '/EHsc' in command, 'UTF-8 must not replace exception semantics: ' + command
     run(['cmake', '--build', build / 'native', '--target', item['target'], '--parallel', '2'], env=env)
     run(['cmake', '--build', build / 'native', '--parallel', '2'], env=env)
     test_selection = ['-E', '(Live|live|Smoke|smoke)']
@@ -152,6 +164,10 @@ def build_one(item, lock, work, prefix, platform):
         if candidate.is_file():
             shutil.copy2(candidate, notices)
     assert list(notices.glob('LICENSE*')), 'upstream license missing'
+    if identifier == 'mcap-loader':
+        vendored_notice = source / 'data_load_mcap/contrib/mcap/LICENSE'
+        assert vendored_notice.is_file(), 'vendored MCAP license missing'
+        shutil.copy2(vendored_notice, notices / 'MCAP-LICENSE')
     shutil.copy2(patch, notices)
     shutil.copy2(PATCHES / 'pj_display_language.hpp', notices)
     nodes = json.loads(graph.read_text(encoding='utf-8'))['graph']['nodes']
@@ -191,6 +207,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--work', type=Path, required=True)
     parser.add_argument('--prefix', type=Path, required=True)
+    parser.add_argument('--preflight', action='store_true', help='isolated plugin proof only; never a release payload')
     args = parser.parse_args()
     lock = json.loads((PATCHES / 'source-lock.json').read_text(encoding='utf-8'))
     assert digest(PATCHES / 'pj_display_language.hpp') == lock['helper_sha256']
@@ -198,6 +215,12 @@ def main():
     if platform == 'Windows':
         os.environ.pop('PKG_CONFIG_PATH', None)
     work, prefix = args.work.resolve(), args.prefix.resolve()
+    if args.preflight:
+        assert not prefix.exists(), 'preflight requires an empty destination'
+        record_path = prefix / 'share/plotjuggler4/release.json'
+        record_path.parent.mkdir(parents=True)
+        commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+        record_path.write_text(json.dumps({'kind': 'plugin-preflight-only-not-a-release', 'source_commit': commit}) + '\n', encoding='utf-8')
     assert (prefix / 'share/plotjuggler4/release.json').is_file(), 'stage base payload first'
     results = []
     for item in lock['plugins']:

@@ -137,7 +137,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
         assert hashlib.sha256((prefix / 'share/licenses' / item['path']).read_bytes()).hexdigest() == item['sha256']
     assert hashlib.sha256(log.read_bytes()).hexdigest() == LOG_SHA, 'unexpected real BIN fixture'
     rebuilt = record.get('localized_plugin_rebuilds', [])
-    required_rebuilt = {'protobuf-parser', 'toolbox-transform-editor', 'webrtc-client'}
+    required_rebuilt = {'protobuf-parser', 'toolbox-transform-editor', 'webrtc-client', 'mcap-loader'}
     if os.name != 'nt':
         required_rebuilt.add('toolbox-assistant-agent')
     assert {item['id'] for item in rebuilt} == required_rebuilt, 'missing localized plugin provenance'

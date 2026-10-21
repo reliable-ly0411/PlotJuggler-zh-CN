@@ -232,7 +232,8 @@ LeftPanel::LeftPanel(QWidget* parent) : QWidget(parent), ui_(new Ui::LeftPanel) 
   // Persist the user's choice so it is restored next session. The signal only
   // fires on genuine user selection — setStreamingSources() blocks it while
   // repopulating — so this never re-saves a programmatic restore.
-  connect(ui_->comboStreaming, &QComboBox::currentTextChanged, this, [this](const QString& source) {
+  connect(ui_->comboStreaming, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) {
+    const QString source = ui_->comboStreaming->currentData().toString();
     QSettings().setValue(kStreamingSourceKey, source);
     emit streamingSourceChanged(source);
   });
@@ -290,24 +291,26 @@ void LeftPanel::setRecentEnabled(bool enabled) {
   ui_->buttonRecentFiles->setEnabled(enabled);
 }
 
-void LeftPanel::setStreamingSources(const QStringList& names) {
-  const QString previous = ui_->comboStreaming->currentText();
+void LeftPanel::setStreamingSources(const QList<QPair<QString, QString>>& sources) {
+  const QString previous = ui_->comboStreaming->currentData().toString();
   {
     QSignalBlocker block(ui_->comboStreaming);
     ui_->comboStreaming->clear();
-    ui_->comboStreaming->addItems(names);
+    for (const auto& [canonical, display] : sources) {
+      ui_->comboStreaming->addItem(display, canonical);
+    }
     // Keep the current selection across a mid-session refresh; on the first
     // (empty) population fall back to the source persisted last session.
     const QString desired = previous.isEmpty() ? QSettings().value(kStreamingSourceKey).toString() : previous;
-    const int idx = ui_->comboStreaming->findText(desired);
+    const int idx = ui_->comboStreaming->findData(desired);
     if (idx >= 0) {
       ui_->comboStreaming->setCurrentIndex(idx);
     }
   }
-  // QComboBox auto-selects index 0 on the first addItems(), but the blocker
-  // above swallows the corresponding currentTextChanged; emit once so the
+  // QComboBox auto-selects index 0 on the first addItem(), but the blocker
+  // above swallows the corresponding currentIndexChanged; emit once so the
   // visible selection matches what listeners (StreamingSourceManager) hold.
-  const QString current = ui_->comboStreaming->currentText();
+  const QString current = ui_->comboStreaming->currentData().toString();
   if (current != previous) {
     emit streamingSourceChanged(current);
   }
@@ -401,7 +404,7 @@ QDomElement LeftPanel::saveSourcesState(QDomDocument& doc) const {
     element.setAttribute(u"sources_tab"_s, u"cloud"_s);
   }
 
-  element.setAttribute(u"streaming_source"_s, ui_->comboStreaming->currentText());
+  element.setAttribute(u"streaming_source"_s, ui_->comboStreaming->currentData().toString());
   element.setAttribute(u"streaming_buffer"_s, QString::number(ui_->streamingSpinBox->value()));
   return element;
 }
@@ -427,13 +430,13 @@ void LeftPanel::restoreSourcesState(const QDomElement& element) {
     // Unknown tab string -> silent no-op.
   }
 
-  // streaming_source: pick the combo entry by display text. -1 from
-  // findText means the source isn't currently in the combo (plugin
+  // streaming_source: pick the combo entry by canonical name. -1 from
+  // findData means the source isn't currently in the combo (plugin
   // not installed) -> silent no-op. Block signals so we don't emit
   // streamingSourceChanged during restore.
   if (element.hasAttribute(u"streaming_source"_s)) {
     const QString src = element.attribute(u"streaming_source"_s);
-    const int idx = ui_->comboStreaming->findText(src);
+    const int idx = ui_->comboStreaming->findData(src);
     if (idx >= 0) {
       const QSignalBlocker blocker(ui_->comboStreaming);
       ui_->comboStreaming->setCurrentIndex(idx);

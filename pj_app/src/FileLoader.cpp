@@ -1034,7 +1034,10 @@ void FileLoader::openFromDialog(QWidget* dialog_parent) {
   loadFromBrowserPicker(dialog_parent, {});
   return;
 #else
-  const QString filter = extensions_.buildFileFilter();
+  const QString filter = extensions_.buildFileFilter([](const RuntimeDataSourcePlugin& source) {
+    return bundledPluginText(QString::fromStdString(source.id), QString::fromStdString(source.version),
+                             QString::fromStdString(source.name)).toStdString();
+  });
   QSettings settings;
   const QString last_dir = settings.value(kLastDirKey, QString()).toString();
 
@@ -1068,7 +1071,10 @@ void FileLoader::replaceFromDialog(DatasetId dataset_id, QWidget* dialog_parent)
 #ifdef PJ_TARGET_WASM
   loadFromBrowserPicker(dialog_parent, hints);
 #else
-  const QString filter = extensions_.buildFileFilter();
+  const QString filter = extensions_.buildFileFilter([](const RuntimeDataSourcePlugin& source) {
+    return bundledPluginText(QString::fromStdString(source.id), QString::fromStdString(source.version),
+                             QString::fromStdString(source.name)).toStdString();
+  });
   QSettings settings;
   const QString last_dir = settings.value(kLastDirKey, QString()).toString();
   // Single-select: the pick replaces exactly one dataset.
@@ -1112,7 +1118,10 @@ void FileLoader::loadFromBrowserPicker(QWidget* dialog_parent, LoadHints hints) 
 }
 
 void FileLoader::selectBrowserInput(QWidget* dialog_parent, BrowserSelectionCallback callback) {
-  const QString filter = extensions_.buildFileFilter();
+  const QString filter = extensions_.buildFileFilter([](const RuntimeDataSourcePlugin& source) {
+    return bundledPluginText(QString::fromStdString(source.id), QString::fromStdString(source.version),
+                             QString::fromStdString(source.name)).toStdString();
+  });
   qCInfo(lcFileLoader).noquote() << "Opening browser file picker with filter:" << filter;
   FileSelectionService::selectAndStageFile(
       dialog_parent, filter, browser_file_store_,
@@ -1248,13 +1257,14 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
   const QString source_name = QString::fromStdString(source->name);
   const QString source_manifest_id = QString::fromStdString(source->id);
   const QString source_version = QString::fromStdString(source->version);
+  const QString source_display_name = bundledPluginText(source_manifest_id, source_version, source_name);
   const auto display_plugin_error = [&source_manifest_id, &source_version](const std::string& error) {
     return bundledPluginError(source_manifest_id, source_version, QString::fromStdString(error));
   };
 
   DataSourceHandle handle = source->library.createHandle();
   if (!handle.valid()) {
-    (void)fail(tr("Plugin '%1': createHandle failed.").arg(source_name));
+    (void)fail(tr("Plugin '%1': createHandle failed.").arg(source_display_name));
     co_return;
   }
   // Snapshot everything needed after an asynchronous dialog. The handle owner
@@ -1412,12 +1422,12 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
   ServiceRegistryBuilder registry;
   if (auto status = ingest_session.registerServices(registry); !status) {
     (void)fail(
-        tr("Plugin '%1': service registration failed: %2").arg(source_name, display_plugin_error(status.error())));
+        tr("Plugin '%1': service registration failed: %2").arg(source_display_name, display_plugin_error(status.error())));
     co_return;
   }
 
   if (auto status = handle.bind(registry.view()); !status) {
-    (void)fail(tr("Plugin '%1': bind failed: %2").arg(source_name, display_plugin_error(status.error())));
+    (void)fail(tr("Plugin '%1': bind failed: %2").arg(source_display_name, display_plugin_error(status.error())));
     co_return;
   }
 
@@ -1450,7 +1460,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
                                                       : preset_bytes;
     if (auto status = handle.loadConfig(preset); !status) {
       (void)fail(tr("Plugin '%1' rejected the layout's saved configuration: %2")
-                     .arg(source_name, display_plugin_error(status.error())));
+                     .arg(source_display_name, display_plugin_error(status.error())));
       co_return;
     }
     config = preset;
@@ -1469,13 +1479,13 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
         skip_dialog = true;
       } else {
         qCInfo(lcFileLoader).noquote() << tr("Layout preset rejected by '%1': %2 — falling back to dialog")
-                                              .arg(source_name, display_plugin_error(status.error()));
+                                              .arg(source_display_name, display_plugin_error(status.error()));
       }
     }
     if (!skip_dialog) {
       config = buildLoadConfig(saved_config, input.backing_path);
       if (auto status = handle.loadConfig(config); !status) {
-        (void)fail(tr("Plugin '%1': loadConfig failed: %2").arg(source_name, display_plugin_error(status.error())));
+        (void)fail(tr("Plugin '%1': loadConfig failed: %2").arg(source_display_name, display_plugin_error(status.error())));
         co_return;
       }
     }
@@ -1543,7 +1553,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
       // reload keeps the contract uniform.
       if (auto status = handle.loadConfig(config); !status) {
         (void)fail(tr("Plugin '%1': loadConfig (post-dialog) failed: %2")
-                       .arg(source_name, display_plugin_error(status.error())));
+                       .arg(source_display_name, display_plugin_error(status.error())));
         co_return;
       }
     }
@@ -2105,7 +2115,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
   std::string captured_config;
   if (auto status = handle.saveConfig(captured_config); !status) {
     qCWarning(lcFileLoader).noquote() << tr("Plugin '%1': saveConfig failed: %2 — layout save will skip plugin config")
-                                             .arg(source_name, QString::fromStdString(status.error()));
+                                             .arg(source_display_name, QString::fromStdString(status.error()));
     captured_config.clear();
   }
 
@@ -2317,6 +2327,7 @@ void FileLoader::onWorkerFinished(std::uint64_t generation) {
   const bool replacing = ctx_->replacing;
   const QString path = ctx_->path;
   const QString source_name = ctx_->source_name;
+  const QString source_display_name = bundledPluginText(ctx_->source_manifest_id, ctx_->source_version, source_name);
   const quint64 ticket = ctx_->ticket;
   const IngestToken ingest_token = ctx_->ingest_token;
   // Transfer terminal ownership out of LoadContext before any legacy signal
@@ -2365,7 +2376,7 @@ void FileLoader::onWorkerFinished(std::uint64_t generation) {
     emitLoadFinished(ticket, LoadOutcome::kFailed, path, 0);
     const QString reason =
         tr("Plugin '%1': start failed: %2")
-            .arg(source_name, bundledPluginError(ctx_->source_manifest_id, ctx_->source_version, ctx_->start_error));
+            .arg(source_display_name, bundledPluginError(ctx_->source_manifest_id, ctx_->source_version, ctx_->start_error));
     qCWarning(lcFileLoader).noquote() << reason;
     if (!replacing) {
       // Real-delete the abandoned first-load shell (no tombstone), invalidating
@@ -2396,7 +2407,7 @@ void FileLoader::onWorkerFinished(std::uint64_t generation) {
         // decided that nothing could be kept).
         emitLoadFinished(ticket, cancel == 0 ? LoadOutcome::kFailed : LoadOutcome::kCancelled, path, 0);
         const QString reason = tr("Plugin '%1': derived-series replay failed: %2")
-                                   .arg(source_name, QString::fromStdString(replayed.error()));
+                                   .arg(source_display_name, QString::fromStdString(replayed.error()));
         qCWarning(lcFileLoader).noquote() << reason;
         failReplacingLoad(dataset_id, path, reason);
         refill_ok = false;
@@ -2520,7 +2531,8 @@ void FileLoader::finishLoadOnGui(bool fully_loaded) {
   std::string captured_config;
   if (auto status = ctx_->handle.saveConfig(captured_config); !status) {
     qCWarning(lcFileLoader).noquote() << tr("Plugin '%1': saveConfig failed: %2 — layout save will skip plugin config")
-                                             .arg(ctx_->source_name, QString::fromStdString(status.error()));
+                                             .arg(bundledPluginText(ctx_->source_manifest_id, ctx_->source_version, ctx_->source_name),
+                                                  QString::fromStdString(status.error()));
     captured_config.clear();
   }
   session_.setDatasetSourcePath(dataset_id, ctx_->path);
