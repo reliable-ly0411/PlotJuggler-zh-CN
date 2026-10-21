@@ -1,4 +1,13 @@
 versions.env text eol=lf
+# Shell entry points must execute identically in Git Bash and POSIX shells.
+*.sh text eol=lf
 *.bat text eol=crlf
 # Unified diffs require a space-only context line for an empty source line.
 packaging/localization/plugin-patches/*.patch text eol=lf whitespace=-blank-at-eol
+
+# This helper is byte-hashed in the reproducible plugin source lock.
+packaging/localization/plugin-patches/pj_display_language.hpp text eol=lf
+
+# Preserve byte-stable provenance and offline fixture inputs on every checkout.
+packaging/localization/plugin-patches/source-lock.json text eol=lf
+packaging/localization/plugin-patches/display_language_test.cpp text eol=lf

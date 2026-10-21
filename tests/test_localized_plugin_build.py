@@ -18,6 +18,8 @@ class LocalizedPluginBuildTest(unittest.TestCase):
     def test_locked_patches_and_peeled_commits(self):
         lock = json.loads((PATCHES / 'source-lock.json').read_text())
         self.assertEqual(len(lock['plugins']), 4)
+        self.assertIn('packaging/localization/plugin-patches/pj_display_language.hpp text eol=lf',
+                      (ROOT / '.gitattributes').read_text())
         self.assertEqual(hashlib.sha256((PATCHES / 'pj_display_language.hpp').read_bytes()).hexdigest(), lock['helper_sha256'])
         for item in lock['plugins']:
             self.assertRegex(item['commit'], r'^[a-f0-9]{40}$')
