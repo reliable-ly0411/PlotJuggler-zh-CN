@@ -1,0 +1,119 @@
+name: Minimal Qt5 hash memory diagnostic
+'on':
+  push:
+    branches: [zh-CN-dev, 'zh-CN-fix/**']
+    paths:
+    - tests/localized_meme_test.cpp
+    - tests/image-tools/**
+    - .github/workflows/zh-scaling-diagnostic.yml
+  pull_request:
+    branches: [zh-CN-dev]
+    paths:
+    - tests/image-tools/**
+    - tests/localized_meme_test.cpp
+    - .github/workflows/zh-scaling-diagnostic.yml
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  isolate-hash:
+    runs-on: ubuntu-22.04
+    container: ubuntu:22.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - name: Install isolated Qt5 and memory diagnostics
+      run: |
+        apt-get update
+        DEBIAN_FRONTEND=noninteractive apt-get install -y cmake build-essential git ca-certificates python3 python3-pil qtbase5-dev valgrind
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - name: Freeze and independently verify the captured public input
+      run: |
+        mkdir -p diagnostic
+        python3 - <<'PY'
+        import hashlib,json
+        from pathlib import Path
+        from PIL import Image
+        root=Path("plotjuggler_app/resources/memes")
+        image=Image.open(root/"zh_CN/patches/atlas_44.png").convert("RGBA")
+        raw=image.tobytes()
+        expected=json.loads((root/"zh_CN.json").read_text())["assets"]["zh_CN/patches/atlas_44.png"]["rgba_sha256"]
+        assert image.size==(1031,310)
+        assert hashlib.sha256(raw).hexdigest()==expected=="05d3ec8ca2ac9e46f3ba4db64ae03fff9c47419f671763b8745f96be15ee0522"
+        Path("diagnostic/fixture.rgba").write_bytes(raw)
+        Path("diagnostic/fixture.sha256").write_text(expected)
+        PY
+        dpkg-query -W libqt5core5a libqt5gui5 valgrind > diagnostic/runtime.txt
+        cmake -S tests/image-tools -B hash-build -DPJ_IMAGE_TOOLS_QT_MAJOR=5 -DCMAKE_BUILD_TYPE=Release
+        cmake --build hash-build --target hash_buffer_probe hash_image_probe --parallel 2
+        ldd hash-build/hash_buffer_probe > diagnostic/buffer-dependencies.txt
+        ldd hash-build/hash_image_probe > diagnostic/image-dependencies.txt
+        ! grep -q Qt5Gui diagnostic/buffer-dependencies.txt
+    - name: Verify diagnostic success and mismatch exit codes
+      run: python3 tests/image-tools/test_hash_probe.py hash-build/hash_buffer_probe hash-build/hash_image_probe
+    - name: Native independent buffer and image loops
+      id: native
+      continue-on-error: true
+      run: |
+        expected="$(cat diagnostic/fixture.sha256)"
+        failed=0
+        for mode in rows offset once; do
+          hash-build/hash_buffer_probe diagnostic/fixture.rgba 1031 310 "$mode" 8192 "diagnostic/native-$mode" "$expected" || failed=1
+        done
+        for profile in default serial; do
+          export PJ_SCALE_THREADS=0
+          if [ "$profile" = serial ]; then export PJ_SCALE_THREADS=1; fi
+          for mode in image-direct image-copy; do
+            hash-build/hash_image_probe diagnostic/fixture.rgba 1031 310 "$mode" 8192 "diagnostic/native-$profile-$mode" "$expected" || failed=1
+          done
+        done
+        exit "$failed"
+    - name: Address and undefined behavior sanitizers
+      id: sanitizers
+      continue-on-error: true
+      run: |
+        cmake -S tests/image-tools -B sanitized -DPJ_IMAGE_TOOLS_QT_MAJOR=5 -DCMAKE_BUILD_TYPE=Debug '-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer -O1' '-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined'
+        cmake --build sanitized --target hash_buffer_probe hash_image_probe --parallel 2
+        expected="$(cat diagnostic/fixture.sha256)"
+        failed=0
+        for mode in rows offset once; do
+          PJ_HASH_SECONDS=10 sanitized/hash_buffer_probe diagnostic/fixture.rgba 1031 310 "$mode" 256 "diagnostic/sanitized-$mode" "$expected" > "diagnostic/sanitized-$mode.log" 2>&1 || failed=1
+        done
+        for mode in image-direct image-copy; do
+          PJ_HASH_SECONDS=10 sanitized/hash_image_probe diagnostic/fixture.rgba 1031 310 "$mode" 256 "diagnostic/sanitized-$mode" "$expected" > "diagnostic/sanitized-$mode.log" 2>&1 || failed=1
+        done
+        exit "$failed"
+    - name: Memcheck covers reads inside the uninstrumented Qt5 libraries
+      id: memcheck
+      continue-on-error: true
+      run: |
+        expected="$(cat diagnostic/fixture.sha256)"
+        failed=0
+        for mode in rows offset once; do
+          PJ_HASH_SECONDS=60 valgrind --tool=memcheck --track-origins=yes --error-exitcode=99 --log-file="diagnostic/memcheck-$mode.log" hash-build/hash_buffer_probe diagnostic/fixture.rgba 1031 310 "$mode" 8 "diagnostic/memcheck-$mode" "$expected" || failed=1
+        done
+        for mode in image-direct image-copy; do
+          PJ_HASH_SECONDS=60 valgrind --tool=memcheck --track-origins=yes --error-exitcode=99 --log-file="diagnostic/memcheck-$mode.log" hash-build/hash_image_probe diagnostic/fixture.rgba 1031 310 "$mode" 8 "diagnostic/memcheck-$mode" "$expected" || failed=1
+        done
+        exit "$failed"
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: minimal-hash-${{ github.sha }}
+        path: diagnostic/
+        if-no-files-found: error
+        retention-days: 14
+    - name: Propagate diagnostic failures
+      if: always()
+      env:
+        NATIVE: ${{ steps.native.outcome }}
+        SANITIZERS: ${{ steps.sanitizers.outcome }}
+        MEMCHECK: ${{ steps.memcheck.outcome }}
+      run: |
+        test "$NATIVE" = success
+        test "$SANITIZERS" = success
+        test "$MEMCHECK" = success
