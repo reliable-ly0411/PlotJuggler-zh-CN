@@ -84,7 +84,7 @@ Unknown UI bytes or dynamic values are returned unchanged. Noneditable combo
 items retain canonical text in a separate role for comparisons/events; editable
 inputs and raw data/code/table bodies are never translated by a broad matcher.
 Mixed user/internal prose is localized at its typed construction site in the
-four rebuilt source-patched plugins; Mosaico retains its official binary and
+five rebuilt source-patched plugins; Mosaico retains its official binary and
 remaining mixed English (issue #20), not by searching arbitrary plain-text bodies.
 See `packaging/localization/plugin-patches/README.md` for build provenance and
 `tests/test_bundled_translations.py` plus native Qt regressions for guards.

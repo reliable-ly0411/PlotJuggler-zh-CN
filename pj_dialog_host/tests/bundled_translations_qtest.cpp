@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 #include <QApplication>
+#ifdef PJ_TEST_PRODUCTION_CATALOG
+#include "AppLanguage.h"
+#endif
 #include <QComboBox>
 #include <QCryptographicHash>
 #include <QFile>
@@ -44,6 +47,40 @@ class Translation : public QTranslator {
 class BundledTranslationsTest : public QObject {
   Q_OBJECT
  private slots:
+  void pinnedPlaceholdersUseProductionCatalogWithoutChangingValues() {
+#ifdef PJ_TEST_PRODUCTION_CATALOG
+    PJ::AppLanguage language(*qApp, QStringLiteral("zh_CN"));
+    QVERIFY(language.catalogLoaded());
+    const QDir fixtures = QFileInfo(QStringLiteral(PJ_CSV_UI_FIXTURE)).dir();
+    struct Case { const char* file; const char* widget; const char* english; const char* chinese; };
+    const Case cases[] = {
+        {"webrtc_1_0_1.ui", "lineEditManualPath", "e.g. cam0", "例如 cam0"},
+        {"json_1_3_0.ui", "lineEditTimestampField", "e.g. timestamp, ts, time", "例如 timestamp, ts, time"},
+        {"protobuf_1_2_0.ui", "lineEditTimestampField", "e.g. timestamp, ts, time", "例如 timestamp, ts, time"}};
+    for (const auto& item : cases) {
+      QFile file(fixtures.filePath(QString::fromLatin1(item.file)));
+      QVERIFY(file.open(QIODevice::ReadOnly));
+      const auto raw = file.readAll().replace("\r\n", "\n");
+      QByteArray scope;
+      const auto localized = PJ::localizeBundledUi(raw, &scope);
+      QVERIFY(!scope.isEmpty());
+      QVERIFY(localized.contains(item.chinese));
+      QLineEdit input;
+      input.setObjectName(QString::fromLatin1(item.widget));
+      input.setProperty(PJ::kBundledUiScope, scope);
+      const QString original = QStringLiteral("User_%1 timestamp, ts, time e.g. cam0");
+      input.setText(original);
+      QCOMPARE(PJ::bundledDisplayText(&input, "placeholderText", QString::fromLatin1(item.english)),
+               QString::fromUtf8(item.chinese));
+      QCOMPARE(PJ::bundledDisplayText(&input, "text", original), original);
+      QCOMPARE(input.text(), original);
+      QCOMPARE(PJ::localizeBundledUi(raw + "\n", &scope), raw + "\n");
+      QVERIFY(scope.isEmpty());
+    }
+#else
+    QSKIP("Production application catalog is unavailable when PJ4_BUILD_APP is disabled");
+#endif
+  }
   void exactUiGateAndLanguage() {
     QFile file(QStringLiteral(PJ_CSV_UI_FIXTURE));
     QVERIFY(file.open(QIODevice::ReadOnly));

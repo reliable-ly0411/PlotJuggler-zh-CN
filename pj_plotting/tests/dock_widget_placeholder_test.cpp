@@ -25,6 +25,9 @@
 #include <QStringList>
 #include <QToolButton>
 #include <QtGlobal>
+#include <QTranslator>
+#include <QScopeGuard>
+#include <DockWidgetTab.h>
 #include <optional>
 #include <string_view>
 #include <utility>
@@ -263,6 +266,36 @@ class DockFocusTest : public ::testing::Test {
  private:
   ads::CDockManager::ConfigFlags saved_flags_;
 };
+
+TEST(DockWidgetPlaceholderTest, LocalizedTitleKeepsAdsIdentityAndRestoresState) {
+  class Labels final : public QTranslator {
+   public:
+    QString translate(const char* context, const char* source, const char*, int) const override {
+      if (QByteArray(context) == "PJ::DockWidget" && QByteArray(source) == "Plot") return u"绘图"_s;
+      return {};
+    }
+    bool isEmpty() const override { return false; }
+  } labels;
+  qApp->installTranslator(&labels);
+  const auto remove = qScopeGuard([&] { qApp->removeTranslator(&labels); });
+  PJ::PlotDocker source(u"User Plot %1"_s);
+  auto* dock = source.plotAt(0);
+  ASSERT_NE(dock, nullptr);
+  EXPECT_EQ(dock->objectName(), u"Plot"_s);
+  EXPECT_EQ(dock->windowTitle(), u"绘图"_s);
+  EXPECT_EQ(dock->tabWidget()->text(), u"绘图"_s);
+  EXPECT_EQ(dock->toggleViewAction()->text(), u"绘图"_s);
+  const auto identity = dock->stateId();
+  QDomDocument doc;
+  const auto saved = source.xmlSaveState(doc);
+  PJ::PlotDocker restored(u"Restored"_s);
+  ASSERT_TRUE(restored.xmlLoadState(saved));
+  auto* result = restored.plotAt(0);
+  ASSERT_NE(result, nullptr);
+  EXPECT_EQ(result->objectName(), u"Plot"_s);
+  EXPECT_EQ(result->windowTitle(), u"绘图"_s);
+  EXPECT_EQ(result->stateId(), identity);
+}
 
 TEST(DockWidgetPlaceholderTest, EmptyDockerStartsWithPlaceholderDock) {
   PJ::SessionManager session;

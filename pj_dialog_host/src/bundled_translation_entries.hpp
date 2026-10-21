@@ -532,6 +532,9 @@ constexpr DisplayEntry kDisplayEntries[] = {
     {"plugin:toolbox-quaternion@1.0.1", "message-source:toolbox-quaternion", "message", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "quaternion save failed: host did not expose pj.data_processors.v1")},
     {"7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0", "", "text", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "Output:")},
     {"7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0", "output_prefix", "placeholderText", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "e.g. /imu/rpy/")},
+    {"65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558", "lineEditManualPath", "placeholderText", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "e.g. cam0")},
+    {"556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1", "lineEditTimestampField", "placeholderText", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "e.g. timestamp, ts, time")},
+    {"b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658", "lineEditTimestampField", "placeholderText", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "e.g. timestamp, ts, time")},
 };
 constexpr TemplateEntry kTemplateEntries[] = {
     {"31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce", "labelAnalyzeError", "text", "\\AOnly\\ MCAP\\-storage\\ ROS\\ 2\\ bags\\ are\\ supported;\\ this\\ bag\\ uses\\ '([\\s\\S]*)'\\.\\ Convert\\ it\\ with\\ 'ros2\\ bag\\ convert'\\ \\(storage_id:\\ mcap\\)\\.\\z", QT_TRANSLATE_NOOP("PJ::BundledPlugins", "Only MCAP-storage ROS 2 bags are supported; this bag uses '%1'. Convert it with 'ros2 bag convert' (storage_id: mcap).")},

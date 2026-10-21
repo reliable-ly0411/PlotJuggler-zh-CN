@@ -85,6 +85,8 @@ DockWidget::DockWidget(
       session_(session),
       catalog_(catalog),
       state_id_(newStateId()) {
+  // ADS objectName remains the constructor identity; only its visible title translates.
+  setWindowTitle(tr("Plot"));
   setFrameShape(QFrame::NoFrame);
 
   setFeature(ads::CDockWidget::DockWidgetFloatable, false);

@@ -14,12 +14,40 @@
 #include <QPointer>
 #include <QPushButton>
 #include <QtGlobal>
+#include <QTranslator>
+#include <QScopeGuard>
 
 #include "pj_plotting/PlotDocker.h"
 #include "pj_plotting/TabbedPlotWidget.h"
 using namespace Qt::StringLiterals;
 
 namespace {
+
+// Default creation is localized; explicit and restored names are user data.
+TEST(TabbedWidgetTab, LocalizedDefaultsPreserveExplicitNamesAndStableState) {
+  class Labels final : public QTranslator {
+   public:
+    QString translate(const char* context, const char* source, const char*, int) const override {
+      if (QByteArray(context) == "PJ::TabbedPlotWidget" && QByteArray(source) == "tab%1") return u"标签页%1"_s;
+      return {};
+    }
+    bool isEmpty() const override { return false; }
+  } labels;
+  qApp->installTranslator(&labels);
+  const auto remove = qScopeGuard([&] { qApp->removeTranslator(&labels); });
+  PJ::TabbedPlotWidget tabbed;
+  EXPECT_EQ(tabbed.dockerAt(0)->name(), u"标签页1"_s);
+  auto* custom = tabbed.addTab(u"tab1 User_%1"_s);
+  const QString identity = custom->stateId();
+  QDomDocument doc;
+  const auto saved = tabbed.xmlSaveState(doc);
+  qApp->removeTranslator(&labels);
+  ASSERT_TRUE(tabbed.xmlLoadState(saved));
+  EXPECT_EQ(tabbed.dockerAt(0)->name(), u"标签页1"_s);
+  EXPECT_EQ(tabbed.dockerAt(1)->name(), u"tab1 User_%1"_s);
+  EXPECT_EQ(tabbed.dockerAt(1)->stateId(), identity);
+  EXPECT_EQ(tabbed.addTab(u"tab2"_s)->name(), u"tab2"_s);
+}
 
 TEST(TabbedWidgetTab, HostsWidgetAsCurrentTabWithNullDocker) {
   PJ::TabbedPlotWidget tabbed;  // ctor adds one plot tab

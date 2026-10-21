@@ -34,6 +34,17 @@ class BundledTranslationTest(unittest.TestCase):
                 self.assertEqual([x.split('=', 1)[0] for x in row['source'].split(';')],
                                  [x.split('=', 1)[0] for x in row['translation'].split(';')])
 
+    def test_marketplace_display_keeps_category_identity_and_escapes_details(self):
+        source = (ROOT / 'pj_marketplace/src/ui/marketplace_window.cpp').read_text(encoding='utf-8')
+        self.assertIn('category_item->setData(kCategoryTokenRole, ext.category)', source)
+        self.assertIn('data(kCategoryTokenRole).toString(), other.data(kCategoryTokenRole).toString()', source)
+        self.assertIn('category_item->setData(kCategoryNameKeyRole, ext.name)', source)
+        self.assertIn('detail_title_->setText(PJ::bundledPluginText(ext->id, ext->version, ext->name))', source)
+        self.assertIn('esc(PJ::bundledPluginText(ext->id, ext->version, ext->description))', source)
+        self.assertIn('meta << esc(displayCategory(ext->category))', source)
+        self.assertIn('return category;', source)
+        self.assertIn('const ExtensionDiagnostic diagnostic = ext_mgr_->diagnostics().back();', source)
+
     def test_literal_macros_never_wrap_runtime_translation(self):
         bad = re.compile(r'(?:QStringLiteral|QLatin1String|QT_TRANSLATE_NOOP)\s*\(\s*(?:QCoreApplication::translate|(?:QObject::)?tr)\s*\(')
         for module in ROOT.glob('pj_*'):
@@ -43,13 +54,13 @@ class BundledTranslationTest(unittest.TestCase):
     def test_native_build_remains_explicit(self):
         workflow = (ROOT / '.github/workflows/zh-4x-packages.yml').read_text(encoding='utf-8')
         self.assertIn("github.event_name == 'push' && github.event.created", workflow)
-        self.assertIn("'zh-CN-4.x-ci/release-candidate-rc2-final6'", workflow)
+        self.assertIn("'zh-CN-4.x-ci/release-candidate-rc2-final7'", workflow)
         self.assertNotIn("branches: ['zh-CN-4.x-*", workflow)
         condition = "github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.created)"
         self.assertIn('    if: ' + condition, workflow)
         branches = re.search(r"branches: \[(.*?)\]", workflow).group(1)
         admitted = re.findall(r"'([^']+)'", branches)
-        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final6'})
+        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final7'})
         def runs(event, branch, created):
             trigger = event == 'workflow_dispatch' or (event == 'push' and branch in admitted)
             gate = event == 'workflow_dispatch' or (event == 'push' and created)

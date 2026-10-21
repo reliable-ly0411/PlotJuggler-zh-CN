@@ -69,3 +69,10 @@ Keep these porting and rendering constraints in mind:
 - **Qwt is external and never patched** (`3rdparty/qwt/README.PJ4.md`: FetchContent of the pinned release, or the conda-forge package under `PJ_SYSTEM_QWT`): the PJ3-era in-tree Qwt patches are realized here instead — `PlotScaleDraw` (fixed-notation tick labels, installed on every axis by `QwtPlotPimpl`) and the "Lines and Dots" style (`PlotCurve::drawCurve`: Lines plus one batched, pixel-weeded `drawDots` pass — per-point QPainter calls are pathological on the OpenGL paint engine; on WASM `applyStyleToCurve` sets an explicit `QwtSymbol` instead, which `PlotRhiCanvas` turns into geometry). Do not reintroduce patches under `3rdparty/qwt/src`.
 - **On-canvas text goes through `RasterTextEngine`** (`widget/include/pj_plotting/RasterTextEngine.h`, installed at app startup): the GL canvas's glyph atlas does not survive GPU resets or context recreation, so legend/tracker text is CPU-rasterized and re-uploaded per draw. Do not draw canvas text with raw `QPainter::drawText`, and do not cache the rasterized images — a resident GL texture is exactly what a GPU reset blanks.
 - **The WASM QRhi canvas follows the same reset contract**: it asks Qwt to draw each visible legend/label into a tight DPR-scaled CPU raster, packs those temporary images into one upload, and drops the texture, bindings, pipeline, and text buffer in `releaseResources()`. Keep text changes on the canvas dirty/replot path; never retain the CPU rasters or let a QRhi text resource survive context teardown.
+
+## Localized default titles
+
+A new unnamed plot tab receives a translated default title. Explicit names,
+renamed titles and restored layout names remain user data and are never matched
+for translation. DockWidget localizes only its ADS window title, leaving the
+constructor objectName and saved state IDs unchanged.

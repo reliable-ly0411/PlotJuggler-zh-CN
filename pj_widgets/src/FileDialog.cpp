@@ -46,7 +46,7 @@ class FileDetailsDisplayProxy final : public QIdentityProxyModel {
     if (index.column() == 1 && info.isFile()) {
       return QLocale(QLocale::Chinese, QLocale::China).formattedDataSize(files->size(source));
     }
-    if (index.column() == 2 && info.isFile() && !info.isSymLink()) {
+    if (index.column() == 2 && info.isFile()) {
       const QString mime = QMimeDatabase().mimeTypeForFile(info).name();
       if (mime == u"application/octet-stream"_s) return QCoreApplication::translate("PJ::FileDialog", "Binary file");
       if (mime == u"application/xml"_s || mime == u"text/xml"_s)

@@ -3727,6 +3727,27 @@
       "property": "placeholderText",
       "source": "e.g. /imu/rpy/",
       "translation": "例如 /imu/rpy/"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "lineEditManualPath",
+      "property": "placeholderText",
+      "source": "e.g. cam0",
+      "translation": "例如 cam0"
+    },
+    {
+      "scope": "556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1",
+      "widget": "lineEditTimestampField",
+      "property": "placeholderText",
+      "source": "e.g. timestamp, ts, time",
+      "translation": "例如 timestamp, ts, time"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "lineEditTimestampField",
+      "property": "placeholderText",
+      "source": "e.g. timestamp, ts, time",
+      "translation": "例如 timestamp, ts, time"
     }
   ],
   "templates": [

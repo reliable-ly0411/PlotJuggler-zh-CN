@@ -2904,6 +2904,17 @@ p, li { white-space: pre-wrap; }
         <translation>例如 /imu/rpy/</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>e.g. cam0</source>
+        <translation>例如 cam0</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>e.g. timestamp, ts, time</source>
+        <translation>例如 timestamp, ts, time</translation>
+    </message>
+    <message>
         <location line="+15"/>
         <location line="+1"/>
         <source>Values in &quot;%1&quot; are not monotonically increasing. Will sort these automatically</source>
@@ -3564,7 +3575,12 @@ Message: %3</source>
 <context>
     <name>PJ::DockWidget</name>
     <message>
-        <location filename="../../pj_plotting/widget/src/DockWidget.cpp" line="+896"/>
+        <location filename="../../pj_plotting/widget/src/DockWidget.cpp" line="+89"/>
+        <source>Plot</source>
+        <translation>绘图</translation>
+    </message>
+    <message>
+        <location line="+809"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
@@ -5914,7 +5930,7 @@ already rectified and would otherwise be undistorted twice.</source>
 <context>
     <name>PJ::MarketplaceWindow</name>
     <message>
-        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="+256"/>
+        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="+267"/>
         <source>PlotJuggler Marketplace</source>
         <translation>PlotJuggler 扩展市场</translation>
     </message>
@@ -5930,12 +5946,12 @@ already rectified and would otherwise be undistorted twice.</source>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+643"/>
+        <location line="+644"/>
         <source>Installed</source>
         <translation>已安装</translation>
     </message>
     <message>
-        <location line="-643"/>
+        <location line="-644"/>
         <source>Marketplace</source>
         <translation>扩展市场</translation>
     </message>
@@ -6059,7 +6075,7 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
     </message>
     <message>
         <location line="+11"/>
-        <location line="+617"/>
+        <location line="+618"/>
         <source>Marketplace diagnostic: %1</source>
         <translation>扩展市场诊断：%1</translation>
     </message>
@@ -6100,7 +6116,27 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
         <translation>正在安装</translation>
     </message>
     <message>
-        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="+4"/>
+        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="-876"/>
+        <source>Data loaders</source>
+        <translation>数据加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data streams</source>
+        <translation>数据流</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Message parsers</source>
+        <translation>消息解析器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Toolboxes</source>
+        <translation>工具箱</translation>
+    </message>
+    <message>
+        <location line="+877"/>
         <source>Needs Restart</source>
         <translation>需要重启</translation>
     </message>
@@ -7185,6 +7221,11 @@ Details: %1</source>
         <location line="+1"/>
         <source>Toggle right panel</source>
         <translation>显示或隐藏右侧面板</translation>
+    </message>
+    <message>
+        <location line="+85"/>
+        <source>tab%1</source>
+        <translation>标签页%1</translation>
     </message>
 </context>
 <context>

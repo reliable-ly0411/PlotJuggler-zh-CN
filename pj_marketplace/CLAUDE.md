@@ -56,3 +56,8 @@ User-facing install, extraction and registry error templates are translated at
 their Qt boundary before interpolating paths and IDs. The Qt-free archive policy
 keeps its original diagnostics; DownloadManager translates only recognized
 complete templates. Unknown plugin, system and library details remain verbatim.
+
+Pinned bundled-plugin names and descriptions use the same display mapping in
+list rows and the detail panel, before HTML escaping. Known category labels are
+translated only for presentation; category filtering and compound sorting retain
+registry tokens and original plugin names. Unknown categories remain verbatim.

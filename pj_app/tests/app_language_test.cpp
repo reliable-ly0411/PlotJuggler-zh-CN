@@ -89,6 +89,8 @@ class AppLanguageTest : public QObject {
     const PJ::AppLanguage language(*QCoreApplication::instance(), u"zh_CN"_s);
     QVERIFY(language.catalogLoaded());
     QVERIFY(QFile::exists(u":/i18n/plotjuggler4_zh_CN.qm"_s));
+    QCOMPARE(QCoreApplication::translate("PJ::DockWidget", "Plot"), u"绘图"_s);
+    QCOMPARE(QCoreApplication::translate("PJ::TabbedPlotWidget", "tab%1").arg(2), u"标签页2"_s);
     QCOMPARE(language.language(), u"zh_CN"_s);
     QCOMPARE(QCoreApplication::instance()->property("interfaceLanguage").toString(), u"zh_CN"_s);
     const QString label = QCoreApplication::translate("PreferencesContent", "Language:");
