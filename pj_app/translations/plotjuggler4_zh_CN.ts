@@ -571,6 +571,79 @@
     </message>
 </context>
 <context>
+    <name>PJ::ArchiveDiagnostics</name>
+    <message>
+        <location filename="../../pj_marketplace/src/core/DownloadManager.cpp" line="+31"/>
+        <source>archive entry is neither a regular file nor a directory</source>
+        <translation>压缩包条目既不是普通文件，也不是目录</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>archive entry has an empty path</source>
+        <translation>压缩包条目的路径为空</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path uses a backslash separator</source>
+        <translation>压缩包条目路径使用了反斜杠分隔符</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path is absolute</source>
+        <translation>压缩包条目使用了绝对路径</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path carries a drive letter</source>
+        <translation>压缩包条目路径包含驱动器盘符</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path has an empty segment</source>
+        <translation>压缩包条目路径包含空路径段</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path has a dot segment</source>
+        <translation>压缩包条目路径包含 . 或 .. 路径段</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path segment ends in a dot or space</source>
+        <translation>压缩包条目路径段以点号或空格结尾</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path uses a reserved device name</source>
+        <translation>压缩包条目路径使用了保留的设备名</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path holds a control byte</source>
+        <translation>压缩包条目路径包含控制字符</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>archive holds more than %1 entries</source>
+        <translation>压缩包包含的条目数超过 %1</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>archive entry expands to more than %1 bytes</source>
+        <translation>压缩包条目解压后超过 %1 字节</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>archive expands to more than %1 bytes in total</source>
+        <translation>压缩包解压后的总大小超过 %1 字节</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>archive entry path is deeper than %1 segments</source>
+        <translation>压缩包条目路径的层级超过 %1</translation>
+    </message>
+</context>
+<context>
     <name>PJ::BuiltinFilters</name>
     <message>
         <location filename="../../pj_plotting/widget/src/BuiltinFilterPresentation.cpp" line="+15"/>
@@ -1281,7 +1354,7 @@
 <context>
     <name>PJ::ExtensionManager</name>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+908"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+973"/>
         <source>Not available for this platform (%1)</source>
         <translation>此平台不可用（%1）</translation>
     </message>
@@ -3028,6 +3101,536 @@ already rectified and would otherwise be undistorted twice.</source>
     </message>
 </context>
 <context>
+    <name>PJ::MarketplaceDiagnostics</name>
+    <message>
+        <location filename="../../pj_marketplace/src/core/DownloadManager.cpp" line="+19"/>
+        <source>Archive is larger than the %1-byte limit</source>
+        <translation>压缩包超过 %1 字节的限制</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Could not create destination directory: %1</source>
+        <translation>无法创建目标目录：%1</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Could not open ZIP: %1</source>
+        <translation>无法打开 ZIP：%1</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <location line="+90"/>
+        <location line="+196"/>
+        <source>Cancelled</source>
+        <translation>已取消</translation>
+    </message>
+    <message>
+        <location line="-270"/>
+        <source>Unsafe path detected in ZIP entry: %1</source>
+        <translation>ZIP 条目包含不安全路径：%1</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>%1 (at &quot;%2&quot;)</source>
+        <translation>%1（位于“%2”）</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>No write permission for: %1</source>
+        <translation>没有写入权限：%1</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Error reading ZIP entry &apos;%1&apos;: %2</source>
+        <translation>读取 ZIP 条目“%1”时出错：%2</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>ZIP entry &apos;%1&apos; holds more bytes than it declares</source>
+        <translation>ZIP 条目“%1”的实际字节数超过其声明值</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>ZIP entry &apos;%1&apos; does not declare its size and expands past the remaining budget</source>
+        <translation>ZIP 条目“%1”未声明大小，且解压后超过剩余额度</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Error during extraction: %1</source>
+        <translation>解压时出错：%1</translation>
+    </message>
+    <message>
+        <location line="+146"/>
+        <source>Malformed checksum in registry (&quot;%1&quot; has no digest)</source>
+        <translation>注册表中的校验和格式无效（“%1”没有摘要）</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Checksum mismatch</source>
+        <translation>校验和不匹配</translation>
+    </message>
+    <message>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="-856"/>
+        <source>Extension id is empty</source>
+        <translation>扩展 ID 为空</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Extension id &quot;%1&quot; is not safe for filesystem paths</source>
+        <translation>扩展 ID“%1”不能安全地用于文件系统路径</translation>
+    </message>
+    <message>
+        <location line="+90"/>
+        <source>record names no path</source>
+        <translation>记录未指定路径</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>record path is not absolute</source>
+        <translation>记录中的路径不是绝对路径</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>record targets the extensions store itself</source>
+        <translation>记录指向扩展存储目录本身</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>record targets a path outside the extensions store</source>
+        <translation>记录指向扩展存储目录之外</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>record path resolves outside the extensions store</source>
+        <translation>记录中的路径解析后位于扩展存储目录之外</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>record path is not a directory</source>
+        <translation>记录中的路径不是目录</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>a cleanup record must carry no extension id</source>
+        <translation>清理记录不能包含扩展 ID</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>a cleanup record must be filed under a cleanup name</source>
+        <translation>清理记录必须以清理记录名称保存</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>record for &quot;%1&quot; is filed under the name &quot;%2&quot;</source>
+        <translation>扩展“%1”的记录以名称“%2”保存</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>record could not be opened</source>
+        <translation>无法打开记录</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>record is not a JSON object</source>
+        <translation>记录不是 JSON 对象</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>record does not declare schema %1</source>
+        <translation>记录未声明格式版本 %1</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>record declares no known operation</source>
+        <translation>记录未声明已知操作</translation>
+    </message>
+    <message>
+        <location line="+103"/>
+        <source>Ignored a removal record: %1 (&quot;%2&quot;)%3</source>
+        <translation>已忽略删除记录：%1（“%2”）%3</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source> and it could not be quarantined</source>
+        <translation>，且无法将其隔离</translation>
+    </message>
+    <message>
+        <location line="+66"/>
+        <source>Downloaded artifact must contain exactly one top-level directory named &quot;%1&quot;</source>
+        <translation>下载的安装包必须且只能包含一个名为“%1”的顶层目录</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <location line="+95"/>
+        <source>no valid plugin DSO found</source>
+        <translation>未找到有效的插件动态库</translation>
+    </message>
+    <message>
+        <location line="-63"/>
+        <location line="+93"/>
+        <source>multiple embedded plugin ids in one extension directory: &quot;%1&quot; and &quot;%2&quot;</source>
+        <translation>同一扩展目录中包含多个插件 ID：“%1”和“%2”</translation>
+    </message>
+    <message>
+        <location line="-85"/>
+        <location line="+93"/>
+        <source>multiple embedded plugin versions in one extension directory for &quot;%1&quot;</source>
+        <translation>同一扩展目录中包含插件“%1”的多个版本</translation>
+    </message>
+    <message>
+        <location line="-45"/>
+        <source>plugin admission helper failed</source>
+        <translation>插件准入检查辅助程序失败</translation>
+    </message>
+    <message>
+        <location line="+75"/>
+        <source>Installed artifact is not a valid plugin: %1</source>
+        <translation>安装内容不是有效插件：%1</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Embedded plugin id &quot;%1&quot; does not match registry id &quot;%2&quot;</source>
+        <translation>内嵌插件 ID“%1”与注册表 ID“%2”不一致</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Embedded plugin version &quot;%1&quot; does not match registry version &quot;%2&quot;</source>
+        <translation>内嵌插件版本“%1”与注册表版本“%2”不一致</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <location line="+11"/>
+        <source>Could not write staged install intent: %1</source>
+        <translation>无法写入暂存安装意图记录：%1</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Staged install is missing registry intent</source>
+        <translation>暂存安装缺少注册表意图记录</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Could not read staged install intent: %1</source>
+        <translation>无法读取暂存安装意图记录：%1</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Staged install registry intent is invalid</source>
+        <translation>暂存安装的注册表意图记录无效</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Staged install registry intent has unsafe id: %1</source>
+        <translation>暂存安装的注册表意图记录包含不安全的 ID：%1</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Staged install registry intent has unsafe version &quot;%1&quot;</source>
+        <translation>暂存安装的注册表意图记录包含不安全的版本“%1”</translation>
+    </message>
+    <message>
+        <location line="+102"/>
+        <source>Another PlotJuggler instance is managing extensions. Close it and restart PlotJuggler to manage extensions here.</source>
+        <translation>另一个 PlotJuggler 实例正在管理扩展。请关闭该实例并重新启动 PlotJuggler，以在此处管理扩展。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Cannot create the extensions lock file. Extensions cannot be installed, updated or removed this session.</source>
+        <translation>无法创建扩展锁文件。本次会话无法安装、更新或移除扩展。</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <location line="+12"/>
+        <source>%1 This session can browse installed extensions but cannot install, update or remove them.</source>
+        <translation>%1 本次会话可以浏览已安装的扩展，但无法安装、更新或移除扩展。</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Could not create extensions directory &quot;%1&quot;</source>
+        <translation>无法创建扩展目录“%1”</translation>
+    </message>
+    <message>
+        <location line="+191"/>
+        <location line="+315"/>
+        <source>Install of &quot;%1&quot; is already in progress</source>
+        <translation>正在安装“%1”</translation>
+    </message>
+    <message>
+        <location line="-308"/>
+        <source>Cannot read &quot;%1&quot;</source>
+        <translation>无法读取“%1”</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <location line="+345"/>
+        <source>Extraction area &quot;%1&quot; is on a different filesystem than &quot;%2&quot;, so the install could not be completed atomically</source>
+        <translation>解压目录“%1”与“%2”不在同一文件系统，无法以原子方式完成安装</translation>
+    </message>
+    <message>
+        <location line="-317"/>
+        <source>ZIP must contain exactly one top-level directory holding the plugin</source>
+        <translation>ZIP 必须且只能包含一个存放插件的顶层目录</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Not a valid plugin package: %1</source>
+        <translation>不是有效的插件安装包：%1</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <location line="+244"/>
+        <source>Uninstall of &quot;%1&quot; is staged; restart to apply it before installing again</source>
+        <translation>“%1”的卸载已暂存；请重启应用使其生效后再安装</translation>
+    </message>
+    <message>
+        <location line="-179"/>
+        <location line="+165"/>
+        <source>Extension &quot;%1&quot; is already installed</source>
+        <translation>扩展“%1”已安装</translation>
+    </message>
+    <message>
+        <location line="-158"/>
+        <source>Replacing &quot;%1&quot; was cancelled: no window is left to confirm it</source>
+        <translation>已取消替换“%1”：已无可用于确认的窗口</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Replacing &quot;%1&quot; was cancelled: the window that asked was replaced while the question was open</source>
+        <translation>已取消替换“%1”：提出确认问题的窗口在对话框打开期间已被替换</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Replacing &quot;%1&quot; was cancelled</source>
+        <translation>已取消替换“%1”</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <location line="+256"/>
+        <source>Could not replace existing staged install directory &quot;%1&quot;</source>
+        <translation>无法替换已有的暂存安装目录“%1”</translation>
+    </message>
+    <message>
+        <location line="-248"/>
+        <location line="+255"/>
+        <source>Could not stage install to &quot;%1&quot;</source>
+        <translation>无法将安装暂存至“%1”</translation>
+    </message>
+    <message>
+        <location line="-235"/>
+        <location line="+254"/>
+        <source>Could not replace existing extension directory &quot;%1&quot;</source>
+        <translation>无法替换已有的扩展目录“%1”</translation>
+    </message>
+    <message>
+        <location line="-246"/>
+        <source>Could not install to &quot;%1&quot;</source>
+        <translation>无法安装至“%1”</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+13"/>
+        <source>Post-install validation failed: %1</source>
+        <translation>安装后验证失败：%1</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <source>embedded id changed to &quot;%1&quot;</source>
+        <translation>内嵌 ID 已变为“%1”</translation>
+    </message>
+    <message>
+        <location line="+138"/>
+        <source>Not enough disk space to install the extension</source>
+        <translation>磁盘空间不足，无法安装扩展</translation>
+    </message>
+    <message>
+        <location line="+98"/>
+        <source>Could not promote install to &quot;%1&quot;</source>
+        <translation>无法将安装内容正式移入“%1”</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+7"/>
+        <source>Post-promotion validation failed: %1</source>
+        <translation>正式安装后验证失败：%1</translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>Installation was cancelled</source>
+        <translation>安装已取消</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <location line="+95"/>
+        <source>Extension &quot;%1&quot; is not installed</source>
+        <translation>扩展“%1”尚未安装</translation>
+    </message>
+    <message>
+        <location line="-81"/>
+        <source>Extension &quot;%1&quot; ships with the application and cannot be uninstalled</source>
+        <translation>扩展“%1”随应用附带，无法卸载</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Could not persist the disabled state for &quot;%1&quot;; uninstall not scheduled</source>
+        <translation>无法保存“%1”的禁用状态；未安排卸载</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Could not record the removal of &quot;%1&quot;; uninstall not scheduled</source>
+        <translation>无法记录对“%1”的删除；未安排卸载</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Extension &quot;%1&quot; does not ship with the application</source>
+        <translation>扩展“%1”并非应用附带扩展</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Extension &quot;%1&quot; is already at its bundled version</source>
+        <translation>扩展“%1”已是应用附带版本</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Could not stage the downgrade of &quot;%1&quot;</source>
+        <translation>无法暂存“%1”的降级操作</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>Installed version &quot;%1&quot; is newer than registry version &quot;%2&quot;; downgrade is not allowed</source>
+        <translation>已安装版本“%1”比注册表版本“%2”更新；不允许降级</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Update for &quot;%1&quot; is already staged; restart to apply it</source>
+        <translation>“%1”的更新已暂存；请重启应用使其生效</translation>
+    </message>
+    <message>
+        <location line="+104"/>
+        <source> Moved to quarantine: &quot;%1&quot;.</source>
+        <translation>已移至隔离目录：“%1”。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source> Could not remove or quarantine &quot;%1&quot; — manual cleanup required.</source>
+        <translation>无法删除或隔离“%1”，需要手动清理。</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Staged install directory has no id</source>
+        <translation>暂存安装目录没有 ID</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Staged install directory &quot;%1&quot; does not match registry id &quot;%2&quot;</source>
+        <translation>暂存安装目录“%1”与注册表 ID“%2”不一致</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Could not back up &quot;%1&quot; before update — staged install left in &quot;%2&quot;</source>
+        <translation>更新前无法备份“%1”；暂存安装保留在“%2”</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Could not promote staged install to &quot;%1&quot;</source>
+        <translation>无法将暂存安装正式移入“%1”</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source> Previous version restored.</source>
+        <translation>已恢复旧版本。</translation>
+    </message>
+    <message>
+        <location line="+89"/>
+        <source>record path became a symlink before deletion</source>
+        <translation>删除前记录中的路径变成了符号链接</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Refused a removal record at deletion time: %1 (&quot;%2&quot;)</source>
+        <translation>删除时拒绝执行记录：%1（“%2”）</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Could not remove extension directory &quot;%1&quot;; restart the application or close any process using it</source>
+        <translation>无法删除扩展目录“%1”；请重启应用或关闭正在使用它的进程</translation>
+    </message>
+    <message>
+        <location line="+62"/>
+        <source>Ignored a legacy uninstall marker: %1</source>
+        <translation>已忽略旧版卸载标记：%1</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Could not record the cleanup of &quot;%1&quot;; it stays scheduled by its in-payload marker</source>
+        <translation>无法记录对“%1”的清理；其安装内容中的标记仍保留该清理任务</translation>
+    </message>
+    <message>
+        <location line="+158"/>
+        <source> Previous version remains in backup: &quot;%1&quot;.</source>
+        <translation>旧版本仍保留在备份中：“%1”。</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Content-addressed shadow skipped for &quot;%1&quot;: %2</source>
+        <translation>已跳过“%1”的内容寻址副本：%2</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Could not persist the content-addressed load profile</source>
+        <translation>无法保存内容寻址加载配置</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Content-addressed object for &quot;%1&quot; failed its integrity check; loading the local copy instead. Reinstall to regenerate it.</source>
+        <translation>“%1”的内容寻址对象未通过完整性检查；将改为加载本地副本。请重新安装以重新生成该对象。</translation>
+    </message>
+    <message>
+        <location line="+199"/>
+        <source>Could not restore the enabled state of &quot;%1&quot;; it may load differently next launch</source>
+        <translation>无法恢复“%1”的启用状态；下次启动时其加载行为可能不同</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Could not persist the enabled state of &quot;%1&quot;</source>
+        <translation>无法保存“%1”的启用状态</translation>
+    </message>
+    <message>
+        <location filename="../../pj_marketplace/src/core/RegistryManager.cpp" line="+105"/>
+        <source>Registry parse error: missing or empty required string field &quot;%1&quot;</source>
+        <translation>注册表解析错误：缺少必需的字符串字段“%1”，或该字段为空</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Registry parse error: field &quot;%1&quot; must be a string</source>
+        <translation>注册表解析错误：字段“%1”必须是字符串</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>JSON parse error: %1</source>
+        <translation>JSON 解析错误：%1</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Registry JSON root must be an object</source>
+        <translation>注册表 JSON 根节点必须是对象</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Registry JSON missing &quot;extensions&quot; array</source>
+        <translation>注册表 JSON 缺少“extensions”数组</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Each entry in &quot;extensions&quot; must be a JSON object</source>
+        <translation>“extensions”中的每个条目都必须是 JSON 对象</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <source>Registry resolution error: %1</source>
+        <translation>注册表解析错误：%1</translation>
+    </message>
+</context>
+<context>
     <name>PJ::MarketplaceWindow</name>
     <message>
         <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="+256"/>
@@ -3596,7 +4199,12 @@ Details: %1</source>
         <translation>趣图（英文图片）</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+25"/>
+        <source>Chinese sessions always use the translated banner; the meme choice is kept for English sessions.</source>
+        <translation>中文界面始终显示中文横幅；趣图选项将保留供英文界面使用。</translation>
+    </message>
+    <message>
+        <location line="+35"/>
         <source>This folder does not exist.</source>
         <translation>此文件夹不存在。</translation>
     </message>
@@ -5275,6 +5883,110 @@ Details: %1</source>
     </message>
 </context>
 <context>
+    <name>pj::scene3d::MeshDiagnostics</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/mesh_load_set.h" line="+128"/>
+        <source>mesh load threw: %1</source>
+        <translation>加载网格时发生异常：%1</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>mesh load threw an unknown exception</source>
+        <translation>加载网格时发生未知异常</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/mesh_loader.cpp" line="+335"/>
+        <source>assimp returned no scene for %1</source>
+        <translation>Assimp 未返回 %1 的场景</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>model exceeds browser structure limits in %1 (%2 materials, %3 nodes, depth %4)</source>
+        <translation>%1 中的模型超过浏览器结构限制（%2 个材质、%3 个节点、深度 %4）</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>model has an invalid or over-limit node graph in %1</source>
+        <translation>%1 中的模型节点图无效或超过限制</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>model has an invalid mesh reference in %1</source>
+        <translation>%1 中的模型包含无效的网格引用</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>model vertex count overflow in %1</source>
+        <translation>%1 中的模型顶点数量溢出</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>model index count overflow in %1</source>
+        <translation>%1 中的模型索引数量溢出</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>model exceeds browser geometry limits in %1 (%2 vertices, %3 indices, %4 submeshes)</source>
+        <translation>%1 中的模型超过浏览器几何体限制（%2 个顶点、%3 个索引、%4 个子网格）</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>model exceeds the browser embedded-texture limit in %1</source>
+        <translation>%1 中的模型超过浏览器内嵌纹理限制</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>no renderable geometry in %1</source>
+        <translation>%1 中没有可渲染的几何体</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>model would retain more than %1 MiB in the browser</source>
+        <translation>模型将在浏览器中占用超过 %1 MiB</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <location line="+37"/>
+        <source>model source exceeds the %1 MiB browser limit</source>
+        <translation>模型源文件超过浏览器的 %1 MiB 限制</translation>
+    </message>
+    <message>
+        <location line="-26"/>
+        <source>assimp failed to import %1</source>
+        <translation>Assimp 无法导入 %1</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>mesh import of %1 threw: %2</source>
+        <translation>导入网格 %1 时发生异常：%2</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>mesh import of %1 threw an unknown exception</source>
+        <translation>导入网格 %1 时发生未知异常</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>assimp failed to import %1 buffer</source>
+        <translation>Assimp 无法导入 %1 缓冲区</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>mesh import of %1 buffer threw: %2</source>
+        <translation>导入 %1 缓冲区中的网格时发生异常：%2</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>mesh import of %1 buffer threw an unknown exception</source>
+        <translation>导入 %1 缓冲区中的网格时发生未知异常</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/passes/grid_map_render_pass.cpp" line="+219"/>
+        <source>Grid map %1 x %2 exceeds this GPU&apos;s texture or draw limits</source>
+        <translation>栅格地图 %1 × %2 超过此 GPU 的纹理或绘制限制</translation>
+    </message>
+</context>
+<context>
     <name>pj::scene3d::OccupancyGridLayer</name>
     <message>
         <location filename="../../pj_scene3D/widgets/src/layers/occupancy_grid_layer.cpp" line="+471"/>
@@ -6060,6 +6772,86 @@ Details: %1</source>
         <location line="+0"/>
         <source>Show/hide the path after the current time</source>
         <translation>显示或隐藏当前时间之后的轨迹</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::UrdfParser</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/urdf_parser.cpp" line="+109"/>
+        <source>URDF mesh reference exceeds the browser string limit</source>
+        <translation>URDF 网格引用超过浏览器字符串长度限制</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>URDF material reference exceeds the browser string limit</source>
+        <translation>URDF 材质引用超过浏览器字符串长度限制</translation>
+    </message>
+    <message>
+        <location line="+72"/>
+        <source>Unsupported format: xacro — run `xacro input.xacro &gt; output.urdf` and load the result.</source>
+        <translation>不支持 xacro 格式。请运行 `xacro input.xacro &gt; output.urdf`，然后加载生成的文件。</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>robot_description too large (%1 MiB, limit 32 MiB)</source>
+        <translation>robot_description 过大（%1 MiB，上限为 32 MiB）</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <location line="+11"/>
+        <source>Parse error: %1</source>
+        <translation>解析错误：%1</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Parse error: empty document</source>
+        <translation>解析错误：文档为空</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Format &apos;%1&apos; is not supported — only URDF</source>
+        <translation>不支持格式“%1”，仅支持 URDF</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>URDF exceeds the browser material limit</source>
+        <translation>URDF 超过浏览器材质数量限制</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>URDF material name exceeds the browser string limit</source>
+        <translation>URDF 材质名称超过浏览器字符串长度限制</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>URDF exceeds the browser link limit</source>
+        <translation>URDF 超过浏览器连杆数量限制</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>URDF link name exceeds the browser string limit</source>
+        <translation>URDF 连杆名称超过浏览器字符串长度限制</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <location line="+17"/>
+        <source>URDF exceeds the browser geometry limit</source>
+        <translation>URDF 超过浏览器几何体数量限制</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>URDF exceeds the browser joint limit</source>
+        <translation>URDF 超过浏览器关节数量限制</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>URDF joint field exceeds the browser string limit</source>
+        <translation>URDF 关节字段超过浏览器字符串长度限制</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Parse error: &lt;robot&gt; has no &lt;link&gt; elements</source>
+        <translation>解析错误：&lt;robot&gt; 中没有 &lt;link&gt; 元素</translation>
     </message>
 </context>
 <context>

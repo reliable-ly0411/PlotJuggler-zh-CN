@@ -265,3 +265,10 @@ the same rule for the same reason.)
 - **Assistant Agent.** `toolbox-assistant-agent` is published for Windows, but
   its backends drive the `claude`/`codex` CLI through POSIX-only code, so it
   is bundled on Linux only (AppImage/.deb) and left out of the whitelist here.
+
+## Chinese component pages
+
+Custom directory, replacement-confirmation and shortcut text use `qsTranslate`
+with the `PlotJugglerInstaller` context. The build compiles `meta/zh_CN.ts` using
+the pinned Qt `lrelease`; `package.xml` loads that catalog for Chinese locales.
+IFW standard pages use its bundled translations. License originals are unchanged.

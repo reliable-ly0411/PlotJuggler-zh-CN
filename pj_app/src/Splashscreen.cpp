@@ -174,7 +174,12 @@ QStringList seriousSplashSubtitles() {
 
 QString startupSplashMode(const QSettings& settings) {
   const bool chinese = QCoreApplication::instance()->property("interfaceLanguage").toString() == "zh_CN"_L1;
-  return settings.value(kSplashModeKey, chinese ? kSplashModeSerious : kSplashModeMemes).toString();
+  // Baked-in meme captions have no translated pixels. Keep the stored choice
+  // intact for an English session, but never render English artwork in Chinese.
+  if (chinese) {
+    return kSplashModeSerious;
+  }
+  return settings.value(kSplashModeKey, kSplashModeMemes).toString();
 }
 
 QPixmap capMemeToSplashBox(const QPixmap& pixmap) {

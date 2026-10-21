@@ -239,3 +239,9 @@ this separately licensed fallback before constructing the shell, keeping the exi
 Noto Sans UI family while allowing Chinese text on hosts without system CJK fonts.
 The native release packaging copies the pinned font and its OFL text together;
 source builds and WebAssembly do not download it at application startup.
+
+## Localized startup artwork
+
+Chinese sessions always compose the translated banner, even when an older saved
+profile selects memes. The saved mode is not rewritten and remains effective in
+English sessions. Preferences shows that saved choice and explains the override.

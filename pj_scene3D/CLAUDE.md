@@ -274,3 +274,9 @@ sections where we struggle to find the correct solution.
 Work is surfaced as diffs for user-approved commits (see the root CLAUDE.md
 commit policy). There is no standing rule either mandating or forbidding
 delegation of implementation to Codex for this module — decide per task.
+
+## Diagnostic localization
+
+URDF parsing, mesh-loading and GPU-limit status templates use Qt translations.
+Model names, paths, XML tokens and third-party exception details remain verbatim;
+translations do not change model validation or the stored data.

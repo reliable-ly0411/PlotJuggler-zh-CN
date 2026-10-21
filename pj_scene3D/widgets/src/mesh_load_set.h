@@ -10,6 +10,7 @@
 // wiring, the exception-guarded result() drain (the H.9 defense-in-depth
 // barrier), and the completion bookkeeping.
 
+#include <QCoreApplication>
 #include <QFuture>
 #include <QFutureWatcher>
 #include <QObject>
@@ -124,9 +125,11 @@ class MeshLoadSet {
       try {
         data = entry.future.result();
       } catch (const std::exception& ex) {
-        data.error = QStringLiteral("mesh load threw: %1").arg(QString::fromUtf8(ex.what()));
+        data.error = QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "mesh load threw: %1")
+                         .arg(QString::fromUtf8(ex.what()));
       } catch (...) {
-        data.error = QStringLiteral("mesh load threw an unknown exception");
+        data.error =
+            QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "mesh load threw an unknown exception");
       }
       entry.failed = !data.ok;
       if (data.ok) {

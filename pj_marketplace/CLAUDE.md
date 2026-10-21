@@ -49,3 +49,10 @@ a standalone, network-dependent harness excluded from CTest.
 | How it works | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) |
 | End-user flow | [`docs/USER_MANUAL.md`](./docs/USER_MANUAL.md) |
 | Registry/package wire format | [`docs/plotjuggler-marketplace-spec-v1.0.0-en.md`](./docs/plotjuggler-marketplace-spec-v1.0.0-en.md) |
+
+## Diagnostic localization
+
+User-facing install, extraction and registry error templates are translated at
+their Qt boundary before interpolating paths and IDs. The Qt-free archive policy
+keeps its original diagnostics; DownloadManager translates only recognized
+complete templates. Unknown plugin, system and library details remain verbatim.

@@ -80,6 +80,31 @@ class AppLanguageTest : public QObject {
     QCOMPARE(QCoreApplication::translate("QPlatformTheme", "Cancel"), u"取消"_s);
   }
 
+  void diagnosticTemplatesPreserveDynamicData() {
+    const QString path = u"/tmp/原始 logs/Checksum mismatch.bin"_s;
+    {
+      const PJ::AppLanguage chinese(*QCoreApplication::instance(), u"zh_CN"_s);
+      QVERIFY(chinese.catalogLoaded());
+      QCOMPARE(
+          QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Cannot read \"%1\"").arg(path),
+          u"无法读取“%1”"_s.arg(path));
+      QCOMPARE(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Checksum mismatch"), u"校验和不匹配"_s);
+      QCOMPARE(
+          QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive holds more than %1 entries").arg(123),
+          u"压缩包包含的条目数超过 123"_s);
+      QCOMPARE(
+          QCoreApplication::translate("pj::scene3d::UrdfParser", "Parse error: <robot> has no <link> elements"),
+          u"解析错误：<robot> 中没有 <link> 元素"_s);
+      QCOMPARE(
+          QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "mesh load threw: %1").arg(path),
+          u"加载网格时发生异常：%1"_s.arg(path));
+    }
+    const PJ::AppLanguage english(*QCoreApplication::instance(), u"en_US"_s);
+    QCOMPARE(
+        QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Cannot read \"%1\"").arg(path),
+        u"Cannot read \"%1\""_s.arg(path));
+  }
+
   void embeddedCatalogTranslatesCurrentQtFileDialogKeys_data() {
     QTest::addColumn<QByteArray>("context");
     QTest::addColumn<QByteArray>("source");

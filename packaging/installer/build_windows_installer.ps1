@@ -579,6 +579,12 @@ foreach ($f in Get-ChildItem (Join-Path $pkgSrc "meta") -File | Where-Object { $
   Copy-Item $f.FullName $stageMeta -Force
 }
 
+# Compile the component catalog with the same pinned Qt kit as the application.
+$lrelease = Resolve-Exe "lrelease.exe" (Split-Path $windeployqt -Parent)
+if (-not $lrelease) { Die "lrelease.exe not found. Install Qt Linguist tools in the selected kit or add them to PATH." }
+& $lrelease (Join-Path $stageMeta "zh_CN.ts") -qm (Join-Path $stageMeta "zh_CN.qm")
+if ($LASTEXITCODE -ne 0) { Die "Installer translation compilation failed." }
+
 if ($ExtraPrefix) {
   Copy-Item (Join-Path $stageData "share/licenses/Qt-LGPL.txt") (Join-Path $stageMeta "license_lgpl.txt") -Force
 }
