@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class TextEncodingTest(unittest.TestCase):
     def test_release_and_acceptance_text_io_declares_encoding(self):
-        files = list((ROOT / 'packaging/localization').glob('*.py')) + list((ROOT / 'tests').glob('*.py'))
+        files = list((ROOT / 'packaging/localization').glob('*.py')) + list((ROOT / 'tests').glob('*.py')) + list((ROOT / '.github/release_policy').glob('*.py'))
         missing = []
         for path in files:
             for node in ast.walk(ast.parse(path.read_text(encoding='utf-8'))):
