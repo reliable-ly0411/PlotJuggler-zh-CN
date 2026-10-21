@@ -1,0 +1,72 @@
+--- a/toolbox_transform_editor/transform_editor_plugin.cpp
++++ b/toolbox_transform_editor/transform_editor_plugin.cpp
+@@ -1,3 +1,4 @@
++#include "../pj_display_language.hpp"
+ // SPDX-License-Identifier: MPL-2.0
+ //
+ // Transform Editor toolbox plugin for PlotJuggler 4.
+@@ -393,15 +394,15 @@
+     // behaviour, so an already-existing name is not an error here.
+     std::string single_term;
+     if (output_name_.empty()) {
+-      single_term += "Create a name for the new series\n";
++      single_term += pj_zh_localization::text("Create a name for the new series\n", "请为新曲线命名\n");
+     } else if (std::find(sources_.begin(), sources_.end(), output_name_) != sources_.end()) {
+-      single_term += "Give the new series a name that isn't one of its inputs\n";
++      single_term += pj_zh_localization::text("Give the new series a name that isn't one of its inputs\n", "新曲线名称不能与输入曲线相同\n");
+     }
+     if (sources_.empty()) {
+-      single_term += "Add an input time series (drag & drop)\n";
++      single_term += pj_zh_localization::text("Add an input time series (drag & drop)\n", "请拖入输入时间序列\n");
+     }
+     if (function_body_.empty()) {
+-      single_term += "Write your function body\n";
++      single_term += pj_zh_localization::text("Write your function body\n", "请编写函数体\n");
+     }
+     if (!validation_error_.empty()) {
+       single_term += validation_error_ + "\n";
+@@ -455,7 +456,7 @@
+     // placeholder over the same rect. It lives on the Create setEnabled below.
+     std::string batch_term;
+     if (batch_function_body_.empty()) {
+-      batch_term += "Write your function body\n";
++      batch_term += pj_zh_localization::text("Write your function body\n", "请编写函数体\n");
+     }
+     if (!batch_validation_error_.empty()) {
+       batch_term += batch_validation_error_ + "\n";
+@@ -839,14 +840,14 @@
+       // user's other snippets survive) and persist so it outlives a restart.
+       if (auto loaded = loadSnippetsFromPath(std::filesystem::path(path))) {
+         if (loaded->empty()) {
+-          io_status_ = "The selected file contains no functions.";
++          io_status_ = pj_zh_localization::text("The selected file contains no functions.", "所选文件不包含函数。");
+         } else {
+           mergeSnippets(*loaded);
+           saveSnippetsToDisk(snippets_);
+-          io_status_ = "Imported " + std::to_string(loaded->size()) + " function(s).";
++          io_status_ = pj_zh_localization::text("Imported ", "已导入 ") + std::to_string(loaded->size()) + pj_zh_localization::text(" function(s).", " 个函数。");
+         }
+       } else {
+-        io_status_ = "Could not read a function library from the selected file.";
++        io_status_ = pj_zh_localization::text("Could not read a function library from the selected file.", "无法从所选文件读取函数库。");
+       }
+       return true;
+     }
+@@ -854,7 +855,7 @@
+       // Export: write the current library to the chosen file.
+       const bool ok = saveSnippetsToPath(snippets_, std::filesystem::path(path));
+       io_status_ =
+-          ok ? "Exported " + std::to_string(snippets_.size()) + " function(s)." : "Could not write the selected file.";
++          ok ? pj_zh_localization::text("Exported ", "已导出 ") + std::to_string(snippets_.size()) + pj_zh_localization::text(" function(s).", " 个函数。") : pj_zh_localization::text("Could not write the selected file.", "无法写入所选文件。");
+       return true;
+     }
+     return false;
+@@ -1704,7 +1705,7 @@
+       // than a misleading "must return a number" (the user may have returned several).
+       const std::string n = std::to_string(num_outputs);
+       const std::string plural = num_outputs == 1 ? "" : "s";
+-      const std::string msg = "function produced no output — declared " + n + " output" + plural +
++      const std::string msg = pj_zh_localization::isChinese() ? "函数未产生输出；已声明 " + n + " 个输出，因此每个点必须恰好返回 " + n + " 个值" : "function produced no output — declared " + n + " output" + plural +
+                               ", so it must return exactly " + n + " value" + plural + " per point";
+       dialog_.setValidationError(msg);
+     }

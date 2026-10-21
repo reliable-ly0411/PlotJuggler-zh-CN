@@ -33,6 +33,12 @@ AppLanguage::AppLanguage(QCoreApplication& app, const QString& language)
     : app_(app), language_(normalizedLanguage(language)) {
   initializeTranslationResources();
   app_.setProperty("interfaceLanguage", language_);
+  // Rebuilt pinned native plugins localize fixed text at its formatting site,
+  // before it is combined with source code or server/user data. No credentials,
+  // protocol data or persisted plugin configuration are passed through this hint.
+  previous_plugin_language_set_ = qEnvironmentVariableIsSet("PLOTJUGGLER_UI_LANGUAGE");
+  previous_plugin_language_ = qgetenv("PLOTJUGGLER_UI_LANGUAGE");
+  qputenv("PLOTJUGGLER_UI_LANGUAGE", language_.toUtf8());
   if (language_ == "zh_CN"_L1) {
     catalog_loaded_ = translator_.load(u":/i18n/plotjuggler4_zh_CN.qm"_s) && app_.installTranslator(&translator_);
     if (!catalog_loaded_) {
@@ -42,6 +48,11 @@ AppLanguage::AppLanguage(QCoreApplication& app, const QString& language)
 }
 
 AppLanguage::~AppLanguage() {
+  if (previous_plugin_language_set_) {
+    qputenv("PLOTJUGGLER_UI_LANGUAGE", previous_plugin_language_);
+  } else {
+    qunsetenv("PLOTJUGGLER_UI_LANGUAGE");
+  }
   if (catalog_loaded_) {
     app_.removeTranslator(&translator_);
   }

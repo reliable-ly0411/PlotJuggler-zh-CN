@@ -1,7 +1,6 @@
+#include <pj_widgets/BundledPluginText.h>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
-
-#include "pj_marketplace/marketplace_window.hpp"
 
 #include <QColor>
 #include <QDesktopServices>
@@ -36,6 +35,7 @@
 
 #include "pj_marketplace/download_manager.hpp"
 #include "pj_marketplace/extension_manager.hpp"
+#include "pj_marketplace/marketplace_window.hpp"
 #include "pj_marketplace/platform_utils.hpp"
 #include "pj_marketplace/registry_manager.hpp"
 #include "pj_marketplace/version_compare.hpp"
@@ -601,7 +601,7 @@ void MarketplaceWindow::setupSignals() {
       QString name = id;
       for (const auto& ext : extensions_) {
         if (ext.id == id) {
-          name = ext.name;
+          name = PJ::bundledPluginText(ext.id, ext.version, ext.name);
           break;
         }
       }
@@ -666,8 +666,8 @@ void MarketplaceWindow::rebuildTable(bool preserve_scroll) {
 
     // Name, with the full description as tooltip. Plain QTableWidgetItem — the
     // Name column sorts by case-insensitive text.
-    auto* name_item = new QTableWidgetItem(ext.name);
-    name_item->setToolTip(ext.description);
+    auto* name_item = new QTableWidgetItem(PJ::bundledPluginText(ext.id, ext.version, ext.name));
+    name_item->setToolTip(PJ::bundledPluginText(ext.id, ext.version, ext.description));
     name_item->setData(Qt::UserRole, ext.id);
     table->setItem(row, kColName, name_item);
 
@@ -714,7 +714,7 @@ void MarketplaceWindow::rebuildTable(bool preserve_scroll) {
     // Description: full text, wraps within the stretched column. No tooltip —
     // the cell already renders the whole string, so a tooltip repeating it
     // adds nothing and covers the row on hover.
-    auto* desc_item = new QTableWidgetItem(ext.description);
+    auto* desc_item = new QTableWidgetItem(PJ::bundledPluginText(ext.id, ext.version, ext.description));
     table->setItem(row, kColDescription, desc_item);
   }
 
@@ -1145,7 +1145,10 @@ void MarketplaceWindow::applyFilters() {
     // from compatibleExtensions(currentPlatform()), and rows synthesized for installed
     // extensions carry no platforms map, so nothing here can be foreign-platform.
     if (!search.isEmpty()) {
-      bool match = ext.name.toLower().contains(search) || ext.description.toLower().contains(search);
+      bool match = ext.name.toLower().contains(search) || ext.description.toLower().contains(search) ||
+                   ext.id.toLower().contains(search) ||
+                   PJ::bundledPluginText(ext.id, ext.version, ext.name).toLower().contains(search) ||
+                   PJ::bundledPluginText(ext.id, ext.version, ext.description).toLower().contains(search);
       if (!match) {
         for (const auto& tag : ext.tags) {
           if (tag.toLower().contains(search)) {
@@ -1219,7 +1222,7 @@ void MarketplaceWindow::showInstallProgress(const QString& verb) {
     name = active_install_id_;
     for (const auto& ext : extensions_) {
       if (ext.id == active_install_id_) {
-        name = ext.name;
+        name = PJ::bundledPluginText(ext.id, ext.version, ext.name);
         break;
       }
     }
@@ -1322,7 +1325,7 @@ QString MarketplaceWindow::installedStatusText(const QString& id, bool from_file
   }
   for (const auto& ext : extensions_) {
     if (ext.id == id) {
-      return tr("Installed %1 v%2").arg(ext.name, ext.version);
+      return tr("Installed %1 v%2").arg(PJ::bundledPluginText(ext.id, ext.version, ext.name), ext.version);
     }
   }
   return tr("Installed %1").arg(id);

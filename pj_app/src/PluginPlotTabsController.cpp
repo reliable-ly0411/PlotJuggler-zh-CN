@@ -1,13 +1,13 @@
+#include <pj_widgets/BundledPluginText.h>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
-
-#include "PluginPlotTabsController.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <optional>
 
+#include "PluginPlotTabsController.h"
 #include "pj_plotting/DockWidget.h"
 #include "pj_plotting/PlotDocker.h"
 #include "pj_plotting/PlotWidget.h"
@@ -163,7 +163,10 @@ QString PluginPlotTabsController::toolboxBadge(const QString& plugin_id) const {
   if (toolbox == nullptr) {
     return {};
   }
-  return toolbox->name.empty() ? plugin_id : QString::fromStdString(toolbox->name);
+  return toolbox->name.empty()
+             ? plugin_id
+             : bundledPluginText(
+                   plugin_id, QString::fromStdString(toolbox->version), QString::fromStdString(toolbox->name));
 }
 
 void PluginPlotTabsController::refreshAvailability() {

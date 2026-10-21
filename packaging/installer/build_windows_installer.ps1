@@ -397,6 +397,8 @@ if ($SkipPlugins) {
 # Merge the pinned fork payload before validating the sealed runtime closure.
 if ($ExtraPrefix) {
   if (-not (Test-Path -LiteralPath $ExtraPrefix -PathType Container)) { Die "extra prefix missing: $ExtraPrefix" }
+  python (Join-Path $PSScriptRoot "../localization/replace_localized_plugins.py") --extra-prefix $ExtraPrefix --destination $stageData
+  if ($LASTEXITCODE -ne 0) { Die "localized plugin replacement failed" }
   Get-ChildItem -LiteralPath $ExtraPrefix -Force | Copy-Item -Destination $stageData -Recurse -Force
   $extraManifest = Join-Path $stagePlugins "ardupilot-dataflash\manifest.json"
   $m = Get-Content -LiteralPath $extraManifest -Raw | ConvertFrom-Json

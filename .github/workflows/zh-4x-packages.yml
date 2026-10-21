@@ -2,7 +2,8 @@ name: Chinese 4.x candidate packages
 
 on:
   push:
-    branches: ['zh-CN-4.x-ci/release-candidate']
+    # Explicit one-time rc.2 candidate; only branch creation runs native jobs.
+    branches: ['zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final']
   workflow_dispatch:
 
 permissions:
@@ -245,6 +246,8 @@ jobs:
           python tests/check_localization_provenance.py
           python tests/test_release_versions.py -v
           python tests/test_installer_translations.py -v
+          python tests/test_bundled_translations.py -v
+          python tests/test_localized_plugin_build.py -v
           python tests/test_package_acceptance.py -v
           if [[ "$RUNNER_OS" == Linux ]]; then python tests/test_deb_dependencies.py -v; fi
           python packaging/localization/version_map.py "$PJ_VERSION"
@@ -253,6 +256,28 @@ jobs:
           args=()
           if [[ "$RUNNER_OS" == Linux ]]; then args+=(--linux-tools); fi
           python packaging/localization/prepare_payload.py --prefix build/fork-prefix "${args[@]}"
+      - name: Rebuild pinned display-localized official plugins
+        id: localized-plugins
+        shell: pwsh
+        run: python packaging/localization/build_localized_plugins.py --work build/localized-plugins --prefix build/fork-prefix
+      - name: Retain completed localized plugin dependencies
+        if: always() && steps.localized-plugins.outcome != 'skipped'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.conan2
+          key: zh4-conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt', 'conan.lock') }}-localized-${{ hashFiles('packaging/localization/plugin-patches/source-lock.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Retain localized plugin build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: localized-plugin-build-${{ runner.os }}
+          path: |
+            build/localized-plugins/completed.json
+            build/localized-plugins/*/build/conan-graph.json
+            build/localized-plugins/*/build/conan.lock
+            build/localized-plugins/*/build/offline-tests.xml
+            build/fork-prefix/share/plotjuggler4/release.json
+          if-no-files-found: warn
       - name: Package Linux artifacts
         if: runner.os == 'Linux'
         run: |

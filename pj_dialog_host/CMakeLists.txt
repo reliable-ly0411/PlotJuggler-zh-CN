@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets UiTools SvgWidgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets UiTools SvgWidgets Xml)
 
 # Workaround: some Qt packages still publish AGL in transitive OpenGL links,
 # but that framework was removed in newer macOS SDKs.
@@ -24,6 +24,7 @@ add_library(pj_dialog_engine_qt STATIC
     src/dialog_engine.cpp
     src/panel_engine.cpp
     src/pj_ui_loader.cpp
+    src/bundled_translations.cpp
     src/chart_preview_widget.cpp
     src/chart_placeholder_overlay.hpp
     include/pj_plugins/host_qt/chart_preview_widget.hpp
@@ -57,6 +58,7 @@ target_link_libraries(pj_dialog_engine_qt
     PRIVATE
         pj_plotting       # PlotWidget for embedded chart containers
         pj_runtime        # AppSession + CatalogModel
+        Qt6::Xml
 )
 
 if(PJ_BUILD_TESTS)
@@ -82,4 +84,12 @@ if(PJ_BUILD_TESTS)
         LIBS pj_dialog_engine_qt plotjuggler_sdk::plugin_sdk pj_plotting pj_runtime
     )
     set_target_properties(pj_dialog_host_panel_tests PROPERTIES AUTOMOC ON)
+    add_executable(pj_bundled_translations_test tests/bundled_translations_qtest.cpp)
+    set_target_properties(pj_bundled_translations_test PROPERTIES AUTOMOC ON)
+    target_link_libraries(pj_bundled_translations_test PRIVATE pj_dialog_engine_qt Qt6::Test)
+    target_compile_options(pj_bundled_translations_test PRIVATE ${PJ_WARNING_FLAGS})
+    target_compile_definitions(pj_bundled_translations_test PRIVATE
+        PJ_CSV_UI_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/csv_1_0_7.ui")
+    add_test(NAME pj_bundled_translations_test COMMAND pj_bundled_translations_test)
+    set_tests_properties(pj_bundled_translations_test PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()

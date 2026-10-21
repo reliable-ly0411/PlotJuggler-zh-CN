@@ -1,7 +1,6 @@
+#include <pj_widgets/BundledPluginText.h>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
-
-#include "FileLoader.h"
 
 #include <QCoreApplication>
 #include <QElapsedTimer>
@@ -42,6 +41,7 @@
 #include "BrowserFileStore.h"
 #include "DialogPresenter.h"
 #include "FanoutConfig.h"
+#include "FileLoader.h"
 #include "FileSelectionService.h"
 #include "LayoutXml.h"
 #include "pj_base/data_source_protocol.h"
@@ -941,6 +941,7 @@ struct FileLoader::LoadContext {
   // The selected plugin's stable manifest id, carried alongside its display
   // name (source_name) so the commit epilogue's fileLoaded reports both.
   QString source_manifest_id;
+  QString source_version;
   std::string config;
   DatasetId dataset_id = 0;
   quint64 ticket = 0;  // the request's LoadRequestId, for the worker-path terminal
@@ -1246,6 +1247,10 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
   }
   const QString source_name = QString::fromStdString(source->name);
   const QString source_manifest_id = QString::fromStdString(source->id);
+  const QString source_version = QString::fromStdString(source->version);
+  const auto display_plugin_error = [&source_manifest_id, &source_version](const std::string& error) {
+    return bundledPluginError(source_manifest_id, source_version, QString::fromStdString(error));
+  };
 
   DataSourceHandle handle = source->library.createHandle();
   if (!handle.valid()) {
@@ -1407,12 +1412,12 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
   ServiceRegistryBuilder registry;
   if (auto status = ingest_session.registerServices(registry); !status) {
     (void)fail(
-        tr("Plugin '%1': service registration failed: %2").arg(source_name, QString::fromStdString(status.error())));
+        tr("Plugin '%1': service registration failed: %2").arg(source_name, display_plugin_error(status.error())));
     co_return;
   }
 
   if (auto status = handle.bind(registry.view()); !status) {
-    (void)fail(tr("Plugin '%1': bind failed: %2").arg(source_name, QString::fromStdString(status.error())));
+    (void)fail(tr("Plugin '%1': bind failed: %2").arg(source_name, display_plugin_error(status.error())));
     co_return;
   }
 
@@ -1445,7 +1450,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
                                                       : preset_bytes;
     if (auto status = handle.loadConfig(preset); !status) {
       (void)fail(tr("Plugin '%1' rejected the layout's saved configuration: %2")
-                     .arg(source_name, QString::fromStdString(status.error())));
+                     .arg(source_name, display_plugin_error(status.error())));
       co_return;
     }
     config = preset;
@@ -1464,13 +1469,13 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
         skip_dialog = true;
       } else {
         qCInfo(lcFileLoader).noquote() << tr("Layout preset rejected by '%1': %2 — falling back to dialog")
-                                              .arg(source_name, QString::fromStdString(status.error()));
+                                              .arg(source_name, display_plugin_error(status.error()));
       }
     }
     if (!skip_dialog) {
       config = buildLoadConfig(saved_config, input.backing_path);
       if (auto status = handle.loadConfig(config); !status) {
-        (void)fail(tr("Plugin '%1': loadConfig failed: %2").arg(source_name, QString::fromStdString(status.error())));
+        (void)fail(tr("Plugin '%1': loadConfig failed: %2").arg(source_name, display_plugin_error(status.error())));
         co_return;
       }
     }
@@ -1538,7 +1543,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
       // reload keeps the contract uniform.
       if (auto status = handle.loadConfig(config); !status) {
         (void)fail(tr("Plugin '%1': loadConfig (post-dialog) failed: %2")
-                       .arg(source_name, QString::fromStdString(status.error())));
+                       .arg(source_name, display_plugin_error(status.error())));
         co_return;
       }
     }
@@ -1645,6 +1650,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
     ctx_->dialog_parent = request.dialog_parent;
     ctx_->source_name = source_name;
     ctx_->source_manifest_id = source_manifest_id;
+    ctx_->source_version = QString::fromStdString(source->version);
     ctx_->config = config;
     ctx_->dataset_id = dataset_id;
     ctx_->ticket = ticket;
@@ -2357,7 +2363,9 @@ void FileLoader::onWorkerFinished(std::uint64_t generation) {
   } else if (!ctx_->start_ok && cancel == 0) {  // start() failed (and not a user stop)
     ingest_outcome = IngestOutcome::kFailed;
     emitLoadFinished(ticket, LoadOutcome::kFailed, path, 0);
-    const QString reason = tr("Plugin '%1': start failed: %2").arg(source_name, ctx_->start_error);
+    const QString reason =
+        tr("Plugin '%1': start failed: %2")
+            .arg(source_name, bundledPluginError(ctx_->source_manifest_id, ctx_->source_version, ctx_->start_error));
     qCWarning(lcFileLoader).noquote() << reason;
     if (!replacing) {
       // Real-delete the abandoned first-load shell (no tombstone), invalidating

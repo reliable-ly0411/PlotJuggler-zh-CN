@@ -1,2 +1,4 @@
 versions.env text eol=lf
 *.bat text eol=crlf
+# Unified diffs require a space-only context line for an empty source line.
+packaging/localization/plugin-patches/*.patch text eol=lf whitespace=-blank-at-eol

@@ -1,0 +1,4144 @@
+{
+  "uis": [
+    {
+      "plugin": "ros2-topic-subscriber",
+      "version": "1.1.1",
+      "tag": "data_stream_ros2/v1.1.1",
+      "path": "data_stream_ros2/distro/datastream_ros2.ui",
+      "sha256": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "context": "DataStreamROS2"
+    },
+    {
+      "plugin": "webrtc-client",
+      "version": "1.0.1",
+      "tag": "data_stream_webrtc/v1.0.1",
+      "path": "data_stream_webrtc/datastream_webrtc.ui",
+      "sha256": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "context": "DataStreamWebRTC"
+    },
+    {
+      "plugin": "ros-parser",
+      "version": "1.2.5",
+      "tag": "parser_ros/v1.2.5",
+      "path": "parser_ros/ros_parser_options.ui",
+      "sha256": "5925e6d81e192df14cb34251d436799dbf8c91643f9a6af45e6cea21694ac5c6",
+      "context": "RosParserOptionsForm"
+    },
+    {
+      "plugin": "toolbox-mosaico",
+      "version": "1.3.0",
+      "tag": "toolbox_mosaico/v1.3.0",
+      "path": "toolbox_mosaico/ui/cert_dialog.ui",
+      "sha256": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "context": "CertDialog"
+    },
+    {
+      "plugin": "toolbox-mosaico",
+      "version": "1.3.0",
+      "tag": "toolbox_mosaico/v1.3.0",
+      "path": "toolbox_mosaico/ui/mosaico_panel.ui",
+      "sha256": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "context": "MosaicoPanel"
+    },
+    {
+      "plugin": "toolbox-quaternion",
+      "version": "1.0.1",
+      "tag": "toolbox_quaternion/v1.0.1",
+      "path": "toolbox_quaternion/quaternion_dialog.ui",
+      "sha256": "7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0",
+      "context": "QuaternionDialog"
+    },
+    {
+      "plugin": "mcap-loader",
+      "version": "1.3.0",
+      "tag": "data_load_mcap/v1.3.0",
+      "path": "data_load_mcap/dialog_mcap.ui",
+      "sha256": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "context": "dialog_mcap"
+    },
+    {
+      "plugin": "toolbox-assistant-agent",
+      "version": "0.2.0",
+      "tag": "toolbox_assistant_agent/v0.2.0",
+      "path": "toolbox_assistant_agent/ui/rename_conversation.ui",
+      "sha256": "134934fc8db73854db04fd1088ca57b67d9de28b1caf81134dcd35e8603916d4",
+      "context": "RenameConversation"
+    },
+    {
+      "plugin": "toolbox-assistant-agent",
+      "version": "0.2.0",
+      "tag": "toolbox_assistant_agent/v0.2.0",
+      "path": "toolbox_assistant_agent/ui/assistant_panel.ui",
+      "sha256": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "context": "AssistantPanel"
+    },
+    {
+      "plugin": "toolbox-assistant-agent",
+      "version": "0.2.0",
+      "tag": "toolbox_assistant_agent/v0.2.0",
+      "path": "toolbox_assistant_agent/ui/assistant_settings.ui",
+      "sha256": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "context": "AssistantSettings"
+    },
+    {
+      "plugin": "json-parser",
+      "version": "1.3.0",
+      "tag": "parser_json/v1.3.0",
+      "path": "parser_json/json_parser_options.ui",
+      "sha256": "556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1",
+      "context": "JsonParserOptionsForm"
+    },
+    {
+      "plugin": "protobuf-parser",
+      "version": "1.2.0",
+      "tag": "parser_protobuf/v1.2.0",
+      "path": "parser_protobuf/protobuf_parser_options.ui",
+      "sha256": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "context": "ProtobufParserOptionsForm"
+    },
+    {
+      "plugin": "foxglove-bridge",
+      "version": "1.1.0",
+      "tag": "data_stream_foxglove_bridge/v1.1.0",
+      "path": "data_stream_foxglove_bridge/foxglove_client.ui",
+      "sha256": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "context": "FoxgloveDialog"
+    },
+    {
+      "plugin": "ulog-loader",
+      "version": "1.1.2",
+      "tag": "data_load_ulog/v1.1.2",
+      "path": "data_load_ulog/ulog_params.ui",
+      "sha256": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "context": "ULogParamsForm"
+    },
+    {
+      "plugin": "parquet-loader",
+      "version": "1.0.2",
+      "tag": "data_load_parquet/v1.0.2",
+      "path": "data_load_parquet/dataload_parquet.ui",
+      "sha256": "16a450cea7ed14699a9536d51926143fd554f7f1f571eb1abd10b82f74d581b2",
+      "context": "DialogParquet"
+    },
+    {
+      "plugin": "plotjuggler-bridge",
+      "version": "1.0.1",
+      "tag": "data_stream_pj_bridge/v1.0.1",
+      "path": "data_stream_pj_bridge/websocket_client.ui",
+      "sha256": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "context": "WebSocketDialog"
+    },
+    {
+      "plugin": "toolbox-transform-editor",
+      "version": "1.0.4",
+      "tag": "toolbox_transform_editor/v1.0.4",
+      "path": "toolbox_transform_editor/save_function_name.ui",
+      "sha256": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "context": "SaveFunctionName"
+    },
+    {
+      "plugin": "toolbox-transform-editor",
+      "version": "1.0.4",
+      "tag": "toolbox_transform_editor/v1.0.4",
+      "path": "toolbox_transform_editor/overwrite_function.ui",
+      "sha256": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "context": "OverwriteFunction"
+    },
+    {
+      "plugin": "toolbox-transform-editor",
+      "version": "1.0.4",
+      "tag": "toolbox_transform_editor/v1.0.4",
+      "path": "toolbox_transform_editor/transform_editor_dialog.ui",
+      "sha256": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "context": "TransformEditorDialog"
+    },
+    {
+      "plugin": "toolbox-transform-editor",
+      "version": "1.0.4",
+      "tag": "toolbox_transform_editor/v1.0.4",
+      "path": "toolbox_transform_editor/transform_editor_help.ui",
+      "sha256": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "context": "TransformEditorHelp"
+    },
+    {
+      "plugin": "toolbox-transform-editor",
+      "version": "1.0.4",
+      "tag": "toolbox_transform_editor/v1.0.4",
+      "path": "toolbox_transform_editor/function_library.ui",
+      "sha256": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "context": "FunctionsLibrary"
+    },
+    {
+      "plugin": "csv-loader",
+      "version": "1.0.7",
+      "tag": "data_load_csv/v1.0.7",
+      "path": "data_load_csv/dataload_csv.ui",
+      "sha256": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "context": "DialogCSV"
+    },
+    {
+      "plugin": "csv-loader",
+      "version": "1.0.7",
+      "tag": "data_load_csv/v1.0.7",
+      "path": "data_load_csv/datetimehelp.ui",
+      "sha256": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "context": "DateTimeHelp"
+    }
+  ],
+  "exact": [
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "DataStreamROS2",
+      "property": "windowTitle",
+      "source": "Select ROS messages",
+      "translation": "选择 ROS 消息"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "labelStatus",
+      "property": "text",
+      "source": "Scanning ROS 2 topics...",
+      "translation": "正在扫描 ROS 2 主题…"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "tabTopicSelector",
+      "property": "title",
+      "source": "Topic Selector",
+      "translation": "主题选择器"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "checkBoxTimestamp",
+      "property": "text",
+      "source": "If present, use the timestamp in the field [header.stamp]",
+      "translation": "如果存在，则使用 [header.stamp] 字段中的时间戳"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "labelArraySize",
+      "property": "text",
+      "source": "Maximum size of arrays:",
+      "translation": "数组最大大小："
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "radioMaxClamp",
+      "property": "text",
+      "source": "clamp",
+      "translation": "截断"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "radioMaxDiscard",
+      "property": "text",
+      "source": "discard",
+      "translation": "丢弃"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "labelFilter",
+      "property": "text",
+      "source": "Filter: ",
+      "translation": "筛选： "
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "labelTip",
+      "property": "text",
+      "source": "Tip: [CTRL+A] select all, [CTRL+SHIFT+A] deselect all",
+      "translation": "提示：[CTRL+A] 全选，[CTRL+SHIFT+A] 取消全选"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "tabAdvancedOptions",
+      "property": "title",
+      "source": "Advanced Options",
+      "translation": "高级选项"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "labelStringParsing",
+      "property": "text",
+      "source": "String parsing (used for instance in diagnostic_msgs/DiagnosticArray)",
+      "translation": "字符串解析（例如用于 diagnostic_msgs/DiagnosticArray）"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "checkBoxStringSuffix",
+      "property": "text",
+      "source": "remove suffixes from numbers (example: \"100ms\" -> 100)",
+      "translation": "移除数字的后缀（例如：\"100ms\" -> 100）"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "checkBoxStringBoolean",
+      "property": "text",
+      "source": "convert boolean strings (\"false\"/\"true\") to numbers (0/1)",
+      "translation": "将布尔字符串（\"false\"/\"true\"）转换为数字（0/1）"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "DataStreamWebRTC",
+      "property": "windowTitle",
+      "source": "WebRTC Video Client (WHEP)",
+      "translation": "WebRTC 视频客户端（WHEP）"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "connectionBanner",
+      "property": "text",
+      "source": "Connection",
+      "translation": "连接"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "labelTransport",
+      "property": "text",
+      "source": "Transport",
+      "translation": "传输方式"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "labelAddress",
+      "property": "text",
+      "source": "Address",
+      "translation": "地址"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "labelPort",
+      "property": "text",
+      "source": "Port",
+      "translation": "端口"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "labelServerRow",
+      "property": "text",
+      "source": "Server",
+      "translation": "服务器"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "comboBoxTransport",
+      "property": "toolTip",
+      "source": "WHEP signaling is HTTP. (HTTPS is not wired in this build.)",
+      "translation": "WHEP 信令使用 HTTP。（此构建版本尚未接入 HTTPS。）"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "lineEditAddress",
+      "property": "toolTip",
+      "source": "WHEP server host (mediamtx). Each selected path is read from http://<address>:<port>/<path>/whep.",
+      "translation": "WHEP 服务器主机（mediamtx）。每个选定路径均从 http://<address>:<port>/<path>/whep 读取。"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "lineEditPort",
+      "property": "toolTip",
+      "source": "WHEP server port (mediamtx default 8889).",
+      "translation": "WHEP 服务器端口（mediamtx 默认为 8889）。"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "labelApiRow",
+      "property": "text",
+      "source": "Control API",
+      "translation": "控制 API"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "comboBoxApiTransport",
+      "property": "toolTip",
+      "source": "Control API is HTTP. (HTTPS is not wired in this build.)",
+      "translation": "控制 API 使用 HTTP。（此构建版本尚未接入 HTTPS。）"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "lineEditApiAddress",
+      "property": "toolTip",
+      "source": "mediamtx Control API host, used only to list paths (GET /v3/paths/list). Auto-derived from the server; edit to override, or clear to disable API discovery (manual paths still work).",
+      "translation": "mediamtx 控制 API 主机，仅用于列出路径（GET /v3/paths/list）。默认根据服务器自动推导；可编辑以覆盖，或清空以禁用 API 发现（手动路径仍可使用）。"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "lineEditApiPort",
+      "property": "toolTip",
+      "source": "mediamtx Control API port (default 9997).",
+      "translation": "mediamtx 控制 API 端口（默认为 9997）。"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "buttonRefresh",
+      "property": "text",
+      "source": "Refresh list",
+      "translation": "刷新列表"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "labelPath",
+      "property": "text",
+      "source": "Base path",
+      "translation": "基础路径"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "lineEditPath",
+      "property": "toolTip",
+      "source": "Optional base path prefix on the server (most mediamtx setups leave this empty).",
+      "translation": "服务器上的可选基础路径前缀（大多数 mediamtx 配置可留空）。"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "lineEditPath",
+      "property": "placeholderText",
+      "source": "(optional)",
+      "translation": "（可选）"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "labelBearer",
+      "property": "text",
+      "source": "Bearer token",
+      "translation": "Bearer 令牌"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "lineEditBearer",
+      "property": "toolTip",
+      "source": "Optional. Sent as \"Authorization: Bearer ...\" on every WHEP and Control API request.",
+      "translation": "可选。每个 WHEP 和控制 API 请求都会以 \"Authorization: Bearer ...\" 的形式发送此令牌。"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "lineEditBearer",
+      "property": "placeholderText",
+      "source": "(optional)",
+      "translation": "（可选）"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "labelTopicPrefix",
+      "property": "text",
+      "source": "Topic prefix",
+      "translation": "主题前缀"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "lineEditTopicPrefix",
+      "property": "toolTip",
+      "source": "Each selected path becomes the topic <prefix>/<path>.",
+      "translation": "每个选定路径都会成为主题 <prefix>/<path>。"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "streamsBanner",
+      "property": "text",
+      "source": "Streams",
+      "translation": "流"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "streamsBanner",
+      "property": "filterPlaceholder",
+      "source": "Filter",
+      "translation": "筛选"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "camerasList",
+      "property": "toolTip",
+      "source": "Paths on the server (from the Control API) plus manually added ones. Select the streams you want; each becomes its own PJ.VideoFrame topic. Only H.264 streams are selectable.",
+      "translation": "服务器上的路径（由控制 API 获取）以及手动添加的路径。选择所需的流；每个流都会成为独立的 PJ.VideoFrame 主题。仅可选择 H.264 流。"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "camerasList",
+      "property": "text",
+      "source": "Path",
+      "translation": "路径"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "camerasList",
+      "property": "text",
+      "source": "Tracks",
+      "translation": "轨道"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "camerasList",
+      "property": "text",
+      "source": "Ready",
+      "translation": "就绪"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "labelManualPath",
+      "property": "text",
+      "source": "Manual path:",
+      "translation": "手动路径："
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "lineEditManualPath",
+      "property": "toolTip",
+      "source": "Add a path the Control API did not list (API disabled, or a non-mediamtx WHEP server).",
+      "translation": "添加控制 API 未列出的路径（适用于 API 已禁用或非 mediamtx 的 WHEP 服务器）。"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "buttonAddPath",
+      "property": "text",
+      "source": "Add",
+      "translation": "添加"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "iceBanner",
+      "property": "text",
+      "source": "ICE Servers (STUN / TURN)",
+      "translation": "ICE 服务器（STUN / TURN）"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "tableIceServers",
+      "property": "toolTip",
+      "source": "STUN: fill URL only (e.g. stun:stun.l.google.com:19302). TURN: also fill Username and Credential (e.g. turn:turn.example.org:3478).",
+      "translation": "STUN：仅填写 URL（例如 stun:stun.l.google.com:19302）。TURN：还需填写用户名和凭据（例如 turn:turn.example.org:3478）。"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "tableIceServers",
+      "property": "text",
+      "source": "Username",
+      "translation": "用户名"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "tableIceServers",
+      "property": "text",
+      "source": "Credential",
+      "translation": "凭据"
+    },
+    {
+      "scope": "5925e6d81e192df14cb34251d436799dbf8c91643f9a6af45e6cea21694ac5c6",
+      "widget": "RosParserOptionsForm",
+      "property": "windowTitle",
+      "source": "ROS Parser Options",
+      "translation": "ROS 解析器选项"
+    },
+    {
+      "scope": "5925e6d81e192df14cb34251d436799dbf8c91643f9a6af45e6cea21694ac5c6",
+      "widget": "checkBoxTimestamp",
+      "property": "text",
+      "source": "If present, use the timestamp in the field [header.stamp]",
+      "translation": "如果存在，则使用 [header.stamp] 字段中的时间戳"
+    },
+    {
+      "scope": "5925e6d81e192df14cb34251d436799dbf8c91643f9a6af45e6cea21694ac5c6",
+      "widget": "labelArraySize",
+      "property": "text",
+      "source": "Maximum size of arrays:",
+      "translation": "数组最大大小："
+    },
+    {
+      "scope": "5925e6d81e192df14cb34251d436799dbf8c91643f9a6af45e6cea21694ac5c6",
+      "widget": "radioMaxClamp",
+      "property": "text",
+      "source": "clamp",
+      "translation": "截断"
+    },
+    {
+      "scope": "5925e6d81e192df14cb34251d436799dbf8c91643f9a6af45e6cea21694ac5c6",
+      "widget": "radioMaxDiscard",
+      "property": "text",
+      "source": "discard",
+      "translation": "丢弃"
+    },
+    {
+      "scope": "5925e6d81e192df14cb34251d436799dbf8c91643f9a6af45e6cea21694ac5c6",
+      "widget": "labelStringParsing",
+      "property": "text",
+      "source": "String parsing (used for instance in diagnostic_msgs/DiagnosticArray)",
+      "translation": "字符串解析（例如用于 diagnostic_msgs/DiagnosticArray）"
+    },
+    {
+      "scope": "5925e6d81e192df14cb34251d436799dbf8c91643f9a6af45e6cea21694ac5c6",
+      "widget": "checkBoxStringSuffix",
+      "property": "text",
+      "source": "remove suffixes from numbers (example: \"100ms\" -> 100)",
+      "translation": "移除数字的后缀（例如：\"100ms\" -> 100）"
+    },
+    {
+      "scope": "5925e6d81e192df14cb34251d436799dbf8c91643f9a6af45e6cea21694ac5c6",
+      "widget": "checkBoxStringBoolean",
+      "property": "text",
+      "source": "convert boolean strings (\"false\"/\"true\") to numbers (0/1)",
+      "translation": "将布尔字符串（\"false\"/\"true\"）转换为数字（0/1）"
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "CertDialog",
+      "property": "windowTitle",
+      "source": "Server Certificate / API Key",
+      "translation": "服务器证书／API 密钥"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "serverHeaderBand",
+      "property": "text",
+      "source": "Server:",
+      "translation": "服务器："
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "serverHeaderBand",
+      "property": "trailingButtonToolTips",
+      "source": "Connect",
+      "translation": "连接"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "serverHeaderBand",
+      "property": "trailingButtonToolTips",
+      "source": "Cert / API Key…",
+      "translation": "证书／API 密钥…"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "seqHeaderBand",
+      "property": "text",
+      "source": "Sequences",
+      "translation": "序列"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "seqHeaderBand",
+      "property": "filterPlaceholder",
+      "source": "Filter…",
+      "translation": "筛选…"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "seqHeaderBand",
+      "property": "trailingToggleToolTip",
+      "source": "Use regular expression",
+      "translation": "使用正则表达式"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "seqHeaderBand",
+      "property": "trailingButtonToolTips",
+      "source": "Reload sequences",
+      "translation": "重新加载序列"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "metadataFilterHeaderBand",
+      "property": "text",
+      "source": "Metadata Filter",
+      "translation": "元数据筛选"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "keyCombo",
+      "property": "placeholderText",
+      "source": "Key",
+      "translation": "键"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "opCombo",
+      "property": "placeholderText",
+      "source": "Op",
+      "translation": "运算符"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "valCombo",
+      "property": "placeholderText",
+      "source": "Value",
+      "translation": "值"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "topicHeaderBand",
+      "property": "text",
+      "source": "Topics",
+      "translation": "主题"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "topicHeaderBand",
+      "property": "filterPlaceholder",
+      "source": "Filter…",
+      "translation": "筛选…"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "topicHeaderBand",
+      "property": "trailingToggleToolTip",
+      "source": "Use regular expression",
+      "translation": "使用正则表达式"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "topicHeaderBand",
+      "property": "trailingButtonToolTips",
+      "source": "Reload topics",
+      "translation": "重新加载主题"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "infoHeaderBand",
+      "property": "text",
+      "source": "Info",
+      "translation": "信息"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "buttonCancel",
+      "property": "text",
+      "source": "Cancel",
+      "translation": "取消"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "buttonFetch",
+      "property": "text",
+      "source": "Download",
+      "translation": "下载"
+    },
+    {
+      "scope": "7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0",
+      "widget": "QuaternionDialog",
+      "property": "windowTitle",
+      "source": "Quaternion to RPY",
+      "translation": "四元数转 RPY"
+    },
+    {
+      "scope": "7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0",
+      "widget": "radio_radians",
+      "property": "text",
+      "source": "Radians",
+      "translation": "弧度"
+    },
+    {
+      "scope": "7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0",
+      "widget": "radio_degrees",
+      "property": "text",
+      "source": "Degrees",
+      "translation": "度"
+    },
+    {
+      "scope": "7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0",
+      "widget": "unwrap_check",
+      "property": "text",
+      "source": "Unwrap Angles",
+      "translation": "角度解缠绕"
+    },
+    {
+      "scope": "7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0",
+      "widget": "save_button",
+      "property": "text",
+      "source": "Save",
+      "translation": "保存"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "dialog_mcap",
+      "property": "windowTitle",
+      "source": "MCAP Parser",
+      "translation": "MCAP 解析器"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "headerSettings",
+      "property": "text",
+      "source": "Settings",
+      "translation": "设置"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "label_2",
+      "property": "text",
+      "source": "If an array size exceeds:",
+      "translation": "如果数组大小超过："
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "label_4",
+      "property": "text",
+      "source": "then:",
+      "translation": "则："
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "radioClamp",
+      "property": "text",
+      "source": "Clamp",
+      "translation": "截断"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "radioSkip",
+      "property": "text",
+      "source": "Skip",
+      "translation": "跳过"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "label_3",
+      "property": "text",
+      "source": "Timestamp:",
+      "translation": "时间戳："
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "radioPublishTime",
+      "property": "text",
+      "source": "publish",
+      "translation": "发布时间"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "radioLogTime",
+      "property": "text",
+      "source": "log",
+      "translation": "记录时间"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "checkBoxUseTimestamp",
+      "property": "text",
+      "source": "Override with the message header timestamp (if present)",
+      "translation": "使用消息头中的时间戳覆盖（如果存在）"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "headerChannels",
+      "property": "text",
+      "source": "Channels",
+      "translation": "通道"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "headerChannels",
+      "property": "filterPlaceholder",
+      "source": "Filter Channel Names",
+      "translation": "筛选通道名称"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "btnSelectAll",
+      "property": "text",
+      "source": "Select All",
+      "translation": "全选"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "btnDeselectAll",
+      "property": "text",
+      "source": "Deselect All",
+      "translation": "取消全选"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "tableWidget",
+      "property": "text",
+      "source": "Channel name",
+      "translation": "通道名称"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "tableWidget",
+      "property": "text",
+      "source": "Schema",
+      "translation": "模式"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "tableWidget",
+      "property": "text",
+      "source": "Encoding",
+      "translation": "编码"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "tableWidget",
+      "property": "text",
+      "source": "Msg Count",
+      "translation": "消息数"
+    },
+    {
+      "scope": "134934fc8db73854db04fd1088ca57b67d9de28b1caf81134dcd35e8603916d4",
+      "widget": "RenameConversation",
+      "property": "windowTitle",
+      "source": "Rename conversation",
+      "translation": "重命名对话"
+    },
+    {
+      "scope": "134934fc8db73854db04fd1088ca57b67d9de28b1caf81134dcd35e8603916d4",
+      "widget": "renameCaption",
+      "property": "text",
+      "source": "Name (leave blank to use the default title)",
+      "translation": "名称（留空则使用默认标题）"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "AssistantPanel",
+      "property": "windowTitle",
+      "source": "Assistant Agent",
+      "translation": "智能助手"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "settingsButton",
+      "property": "text",
+      "source": "Settings...",
+      "translation": "设置…"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "settingsButton",
+      "property": "toolTip",
+      "source": "Settings",
+      "translation": "设置"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "conversationsBand",
+      "property": "text",
+      "source": "Conversations",
+      "translation": "对话"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "conversationsBand",
+      "property": "trailingButtonToolTips",
+      "source": "New chat: start a fresh conversation (the current one stays in this list)",
+      "translation": "新建对话：开始一段新对话（当前对话将保留在此列表中）"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "conversationList",
+      "property": "pj_context_actions",
+      "source": "rename=Rename",
+      "translation": "rename=重命名"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "transcriptText",
+      "property": "placeholderText",
+      "source": "Ask the assistant to list your topics, describe a topic, or plot the derivative of a series...",
+      "translation": "让助手列出主题、描述某个主题，或绘制某个序列的导数…"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "statusLabel",
+      "property": "text",
+      "source": "Ready.",
+      "translation": "就绪。"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "inputEdit",
+      "property": "placeholderText",
+      "source": "Type a message and press Send...",
+      "translation": "输入消息并按“发送”…"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "sendButton",
+      "property": "text",
+      "source": "Send",
+      "translation": "发送"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "cancelButton",
+      "property": "text",
+      "source": "Cancel",
+      "translation": "取消"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "AssistantSettings",
+      "property": "windowTitle",
+      "source": "Assistant Agent - Settings",
+      "translation": "智能助手 - 设置"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "backendCaption",
+      "property": "text",
+      "source": "Choose which model backend the assistant uses.",
+      "translation": "选择助手使用的模型后端。"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "backendFieldLabel",
+      "property": "text",
+      "source": "Backend",
+      "translation": "后端"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "backendCombo",
+      "property": "text",
+      "source": "Claude Code (subscription)",
+      "translation": "Claude Code（订阅）"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "backendCombo",
+      "property": "text",
+      "source": "Codex (ChatGPT subscription)",
+      "translation": "Codex（ChatGPT 订阅）"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "claudeModelLabel",
+      "property": "text",
+      "source": "Claude model",
+      "translation": "Claude 模型"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "claudeCustomModelLabel",
+      "property": "text",
+      "source": "Custom model",
+      "translation": "自定义模型"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "claudeModelEdit",
+      "property": "placeholderText",
+      "source": "full model name",
+      "translation": "完整模型名称"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "claudeCliPathLabel",
+      "property": "text",
+      "source": "claude CLI path",
+      "translation": "claude 命令行工具路径"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "claudeCliPathEdit",
+      "property": "placeholderText",
+      "source": "claude (on PATH) or full path",
+      "translation": "claude（位于 PATH 中）或完整路径"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "codexModelLabel",
+      "property": "text",
+      "source": "Codex model",
+      "translation": "Codex 模型"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "codexCustomModelLabel",
+      "property": "text",
+      "source": "Custom model",
+      "translation": "自定义模型"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "codexModelEdit",
+      "property": "placeholderText",
+      "source": "full model name",
+      "translation": "完整模型名称"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "codexCliPathLabel",
+      "property": "text",
+      "source": "codex CLI path",
+      "translation": "codex 命令行工具路径"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "codexCliPathEdit",
+      "property": "placeholderText",
+      "source": "codex (on PATH) or full path",
+      "translation": "codex（位于 PATH 中）或完整路径"
+    },
+    {
+      "scope": "556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1",
+      "widget": "JsonParserOptionsForm",
+      "property": "windowTitle",
+      "source": "JSON Parser Options",
+      "translation": "JSON 解析器选项"
+    },
+    {
+      "scope": "556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1",
+      "widget": "checkBoxUseEmbeddedTimestamp",
+      "property": "text",
+      "source": "Use embedded timestamp field",
+      "translation": "使用内嵌时间戳字段"
+    },
+    {
+      "scope": "556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1",
+      "widget": "checkBoxUseEmbeddedTimestamp",
+      "property": "toolTip",
+      "source": "If enabled, the parser will look for a timestamp field in the JSON message and use its value as the message timestamp.",
+      "translation": "启用后，解析器将在 JSON 消息中查找时间戳字段，并将其值用作消息时间戳。"
+    },
+    {
+      "scope": "556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1",
+      "widget": "labelTimestampField",
+      "property": "text",
+      "source": "Timestamp field name:",
+      "translation": "时间戳字段名称："
+    },
+    {
+      "scope": "556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1",
+      "widget": "lineEditTimestampField",
+      "property": "toolTip",
+      "source": "Name of the top-level JSON field containing the timestamp, in seconds.",
+      "translation": "包含时间戳的顶层 JSON 字段名称，时间戳单位为秒。"
+    },
+    {
+      "scope": "556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1",
+      "widget": "checkBoxLabelKeyedArrays",
+      "property": "text",
+      "source": "Key arrays of labeled objects by label",
+      "translation": "使用标签作为带标签对象数组的键"
+    },
+    {
+      "scope": "556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1",
+      "widget": "checkBoxLabelKeyedArrays",
+      "property": "toolTip",
+      "source": "If enabled, arrays of objects carrying a string \"label\" (or \"name\") member are keyed by that label instead of the array index, and a lone \"value\" member collapses onto it (e.g. scalars/shoulder_pan.pos instead of scalars[0]/value).",
+      "translation": "启用后，对于含有字符串 \"label\"（或 \"name\"）成员的对象数组，将使用该标签而非数组索引作为键；如果仅有一个 \"value\" 成员，则将其合并到该键下（例如，使用 scalars/shoulder_pan.pos，而不是 scalars[0]/value）。"
+    },
+    {
+      "scope": "556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1",
+      "widget": "labelArraySize",
+      "property": "text",
+      "source": "Maximum size of arrays:",
+      "translation": "数组最大大小："
+    },
+    {
+      "scope": "556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1",
+      "widget": "radioMaxClamp",
+      "property": "text",
+      "source": "clamp",
+      "translation": "截断"
+    },
+    {
+      "scope": "556ef5d2dc020da3e9f1bebb8b04e67e09cd752b9ae58153c3e64f9f9c9811c1",
+      "widget": "radioMaxDiscard",
+      "property": "text",
+      "source": "discard",
+      "translation": "丢弃"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "ProtobufParserOptionsForm",
+      "property": "windowTitle",
+      "source": "Protobuf Parser Options",
+      "translation": "Protobuf 解析器选项"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "labelProtoFile",
+      "property": "text",
+      "source": "Proto file:",
+      "translation": "Proto 文件："
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "lineEditProtoFile",
+      "property": "placeholderText",
+      "source": "Path to a .proto file",
+      "translation": ".proto 文件的路径"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "buttonLoadProtoFile",
+      "property": "toolTip",
+      "source": "Browse for a .proto file",
+      "translation": "浏览并选择 .proto 文件"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "labelMessageType",
+      "property": "text",
+      "source": "Select your message type:",
+      "translation": "选择消息类型："
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "checkBoxUseEmbeddedTimestamp",
+      "property": "text",
+      "source": "Use embedded timestamp field",
+      "translation": "使用内嵌时间戳字段"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "checkBoxUseEmbeddedTimestamp",
+      "property": "toolTip",
+      "source": "If enabled, the parser will look for a top-level double field and use its value (in seconds) as the message timestamp.",
+      "translation": "启用后，解析器将查找顶层 double 类型字段，并将其值（单位为秒）用作消息时间戳。"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "labelTimestampField",
+      "property": "text",
+      "source": "Timestamp field name:",
+      "translation": "时间戳字段名称："
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "lineEditTimestampField",
+      "property": "toolTip",
+      "source": "Name of the top-level double field containing the timestamp in seconds. Leave empty to try \"timestamp\" then \"ts\" automatically.",
+      "translation": "包含时间戳（单位为秒）的顶层 double 类型字段名称。留空时将自动依次尝试 \"timestamp\" 和 \"ts\"。"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "labelArraySize",
+      "property": "text",
+      "source": "Maximum size of arrays:",
+      "translation": "数组最大大小："
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "radioMaxClamp",
+      "property": "text",
+      "source": "clamp",
+      "translation": "截断"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "radioMaxDiscard",
+      "property": "text",
+      "source": "discard",
+      "translation": "丢弃"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "labelFileText",
+      "property": "text",
+      "source": "File text:",
+      "translation": "文件文本："
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "textEditProtoPreview",
+      "property": "placeholderText",
+      "source": "Proto file content will appear here after loading...",
+      "translation": "加载后将在此处显示 Proto 文件内容…"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "bannerIncludeFolders",
+      "property": "text",
+      "source": "Include Folders",
+      "translation": "包含目录"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "connectionBanner",
+      "property": "text",
+      "source": "Connection",
+      "translation": "连接"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "labelTransport",
+      "property": "text",
+      "source": "Transport",
+      "translation": "传输方式"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "labelAddressHdr",
+      "property": "text",
+      "source": "Address",
+      "translation": "地址"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "labelPortHdr",
+      "property": "text",
+      "source": "Port",
+      "translation": "端口"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "buttonConnect",
+      "property": "text",
+      "source": "Connect",
+      "translation": "连接"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "labelArraySize",
+      "property": "text",
+      "source": "When an array size exceeds:",
+      "translation": "当数组大小超过："
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "radioClamp",
+      "property": "text",
+      "source": "Clamp",
+      "translation": "截断"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "radioSkip",
+      "property": "text",
+      "source": "Skip",
+      "translation": "跳过"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "checkBoxUseTimestamp",
+      "property": "text",
+      "source": "Use the timestamp in the message (if present)",
+      "translation": "使用消息中的时间戳（如果存在）"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "channelsBanner",
+      "property": "text",
+      "source": "Channels",
+      "translation": "通道"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "channelsBanner",
+      "property": "filterPlaceholder",
+      "source": "Filter",
+      "translation": "筛选"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "ULogParamsForm",
+      "property": "windowTitle",
+      "source": "ULog File",
+      "translation": "ULog 文件"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tabInfo",
+      "property": "title",
+      "source": "Info",
+      "translation": "信息"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableInfo",
+      "property": "text",
+      "source": "Property",
+      "translation": "属性"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableInfo",
+      "property": "text",
+      "source": "Value",
+      "translation": "值"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tabParameters",
+      "property": "title",
+      "source": "Properties",
+      "translation": "属性"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableParams",
+      "property": "text",
+      "source": "Property",
+      "translation": "属性"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableParams",
+      "property": "text",
+      "source": "Value",
+      "translation": "值"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tabMessageLogs",
+      "property": "title",
+      "source": "Message Logs",
+      "translation": "消息日志"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableMessageLogs",
+      "property": "text",
+      "source": "Timestamp",
+      "translation": "时间戳"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableMessageLogs",
+      "property": "text",
+      "source": "Level",
+      "translation": "级别"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableMessageLogs",
+      "property": "text",
+      "source": "Message",
+      "translation": "消息"
+    },
+    {
+      "scope": "16a450cea7ed14699a9536d51926143fd554f7f1f571eb1abd10b82f74d581b2",
+      "widget": "DialogParquet",
+      "property": "windowTitle",
+      "source": "Parquet Loader",
+      "translation": "Parquet 加载器"
+    },
+    {
+      "scope": "16a450cea7ed14699a9536d51926143fd554f7f1f571eb1abd10b82f74d581b2",
+      "widget": "checkBoxDateFormat",
+      "property": "text",
+      "source": "Parse Date Format",
+      "translation": "解析日期格式"
+    },
+    {
+      "scope": "16a450cea7ed14699a9536d51926143fd554f7f1f571eb1abd10b82f74d581b2",
+      "widget": "label_4",
+      "property": "text",
+      "source": "<html><head/><body><p>Visit <a href=\"https://doc.qt.io/qt-5/qtime.html#toString\"><span style=\" text-decoration: underline; color:#0000ff;\">these</span></a> <a href=\"https://doc.qt.io/qt-5/qdate.html#fromString-2\"><span style=\" text-decoration: underline; color:#0000ff;\">links</span></a> to learn more about the Date-Time format</p></body></html>",
+      "translation": "<html><head/><body><p>访问<a href=\"https://doc.qt.io/qt-5/qtime.html#toString\"><span style=\" text-decoration: underline; color:#0000ff;\">时间格式说明</span></a>和<a href=\"https://doc.qt.io/qt-5/qdate.html#fromString-2\"><span style=\" text-decoration: underline; color:#0000ff;\">日期格式说明</span></a>，了解日期时间格式的更多信息。</p></body></html>"
+    },
+    {
+      "scope": "16a450cea7ed14699a9536d51926143fd554f7f1f571eb1abd10b82f74d581b2",
+      "widget": "radioButtonSelect",
+      "property": "text",
+      "source": "Select a column to be used as timestamp",
+      "translation": "选择用作时间戳的列"
+    },
+    {
+      "scope": "16a450cea7ed14699a9536d51926143fd554f7f1f571eb1abd10b82f74d581b2",
+      "widget": "radioButtonIndex",
+      "property": "text",
+      "source": "Use row number as X axis",
+      "translation": "使用行号作为 X 轴"
+    },
+    {
+      "scope": "16a450cea7ed14699a9536d51926143fd554f7f1f571eb1abd10b82f74d581b2",
+      "widget": "label_3",
+      "property": "text",
+      "source": "Columns:",
+      "translation": "列："
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "connectionBanner",
+      "property": "text",
+      "source": "Connection",
+      "translation": "连接"
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "buttonConnect",
+      "property": "text",
+      "source": "Connect",
+      "translation": "连接"
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "label_3",
+      "property": "text",
+      "source": "Address",
+      "translation": "地址"
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "label_4",
+      "property": "text",
+      "source": "Port",
+      "translation": "端口"
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "labelTransport",
+      "property": "text",
+      "source": "Transport",
+      "translation": "传输方式"
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "topicsBanner",
+      "property": "text",
+      "source": "Topics",
+      "translation": "主题"
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "topicsBanner",
+      "property": "filterPlaceholder",
+      "source": "Filter",
+      "translation": "筛选"
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "topicsList",
+      "property": "text",
+      "source": "Topic Name",
+      "translation": "主题名称"
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "topicsList",
+      "property": "text",
+      "source": "DataType",
+      "translation": "数据类型"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "SaveFunctionName",
+      "property": "windowTitle",
+      "source": "Name of the Function",
+      "translation": "函数名称"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "saveNameLabel",
+      "property": "text",
+      "source": "Name:",
+      "translation": "名称："
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "OverwriteFunction",
+      "property": "windowTitle",
+      "source": "Warning",
+      "translation": "警告"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "overwriteLabel",
+      "property": "text",
+      "source": "A function with the same name exists already in the list of saved functions.\n\nOverwrite it?",
+      "translation": "已保存的函数列表中已存在同名函数。\n\n是否覆盖？"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "TransformEditorDialog",
+      "property": "windowTitle",
+      "source": "Transform Editor",
+      "translation": "变换编辑器"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "tab",
+      "property": "title",
+      "source": "Single Function",
+      "translation": "单函数"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "timeseriesHeader",
+      "property": "text",
+      "source": "Input Timeseries",
+      "translation": "输入时间序列"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "pushButtonHelp",
+      "property": "toolTip",
+      "source": "Help",
+      "translation": "帮助"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "pushButtonHelp",
+      "property": "text",
+      "source": "Help",
+      "translation": "帮助"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "tableSources",
+      "property": "toolTip",
+      "source": "<html><head/><body><p>Drag &amp; drop timeseries here. Pick the radio to set which one is <span style=\" font-weight:600;\">value</span>.</p></body></html>",
+      "translation": "<html><head/><body><p>将时间序列拖放到此处。通过单选按钮选择用作 <span style=\" font-weight:600;\">value</span> 的序列。</p></body></html>"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "globalVariablesHeader",
+      "property": "text",
+      "source": "Global Variables",
+      "translation": "全局变量"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "globalVarsText",
+      "property": "toolTip",
+      "source": "<html><head/><body><p>Portion of code outside the function.</p><p>Useful to add global variables.</p></body></html>",
+      "translation": "<html><head/><body><p>函数之外的代码部分。</p><p>可用于添加全局变量。</p></body></html>"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "globalVarsText",
+      "property": "placeholderText",
+      "source": "Add your global variables here",
+      "translation": "在此添加全局变量"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "buttonLoadFunctions",
+      "property": "toolTip",
+      "source": "<html><head/><body><p>Import functions from a XML library.</p></body></html>",
+      "translation": "<html><head/><body><p>从 XML 库导入函数。</p></body></html>"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "buttonSaveFunctions",
+      "property": "toolTip",
+      "source": "<html><head/><body><p>Export functions from a XML library.</p></body></html>",
+      "translation": "<html><head/><body><p>从 XML 库导出函数。</p></body></html>"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "buttonSaveCurrent",
+      "property": "toolTip",
+      "source": "<html><head/><body><p>Save the current function in the library.</p></body></html>",
+      "translation": "<html><head/><body><p>将当前函数保存到库中。</p></body></html>"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "buttonLibraryBox",
+      "property": "toolTip",
+      "source": "<html><head/><body><p>Browse and manage available functions.</p></body></html>",
+      "translation": "<html><head/><body><p>浏览和管理可用函数。</p></body></html>"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "functionText",
+      "property": "toolTip",
+      "source": "<html><head/><body><p>Write your function implementation here. </p><p>It <span style=\" font-weight:600;\">must</span> return a new value.</p></body></html>",
+      "translation": "<html><head/><body><p>在此编写函数实现。</p><p>函数<span style=\" font-weight:600;\">必须</span>返回一个新值。</p></body></html>"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "functionText",
+      "property": "placeholderText",
+      "source": "Write your function here",
+      "translation": "在此编写函数"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "outputTimeseriesHeader",
+      "property": "text",
+      "source": "Output Timeseries",
+      "translation": "输出时间序列"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "nameLineEdit",
+      "property": "placeholderText",
+      "source": "name the new timeseries",
+      "translation": "为新时间序列命名"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "nameLineEdit",
+      "property": "toolTip",
+      "source": "<html><body><p>Name of the new time series.</p></body></html>",
+      "translation": "<html><body><p>新时间序列的名称。</p></body></html>"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "pushButtonCreate",
+      "property": "text",
+      "source": "Create New Time Series",
+      "translation": "创建新时间序列"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "tab_2",
+      "property": "title",
+      "source": "Batch Functions",
+      "translation": "批量函数"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "timeseriesHeaderBatch",
+      "property": "text",
+      "source": "Input Timeseries",
+      "translation": "输入时间序列"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "tableBatchSources",
+      "property": "toolTip",
+      "source": "<html><head/><body><p>Drag &amp; drop timeseries here. The function is applied to each one separately.</p></body></html>",
+      "translation": "<html><head/><body><p>将时间序列拖放到此处。函数将分别应用于每个序列。</p></body></html>"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "globalVariablesHeaderBatch",
+      "property": "text",
+      "source": "Global Variables",
+      "translation": "全局变量"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "globalVarsTextBatch",
+      "property": "toolTip",
+      "source": "<html><head/><body><p>Portion of code outside the function.</p><p>Useful to add global variables.</p></body></html>",
+      "translation": "<html><head/><body><p>函数之外的代码部分。</p><p>可用于添加全局变量。</p></body></html>"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "globalVarsTextBatch",
+      "property": "placeholderText",
+      "source": "Add your global variables here",
+      "translation": "在此添加全局变量"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "functionTextBatch",
+      "property": "toolTip",
+      "source": "<html><head/><body><p>Write your function implementation here. </p><p>It <span style=\" font-weight:600;\">must</span> return a new value.</p></body></html>",
+      "translation": "<html><head/><body><p>在此编写函数实现。</p><p>函数<span style=\" font-weight:600;\">必须</span>返回一个新值。</p></body></html>"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "functionTextBatch",
+      "property": "placeholderText",
+      "source": "Write your function here",
+      "translation": "在此编写函数"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "radioButtonPrefix",
+      "property": "text",
+      "source": "Prefix",
+      "translation": "前缀"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "radioButtonSuffix",
+      "property": "text",
+      "source": "Suffix",
+      "translation": "后缀"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "suffixLineEdit",
+      "property": "placeholderText",
+      "source": "prefix / suffix to add to the names",
+      "translation": "要添加到名称中的前缀／后缀"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "pushButtonCreateBatch",
+      "property": "text",
+      "source": "Create New Time Series",
+      "translation": "创建新时间序列"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "TransformEditorHelp",
+      "property": "windowTitle",
+      "source": "Help",
+      "translation": "帮助"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "textBrowser",
+      "property": "html",
+      "source": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:14pt; font-weight:600;\">Transform editor Help</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:14pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">The transform editor uses the scripting language Lua. You may want to read <a href=\"http://tylerneylon.com/a/learn-lua/\"><span style=\" text-decoration: underline;\">Learn Lua in 15 minutes</span></a>.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">In practice, you don't need to know that much to use it in PlotJuggler.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">You should implement the body of a <span style=\" font-style:italic;\">function(time, value),</span> that is invoked for each point. The returned value is the point [time, your_value]</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Single input, stateless functions:</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Example:</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   return (value *  2) + 1</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">or you can use the <a href=\"https://www.tutorialspoint.com/lua/lua_math_library.htm\"><span style=\" text-decoration: underline;\">math library from Lua</span></a>:</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   return math.log(value)</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">The new point will have the same time of the original point. If you want to modify the timestamp, just return two values like this:</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   return time +1, (value *  2) </span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Return multiple points at once:</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Since version 3.1, you may also return multiple values at once, using a Lua table:</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   -- Calculate t1,v1, t2, v2, etc...</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   return { {t1, v1}, {t2, v2} }</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Stateful functions:</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Some transformations require some form of &quot;memory&quot;, i.e. they need the previous value. To do this you may use the &quot;global variable&quot; textbox.</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">For instance, to compute the finite difference between two consecutive value, you would add this to the <span style=\" font-weight:600;\">Global Variables</span> textbox:</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   prev = nil</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">And this to the <span style=\" font-weight:600;\">Function() </span>textbox</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   if ( prev == nil ) then</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">        prev = value</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   end</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   diff = value - prev</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   prev = value</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   return diff  </span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Multi input, single output:</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Select an additional time series and drop it in the table on the left side. Now your function definition will look like <span style=\" font-style:italic;\">function(time,value,v1)</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Average of two time series:</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   return (value + v1) / 2</span></p></body></html>",
+      "translation": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:14pt; font-weight:600;\">变换编辑器帮助</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:14pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">变换编辑器使用 Lua 脚本语言。您可以先阅读<a href=\"http://tylerneylon.com/a/learn-lua/\"><span style=\" text-decoration: underline;\">15 分钟学会 Lua</span></a>.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">实际上，在 PlotJuggler 中使用它并不需要掌握太多知识。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">您需要实现以下函数的函数体：<span style=\" font-style:italic;\">function(time, value),</span>它会对每个数据点调用一次。返回值将构成数据点 [time, your_value]。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">单输入、无状态函数：</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">示例：</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   return (value *  2) + 1</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">也可以使用 <a href=\"https://www.tutorialspoint.com/lua/lua_math_library.htm\"><span style=\" text-decoration: underline;\">Lua 数学库</span></a>:</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   return math.log(value)</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">新数据点的时间与原数据点相同。如果需要修改时间戳，只需像下面这样返回两个值：</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   return time +1, (value *  2) </span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">一次返回多个数据点：</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">从 3.1 版本起，还可以使用 Lua 表一次返回多个值：</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   -- Calculate t1,v1, t2, v2, etc...</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   return { {t1, v1}, {t2, v2} }</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">有状态函数：</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">某些变换需要某种形式的“记忆”，即需要前一个值。为此，可以使用“全局变量”文本框。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">例如，要计算两个相邻值的有限差分，可以在<span style=\" font-weight:600;\">全局变量</span>文本框中添加以下代码：</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   prev = nil</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">并在 <span style=\" font-weight:600;\">Function() </span>文本框中添加以下代码：</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   if ( prev == nil ) then</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">        prev = value</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   end</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   diff = value - prev</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   prev = value</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   return diff  </span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">多输入、单输出：</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">选择另一个时间序列并将其拖放到左侧表格中。此时，函数定义将变为 <span style=\" font-style:italic;\">function(time,value,v1)</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">计算两个时间序列的平均值：</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   return (value + v1) / 2</span></p></body></html>"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "FunctionsLibrary",
+      "property": "windowTitle",
+      "source": "Function Library",
+      "translation": "函数库"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "functionsHeader",
+      "property": "text",
+      "source": "Functions",
+      "translation": "函数"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "functionsHeader",
+      "property": "filterPlaceholder",
+      "source": "Search",
+      "translation": "搜索"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "previewHeader",
+      "property": "text",
+      "source": "Preview",
+      "translation": "预览"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "labelTip",
+      "property": "text",
+      "source": "Ctrl+Click to select multiple",
+      "translation": "按住 Ctrl 并单击可多选"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "useButton",
+      "property": "text",
+      "source": "Use",
+      "translation": "使用"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "DialogCSV",
+      "property": "windowTitle",
+      "source": "CSV Loader",
+      "translation": "CSV 加载器"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "delimiterHeader",
+      "property": "text",
+      "source": "Delimiter",
+      "translation": "分隔符"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "checkBoxAutoDelim",
+      "property": "text",
+      "source": "Detect Automatically",
+      "translation": "自动检测"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "label",
+      "property": "text",
+      "source": "Delimiter:",
+      "translation": "分隔符："
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "comboBox",
+      "property": "text",
+      "source": "\",\" (comma)",
+      "translation": "\",\"（逗号）"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "comboBox",
+      "property": "text",
+      "source": "\";\" (semicolon)",
+      "translation": "\";\"（分号）"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "comboBox",
+      "property": "text",
+      "source": "\" \" (space)",
+      "translation": "\" \"（空格）"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "comboBox",
+      "property": "text",
+      "source": "\"\\t\" (tab)",
+      "translation": "\"\\t\"（制表符）"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "timestampHeader",
+      "property": "text",
+      "source": "Timestamp Format",
+      "translation": "时间戳格式"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "checkBoxAutoTime",
+      "property": "text",
+      "source": "Detect Automatically",
+      "translation": "自动检测"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "labelCustomFormat",
+      "property": "text",
+      "source": "Custom",
+      "translation": "自定义"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "timeAxisHeader",
+      "property": "text",
+      "source": "Time Axis",
+      "translation": "时间轴"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "previewHeader",
+      "property": "text",
+      "source": "Preview",
+      "translation": "预览"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "radioPreviewTable",
+      "property": "text",
+      "source": "Table",
+      "translation": "表格"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "radioPreviewRaw",
+      "property": "text",
+      "source": "Raw",
+      "translation": "原始内容"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "DateTimeHelp",
+      "property": "windowTitle",
+      "source": "Date-Time Format",
+      "translation": "日期时间格式"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "exampleHeader",
+      "property": "text",
+      "source": "Common Format Examples (input date: 1/15/2024 2:30:45.123 PM)",
+      "translation": "常见格式示例（输入日期：1/15/2024 2:30:45.123 PM）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "exampleTable",
+      "property": "text",
+      "source": "Format String",
+      "translation": "格式字符串"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "exampleTable",
+      "property": "text",
+      "source": "Result",
+      "translation": "结果"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "labelNote",
+      "property": "text",
+      "source": "All other input characters will be treated as text. Any non-empty sequence of characters enclosed in single quotes will also be treated (stripped of the quotes) as text and not be interpreted as expressions.",
+      "translation": "所有其他输入字符均视为文本。任何用单引号括起来的非空字符序列也将视为文本（去掉引号），不会被解释为表达式。"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateHeader",
+      "property": "text",
+      "source": "Date Format",
+      "translation": "日期格式"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateFormatTable",
+      "property": "text",
+      "source": "Expression",
+      "translation": "表达式"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateFormatTable",
+      "property": "text",
+      "source": "Output",
+      "translation": "输出"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateFormatTable",
+      "property": "text",
+      "source": "The day as a number without a leading zero (1 to 31)",
+      "translation": "日期中的日，不带前导零（1 至 31）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateFormatTable",
+      "property": "text",
+      "source": "The day as a number with a leading zero (01 to 31)",
+      "translation": "日期中的日，带前导零（01 至 31）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateFormatTable",
+      "property": "text",
+      "source": "The abbreviated localized day name (e.g. 'Mon' to 'Sun')",
+      "translation": "本地化的星期简称（例如 'Mon' 至 'Sun'）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateFormatTable",
+      "property": "text",
+      "source": "The long localized day name (e.g. 'Monday' to 'Sunday')",
+      "translation": "本地化的星期全称（例如 'Monday' 至 'Sunday'）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateFormatTable",
+      "property": "text",
+      "source": "The month as a number without a leading zero (1 to 12)",
+      "translation": "月份，不带前导零（1 至 12）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateFormatTable",
+      "property": "text",
+      "source": "The month as a number with a leading zero (01 to 12)",
+      "translation": "月份，带前导零（01 至 12）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateFormatTable",
+      "property": "text",
+      "source": "The abbreviated localized month name (e.g. 'Jan' to 'Dec')",
+      "translation": "本地化的月份简称（例如 'Jan' 至 'Dec'）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateFormatTable",
+      "property": "text",
+      "source": "The long localized month name (e.g. 'January' to 'December')",
+      "translation": "本地化的月份全称（例如 'January' 至 'December'）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateFormatTable",
+      "property": "text",
+      "source": "The year as a two digit number (00 to 99)",
+      "translation": "两位数字的年份（00 至 99）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "dateFormatTable",
+      "property": "text",
+      "source": "The year as a four digit number, possibly plus a leading minus sign for negative years",
+      "translation": "四位数字的年份；负年份前可能带有负号"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeHeader",
+      "property": "text",
+      "source": "Time Format",
+      "translation": "时间格式"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "Expression",
+      "translation": "表达式"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "Output",
+      "translation": "输出"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "The hour without a leading zero (0 to 23 or 1 to 12 if AM/PM display)",
+      "translation": "小时，不带前导零（0 至 23；采用 AM/PM 显示时为 1 至 12）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "The hour with a leading zero (00 to 23 or 01 to 12 if AM/PM display)",
+      "translation": "小时，带前导零（00 至 23；采用 AM/PM 显示时为 01 至 12）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "The hour without a leading zero (0 to 23, even with AM/PM display)",
+      "translation": "小时，不带前导零（0 至 23，即使采用 AM/PM 显示也不变）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "The hour with a leading zero (00 to 23, even with AM/PM display)",
+      "translation": "小时，带前导零（00 至 23，即使采用 AM/PM 显示也不变）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "The minute without a leading zero (0 to 59)",
+      "translation": "分钟，不带前导零（0 至 59）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "The minute with a leading zero (00 to 59)",
+      "translation": "分钟，带前导零（00 至 59）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "The whole second, without any leading zero (0 to 59)",
+      "translation": "整数秒，不带前导零（0 至 59）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "The whole second, with a leading zero where applicable (00 to 59)",
+      "translation": "整数秒，必要时带前导零（00 至 59）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "The fractional part of the second, to go after a decimal point, without trailing zeroes (0 to 999). Thus \"s.z\" reports the seconds to full available (millisecond) precision without trailing zeroes.",
+      "translation": "秒的小数部分，位于小数点之后，不带末尾零（0 至 999）。因此，\"s.z\" 以完整的可用精度（毫秒）显示秒数，不带末尾零。"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "The fractional part of the second, to millisecond precision, including trailing zeroes where applicable (000 to 999).",
+      "translation": "秒的小数部分，精确到毫秒，必要时包含末尾零（000 至 999）。"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "Interpret as an AM/PM time. A/AP will match an upper-case version of either QLocale::amText() or QLocale::pmText().",
+      "translation": "按 AM/PM 时间解释。A/AP 将匹配 QLocale::amText() 或 QLocale::pmText() 的大写形式。"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeFormatTable",
+      "property": "text",
+      "source": "Interpret as an am/pm time. a/ap will match a lower-case version of either QLocale::amText() or QLocale::pmText().",
+      "translation": "按 am/pm 时间解释。a/ap 将匹配 QLocale::amText() 或 QLocale::pmText() 的小写形式。"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "comboBox",
+      "property": "text",
+      "source": "\",\" (comma)",
+      "translation": "\",\"（逗号）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "comboBox",
+      "property": "text",
+      "source": "\";\" (semicolon)",
+      "translation": "\";\"（分号）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "comboBox",
+      "property": "text",
+      "source": "\" \" (space)",
+      "translation": "\" \"（空格）"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "comboBox",
+      "property": "text",
+      "source": "\"\\t\" (tab)",
+      "translation": "\"\\t\"（制表符）"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "timeAxisModeCombo",
+      "property": "text",
+      "source": "Number of Rows",
+      "translation": "行号"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeAxisModeCombo",
+      "property": "text",
+      "source": "Number of Rows",
+      "translation": "行号"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "timeAxisModeCombo",
+      "property": "text",
+      "source": "Selected Column",
+      "translation": "所选列"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeAxisModeCombo",
+      "property": "text",
+      "source": "Selected Column",
+      "translation": "所选列"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "timeAxisModeCombo",
+      "property": "text",
+      "source": "Multiple Columns",
+      "translation": "多列组合"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "timeAxisModeCombo",
+      "property": "text",
+      "source": "Multiple Columns",
+      "translation": "多列组合"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "labelWarning",
+      "property": "text",
+      "source": "Duplicate column names detected. Adding suffixes",
+      "translation": "检测到重复列名，将添加后缀"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "labelWarning",
+      "property": "text",
+      "source": "Duplicate column names detected. Adding suffixes",
+      "translation": "检测到重复列名，将添加后缀"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "labelWarning",
+      "property": "text",
+      "source": "Some rows have column number mismatch. Will skip those",
+      "translation": "部分行的列数不匹配，将跳过这些行"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "labelWarning",
+      "property": "text",
+      "source": "Some rows have column number mismatch. Will skip those",
+      "translation": "部分行的列数不匹配，将跳过这些行"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "buttonConnect",
+      "property": "text",
+      "source": "Connected",
+      "translation": "已连接"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "topicsList",
+      "property": "headerText",
+      "source": "Topic Name",
+      "translation": "主题名称"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "topicsList",
+      "property": "headerText",
+      "source": "DataType",
+      "translation": "数据类型"
+    },
+    {
+      "scope": "19c08edbaba7d45ee5821ad5d04ef50b011f0f6f380bed704ba6b6467d0ab4d9",
+      "widget": "topicsList",
+      "property": "headerText",
+      "source": "Encoding",
+      "translation": "编码"
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "buttonConnect",
+      "property": "text",
+      "source": "Connected",
+      "translation": "已连接"
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "topicsList",
+      "property": "headerText",
+      "source": "Topic Name",
+      "translation": "主题名称"
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "topicsList",
+      "property": "headerText",
+      "source": "DataType",
+      "translation": "数据类型"
+    },
+    {
+      "scope": "6b5be69c9e609b5adaee461a3de640089ee6c89954db564edb9ab6fa312997ee",
+      "widget": "topicsList",
+      "property": "placeholderText",
+      "source": "Click to select, Click+Drag to multi-select",
+      "translation": "单击选择，单击并拖动可多选"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "tableWidget",
+      "property": "headerText",
+      "source": "Channel name",
+      "translation": "通道名称"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "tableWidget",
+      "property": "headerText",
+      "source": "Schema",
+      "translation": "模式"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "tableWidget",
+      "property": "headerText",
+      "source": "Encoding",
+      "translation": "编码"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "tableWidget",
+      "property": "headerText",
+      "source": "Msg Count",
+      "translation": "消息数"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "labelAnalyzeError",
+      "property": "text",
+      "source": "No channels were found in this MCAP file.",
+      "translation": "此 MCAP 文件中未找到任何通道。"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "buttonLoadProtoFile",
+      "property": "pickerTitle",
+      "source": "Select Proto File",
+      "translation": "选择 Proto 文件"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "comboBoxMessageType",
+      "property": "text",
+      "source": "(load a .proto file first)",
+      "translation": "（请先加载 .proto 文件）"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "buttonAddIncludeFolder",
+      "property": "pickerTitle",
+      "source": "Select Include Folder",
+      "translation": "选择包含文件夹"
+    },
+    {
+      "scope": "b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658",
+      "widget": "listWidgetIncludeFolders",
+      "property": "placeholderText",
+      "source": "Add folders where imported .proto files can be found:",
+      "translation": "添加用于查找导入的 .proto 文件的文件夹："
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "lua_queryBar",
+      "property": "toolTip",
+      "source": "invalid syntax",
+      "translation": "语法无效"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "lua_queryBar",
+      "property": "toolTip",
+      "source": "invalid syntax",
+      "translation": "语法无效"
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "seqTable",
+      "property": "headerText",
+      "source": "Name",
+      "translation": "名称"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "seqTable",
+      "property": "headerText",
+      "source": "Name",
+      "translation": "名称"
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "seqTable",
+      "property": "headerText",
+      "source": "Date",
+      "translation": "日期"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "seqTable",
+      "property": "headerText",
+      "source": "Date",
+      "translation": "日期"
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "seqTable",
+      "property": "headerText",
+      "source": "Size",
+      "translation": "大小"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "seqTable",
+      "property": "headerText",
+      "source": "Size",
+      "translation": "大小"
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "topicTable",
+      "property": "headerText",
+      "source": "Name",
+      "translation": "名称"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "topicTable",
+      "property": "headerText",
+      "source": "Name",
+      "translation": "名称"
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "topicTable",
+      "property": "headerText",
+      "source": "Size",
+      "translation": "大小"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "topicTable",
+      "property": "headerText",
+      "source": "Size",
+      "translation": "大小"
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "seqHeader",
+      "property": "text",
+      "source": "Sequences",
+      "translation": "序列"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "seqHeader",
+      "property": "text",
+      "source": "Sequences",
+      "translation": "序列"
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "topicHeader",
+      "property": "text",
+      "source": "Topics — loading…",
+      "translation": "主题：加载中…"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "topicHeader",
+      "property": "text",
+      "source": "Topics — loading…",
+      "translation": "主题：加载中…"
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "topicHeader",
+      "property": "text",
+      "source": "Topics",
+      "translation": "主题"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "topicHeader",
+      "property": "text",
+      "source": "Topics",
+      "translation": "主题"
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "dataViewHeader",
+      "property": "text",
+      "source": "Info",
+      "translation": "信息"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "dataViewHeader",
+      "property": "text",
+      "source": "Info",
+      "translation": "信息"
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "dataViewHeader",
+      "property": "text",
+      "source": "Download progress",
+      "translation": "下载进度"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "dataViewHeader",
+      "property": "text",
+      "source": "Download progress",
+      "translation": "下载进度"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Server URI contains invalid characters (control or non-ASCII bytes).",
+      "translation": "服务器 URI 包含无效字符（控制字符或非 ASCII 字节）。"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "TLS certificate path contains invalid characters.",
+      "translation": "TLS 证书路径包含无效字符。"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "API key contains invalid characters (control or non-ASCII bytes).",
+      "translation": "API 密钥包含无效字符（控制字符或非 ASCII 字节）。"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Reloading sequences…",
+      "translation": "正在重新加载序列…"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Reloading topics…",
+      "translation": "正在重新加载主题…"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Credentials saved",
+      "translation": "凭据已保存"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Select a sequence + topic(s) first",
+      "translation": "请先选择一个序列和主题"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Cancelling…",
+      "translation": "正在取消…"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Download cancelled — kept the topics that finished first",
+      "translation": "下载已取消，已保留此前完成的主题"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Download cancelled",
+      "translation": "下载已取消"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "host offers no parser ingest (arrow-ipc topics need a newer PlotJuggler)",
+      "translation": "宿主不支持解析器导入（arrow-ipc 主题需要较新版本的 PlotJuggler）"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Unknown error",
+      "translation": "未知错误"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "not connected",
+      "translation": "未连接"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "topic row count overflow",
+      "translation": "主题行数溢出"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "host not bound",
+      "translation": "宿主未绑定"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "no data in the requested range",
+      "translation": "请求范围内没有数据"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "pull failed: unknown error",
+      "translation": "拉取失败：未知错误"
+    },
+    {
+      "scope": "7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0",
+      "widget": "chart_preview",
+      "property": "chartPlaceholder",
+      "source": "Drag and Drop Quaternion values in the frames above.",
+      "translation": "请将四元数值拖放到上方的输入框中。"
+    },
+    {
+      "scope": "7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0",
+      "widget": "status_label",
+      "property": "text",
+      "source": "Created roll/pitch/yaw transform.",
+      "translation": "已创建 roll/pitch/yaw 变换。"
+    },
+    {
+      "scope": "plugin:toolbox-quaternion@1.0.1",
+      "widget": "message-source:toolbox-quaternion",
+      "property": "message",
+      "source": "host did not expose pj.data_processors.v1",
+      "translation": "宿主未提供 pj.data_processors.v1"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "tableSources",
+      "property": "headerText",
+      "source": "Input timeseries",
+      "translation": "输入时间序列"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "tableSources",
+      "property": "headerText",
+      "source": "Input timeseries",
+      "translation": "输入时间序列"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "tableSources",
+      "property": "headerText",
+      "source": "Input timeseries",
+      "translation": "输入时间序列"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "tableSources",
+      "property": "headerText",
+      "source": "Input timeseries",
+      "translation": "输入时间序列"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "tableSources",
+      "property": "headerText",
+      "source": "Input timeseries",
+      "translation": "输入时间序列"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "tableSources",
+      "property": "headerText",
+      "source": "Var",
+      "translation": "变量"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "tableSources",
+      "property": "headerText",
+      "source": "Var",
+      "translation": "变量"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "tableSources",
+      "property": "headerText",
+      "source": "Var",
+      "translation": "变量"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "tableSources",
+      "property": "headerText",
+      "source": "Var",
+      "translation": "变量"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "tableSources",
+      "property": "headerText",
+      "source": "Var",
+      "translation": "变量"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "tableSources",
+      "property": "placeholderText",
+      "source": "Drag & drop timeseries here",
+      "translation": "将时间序列拖放到此处"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "tableSources",
+      "property": "placeholderText",
+      "source": "Drag & drop timeseries here",
+      "translation": "将时间序列拖放到此处"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "tableSources",
+      "property": "placeholderText",
+      "source": "Drag & drop timeseries here",
+      "translation": "将时间序列拖放到此处"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "tableSources",
+      "property": "placeholderText",
+      "source": "Drag & drop timeseries here",
+      "translation": "将时间序列拖放到此处"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "tableSources",
+      "property": "placeholderText",
+      "source": "Drag & drop timeseries here",
+      "translation": "将时间序列拖放到此处"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "tableFunctions",
+      "property": "headerText",
+      "source": "Function",
+      "translation": "函数"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "tableFunctions",
+      "property": "headerText",
+      "source": "Function",
+      "translation": "函数"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "tableFunctions",
+      "property": "headerText",
+      "source": "Function",
+      "translation": "函数"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "tableFunctions",
+      "property": "headerText",
+      "source": "Function",
+      "translation": "函数"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "tableFunctions",
+      "property": "headerText",
+      "source": "Function",
+      "translation": "函数"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "tableFunctions",
+      "property": "headerText",
+      "source": "Language",
+      "translation": "语言"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "tableFunctions",
+      "property": "headerText",
+      "source": "Language",
+      "translation": "语言"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "tableFunctions",
+      "property": "headerText",
+      "source": "Language",
+      "translation": "语言"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "tableFunctions",
+      "property": "headerText",
+      "source": "Language",
+      "translation": "语言"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "tableFunctions",
+      "property": "headerText",
+      "source": "Language",
+      "translation": "语言"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "buttonLoadFunctions",
+      "property": "pickerFilter",
+      "source": "Snippet library (*.json)",
+      "translation": "代码片段库 (*.json)"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "buttonLoadFunctions",
+      "property": "pickerFilter",
+      "source": "Snippet library (*.json)",
+      "translation": "代码片段库 (*.json)"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "buttonLoadFunctions",
+      "property": "pickerFilter",
+      "source": "Snippet library (*.json)",
+      "translation": "代码片段库 (*.json)"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "buttonLoadFunctions",
+      "property": "pickerFilter",
+      "source": "Snippet library (*.json)",
+      "translation": "代码片段库 (*.json)"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "buttonLoadFunctions",
+      "property": "pickerFilter",
+      "source": "Snippet library (*.json)",
+      "translation": "代码片段库 (*.json)"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "buttonLoadFunctions",
+      "property": "pickerTitle",
+      "source": "Import snippet library",
+      "translation": "导入代码片段库"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "buttonLoadFunctions",
+      "property": "pickerTitle",
+      "source": "Import snippet library",
+      "translation": "导入代码片段库"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "buttonLoadFunctions",
+      "property": "pickerTitle",
+      "source": "Import snippet library",
+      "translation": "导入代码片段库"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "buttonLoadFunctions",
+      "property": "pickerTitle",
+      "source": "Import snippet library",
+      "translation": "导入代码片段库"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "buttonLoadFunctions",
+      "property": "pickerTitle",
+      "source": "Import snippet library",
+      "translation": "导入代码片段库"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "buttonSaveFunctions",
+      "property": "pickerFilter",
+      "source": "Snippet library (*.json)",
+      "translation": "代码片段库 (*.json)"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "buttonSaveFunctions",
+      "property": "pickerFilter",
+      "source": "Snippet library (*.json)",
+      "translation": "代码片段库 (*.json)"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "buttonSaveFunctions",
+      "property": "pickerFilter",
+      "source": "Snippet library (*.json)",
+      "translation": "代码片段库 (*.json)"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "buttonSaveFunctions",
+      "property": "pickerFilter",
+      "source": "Snippet library (*.json)",
+      "translation": "代码片段库 (*.json)"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "buttonSaveFunctions",
+      "property": "pickerFilter",
+      "source": "Snippet library (*.json)",
+      "translation": "代码片段库 (*.json)"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "buttonSaveFunctions",
+      "property": "pickerTitle",
+      "source": "Export snippet library",
+      "translation": "导出代码片段库"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "buttonSaveFunctions",
+      "property": "pickerTitle",
+      "source": "Export snippet library",
+      "translation": "导出代码片段库"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "buttonSaveFunctions",
+      "property": "pickerTitle",
+      "source": "Export snippet library",
+      "translation": "导出代码片段库"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "buttonSaveFunctions",
+      "property": "pickerTitle",
+      "source": "Export snippet library",
+      "translation": "导出代码片段库"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "buttonSaveFunctions",
+      "property": "pickerTitle",
+      "source": "Export snippet library",
+      "translation": "导出代码片段库"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "nameLineEdit",
+      "property": "toolTip",
+      "source": "Name is required",
+      "translation": "名称不能为空"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "nameLineEdit",
+      "property": "toolTip",
+      "source": "Name is required",
+      "translation": "名称不能为空"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "nameLineEdit",
+      "property": "toolTip",
+      "source": "Name is required",
+      "translation": "名称不能为空"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "nameLineEdit",
+      "property": "toolTip",
+      "source": "Name is required",
+      "translation": "名称不能为空"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "nameLineEdit",
+      "property": "toolTip",
+      "source": "Name is required",
+      "translation": "名称不能为空"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "tableBatchSources",
+      "property": "placeholderText",
+      "source": "Drag & drop timeseries here",
+      "translation": "将时间序列拖放到此处"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "tableBatchSources",
+      "property": "placeholderText",
+      "source": "Drag & drop timeseries here",
+      "translation": "将时间序列拖放到此处"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "tableBatchSources",
+      "property": "placeholderText",
+      "source": "Drag & drop timeseries here",
+      "translation": "将时间序列拖放到此处"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "tableBatchSources",
+      "property": "placeholderText",
+      "source": "Drag & drop timeseries here",
+      "translation": "将时间序列拖放到此处"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "tableBatchSources",
+      "property": "placeholderText",
+      "source": "Drag & drop timeseries here",
+      "translation": "将时间序列拖放到此处"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "pushButtonCreate",
+      "property": "text",
+      "source": "Modify Time Series",
+      "translation": "修改时间序列"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "pushButtonCreate",
+      "property": "text",
+      "source": "Modify Time Series",
+      "translation": "修改时间序列"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "pushButtonCreate",
+      "property": "text",
+      "source": "Modify Time Series",
+      "translation": "修改时间序列"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "pushButtonCreate",
+      "property": "text",
+      "source": "Modify Time Series",
+      "translation": "修改时间序列"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "pushButtonCreate",
+      "property": "text",
+      "source": "Modify Time Series",
+      "translation": "修改时间序列"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "pushButtonCreate",
+      "property": "text",
+      "source": "Create New Time Series",
+      "translation": "创建新时间序列"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "pushButtonCreate",
+      "property": "text",
+      "source": "Create New Time Series",
+      "translation": "创建新时间序列"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "pushButtonCreate",
+      "property": "text",
+      "source": "Create New Time Series",
+      "translation": "创建新时间序列"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "pushButtonCreate",
+      "property": "text",
+      "source": "Create New Time Series",
+      "translation": "创建新时间序列"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "pushButtonCreateBatch",
+      "property": "text",
+      "source": "Modify Time Series",
+      "translation": "修改时间序列"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "pushButtonCreateBatch",
+      "property": "text",
+      "source": "Modify Time Series",
+      "translation": "修改时间序列"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "pushButtonCreateBatch",
+      "property": "text",
+      "source": "Modify Time Series",
+      "translation": "修改时间序列"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "pushButtonCreateBatch",
+      "property": "text",
+      "source": "Modify Time Series",
+      "translation": "修改时间序列"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "pushButtonCreateBatch",
+      "property": "text",
+      "source": "Modify Time Series",
+      "translation": "修改时间序列"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "pushButtonCreateBatch",
+      "property": "text",
+      "source": "Create New Time Series",
+      "translation": "创建新时间序列"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "pushButtonCreateBatch",
+      "property": "text",
+      "source": "Create New Time Series",
+      "translation": "创建新时间序列"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "pushButtonCreateBatch",
+      "property": "text",
+      "source": "Create New Time Series",
+      "translation": "创建新时间序列"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "pushButtonCreateBatch",
+      "property": "text",
+      "source": "Create New Time Series",
+      "translation": "创建新时间序列"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Create a name for the new series\n",
+      "translation": "请为新序列命名\n"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Create a name for the new series\n",
+      "translation": "请为新序列命名\n"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Create a name for the new series\n",
+      "translation": "请为新序列命名\n"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Create a name for the new series\n",
+      "translation": "请为新序列命名\n"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Create a name for the new series\n",
+      "translation": "请为新序列命名\n"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Give the new series a name that isn't one of its inputs\n",
+      "translation": "新序列的名称不能与任何输入序列相同\n"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Give the new series a name that isn't one of its inputs\n",
+      "translation": "新序列的名称不能与任何输入序列相同\n"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Give the new series a name that isn't one of its inputs\n",
+      "translation": "新序列的名称不能与任何输入序列相同\n"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Give the new series a name that isn't one of its inputs\n",
+      "translation": "新序列的名称不能与任何输入序列相同\n"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Give the new series a name that isn't one of its inputs\n",
+      "translation": "新序列的名称不能与任何输入序列相同\n"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Add an input time series (drag & drop)\n",
+      "translation": "请拖放以添加输入时间序列\n"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Add an input time series (drag & drop)\n",
+      "translation": "请拖放以添加输入时间序列\n"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Add an input time series (drag & drop)\n",
+      "translation": "请拖放以添加输入时间序列\n"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Add an input time series (drag & drop)\n",
+      "translation": "请拖放以添加输入时间序列\n"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Add an input time series (drag & drop)\n",
+      "translation": "请拖放以添加输入时间序列\n"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Write your function body\n",
+      "translation": "请编写函数体\n"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Write your function body\n",
+      "translation": "请编写函数体\n"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Write your function body\n",
+      "translation": "请编写函数体\n"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Write your function body\n",
+      "translation": "请编写函数体\n"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Write your function body\n",
+      "translation": "请编写函数体\n"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "framePlotPreviewBatch",
+      "property": "chartPlaceholder",
+      "source": "Write your function body\n",
+      "translation": "请编写函数体\n"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "framePlotPreviewBatch",
+      "property": "chartPlaceholder",
+      "source": "Write your function body\n",
+      "translation": "请编写函数体\n"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "framePlotPreviewBatch",
+      "property": "chartPlaceholder",
+      "source": "Write your function body\n",
+      "translation": "请编写函数体\n"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "framePlotPreviewBatch",
+      "property": "chartPlaceholder",
+      "source": "Write your function body\n",
+      "translation": "请编写函数体\n"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "framePlotPreviewBatch",
+      "property": "chartPlaceholder",
+      "source": "Write your function body\n",
+      "translation": "请编写函数体\n"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "The selected file contains no functions.",
+      "translation": "所选文件中没有函数。"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "The selected file contains no functions.",
+      "translation": "所选文件中没有函数。"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "The selected file contains no functions.",
+      "translation": "所选文件中没有函数。"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "The selected file contains no functions.",
+      "translation": "所选文件中没有函数。"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "The selected file contains no functions.",
+      "translation": "所选文件中没有函数。"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Could not read a function library from the selected file.",
+      "translation": "无法从所选文件中读取函数库。"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Could not read a function library from the selected file.",
+      "translation": "无法从所选文件中读取函数库。"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Could not read a function library from the selected file.",
+      "translation": "无法从所选文件中读取函数库。"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Could not read a function library from the selected file.",
+      "translation": "无法从所选文件中读取函数库。"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Could not read a function library from the selected file.",
+      "translation": "无法从所选文件中读取函数库。"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Could not write the selected file.",
+      "translation": "无法写入所选文件。"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Could not write the selected file.",
+      "translation": "无法写入所选文件。"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Could not write the selected file.",
+      "translation": "无法写入所选文件。"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Could not write the selected file.",
+      "translation": "无法写入所选文件。"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Could not write the selected file.",
+      "translation": "无法写入所选文件。"
+    },
+    {
+      "scope": "plugin:toolbox-transform-editor@1.0.4",
+      "widget": "message-source:toolbox-transform-editor",
+      "property": "message",
+      "source": "Transform Editor: a source series, an output name, and a function body are required.",
+      "translation": "变换编辑器：必须提供源序列、输出名称和函数体。"
+    },
+    {
+      "scope": "plugin:toolbox-transform-editor@1.0.4",
+      "widget": "message-source:toolbox-transform-editor",
+      "property": "message",
+      "source": "Transform Editor: the host did not expose pj.data_processors.v1 (cannot create the series).",
+      "translation": "变换编辑器：宿主未提供 pj.data_processors.v1（无法创建序列）。"
+    },
+    {
+      "scope": "plugin:toolbox-transform-editor@1.0.4",
+      "widget": "message-source:toolbox-transform-editor",
+      "property": "message",
+      "source": "Transform Editor: no valid output name.",
+      "translation": "变换编辑器：没有有效的输出名称。"
+    },
+    {
+      "scope": "plugin:toolbox-transform-editor@1.0.4",
+      "widget": "message-source:toolbox-transform-editor",
+      "property": "message",
+      "source": "Transform Editor: drop in some input series, set a prefix/suffix, and write a function body.",
+      "translation": "变换编辑器：请拖入输入序列，设置前缀或后缀，并编写函数体。"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableInfo",
+      "property": "headerText",
+      "source": "Property",
+      "translation": "属性"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableInfo",
+      "property": "headerText",
+      "source": "Value",
+      "translation": "值"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableParams",
+      "property": "headerText",
+      "source": "Property",
+      "translation": "属性"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableParams",
+      "property": "headerText",
+      "source": "Value",
+      "translation": "值"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableMessageLogs",
+      "property": "headerText",
+      "source": "Timestamp",
+      "translation": "时间戳"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableMessageLogs",
+      "property": "headerText",
+      "source": "Level",
+      "translation": "级别"
+    },
+    {
+      "scope": "c37b8707ed6afe889f984a214d9ba4f16043f4782e63907b0b99004d7f29344c",
+      "widget": "tableMessageLogs",
+      "property": "headerText",
+      "source": "Message",
+      "translation": "消息"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "listRosTopics",
+      "property": "headerText",
+      "source": "Topic",
+      "translation": "主题"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "listRosTopics",
+      "property": "headerText",
+      "source": "Datatype",
+      "translation": "数据类型"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "camerasList",
+      "property": "headerText",
+      "source": "Path",
+      "translation": "路径"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "camerasList",
+      "property": "headerText",
+      "source": "Tracks",
+      "translation": "轨道"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "camerasList",
+      "property": "headerText",
+      "source": "Ready",
+      "translation": "就绪"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "tableIceServers",
+      "property": "headerText",
+      "source": "Username",
+      "translation": "用户名"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "tableIceServers",
+      "property": "headerText",
+      "source": "Credential",
+      "translation": "凭据"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "labelApiStatus",
+      "property": "text",
+      "source": "path not added: whitespace/control characters are not allowed",
+      "translation": "未添加路径：不允许包含空白或控制字符"
+    },
+    {
+      "scope": "134934fc8db73854db04fd1088ca57b67d9de28b1caf81134dcd35e8603916d4",
+      "widget": "conversationList",
+      "property": "placeholderText",
+      "source": "No conversations yet",
+      "translation": "暂无对话"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "conversationList",
+      "property": "placeholderText",
+      "source": "No conversations yet",
+      "translation": "暂无对话"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "conversationList",
+      "property": "placeholderText",
+      "source": "No conversations yet",
+      "translation": "暂无对话"
+    },
+    {
+      "scope": "134934fc8db73854db04fd1088ca57b67d9de28b1caf81134dcd35e8603916d4",
+      "widget": "claudeModelCombo",
+      "property": "text",
+      "source": "CLI default",
+      "translation": "CLI 默认值"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "claudeModelCombo",
+      "property": "text",
+      "source": "CLI default",
+      "translation": "CLI 默认值"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "claudeModelCombo",
+      "property": "text",
+      "source": "CLI default",
+      "translation": "CLI 默认值"
+    },
+    {
+      "scope": "134934fc8db73854db04fd1088ca57b67d9de28b1caf81134dcd35e8603916d4",
+      "widget": "codexModelCombo",
+      "property": "text",
+      "source": "CLI default",
+      "translation": "CLI 默认值"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "codexModelCombo",
+      "property": "text",
+      "source": "CLI default",
+      "translation": "CLI 默认值"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "codexModelCombo",
+      "property": "text",
+      "source": "CLI default",
+      "translation": "CLI 默认值"
+    },
+    {
+      "scope": "134934fc8db73854db04fd1088ca57b67d9de28b1caf81134dcd35e8603916d4",
+      "widget": "claudeModelCombo",
+      "property": "text",
+      "source": "Custom...",
+      "translation": "自定义…"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "claudeModelCombo",
+      "property": "text",
+      "source": "Custom...",
+      "translation": "自定义…"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "claudeModelCombo",
+      "property": "text",
+      "source": "Custom...",
+      "translation": "自定义…"
+    },
+    {
+      "scope": "134934fc8db73854db04fd1088ca57b67d9de28b1caf81134dcd35e8603916d4",
+      "widget": "codexModelCombo",
+      "property": "text",
+      "source": "Custom...",
+      "translation": "自定义…"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "codexModelCombo",
+      "property": "text",
+      "source": "Custom...",
+      "translation": "自定义…"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "codexModelCombo",
+      "property": "text",
+      "source": "Custom...",
+      "translation": "自定义…"
+    },
+    {
+      "scope": "134934fc8db73854db04fd1088ca57b67d9de28b1caf81134dcd35e8603916d4",
+      "widget": "claudeModelCombo",
+      "property": "text",
+      "source": "sonnet — fast; the measured default",
+      "translation": "sonnet：快速；经实测的默认选项"
+    },
+    {
+      "scope": "b9f440266cca4f779faabb3571d1a1d3774995be9bc4dc59feee97db3ac2485a",
+      "widget": "claudeModelCombo",
+      "property": "text",
+      "source": "sonnet — fast; the measured default",
+      "translation": "sonnet：快速；经实测的默认选项"
+    },
+    {
+      "scope": "241f12aa818c558e3f3dd9a70315ab73d81d243b8201062c6d2d79bae87e4de1",
+      "widget": "claudeModelCombo",
+      "property": "text",
+      "source": "sonnet — fast; the measured default",
+      "translation": "sonnet：快速；经实测的默认选项"
+    },
+    {
+      "scope": "plugin:toolbox-quaternion@1.0.1",
+      "widget": "message-source:toolbox-quaternion",
+      "property": "message",
+      "source": "quaternion apply failed: host did not expose pj.data_processors.v1",
+      "translation": "四元数应用失败：宿主未提供 pj.data_processors.v1"
+    },
+    {
+      "scope": "plugin:toolbox-quaternion@1.0.1",
+      "widget": "message-source:toolbox-quaternion",
+      "property": "message",
+      "source": "quaternion save failed: host did not expose pj.data_processors.v1",
+      "translation": "四元数保存失败：宿主未提供 pj.data_processors.v1"
+    }
+  ],
+  "templates": [
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "labelAnalyzeError",
+      "property": "text",
+      "source": "Only MCAP-storage ROS 2 bags are supported; this bag uses '%1'. Convert it with 'ros2 bag convert' (storage_id: mcap).",
+      "translation": "仅支持使用 MCAP 存储的 ROS 2 bag；此 bag 使用“%1”。请使用 'ros2 bag convert' 转换（storage_id: mcap）。",
+      "pattern": "\\AOnly\\ MCAP\\-storage\\ ROS\\ 2\\ bags\\ are\\ supported;\\ this\\ bag\\ uses\\ '([\\s\\S]*)'\\.\\ Convert\\ it\\ with\\ 'ros2\\ bag\\ convert'\\ \\(storage_id:\\ mcap\\)\\.\\z"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "function produced no output — declared %1 outputs, so it must return exactly %1 values per point",
+      "translation": "函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值",
+      "pattern": "\\Afunction\\ produced\\ no\\ output\\ —\\ declared\\ ([0-9]+)\\ outputs,\\ so\\ it\\ must\\ return\\ exactly\\ (?:\\1)\\ values\\ per\\ point\\z"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "function produced no output — declared %1 outputs, so it must return exactly %1 values per point",
+      "translation": "函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值",
+      "pattern": "\\Afunction\\ produced\\ no\\ output\\ —\\ declared\\ ([0-9]+)\\ outputs,\\ so\\ it\\ must\\ return\\ exactly\\ (?:\\1)\\ values\\ per\\ point\\z"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "function produced no output — declared %1 outputs, so it must return exactly %1 values per point",
+      "translation": "函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值",
+      "pattern": "\\Afunction\\ produced\\ no\\ output\\ —\\ declared\\ ([0-9]+)\\ outputs,\\ so\\ it\\ must\\ return\\ exactly\\ (?:\\1)\\ values\\ per\\ point\\z"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "function produced no output — declared %1 outputs, so it must return exactly %1 values per point",
+      "translation": "函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值",
+      "pattern": "\\Afunction\\ produced\\ no\\ output\\ —\\ declared\\ ([0-9]+)\\ outputs,\\ so\\ it\\ must\\ return\\ exactly\\ (?:\\1)\\ values\\ per\\ point\\z"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "function produced no output — declared %1 outputs, so it must return exactly %1 values per point",
+      "translation": "函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值",
+      "pattern": "\\Afunction\\ produced\\ no\\ output\\ —\\ declared\\ ([0-9]+)\\ outputs,\\ so\\ it\\ must\\ return\\ exactly\\ (?:\\1)\\ values\\ per\\ point\\z"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "function produced no output — declared %1 output, so it must return exactly %1 value per point",
+      "translation": "函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值",
+      "pattern": "\\Afunction\\ produced\\ no\\ output\\ —\\ declared\\ ([0-9]+)\\ output,\\ so\\ it\\ must\\ return\\ exactly\\ (?:\\1)\\ value\\ per\\ point\\z"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "function produced no output — declared %1 output, so it must return exactly %1 value per point",
+      "translation": "函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值",
+      "pattern": "\\Afunction\\ produced\\ no\\ output\\ —\\ declared\\ ([0-9]+)\\ output,\\ so\\ it\\ must\\ return\\ exactly\\ (?:\\1)\\ value\\ per\\ point\\z"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "function produced no output — declared %1 output, so it must return exactly %1 value per point",
+      "translation": "函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值",
+      "pattern": "\\Afunction\\ produced\\ no\\ output\\ —\\ declared\\ ([0-9]+)\\ output,\\ so\\ it\\ must\\ return\\ exactly\\ (?:\\1)\\ value\\ per\\ point\\z"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "function produced no output — declared %1 output, so it must return exactly %1 value per point",
+      "translation": "函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值",
+      "pattern": "\\Afunction\\ produced\\ no\\ output\\ —\\ declared\\ ([0-9]+)\\ output,\\ so\\ it\\ must\\ return\\ exactly\\ (?:\\1)\\ value\\ per\\ point\\z"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "function produced no output — declared %1 output, so it must return exactly %1 value per point",
+      "translation": "函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值",
+      "pattern": "\\Afunction\\ produced\\ no\\ output\\ —\\ declared\\ ([0-9]+)\\ output,\\ so\\ it\\ must\\ return\\ exactly\\ (?:\\1)\\ value\\ per\\ point\\z"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "labelAnalyzeError",
+      "property": "text",
+      "source": "No readable channels: all %1 channel(s) in this file reference a missing schema.",
+      "translation": "没有可读取的通道：此文件中的全部 %1 个通道都引用了缺失的模式。",
+      "pattern": "\\ANo\\ readable\\ channels:\\ all\\ ([0-9]+)\\ channel\\(s\\)\\ in\\ this\\ file\\ reference\\ a\\ missing\\ schema\\.\\z"
+    },
+    {
+      "scope": "94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9",
+      "widget": "labelWarning",
+      "property": "text",
+      "source": "Values in \"%1\" are not monotonically increasing. Will sort these automatically",
+      "translation": "“%1”列中的值不是单调递增的，将自动排序",
+      "pattern": "\\AValues\\ in\\ \"([\\s\\S]*)\"\\ are\\ not\\ monotonically\\ increasing\\.\\ Will\\ sort\\ these\\ automatically\\z"
+    },
+    {
+      "scope": "b76e3c3e8ffb7355b862977b89ba7c858cd860f2631cc0665ffd5f61bba65151",
+      "widget": "labelWarning",
+      "property": "text",
+      "source": "Values in \"%1\" are not monotonically increasing. Will sort these automatically",
+      "translation": "“%1”列中的值不是单调递增的，将自动排序",
+      "pattern": "\\AValues\\ in\\ \"([\\s\\S]*)\"\\ are\\ not\\ monotonically\\ increasing\\.\\ Will\\ sort\\ these\\ automatically\\z"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "labelAnalyzeError",
+      "property": "text",
+      "source": "Only MCAP-storage ROS 2 bags are supported; unsupported bag file: %1",
+      "translation": "仅支持使用 MCAP 存储的 ROS 2 bag；不支持的 bag 文件：%1",
+      "pattern": "\\AOnly\\ MCAP\\-storage\\ ROS\\ 2\\ bags\\ are\\ supported;\\ unsupported\\ bag\\ file:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "synthetic timestamp overflows int64 at row %1 (anchor %2, interval %3)",
+      "translation": "生成的时间戳在第 %1 行超出 int64 范围（起点 %2，间隔 %3）",
+      "pattern": "\\Asynthetic\\ timestamp\\ overflows\\ int64\\ at\\ row\\ ([\\s\\S]*)\\ \\(anchor\\ ([\\s\\S]*),\\ interval\\ ([\\s\\S]*)\\)\\z"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "labelAnalyzeError",
+      "property": "text",
+      "source": "Cannot read the contents of this MCAP file.%1\nCode: %2\nMessage: %3",
+      "translation": "无法读取此 MCAP 文件的内容。%1\n代码：%2\n消息：%3",
+      "pattern": "\\ACannot\\ read\\ the\\ contents\\ of\\ this\\ MCAP\\ file\\.([\\s\\S]*)\\\nCode:\\ ([\\s\\S]*)\\\nMessage:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "labelAnalyzeError",
+      "property": "text",
+      "source": "ROS 2 bag file listed in metadata.yaml is missing: %1",
+      "translation": "metadata.yaml 中列出的 ROS 2 bag 文件缺失：%1",
+      "pattern": "\\AROS\\ 2\\ bag\\ file\\ listed\\ in\\ metadata\\.yaml\\ is\\ missing:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "labelAnalyzeError",
+      "property": "text",
+      "source": "Cannot open this MCAP file.%1\nCode: %2\nMessage: %3",
+      "translation": "无法打开此 MCAP 文件。%1\n代码：%2\n消息：%3",
+      "pattern": "\\ACannot\\ open\\ this\\ MCAP\\ file\\.([\\s\\S]*)\\\nCode:\\ ([\\s\\S]*)\\\nMessage:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "labelAnalyzeError",
+      "property": "text",
+      "source": "The ROS 2 bag metadata lists no data files: %1",
+      "translation": "ROS 2 bag 元数据未列出任何数据文件：%1",
+      "pattern": "\\AThe\\ ROS\\ 2\\ bag\\ metadata\\ lists\\ no\\ data\\ files:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "labelApiStatus",
+      "property": "text",
+      "source": "Control API: %1 (manual paths still work)",
+      "translation": "控制 API：%1（仍可使用手动路径）",
+      "pattern": "\\AControl\\ API:\\ ([\\s\\S]*)\\ \\(manual\\ paths\\ still\\ work\\)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-transform-editor@1.0.4",
+      "widget": "message-source:toolbox-transform-editor",
+      "property": "message",
+      "source": "Transform Editor: created %1 series.",
+      "translation": "变换编辑器：已创建 %1 个序列。",
+      "pattern": "\\ATransform\\ Editor:\\ created\\ ([0-9]+)\\ series\\.\\z"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "labelAnalyzeError",
+      "property": "text",
+      "source": "Not a ROS 2 bag metadata.yaml: %1",
+      "translation": "不是 ROS 2 bag 的 metadata.yaml：%1",
+      "pattern": "\\ANot\\ a\\ ROS\\ 2\\ bag\\ metadata\\.yaml:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-transform-editor@1.0.4",
+      "widget": "message-source:toolbox-transform-editor",
+      "property": "message",
+      "source": "Transform Editor: error on '%1': %2",
+      "translation": "变换编辑器：处理“%1”时出错：%2",
+      "pattern": "\\ATransform\\ Editor:\\ error\\ on\\ '([\\s\\S]*)':\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Mosaico connection failed: %1",
+      "translation": "Mosaico 连接失败：%1",
+      "pattern": "\\AMosaico\\ connection\\ failed:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-quaternion@1.0.1",
+      "widget": "message-source:toolbox-quaternion",
+      "property": "message",
+      "source": "quaternion apply failed: %1",
+      "translation": "四元数应用失败：%1",
+      "pattern": "\\Aquaternion\\ apply\\ failed:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-quaternion@1.0.1",
+      "widget": "message-source:toolbox-quaternion",
+      "property": "message",
+      "source": "quaternion save failed: %1",
+      "translation": "四元数保存失败：%1",
+      "pattern": "\\Aquaternion\\ save\\ failed:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Imported %1/%2 topics from %3",
+      "translation": "已从 %3 导入 %1/%2 个主题",
+      "pattern": "\\AImported\\ ([\\s\\S]*)/([\\s\\S]*)\\ topics\\ from\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "create dataset failed: %1",
+      "translation": "创建数据集失败：%1",
+      "pattern": "\\Acreate\\ dataset\\ failed:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Mosaico fetch errors:\n%1",
+      "translation": "Mosaico 获取错误：\n%1",
+      "pattern": "\\AMosaico\\ fetch\\ errors:\\\n([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Imported %1 function(s).",
+      "translation": "已导入 %1 个函数。",
+      "pattern": "\\AImported\\ ([0-9]+)\\ function\\(s\\)\\.\\z"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Imported %1 function(s).",
+      "translation": "已导入 %1 个函数。",
+      "pattern": "\\AImported\\ ([0-9]+)\\ function\\(s\\)\\.\\z"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Imported %1 function(s).",
+      "translation": "已导入 %1 个函数。",
+      "pattern": "\\AImported\\ ([0-9]+)\\ function\\(s\\)\\.\\z"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Imported %1 function(s).",
+      "translation": "已导入 %1 个函数。",
+      "pattern": "\\AImported\\ ([0-9]+)\\ function\\(s\\)\\.\\z"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Imported %1 function(s).",
+      "translation": "已导入 %1 个函数。",
+      "pattern": "\\AImported\\ ([0-9]+)\\ function\\(s\\)\\.\\z"
+    },
+    {
+      "scope": "043e8b5701234811c494930f4ab1abc85dfd0819acc02f1bd2cb36c2aee2b144",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Exported %1 function(s).",
+      "translation": "已导出 %1 个函数。",
+      "pattern": "\\AExported\\ ([0-9]+)\\ function\\(s\\)\\.\\z"
+    },
+    {
+      "scope": "98b7d4e0bcbe175494f8a3a1b81a5001db5c91becdaaae004ab140f7432d4728",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Exported %1 function(s).",
+      "translation": "已导出 %1 个函数。",
+      "pattern": "\\AExported\\ ([0-9]+)\\ function\\(s\\)\\.\\z"
+    },
+    {
+      "scope": "f3b45d2fb7d8fc104b2755b2d20f1162a010c42f8ab2d9103d5e3b400bb76400",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Exported %1 function(s).",
+      "translation": "已导出 %1 个函数。",
+      "pattern": "\\AExported\\ ([0-9]+)\\ function\\(s\\)\\.\\z"
+    },
+    {
+      "scope": "9090829f8e2eb955717db536e5456e85452b3336ed15c9abfb8d1fe3bc63a572",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Exported %1 function(s).",
+      "translation": "已导出 %1 个函数。",
+      "pattern": "\\AExported\\ ([0-9]+)\\ function\\(s\\)\\.\\z"
+    },
+    {
+      "scope": "8fda4686da09b0da977b0dc337f12a11829c1da4eb40f2360ee21a3a9dc34dc1",
+      "widget": "framePlotPreview",
+      "property": "chartPlaceholder",
+      "source": "Exported %1 function(s).",
+      "translation": "已导出 %1 个函数。",
+      "pattern": "\\AExported\\ ([0-9]+)\\ function\\(s\\)\\.\\z"
+    },
+    {
+      "scope": "65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558",
+      "widget": "labelApiStatus",
+      "property": "text",
+      "source": "%1 path(s) on the server",
+      "translation": "服务器上有 %1 个路径",
+      "pattern": "\\A([0-9]+)\\ path\\(s\\)\\ on\\ the\\ server\\z"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Fetching %1 topic(s)…",
+      "translation": "正在获取 %1 个主题…",
+      "pattern": "\\AFetching\\ ([0-9]+)\\ topic\\(s\\)…\\z"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Connected — server %1",
+      "translation": "已连接，服务器版本 %1",
+      "pattern": "\\AConnected\\ —\\ server\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-transform-editor@1.0.4",
+      "widget": "message-source:toolbox-transform-editor",
+      "property": "message",
+      "source": "Transform Editor: %1",
+      "translation": "变换编辑器：%1",
+      "pattern": "\\ATransform\\ Editor:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "Connecting to %1…",
+      "translation": "正在连接到 %1…",
+      "pattern": "\\AConnecting\\ to\\ ([\\s\\S]*)…\\z"
+    },
+    {
+      "scope": "7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0",
+      "widget": "status_label",
+      "property": "text",
+      "source": "Create failed: %1",
+      "translation": "创建失败：%1",
+      "pattern": "\\ACreate\\ failed:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "cdd33e49e9006430da202e1b6d3ef0d2abab6823b85bd7a0cc1c38f2ea699861",
+      "widget": "labelStatus",
+      "property": "text",
+      "source": "%1 topic(s) found",
+      "translation": "找到 %1 个主题",
+      "pattern": "\\A([0-9]+)\\ topic\\(s\\)\\ found\\z"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "listTopics %1: %2",
+      "translation": "列出主题 %1：%2",
+      "pattern": "\\AlistTopics\\ ([\\s\\S]*):\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "pull failed: %1",
+      "translation": "拉取失败：%1",
+      "pattern": "\\Apull\\ failed:\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "31409a7d92a01ec2fc00a899ce040e58cd32258d891ae4a06b7a288e50f455ce",
+      "widget": "labelAnalyzeError",
+      "property": "text",
+      "source": "Cannot open %1",
+      "translation": "无法打开 %1",
+      "pattern": "\\ACannot\\ open\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "plugin:toolbox-mosaico@1.3.0",
+      "widget": "message-source:toolbox-mosaico",
+      "property": "message",
+      "source": "%1 sequences",
+      "translation": "%1 个序列",
+      "pattern": "\\A([0-9]+)\\ sequences\\z"
+    },
+    {
+      "scope": "b0d924df7b2062bde38bada6bcdc38cd14fcf7642521f2d2b3d4ca6446e8881e",
+      "widget": "dataViewHeader",
+      "property": "text",
+      "source": "Info — %1",
+      "translation": "信息：%1",
+      "pattern": "\\AInfo\\ —\\ ([\\s\\S]*)\\z"
+    },
+    {
+      "scope": "f9301cd4a0dd4bdb3c69acdde21dde918622b81d931b2b5be6be68f59ec9aba1",
+      "widget": "dataViewHeader",
+      "property": "text",
+      "source": "Info — %1",
+      "translation": "信息：%1",
+      "pattern": "\\AInfo\\ —\\ ([\\s\\S]*)\\z"
+    }
+  ]
+}

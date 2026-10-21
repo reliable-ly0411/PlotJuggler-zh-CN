@@ -34,6 +34,26 @@ class AppLanguageTest : public QObject {
     QCOMPARE(PJ::AppLanguage::normalizedLanguage(requested), expected);
   }
 
+  void pluginLanguageHintMatchesStartupAndRestoresEnvironment() {
+    const bool existed = qEnvironmentVariableIsSet("PLOTJUGGLER_UI_LANGUAGE");
+    const QByteArray original = qgetenv("PLOTJUGGLER_UI_LANGUAGE");
+    qputenv("PLOTJUGGLER_UI_LANGUAGE", "external-original");
+    {
+      const PJ::AppLanguage chinese(*QCoreApplication::instance(), u"zh-CN"_s);
+      QCOMPARE(qgetenv("PLOTJUGGLER_UI_LANGUAGE"), QByteArray("zh_CN"));
+    }
+    QCOMPARE(qgetenv("PLOTJUGGLER_UI_LANGUAGE"), QByteArray("external-original"));
+    qunsetenv("PLOTJUGGLER_UI_LANGUAGE");
+    {
+      const PJ::AppLanguage english(*QCoreApplication::instance(), u"en_US"_s);
+      QCOMPARE(qgetenv("PLOTJUGGLER_UI_LANGUAGE"), QByteArray("en_US"));
+    }
+    QVERIFY(!qEnvironmentVariableIsSet("PLOTJUGGLER_UI_LANGUAGE"));
+    if (existed) {
+      qputenv("PLOTJUGGLER_UI_LANGUAGE", original);
+    }
+  }
+
   void freshProfileDefaultsToChineseWithoutWritingSettings() {
     QTemporaryDir directory;
     QVERIFY(directory.isValid());

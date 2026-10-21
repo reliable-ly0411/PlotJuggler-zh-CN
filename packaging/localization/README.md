@@ -88,3 +88,13 @@ must never be part of candidate generation. The publisher accepts only the expli
 its release manifest. Each version uses a new ref; never reuse or force-update a
 previous promotion ref. Only its first creation triggers publication. This
 keeps the default 3.x branch independent of the 4.x publication mechanism.
+
+
+## rc.2 fixed-plugin display rebuilds
+
+The candidate packages rebuild the five scoped plugins documented in
+[plugin-patches/README.md](plugin-patches/README.md). The explicit native entry
+also permits the first creation of `zh-CN-4.x-ci/release-candidate-rc2-final`;
+ordinary subsequent pushes and merges still skip heavy packaging. No candidate
+branch creation publishes a release. rc.2 uses its own accepted-run promotion
+ref and never reuses or overwrites rc.1.

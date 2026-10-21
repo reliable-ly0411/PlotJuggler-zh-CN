@@ -857,6 +857,2247 @@
     </message>
 </context>
 <context>
+    <name>PJ::BundledPluginDiagnostics</name>
+    <message>
+        <location filename="../../pj_widgets/include/pj_widgets/BundledPluginText.h" line="+142"/>
+        <source>ArduPilot BIN requires a string filepath</source>
+        <translation>ArduPilot BIN 需要字符串类型的文件路径</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ArduPilot BIN requires a nonempty filepath without NUL bytes</source>
+        <translation>ArduPilot BIN 需要非空且不含 NUL 字节的文件路径</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>ArduPilot BIN: no filepath configured</source>
+        <translation>ArduPilot BIN：未配置文件路径</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ArduPilot BIN: cannot open file</source>
+        <translation>ArduPilot BIN：无法打开文件</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ArduPilot BIN: unsupported file size</source>
+        <translation>ArduPilot BIN：不支持的文件大小</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ArduPilot BIN: file read failed or file changed during import</source>
+        <translation>ArduPilot BIN：文件读取失败，或文件在导入期间发生变化</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>ArduPilot BIN: timestamp exceeds the SDK nanosecond range</source>
+        <translation>ArduPilot BIN：时间戳超出 SDK 支持的纳秒范围</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>invalid config JSON</source>
+        <translation>配置 JSON 无效</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>invalid config</source>
+        <translation>配置无效</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>no filepath configured</source>
+        <translation>未配置文件路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>CSV parsing failed</source>
+        <translation>CSV 解析失败</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Loading aborted by user</source>
+        <translation>用户已中止加载</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::BundledPluginMetadata</name>
+    <message>
+        <location line="-147"/>
+        <source>Arrow IPC Parser</source>
+        <translation>Arrow IPC 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for self-describing Arrow IPC streams.</source>
+        <translation>用于自描述 Arrow IPC 数据流的消息解析器。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>CSV Loader</source>
+        <translation>CSV 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for CSV files.</source>
+        <translation>用于 CSV 文件的数据加载器。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DataTamer Parser</source>
+        <translation>DataTamer 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for DataTamer encoded data. Efficient serialization for robotics.</source>
+        <translation>用于 DataTamer 编码数据的消息解析器，支持面向机器人的高效序列化。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Dummy Streamer</source>
+        <translation>模拟数据流</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Generates synthetic sine, cosine, sawtooth, and noise signals for testing and demonstration.</source>
+        <translation>生成正弦、余弦、锯齿波和噪声信号，用于测试与演示。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Foxglove Bridge</source>
+        <translation>Foxglove 桥接</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connect to Foxglove WebSocket server for ROS data streaming. Compatible with Foxglove Studio.</source>
+        <translation>连接 Foxglove WebSocket 服务器以接收 ROS 数据流，兼容 Foxglove Studio。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>JSON Parser</source>
+        <translation>JSON 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for JSON, CBOR, MessagePack, and BSON encoded data.</source>
+        <translation>用于 JSON、CBOR、MessagePack 和 BSON 编码数据的消息解析器。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>MCAP Loader</source>
+        <translation>MCAP 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for MCAP files and split ROS 2 bags (metadata.yaml). Supports ROS1, ROS2, Protobuf, and JSON message encodings.</source>
+        <translation>加载 MCAP 文件及分卷 ROS 2 数据包（metadata.yaml），支持 ROS1、ROS2、Protobuf 和 JSON 消息编码。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>MP4 Loader</source>
+        <translation>MP4 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for .mp4 video files. Reads the container&apos;s creation_time tag (when present) so the host can anchor the video on a wall-clock timeline; supports multi-file selection via the standard File dialog.</source>
+        <translation>加载 .mp4 视频文件。读取容器的 creation_time 标签（若存在），使宿主可将视频定位在绝对时间轴上；支持通过标准文件对话框选择多个文件。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Parquet Loader</source>
+        <translation>Parquet 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for Apache Parquet files. Efficient columnar storage format.</source>
+        <translation>加载 Apache Parquet 文件，这是一种高效的列式存储格式。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>PlotJuggler Bridge</source>
+        <translation>PlotJuggler 桥接</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connect to PlotJuggler Bridge server for generic data streaming over WebSocket.</source>
+        <translation>连接 PlotJuggler Bridge 服务器，通过 WebSocket 接收通用数据流。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>3D Loader (PLY/PCD)</source>
+        <translation>3D 加载器（PLY/PCD）</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for static 3D files: .pcd and vertex-only .ply load as a point cloud; .ply with faces loads as a 3D mesh. One snapshot at timestamp 0.</source>
+        <translation>加载静态 3D 文件：.pcd 和仅包含顶点的 .ply 作为点云加载；包含面的 .ply 作为三维网格加载。在时间戳 0 处生成一个快照。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Protobuf Parser</source>
+        <translation>Protobuf 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for Protocol Buffers encoded data. Promotes the well-known Foxglove schemas (PointCloud, CompressedVideo, CompressedImage, RawImage, ImageAnnotations, SceneUpdate, FrameTransform, PosesInFrame, CameraCalibration, VoxelGrid, Grid) to builtin scene objects.</source>
+        <translation>解析 Protocol Buffers 编码消息，将常用 Foxglove 消息类型（PointCloud、CompressedVideo、CompressedImage、RawImage、ImageAnnotations、SceneUpdate、FrameTransform、PosesInFrame、CameraCalibration、VoxelGrid、Grid）转换为内置场景对象。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>ROS CDR Parser</source>
+        <translation>ROS CDR 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for ROS1 and ROS2 messages (ros1msg, ros2msg, omgidl). Promotes common sensor and visualization messages (Image, PointCloud2, OccupancyGrid, GridMap, TF, Markers, and yolo_msgs/DetectionArray to ImageAnnotations) to builtin scene objects.</source>
+        <translation>解析 ROS1 和 ROS2 消息（ros1msg、ros2msg、omgidl），将常用传感器及可视化消息（Image、PointCloud2、OccupancyGrid、GridMap、TF、Markers，以及转换为 ImageAnnotations 的 yolo_msgs/DetectionArray）转换为内置场景对象。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>ROS 2 Topic Subscriber</source>
+        <translation>ROS 2 主题订阅器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Subscribe to ROS 2 topics in real time and stream the decoded fields into PlotJuggler.</source>
+        <translation>实时订阅 ROS 2 主题，并将解码字段以数据流形式传入 PlotJuggler。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Assistant Agent</source>
+        <translation>智能助手</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>A chat assistant that drives PlotJuggler through the plugin SDK: lists and describes topics, reads series statistics, and creates derived timeseries, markers and plot tabs it owns. Uses the Claude Code or Codex CLI already installed and signed in on your machine; the plugin stores no API keys. Linux, macOS and Windows.</source>
+        <translation>通过插件 SDK 操作 PlotJuggler 的聊天助手，可列出及描述主题、读取序列统计信息，并创建其拥有的派生时间序列、标记和绘图标签页。使用您电脑上已安装并登录的 Claude Code 或 Codex 命令行工具；插件不保存 API 密钥。支持 Linux、macOS 和 Windows。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Mosaico Cloud Server</source>
+        <translation>Mosaico 云服务器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Browse and import data from Mosaico cloud servers via Apache Arrow Flight. Scalar topics are handed to the host as arrow-ipc messages and decoded by the parser_arrow plugin (install it alongside). Includes Lua metadata predicate filter, multi-topic streaming, and time-range selection.</source>
+        <translation>通过 Apache Arrow Flight 浏览并导入 Mosaico 云服务器数据。标量主题以 arrow-ipc 消息交给宿主，由 parser_arrow 插件解码（需同时安装）。支持 Lua 元数据条件筛选、多主题流式传输和时间范围选择。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Quaternion to RPY</source>
+        <translation>四元数转 RPY</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Converts quaternion (x, y, z, w) time series into Roll, Pitch, Yaw angles with optional unwrapping and degree/radian output.</source>
+        <translation>将四元数（x、y、z、w）时间序列转换为横滚、俯仰、偏航角，支持角度解缠绕及角度/弧度输出。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Transform Editor</source>
+        <translation>变换编辑器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Create named derived time series using Lua functions. Equivalent to the Custom Series editor in PJ3.</source>
+        <translation>使用 Lua 函数创建命名的派生时间序列，相当于 PJ3 的自定义序列编辑器。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>ULog Loader</source>
+        <translation>ULog 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for PX4 ULog files. Flight log format for PX4 autopilot.</source>
+        <translation>加载 PX4 ULog 文件，这是 PX4 自动驾驶仪的飞行日志格式。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>WebRTC Video Client</source>
+        <translation>WebRTC 视频客户端</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Receives live H.264 video via standard WHEP (mediamtx, go2rtc, LiveKit, Cloudflare Stream...) and feeds each stream to PlotJuggler as canonical PJ.VideoFrame messages. One HTTP request per stream, per-camera reconnect, mediamtx Control API discovery. H.264 pass-through; no transcode.</source>
+        <translation>通过标准 WHEP 接收实时 H.264 视频（mediamtx、go2rtc、LiveKit、Cloudflare Stream 等），并以标准 PJ.VideoFrame 消息送入 PlotJuggler。每路流使用一次 HTTP 请求，支持逐摄像头重连及 mediamtx Control API 发现。H.264 直接传输，不转码。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>ArduPilot DataFlash BIN logs: numeric fields, sensor instances, units, parameters and message timelines.</source>
+        <translation>ArduPilot DataFlash BIN 日志：数值字段、传感器实例、单位、参数及消息时间线。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::BundledPlugins</name>
+    <message>
+        <location filename="../../pj_dialog_host/src/bundled_translation_entries.hpp" line="+29"/>
+        <source>Select ROS messages</source>
+        <translation>选择 ROS 消息</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Scanning ROS 2 topics...</source>
+        <translation>正在扫描 ROS 2 主题…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Topic Selector</source>
+        <translation>主题选择器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+46"/>
+        <source>If present, use the timestamp in the field [header.stamp]</source>
+        <translation>如果存在，则使用 [header.stamp] 字段中的时间戳</translation>
+    </message>
+    <message>
+        <location line="-45"/>
+        <location line="+46"/>
+        <location line="+83"/>
+        <location line="+12"/>
+        <source>Maximum size of arrays:</source>
+        <translation>数组最大大小：</translation>
+    </message>
+    <message>
+        <location line="-140"/>
+        <location line="+46"/>
+        <location line="+83"/>
+        <location line="+12"/>
+        <source>clamp</source>
+        <translation>截断</translation>
+    </message>
+    <message>
+        <location line="-140"/>
+        <location line="+46"/>
+        <location line="+83"/>
+        <location line="+12"/>
+        <source>discard</source>
+        <translation>丢弃</translation>
+    </message>
+    <message>
+        <location line="-140"/>
+        <source>Filter: </source>
+        <translation>筛选： </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tip: [CTRL+A] select all, [CTRL+SHIFT+A] deselect all</source>
+        <translation>提示：[CTRL+A] 全选，[CTRL+SHIFT+A] 取消全选</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Advanced Options</source>
+        <translation>高级选项</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+43"/>
+        <source>String parsing (used for instance in diagnostic_msgs/DiagnosticArray)</source>
+        <translation>字符串解析（例如用于 diagnostic_msgs/DiagnosticArray）</translation>
+    </message>
+    <message>
+        <location line="-42"/>
+        <location line="+43"/>
+        <source>remove suffixes from numbers (example: &quot;100ms&quot; -&gt; 100)</source>
+        <translation>移除数字的后缀（例如："100ms" -&gt; 100）</translation>
+    </message>
+    <message>
+        <location line="-42"/>
+        <location line="+43"/>
+        <source>convert boolean strings (&quot;false&quot;/&quot;true&quot;) to numbers (0/1)</source>
+        <translation>将布尔字符串（"false"/"true"）转换为数字（0/1）</translation>
+    </message>
+    <message>
+        <location line="-42"/>
+        <source>WebRTC Video Client (WHEP)</source>
+        <translation>WebRTC 视频客户端（WHEP）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+137"/>
+        <location line="+28"/>
+        <source>Connection</source>
+        <translation>连接</translation>
+    </message>
+    <message>
+        <location line="-164"/>
+        <location line="+137"/>
+        <location line="+31"/>
+        <source>Transport</source>
+        <translation>传输方式</translation>
+    </message>
+    <message>
+        <location line="-167"/>
+        <location line="+137"/>
+        <location line="+28"/>
+        <source>Address</source>
+        <translation>地址</translation>
+    </message>
+    <message>
+        <location line="-164"/>
+        <location line="+137"/>
+        <location line="+28"/>
+        <source>Port</source>
+        <translation>端口</translation>
+    </message>
+    <message>
+        <location line="-164"/>
+        <source>Server</source>
+        <translation>服务器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>WHEP signaling is HTTP. (HTTPS is not wired in this build.)</source>
+        <translation>WHEP 信令使用 HTTP。（此构建版本尚未接入 HTTPS。）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>WHEP server host (mediamtx). Each selected path is read from http://&lt;address&gt;:&lt;port&gt;/&lt;path&gt;/whep.</source>
+        <translation>WHEP 服务器主机（mediamtx）。每个选定路径均从 http://&lt;address&gt;:&lt;port&gt;/&lt;path&gt;/whep 读取。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>WHEP server port (mediamtx default 8889).</source>
+        <translation>WHEP 服务器端口（mediamtx 默认为 8889）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Control API</source>
+        <translation>控制 API</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Control API is HTTP. (HTTPS is not wired in this build.)</source>
+        <translation>控制 API 使用 HTTP。（此构建版本尚未接入 HTTPS。）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>mediamtx Control API host, used only to list paths (GET /v3/paths/list). Auto-derived from the server; edit to override, or clear to disable API discovery (manual paths still work).</source>
+        <translation>mediamtx 控制 API 主机，仅用于列出路径（GET /v3/paths/list）。默认根据服务器自动推导；可编辑以覆盖，或清空以禁用 API 发现（手动路径仍可使用）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>mediamtx Control API port (default 9997).</source>
+        <translation>mediamtx 控制 API 端口（默认为 9997）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Refresh list</source>
+        <translation>刷新列表</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Base path</source>
+        <translation>基础路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Optional base path prefix on the server (most mediamtx setups leave this empty).</source>
+        <translation>服务器上的可选基础路径前缀（大多数 mediamtx 配置可留空）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+3"/>
+        <source>(optional)</source>
+        <translation>（可选）</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>Bearer token</source>
+        <translation>Bearer 令牌</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Optional. Sent as &quot;Authorization: Bearer ...&quot; on every WHEP and Control API request.</source>
+        <translation>可选。每个 WHEP 和控制 API 请求都会以 "Authorization: Bearer ..." 的形式发送此令牌。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Topic prefix</source>
+        <translation>主题前缀</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Each selected path becomes the topic &lt;prefix&gt;/&lt;path&gt;.</source>
+        <translation>每个选定路径都会成为主题 &lt;prefix&gt;/&lt;path&gt;。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Streams</source>
+        <translation>流</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+125"/>
+        <location line="+24"/>
+        <source>Filter</source>
+        <translation>筛选</translation>
+    </message>
+    <message>
+        <location line="-148"/>
+        <source>Paths on the server (from the Control API) plus manually added ones. Select the streams you want; each becomes its own PJ.VideoFrame topic. Only H.264 streams are selectable.</source>
+        <translation>服务器上的路径（由控制 API 获取）以及手动添加的路径。选择所需的流；每个流都会成为独立的 PJ.VideoFrame 主题。仅可选择 H.264 流。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+440"/>
+        <source>Path</source>
+        <translation>路径</translation>
+    </message>
+    <message>
+        <location line="-439"/>
+        <location line="+440"/>
+        <source>Tracks</source>
+        <translation>轨道</translation>
+    </message>
+    <message>
+        <location line="-439"/>
+        <location line="+440"/>
+        <source>Ready</source>
+        <translation>就绪</translation>
+    </message>
+    <message>
+        <location line="-439"/>
+        <source>Manual path:</source>
+        <translation>手动路径：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Add a path the Control API did not list (API disabled, or a non-mediamtx WHEP server).</source>
+        <translation>添加控制 API 未列出的路径（适用于 API 已禁用或非 mediamtx 的 WHEP 服务器）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Add</source>
+        <translation>添加</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>ICE Servers (STUN / TURN)</source>
+        <translation>ICE 服务器（STUN / TURN）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>STUN: fill URL only (e.g. stun:stun.l.google.com:19302). TURN: also fill Username and Credential (e.g. turn:turn.example.org:3478).</source>
+        <translation>STUN：仅填写 URL（例如 stun:stun.l.google.com:19302）。TURN：还需填写用户名和凭据（例如 turn:turn.example.org:3478）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+435"/>
+        <source>Username</source>
+        <translation>用户名</translation>
+    </message>
+    <message>
+        <location line="-434"/>
+        <location line="+435"/>
+        <source>Credential</source>
+        <translation>凭据</translation>
+    </message>
+    <message>
+        <location line="-434"/>
+        <source>ROS Parser Options</source>
+        <translation>ROS 解析器选项</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Server Certificate / API Key</source>
+        <translation>服务器证书／API 密钥</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Server:</source>
+        <translation>服务器：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+97"/>
+        <location line="+25"/>
+        <source>Connect</source>
+        <translation>连接</translation>
+    </message>
+    <message>
+        <location line="-121"/>
+        <source>Cert / API Key…</source>
+        <translation>证书／API 密钥…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+262"/>
+        <location line="+1"/>
+        <source>Sequences</source>
+        <translation>序列</translation>
+    </message>
+    <message>
+        <location line="-262"/>
+        <location line="+8"/>
+        <source>Filter…</source>
+        <translation>筛选…</translation>
+    </message>
+    <message>
+        <location line="-7"/>
+        <location line="+8"/>
+        <source>Use regular expression</source>
+        <translation>使用正则表达式</translation>
+    </message>
+    <message>
+        <location line="-7"/>
+        <source>Reload sequences</source>
+        <translation>重新加载序列</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Metadata Filter</source>
+        <translation>元数据筛选</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Key</source>
+        <translation>键</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Op</source>
+        <translation>运算符</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+98"/>
+        <location line="+3"/>
+        <location line="+302"/>
+        <location line="+2"/>
+        <source>Value</source>
+        <translation>值</translation>
+    </message>
+    <message>
+        <location line="-404"/>
+        <location line="+116"/>
+        <location line="+142"/>
+        <location line="+1"/>
+        <source>Topics</source>
+        <translation>主题</translation>
+    </message>
+    <message>
+        <location line="-256"/>
+        <source>Reload topics</source>
+        <translation>重新加载主题</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+91"/>
+        <location line="+165"/>
+        <location line="+1"/>
+        <source>Info</source>
+        <translation>信息</translation>
+    </message>
+    <message>
+        <location line="-256"/>
+        <location line="+37"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location line="-36"/>
+        <source>Download</source>
+        <translation>下载</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Quaternion to RPY</source>
+        <translation>四元数转 RPY</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Radians</source>
+        <translation>弧度</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Degrees</source>
+        <translation>度</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unwrap Angles</source>
+        <translation>角度解缠绕</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Save</source>
+        <translation>保存</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>MCAP Parser</source>
+        <translation>MCAP 解析器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+21"/>
+        <source>Settings</source>
+        <translation>设置</translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <source>If an array size exceeds:</source>
+        <translation>如果数组大小超过：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>then:</source>
+        <translation>则：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+73"/>
+        <source>Clamp</source>
+        <translation>截断</translation>
+    </message>
+    <message>
+        <location line="-72"/>
+        <location line="+73"/>
+        <source>Skip</source>
+        <translation>跳过</translation>
+    </message>
+    <message>
+        <location line="-72"/>
+        <source>Timestamp:</source>
+        <translation>时间戳：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>publish</source>
+        <translation>发布时间</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>log</source>
+        <translation>记录时间</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Override with the message header timestamp (if present)</source>
+        <translation>使用消息头中的时间戳覆盖（如果存在）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+70"/>
+        <source>Channels</source>
+        <translation>通道</translation>
+    </message>
+    <message>
+        <location line="-69"/>
+        <source>Filter Channel Names</source>
+        <translation>筛选通道名称</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Select All</source>
+        <translation>全选</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Deselect All</source>
+        <translation>取消全选</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+207"/>
+        <source>Channel name</source>
+        <translation>通道名称</translation>
+    </message>
+    <message>
+        <location line="-206"/>
+        <location line="+207"/>
+        <source>Schema</source>
+        <translation>模式</translation>
+    </message>
+    <message>
+        <location line="-206"/>
+        <location line="+200"/>
+        <location line="+7"/>
+        <source>Encoding</source>
+        <translation>编码</translation>
+    </message>
+    <message>
+        <location line="-206"/>
+        <location line="+207"/>
+        <source>Msg Count</source>
+        <translation>消息数</translation>
+    </message>
+    <message>
+        <location line="-206"/>
+        <source>Rename conversation</source>
+        <translation>重命名对话</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Name (leave blank to use the default title)</source>
+        <translation>名称（留空则使用默认标题）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Assistant Agent</source>
+        <translation>智能助手</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Settings...</source>
+        <translation>设置…</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Conversations</source>
+        <translation>对话</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New chat: start a fresh conversation (the current one stays in this list)</source>
+        <translation>新建对话：开始一段新对话（当前对话将保留在此列表中）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>rename=Rename</source>
+        <translation>rename=重命名</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ask the assistant to list your topics, describe a topic, or plot the derivative of a series...</source>
+        <translation>让助手列出主题、描述某个主题，或绘制某个序列的导数…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ready.</source>
+        <translation>就绪。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Type a message and press Send...</source>
+        <translation>输入消息并按“发送”…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Send</source>
+        <translation>发送</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Assistant Agent - Settings</source>
+        <translation>智能助手 - 设置</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Choose which model backend the assistant uses.</source>
+        <translation>选择助手使用的模型后端。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Backend</source>
+        <translation>后端</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Claude Code (subscription)</source>
+        <translation>Claude Code（订阅）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Codex (ChatGPT subscription)</source>
+        <translation>Codex（ChatGPT 订阅）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Claude model</source>
+        <translation>Claude 模型</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+5"/>
+        <source>Custom model</source>
+        <translation>自定义模型</translation>
+    </message>
+    <message>
+        <location line="-4"/>
+        <location line="+5"/>
+        <source>full model name</source>
+        <translation>完整模型名称</translation>
+    </message>
+    <message>
+        <location line="-4"/>
+        <source>claude CLI path</source>
+        <translation>claude 命令行工具路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>claude (on PATH) or full path</source>
+        <translation>claude（位于 PATH 中）或完整路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Codex model</source>
+        <translation>Codex 模型</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>codex CLI path</source>
+        <translation>codex 命令行工具路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>codex (on PATH) or full path</source>
+        <translation>codex（位于 PATH 中）或完整路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>JSON Parser Options</source>
+        <translation>JSON 解析器选项</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+14"/>
+        <source>Use embedded timestamp field</source>
+        <translation>使用内嵌时间戳字段</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>If enabled, the parser will look for a timestamp field in the JSON message and use its value as the message timestamp.</source>
+        <translation>启用后，解析器将在 JSON 消息中查找时间戳字段，并将其值用作消息时间戳。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+14"/>
+        <source>Timestamp field name:</source>
+        <translation>时间戳字段名称：</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Name of the top-level JSON field containing the timestamp, in seconds.</source>
+        <translation>包含时间戳的顶层 JSON 字段名称，时间戳单位为秒。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Key arrays of labeled objects by label</source>
+        <translation>使用标签作为带标签对象数组的键</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>If enabled, arrays of objects carrying a string &quot;label&quot; (or &quot;name&quot;) member are keyed by that label instead of the array index, and a lone &quot;value&quot; member collapses onto it (e.g. scalars/shoulder_pan.pos instead of scalars[0]/value).</source>
+        <translation>启用后，对于含有字符串 "label"（或 "name"）成员的对象数组，将使用该标签而非数组索引作为键；如果仅有一个 "value" 成员，则将其合并到该键下（例如，使用 scalars/shoulder_pan.pos，而不是 scalars[0]/value）。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Protobuf Parser Options</source>
+        <translation>Protobuf 解析器选项</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Proto file:</source>
+        <translation>Proto 文件：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Path to a .proto file</source>
+        <translation>.proto 文件的路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse for a .proto file</source>
+        <translation>浏览并选择 .proto 文件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Select your message type:</source>
+        <translation>选择消息类型：</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>If enabled, the parser will look for a top-level double field and use its value (in seconds) as the message timestamp.</source>
+        <translation>启用后，解析器将查找顶层 double 类型字段，并将其值（单位为秒）用作消息时间戳。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Name of the top-level double field containing the timestamp in seconds. Leave empty to try &quot;timestamp&quot; then &quot;ts&quot; automatically.</source>
+        <translation>包含时间戳（单位为秒）的顶层 double 类型字段名称。留空时将自动依次尝试 "timestamp" 和 "ts"。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>File text:</source>
+        <translation>文件文本：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Proto file content will appear here after loading...</source>
+        <translation>加载后将在此处显示 Proto 文件内容…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Include Folders</source>
+        <translation>包含目录</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>When an array size exceeds:</source>
+        <translation>当数组大小超过：</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Use the timestamp in the message (if present)</source>
+        <translation>使用消息中的时间戳（如果存在）</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>ULog File</source>
+        <translation>ULog 文件</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location line="+3"/>
+        <location line="+302"/>
+        <location line="+2"/>
+        <source>Property</source>
+        <translation>属性</translation>
+    </message>
+    <message>
+        <location line="-305"/>
+        <source>Properties</source>
+        <translation>属性</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Message Logs</source>
+        <translation>消息日志</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+303"/>
+        <source>Timestamp</source>
+        <translation>时间戳</translation>
+    </message>
+    <message>
+        <location line="-302"/>
+        <location line="+303"/>
+        <source>Level</source>
+        <translation>级别</translation>
+    </message>
+    <message>
+        <location line="-302"/>
+        <location line="+303"/>
+        <source>Message</source>
+        <translation>消息</translation>
+    </message>
+    <message>
+        <location line="-302"/>
+        <source>Parquet Loader</source>
+        <translation>Parquet 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Parse Date Format</source>
+        <translation>解析日期格式</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Visit &lt;a href=&quot;https://doc.qt.io/qt-5/qtime.html#toString&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;these&lt;/span&gt;&lt;/a&gt; &lt;a href=&quot;https://doc.qt.io/qt-5/qdate.html#fromString-2&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;links&lt;/span&gt;&lt;/a&gt; to learn more about the Date-Time format&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;访问&lt;a href="https://doc.qt.io/qt-5/qtime.html#toString"&gt;&lt;span style=" text-decoration: underline; color:#0000ff;"&gt;时间格式说明&lt;/span&gt;&lt;/a&gt;和&lt;a href="https://doc.qt.io/qt-5/qdate.html#fromString-2"&gt;&lt;span style=" text-decoration: underline; color:#0000ff;"&gt;日期格式说明&lt;/span&gt;&lt;/a&gt;，了解日期时间格式的更多信息。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Select a column to be used as timestamp</source>
+        <translation>选择用作时间戳的列</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Use row number as X axis</source>
+        <translation>使用行号作为 X 轴</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Columns:</source>
+        <translation>列：</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <location line="+108"/>
+        <location line="+4"/>
+        <source>Topic Name</source>
+        <translation>主题名称</translation>
+    </message>
+    <message>
+        <location line="-111"/>
+        <location line="+108"/>
+        <location line="+4"/>
+        <source>DataType</source>
+        <translation>数据类型</translation>
+    </message>
+    <message>
+        <location line="-111"/>
+        <source>Name of the Function</source>
+        <translation>函数名称</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Name:</source>
+        <translation>名称：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Warning</source>
+        <translation>警告</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A function with the same name exists already in the list of saved functions.
+
+Overwrite it?</source>
+        <translation>已保存的函数列表中已存在同名函数。
+
+是否覆盖？</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transform Editor</source>
+        <translation>变换编辑器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Single Function</source>
+        <translation>单函数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+18"/>
+        <source>Input Timeseries</source>
+        <translation>输入时间序列</translation>
+    </message>
+    <message>
+        <location line="-17"/>
+        <location line="+1"/>
+        <location line="+27"/>
+        <source>Help</source>
+        <translation>帮助</translation>
+    </message>
+    <message>
+        <location line="-26"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Drag &amp;amp; drop timeseries here. Pick the radio to set which one is &lt;span style=&quot; font-weight:600;&quot;&gt;value&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;将时间序列拖放到此处。通过单选按钮选择用作 &lt;span style=" font-weight:600;"&gt;value&lt;/span&gt; 的序列。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+16"/>
+        <source>Global Variables</source>
+        <translation>全局变量</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <location line="+16"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Portion of code outside the function.&lt;/p&gt;&lt;p&gt;Useful to add global variables.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;函数之外的代码部分。&lt;/p&gt;&lt;p&gt;可用于添加全局变量。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <location line="+16"/>
+        <source>Add your global variables here</source>
+        <translation>在此添加全局变量</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Import functions from a XML library.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;从 XML 库导入函数。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Export functions from a XML library.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;从 XML 库导出函数。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save the current function in the library.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;将当前函数保存到库中。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Browse and manage available functions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;浏览和管理可用函数。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+12"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Write your function implementation here. &lt;/p&gt;&lt;p&gt;It &lt;span style=&quot; font-weight:600;&quot;&gt;must&lt;/span&gt; return a new value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在此编写函数实现。&lt;/p&gt;&lt;p&gt;函数&lt;span style=" font-weight:600;"&gt;必须&lt;/span&gt;返回一个新值。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <location line="+12"/>
+        <source>Write your function here</source>
+        <translation>在此编写函数</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>Output Timeseries</source>
+        <translation>输出时间序列</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>name the new timeseries</source>
+        <translation>为新时间序列命名</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;html&gt;&lt;body&gt;&lt;p&gt;Name of the new time series.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;body&gt;&lt;p&gt;新时间序列的名称。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+12"/>
+        <location line="+190"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+6"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Create New Time Series</source>
+        <translation>创建新时间序列</translation>
+    </message>
+    <message>
+        <location line="-213"/>
+        <source>Batch Functions</source>
+        <translation>批量函数</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Drag &amp;amp; drop timeseries here. The function is applied to each one separately.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;将时间序列拖放到此处。函数将分别应用于每个序列。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Prefix</source>
+        <translation>前缀</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Suffix</source>
+        <translation>后缀</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>prefix / suffix to add to the names</source>
+        <translation>要添加到名称中的前缀／后缀</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;Transform editor Help&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:14pt; font-weight:600;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The transform editor uses the scripting language Lua. You may want to read &lt;a href=&quot;http://tylerneylon.com/a/learn-lua/&quot;&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;Learn Lua in 15 minutes&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;In practice, you don&apos;t need to know that much to use it in PlotJuggler.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;You should implement the body of a &lt;span style=&quot; font-style:italic;&quot;&gt;function(time, value),&lt;/span&gt; that is invoked for each point. The returned value is the point [time, your_value]&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Single input, stateless functions:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Example:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return (value *  2) + 1&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;or you can use the &lt;a href=&quot;https://www.tutorialspoint.com/lua/lua_math_library.htm&quot;&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;math library from Lua&lt;/span&gt;&lt;/a&gt;:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return math.log(value)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The new point will have the same time of the original point. If you want to modify the timestamp, just return two values like this:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return time +1, (value *  2) &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Return multiple points at once:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Since version 3.1, you may also return multiple values at once, using a Lua table:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   -- Calculate t1,v1, t2, v2, etc...&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return { {t1, v1}, {t2, v2} }&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Stateful functions:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Some transformations require some form of &amp;quot;memory&amp;quot;, i.e. they need the previous value. To do this you may use the &amp;quot;global variable&amp;quot; textbox.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;For instance, to compute the finite difference between two consecutive value, you would add this to the &lt;span style=&quot; font-weight:600;&quot;&gt;Global Variables&lt;/span&gt; textbox:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   prev = nil&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;And this to the &lt;span style=&quot; font-weight:600;&quot;&gt;Function() &lt;/span&gt;textbox&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   if ( prev == nil ) then&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;        prev = value&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   end&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   diff = value - prev&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   prev = value&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return diff  &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Multi input, single output:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Select an additional time series and drop it in the table on the left side. Now your function definition will look like &lt;span style=&quot; font-style:italic;&quot;&gt;function(time,value,v1)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Average of two time series:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return (value + v1) / 2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;style type="text/css"&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;"&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:14pt; font-weight:600;"&gt;变换编辑器帮助&lt;/span&gt;&lt;/p&gt;
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:14pt; font-weight:600;"&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;变换编辑器使用 Lua 脚本语言。您可以先阅读&lt;a href="http://tylerneylon.com/a/learn-lua/"&gt;&lt;span style=" text-decoration: underline;"&gt;15 分钟学会 Lua&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;实际上，在 PlotJuggler 中使用它并不需要掌握太多知识。&lt;/p&gt;
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;您需要实现以下函数的函数体：&lt;span style=" font-style:italic;"&gt;function(time, value),&lt;/span&gt;它会对每个数据点调用一次。返回值将构成数据点 [time, your_value]。&lt;/p&gt;
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;单输入、无状态函数：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;示例：&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   return (value *  2) + 1&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;也可以使用 &lt;a href="https://www.tutorialspoint.com/lua/lua_math_library.htm"&gt;&lt;span style=" text-decoration: underline;"&gt;Lua 数学库&lt;/span&gt;&lt;/a&gt;:&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   return math.log(value)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;新数据点的时间与原数据点相同。如果需要修改时间戳，只需像下面这样返回两个值：&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   return time +1, (value *  2) &lt;/span&gt;&lt;/p&gt;
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;一次返回多个数据点：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;从 3.1 版本起，还可以使用 Lua 表一次返回多个值：&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   -- Calculate t1,v1, t2, v2, etc...&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   return { {t1, v1}, {t2, v2} }&lt;/span&gt;&lt;/p&gt;
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;有状态函数：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;某些变换需要某种形式的“记忆”，即需要前一个值。为此，可以使用“全局变量”文本框。&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;例如，要计算两个相邻值的有限差分，可以在&lt;span style=" font-weight:600;"&gt;全局变量&lt;/span&gt;文本框中添加以下代码：&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   prev = nil&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;并在 &lt;span style=" font-weight:600;"&gt;Function() &lt;/span&gt;文本框中添加以下代码：&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   if ( prev == nil ) then&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;        prev = value&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   end&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   diff = value - prev&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   prev = value&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   return diff  &lt;/span&gt;&lt;/p&gt;
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;多输入、单输出：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;选择另一个时间序列并将其拖放到左侧表格中。此时，函数定义将变为 &lt;span style=" font-style:italic;"&gt;function(time,value,v1)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;计算两个时间序列的平均值：&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-style:italic;"&gt;   return (value + v1) / 2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Function Library</source>
+        <translation>函数库</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Functions</source>
+        <translation>函数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Search</source>
+        <translation>搜索</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+15"/>
+        <source>Preview</source>
+        <translation>预览</translation>
+    </message>
+    <message>
+        <location line="-14"/>
+        <source>Ctrl+Click to select multiple</source>
+        <translation>按住 Ctrl 并单击可多选</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Use</source>
+        <translation>使用</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>CSV Loader</source>
+        <translation>CSV 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Delimiter</source>
+        <translation>分隔符</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+7"/>
+        <source>Detect Automatically</source>
+        <translation>自动检测</translation>
+    </message>
+    <message>
+        <location line="-6"/>
+        <source>Delimiter:</source>
+        <translation>分隔符：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+44"/>
+        <source>&quot;,&quot; (comma)</source>
+        <translation>","（逗号）</translation>
+    </message>
+    <message>
+        <location line="-43"/>
+        <location line="+44"/>
+        <source>&quot;;&quot; (semicolon)</source>
+        <translation>";"（分号）</translation>
+    </message>
+    <message>
+        <location line="-43"/>
+        <location line="+44"/>
+        <source>&quot; &quot; (space)</source>
+        <translation>" "（空格）</translation>
+    </message>
+    <message>
+        <location line="-43"/>
+        <location line="+44"/>
+        <source>&quot;\t&quot; (tab)</source>
+        <translation>"\t"（制表符）</translation>
+    </message>
+    <message>
+        <location line="-43"/>
+        <source>Timestamp Format</source>
+        <translation>时间戳格式</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Custom</source>
+        <translation>自定义</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Time Axis</source>
+        <translation>时间轴</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Table</source>
+        <translation>表格</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Raw</source>
+        <translation>原始内容</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Date-Time Format</source>
+        <translation>日期时间格式</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Common Format Examples (input date: 1/15/2024 2:30:45.123 PM)</source>
+        <translation>常见格式示例（输入日期：1/15/2024 2:30:45.123 PM）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Format String</source>
+        <translation>格式字符串</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Result</source>
+        <translation>结果</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>All other input characters will be treated as text. Any non-empty sequence of characters enclosed in single quotes will also be treated (stripped of the quotes) as text and not be interpreted as expressions.</source>
+        <translation>所有其他输入字符均视为文本。任何用单引号括起来的非空字符序列也将视为文本（去掉引号），不会被解释为表达式。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Date Format</source>
+        <translation>日期格式</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+13"/>
+        <source>Expression</source>
+        <translation>表达式</translation>
+    </message>
+    <message>
+        <location line="-12"/>
+        <location line="+13"/>
+        <source>Output</source>
+        <translation>输出</translation>
+    </message>
+    <message>
+        <location line="-12"/>
+        <source>The day as a number without a leading zero (1 to 31)</source>
+        <translation>日期中的日，不带前导零（1 至 31）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The day as a number with a leading zero (01 to 31)</source>
+        <translation>日期中的日，带前导零（01 至 31）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The abbreviated localized day name (e.g. &apos;Mon&apos; to &apos;Sun&apos;)</source>
+        <translation>本地化的星期简称（例如 'Mon' 至 'Sun'）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The long localized day name (e.g. &apos;Monday&apos; to &apos;Sunday&apos;)</source>
+        <translation>本地化的星期全称（例如 'Monday' 至 'Sunday'）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The month as a number without a leading zero (1 to 12)</source>
+        <translation>月份，不带前导零（1 至 12）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The month as a number with a leading zero (01 to 12)</source>
+        <translation>月份，带前导零（01 至 12）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The abbreviated localized month name (e.g. &apos;Jan&apos; to &apos;Dec&apos;)</source>
+        <translation>本地化的月份简称（例如 'Jan' 至 'Dec'）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The long localized month name (e.g. &apos;January&apos; to &apos;December&apos;)</source>
+        <translation>本地化的月份全称（例如 'January' 至 'December'）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The year as a two digit number (00 to 99)</source>
+        <translation>两位数字的年份（00 至 99）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The year as a four digit number, possibly plus a leading minus sign for negative years</source>
+        <translation>四位数字的年份；负年份前可能带有负号</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Time Format</source>
+        <translation>时间格式</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The hour without a leading zero (0 to 23 or 1 to 12 if AM/PM display)</source>
+        <translation>小时，不带前导零（0 至 23；采用 AM/PM 显示时为 1 至 12）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The hour with a leading zero (00 to 23 or 01 to 12 if AM/PM display)</source>
+        <translation>小时，带前导零（00 至 23；采用 AM/PM 显示时为 01 至 12）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The hour without a leading zero (0 to 23, even with AM/PM display)</source>
+        <translation>小时，不带前导零（0 至 23，即使采用 AM/PM 显示也不变）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The hour with a leading zero (00 to 23, even with AM/PM display)</source>
+        <translation>小时，带前导零（00 至 23，即使采用 AM/PM 显示也不变）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The minute without a leading zero (0 to 59)</source>
+        <translation>分钟，不带前导零（0 至 59）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The minute with a leading zero (00 to 59)</source>
+        <translation>分钟，带前导零（00 至 59）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The whole second, without any leading zero (0 to 59)</source>
+        <translation>整数秒，不带前导零（0 至 59）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The whole second, with a leading zero where applicable (00 to 59)</source>
+        <translation>整数秒，必要时带前导零（00 至 59）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The fractional part of the second, to go after a decimal point, without trailing zeroes (0 to 999). Thus &quot;s.z&quot; reports the seconds to full available (millisecond) precision without trailing zeroes.</source>
+        <translation>秒的小数部分，位于小数点之后，不带末尾零（0 至 999）。因此，"s.z" 以完整的可用精度（毫秒）显示秒数，不带末尾零。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The fractional part of the second, to millisecond precision, including trailing zeroes where applicable (000 to 999).</source>
+        <translation>秒的小数部分，精确到毫秒，必要时包含末尾零（000 至 999）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Interpret as an AM/PM time. A/AP will match an upper-case version of either QLocale::amText() or QLocale::pmText().</source>
+        <translation>按 AM/PM 时间解释。A/AP 将匹配 QLocale::amText() 或 QLocale::pmText() 的大写形式。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Interpret as an am/pm time. a/ap will match a lower-case version of either QLocale::amText() or QLocale::pmText().</source>
+        <translation>按 am/pm 时间解释。a/ap 将匹配 QLocale::amText() 或 QLocale::pmText() 的小写形式。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+1"/>
+        <source>Number of Rows</source>
+        <translation>行号</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Selected Column</source>
+        <translation>所选列</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Multiple Columns</source>
+        <translation>多列组合</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Duplicate column names detected. Adding suffixes</source>
+        <translation>检测到重复列名，将添加后缀</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Some rows have column number mismatch. Will skip those</source>
+        <translation>部分行的列数不匹配，将跳过这些行</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+4"/>
+        <source>Connected</source>
+        <translation>已连接</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Click to select, Click+Drag to multi-select</source>
+        <translation>单击选择，单击并拖动可多选</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>No channels were found in this MCAP file.</source>
+        <translation>此 MCAP 文件中未找到任何通道。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Select Proto File</source>
+        <translation>选择 Proto 文件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>(load a .proto file first)</source>
+        <translation>（请先加载 .proto 文件）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Select Include Folder</source>
+        <translation>选择包含文件夹</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Add folders where imported .proto files can be found:</source>
+        <translation>添加用于查找导入的 .proto 文件的文件夹：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>invalid syntax</source>
+        <translation>语法无效</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+5"/>
+        <location line="+1"/>
+        <source>Name</source>
+        <translation>名称</translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <location line="+1"/>
+        <source>Date</source>
+        <translation>日期</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+3"/>
+        <location line="+1"/>
+        <source>Size</source>
+        <translation>大小</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <location line="+1"/>
+        <source>Topics — loading…</source>
+        <translation>主题：加载中…</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+1"/>
+        <source>Download progress</source>
+        <translation>下载进度</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Server URI contains invalid characters (control or non-ASCII bytes).</source>
+        <translation>服务器 URI 包含无效字符（控制字符或非 ASCII 字节）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>TLS certificate path contains invalid characters.</source>
+        <translation>TLS 证书路径包含无效字符。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>API key contains invalid characters (control or non-ASCII bytes).</source>
+        <translation>API 密钥包含无效字符（控制字符或非 ASCII 字节）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Reloading sequences…</source>
+        <translation>正在重新加载序列…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Reloading topics…</source>
+        <translation>正在重新加载主题…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Credentials saved</source>
+        <translation>凭据已保存</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Select a sequence + topic(s) first</source>
+        <translation>请先选择一个序列和主题</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cancelling…</source>
+        <translation>正在取消…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Download cancelled — kept the topics that finished first</source>
+        <translation>下载已取消，已保留此前完成的主题</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Download cancelled</source>
+        <translation>下载已取消</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>host offers no parser ingest (arrow-ipc topics need a newer PlotJuggler)</source>
+        <translation>宿主不支持解析器导入（arrow-ipc 主题需要较新版本的 PlotJuggler）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unknown error</source>
+        <translation>未知错误</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>not connected</source>
+        <translation>未连接</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>topic row count overflow</source>
+        <translation>主题行数溢出</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>host not bound</source>
+        <translation>宿主未绑定</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>no data in the requested range</source>
+        <translation>请求范围内没有数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>pull failed: unknown error</source>
+        <translation>拉取失败：未知错误</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Drag and Drop Quaternion values in the frames above.</source>
+        <translation>请将四元数值拖放到上方的输入框中。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Created roll/pitch/yaw transform.</source>
+        <translation>已创建 roll/pitch/yaw 变换。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>host did not expose pj.data_processors.v1</source>
+        <translation>宿主未提供 pj.data_processors.v1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Input timeseries</source>
+        <translation>输入时间序列</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Var</source>
+        <translation>变量</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+36"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Drag &amp; drop timeseries here</source>
+        <translation>将时间序列拖放到此处</translation>
+    </message>
+    <message>
+        <location line="-39"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Function</source>
+        <translation>函数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Language</source>
+        <translation>语言</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+6"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Snippet library (*.json)</source>
+        <translation>代码片段库 (*.json)</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Import snippet library</source>
+        <translation>导入代码片段库</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Export snippet library</source>
+        <translation>导出代码片段库</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Name is required</source>
+        <translation>名称不能为空</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+5"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Modify Time Series</source>
+        <translation>修改时间序列</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Create a name for the new series
+</source>
+        <translation>请为新序列命名
+</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Give the new series a name that isn&apos;t one of its inputs
+</source>
+        <translation>新序列的名称不能与任何输入序列相同
+</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Add an input time series (drag &amp; drop)
+</source>
+        <translation>请拖放以添加输入时间序列
+</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Write your function body
+</source>
+        <translation>请编写函数体
+</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>The selected file contains no functions.</source>
+        <translation>所选文件中没有函数。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Could not read a function library from the selected file.</source>
+        <translation>无法从所选文件中读取函数库。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Could not write the selected file.</source>
+        <translation>无法写入所选文件。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transform Editor: a source series, an output name, and a function body are required.</source>
+        <translation>变换编辑器：必须提供源序列、输出名称和函数体。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transform Editor: the host did not expose pj.data_processors.v1 (cannot create the series).</source>
+        <translation>变换编辑器：宿主未提供 pj.data_processors.v1（无法创建序列）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transform Editor: no valid output name.</source>
+        <translation>变换编辑器：没有有效的输出名称。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transform Editor: drop in some input series, set a prefix/suffix, and write a function body.</source>
+        <translation>变换编辑器：请拖入输入序列，设置前缀或后缀，并编写函数体。</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Topic</source>
+        <translation>主题</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Datatype</source>
+        <translation>数据类型</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>path not added: whitespace/control characters are not allowed</source>
+        <translation>未添加路径：不允许包含空白或控制字符</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>No conversations yet</source>
+        <translation>暂无对话</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>CLI default</source>
+        <translation>CLI 默认值</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Custom...</source>
+        <translation>自定义…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>sonnet — fast; the measured default</source>
+        <translation>sonnet：快速；经实测的默认选项</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>quaternion apply failed: host did not expose pj.data_processors.v1</source>
+        <translation>四元数应用失败：宿主未提供 pj.data_processors.v1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>quaternion save failed: host did not expose pj.data_processors.v1</source>
+        <translation>四元数保存失败：宿主未提供 pj.data_processors.v1</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <location line="+1"/>
+        <source>Values in &quot;%1&quot; are not monotonically increasing. Will sort these automatically</source>
+        <translation>“%1”列中的值不是单调递增的，将自动排序</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>No readable channels: all %1 channel(s) in this file reference a missing schema.</source>
+        <translation>没有可读取的通道：此文件中的全部 %1 个通道都引用了缺失的模式。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Cannot open this MCAP file.%1
+Code: %2
+Message: %3</source>
+        <translation>无法打开此 MCAP 文件。%1
+代码：%2
+消息：%3</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>Cannot read the contents of this MCAP file.%1
+Code: %2
+Message: %3</source>
+        <translation>无法读取此 MCAP 文件的内容。%1
+代码：%2
+消息：%3</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Cannot open %1</source>
+        <translation>无法打开 %1</translation>
+    </message>
+    <message>
+        <location line="-27"/>
+        <source>Not a ROS 2 bag metadata.yaml: %1</source>
+        <translation>不是 ROS 2 bag 的 metadata.yaml：%1</translation>
+    </message>
+    <message>
+        <location line="-22"/>
+        <source>Only MCAP-storage ROS 2 bags are supported; this bag uses &apos;%1&apos;. Convert it with &apos;ros2 bag convert&apos; (storage_id: mcap).</source>
+        <translation>仅支持使用 MCAP 存储的 ROS 2 bag；此 bag 使用“%1”。请使用 'ros2 bag convert' 转换（storage_id: mcap）。</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>The ROS 2 bag metadata lists no data files: %1</source>
+        <translation>ROS 2 bag 元数据未列出任何数据文件：%1</translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <source>Only MCAP-storage ROS 2 bags are supported; unsupported bag file: %1</source>
+        <translation>仅支持使用 MCAP 存储的 ROS 2 bag；不支持的 bag 文件：%1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>ROS 2 bag file listed in metadata.yaml is missing: %1</source>
+        <translation>metadata.yaml 中列出的 ROS 2 bag 文件缺失：%1</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <location line="+1"/>
+        <source>Info — %1</source>
+        <translation>信息：%1</translation>
+    </message>
+    <message>
+        <location line="-8"/>
+        <source>Connecting to %1…</source>
+        <translation>正在连接到 %1…</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Fetching %1 topic(s)…</source>
+        <translation>正在获取 %1 个主题…</translation>
+    </message>
+    <message>
+        <location line="-17"/>
+        <source>Mosaico connection failed: %1</source>
+        <translation>Mosaico 连接失败：%1</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>%1 sequences</source>
+        <translation>%1 个序列</translation>
+    </message>
+    <message>
+        <location line="-21"/>
+        <source>Mosaico fetch errors:
+%1</source>
+        <translation>Mosaico 获取错误：
+%1</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>Imported %1/%2 topics from %3</source>
+        <translation>已从 %3 导入 %1/%2 个主题</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Connected — server %1</source>
+        <translation>已连接，服务器版本 %1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>listTopics %1: %2</source>
+        <translation>列出主题 %1：%2</translation>
+    </message>
+    <message>
+        <location line="-32"/>
+        <source>synthetic timestamp overflows int64 at row %1 (anchor %2, interval %3)</source>
+        <translation>生成的时间戳在第 %1 行超出 int64 范围（起点 %2，间隔 %3）</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>create dataset failed: %1</source>
+        <translation>创建数据集失败：%1</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>pull failed: %1</source>
+        <translation>拉取失败：%1</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Create failed: %1</source>
+        <translation>创建失败：%1</translation>
+    </message>
+    <message>
+        <location line="-19"/>
+        <source>quaternion save failed: %1</source>
+        <translation>四元数保存失败：%1</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>quaternion apply failed: %1</source>
+        <translation>四元数应用失败：%1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Imported %1 function(s).</source>
+        <translation>已导入 %1 个函数。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Exported %1 function(s).</source>
+        <translation>已导出 %1 个函数。</translation>
+    </message>
+    <message>
+        <location line="-33"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>function produced no output — declared %1 output, so it must return exactly %1 value per point</source>
+        <translation>函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>function produced no output — declared %1 outputs, so it must return exactly %1 values per point</source>
+        <translation>函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>Transform Editor: %1</source>
+        <translation>变换编辑器：%1</translation>
+    </message>
+    <message>
+        <location line="-22"/>
+        <source>Transform Editor: created %1 series.</source>
+        <translation>变换编辑器：已创建 %1 个序列。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Transform Editor: error on &apos;%1&apos;: %2</source>
+        <translation>变换编辑器：处理“%1”时出错：%2</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>%1 topic(s) found</source>
+        <translation>找到 %1 个主题</translation>
+    </message>
+    <message>
+        <location line="-6"/>
+        <source>%1 path(s) on the server</source>
+        <translation>服务器上有 %1 个路径</translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <source>Control API: %1 (manual paths still work)</source>
+        <translation>控制 API：%1（仍可使用手动路径）</translation>
+    </message>
+</context>
+<context>
     <name>PJ::CalendarWidget</name>
     <message>
         <location filename="../../pj_widgets/src/DateRangePicker.cpp" line="+298"/>
@@ -1370,7 +3611,7 @@
 <context>
     <name>PJ::FileLoader</name>
     <message>
-        <location filename="../src/FileLoader.cpp" line="+1048"/>
+        <location filename="../src/FileLoader.cpp" line="+1049"/>
         <location line="+1"/>
         <source>Load Data</source>
         <translation>加载数据</translation>
@@ -1407,7 +3648,7 @@
         <translation>此布局需要数据源插件“%1”，但尚未安装用于处理 %2 文件的该插件。</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+15"/>
         <source>Plugin &apos;%1&apos;: createHandle failed.</source>
         <translation>插件“%1”：createHandle 失败。</translation>
     </message>
@@ -1472,19 +3713,19 @@
         <translation>无法替换数据集 %1：选中的配置会生成 %2 个数据集。</translation>
     </message>
     <message>
-        <location line="+520"/>
-        <location line="+413"/>
+        <location line="+521"/>
+        <location line="+415"/>
         <source>Plugin &apos;%1&apos;: saveConfig failed: %2 — layout save will skip plugin config</source>
         <translation>插件“%1”：saveConfig 失败：%2；保存布局时将跳过插件配置</translation>
     </message>
     <message>
-        <location line="-397"/>
-        <location line="+412"/>
+        <location line="-399"/>
+        <location line="+414"/>
         <source>Loader metadata rejected: %1</source>
         <translation>加载器元数据被拒绝：%1</translation>
     </message>
     <message>
-        <location line="-368"/>
+        <location line="-370"/>
         <location line="+186"/>
         <location line="+8"/>
         <source>Import discarded</source>
@@ -1503,12 +3744,12 @@
         <translation>无法加载“%1”：文件不可读。</translation>
     </message>
     <message>
-        <location line="+144"/>
+        <location line="+145"/>
         <source>Plugin &apos;%1&apos;: start failed: %2</source>
         <translation>插件“%1”：启动失败：%2</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Plugin &apos;%1&apos;: derived-series replay failed: %2</source>
         <translation>插件“%1”：派生序列重放失败：%2</translation>
     </message>
@@ -1866,7 +4107,7 @@ already rectified and would otherwise be undistorted twice.</source>
 <context>
     <name>PJ::LeftPanel</name>
     <message>
-        <location filename="../src/ui/LeftPanel.cpp" line="+89"/>
+        <location filename="../src/ui/LeftPanel.cpp" line="+90"/>
         <source>(no recent layouts)</source>
         <translation>（没有最近使用的布局）</translation>
     </message>
@@ -1917,7 +4158,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>录制每个活动数据流中已订阅的话题，每个数据流保存为一个 MCAP 文件</translation>
     </message>
     <message>
-        <location line="+246"/>
+        <location line="+253"/>
         <source>(no cloud plugins)</source>
         <translation>（没有云端插件）</translation>
     </message>
@@ -1925,7 +4166,7 @@ already rectified and would otherwise be undistorted twice.</source>
 <context>
     <name>PJ::MainWindow</name>
     <message>
-        <location filename="../src/MainWindow.cpp" line="+335"/>
+        <location filename="../src/MainWindow.cpp" line="+338"/>
         <source>PlotJuggler 4 Layout (*.pj4.xml)</source>
         <translation>PlotJuggler 4 布局 (*.pj4.xml)</translation>
     </message>
@@ -2075,14 +4316,14 @@ already rectified and would otherwise be undistorted twice.</source>
         <location line="+1"/>
         <location line="+1239"/>
         <location line="+162"/>
-        <location line="+1754"/>
+        <location line="+1758"/>
         <location line="+250"/>
         <location line="+3140"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-6455"/>
+        <location line="-6459"/>
         <source>Undo</source>
         <translation>撤销</translation>
     </message>
@@ -2348,7 +4589,7 @@ already rectified and would otherwise be undistorted twice.</source>
     </message>
     <message>
         <location line="+104"/>
-        <location line="+442"/>
+        <location line="+446"/>
         <location line="+103"/>
         <location line="+705"/>
         <location line="+9"/>
@@ -2358,16 +4599,16 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>加载布局</translation>
     </message>
     <message>
-        <location line="-1977"/>
+        <location line="-1981"/>
         <location line="+25"/>
-        <location line="+2043"/>
+        <location line="+2047"/>
         <location line="+7"/>
         <location line="+5"/>
         <source>Save Layout</source>
         <translation>保存布局</translation>
     </message>
     <message>
-        <location line="-2073"/>
+        <location line="-2077"/>
         <source>Requested layout download: %1</source>
         <translation>已请求下载布局：%1</translation>
     </message>
@@ -2402,7 +4643,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>（未安装扩展）</translation>
     </message>
     <message>
-        <location line="+137"/>
+        <location line="+141"/>
         <source>(no toolboxes available)</source>
         <translation>（没有可用的工具箱）</translation>
     </message>
@@ -3027,7 +5268,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>继续下载</translation>
     </message>
     <message>
-        <location line="+294"/>
+        <location line="+297"/>
         <source>Failed to publish toolbox services for &apos;%1&apos;: %2</source>
         <translation>无法为“%1”发布工具箱服务：%2</translation>
     </message>
@@ -3580,7 +5821,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>无法保存内容寻址加载配置</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+40"/>
         <source>Content-addressed object for &quot;%1&quot; failed its integrity check; loading the local copy instead. Reinstall to regenerate it.</source>
         <translation>“%1”的内容寻址对象未通过完整性检查；将改为加载本地副本。请重新安装以重新生成该对象。</translation>
     </message>
@@ -5254,7 +7495,7 @@ Details: %1</source>
 <context>
     <name>QAbstractFileIconProvider</name>
     <message>
-        <location filename="../src/AppLanguage.cpp" line="+72"/>
+        <location filename="../src/AppLanguage.cpp" line="+80"/>
         <source>Drive</source>
         <translation>驱动器</translation>
     </message>
@@ -5320,10 +7561,10 @@ Details: %1</source>
     </message>
     <message>
         <location line="+2"/>
-        <location filename="../src/FileLoader.cpp" line="-1971"/>
+        <location filename="../src/FileLoader.cpp" line="-1979"/>
         <location line="+90"/>
         <location line="+7"/>
-        <location filename="../src/MainWindow.cpp" line="-9943"/>
+        <location filename="../src/MainWindow.cpp" line="-9950"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
@@ -5538,22 +7779,42 @@ Details: %1</source>
         <translation>合并选中的数据集</translation>
     </message>
     <message>
-        <location filename="../../pj_dialog_host/src/dialog_engine.cpp" line="+496"/>
-        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="+477"/>
+        <location filename="../../pj_dialog_host/src/dialog_engine.cpp" line="+500"/>
+        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="+482"/>
         <source>Select File</source>
         <translation>选择文件</translation>
     </message>
     <message>
-        <location line="+72"/>
-        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="+17"/>
+        <location line="+75"/>
+        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="+19"/>
         <source>Select Folder</source>
         <translation>选择文件夹</translation>
     </message>
     <message>
-        <location line="+36"/>
-        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="-9"/>
+        <location line="+42"/>
+        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="-10"/>
         <source>Save File</source>
         <translation>保存文件</translation>
+    </message>
+    <message>
+        <location filename="../src/BundledAdsTranslationKeys.h" line="+8"/>
+        <source>List All Tabs</source>
+        <translation>列出所有标签页</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Detach Group</source>
+        <translation>分离分组</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Minimize</source>
+        <translation>最小化</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close Tab</source>
+        <translation>关闭标签页</translation>
     </message>
 </context>
 <context>
@@ -5759,6 +8020,183 @@ Details: %1</source>
         <location line="+20"/>
         <source>Name</source>
         <translation>名称</translation>
+    </message>
+</context>
+<context>
+    <name>ads::CAutoHideTab</name>
+    <message>
+        <location filename="../src/BundledAdsTranslationKeys.h" line="+1"/>
+        <source>Detach</source>
+        <translation>分离</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pin To...</source>
+        <translation>固定到…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Top</source>
+        <translation>顶部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Left</source>
+        <translation>左侧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Right</source>
+        <translation>右侧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Bottom</source>
+        <translation>底部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unpin (Dock)</source>
+        <translation>取消固定（停靠）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+</context>
+<context>
+    <name>ads::CDockAreaTitleBar</name>
+    <message>
+        <location line="+1"/>
+        <source>Detach</source>
+        <translation>分离</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Detach Group</source>
+        <translation>分离分组</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unpin (Dock)</source>
+        <translation>取消固定（停靠）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pin Group</source>
+        <translation>固定分组</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pin Group To...</source>
+        <translation>将分组固定到…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Top</source>
+        <translation>顶部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Left</source>
+        <translation>左侧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Right</source>
+        <translation>右侧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Bottom</source>
+        <translation>底部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Minimize</source>
+        <translation>最小化</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close Group</source>
+        <translation>关闭分组</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close Other Groups</source>
+        <translation>关闭其他分组</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pin Active Tab (Press Ctrl to Pin Group)</source>
+        <translation>固定当前标签页（按 Ctrl 固定分组）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close Active Tab</source>
+        <translation>关闭当前标签页</translation>
+    </message>
+</context>
+<context>
+    <name>ads::CDockManager</name>
+    <message>
+        <location line="+1"/>
+        <source>Show View</source>
+        <translation>显示视图</translation>
+    </message>
+</context>
+<context>
+    <name>ads::CDockWidgetTab</name>
+    <message>
+        <location line="+1"/>
+        <source>Detach</source>
+        <translation>分离</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pin</source>
+        <translation>固定</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pin To...</source>
+        <translation>固定到…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Top</source>
+        <translation>顶部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Left</source>
+        <translation>左侧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Right</source>
+        <translation>右侧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Bottom</source>
+        <translation>底部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close Others</source>
+        <translation>关闭其他标签页</translation>
     </message>
 </context>
 <context>

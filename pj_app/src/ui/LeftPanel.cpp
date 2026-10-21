@@ -1,7 +1,6 @@
+#include <pj_widgets/BundledPluginText.h>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
-
-#include "ui/LeftPanel.h"
 
 #include <QAction>
 #include <QComboBox>
@@ -26,6 +25,8 @@
 #include <QVBoxLayout>
 #include <initializer_list>
 #include <nlohmann/json.hpp>
+
+#include "ui/LeftPanel.h"
 
 #ifdef PJ_TARGET_WASM
 #include "BrowserPersistence.h"
@@ -556,10 +557,17 @@ void LeftPanel::populateCloudToolboxes(const std::vector<RuntimeToolboxPlugin>& 
 
       // One combo entry per cloud source: display name, plugin id as data
       // (ids are stable across sessions; names/order are not).
-      ui_->comboCloud->addItem(QString::fromStdString(tb.name), QString::fromStdString(tb.id));
+      ui_->comboCloud->addItem(
+          bundledPluginText(
+              QString::fromStdString(tb.id), QString::fromStdString(tb.version), QString::fromStdString(tb.name)),
+          QString::fromStdString(tb.id));
       if (auto desc = manifest.find("description"); desc != manifest.end() && desc->is_string()) {
         ui_->comboCloud->setItemData(
-            ui_->comboCloud->count() - 1, QString::fromStdString(desc->get<std::string>()), Qt::ToolTipRole);
+            ui_->comboCloud->count() - 1,
+            bundledPluginText(
+                QString::fromStdString(tb.id), QString::fromStdString(tb.version),
+                QString::fromStdString(desc->get<std::string>())),
+            Qt::ToolTipRole);
       }
     }
 

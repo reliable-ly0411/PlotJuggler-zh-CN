@@ -2496,11 +2496,10 @@ std::vector<QString> ExtensionManager::managedPluginDirs() {
             // and surface why, since the store copy stays unusable until reinstall.
             reportDiagnostic(
                 entry.fileName(),
-                QStringLiteral(
-                    QCoreApplication::translate(
-                        "PJ::MarketplaceDiagnostics",
-                        "Content-addressed object for \"%1\" failed its integrity check; loading the local copy "
-                        "instead. Reinstall to regenerate it."))
+                QCoreApplication::translate(
+                    "PJ::MarketplaceDiagnostics",
+                    "Content-addressed object for \"%1\" failed its integrity check; loading the local copy "
+                    "instead. Reinstall to regenerate it.")
                     .arg(entry.fileName()),
                 true);
           }
