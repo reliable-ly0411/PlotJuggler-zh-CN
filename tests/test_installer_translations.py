@@ -13,7 +13,7 @@ META = ROOT / 'packaging/installer/packages/io.plotjuggler.application/meta'
 
 class InstallerTranslationsTest(unittest.TestCase):
     def test_every_script_template_is_translated(self):
-        script = (META / 'installscript.qs').read_text()
+        script = (META / 'installscript.qs').read_text(encoding='utf-8')
         sources = {ast.literal_eval(value) for value in re.findall(
             r'qsTranslate\("PlotJugglerInstaller", ("(?:[^"\\]|\\.)*")\)', script)}
         catalog = ET.parse(META / 'zh_CN.ts').getroot()
@@ -30,7 +30,7 @@ class InstallerTranslationsTest(unittest.TestCase):
     def test_catalog_is_built_and_registered(self):
         package = ET.parse(META / 'package.xml').getroot()
         self.assertIn('zh_CN.qm', [t.text for t in package.findall('Translations/Translation')])
-        build = (ROOT / 'packaging/installer/build_windows_installer.ps1').read_text()
+        build = (ROOT / 'packaging/installer/build_windows_installer.ps1').read_text(encoding='utf-8')
         self.assertIn('Resolve-Exe "lrelease.exe" (Split-Path $windeployqt -Parent)', build)
         self.assertIn('if (-not $lrelease)', build)
         self.assertIn('Installer translation compilation failed.', build)
@@ -42,7 +42,7 @@ class InstallerTranslationsTest(unittest.TestCase):
         self.assertNotIn('Form', strings)
 
     def test_replacement_is_still_confirmed(self):
-        script = (META / 'installscript.qs').read_text()
+        script = (META / 'installscript.qs').read_text(encoding='utf-8')
         self.assertIn('if (answer !== QMessageBox.Yes)', script)
         self.assertIn('gui.rejectPage(QInstaller.ComponentSelection)', script)
         self.assertLess(script.index('if (answer !== QMessageBox.Yes)'),

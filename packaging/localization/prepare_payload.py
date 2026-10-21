@@ -89,7 +89,7 @@ def stage(build, prefix, config, linux_tools):
     record['expected_plugins'] = [f"{x['id']}={x['version']}" for x in locked['extensions'] if x['id'] in ids]
     assert len(record['expected_plugins']) == len(ids)
     record['expected_plugins'].append('ardupilot-dataflash=' + record['bin_plugin_version'])
-    originals = json.loads((ROOT / 'packaging/localization/preserved-upstream-plugins.json').read_text())
+    originals = json.loads((ROOT / 'packaging/localization/preserved-upstream-plugins.json').read_text(encoding='utf-8'))
     original = originals['linux-x86_64' if linux_tools else 'windows-x86_64']
     upstream = next(item for item in locked['extensions'] if item['id'] == original['id'])
     platform = 'linux-x86_64' if linux_tools else 'windows-x86_64'

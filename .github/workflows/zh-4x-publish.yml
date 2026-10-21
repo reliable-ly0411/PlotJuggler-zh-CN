@@ -84,7 +84,7 @@ jobs:
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CANDIDATE_RUN" > run.json
           python3 - <<'PY'
           import json, os
-          r = json.load(open('run.json'))
+          r = json.load(open('run.json', encoding='utf-8'))
           assert r['status'] == 'completed' and r['conclusion'] == 'success'
           assert r['head_sha'] == os.environ['SOURCE_SHA']
           assert str(r['run_attempt']) == os.environ['CANDIDATE_ATTEMPT']
@@ -124,7 +124,7 @@ jobs:
                       f'PlotJuggler-{version}-x86_64-zh-CN.AppImage',
                       f'plotjuggler4_{mapped["deb"]}_amd64-zh-CN.deb'}
           assert {x.name for x in Path('dist').iterdir()} == expected
-          manifest = json.loads(Path('acceptance/release-manifest.json').read_text())
+          manifest = json.loads(Path('acceptance/release-manifest.json').read_text(encoding='utf-8'))
           assert manifest['schema_version'] == 1 and manifest['automated_acceptance'] == 'passed'
           assert manifest['source_commit'] == manifest['workflow_sha'] == os.environ['SOURCE_SHA']
           assert manifest['source_tree'] == subprocess.check_output(['git', 'rev-parse', os.environ['SOURCE_SHA'] + '^{tree}'], text=True).strip()
@@ -136,15 +136,15 @@ jobs:
           public_assets = stage_public_assets(Path('dist'), Path('release-assets'), manifest['assets'])
           Path('public-asset-manifest.json').write_text(json.dumps({
               'source_commit': manifest['source_commit'], 'run_id': manifest['run_id'],
-              'run_attempt': manifest['run_attempt'], 'assets': public_assets}, indent=2) + '\n')
-          baseline = json.loads(Path('docs/localization/upstream-baseline.json').read_text())
-          body = Path('docs/localization/RELEASE-' + version + '.md').read_text()
+              'run_attempt': manifest['run_attempt'], 'assets': public_assets}, indent=2) + '\n', encoding='utf-8')
+          baseline = json.loads(Path('docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
+          body = Path('docs/localization/RELEASE-' + version + '.md').read_text(encoding='utf-8')
           replacements = {'SOURCE_SHA': os.environ['SOURCE_SHA'],
                           'SOURCE_TREE': subprocess.check_output(['git', 'rev-parse', os.environ['SOURCE_SHA'] + '^{tree}'], text=True).strip(),
                           'BIN_SHA': baseline['ardupilot_plugin']['commit'],
                           'BIN_VERSION': baseline['ardupilot_plugin']['version'],
                           'RUN_ID': os.environ['CANDIDATE_RUN'],
-                          'RUN_URL': json.load(open('run.json'))['html_url'],
+                          'RUN_URL': json.load(open('run.json', encoding='utf-8'))['html_url'],
                           'ASSET_TABLE': '| 文件 | 字节数 | SHA-256 |\n| --- | ---: | --- |\n' +
                               '\n'.join(f"| `{a['name']}` | {a['size']} | `{a['sha256']}` |" for a in public_assets)}
           for key, value in replacements.items(): body = body.replace('@' + key + '@', value)
@@ -154,7 +154,7 @@ jobs:
           # Change only literal download filenames, not Debian's ordered version.
           for asset in public_assets:
               body = body.replace('`' + asset['candidate_name'] + '`', '`' + asset['name'] + '`')
-          Path('release-notes.md').write_text(body)
+          Path('release-notes.md').write_text(body, encoding='utf-8')
           PY
           python3 packaging/localization/hash_packages.py release-assets --output SHA256SUMS.txt
       - name: Create immutable tag and upload the accepted bytes to a draft

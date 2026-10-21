@@ -3,7 +3,7 @@ name: Chinese 4.x candidate packages
 on:
   push:
     # Explicit one-time rc.2 candidate; only branch creation runs native jobs.
-    branches: ['zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final3']
+    branches: ['zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final4']
   workflow_dispatch:
 
 permissions:
@@ -46,6 +46,20 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - name: Lightweight release preflight before dependencies
+        env:
+          PYTHONUTF8: '0'
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py' -v
+          python -m unittest discover -s .github/release_policy -p 'test_*.py' -v
+          python tests/check_translations_4x.py --catalog-only
+          python tests/check_localization_provenance.py
+      - name: Windows native path and PowerShell preflight
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          PYTHONUTF8: '0'
+        run: ./tests/check_windows_packaging.ps1
       - name: Read pinned versions
         id: versions
         run: |
@@ -137,11 +151,11 @@ jobs:
           from pathlib import Path
           import sys
           p = Path(sys.argv[1])
-          lines = p.read_text().splitlines() if p.exists() else []
+          lines = p.read_text(encoding='utf-8').splitlines() if p.exists() else []
           lines = [s for s in lines if not s.startswith(('core.sources:download_cache=', 'core.sources:download_urls='))]
           lines += [f'core.sources:download_cache={sys.argv[2]}',
                     'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources/"]']
-          p.write_text('\n'.join(lines) + '\n')
+          p.write_text('\n'.join(lines) + '\n', encoding='utf-8')
           PY
       - name: Resolve exact Linux SDK and dependencies
         if: runner.os == 'Linux'
@@ -182,7 +196,7 @@ jobs:
           for index, path in enumerate(home.glob('p/b/ffmpe*/b/build-*/ffbuild/config.log')):
               # configure starts this log with `set`, including the complete
               # process environment. Never publish that preamble as an artifact.
-              lines = path.read_text(errors='replace').splitlines()
+              lines = path.read_text(encoding='utf-8', errors='replace').splitlines()
               probes = [i for i, line in enumerate(lines)
                         if line.startswith(('require_pkg_config libdav1d ',
                                             'check_pkg_config libdav1d '))]
@@ -190,7 +204,7 @@ jobs:
                   print('No dav1d probe found; the environment-bearing log is omitted.')
                   continue
               diagnostic = '\n'.join(lines[probes[-1]:][:400]) + '\n'
-              (output / f'ffmpeg-{index}-dav1d-probe.log').write_text(diagnostic)
+              (output / f'ffmpeg-{index}-dav1d-probe.log').write_text(diagnostic, encoding='utf-8')
               print(f'--- {path.name}: {path.parent.parent.name} ---')
               print(diagnostic)
           PYLOG

@@ -66,7 +66,7 @@ class ReleaseAssetsTest(unittest.TestCase):
             self.assertEqual((self.source / row['candidate_name']).read_bytes(),
                              (self.target / row['name']).read_bytes())
             self.assertEqual(module.public_name(row['name']), row['name'])
-        sums = (self.target / 'SHA256SUMS.txt').read_text()
+        sums = (self.target / 'SHA256SUMS.txt').read_text(encoding='utf-8')
         self.assertIn(PUBLIC_DEB, sums)
         self.assertNotIn('~', sums)
         self.verify()
@@ -111,7 +111,7 @@ class ReleaseAssetsTest(unittest.TestCase):
         (package / 'DEBIAN').mkdir(parents=True)
         (package / 'DEBIAN/control').write_text(
             'Package: plotjuggler4\nVersion: 4.0.0~zh.1~rc.1-1\nArchitecture: amd64\n'
-            'Maintainer: Test <test@example.test>\nDescription: Filename regression fixture\n')
+            'Maintainer: Test <test@example.test>\nDescription: Filename regression fixture\n', encoding='utf-8')
         subprocess.run(['dpkg-deb', '--build', str(package), str(self.source / DEB)],
                        check=True, capture_output=True)
         self.assets[-1].update(size=(self.source / DEB).stat().st_size, sha256=module.sha256(self.source / DEB))
@@ -123,7 +123,7 @@ class ReleaseAssetsTest(unittest.TestCase):
     def test_original_tilde_checksum_mismatch_is_rejected(self):
         self.stage()
         sums = self.target / 'SHA256SUMS.txt'
-        sums.write_text(sums.read_text().replace(PUBLIC_DEB, DEB))
+        sums.write_text(sums.read_text(encoding='utf-8').replace(PUBLIC_DEB, DEB), encoding='utf-8')
         with self.assertRaisesRegex(ValueError, 'SHA256SUMS'):
             self.verify()
 
@@ -196,16 +196,16 @@ class ReleaseAssetsTest(unittest.TestCase):
 
     def workflow_run(self, name):
         """Use the actual workflow shell blocks, not a duplicate publish sequence."""
-        text = (ROOT / '.github/workflows/zh-4x-publish.yml').read_text()
+        text = (ROOT / '.github/workflows/zh-4x-publish.yml').read_text(encoding='utf-8')
         step = text.split('      - name: ' + name + '\n', 1)[1].split('\n      - ', 1)[0]
         return textwrap.dedent(step.split('        run: |\n', 1)[1])
 
-    @unittest.skipUnless(shutil.which('bash') and shutil.which('sha256sum'), 'Workflow runs on Linux')
+    @unittest.skipUnless(sys.platform == 'linux' and shutil.which('bash') and shutil.which('sha256sum'), 'Workflow runs on Linux')
     def test_workflow_only_publishes_after_successful_draft_verification(self):
         """Reproduce GitHub's tilde rename with a mock API; no real network writes."""
         self.stage()
         (self.work / 'packaging').symlink_to(ROOT / 'packaging', target_is_directory=True)
-        (self.work / 'release-notes.md').write_text(NOTES)
+        (self.work / 'release-notes.md').write_text(NOTES, encoding='utf-8')
         mock_bin = self.work / 'mock-bin'
         mock_bin.mkdir()
         mock = mock_bin / 'gh'
@@ -219,13 +219,13 @@ class ReleaseAssetsTest(unittest.TestCase):
             if args[:2] == ['release', 'create']:
                 state.write_text(json.dumps({
                     'id': 123, 'tag_name': os.environ['RELEASE_TAG'], 'draft': True, 'prerelease': True,
-                    'body': Path('release-notes.md').read_text(), 'assets': [],
-                    'upload_url': f'https://uploads.github.com/repos/{repo}/releases/123/assets{{?name,label}}'}))
+                    'body': Path('release-notes.md').read_text(encoding='utf-8'), 'assets': [],
+                    'upload_url': f'https://uploads.github.com/repos/{repo}/releases/123/assets{{?name,label}}'}), encoding='utf-8')
                 Path('server-bytes').mkdir()
             elif args[:2] == ['release', 'download']:
                 shutil.copytree('server-bytes', args[args.index('-D') + 1])
             elif args[:2] == ['release', 'edit']:
-                Path('published').write_text('yes')
+                Path('published').write_text('yes', encoding='utf-8')
             elif args[0] == 'api':
                 if any('/actions/runs/' in a for a in args):
                     print(os.environ['CANDIDATE_ATTEMPT'])
@@ -235,20 +235,20 @@ class ReleaseAssetsTest(unittest.TestCase):
                     if os.environ.get('MOCK_RENAME'):
                         name = 'unexpected-' + name
                     body = path.read_bytes()
-                    r = json.loads(state.read_text())
+                    r = json.loads(state.read_text(encoding='utf-8'))
                     asset = {'id': len(r['assets']) + 1, 'name': name, 'state': 'uploaded',
                              'size': len(body), 'digest': 'sha256:' + hashlib.sha256(body).hexdigest()}
                     r['assets'].append(asset)
-                    state.write_text(json.dumps(r))
+                    state.write_text(json.dumps(r), encoding='utf-8')
                     (Path('server-bytes') / name).write_bytes(body)
                     print(json.dumps(asset))
                 elif '--method' in args:
                     print('{}')
                 else:
-                    print(state.read_text())
+                    print(state.read_text(encoding='utf-8'))
             else:
                 raise SystemExit('Unexpected mock gh call: ' + str(args))
-            '''))
+            '''), encoding='utf-8')
         mock.chmod(0o755)
         script = '\n'.join(self.workflow_run(name) for name in [
             'Create immutable tag and upload the accepted bytes to a draft',
@@ -269,7 +269,7 @@ class ReleaseAssetsTest(unittest.TestCase):
         # GitHub returns dotted names, and publication must never be attempted.
         (self.target / PUBLIC_DEB).rename(self.target / DEB)
         sums = self.target / 'SHA256SUMS.txt'
-        sums.write_text(sums.read_text().replace(PUBLIC_DEB, DEB))
+        sums.write_text(sums.read_text(encoding='utf-8').replace(PUBLIC_DEB, DEB), encoding='utf-8')
         result = subprocess.run(['bash', '-c', script], cwd=self.work, env=env, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((self.work / 'published').exists())
@@ -277,7 +277,7 @@ class ReleaseAssetsTest(unittest.TestCase):
         for directory in ['upload-responses', 'server-bytes']:
             shutil.rmtree(self.work / directory)
         (self.target / DEB).rename(self.target / PUBLIC_DEB)
-        sums.write_text(sums.read_text().replace(DEB, PUBLIC_DEB))
+        sums.write_text(sums.read_text(encoding='utf-8').replace(DEB, PUBLIC_DEB), encoding='utf-8')
         # Even a new, unanticipated server rename cannot silently pass.
         result = subprocess.run(['bash', '-c', script], cwd=self.work, env=dict(env, MOCK_RENAME='1'),
                                 capture_output=True, text=True)
@@ -286,7 +286,7 @@ class ReleaseAssetsTest(unittest.TestCase):
         self.assertIn('renamed assets', result.stderr)
 
     def test_workflow_does_not_bypass_or_reorder_the_draft_gate(self):
-        workflow = (ROOT / '.github/workflows/zh-4x-publish.yml').read_text()
+        workflow = (ROOT / '.github/workflows/zh-4x-publish.yml').read_text(encoding='utf-8')
         self.assertEqual(workflow.count('--draft=false'), 1)
         self.assertLess(workflow.index('--downloads draft-check'), workflow.index('--draft=false'))
         self.assertNotIn('continue-on-error:', workflow)

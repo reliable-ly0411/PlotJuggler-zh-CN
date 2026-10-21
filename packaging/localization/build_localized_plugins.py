@@ -43,11 +43,11 @@ def checkout(url, commit, directory):
 def validate_sdk_version(source, expected):
     version_file = source / 'VERSION'
     if version_file.is_file():
-        actual = version_file.read_text().strip()
+        actual = version_file.read_text(encoding='utf-8').strip()
     else:
         # SDK 0.20.0 predates VERSION; its exact pinned recipe is authoritative.
         matches = re.findall(r'^\s+version\s*=\s*["\']([^"\']+)["\']\s*$',
-                             (source / 'conanfile.py').read_text(), re.M)
+                             (source / 'conanfile.py').read_text(encoding='utf-8'), re.M)
         assert len(matches) == 1, 'ambiguous legacy SDK recipe version'
         actual = matches[0]
     assert actual == expected, (actual, expected)
@@ -60,8 +60,8 @@ def build_one(item, lock, work, prefix, platform):
     build = work / identifier / 'build'
     build.mkdir(parents=True)
     checkout(lock['repository'], item['commit'], source)
-    assert (source / 'SDK_VERSION').read_text().strip() == item['sdk']
-    manifest = json.loads((source / item['module'] / 'manifest.json').read_text())
+    assert (source / 'SDK_VERSION').read_text(encoding='utf-8').strip() == item['sdk']
+    manifest = json.loads((source / item['module'] / 'manifest.json').read_text(encoding='utf-8'))
     assert manifest['id'] == identifier and manifest['version'] == item['version']
     patch = PATCHES / (identifier + '.patch')
     assert digest(patch) == item['patch_sha256']
@@ -84,7 +84,7 @@ def build_one(item, lock, work, prefix, platform):
         name = 'LocalizedDisplay_' + suffix
         checks += f'add_test(NAME {name} COMMAND pj_localized_display_test en_US)\n'
         checks += f'set_tests_properties({name} PROPERTIES ENVIRONMENT "PLOTJUGGLER_UI_LANGUAGE={value}")\n'
-    cmake_path.write_text(cmake_path.read_text() + checks)
+    cmake_path.write_text(cmake_path.read_text(encoding='utf-8') + checks, encoding='utf-8')
     sdk = item['sdk']
     common = ['-s', 'build_type=Release', '-s', 'compiler.cppstd=20', '-s:b', 'compiler.cppstd=20']
     if platform == 'Windows':
@@ -128,7 +128,7 @@ def build_one(item, lock, work, prefix, platform):
         # installed CLI even without API keys, so are deliberately not run.
         test_selection = ['-R', '^(LocalizedDisplay_.*|ToolboxAssistantAgent(ChatSession|UsageLedger|SettingsStore|ConversationState|SeriesStats|StreamJson)Test)$']
     if identifier == 'toolbox-assistant-agent':
-        listing = subprocess.check_output(['ctest', '--test-dir', build / 'native', '--show-only=json-v1', *test_selection], env=env, text=True)
+        listing = subprocess.check_output(['ctest', '--test-dir', build / 'native', '--show-only=json-v1', *test_selection], env=env, text=True, encoding='utf-8')
         selected = {test['name'] for test in json.loads(listing)['tests']}
         expected = {'ToolboxAssistantAgent' + name + 'Test' for name in
                     ['ChatSession', 'UsageLedger', 'SettingsStore', 'ConversationState', 'SeriesStats', 'StreamJson']}
@@ -136,10 +136,10 @@ def build_one(item, lock, work, prefix, platform):
         assert selected == expected, (selected, expected)
     run(['ctest', '--test-dir', build / 'native', '--no-tests=error', '--output-on-failure', '--timeout', '120',
          '--output-junit', str(build / 'offline-tests.xml'), *test_selection], env=env)
-    run([sys.executable, source / 'scripts/release_tools.py', 'verify-version-consistency',
+    run([sys.executable, '-X', 'utf8', source / 'scripts/release_tools.py', 'verify-version-consistency',
          item['module'], '--expected-version', item['version'], '--build-dir', build / 'native', '--check-manifest'], env=env)
     output = work / identifier / 'dist'
-    run([sys.executable, source / 'scripts/release_tools.py', 'create-distribution-package',
+    run([sys.executable, '-X', 'utf8', source / 'scripts/release_tools.py', 'create-distribution-package',
          item['module'], '--version', item['version'], '--build-dir', build / 'native', '--output-dir', output], env=env)
     staged = output / identifier
     binaries = [p for p in staged.iterdir() if p.suffix in ('.so', '.dll')]
@@ -154,7 +154,7 @@ def build_one(item, lock, work, prefix, platform):
     assert list(notices.glob('LICENSE*')), 'upstream license missing'
     shutil.copy2(patch, notices)
     shutil.copy2(PATCHES / 'pj_display_language.hpp', notices)
-    nodes = json.loads(graph.read_text())['graph']['nodes']
+    nodes = json.loads(graph.read_text(encoding='utf-8'))['graph']['nodes']
     dependencies = []
     for node in nodes.values():
         if not node.get('ref') or not node.get('package_folder') or node.get('context') == 'build':
@@ -192,7 +192,7 @@ def main():
     parser.add_argument('--work', type=Path, required=True)
     parser.add_argument('--prefix', type=Path, required=True)
     args = parser.parse_args()
-    lock = json.loads((PATCHES / 'source-lock.json').read_text())
+    lock = json.loads((PATCHES / 'source-lock.json').read_text(encoding='utf-8'))
     assert digest(PATCHES / 'pj_display_language.hpp') == lock['helper_sha256']
     platform = 'Windows' if os.name == 'nt' else 'Linux'
     if platform == 'Windows':
@@ -203,11 +203,11 @@ def main():
     for item in lock['plugins']:
         if platform in item['platforms']:
             results.append(build_one(item, lock, work, prefix, platform))
-            (work / 'completed.json').write_text(json.dumps(results, indent=2) + '\n')
+            (work / 'completed.json').write_text(json.dumps(results, indent=2) + '\n', encoding='utf-8')
     record_path = prefix / 'share/plotjuggler4/release.json'
-    record = json.loads(record_path.read_text())
+    record = json.loads(record_path.read_text(encoding='utf-8'))
     record['localized_plugin_rebuilds'] = results
-    record_path.write_text(json.dumps(record, indent=2) + '\n')
+    record_path.write_text(json.dumps(record, indent=2) + '\n', encoding='utf-8')
     shutil.copy2(PATCHES / 'source-lock.json', prefix / 'share/plotjuggler4/localized-plugin-sources.json')
 
 

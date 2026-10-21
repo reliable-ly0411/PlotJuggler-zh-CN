@@ -11,7 +11,7 @@ import shutil
 def replace(extra, destination):
     extra, destination = extra.resolve(), destination.resolve()
     assert extra != destination and extra not in destination.parents and destination not in extra.parents
-    record = json.loads((extra / 'share/plotjuggler4/release.json').read_text())
+    record = json.loads((extra / 'share/plotjuggler4/release.json').read_text(encoding='utf-8'))
     for item in record['localized_plugin_rebuilds']:
         identifier = item['id']
         assert identifier in {'protobuf-parser', 'toolbox-assistant-agent',

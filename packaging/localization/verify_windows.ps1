@@ -9,7 +9,7 @@ $checksum = Get-Content (Join-Path $Packages "SHA256SUMS-Windows.txt")
 $before = (Get-FileHash $installer[0].FullName -Algorithm SHA256).Hash.ToLower()
 if (-not $checksum.StartsWith($before)) { throw "Downloaded installer checksum mismatch" }
 $root = Join-Path $env:RUNNER_TEMP "pj4-installed-zh"
-$p = Start-Process $installer[0].FullName -ArgumentList @("install", "--root", $root,
+$p = Start-Process $installer[0].FullName -ArgumentList @("install", "--root", "`"$root`"",
     "--accept-licenses", "--default-answer", "--confirm-command") -Wait -PassThru -NoNewWindow `
     -RedirectStandardOutput (Join-Path $outputPath 'installer.out') `
     -RedirectStandardError (Join-Path $outputPath 'installer.err')

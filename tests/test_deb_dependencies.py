@@ -23,11 +23,11 @@ class DebDependenciesTest(unittest.TestCase):
         for filename in ('share/applications/plotjuggler4.desktop',
                          'share/icons/hicolor/256x256/apps/plotjuggler4.png',
                          'share/icons/hicolor/scalable/apps/plotjuggler4.svg'):
-            (app / 'usr' / filename).write_text('fixture\n')
+            (app / 'usr' / filename).write_text('fixture\n', encoding='utf-8')
         provider = root / 'provider.c'
-        provider.write_text('int dependency(void) { return 1; }\n')
+        provider.write_text('int dependency(void) { return 1; }\n', encoding='utf-8')
         consumer = root / 'consumer.c'
-        consumer.write_text('extern int dependency(void); int call(void) { return dependency(); }\n')
+        consumer.write_text('extern int dependency(void); int call(void) { return dependency(); }\n', encoding='utf-8')
         subprocess.run(['gcc', '-shared', '-fPIC', str(provider), '-Wl,-soname,' + soname,
                         '-o', str(root / soname)], check=True)
         subprocess.run(['gcc', '-shared', '-fPIC', str(consumer), '-L' + str(root),

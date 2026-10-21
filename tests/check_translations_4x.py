@@ -66,7 +66,7 @@ def find_lupdate(explicit: str | None) -> str:
         if os.environ.get(prefix_name):
             candidates.append(str(Path(os.environ[prefix_name]) / 'bin/lupdate'))
     versions = ROOT / 'versions.env'
-    match = re.search(r'^PJ_QT_VERSION=["\']?([^\s"\']+)', versions.read_text(), re.MULTILINE)
+    match = re.search(r'^PJ_QT_VERSION=["\']?([^\s"\']+)', versions.read_text(encoding='utf-8'), re.MULTILINE)
     if match:
         candidates.extend(str(p) for p in sorted((ROOT / '.qt' / match.group(1)).glob('*/bin/lupdate')))
     candidates.extend(('lupdate6', 'lupdate-qt6', 'pyside6-lupdate', 'lupdate'))
@@ -88,7 +88,7 @@ def extract(lupdate: str, output: Path, scratch: Path) -> None:
                '-locations', 'relative', '-source-language', 'en_US', '-target-language', 'zh_CN',
                '-disable-heuristic', 'sametext', '-disable-heuristic', 'similartext',
                '-ts', str(output)]
-    result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, check=False)
+    result = subprocess.run(command, cwd=ROOT, text=True, encoding='utf-8', capture_output=True, check=False)
     if result.returncode:
         raise ValueError(f'lupdate failed ({result.returncode}):\n{result.stdout}{result.stderr}')
     if result.stderr.strip():

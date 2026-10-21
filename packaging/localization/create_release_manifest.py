@@ -21,7 +21,7 @@ def sha256(path):
 def main():
     source = os.environ['GITHUB_SHA']
     tree = subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip()
-    values = dict(line.split('=', 1) for line in Path('versions.env').read_text().splitlines()
+    values = dict(line.split('=', 1) for line in Path('versions.env').read_text(encoding='utf-8').splitlines()
                   if line and not line.startswith('#'))
     version = values['PJ_APP_VERSION']
     reports = sorted(Path('reports').rglob('acceptance.json'))

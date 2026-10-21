@@ -16,10 +16,10 @@ spec.loader.exec_module(replacement)
 
 class LocalizedPluginBuildTest(unittest.TestCase):
     def test_locked_patches_and_peeled_commits(self):
-        lock = json.loads((PATCHES / 'source-lock.json').read_text())
+        lock = json.loads((PATCHES / 'source-lock.json').read_text(encoding='utf-8'))
         self.assertEqual(len(lock['plugins']), 4)
         self.assertIn('packaging/localization/plugin-patches/pj_display_language.hpp text eol=lf',
-                      (ROOT / '.gitattributes').read_text())
+                      (ROOT / '.gitattributes').read_text(encoding='utf-8'))
         self.assertEqual(hashlib.sha256((PATCHES / 'pj_display_language.hpp').read_bytes()).hexdigest(), lock['helper_sha256'])
         for item in lock['plugins']:
             self.assertRegex(item['commit'], r'^[a-f0-9]{40}$')
@@ -30,11 +30,11 @@ class LocalizedPluginBuildTest(unittest.TestCase):
         self.assertNotEqual(lock['sdk_commits']['0.32.0'], lock['sdk_tag_objects']['0.32.0'])
 
     def test_mosaico_original_package_identity_is_preserved(self):
-        lock = json.loads((PATCHES / 'source-lock.json').read_text())
+        lock = json.loads((PATCHES / 'source-lock.json').read_text(encoding='utf-8'))
         self.assertNotIn('toolbox-mosaico', {p['id'] for p in lock['plugins']})
         self.assertEqual([p['id'] for p in lock['deferred_plugins']], ['toolbox-mosaico'])
-        originals = json.loads((ROOT / 'packaging/localization/preserved-upstream-plugins.json').read_text())
-        registry = json.loads((ROOT / 'packaging/localization/registry-lock.json').read_text())
+        originals = json.loads((ROOT / 'packaging/localization/preserved-upstream-plugins.json').read_text(encoding='utf-8'))
+        registry = json.loads((ROOT / 'packaging/localization/registry-lock.json').read_text(encoding='utf-8'))
         upstream = next(p for p in registry['extensions'] if p['id'] == 'toolbox-mosaico')
         self.assertEqual(set(originals), {'linux-x86_64', 'windows-x86_64'})
         for platform, item in originals.items():
@@ -60,7 +60,7 @@ class LocalizedPluginBuildTest(unittest.TestCase):
             record_path.parent.mkdir(parents=True)
             record_path.write_text(json.dumps({'localized_plugin_rebuilds': [{
                 'id': 'protobuf-parser', 'files': [{'path': (relative / 'new.so').as_posix(),
-                    'sha256': hashlib.sha256(new.read_bytes()).hexdigest()}]}]}))
+                    'sha256': hashlib.sha256(new.read_bytes()).hexdigest()}]}]}), encoding='utf-8')
             replacement.replace(extra, dest)
             self.assertEqual(list((dest / relative).iterdir()), [dest / relative / 'new.so'])
             new.write_bytes(b'corrupt')
@@ -69,7 +69,7 @@ class LocalizedPluginBuildTest(unittest.TestCase):
             self.assertEqual((dest / relative / 'new.so').read_bytes(), b'localized')
 
     def test_native_build_offline_and_separate_sdk_graphs(self):
-        script = (ROOT / 'packaging/localization/build_localized_plugins.py').read_text()
+        script = (ROOT / 'packaging/localization/build_localized_plugins.py').read_text(encoding='utf-8')
         self.assertIn("source / 'SDK_VERSION'", script)
         self.assertIn("'--lockfile-out='", script)
         self.assertIn("'-DCMAKE_CXX_FLAGS=/utf-8'", script)
@@ -78,7 +78,7 @@ class LocalizedPluginBuildTest(unittest.TestCase):
         self.assertNotIn('upload_conan_artifacts', script)
         self.assertNotIn('--sdk-local', script)
         self.assertIn("assert identifier != 'toolbox-mosaico'", script)
-        self.assertNotIn("'toolbox-mosaico'", (ROOT / 'packaging/localization/replace_localized_plugins.py').read_text())
+        self.assertNotIn("'toolbox-mosaico'", (ROOT / 'packaging/localization/replace_localized_plugins.py').read_text(encoding='utf-8'))
         self.assertIn("'fork-localized-rebuild-not-upstream-binary'", script)
 
 

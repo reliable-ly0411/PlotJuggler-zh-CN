@@ -41,13 +41,13 @@ class BundledTranslationTest(unittest.TestCase):
     def test_native_build_remains_explicit(self):
         workflow = (ROOT / '.github/workflows/zh-4x-packages.yml').read_text(encoding='utf-8')
         self.assertIn("github.event_name == 'push' && github.event.created", workflow)
-        self.assertIn("'zh-CN-4.x-ci/release-candidate-rc2-final3'", workflow)
+        self.assertIn("'zh-CN-4.x-ci/release-candidate-rc2-final4'", workflow)
         self.assertNotIn("branches: ['zh-CN-4.x-*", workflow)
         condition = "github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.created)"
         self.assertIn('    if: ' + condition, workflow)
         branches = re.search(r"branches: \[(.*?)\]", workflow).group(1)
         admitted = re.findall(r"'([^']+)'", branches)
-        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final3'})
+        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final4'})
         def runs(event, branch, created):
             trigger = event == 'workflow_dispatch' or (event == 'push' and branch in admitted)
             gate = event == 'workflow_dispatch' or (event == 'push' and created)
