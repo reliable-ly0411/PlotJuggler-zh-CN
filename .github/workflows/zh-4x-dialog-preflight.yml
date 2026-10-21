@@ -1,13 +1,13 @@
 name: Chinese rc.2 file-dialog platform preflight
 on:
   push:
-    branches: ['zh-CN-4.x-ci/dialog-preflight-rc2-final8']
+    branches: ['zh-CN-4.x-ci/dialog-preflight-rc2-final8-fixed']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   dialog:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.created && github.ref_name == 'zh-CN-4.x-ci/dialog-preflight-rc2-final8')
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.created && github.ref_name == 'zh-CN-4.x-ci/dialog-preflight-rc2-final8-fixed')
     runs-on: windows-2022
     timeout-minutes: 20
     defaults:

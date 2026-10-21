@@ -139,11 +139,7 @@ TEST_F(FileDialogTest, FileLinksKeepOriginalIdentityAndLocalizedMimeType) {
     const auto destination = QFileInfo(targets[i]).filesystemFilePath();
     if (i == 2) std::filesystem::create_directory_symlink(destination, link, error);
     else std::filesystem::create_symlink(destination, link, error);
-#ifdef Q_OS_WIN
-    if (error) GTEST_SKIP() << "Native symbolic link creation unavailable: " << error.message();
-#else
-    ASSERT_FALSE(error) << error.message();
-#endif
+    ASSERT_FALSE(error) << "Native symbolic link fixture must be exercised: " << error.message();
   }
   PJ::FileDialog picker;
   picker.setDirectory(temp.path());
@@ -179,6 +175,7 @@ TEST_F(FileDialogTest, FileLinksKeepOriginalIdentityAndLocalizedMimeType) {
       EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)).toString(), QCoreApplication::translate(
           "PJ::FileDialog", mime == u"text/plain"_s ? "Plain text document" : "XML document"));
     } else {
+      EXPECT_EQ(proxy->data(shown.siblingAtColumn(1)), source->data(original.siblingAtColumn(1)));
       EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)), source->data(original.siblingAtColumn(2)))
         << "actual=" << proxy->data(shown.siblingAtColumn(2)).toString().toStdString()
         << " expected=" << source->data(original.siblingAtColumn(2)).toString().toStdString();

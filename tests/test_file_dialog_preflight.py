@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class FileDialogPreflightPolicy(unittest.TestCase):
     def test_exact_first_creation_only(self):
         text = (ROOT / '.github/workflows/zh-4x-dialog-preflight.yml').read_text(encoding='utf-8')
-        branch = 'zh-CN-4.x-ci/dialog-preflight-rc2-final8'
+        branch = 'zh-CN-4.x-ci/dialog-preflight-rc2-final8-fixed'
         self.assertIn("branches: ['" + branch + "']", text)
         self.assertIn("github.event.created && github.ref_name == '" + branch + "'", text)
         self.assertIn('contents: read', text)

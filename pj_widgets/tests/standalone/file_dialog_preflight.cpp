@@ -11,6 +11,7 @@
 #include <QJsonObject>
 #include <QMimeDatabase>
 #include <QSettings>
+#include <QLocale>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QtTest>
@@ -86,11 +87,29 @@ class FileDialogPreflight : public QObject {
         const QString mime=QMimeDatabase().mimeTypeForFile(info).name();
         const QString expected=QCoreApplication::translate("PJ::FileDialog",mime==u"text/plain"_s?"Plain text document":"XML document");
         if(actual!=expected){qWarning()<<names[i]<<"expected"<<expected<<"actual"<<actual;all=false;}
+        QCOMPARE(proxy->data(shown.siblingAtColumn(1)).toString(),
+                 QLocale(QLocale::Chinese,QLocale::China).formattedDataSize(source->size(original)));
       } else if(i<4 && actual!=raw) {
         qWarning()<<names[i]<<"must preserve source Type"<<raw<<"but got"<<actual;all=false;
       }
+      if(i==2 || i==3) {
+        QCOMPARE(proxy->data(shown.siblingAtColumn(1)),source->data(original.siblingAtColumn(1)));
+      }
+#ifdef Q_OS_WIN
+      if(i==4) {
+        QVERIFY(info.isShortcut());
+        QVERIFY(!info.isSymbolicLink());
+        QCOMPARE(actual,QCoreApplication::translate("PJ::FileDialog","Binary file"));
+        QCOMPARE(proxy->data(shown.siblingAtColumn(1)).toString(),
+                 QLocale(QLocale::Chinese,QLocale::China).formattedDataSize(source->size(original)));
+      }
+#endif
+      picker.selectFile(path);
+      QCOMPARE(picker.selectedFile(),inner->selectedFiles().value(0));
+      if(i<2) QCOMPARE(picker.selectedFile(),path);
       qApp->setProperty("interfaceLanguage",u"en_US"_s);
       QCOMPARE(proxy->data(shown.siblingAtColumn(2)).toString(),raw);
+      QCOMPARE(proxy->data(shown.siblingAtColumn(1)),source->data(original.siblingAtColumn(1)));
       qApp->setProperty("interfaceLanguage",u"zh_CN"_s);
     }
     QVERIFY2(all,"See all row-specific Type diagnostics above; no failed row is skipped.");
