@@ -113,7 +113,9 @@ TEST_F(FileDialogTest, LocalizedDetailsPreserveNamesRolesPathsAndSourceSorting) 
   EXPECT_EQ(picker.selectedFile(), path);
   qApp->setProperty("interfaceLanguage", u"en_US"_s);
   EXPECT_EQ(proxy->data(shown.siblingAtColumn(1)), source->data(original.siblingAtColumn(1)));
-  EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)), source->data(original.siblingAtColumn(2)));
+  EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)), source->data(original.siblingAtColumn(2)))
+        << "actual=" << proxy->data(shown.siblingAtColumn(2)).toString().toStdString()
+        << " expected=" << source->data(original.siblingAtColumn(2)).toString().toStdString();
 }
 
 TEST_F(FileDialogTest, FileLinksKeepOriginalIdentityAndLocalizedMimeType) {
@@ -157,6 +159,7 @@ TEST_F(FileDialogTest, FileLinksKeepOriginalIdentityAndLocalizedMimeType) {
   picker.show();
   for (int i = 0; i < names.size(); ++i) {
     const QString path = directory.filePath(names[i]);
+    SCOPED_TRACE(names[i].toStdString());
     QDeadlineTimer deadline(5000);
     while (!source->index(path).isValid() && !deadline.hasExpired()) {
       QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
@@ -176,7 +179,9 @@ TEST_F(FileDialogTest, FileLinksKeepOriginalIdentityAndLocalizedMimeType) {
       EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)).toString(), QCoreApplication::translate(
           "PJ::FileDialog", mime == u"text/plain"_s ? "Plain text document" : "XML document"));
     } else {
-      EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)), source->data(original.siblingAtColumn(2)));
+      EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)), source->data(original.siblingAtColumn(2)))
+        << "actual=" << proxy->data(shown.siblingAtColumn(2)).toString().toStdString()
+        << " expected=" << source->data(original.siblingAtColumn(2)).toString().toStdString();
     }
   }
 }
