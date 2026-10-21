@@ -20,7 +20,7 @@ class BundledTranslationTest(unittest.TestCase):
         data = json.loads((ROOT / 'packaging/localization/bundled-ui-translations.json').read_text(encoding='utf-8'))
         hashes = {ui['sha256'] for ui in data['uis']}
         self.assertEqual(len(hashes), len(data['uis']))
-        digest = hashlib.sha256((ROOT / 'pj_dialog_host/tests/fixtures/csv_1_0_7.ui').read_bytes()).hexdigest()
+        digest = hashlib.sha256((ROOT / 'pj_dialog_host/tests/fixtures/csv_1_0_7.ui').read_bytes().replace(b"\r\n", b"\n")).hexdigest()
         self.assertIn(digest, hashes)
         for row in data['exact'] + data['templates']:
             self.assertTrue(row['scope'] in hashes or re.fullmatch(r'plugin:[a-z0-9-]+@[0-9.]+', row['scope']))
@@ -41,13 +41,13 @@ class BundledTranslationTest(unittest.TestCase):
     def test_native_build_remains_explicit(self):
         workflow = (ROOT / '.github/workflows/zh-4x-packages.yml').read_text(encoding='utf-8')
         self.assertIn("github.event_name == 'push' && github.event.created", workflow)
-        self.assertIn("'zh-CN-4.x-ci/release-candidate-rc2-final'", workflow)
+        self.assertIn("'zh-CN-4.x-ci/release-candidate-rc2-final2'", workflow)
         self.assertNotIn("branches: ['zh-CN-4.x-*", workflow)
         condition = "github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.created)"
         self.assertIn('    if: ' + condition, workflow)
         branches = re.search(r"branches: \[(.*?)\]", workflow).group(1)
         admitted = re.findall(r"'([^']+)'", branches)
-        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final'})
+        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final2'})
         def runs(event, branch, created):
             trigger = event == 'workflow_dispatch' or (event == 'push' and branch in admitted)
             gate = event == 'workflow_dispatch' or (event == 'push' and created)

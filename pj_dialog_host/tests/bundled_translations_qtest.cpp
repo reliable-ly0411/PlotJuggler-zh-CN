@@ -43,7 +43,8 @@ class BundledTranslationsTest : public QObject {
   void exactUiGateAndLanguage() {
     QFile file(QStringLiteral(PJ_CSV_UI_FIXTURE));
     QVERIFY(file.open(QIODevice::ReadOnly));
-    const auto ui = file.readAll();
+    // Git may check this fixture out with CRLF on Windows. Identity uses LF.
+    const auto ui = file.readAll().replace("\r\n", "\n");
     QByteArray scope;
     Translation translator;
     QCoreApplication::installTranslator(&translator);
@@ -75,7 +76,7 @@ class BundledTranslationsTest : public QObject {
   void scopedDataAndCanonicalCombo() {
     QFile file(QStringLiteral(PJ_CSV_UI_FIXTURE));
     QVERIFY(file.open(QIODevice::ReadOnly));
-    const auto scope = QCryptographicHash::hash(file.readAll(), QCryptographicHash::Sha256).toHex();
+    const auto scope = QCryptographicHash::hash(file.readAll().replace("\r\n", "\n"), QCryptographicHash::Sha256).toHex();
     Translation translator;
     QCoreApplication::installTranslator(&translator);
     QComboBox combo;
@@ -107,5 +108,10 @@ class BundledTranslationsTest : public QObject {
     QCoreApplication::removeTranslator(&translator);
   }
 };
-QTEST_MAIN(BundledTranslationsTest)
+// A console entry point preserves QTest failure output on Windows runners.
+int main(int argc, char** argv) {
+  QApplication app(argc, argv);
+  BundledTranslationsTest test;
+  return QTest::qExec(&test, argc, argv);
+}
 #include "bundled_translations_qtest.moc"
