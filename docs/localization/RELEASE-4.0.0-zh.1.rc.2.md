@@ -26,7 +26,7 @@
 - BIN 支持数值字段、传感器实例、单位、参数和消息时间线，包含中文文件路径、重复加载、多个数据文件隔离和损坏格式回归。
 - 固定官方插件 registry 快照 `2696403e106c6960541b8da19987ece35a24597e`；Windows 包含 18 个官方插件和 BIN，Linux 包含 20 个官方插件和 BIN。插件按实际 SDK/ABI 校验。
 - 固定随包官方插件的标题、控件及动态说明采用限定版本/控件的显示映射；不改数据列、路径、代码、协议值或事件标识。
-- Protobuf、Mosaico、Transform Editor、WebRTC，以及 Linux 的 Assistant 由固定上游源码加本仓显示补丁重建。它们不是上游原始二进制，不冒用上游签名；保留兼容 ID/版本，新二进制哈希、源码/tag/SDK、补丁及依赖来源见包内 release.json 和许可证目录。插件市场更新可能覆盖这些汉化重建版本。
+- Protobuf、Transform Editor、WebRTC，以及 Linux 的 Assistant 由固定上游源码加本仓显示补丁重建。它们不是上游原始二进制，不冒用上游签名；保留兼容 ID/版本，新二进制哈希、源码/tag/SDK、补丁及依赖来源见包内 release.json 和许可证目录。插件市场更新可能覆盖这些汉化重建版本。
 - 附带 Noto Sans CJK SC 字体及 SIL OFL，避免依赖系统是否已安装中文字体。BIN、字体及应用许可文本保留在包内。
 
 ## 下载与安装
@@ -42,6 +42,8 @@ Debian 元数据为 `4.0.0~zh.1~rc.2-1`；IFW 数字包版本为 `4.0.0.1.0.2`�
 映射回归保证 rc.1 < rc.2 < 同汉化修订正式版；详见 [发布规范](../../blob/@SOURCE_SHA@/RELEASING.md)。
 
 ## 兼容性与已知限制
+
+- Mosaico 1.3.0 明确保留官方原始二进制及剩余英文，未从包中移除。已安全限定的静态控件翻译保留，但 Info、元数据混合正文及部分状态不做猜测替换，以保护原始用户/服务器数据。独立 SDK 重建再分发许可依据尚未核实，并非认定禁止。后续跟踪 [#20](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/20)；本版不宣称所有插件绝对全中文。
 
 - 使用 Qt 6.11.1、C++20 和 PlotJuggler SDK 0.34.1。BIN bootstrap ABI 5 / data-source ABI 4；PJ3 Qt5 插件与 PJ4 C ABI 不兼容，不能混用。
 - 4.x 是重新设计的应用；不保证完整兼容 3.x 布局文件。建议与 3.x 并行安装，保留原日志及布局备份。

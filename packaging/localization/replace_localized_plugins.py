@@ -14,7 +14,7 @@ def replace(extra, destination):
     record = json.loads((extra / 'share/plotjuggler4/release.json').read_text())
     for item in record['localized_plugin_rebuilds']:
         identifier = item['id']
-        assert identifier in {'protobuf-parser', 'toolbox-mosaico', 'toolbox-assistant-agent',
+        assert identifier in {'protobuf-parser', 'toolbox-assistant-agent',
                               'toolbox-transform-editor', 'webrtc-client'}
         relative = Path('lib/plotjuggler/plugins') / identifier
         source = extra / relative

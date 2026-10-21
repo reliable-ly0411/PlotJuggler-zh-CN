@@ -55,8 +55,7 @@ def validate_sdk_version(source, expected):
 
 def build_one(item, lock, work, prefix, platform):
     identifier = item['id']
-    if identifier == 'toolbox-mosaico' and not lock.get('mosaico_sdk_license_evidence'):
-        raise ValueError('Mosaico SDK v0.1.0 redistribution license evidence is unresolved; packaging is blocked')
+    assert identifier != 'toolbox-mosaico', 'Mosaico must remain the original official binary (issue #20)'
     source = work / identifier / 'source'
     build = work / identifier / 'build'
     build.mkdir(parents=True)
@@ -69,13 +68,6 @@ def build_one(item, lock, work, prefix, platform):
     run(['git', '-C', source, 'apply', '--check', patch])
     run(['git', '-C', source, 'apply', patch])
     shutil.copy2(PATCHES / 'pj_display_language.hpp', source)
-    if identifier == 'toolbox-mosaico':
-        # Bind the upstream CPM tag archive to reviewed bytes as well.
-        cmake = source / item['module'] / 'CMakeLists.txt'
-        text = cmake.read_text()
-        needle = '  NAME mosaico_sdk\n'
-        assert text.count(needle) == 1
-        cmake.write_text(text.replace(needle, needle + '  URL_HASH SHA256=' + lock['mosaico_sdk_archive_sha256'] + '\n'))
     # Add deterministic offline checks to every isolated native build. The
     # Assistant variant also compiles its patched model and checks raw text.
     fixture = (PATCHES / 'display_language_test.cpp').as_posix()
@@ -181,13 +173,15 @@ def build_one(item, lock, work, prefix, platform):
                 dst = notices / 'source-dependencies' / dep.name / candidate.name
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(candidate, dst)
+    notice_files = [{'path': p.relative_to(prefix).as_posix(), 'sha256': digest(p)}
+                    for p in sorted(notices.rglob('*')) if p.is_file()]
     files = [{'path': p.relative_to(prefix).as_posix(), 'sha256': digest(p)}
              for p in sorted(destination.rglob('*')) if p.is_file()]
     return {**item, 'kind': 'fork-localized-rebuild-not-upstream-binary',
             'helper_sha256': lock['helper_sha256'], 'sdk_source_fallback_commit': lock['sdk_commits'][sdk],
             'sdk_acquisition': sdk_acquisition,
             'conan_graph_sha256': digest(graph), 'conan_lock_sha256': digest(build / 'conan.lock'),
-            'dependencies': dependencies, 'files': files,
+            'dependencies': dependencies, 'files': files, 'license_files': notice_files,
             'test_policy': 'pure-model Assistant allowlist; other upstream tests exclude live/smoke; no external AI',
             'ctest_selection': test_selection,
             'upstream_update_notice': 'Marketplace updates may replace this localized build; ID/version are preserved for compatibility.'}

@@ -17,7 +17,7 @@ spec.loader.exec_module(replacement)
 class LocalizedPluginBuildTest(unittest.TestCase):
     def test_locked_patches_and_peeled_commits(self):
         lock = json.loads((PATCHES / 'source-lock.json').read_text())
-        self.assertEqual(len(lock['plugins']), 5)
+        self.assertEqual(len(lock['plugins']), 4)
         self.assertEqual(hashlib.sha256((PATCHES / 'pj_display_language.hpp').read_bytes()).hexdigest(), lock['helper_sha256'])
         for item in lock['plugins']:
             self.assertRegex(item['commit'], r'^[a-f0-9]{40}$')
@@ -26,6 +26,23 @@ class LocalizedPluginBuildTest(unittest.TestCase):
             self.assertIn(item['sdk'], lock['sdk_commits'])
         self.assertEqual(lock['sdk_commits']['0.32.0'], 'e325fe38138690a79c8b4bbea28fa6b63066b75c')
         self.assertNotEqual(lock['sdk_commits']['0.32.0'], lock['sdk_tag_objects']['0.32.0'])
+
+    def test_mosaico_original_package_identity_is_preserved(self):
+        lock = json.loads((PATCHES / 'source-lock.json').read_text())
+        self.assertNotIn('toolbox-mosaico', {p['id'] for p in lock['plugins']})
+        self.assertEqual([p['id'] for p in lock['deferred_plugins']], ['toolbox-mosaico'])
+        originals = json.loads((ROOT / 'packaging/localization/preserved-upstream-plugins.json').read_text())
+        registry = json.loads((ROOT / 'packaging/localization/registry-lock.json').read_text())
+        upstream = next(p for p in registry['extensions'] if p['id'] == 'toolbox-mosaico')
+        self.assertEqual(set(originals), {'linux-x86_64', 'windows-x86_64'})
+        for platform, item in originals.items():
+            self.assertEqual(item['version'], upstream['version'])
+            self.assertEqual(item['url'], upstream['platforms'][platform]['url'])
+            self.assertEqual('sha256:' + item['archive_sha256'], upstream['platforms'][platform]['checksum'])
+            self.assertEqual(len(item['files']), 2)
+            for entry in item['files']:
+                self.assertTrue(entry['path'].startswith('lib/plotjuggler/plugins/toolbox-mosaico/'))
+                self.assertRegex(entry['sha256'], r'^[a-f0-9]{64}$')
 
     def test_replace_removes_old_binary_and_verifies_new_hash(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -58,7 +75,8 @@ class LocalizedPluginBuildTest(unittest.TestCase):
         self.assertNotIn('AssistantDialog|', script)
         self.assertNotIn('upload_conan_artifacts', script)
         self.assertNotIn('--sdk-local', script)
-        self.assertIn("not lock.get('mosaico_sdk_license_evidence')", script)
+        self.assertIn("assert identifier != 'toolbox-mosaico'", script)
+        self.assertNotIn("'toolbox-mosaico'", (ROOT / 'packaging/localization/replace_localized_plugins.py').read_text())
         self.assertIn("'fork-localized-rebuild-not-upstream-binary'", script)
 
 
