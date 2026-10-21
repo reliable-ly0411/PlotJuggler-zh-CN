@@ -1,0 +1,331 @@
+{
+  "releases": {
+    "103586400": {
+      "published_at": "2023-05-19T10:11:07Z",
+      "status": "baseline",
+      "tag": "3.7.0",
+      "upstream_sha": "4eec75bd18d9dbd07b99b77b2273cb6cf3d5c8ae"
+    },
+    "103934811": {
+      "published_at": "2023-05-23T11:11:38Z",
+      "status": "baseline",
+      "tag": "3.7.1",
+      "upstream_sha": "fb2bab446f63c726f85e71b155d9fcbeb5603dc1"
+    },
+    "134122492": {
+      "published_at": "2023-12-15T16:57:00Z",
+      "status": "baseline",
+      "tag": "3.8.3",
+      "upstream_sha": "25dea896e4126baae69b362c8dc7cdb5af31097c"
+    },
+    "134693854": {
+      "published_at": "2023-12-20T21:25:34Z",
+      "status": "baseline",
+      "tag": "3.8.4",
+      "upstream_sha": "54bd6836ca571bfadb68acaece19b94603e03f99"
+    },
+    "136345548": {
+      "published_at": "2024-01-09T15:09:22Z",
+      "status": "baseline",
+      "tag": "3.8.6",
+      "upstream_sha": "153a9c938ab17e700066297a4a840ffd8e951933"
+    },
+    "137204541": {
+      "published_at": "2024-01-16T11:43:51Z",
+      "status": "baseline",
+      "tag": "3.8.7",
+      "upstream_sha": "b9fd8cf829280a1d05197bbc4495b6e87685f759"
+    },
+    "137546250": {
+      "published_at": "2024-01-18T12:07:57Z",
+      "status": "baseline",
+      "tag": "3.8.8",
+      "upstream_sha": "92f7389b0112780cd9282522c1a348d5e54dd5c5"
+    },
+    "139513773": {
+      "published_at": "2024-02-01T14:16:02Z",
+      "status": "baseline",
+      "tag": "3.8.10",
+      "upstream_sha": "c7b7cc9089e00e9c2539c7f8a8923b251e93cb15"
+    },
+    "139818430": {
+      "published_at": "2024-02-04T16:50:25Z",
+      "status": "baseline",
+      "tag": "3.9.0",
+      "upstream_sha": "23d2ec6257983cf5697a7a0ac12b2a619317e298"
+    },
+    "142791189": {
+      "published_at": "2024-02-20T14:42:34Z",
+      "status": "baseline",
+      "tag": "3.9.1",
+      "upstream_sha": "d16637fa9d47208c30e448d64c7a15ee2f85d83f"
+    },
+    "14854587": {
+      "status": "prerelease",
+      "tag": "custom_plot_alpha_1"
+    },
+    "14865999": {
+      "status": "prerelease",
+      "tag": "custom_plot_alpha_2"
+    },
+    "14890276": {
+      "status": "prerelease",
+      "tag": "custom_plot_alpha_3"
+    },
+    "14922396": {
+      "status": "prerelease",
+      "tag": "custom_plot_beta_1"
+    },
+    "15070766": {
+      "status": "prerelease",
+      "tag": "2.0_beta_2"
+    },
+    "15075556": {
+      "status": "prerelease",
+      "tag": "2.0_rc_1"
+    },
+    "184565895": {
+      "published_at": "2024-11-10T15:44:01Z",
+      "status": "baseline",
+      "tag": "3.9.3",
+      "upstream_sha": "238b203e1497e1d6d4e1fe9394df0eefd53b7092"
+    },
+    "215628401": {
+      "published_at": "2025-04-30T02:15:56Z",
+      "status": "baseline",
+      "tag": "3.10.0",
+      "upstream_sha": "9034fb6f3b9ff0c66c9d46c3526411902c722855"
+    },
+    "215727665": {
+      "published_at": "2025-04-30T11:38:17Z",
+      "status": "baseline",
+      "tag": "3.10.1",
+      "upstream_sha": "c8ff9e1f74dc2d1c66207493da83522532ae97a6"
+    },
+    "230822277": {
+      "published_at": "2025-07-08T13:03:52Z",
+      "status": "baseline",
+      "tag": "3.10.9",
+      "upstream_sha": "7f242c86ab5eceee469eb29c928d57153593e593"
+    },
+    "231901662": {
+      "published_at": "2025-07-11T21:17:48Z",
+      "status": "baseline",
+      "tag": "3.10.10",
+      "upstream_sha": "70ab11494d5bfe7697e62c26b80115c803e049b2"
+    },
+    "235365453": {
+      "published_at": "2025-07-26T11:28:18Z",
+      "status": "baseline",
+      "tag": "3.10.11",
+      "upstream_sha": "93367183df9cd2b3e4b35515e3dc87013b800918"
+    },
+    "243728838": {
+      "published_at": "2025-08-31T15:38:24Z",
+      "status": "baseline",
+      "tag": "3.11.0",
+      "upstream_sha": "03548e45a5da53900741bd4f7b1e1a62b95f029d"
+    },
+    "244421896": {
+      "published_at": "2025-09-03T12:08:59Z",
+      "status": "baseline",
+      "tag": "3.11.1",
+      "upstream_sha": "e9e2e624d67cc157143f42342d916c0abe38a487"
+    },
+    "248071890": {
+      "published_at": "2025-09-17T21:14:18Z",
+      "status": "baseline",
+      "tag": "3.12.0",
+      "upstream_sha": "96af6ae9b345d541bb1efa27d2d25f14a954d7a7"
+    },
+    "248801289": {
+      "published_at": "2025-09-20T17:26:38Z",
+      "status": "baseline",
+      "tag": "3.12.1",
+      "upstream_sha": "75f9885826a7aca8c337057d368fe9e4ccfd89b2"
+    },
+    "250636898": {
+      "published_at": "2025-09-28T23:06:39Z",
+      "status": "baseline",
+      "tag": "3.12.2",
+      "upstream_sha": "f84b83af38276fec791e58fe6cff2bdad88b0a36"
+    },
+    "250857005": {
+      "published_at": "2025-09-29T15:51:26Z",
+      "status": "baseline",
+      "tag": "3.13.0",
+      "upstream_sha": "5c8b44c1ceeed2db698e233b4b7794a136047d4b"
+    },
+    "251783316": {
+      "published_at": "2025-10-02T16:05:26Z",
+      "status": "baseline",
+      "tag": "3.13.1",
+      "upstream_sha": "3827be11f10113b8368f0351fd974bdf05a53e44"
+    },
+    "252669268": {
+      "published_at": "2025-10-07T10:37:18Z",
+      "status": "baseline",
+      "tag": "3.13.2",
+      "upstream_sha": "e557c62731792a34fe6c9e3c13806c343ba487b8"
+    },
+    "264560807": {
+      "published_at": "2025-11-22T21:28:21Z",
+      "status": "baseline",
+      "tag": "3.14.0",
+      "upstream_sha": "a59426cb052d7a796c6e82b5446e4d0e655db037"
+    },
+    "265076356": {
+      "published_at": "2025-11-25T10:16:07Z",
+      "status": "baseline",
+      "tag": "3.14.1",
+      "upstream_sha": "a3107f96939afc46aab95fc44d1991ee80132f41"
+    },
+    "26533747": {
+      "status": "prerelease",
+      "tag": "2.7.0"
+    },
+    "268011781": {
+      "published_at": "2025-12-06T16:46:18Z",
+      "status": "baseline",
+      "tag": "3.14.2",
+      "upstream_sha": "47f33dc7ec1b7859abb3e7b2f8975e2b192f495e"
+    },
+    "268141551": {
+      "published_at": "2025-12-07T19:44:49Z",
+      "status": "baseline",
+      "tag": "3.14.3",
+      "upstream_sha": "e93b8860d45834ff9b7b52b28c70d5cffadb2b5d"
+    },
+    "271770038": {
+      "published_at": "2025-12-19T14:21:59Z",
+      "status": "baseline",
+      "tag": "3.14.4",
+      "upstream_sha": "2e37c1b3fbfddaab4e2f2ae8dafb8efb27ab6fbf"
+    },
+    "272273786": {
+      "published_at": "2025-12-22T17:34:08Z",
+      "status": "baseline",
+      "tag": "3.14.5",
+      "upstream_sha": "28f0a21a59c9977f912573ba96c71837e68526b6"
+    },
+    "273028238": {
+      "published_at": "2025-12-27T23:52:25Z",
+      "status": "baseline",
+      "tag": "3.15.0",
+      "upstream_sha": "1168247f8e688a3329309835f006637a15b5fd53"
+    },
+    "295310079": {
+      "published_at": "2026-03-10T18:26:10Z",
+      "status": "baseline",
+      "tag": "3.16.0",
+      "upstream_sha": "5a0f01bcd5f8df7fd20923017b0dc3b72581337f"
+    },
+    "314642360": {
+      "published_at": "2026-04-28T14:26:43Z",
+      "status": "baseline",
+      "tag": "3.17.0",
+      "upstream_sha": "1c81250c35535d5a50e5e8ccf6d00890c28997a3"
+    },
+    "314922464": {
+      "published_at": "2026-04-29T00:28:54Z",
+      "status": "baseline",
+      "tag": "3.17.1",
+      "upstream_sha": "ddcbd05be05f9a8e90da624828b36ec795383fb4"
+    },
+    "320454419": {
+      "published_at": "2026-05-11T12:54:36Z",
+      "status": "baseline",
+      "tag": "3.17.2",
+      "upstream_sha": "034a5cc919909aebb124e0dc1abbe2029c3eed0f"
+    },
+    "3528756": {
+      "status": "prerelease",
+      "tag": "0.01"
+    },
+    "36011218": {
+      "published_at": "2021-01-05T18:48:09Z",
+      "status": "baseline",
+      "tag": "3.0.7",
+      "upstream_sha": "3bd795554b0f687a5ea8f579f76b1c4e4ca27ddb"
+    },
+    "37139204": {
+      "published_at": "2021-01-31T11:55:27Z",
+      "status": "baseline",
+      "tag": "3.1.0",
+      "upstream_sha": "b7369c4fe7405aed3cf2c9f803a4071d34932774"
+    },
+    "43020331": {
+      "published_at": "2021-05-16T20:10:03Z",
+      "status": "baseline",
+      "tag": "3.1.1",
+      "upstream_sha": "c8d5783852ecfd94670f38fb494d32084aa29910"
+    },
+    "44025192": {
+      "published_at": "2021-06-03T07:55:04Z",
+      "status": "baseline",
+      "tag": "3.1.2",
+      "upstream_sha": "358d6d9b2db625cef2fdb30256e7b1cad0330097"
+    },
+    "44537745": {
+      "published_at": "2021-06-13T15:09:28Z",
+      "status": "baseline",
+      "tag": "3.2.0",
+      "upstream_sha": "d8ac062784b97b64369461b2dd8083021edf5fc6"
+    },
+    "49817600": {
+      "published_at": "2021-09-19T16:49:33Z",
+      "status": "baseline",
+      "tag": "3.3.0",
+      "upstream_sha": "373cca74f7f2078059857bc74983da50102e7c3a"
+    },
+    "50886894": {
+      "published_at": "2021-10-06T12:44:18Z",
+      "status": "baseline",
+      "tag": "3.3.1",
+      "upstream_sha": "d880c4a9fb2d8f4f62879b2d7eda0eca049eac23"
+    },
+    "58286458": {
+      "published_at": "2022-01-30T17:47:46Z",
+      "status": "baseline",
+      "tag": "3.4.0",
+      "upstream_sha": "fca85d7fe921eab4d0283100c53ed89a553ac8e2"
+    },
+    "58825463": {
+      "published_at": "2022-02-06T16:38:55Z",
+      "status": "baseline",
+      "tag": "3.4.1",
+      "upstream_sha": "ae42b115aab5fa4e28272b5e63c22c6a6c4367d7"
+    },
+    "70844486": {
+      "published_at": "2022-06-29T09:55:50Z",
+      "status": "baseline",
+      "tag": "3.4.5",
+      "upstream_sha": "0dcb2f86eb7d04cf79f19da00fc39701e9028c03"
+    },
+    "71797259": {
+      "published_at": "2022-07-12T12:35:09Z",
+      "status": "baseline",
+      "tag": "3.5.0",
+      "upstream_sha": "d938c408fa68cfeca389c132125cd21dcb3eccfe"
+    },
+    "73745818": {
+      "published_at": "2022-08-05T11:14:05Z",
+      "status": "baseline",
+      "tag": "3.5.2",
+      "upstream_sha": "d0ca482f675a781203f76e22f4212a1751e4faeb"
+    },
+    "74362943": {
+      "published_at": "2022-08-13T21:09:42Z",
+      "status": "baseline",
+      "tag": "3.6.0",
+      "upstream_sha": "e99ff0541b4403e39e6054391e70280c669ec3c6"
+    },
+    "90306409": {
+      "published_at": "2023-01-26T14:35:29Z",
+      "status": "baseline",
+      "tag": "3.6.1",
+      "upstream_sha": "8ff5e6a43a372008c03ae75f14737ed62c1ab641"
+    }
+  },
+  "schema": 1
+}
