@@ -432,6 +432,7 @@ TEST_F(PluginCatalogTest, StaticPluginSetParticipatesInFilteringAndHandleCreatio
   ASSERT_TRUE(dialog.has_value());
   EXPECT_EQ(*dialog, &kStaticDialogVtable);
   EXPECT_NE(catalog.buildFileFilter().find("*.probe"), std::string::npos);
+  EXPECT_EQ(catalog.buildFileFilter("Supported", "Any"), "Supported (*.probe);;Static File (*.probe);;Any (*)");
 
   catalog.scanDirectory();
   ASSERT_EQ(catalog.dataSources().size(), 1U);

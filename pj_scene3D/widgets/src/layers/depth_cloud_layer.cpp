@@ -3,6 +3,8 @@
 
 #include "pj_scene3d_widgets/layers/depth_cloud_layer.h"
 
+#include "pj_widgets/Colormap.h"
+
 #include <QComboBox>
 #include <QFormLayout>
 #include <QImage>
@@ -280,10 +282,10 @@ QWidget* DepthCloudLayer::createConfigWidget(QWidget* parent) {
   outer->addLayout(form);
 
   auto* colormap_combo = new PJ::ComboBox(container);
-  colormap_combo->addItem(u"turbo"_s, static_cast<int>(PointcloudRenderPass::Colormap::kTurbo));
-  colormap_combo->addItem(u"viridis"_s, static_cast<int>(PointcloudRenderPass::Colormap::kViridis));
-  colormap_combo->addItem(u"plasma"_s, static_cast<int>(PointcloudRenderPass::Colormap::kPlasma));
-  colormap_combo->addItem(u"grayscale"_s, static_cast<int>(PointcloudRenderPass::Colormap::kGrayscale));
+  colormap_combo->addItem(PJ::colormapDisplayName(PJ::Colormap::kTurbo), static_cast<int>(PointcloudRenderPass::Colormap::kTurbo));
+  colormap_combo->addItem(PJ::colormapDisplayName(PJ::Colormap::kViridis), static_cast<int>(PointcloudRenderPass::Colormap::kViridis));
+  colormap_combo->addItem(PJ::colormapDisplayName(PJ::Colormap::kPlasma), static_cast<int>(PointcloudRenderPass::Colormap::kPlasma));
+  colormap_combo->addItem(PJ::colormapDisplayName(PJ::Colormap::kGrayscale), static_cast<int>(PointcloudRenderPass::Colormap::kGrayscale));
   colormap_combo->setCurrentIndex(static_cast<int>(colormap_));
   form->addRow(tr("Colormap:"), colormap_combo);
 

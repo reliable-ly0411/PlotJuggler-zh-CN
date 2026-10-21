@@ -22,7 +22,7 @@
 <context>
     <name>AppLanguage</name>
     <message>
-        <location filename="../src/main.cpp" line="+299"/>
+        <location filename="../src/main.cpp" line="+310"/>
         <source>Interface language for this session (zh_CN or en_US).</source>
         <translation>本次会话的界面语言（zh_CN 或 en_US）。</translation>
     </message>
@@ -571,6 +571,219 @@
     </message>
 </context>
 <context>
+    <name>PJ::BuiltinFilters</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/BuiltinFilterPresentation.cpp" line="+15"/>
+        <source>None</source>
+        <translation>无</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pass-through (no change).</source>
+        <translation>直接输出（不作更改）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Absolute</source>
+        <translation>绝对值</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Absolute value |y|.</source>
+        <translation>绝对值 |y|。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Scale</source>
+        <translation>缩放</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Affine scale + offset, with a time shift.</source>
+        <translation>线性缩放与偏移，并可平移时间。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offset</source>
+        <translation>偏移</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Time offset</source>
+        <translation>时间偏移</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Derivative</source>
+        <translation>求导</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Rate of change dv/dt.</source>
+        <translation>变化率 dv/dt。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Use fixed Δt</source>
+        <translation>使用固定 Δt</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Fixed Δt</source>
+        <translation>固定 Δt</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Integral</source>
+        <translation>积分</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Running trapezoidal integral of y over time.</source>
+        <translation>使用梯形法累计计算 y 对时间的积分。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Moving Average</source>
+        <translation>滑动平均</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Boxcar moving average.</source>
+        <translation>矩形窗口滑动平均。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Window</source>
+        <translation>窗口</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Center timestamp</source>
+        <translation>时间戳居中</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Moving Root Mean Squared</source>
+        <translation>滑动均方根</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Moving RMS over a window.</source>
+        <translation>计算窗口内的滑动均方根。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Moving Variance / Stdev</source>
+        <translation>滑动方差 / 标准差</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Moving variance or standard deviation.</source>
+        <translation>计算滑动方差或标准差。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Standard deviation</source>
+        <translation>标准差</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Outlier Removal</source>
+        <translation>异常值剔除</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Drop single-sample spikes.</source>
+        <translation>剔除单采样点尖峰。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Factor</source>
+        <translation>系数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Samples Counter</source>
+        <translation>采样点计数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Count of samples in a trailing time window.</source>
+        <translation>统计此前时间窗口内的采样点数。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Binary Filter</source>
+        <translation>二值滤波</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Boolean 0/1 predicate over the value.</source>
+        <translation>按条件将数值转换为 0 或 1。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comparison</source>
+        <translation>比较条件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>== a</source>
+        <translation>== a</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt; a</source>
+        <translation>&lt; a</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;= a</source>
+        <translation>&lt;= a</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&gt; a</source>
+        <translation>&gt; a</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&gt;= a</source>
+        <translation>&gt;= a</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>in [a, b]</source>
+        <translation>位于 [a, b] 内</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Threshold a</source>
+        <translation>阈值 a</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Threshold b</source>
+        <translation>阈值 b</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tolerance (==)</source>
+        <translation>容差（==）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Time Since Previous</source>
+        <translation>距上一个采样点的时间</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Δt between consecutive samples (seconds).</source>
+        <translation>相邻采样点之间的 Δt（秒）。</translation>
+    </message>
+</context>
+<context>
     <name>PJ::CalendarWidget</name>
     <message>
         <location filename="../../pj_widgets/src/DateRangePicker.cpp" line="+298"/>
@@ -606,6 +819,30 @@
         <location line="+0"/>
         <source>Sun</source>
         <translation>周日</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::Colormap</name>
+    <message>
+        <location filename="../../pj_widgets/src/Colormap.cpp" line="+166"/>
+        <location line="+8"/>
+        <source>Turbo</source>
+        <translation>Turbo</translation>
+    </message>
+    <message>
+        <location line="-6"/>
+        <source>Viridis</source>
+        <translation>Viridis</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Plasma</source>
+        <translation>Plasma</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Grayscale</source>
+        <translation>灰度</translation>
     </message>
 </context>
 <context>
@@ -1029,6 +1266,19 @@
     </message>
 </context>
 <context>
+    <name>PJ::ExtensionCatalogService</name>
+    <message>
+        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+737"/>
+        <source>All supported files</source>
+        <translation>所有支持的文件</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>All files</source>
+        <translation>所有文件</translation>
+    </message>
+</context>
+<context>
     <name>PJ::ExtensionManager</name>
     <message>
         <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+908"/>
@@ -1149,19 +1399,19 @@
         <translation>无法替换数据集 %1：选中的配置会生成 %2 个数据集。</translation>
     </message>
     <message>
-        <location line="+504"/>
-        <location line="+408"/>
+        <location line="+520"/>
+        <location line="+413"/>
         <source>Plugin &apos;%1&apos;: saveConfig failed: %2 — layout save will skip plugin config</source>
         <translation>插件“%1”：saveConfig 失败：%2；保存布局时将跳过插件配置</translation>
     </message>
     <message>
-        <location line="-392"/>
-        <location line="+407"/>
+        <location line="-397"/>
+        <location line="+412"/>
         <source>Loader metadata rejected: %1</source>
         <translation>加载器元数据被拒绝：%1</translation>
     </message>
     <message>
-        <location line="-363"/>
+        <location line="-368"/>
         <location line="+186"/>
         <location line="+8"/>
         <source>Import discarded</source>
@@ -1190,7 +1440,7 @@
         <translation>插件“%1”：派生序列重放失败：%2</translation>
     </message>
     <message>
-        <location line="+205"/>
+        <location line="+217"/>
         <source>%1 loads failed</source>
         <translation>%1 项加载失败</translation>
     </message>
@@ -1208,13 +1458,13 @@
 <context>
     <name>PJ::FilterEditorPanel</name>
     <message>
-        <location filename="../../pj_plotting/widget/src/FilterEditorPanel.cpp" line="+118"/>
-        <location line="+333"/>
+        <location filename="../../pj_plotting/widget/src/FilterEditorPanel.cpp" line="+119"/>
+        <location line="+348"/>
         <source>Apply</source>
         <translation>应用</translation>
     </message>
     <message>
-        <location line="-329"/>
+        <location line="-344"/>
         <source>Close</source>
         <translation>关闭</translation>
     </message>
@@ -1224,7 +1474,7 @@
         <translation>警告：未能加载内置滤波器定义</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+21"/>
         <source>Copy parameters</source>
         <translation>复制参数</translation>
     </message>
@@ -1244,7 +1494,7 @@
         <translation>-- 无变换 --</translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+198"/>
         <source>Filter &apos;%1&apos; is not available</source>
         <translation>滤波器“%1”不可用</translation>
     </message>
@@ -1254,7 +1504,7 @@
         <translation>无法读取滤波器参数；将使用默认值</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+21"/>
         <source>Pick a filter to copy</source>
         <translation>请选择要复制的滤波器</translation>
     </message>
@@ -3163,6 +3413,26 @@ Details: %1</source>
     </message>
 </context>
 <context>
+    <name>PJ::PixelInspector</name>
+    <message>
+        <location filename="../../pj_scene2D/widgets/src/pixel_inspector.cpp" line="+305"/>
+        <location line="+86"/>
+        <location line="+30"/>
+        <source>Position: %1, %2</source>
+        <translation>位置：%1，%2</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Depth:    %1 m</source>
+        <translation>深度：%1 m</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Depth:    — (no data)</source>
+        <translation>深度：—（无数据）</translation>
+    </message>
+</context>
+<context>
     <name>PJ::PlotDocker</name>
     <message>
         <location filename="../../pj_plotting/widget/src/PlotDocker.cpp" line="+613"/>
@@ -3317,13 +3587,13 @@ Details: %1</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>memes</source>
-        <translation>趣味图片</translation>
+        <source>serious</source>
+        <translation>简洁标识</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>serious</source>
-        <translation>简洁标识</translation>
+        <source>memes (English images)</source>
+        <translation>趣图（英文图片）</translation>
     </message>
     <message>
         <location line="+58"/>
@@ -3865,6 +4135,84 @@ Details: %1</source>
     </message>
 </context>
 <context>
+    <name>PJ::Splashscreen</name>
+    <message>
+        <location filename="../src/Splashscreen.cpp" line="+157"/>
+        <source>Now you&apos;re plotting</source>
+        <translation>现在，开始绘图吧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The plot thickens</source>
+        <translation>数据的故事，愈发精彩</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hold my rosbag</source>
+        <translation>看好我的 rosbag</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Make your data confess</source>
+        <translation>让数据说出真相</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>More than just curves now</source>
+        <translation>如今，不止于曲线</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Better than it has any right to be</source>
+        <translation>好用得超乎想象</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Objectively the best. Probably.</source>
+        <translation>客观来说，或许是最好的</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Still better than printf</source>
+        <translation>还是比 printf 更直观</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Friends don&apos;t let friends use printf</source>
+        <translation>好朋友，不让你只用 printf</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lovingly over-engineered</source>
+        <translation>用心打磨，精益求精</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Suspiciously good for a free tool</source>
+        <translation>免费工具，也能如此出色</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Opening PlotJuggler. Again.</source>
+        <translation>又一次，打开 PlotJuggler</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Curves were just the beginning</source>
+        <translation>曲线，只是开始</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mostly written by an AI</source>
+        <translation>主要由 AI 编写</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>An AI helped. Allegedly.</source>
+        <translation>据说，AI 也帮了忙</translation>
+    </message>
+</context>
+<context>
     <name>PJ::StreamingSourceManager</name>
     <message>
         <location filename="../src/StreamingSourceManager.cpp" line="+263"/>
@@ -4296,6 +4644,61 @@ Details: %1</source>
     </message>
 </context>
 <context>
+    <name>QAbstractFileIconProvider</name>
+    <message>
+        <location filename="../src/AppLanguage.cpp" line="+72"/>
+        <source>Drive</source>
+        <translation>驱动器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>File</source>
+        <translation>文件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unknown</source>
+        <translation>未知</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>File Folder</source>
+        <comment>Match Windows Explorer</comment>
+        <translation>文件夹</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Folder</source>
+        <comment>All other platforms</comment>
+        <translation>文件夹</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Alias</source>
+        <comment>macOS Finder</comment>
+        <translation>替身</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shortcut</source>
+        <comment>All other platforms</comment>
+        <translation>快捷方式</translation>
+    </message>
+</context>
+<context>
+    <name>QFileDialog</name>
+    <message>
+        <location line="-13"/>
+        <source>&amp;Look in:</source>
+        <translation>查找范围(&amp;L)：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Files of &amp;type:</source>
+        <translation>文件类型(&amp;T)：</translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <location filename="../src/DialogPresenter.cpp" line="+76"/>
@@ -4309,7 +4712,7 @@ Details: %1</source>
     </message>
     <message>
         <location line="+2"/>
-        <location filename="../src/FileLoader.cpp" line="-1943"/>
+        <location filename="../src/FileLoader.cpp" line="-1971"/>
         <location line="+90"/>
         <location line="+7"/>
         <location filename="../src/MainWindow.cpp" line="-9943"/>
@@ -4548,7 +4951,7 @@ Details: %1</source>
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../src/AppLanguage.cpp" line="+55"/>
+        <location filename="../src/AppLanguage.cpp" line="-16"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
@@ -4753,7 +5156,7 @@ Details: %1</source>
 <context>
     <name>pj::scene3d::DepthCloudLayer</name>
     <message>
-        <location filename="../../pj_scene3D/widgets/src/layers/depth_cloud_layer.cpp" line="+288"/>
+        <location filename="../../pj_scene3D/widgets/src/layers/depth_cloud_layer.cpp" line="+290"/>
         <source>Colormap:</source>
         <translation>色图：</translation>
     </message>
@@ -4897,7 +5300,7 @@ Details: %1</source>
 <context>
     <name>pj::scene3d::PointCloudLayer</name>
     <message>
-        <location filename="../../pj_scene3D/widgets/src/layers/pointcloud_layer.cpp" line="+510"/>
+        <location filename="../../pj_scene3D/widgets/src/layers/pointcloud_layer.cpp" line="+512"/>
         <source>sphere</source>
         <translation>球体</translation>
     </message>
