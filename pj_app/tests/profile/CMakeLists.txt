@@ -56,11 +56,20 @@ endforeach()
 # The full native build adds actual runtime/store/recording integration. The
 # Qt-only harness above cannot claim these services merely from path arithmetic.
 if(TARGET pj_runtime)
+    foreach(tier IN ITEMS bundled marketplace)
+        add_library(profile_${tier}_parser SHARED profile_parser_plugin.cpp)
+        target_link_libraries(profile_${tier}_parser PRIVATE plotjuggler_sdk::base)
+        target_include_directories(profile_${tier}_parser PRIVATE "${profile_root}/pj_runtime/tests")
+        target_compile_features(profile_${tier}_parser PRIVATE cxx_std_20)
+    endforeach()
+    target_compile_definitions(profile_bundled_parser PRIVATE PROFILE_BUNDLED_PARSER)
     add_executable(app_profile_services_test app_profile_services_test.cpp)
     target_link_libraries(app_profile_services_test PRIVATE pj_runtime Qt6::Core)
     target_compile_definitions(app_profile_services_test PRIVATE
-        PJ_PROFILE_PLUGIN_PATH="$<TARGET_FILE:mock_data_source_v2_plugin>")
-    add_dependencies(app_profile_services_test mock_data_source_v2_plugin)
+        PJ_PROFILE_PLUGIN_PATH="$<TARGET_FILE:mock_data_source_v2_plugin>"
+        PJ_PROFILE_BUNDLED_PARSER_PATH="$<TARGET_FILE:profile_bundled_parser>"
+        PJ_PROFILE_MARKETPLACE_PARSER_PATH="$<TARGET_FILE:profile_marketplace_parser>")
+    add_dependencies(app_profile_services_test mock_data_source_v2_plugin profile_bundled_parser profile_marketplace_parser)
     set_target_properties(app_profile_services_test PROPERTIES WIN32_EXECUTABLE FALSE)
     if(TARGET pj_scene3d_widgets)
         # This source directly includes GLM; a sibling's non-GLOBAL imported

@@ -169,6 +169,37 @@ void checkMarketplace(const QString& profile) {
   check_catalog(paths);  // A subsequent default-mode startup uses the same receipt and bytes.
 }
 
+/// Real parser DSOs exercise native loading and the shipped-signature trust
+/// boundary. Removing the shipped reference must remove the provenance advantage.
+void checkParserProvenance(const QString& profile) {
+  const QString bundled = profile + QStringLiteral("/随包 parser-fixture");
+  const QString absent = profile + QStringLiteral("/无随包 parser-fixture");
+  require(QDir().mkpath(bundled) && QDir().mkpath(absent), QStringLiteral("Cannot create parser fixture roots"));
+  const auto place = [](const QString& root, const QString& id, const char* original) {
+    const QString directory = QDir(root).filePath(id);
+    require(QDir().mkpath(directory), QStringLiteral("Cannot create parser payload"));
+    const QString source = QString::fromUtf8(original);
+    require(
+        QFile::copy(source, QDir(directory).filePath(QFileInfo(source).fileName())),
+        QStringLiteral("Cannot copy native parser fixture"));
+  };
+  place(bundled, QStringLiteral("zzz-profile-bundled"), PJ_PROFILE_BUNDLED_PARSER_PATH);
+  place(
+      PJ::PlatformUtils::extensionsDir(), QStringLiteral("aaa-profile-marketplace"),
+      PJ_PROFILE_MARKETPLACE_PARSER_PATH);
+  const auto winner = [](const QString& shipped) {
+    PJ::ExtensionCatalogService::Paths paths;
+    paths.bundled_dir = shipped;
+    PJ::ExtensionCatalogService catalog(paths, {});
+    require(catalog.messageParsers().size() == 2, QStringLiteral("Both real Unicode parser DSOs must load"));
+    const auto selection = catalog.resolveParserRoutes("json", "profile/Message", {}, "{}");
+    require(selection.route_dispatch && selection.scalar.has_value(), QStringLiteral("No registered scalar route"));
+    return selection.scalar->provider_id;
+  };
+  require(winner(bundled) == "zzz-profile-bundled", QStringLiteral("Unicode bundled parser lost shipped provenance"));
+  require(winner(absent) == "aaa-profile-marketplace", QStringLiteral("Unshipped parser retained bundled provenance"));
+}
+
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -178,6 +209,7 @@ int main(int argc, char* argv[]) {
   if (app.arguments().size() != 2) {
     return 64;
   }
+  const char* stage = "profile initialization";
   try {
     const QString dedicated = app.arguments()[1];
     require(QDir().mkpath(dedicated), QStringLiteral("Cannot prepare dedicated test directory"));
@@ -192,9 +224,14 @@ int main(int argc, char* argv[]) {
     require(
         QSettings().value(QStringLiteral("profile/host-backend")).toString() == QStringLiteral("isolated"),
         QStringLiteral("Plugin host settings backend does not use the isolated INI"));
+    stage = "recording and source cache";
     checkCaptureServices(profile, run.filePath(QStringLiteral("forbidden-override")));
+    stage = "marketplace seeding and runtime catalog";
     checkMarketplace(profile);
+    stage = "Unicode parser provenance";
+    checkParserProvenance(profile);
 #ifdef PJ_PROFILE_WITH_URDF
+    stage = "embedded URDF extraction";
     QString asset;
     {
       pj::scene3d::UrdfPackageResolver resolver;
@@ -211,7 +248,7 @@ int main(int argc, char* argv[]) {
     std::printf("[app-profile-services] PASS; test data: %s\n", qPrintable(run.path()));
     return 0;
   } catch (const std::exception& error) {
-    std::fprintf(stderr, "[app-profile-services] FAIL: %s\n", error.what());
+    std::fprintf(stderr, "[app-profile-services] FAIL (%s): %s\n", stage, error.what());
     return 1;
   }
 }

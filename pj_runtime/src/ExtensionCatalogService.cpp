@@ -738,7 +738,7 @@ ParserClaimProvenance ExtensionCatalogService::provenanceForParser(const LoadedM
   // cannot forge the top trust tier. Authenticated receipts are the full answer.
   const auto bundled = bundled_plugin_versions_.find(parser.id);
   if (bundled != bundled_plugin_versions_.end() && bundled->second.version == parser.version &&
-      sameDsoSignature(parser.path, bundled->second.dso_path)) {
+      sameDsoSignature(filesystemPath(QString::fromStdString(parser.path)), bundled->second.dso_path)) {
     return ParserClaimProvenance::kBundled;
   }
   return ParserClaimProvenance::kMarketplace;
