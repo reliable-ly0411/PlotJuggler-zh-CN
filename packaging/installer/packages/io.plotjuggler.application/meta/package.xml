@@ -12,9 +12,6 @@
     </Licenses>
     <Default>script</Default>
     <Script>installscript.qs</Script>
-    <Translations>
-        <Translation>zh_CN.qm</Translation>
-    </Translations>
     <UserInterfaces>
         <UserInterface>targetwidget.ui</UserInterface>
         <UserInterface>languagewidget.ui</UserInterface>

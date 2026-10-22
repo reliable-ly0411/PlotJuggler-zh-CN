@@ -32,11 +32,13 @@ class InstallerTranslationsTest(unittest.TestCase):
 
     def test_catalog_is_built_and_registered(self):
         package = ET.parse(META / 'package.xml').getroot()
-        self.assertIn('zh_CN.qm', [t.text for t in package.findall('Translations/Translation')])
+        self.assertIsNone(package.find('Translations'))  # OS locale must not override --lang.
         build = (ROOT / 'packaging/installer/build_windows_installer.ps1').read_text(encoding='utf-8')
         self.assertIn('Resolve-Exe "lrelease.exe" (Split-Path $windeployqt -Parent)', build)
         self.assertIn('if (-not $lrelease)', build)
-        self.assertIn('Installer translation compilation failed.', build)
+        self.assertIn('(Join-Path $installerRoot "translations/ifw_zh_CN.ts") (Join-Path $stageMeta "zh_CN.ts") -qm', build)
+        smoke = (ROOT / 'scripts/verify_windows_installer_resources.py').read_text(encoding='utf-8')
+        self.assertIn("meta / 'zh_CN.ts', '-qm', translations / 'ifw_zh_CN.qm'", smoke)
         self.assertIn('zh_CN.ts', build)
 
     def test_standard_pages_are_explicit_resources(self):

@@ -4,6 +4,7 @@ import ctypes
 import json
 import os
 import ntpath
+from pathlib import Path
 import subprocess
 import time
 
@@ -42,7 +43,9 @@ def validate_records(records, fixture, controller, targets, parse_argv=windows_a
         language = ['zh_CN', 'en_US', 'zh_CN'][i]
         if row['language'] != language or normalized(row['target']) != normalized(targets[i]):
             raise AssertionError('Restart language/TargetDir not preserved')
-        if normalized(row['executable']) != normalized(fixture):
+        # Python's Windows temp root can be RUNNER~1 while CIM returns its
+        # long form. Resolve existing files, without weakening path identity.
+        if normalized(Path(row['executable']).resolve()) != normalized(Path(fixture).resolve()):
             raise AssertionError('Observer was not a child of the exact fixture')
         if row['liveFixturePids'] != [row['pid']]:
             raise AssertionError('A previous fixture did not exit naturally before its successor')
@@ -120,6 +123,8 @@ def probe_gui(fixture, temporary, powershell, template):
                                  cwd=temporary, env=environment)
         try:
             while time.monotonic() - started < 100:
+                if b'PJ_LANGUAGE_RESTART_FAILED:' in output.read_bytes():
+                    raise AssertionError('Production language restart reported failure; see diagnostic stage')
                 if log.exists():
                     try:
                         records = [json.loads(line) for line in log.read_text(encoding='utf-8-sig').splitlines() if line]

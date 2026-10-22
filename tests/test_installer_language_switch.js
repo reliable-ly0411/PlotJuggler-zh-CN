@@ -41,6 +41,9 @@ for (const [current, selection, expected] of [['en_US', 0, 'zh_CN'], ['zh_CN', 1
   assert.ok(widget.probe.includes('$child.ParentProcessId'));
   assert.ok(widget.probe.includes('$parent.ExecutablePath'));
   assert.ok(widget.probe.includes('CommandLineToArgvW'));
+  assert.ok(widget.probe.includes('GetLongPathName'));
+  assert.ok(widget.probe.includes('if (!$length -or $length -ge 32768)'));
+  assert.ok(widget.probe.includes('(Resolve-PJLongPath $parent.ExecutablePath)'));
   assert.ok(command.indexOf('Wait-Process') < command.indexOf('Start-Process'));
   assert.ok(command.includes('-Timeout 30'));
 }

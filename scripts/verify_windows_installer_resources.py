@@ -96,12 +96,11 @@ def smoke(lrelease, rcc=None, qtbase=None):
         if 'IFW Version: 4.10.0, built with Qt ' not in version:
             raise RuntimeError('Pinned IFW runtime version mismatch')
         config, packages, meta, translations, qrc = stage_inputs(ROOT, temporary)
-        run([lrelease, meta / 'zh_CN.ts', '-qm', meta / 'zh_CN.qm'])
         run([lrelease, ROOT / 'packaging/installer/translations/ifw_zh_CN.ts',
-             '-qm', translations / 'ifw_zh_CN.qm'])
+             meta / 'zh_CN.ts', '-qm', translations / 'ifw_zh_CN.qm'])
         shutil.copy2(qtbase, translations / 'qt_zh_CN.qm')
         qm_magic = bytes.fromhex('3cb86418caef9c95cd211cbf60a1bddd')
-        for catalog in (meta / 'zh_CN.qm', translations / 'ifw_zh_CN.qm',
+        for catalog in (translations / 'ifw_zh_CN.qm',
                         translations / 'qt_zh_CN.qm'):
             if not catalog.read_bytes().startswith(qm_magic):
                 raise RuntimeError(f'Invalid compiled Qt catalog: {catalog}')

@@ -627,13 +627,13 @@ foreach ($f in Get-ChildItem (Join-Path $pkgSrc "meta") -File | Where-Object { $
 # Compile the component catalog with the same pinned Qt kit as the application.
 $lrelease = Resolve-Exe "lrelease.exe" (Split-Path $windeployqt -Parent)
 if (-not $lrelease) { Die "lrelease.exe not found. Install Qt Linguist tools in the selected kit or add them to PATH." }
-& $lrelease (Join-Path $stageMeta "zh_CN.ts") -qm (Join-Path $stageMeta "zh_CN.qm")
-if ($LASTEXITCODE -ne 0) { Die "Installer translation compilation failed." }
 
 # Explicit resources are required: IFW's SDK wildcard omits zh_CN catalogs.
 $translationStage = Join-Path $StageDir "translations"
 New-Item -ItemType Directory -Force -Path $translationStage | Out-Null
-& $lrelease (Join-Path $installerRoot "translations/ifw_zh_CN.ts") -qm (Join-Path $translationStage "ifw_zh_CN.qm")
+# IFW 4.10 component catalogs follow the OS locale, not --lang. Merge the
+# custom context into the catalog selected by the SDK --lang path instead.
+& $lrelease (Join-Path $installerRoot "translations/ifw_zh_CN.ts") (Join-Path $stageMeta "zh_CN.ts") -qm (Join-Path $translationStage "ifw_zh_CN.qm")
 if ($LASTEXITCODE -ne 0) { Die "IFW standard-page translation compilation failed." }
 $qtChinese = Join-Path (Split-Path (Split-Path $windeployqt -Parent) -Parent) "translations/qtbase_zh_CN.qm"
 if (-not (Test-Path $qtChinese)) { Die "Missing Qt Base Chinese translation: $qtChinese" }

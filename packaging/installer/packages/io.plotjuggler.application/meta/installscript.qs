@@ -147,6 +147,7 @@ function restartArguments(arguments, language, target)
 // real startup arguments are retained, including proxy/offline options.
 Component.prototype.applyLanguage = function()
 {
+    console.log("PJ_LANGUAGE_RESTART:clicked");
     var widget = component.userInterface("LanguageWidget");
     var language = widget.language.currentIndex === 0 ? "zh_CN" : "en_US";
     if (installer.value("UILanguage") === language)
@@ -159,11 +160,15 @@ Component.prototype.applyLanguage = function()
     var probeCommand = "$ErrorActionPreference = 'Stop'; " +
         "$child = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $PID); " +
         "$parent = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $child.ParentProcessId); " +
-        "if (!$parent.ExecutablePath -or !$parent.CommandLine -or " +
-        "![String]::Equals([IO.Path]::GetFullPath($parent.ExecutablePath), [IO.Path]::GetFullPath('" + executable + "'), [StringComparison]::OrdinalIgnoreCase)) { throw 'Parent identity mismatch' }; " +
         "Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public static class PJInstallerArgv { " +
         "[DllImport(\"shell32.dll\", CharSet=CharSet.Unicode, SetLastError=true)] public static extern IntPtr CommandLineToArgvW(string text, out int count); " +
-        "[DllImport(\"kernel32.dll\")] public static extern IntPtr LocalFree(IntPtr memory); }'; " +
+        "[DllImport(\"kernel32.dll\")] public static extern IntPtr LocalFree(IntPtr memory); " +
+        "[DllImport(\"kernel32.dll\", CharSet=CharSet.Unicode, SetLastError=true)] public static extern uint GetLongPathName(string path, System.Text.StringBuilder result, uint size); }'; " +
+        "function Resolve-PJLongPath([string]$path) { $buffer=New-Object Text.StringBuilder 32768; " +
+        "$length=[PJInstallerArgv]::GetLongPathName([IO.Path]::GetFullPath($path), $buffer, 32768); " +
+        "if (!$length -or $length -ge 32768) { throw 'Parent identity mismatch: path resolution failed' }; return $buffer.ToString() }; " +
+        "if (!$parent.ExecutablePath -or !$parent.CommandLine -or " +
+        "![String]::Equals((Resolve-PJLongPath $parent.ExecutablePath), (Resolve-PJLongPath '" + executable + "'), [StringComparison]::OrdinalIgnoreCase)) { throw 'Parent identity mismatch' }; " +
         "$count = 0; $memory = [PJInstallerArgv]::CommandLineToArgvW($parent.CommandLine, [ref]$count); " +
         "if ($memory -eq [IntPtr]::Zero -or $count -lt 1) { throw 'Invalid parent argv' }; " +
         "try { $argv = @(); for ($i=0; $i -lt $count; $i++) { $argv += [Runtime.InteropServices.Marshal]::PtrToStringUni([Runtime.InteropServices.Marshal]::ReadIntPtr($memory, $i * [IntPtr]::Size)) }; " +
@@ -175,11 +180,13 @@ Component.prototype.applyLanguage = function()
     try { if (probe.length === 2 && probe[1] === 0) parent = JSON.parse(String(probe[0])); } catch (_) {}
     if (!parent || !/^[1-9][0-9]*$/.test(String(parent.pid)) ||
         !(parent.argv instanceof Array) || parent.argv.length === 0 || !target) {
-        this.languageRestartFailed();
+        var reason = probe.length !== 2 || probe[1] !== 0 ? "probe-execute" : "probe-result";
+        if (String(probe[0]).indexOf("Parent identity mismatch") !== -1) reason = "probe-identity";
+        this.languageRestartFailed(reason);
         return;
     }
     for (var i = 0; i < parent.argv.length; ++i) {
-        if (typeof parent.argv[i] !== "string") { this.languageRestartFailed(); return; }
+        if (typeof parent.argv[i] !== "string") { this.languageRestartFailed("invalid-argv"); return; }
     }
     var arguments = restartArguments(parent.argv, language, target);
     var quoted = [];
@@ -189,15 +196,17 @@ Component.prototype.applyLanguage = function()
         "if (Get-Process -Id " + parent.pid + " -ErrorAction SilentlyContinue) { exit 1 }; " +
         "Start-Process -FilePath '" + executable + "' -ArgumentList '" + quoted.join(" ").replace(/'/g, "''") + "'";
     if (installer.executeDetached(powershell, ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", command])) {
+        console.log("PJ_LANGUAGE_RESTART:helper-started");
         widget.applyLanguage.enabled = false;
         gui.rejectWithoutPrompt();
     } else {
-        this.languageRestartFailed();
+        this.languageRestartFailed("helper-start");
     }
 }
 
-Component.prototype.languageRestartFailed = function()
+Component.prototype.languageRestartFailed = function(reason)
 {
+    console.log("PJ_LANGUAGE_RESTART_FAILED:" + reason);
     QMessageBox.warning("language.restart", qsTranslate("PlotJugglerInstaller", "Language selection"),
         qsTranslate("PlotJugglerInstaller", "Could not restart the installer. Close it and run it with --lang zh_CN or --lang en_US."));
 }
