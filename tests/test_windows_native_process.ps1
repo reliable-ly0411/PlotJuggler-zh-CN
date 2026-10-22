@@ -10,24 +10,47 @@ try {
 using System;
 using System.Text;
 using System.Threading;
+using System.IO;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 class Probe {
+  [DllImport("kernel32.dll")] static extern IntPtr GetStdHandle(int kind);
+  [DllImport("kernel32.dll")] static extern IntPtr GetConsoleWindow();
+  static StreamWriter RawWriter(int kind) {
+    // Console.OutputEncoding invokes SetConsoleOutputCP on .NET Framework:
+    // a GUI process without a console must instead write its inherited pipes.
+    var handle = new SafeFileHandle(GetStdHandle(kind), false);
+    if (handle.IsInvalid) throw new IOException("Missing inherited standard handle: " + kind);
+    var writer = new StreamWriter(new FileStream(handle, FileAccess.Write), new UTF8Encoding(false));
+    writer.AutoFlush = true;
+    return writer;
+  }
   static int Main(string[] args) {
-    Console.OutputEncoding = new UTF8Encoding(false);
+    using (var stderr = RawWriter(-12)) {
+      try {
+        using (var stdout = RawWriter(-11)) {
+          if (GetConsoleWindow() != IntPtr.Zero) throw new Exception("GUI fixture acquired a console");
+          return Run(args, stdout, stderr);
+        }
+      } catch (Exception error) { stderr.WriteLine(error.ToString()); return 93; }
+    }
+  }
+  static int Run(string[] args, TextWriter stdout, TextWriter stderr) {
     string[] expected = {"space value", "\u4e2d\u6587", "trailing\\", "quote\"inside", "", "\\\"mixed"};
     if (args.Length != expected.Length + 1) return 91;
     for (int i=0; i<expected.Length; ++i) if(args[i+1] != expected[i]) return 92;
     if(args[0] == "23") {
-      Console.Out.WriteLine("INHERITED-START"); Console.Out.Flush();
+      stdout.WriteLine("INHERITED-START"); stdout.Flush();
       Thread.Sleep(900);
-      Console.Error.WriteLine("INHERITED-STDERR");
-      Console.Out.WriteLine("INHERITED-END");
+      stderr.WriteLine("INHERITED-STDERR");
+      stdout.WriteLine("INHERITED-END");
       return 23;
     }
     Thread.Sleep(700);
-    Console.Out.Write(new string('O', 131072));
-    Console.Error.Write(new string('E', 131072));
-    Console.Out.Write("OUT-DONE-\u4e2d\u6587");
-    Console.Error.Write("ERR-DONE-\u4e2d\u6587");
+    stdout.Write(new string('O', 131072));
+    stderr.Write(new string('E', 131072));
+    stdout.Write("OUT-DONE-\u4e2d\u6587");
+    stderr.Write("ERR-DONE-\u4e2d\u6587");
     return Int32.Parse(args[0]);
   }
 }
@@ -45,7 +68,7 @@ class Probe {
     $watch = [Diagnostics.Stopwatch]::StartNew()
     $result = Invoke-PjNativeProcess -FilePath $exe -ArgumentValues @([string]$code, 'space value',
       ([string][char]0x4e2d + [char]0x6587), 'trailing\', 'quote"inside', '', '\"mixed')
-    if ($result.ExitCode -ne $code) { throw "Wrong process exit: $($result.ExitCode), expected $code" }
+    if ($result.ExitCode -ne $code) { throw "Wrong process exit: $($result.ExitCode), expected $code`nChild stderr:`n$($result.StandardError)" }
     if ($watch.ElapsedMilliseconds -lt 600) { throw 'GUI process was not awaited' }
     $unicode = [string][char]0x4e2d + [char]0x6587
     if ($result.StandardOutput -ne (('O' * 131072) + 'OUT-DONE-' + $unicode)) { throw 'stdout truncated or corrupted' }

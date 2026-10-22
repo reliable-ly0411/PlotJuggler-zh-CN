@@ -22,6 +22,16 @@ class NativeProcessTests(unittest.TestCase):
         self.assertIn('exit $result.ExitCode', launcher)
         self.assertNotIn('& $Bin', launcher)
 
+    def test_fixture_keeps_gui_consoleless_stream_contract(self):
+        fixture = (ROOT/'tests/test_windows_native_process.ps1').read_text(encoding='utf-8')
+        self.assertIn('/target:winexe', fixture)
+        self.assertNotIn('Console.OutputEncoding =', fixture)
+        self.assertIn('GetConsoleWindow() != IntPtr.Zero', fixture)
+        self.assertIn('new SafeFileHandle(GetStdHandle(kind), false)', fixture)
+        self.assertIn('new FileStream(handle, FileAccess.Write)', fixture)
+        self.assertIn('writer.AutoFlush = true', fixture)
+        self.assertIn('Child stderr:', fixture)
+
     @unittest.skipUnless(os.name == 'nt', 'Genuine GUI-subsystem regression requires Windows')
     def test_delayed_gui_under_available_powershell_versions(self):
         shells = [shutil.which(name) for name in ('powershell.exe', 'pwsh.exe')]
