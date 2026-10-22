@@ -220,6 +220,12 @@ if(EMSCRIPTEN)
         ${CMAKE_SOURCE_DIR}/resources/resources.qrc)
 else()
     add_executable(pj_app src/main.cpp)
+    if(WIN32)
+        # Explorer launches a GUI process; main explicitly adopts inherited CLI streams.
+        set_target_properties(pj_app PROPERTIES WIN32_EXECUTABLE TRUE)
+        target_sources(pj_app PRIVATE "${CMAKE_SOURCE_DIR}/resources/windows/plotjuggler.rc")
+        target_include_directories(pj_app PRIVATE "${CMAKE_SOURCE_DIR}/resources/windows")
+    endif()
 endif()
 set_target_properties(pj_app PROPERTIES
     # The CMake target id stays `pj_app` (internal module name), but the installed
@@ -288,6 +294,15 @@ endif()
 # ---------------------------------------------------------------------------
 
 if(PJ_BUILD_TESTS)
+    if(WIN32)
+        # Use an interpreter executable, not Conan's Python3 package config.
+        # Existing native CI provides Qt/FFmpeg/CPython runtime directories to CTest.
+        find_program(PJ_TEST_PYTHON NAMES python python3 REQUIRED)
+        add_test(NAME WindowsApplicationContract
+            COMMAND "${PJ_TEST_PYTHON}" "${CMAKE_SOURCE_DIR}/scripts/verify_windows_application.py"
+                    "$<TARGET_FILE:pj_app>" --runtime)
+        set_tests_properties(WindowsApplicationContract PROPERTIES TIMEOUT 120)
+    endif()
     find_package(GTest REQUIRED)
     pj_add_app_language_test()
 

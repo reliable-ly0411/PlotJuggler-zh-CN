@@ -36,6 +36,7 @@
 #endif
 
 #include "AppLanguage.h"
+#include "WindowsConsole.h"
 #include "BrowserPersistence.h"
 #include "DebugMode.h"
 #ifndef PJ_TARGET_WASM
@@ -205,6 +206,7 @@ int validatePlugins(const QString& plugin_dir, const QStringList& expected_specs
 }  // namespace
 
 int main(int argc, char* argv[]) {
+  PJ::attachParentConsoleStreams();
 #ifndef PJ_TARGET_WASM
   // Handled before any Q(Core)Application exists: the selftest needs nothing
   // from Qt, while a QApplication would demand a platform plugin — and the
