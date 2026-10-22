@@ -70,3 +70,11 @@ https://download.qt.io/online/qtsdkrepository/windows_x86/ifw/tools_ifw_410/qt.t
 离线环境可以提前准备 IFW4.10或更新版本，并传入它的 `bin` 目录。
 此流程不修改旧发布工作流，不运行安装器 GUI。标准页真实加载、中英文重启与
 安装/维护行为仍需要 Windows 原生验收，参数和静态测试不代表界面通过。
+
+## Windows 资源打包回归测试
+
+启用 `PJ_BUILD_TESTS` 时，`WindowsInstallerResourceContract` 使用已安装 Qt 的
+`lrelease` 与现有官方校验下载助手，实际运行 IFW 4.10 `binarycreator`。
+真实配置、标准/自定义中文词典与页面只配合明确标记的合成数据，生成临时离线
+fixture，断言 PE 及两份内嵌词典和独有资源标记，完成后清理。它从不运行生成的
+fixture，也不安装应用。此项验证资源打包，不代表 Windows GUI、语言切换或升级已验收。

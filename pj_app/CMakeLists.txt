@@ -302,6 +302,12 @@ if(PJ_BUILD_TESTS)
             COMMAND "${PJ_TEST_PYTHON}" "${CMAKE_SOURCE_DIR}/scripts/verify_windows_application.py"
                     "$<TARGET_FILE:pj_app>" --runtime)
         set_tests_properties(WindowsApplicationContract PROPERTIES TIMEOUT 120)
+        # Compile a synthetic offline installer with the real pinned IFW tools.
+        # This checks embedded standard/custom catalogs, never installs the fixture.
+        add_test(NAME WindowsInstallerResourceContract
+            COMMAND "${PJ_TEST_PYTHON}" "${CMAKE_SOURCE_DIR}/scripts/verify_windows_installer_resources.py"
+                    --lrelease $<TARGET_FILE:Qt6::lrelease>)
+        set_tests_properties(WindowsInstallerResourceContract PROPERTIES TIMEOUT 900)
     endif()
     find_package(GTest REQUIRED)
     pj_add_app_language_test()
