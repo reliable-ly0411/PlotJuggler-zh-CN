@@ -52,7 +52,7 @@ def validate_records(records, fixture, controller, targets, parse_argv=windows_a
         if normalized(argv[argv.index('--root') + 1]) != normalized(targets[i]):
             raise AssertionError('--root does not reflect current edited TargetDir')
         positional = [arg.split('=', 1)[1] for arg in argv if arg.startswith('TargetDir=')]
-        if i and (len(positional) != 1 or normalized(positional[0]) != normalized(targets[i])):
+        if len(positional) != 1 or normalized(positional[0]) != normalized(targets[i]):
             raise AssertionError('Current TargetDir positional value missing')
         if language == 'zh_CN':
             if '欢迎' not in row['title'] or row['message'] != '欢迎使用 PlotJuggler 4 zh-CN 安装向导。':
@@ -82,6 +82,14 @@ def validate_records(records, fixture, controller, targets, parse_argv=windows_a
     print('PASS: real zh_CN -> en_US -> zh_CN restarts; three PIDs; --script, --root and edited TargetDir preserved.')
 
 
+def fixture_arguments(fixture, controller, target):
+    # IFW 4.10 --root is CLI-only. GUI consumes positional userArguments.
+    # Retain --root solely to exercise production restart argv preservation;
+    # TargetDir is the authoritative GUI value, including the first process.
+    return [str(fixture), '--verbose', '--lang', 'zh_CN', '--script', str(controller),
+            '--root', str(target), 'TargetDir=' + str(target)]
+
+
 def probe_gui(fixture, temporary, powershell, template):
     log = temporary / 'live-results.jsonl'
     controller = temporary / 'live controller.qs'
@@ -100,6 +108,7 @@ def probe_gui(fixture, temporary, powershell, template):
         "', [StringComparison]::OrdinalIgnoreCase) })"
     started = time.monotonic()
     finished = False
+    records = []
     environment = dict(os.environ)
     # Probe the real Windows platform, never an inherited offscreen backend or
     # plugins from the application's different Qt kit. IFW is self-contained.
@@ -107,8 +116,7 @@ def probe_gui(fixture, temporary, powershell, template):
     environment.pop('QT_PLUGIN_PATH', None)
     environment.pop('QT_QPA_PLATFORM_PLUGIN_PATH', None)
     with output.open('wb') as stream:
-        child = subprocess.Popen([str(fixture), '--verbose', '--lang', 'zh_CN', '--script', str(controller),
-                                  '--root', str(targets[0])], stdout=stream, stderr=stream,
+        child = subprocess.Popen(fixture_arguments(fixture, controller, targets[0]), stdout=stream, stderr=stream,
                                  cwd=temporary, env=environment)
         try:
             while time.monotonic() - started < 100:
@@ -135,6 +143,12 @@ def probe_gui(fixture, temporary, powershell, template):
                 raise TimeoutError('Live GUI language/restart smoke did not finish within 100 seconds')
         except Exception:
             # Only the bounded synthetic fixture diagnostic stream; never host env.
+            # The IFW verbose 'Language:' line prints the OS locale, not
+            # selected UILanguage. Surface actual controller observations.
+            for row in records[-10:]:
+                print('LIVE PROBE OBSERVATION:', json.dumps({key: row[key] for key in
+                      ('kind', 'language', 'title', 'message', 'nextButton', 'cancelButton') if key in row},
+                      ensure_ascii=True), flush=True)
             stream.flush()
             diagnostic = output.read_bytes()[-12000:].decode('utf-8', errors='replace')
             print('SYNTHETIC FIXTURE DIAGNOSTIC TAIL:',

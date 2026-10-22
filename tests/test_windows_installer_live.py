@@ -19,8 +19,7 @@ class LiveProbeTests(unittest.TestCase):
         rows = []
         for stage, lang in enumerate(['zh_CN', 'en_US', 'zh_CN']):
             argv = [str(fixture), '--script', str(controller), '--root', str(targets[stage])]
-            if stage:
-                argv += ['TargetDir=' + str(targets[stage])]
+            argv += ['TargetDir=' + str(targets[stage])]
             base = dict(language=lang, pid=10 + stage, target=str(targets[stage]),
                         executable=str(fixture), commandLine=json.dumps(argv), liveFixturePids=[10 + stage])
             chinese = lang == 'zh_CN'
@@ -40,6 +39,28 @@ class LiveProbeTests(unittest.TestCase):
     def check(self, records):
         with contextlib.redirect_stdout(io.StringIO()):
             probe.validate_records(*records, parse_argv=json.loads)
+
+    def test_gui_startup_has_authoritative_positional_target(self):
+        target = Path("/isolated folder/中文 target")
+        argv = probe.fixture_arguments(Path('/fixture.exe'), Path('/controller.qs'), target)
+        self.assertEqual(argv[argv.index('--root') + 1], str(target))
+        self.assertEqual([arg for arg in argv if arg.startswith('TargetDir=')], ['TargetDir=' + str(target)])
+        self.assertEqual(argv[argv.index('--lang') + 1], 'zh_CN')
+
+    def test_cli_root_alone_cannot_pass_gui_contract(self):
+        data = self.records()
+        row = data[0][0]
+        argv = json.loads(row['commandLine'])
+        row['commandLine'] = json.dumps([arg for arg in argv if not arg.startswith('TargetDir=')])
+        with self.assertRaisesRegex(AssertionError, 'TargetDir positional'):
+            self.check(data)
+
+    def test_duplicate_initial_target_cannot_pass(self):
+        data = self.records()
+        row = data[0][0]
+        row['commandLine'] = json.dumps(json.loads(row['commandLine']) + ['TargetDir=/wrong'])
+        with self.assertRaisesRegex(AssertionError, 'TargetDir positional'):
+            self.check(data)
 
     def test_positive_record_contract(self):
         self.check(self.records())
