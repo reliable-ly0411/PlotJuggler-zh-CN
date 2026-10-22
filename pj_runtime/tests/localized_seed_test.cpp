@@ -78,6 +78,23 @@ class LocalizedSeedTest : public QObject {
     QVERIFY(!readBuild(dir.path(), dso, u"id"_s, u"1.0"_s));
   }
 
+  void stagingCreatesMissingTransactionParents() {
+    QTemporaryDir dir;
+    const auto installed = std::filesystem::path(dir.filePath(u"extensions/plugin"_s).toStdString());
+    const auto staged = std::filesystem::path(dir.filePath(u"extensions.seed_stage/plugin"_s).toStdString());
+    std::filesystem::create_directories(installed / "user");
+    QFile extra(QString::fromStdString((installed / "user" / "notes.txt").string()));
+    QVERIFY(extra.open(QIODevice::WriteOnly));
+    QVERIFY(extra.write("keep") > 0);
+    extra.close();
+    QVERIFY(!std::filesystem::exists(staged.parent_path()));
+    const auto ec = preserveFiles(installed, staged);
+    QVERIFY2(!ec, ec.message().c_str());
+    QFile preserved(QString::fromStdString((staged / "user" / "notes.txt").string()));
+    QVERIFY(preserved.open(QIODevice::ReadOnly));
+    QCOMPARE(preserved.readAll(), QByteArray("keep"));
+  }
+
   void stagingPreservesUserExtrasAndRejectsLinks() {
     QTemporaryDir dir;
     const auto installed = std::filesystem::path(dir.filePath(u"installed"_s).toStdString());

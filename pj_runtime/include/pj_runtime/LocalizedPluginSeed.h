@@ -92,6 +92,9 @@ inline std::error_code preserveFiles(const std::filesystem::path& installed, con
     }
   }
   if (!ec) {
+    std::filesystem::create_directories(staged, ec);
+  }
+  if (!ec) {
     std::filesystem::copy(installed, staged, std::filesystem::copy_options::recursive, ec);
   }
   return ec;
