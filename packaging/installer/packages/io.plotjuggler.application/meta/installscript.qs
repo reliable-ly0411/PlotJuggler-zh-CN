@@ -31,12 +31,12 @@ Component.prototype.createOperations = function()
                 "@TargetDir@/bin/PlotJuggler4.exe",
                 "@StartMenuDir@/PlotJuggler 4.lnk",
                 "workingDirectory=@TargetDir@/bin", "iconId=0",
-                "description=Launch PlotJuggler 4");
+                "description=" + qsTranslate("PlotJugglerInstaller", "Launch PlotJuggler 4"));
             component.addOperation("CreateShortcut",
                 "@TargetDir@/bin/PlotJuggler4.exe",
                 "@DesktopDir@/PlotJuggler 4.lnk",
                 "workingDirectory=@TargetDir@/bin", "iconId=0",
-                "description=Launch PlotJuggler 4");
+                "description=" + qsTranslate("PlotJugglerInstaller", "Launch PlotJuggler 4"));
         }
     } catch (e) {
         console.log(e);
@@ -57,8 +57,8 @@ Component.prototype.installerLoaded = function()
     installer.addWizardPage(component, "TargetWidget", QInstaller.TargetDirectory);
 
     targetDirectoryPage = gui.pageWidgetByObjectName("DynamicTargetWidget");
-    targetDirectoryPage.windowTitle = "Choose Installation Directory";
-    targetDirectoryPage.description.setText("Please select where PlotJuggler 4 will be installed:");
+    targetDirectoryPage.windowTitle = qsTranslate("PlotJugglerInstaller", "Choose Installation Directory");
+    targetDirectoryPage.description.setText(qsTranslate("PlotJugglerInstaller", "Please select where PlotJuggler 4 will be installed:"));
     targetDirectoryPage.targetDirectory.textChanged.connect(this, this.targetDirectoryChanged);
     targetDirectoryPage.targetDirectory.setText(installer.value("TargetDir"));
     targetDirectoryPage.targetChooser.released.connect(this, this.targetChooserClicked);
@@ -76,10 +76,10 @@ Component.prototype.targetDirectoryChanged = function()
 {
     var dir = targetDirectoryPage.targetDirectory.text;
     if (installer.fileExists(dir) && installer.fileExists(dir + "/maintenancetool.exe")) {
-        targetDirectoryPage.warning.setText("<p style=\"color: red\">Existing installation detected — it will be replaced on the next page.</p>");
+        targetDirectoryPage.warning.setText(qsTranslate("PlotJugglerInstaller", "<p style=\"color: red\">Existing installation detected — it will be replaced on the next page.</p>"));
     }
     else if (installer.fileExists(dir)) {
-        targetDirectoryPage.warning.setText("<p style=\"color: red\">Installing into an existing directory. Its contents will be wiped on uninstall.</p>");
+        targetDirectoryPage.warning.setText(qsTranslate("PlotJugglerInstaller", "<p style=\"color: red\">Installing into an existing directory. Its contents will be wiped on uninstall.</p>"));
     }
     else {
         targetDirectoryPage.warning.setText("");
@@ -92,9 +92,9 @@ Component.prototype.componentSelectionPageEntered = function()
     var dir = installer.value("TargetDir");
     if (installer.fileExists(dir) && installer.fileExists(dir + "/maintenancetool.exe")) {
         var answer = QMessageBox["question"]("existing.install",
-            "Replace existing installation?",
-            "PlotJuggler 4 is already installed at:\n\n" + dir + "\n\n" +
-            "Continuing will uninstall it before the new version is installed. Continue?",
+            qsTranslate("PlotJugglerInstaller", "Replace existing installation?"),
+            qsTranslate("PlotJugglerInstaller", "PlotJuggler 4 is already installed at:\n\n") + dir + "\n\n" +
+            qsTranslate("PlotJugglerInstaller", "Continuing will uninstall it before the new version is installed. Continue?"),
             QMessageBox.Yes | QMessageBox.No);
         if (answer !== QMessageBox.Yes) {
             gui.rejectPage(QInstaller.ComponentSelection);

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 #include "pj_scene3d_widgets/passes/grid_map_render_pass.h"
 
+#include <QCoreApplication>
 #include <QLoggingCategory>
 #include <QString>
 #include <cstdint>
@@ -215,7 +216,8 @@ void GridMapRenderPass::uploadPending() {
   const bool over_texture = max_texture_size_ > 0 && (grid_.column_count > max_dim || grid_.row_count > max_dim);
   if (over_texture || vertices > static_cast<uint64_t>(std::numeric_limits<GLsizei>::max()) ||
       cells > static_cast<uint64_t>(std::numeric_limits<int>::max())) {
-    rejection_ = QStringLiteral("Grid map %1 x %2 exceeds this GPU's texture or draw limits")
+    rejection_ = QCoreApplication::translate(
+                     "pj::scene3d::MeshDiagnostics", "Grid map %1 x %2 exceeds this GPU's texture or draw limits")
                      .arg(grid_.column_count)
                      .arg(grid_.row_count);
     qCWarning(lcGridMapPass) << *rejection_;

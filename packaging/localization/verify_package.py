@@ -136,6 +136,29 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
     for item in notices['files']:
         assert hashlib.sha256((prefix / 'share/licenses' / item['path']).read_bytes()).hexdigest() == item['sha256']
     assert hashlib.sha256(log.read_bytes()).hexdigest() == LOG_SHA, 'unexpected real BIN fixture'
+    rebuilt = record.get('localized_plugin_rebuilds', [])
+    required_rebuilt = {'protobuf-parser', 'toolbox-transform-editor', 'webrtc-client', 'mcap-loader'}
+    if os.name != 'nt':
+        required_rebuilt.add('toolbox-assistant-agent')
+    assert {item['id'] for item in rebuilt} == required_rebuilt, 'missing localized plugin provenance'
+    for item in rebuilt:
+        assert item['kind'] == 'fork-localized-rebuild-not-upstream-binary'
+        actual_files = {p.relative_to(prefix).as_posix() for p in
+                        (prefix / 'lib/plotjuggler/plugins' / item['id']).rglob('*') if p.is_file()}
+        assert actual_files == {f['path'] for f in item['files']}, 'unexpected upstream/rebuilt plugin mixture'
+        for entry in item['files']:
+            assert hashlib.sha256((prefix / entry['path']).read_bytes()).hexdigest() == entry['sha256'], entry['path']
+
+        for entry in item['license_files']:
+            assert hashlib.sha256((prefix / entry['path']).read_bytes()).hexdigest() == entry['sha256'], entry['path']
+    originals = record['preserved_upstream_plugins']
+    assert len(originals) == 1 and originals[0]['id'] == 'toolbox-mosaico'
+    assert originals[0]['kind'] == 'unmodified-upstream-binary'
+    original_files = {p.relative_to(prefix).as_posix() for p in
+                      (prefix / 'lib/plotjuggler/plugins/toolbox-mosaico').rglob('*') if p.is_file()}
+    assert original_files == {entry['path'] for entry in originals[0]['files']}
+    for entry in originals[0]['files']:
+        assert hashlib.sha256((prefix / entry['path']).read_bytes()).hexdigest() == entry['sha256'], entry['path']
     manifests = sorted((prefix / 'lib/plotjuggler/plugins').glob('*/manifest.json'))
     plugin_records = [json.loads(p.read_text(encoding='utf-8')) for p in manifests]
     bin_manifest = next(m for m in plugin_records if m['id'] == 'ardupilot-dataflash')

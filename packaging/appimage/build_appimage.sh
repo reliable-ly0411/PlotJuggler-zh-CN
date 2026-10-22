@@ -528,6 +528,10 @@ fi
 # replaceable BIN plugin, CJK fallback and licenses remain in every package.
 if [[ -n "${EXTRA_PREFIX}" ]]; then
   [[ -d "${EXTRA_PREFIX}" ]] || { echo "ERROR: extra prefix missing"; exit 1; }
+  # Replace rebuilt plugin directories, not just like-named files. This avoids
+  # silently retaining an upstream DSO or old sidecar beside the localized DSO.
+  python3 "${ROOT}/packaging/localization/replace_localized_plugins.py" \
+    --extra-prefix "${EXTRA_PREFIX}" --destination "${APPDIR}/usr"
   cp -a "${EXTRA_PREFIX}/." "${APPDIR}/usr/"
 fi
 

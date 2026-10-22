@@ -248,7 +248,9 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
         settings.value(u"Preferences::send_anonymous_stats"_s, true).toBool(),
         /*animate=*/false);
     ui_->splashMode->setSelectedIndex(
-        startupSplashMode(settings) == kSplashModeSerious ? 1 : 0);
+        settings.value(kSplashModeKey, startupSplashMode(settings)).toString() == kSplashModeSerious ? 1 : 0);
+    ui_->splashMode->setToolTip(
+        tr("Chinese sessions always use the translated banner; the meme choice is kept for English sessions."));
     if (!MainWindow::customFrameSelectable()) {
       ui_->labelCustomTitleBar->hide();
       ui_->customTitleBarToggle->hide();

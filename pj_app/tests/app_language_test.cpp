@@ -34,6 +34,26 @@ class AppLanguageTest : public QObject {
     QCOMPARE(PJ::AppLanguage::normalizedLanguage(requested), expected);
   }
 
+  void pluginLanguageHintMatchesStartupAndRestoresEnvironment() {
+    const bool existed = qEnvironmentVariableIsSet("PLOTJUGGLER_UI_LANGUAGE");
+    const QByteArray original = qgetenv("PLOTJUGGLER_UI_LANGUAGE");
+    qputenv("PLOTJUGGLER_UI_LANGUAGE", "external-original");
+    {
+      const PJ::AppLanguage chinese(*QCoreApplication::instance(), u"zh-CN"_s);
+      QCOMPARE(qgetenv("PLOTJUGGLER_UI_LANGUAGE"), QByteArray("zh_CN"));
+    }
+    QCOMPARE(qgetenv("PLOTJUGGLER_UI_LANGUAGE"), QByteArray("external-original"));
+    qunsetenv("PLOTJUGGLER_UI_LANGUAGE");
+    {
+      const PJ::AppLanguage english(*QCoreApplication::instance(), u"en_US"_s);
+      QCOMPARE(qgetenv("PLOTJUGGLER_UI_LANGUAGE"), QByteArray("en_US"));
+    }
+    QVERIFY(!qEnvironmentVariableIsSet("PLOTJUGGLER_UI_LANGUAGE"));
+    if (existed) {
+      qputenv("PLOTJUGGLER_UI_LANGUAGE", original);
+    }
+  }
+
   void freshProfileDefaultsToChineseWithoutWritingSettings() {
     QTemporaryDir directory;
     QVERIFY(directory.isValid());
@@ -69,6 +89,8 @@ class AppLanguageTest : public QObject {
     const PJ::AppLanguage language(*QCoreApplication::instance(), u"zh_CN"_s);
     QVERIFY(language.catalogLoaded());
     QVERIFY(QFile::exists(u":/i18n/plotjuggler4_zh_CN.qm"_s));
+    QCOMPARE(QCoreApplication::translate("PJ::DockWidget", "Plot"), u"绘图"_s);
+    QCOMPARE(QCoreApplication::translate("PJ::TabbedPlotWidget", "tab%1").arg(2), u"标签页2"_s);
     QCOMPARE(language.language(), u"zh_CN"_s);
     QCOMPARE(QCoreApplication::instance()->property("interfaceLanguage").toString(), u"zh_CN"_s);
     const QString label = QCoreApplication::translate("PreferencesContent", "Language:");
@@ -78,6 +100,31 @@ class AppLanguageTest : public QObject {
     QVERIFY(!title.isEmpty());
     QVERIFY(title != "Preferences"_L1);
     QCOMPARE(QCoreApplication::translate("QPlatformTheme", "Cancel"), u"取消"_s);
+  }
+
+  void diagnosticTemplatesPreserveDynamicData() {
+    const QString path = u"/tmp/原始 logs/Checksum mismatch.bin"_s;
+    {
+      const PJ::AppLanguage chinese(*QCoreApplication::instance(), u"zh_CN"_s);
+      QVERIFY(chinese.catalogLoaded());
+      QCOMPARE(
+          QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Cannot read \"%1\"").arg(path),
+          u"无法读取“%1”"_s.arg(path));
+      QCOMPARE(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Checksum mismatch"), u"校验和不匹配"_s);
+      QCOMPARE(
+          QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive holds more than %1 entries").arg(123),
+          u"压缩包包含的条目数超过 123"_s);
+      QCOMPARE(
+          QCoreApplication::translate("pj::scene3d::UrdfParser", "Parse error: <robot> has no <link> elements"),
+          u"解析错误：<robot> 中没有 <link> 元素"_s);
+      QCOMPARE(
+          QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "mesh load threw: %1").arg(path),
+          u"加载网格时发生异常：%1"_s.arg(path));
+    }
+    const PJ::AppLanguage english(*QCoreApplication::instance(), u"en_US"_s);
+    QCOMPARE(
+        QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Cannot read \"%1\"").arg(path),
+        u"Cannot read \"%1\""_s.arg(path));
   }
 
   void embeddedCatalogTranslatesCurrentQtFileDialogKeys_data() {

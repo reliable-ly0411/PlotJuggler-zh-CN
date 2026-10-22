@@ -775,7 +775,8 @@ const RuntimeMessageParserPlugin* PluginRuntimeCatalog::findParserById(std::stri
 }
 
 std::string PluginRuntimeCatalog::buildFileFilter(
-    std::string_view supported_label, std::string_view all_label) const {
+    std::string_view supported_label, std::string_view all_label,
+    const std::function<std::string(const RuntimeDataSourcePlugin&)>& display_name) const {
   std::string all_exts;
   std::string per_plugin;
   for (const auto& source : data_sources_) {
@@ -786,7 +787,7 @@ std::string PluginRuntimeCatalog::buildFileFilter(
     if (!per_plugin.empty()) {
       per_plugin += ";;";
     }
-    per_plugin += source.name + " (";
+    per_plugin += (display_name ? display_name(source) : source.name) + " (";
     for (size_t i = 0; i < source.file_extensions.size(); ++i) {
       if (i > 0) {
         per_plugin += " ";

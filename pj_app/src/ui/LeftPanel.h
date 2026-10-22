@@ -5,6 +5,8 @@
 #include <QDomDocument>
 #include <QDomElement>
 #include <QWidget>
+#include <QList>
+#include <QPair>
 #include <vector>
 
 #include "pj_runtime/PluginRuntimeCatalog.h"
@@ -66,7 +68,7 @@ class LeftPanel : public QWidget {
   void onChromeMetricsChanged(const ChromeMetrics& metrics);
   // Repopulates the streaming combo. Preserves the current selection if the
   // previously-selected name is still present.
-  void setStreamingSources(const QStringList& names);
+  void setStreamingSources(const QList<QPair<QString, QString>>& sources);
   void setReloadEnabled(bool enabled);
   void setRecentEnabled(bool enabled);
 

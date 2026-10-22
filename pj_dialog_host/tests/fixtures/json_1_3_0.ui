@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>JsonParserOptionsForm</class>
+ <widget class="QWidget" name="JsonParserOptionsForm">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>350</width>
+    <height>50</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>JSON Parser Options</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="leftMargin">
+    <number>12</number>
+   </property>
+   <property name="topMargin">
+    <number>8</number>
+   </property>
+   <property name="rightMargin">
+    <number>12</number>
+   </property>
+   <property name="bottomMargin">
+    <number>8</number>
+   </property>
+   <item>
+    <widget class="QCheckBox" name="checkBoxUseEmbeddedTimestamp">
+     <property name="text">
+      <string>Use embedded timestamp field</string>
+     </property>
+     <property name="toolTip">
+      <string>If enabled, the parser will look for a timestamp field in the JSON message and use its value as the message timestamp.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayoutTimestampField">
+     <item>
+      <widget class="QLabel" name="labelTimestampField">
+       <property name="text">
+        <string>Timestamp field name:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lineEditTimestampField">
+       <property name="placeholderText">
+        <string>e.g. timestamp, ts, time</string>
+       </property>
+       <property name="toolTip">
+        <string>Name of the top-level JSON field containing the timestamp, in seconds.</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="checkBoxLabelKeyedArrays">
+     <property name="text">
+      <string>Key arrays of labeled objects by label</string>
+     </property>
+     <property name="toolTip">
+      <string>If enabled, arrays of objects carrying a string "label" (or "name") member are keyed by that label instead of the array index, and a lone "value" member collapses onto it (e.g. scalars/shoulder_pan.pos instead of scalars[0]/value).</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="layoutArraySize">
+     <item>
+      <widget class="QLabel" name="labelArraySize">
+       <property name="text">
+        <string>Maximum size of arrays:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="spinBoxArraySize">
+       <property name="minimum">
+        <number>10</number>
+       </property>
+       <property name="maximum">
+        <number>9999</number>
+       </property>
+       <property name="value">
+        <number>500</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="radioMaxClamp">
+       <property name="text">
+        <string>clamp</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+       <attribute name="buttonGroup">
+        <string>arrayPolicyGroup</string>
+       </attribute>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="radioMaxDiscard">
+       <property name="text">
+        <string>discard</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string>arrayPolicyGroup</string>
+       </attribute>
+      </widget>
+     </item>
+     <item>
+      <spacer name="spacerArraySize">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacerBottom">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+ <buttongroups>
+  <buttongroup name="arrayPolicyGroup"/>
+ </buttongroups>
+</ui>

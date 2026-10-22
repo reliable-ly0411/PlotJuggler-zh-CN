@@ -14,7 +14,7 @@ assert record["development_branch"] == "zh-CN-4.x-dev"
 assert record["status"] in ("development", "prerelease")
 for key in ("upstream_commit", "localization_source_commit"):
     assert re.fullmatch(r"[0-9a-f]{40}", record[key]), f"Invalid {key}"
-values = dict(line.split("=", 1) for line in (ROOT / "versions.env").read_text().splitlines()
+values = dict(line.split("=", 1) for line in (ROOT / "versions.env").read_text(encoding='utf-8').splitlines()
               if line and not line.startswith("#"))
 assert re.fullmatch(r"4\.\d+\.\d+-zh\.[1-9]\d*\.(?:dev|rc)\.[1-9]\d*", values["PJ_APP_VERSION"]), \
     "The 4.x development line must use an explicit SemVer prerelease"

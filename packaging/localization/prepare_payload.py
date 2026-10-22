@@ -89,6 +89,17 @@ def stage(build, prefix, config, linux_tools):
     record['expected_plugins'] = [f"{x['id']}={x['version']}" for x in locked['extensions'] if x['id'] in ids]
     assert len(record['expected_plugins']) == len(ids)
     record['expected_plugins'].append('ardupilot-dataflash=' + record['bin_plugin_version'])
+    originals = json.loads((ROOT / 'packaging/localization/preserved-upstream-plugins.json').read_text(encoding='utf-8'))
+    original = originals['linux-x86_64' if linux_tools else 'windows-x86_64']
+    upstream = next(item for item in locked['extensions'] if item['id'] == original['id'])
+    platform = 'linux-x86_64' if linux_tools else 'windows-x86_64'
+    assert upstream['version'] == original['version']
+    assert upstream['platforms'][platform]['checksum'] == 'sha256:' + original['archive_sha256']
+    record['preserved_upstream_plugins'] = [original]
+    record['localization_exceptions'] = [{'id': 'toolbox-mosaico', 'version': '1.3.0',
+        'issue': 'https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/20',
+        'status': 'Original official binary; mixed Info/status text retains English to preserve user data.'}]
+
     out = prefix / 'share/plotjuggler4/release.json'
     out.parent.mkdir(parents=True)
     out.write_text(json.dumps(record, indent=2) + '\n', encoding='utf-8')

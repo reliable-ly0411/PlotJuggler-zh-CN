@@ -57,6 +57,7 @@
 #include <QTextList>
 #include <QTextTable>
 #include <QTimer>
+#include <QTranslator>
 #include <QUrl>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -65,6 +66,7 @@
 #include <nlohmann/json.hpp>
 #include <pj_plugins/host/widget_data_view.hpp>
 #include <pj_plugins/host/widget_event_builder.hpp>
+#include <pj_plugins/host_qt/bundled_translations.hpp>
 #include <pj_plugins/host_qt/pj_ui_loader.hpp>
 #include <pj_plugins/host_qt/widget_adapters.hpp>
 #include <pj_plugins/host_qt/widget_binding.hpp>
@@ -847,12 +849,51 @@ TEST(WidgetBindingCombo, IdenticalItemsPreserveTypedText) {
   combo->setEditable(true);
   combo->addItems({"alpha", "beta"});
   combo->setCurrentText("user.typed.host:1");
+  combo->lineEdit()->setCursorPosition(4);
+  QSignalSpy removed(combo->model(), &QAbstractItemModel::rowsRemoved);
 
   PJ::WidgetData wd;
   wd.setItems("c", {"alpha", "beta"});  // same items, no text field
   PJ::applyWidgetData(&root, PJ::WidgetDataView(wd.toJson()));
 
   EXPECT_EQ(combo->currentText().toStdString(), "user.typed.host:1");
+  EXPECT_EQ(combo->lineEdit()->cursorPosition(), 4);
+  EXPECT_EQ(removed.count(), 0);
+}
+
+TEST(WidgetBindingCombo, BundledTranslationPreservesCanonicalValueAndStableRefresh) {
+  qapp();
+  class Translator : public QTranslator {
+   public:
+    bool isEmpty() const override {
+      return false;
+    }
+    QString translate(const char* context, const char* source, const char*, int) const override {
+      if (QByteArray(context) == "PJ::BundledPlugins" && QByteArray(source) == "Number of Rows") {
+        return QStringLiteral("行号");
+      }
+      return {};
+    }
+  } translator;
+  QCoreApplication::installTranslator(&translator);
+  QWidget root;
+  auto* combo = new QComboBox(&root);
+  combo->setObjectName("timeAxisModeCombo");
+  combo->setProperty(
+      PJ::kBundledUiScope, QByteArray("94a464c6f4e0de8125fa8715ae4ccfd7fb55fb7bedb78ac1a3e0f42c59acdca9"));
+  PJ::WidgetData wd;
+  wd.setItems("timeAxisModeCombo", {"Number of Rows", "Selected Column"});
+  PJ::applyWidgetData(&root, PJ::WidgetDataView(wd.toJson()));
+  EXPECT_EQ(combo->itemText(0), QStringLiteral("行号"));
+  QSignalSpy removed(combo->model(), &QAbstractItemModel::rowsRemoved);
+  PJ::applyWidgetData(&root, PJ::WidgetDataView(wd.toJson()));
+  EXPECT_EQ(removed.count(), 0);
+  std::string event;
+  PJ::connectWidgetSignals(&root, [&](const std::string&, const std::string& json) { event = json; });
+  combo->setCurrentIndex(1);
+  combo->setCurrentIndex(0);
+  EXPECT_EQ(event, PJ::WidgetEventBuilder::indexChanged(0, "Number of Rows"));
+  QCoreApplication::removeTranslator(&translator);
 }
 
 TEST(WidgetBindingCombo, ChangedItemsRebuild) {

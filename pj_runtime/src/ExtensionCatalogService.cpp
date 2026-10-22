@@ -732,9 +732,10 @@ const LoadedToolbox* ExtensionCatalogService::findToolbox(QStringView id) const 
   return it == all.end() ? nullptr : &*it;
 }
 
-QString ExtensionCatalogService::buildFileFilter() const {
+QString ExtensionCatalogService::buildFileFilter(
+    const std::function<std::string(const RuntimeDataSourcePlugin&)>& display_name) const {
   return QString::fromStdString(plugin_catalog_->buildFileFilter(
-      tr("All supported files").toStdString(), tr("All files").toStdString()));
+      tr("All supported files").toStdString(), tr("All files").toStdString(), display_name));
 }
 
 void ExtensionCatalogService::reportDiagnostic(DiagnosticLevel level, const QString& message, const QString& id) const {

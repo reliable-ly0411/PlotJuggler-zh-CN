@@ -1059,6 +1059,30 @@ TEST_F(ExtensionManagerTest, UninstallUnknownExtensionEmitsError) {
   EXPECT_FALSE(spy_finished.first().at(1).toBool());
 }
 
+// A UI copies the last item from diagnostics(), whose QList return is temporary.
+// Surfacing and clearing history must not invalidate that copied message.
+TEST_F(ExtensionManagerTest, DiagnosticSnapshotSurvivesSurfacingAndEmptyHistory) {
+  mgr_->clearDiagnostics();
+  EXPECT_TRUE(mgr_->diagnostics().isEmpty());
+  EXPECT_FALSE(mgr_->hasUnsurfacedDiagnostics());
+  mgr_->markDiagnosticsSurfaced();
+  EXPECT_FALSE(mgr_->hasUnsurfacedDiagnostics());
+  mgr_->uninstall(u"not-installed-%1"_s);
+  ASSERT_TRUE(mgr_->hasUnsurfacedDiagnostics());
+  ASSERT_FALSE(mgr_->diagnostics().isEmpty());
+  const ExtensionDiagnostic diagnostic = mgr_->diagnostics().back();
+  EXPECT_EQ(diagnostic.id, u"not-installed-%1"_s);
+  EXPECT_TRUE(diagnostic.message.contains(u"not-installed-%1"_s));
+  EXPECT_TRUE(diagnostic.is_error);
+  mgr_->markDiagnosticsSurfaced();
+  EXPECT_FALSE(mgr_->hasUnsurfacedDiagnostics());
+  mgr_->clearDiagnostics();
+  EXPECT_TRUE(mgr_->diagnostics().isEmpty());
+  EXPECT_FALSE(mgr_->hasUnsurfacedDiagnostics());
+  EXPECT_TRUE(diagnostic.message.contains(u"not-installed-%1"_s));
+  EXPECT_TRUE(diagnostic.is_error);
+}
+
 // ---------------------------------------------------------------------------
 // [4] Update
 // ---------------------------------------------------------------------------

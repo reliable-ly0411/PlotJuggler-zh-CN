@@ -1,7 +1,6 @@
+#include <pj_widgets/BundledPluginText.h>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
-
-#include "pj_marketplace/marketplace_window.hpp"
 
 #include <QColor>
 #include <QDesktopServices>
@@ -36,6 +35,7 @@
 
 #include "pj_marketplace/download_manager.hpp"
 #include "pj_marketplace/extension_manager.hpp"
+#include "pj_marketplace/marketplace_window.hpp"
 #include "pj_marketplace/platform_utils.hpp"
 #include "pj_marketplace/registry_manager.hpp"
 #include "pj_marketplace/version_compare.hpp"
@@ -70,8 +70,18 @@ enum Column {
 // (see the class comment). Stored via setData at row insertion time in
 // rebuildTable().
 constexpr int kCategoryNameKeyRole = Qt::UserRole + 2;
+constexpr int kCategoryTokenRole = Qt::UserRole + 3;
 
-// Sort compound for the Category column: primary key = category text,
+// Registry tokens remain the sorting/filtering identity; only known category labels translate.
+QString displayCategory(const QString& category) {
+  if (category == u"data_loader"_s) return QCoreApplication::translate("PJ::MarketplaceWindow", "Data loaders");
+  if (category == u"data_stream"_s) return QCoreApplication::translate("PJ::MarketplaceWindow", "Data streams");
+  if (category == u"message_parser"_s) return QCoreApplication::translate("PJ::MarketplaceWindow", "Message parsers");
+  if (category == u"toolbox"_s) return QCoreApplication::translate("PJ::MarketplaceWindow", "Toolboxes");
+  return category;
+}
+
+// Sort compound for the Category column: primary key = canonical category token,
 // secondary key = plugin name (case-insensitive). Grouping by category with an
 // alphabetical run inside each group is the PJ3-era default sort Davide asked
 // to restore. Applied uniformly for both ascending and descending — descending
@@ -81,7 +91,8 @@ class CategoryItem : public QTableWidgetItem {
  public:
   using QTableWidgetItem::QTableWidgetItem;
   [[nodiscard]] bool operator<(const QTableWidgetItem& other) const override {
-    const int cat_cmp = QString::compare(text(), other.text(), Qt::CaseInsensitive);
+    const int cat_cmp = QString::compare(
+        data(kCategoryTokenRole).toString(), other.data(kCategoryTokenRole).toString(), Qt::CaseInsensitive);
     if (cat_cmp != 0) {
       return cat_cmp < 0;
     }
@@ -601,7 +612,7 @@ void MarketplaceWindow::setupSignals() {
       QString name = id;
       for (const auto& ext : extensions_) {
         if (ext.id == id) {
-          name = ext.name;
+          name = PJ::bundledPluginText(ext.id, ext.version, ext.name);
           break;
         }
       }
@@ -666,17 +677,18 @@ void MarketplaceWindow::rebuildTable(bool preserve_scroll) {
 
     // Name, with the full description as tooltip. Plain QTableWidgetItem — the
     // Name column sorts by case-insensitive text.
-    auto* name_item = new QTableWidgetItem(ext.name);
-    name_item->setToolTip(ext.description);
+    auto* name_item = new QTableWidgetItem(PJ::bundledPluginText(ext.id, ext.version, ext.name));
+    name_item->setToolTip(PJ::bundledPluginText(ext.id, ext.version, ext.description));
     name_item->setData(Qt::UserRole, ext.id);
     table->setItem(row, kColName, name_item);
 
-    // Category — the registry `category` value verbatim (data_loader,
+    // Category — display labels for registry category tokens (data_loader,
     // data_stream, message_parser, toolbox). CategoryItem breaks category ties
     // alphabetically by the plugin name it stores in kCategoryNameKeyRole, so
     // the default sort reads as "grouped by category, alphabetical within".
-    auto* category_item = new CategoryItem(ext.category);
-    category_item->setToolTip(ext.category);
+    auto* category_item = new CategoryItem(displayCategory(ext.category));
+    category_item->setToolTip(displayCategory(ext.category));
+    category_item->setData(kCategoryTokenRole, ext.category);
     category_item->setData(kCategoryNameKeyRole, ext.name);
     table->setItem(row, kColCategory, category_item);
 
@@ -714,7 +726,7 @@ void MarketplaceWindow::rebuildTable(bool preserve_scroll) {
     // Description: full text, wraps within the stretched column. No tooltip —
     // the cell already renders the whole string, so a tooltip repeating it
     // adds nothing and covers the row on hover.
-    auto* desc_item = new QTableWidgetItem(ext.description);
+    auto* desc_item = new QTableWidgetItem(PJ::bundledPluginText(ext.id, ext.version, ext.description));
     table->setItem(row, kColDescription, desc_item);
   }
 
@@ -826,7 +838,7 @@ void MarketplaceWindow::updateDetailFooter() {
 
   // Title (plugin name) — a real header-row label so the enable toggle can sit
   // at its height. The green toggle is shown only for installed plugins.
-  ui_->detail_title_->setText(ext->name);
+  ui_->detail_title_->setText(PJ::bundledPluginText(ext->id, ext->version, ext->name));
   {
     const bool title_installed = installed.contains(ext->id);
     ui_->detail_enable_toggle_->setVisible(title_installed);
@@ -872,7 +884,7 @@ void MarketplaceWindow::updateDetailFooter() {
     meta << esc(ext->author);
   }
   if (!ext->category.isEmpty()) {
-    meta << esc(ext->category);
+    meta << esc(displayCategory(ext->category));
   }
   if (!ext->license.isEmpty()) {
     meta << esc(ext->license);
@@ -889,7 +901,7 @@ void MarketplaceWindow::updateDetailFooter() {
 
   // Description.
   if (!ext->description.isEmpty()) {
-    html += u"<p style='margin:0 0 6px 0;'>%1</p>"_s.arg(esc(ext->description));
+    html += u"<p style='margin:0 0 6px 0;'>%1</p>"_s.arg(esc(PJ::bundledPluginText(ext->id, ext->version, ext->description)));
   }
 
   // Changelog: newest version first, matching the marketplace spec's examples.
@@ -1145,7 +1157,10 @@ void MarketplaceWindow::applyFilters() {
     // from compatibleExtensions(currentPlatform()), and rows synthesized for installed
     // extensions carry no platforms map, so nothing here can be foreign-platform.
     if (!search.isEmpty()) {
-      bool match = ext.name.toLower().contains(search) || ext.description.toLower().contains(search);
+      bool match = ext.name.toLower().contains(search) || ext.description.toLower().contains(search) ||
+                   ext.id.toLower().contains(search) ||
+                   PJ::bundledPluginText(ext.id, ext.version, ext.name).toLower().contains(search) ||
+                   PJ::bundledPluginText(ext.id, ext.version, ext.description).toLower().contains(search);
       if (!match) {
         for (const auto& tag : ext.tags) {
           if (tag.toLower().contains(search)) {
@@ -1219,7 +1234,7 @@ void MarketplaceWindow::showInstallProgress(const QString& verb) {
     name = active_install_id_;
     for (const auto& ext : extensions_) {
       if (ext.id == active_install_id_) {
-        name = ext.name;
+        name = PJ::bundledPluginText(ext.id, ext.version, ext.name);
         break;
       }
     }
@@ -1235,7 +1250,7 @@ void MarketplaceWindow::showLatestDiagnostic() {
   if (!ext_mgr_->hasUnsurfacedDiagnostics()) {
     return;
   }
-  const ExtensionDiagnostic& diagnostic = ext_mgr_->diagnostics().back();
+  const ExtensionDiagnostic diagnostic = ext_mgr_->diagnostics().back();
   ext_mgr_->markDiagnosticsSurfaced();
   setStatus(tr("Marketplace diagnostic: %1").arg(diagnostic.message), diagnostic.is_error);
 }
@@ -1322,7 +1337,7 @@ QString MarketplaceWindow::installedStatusText(const QString& id, bool from_file
   }
   for (const auto& ext : extensions_) {
     if (ext.id == id) {
-      return tr("Installed %1 v%2").arg(ext.name, ext.version);
+      return tr("Installed %1 v%2").arg(PJ::bundledPluginText(ext.id, ext.version, ext.name), ext.version);
     }
   }
   return tr("Installed %1").arg(id);

@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 result = subprocess.run(['gh', 'api', f'repos/{sys.argv[1]}/releases/latest'],
-                        capture_output=True, text=True, check=False)
+                        capture_output=True, text=True, encoding='utf-8', check=False)
 data = json.loads(result.stdout)
 if result.returncode:
     # Only a genuine no-Latest response is allowed. Auth/rate-limit/network
@@ -17,4 +17,4 @@ if result.returncode:
 else:
     identity = data['id']
     assert isinstance(identity, int) and identity > 0
-Path(sys.argv[2]).write_text(json.dumps({'id': identity}) + '\n')
+Path(sys.argv[2]).write_text(json.dumps({'id': identity}) + '\n', encoding='utf-8')

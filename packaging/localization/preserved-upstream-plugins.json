@@ -1,0 +1,36 @@
+{
+  "linux-x86_64": {
+    "id": "toolbox-mosaico",
+    "version": "1.3.0",
+    "kind": "unmodified-upstream-binary",
+    "url": "https://github.com/PlotJuggler/pj-official-plugins/releases/download/toolbox_mosaico/v1.3.0/toolbox-mosaico-1.3.0-linux-x86_64.zip",
+    "archive_sha256": "d1d289e8455ba4278ffaedfb54d17dd5b008a35ece96a9e648d2a40feea23211",
+    "files": [
+      {
+        "path": "lib/plotjuggler/plugins/toolbox-mosaico/libtoolbox_mosaico_plugin.so",
+        "sha256": "e50354959e78f243fcada9f34286c2b6b7107ef9924cf311bd49cc30ecb59d93"
+      },
+      {
+        "path": "lib/plotjuggler/plugins/toolbox-mosaico/manifest.json",
+        "sha256": "84d5654cd2263b608c9e1efbbd2971d9d7d6bcce27a5f6c8d8aeb633f34cf0f8"
+      }
+    ]
+  },
+  "windows-x86_64": {
+    "id": "toolbox-mosaico",
+    "version": "1.3.0",
+    "kind": "unmodified-upstream-binary",
+    "url": "https://github.com/PlotJuggler/pj-official-plugins/releases/download/toolbox_mosaico/v1.3.0/toolbox-mosaico-1.3.0-windows-x64.zip",
+    "archive_sha256": "e38e0edb09c82d5bf965c7d34dc657e8ba9318c3b82ef2a7003c11938f1e0be2",
+    "files": [
+      {
+        "path": "lib/plotjuggler/plugins/toolbox-mosaico/manifest.json",
+        "sha256": "657f792d224a3dbdc8bdc9e642adf8d8048c1671182b25d59bd4509d84bee136"
+      },
+      {
+        "path": "lib/plotjuggler/plugins/toolbox-mosaico/toolbox_mosaico_plugin.dll",
+        "sha256": "65b5cc4f641adc5658004934a0bd215d4dbb16ccddd13143250ca1913366c444"
+      }
+    ]
+  }
+}

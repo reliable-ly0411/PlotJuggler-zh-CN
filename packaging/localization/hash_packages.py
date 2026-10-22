@@ -18,5 +18,5 @@ for path in files:
         while chunk := stream.read(8 * 1024 * 1024):
             digest.update(chunk)
     lines.append(f'{digest.hexdigest()}  {path.name}')
-(a.directory / a.output).write_text('\n'.join(lines) + '\n')
+(a.directory / a.output).write_text('\n'.join(lines) + '\n', encoding='utf-8')
 print('\n'.join(lines))

@@ -410,7 +410,7 @@ PlotDocker* TabbedPlotWidget::findDocker(const std::function<bool(PlotDocker*)>&
 
 PlotDocker* TabbedPlotWidget::addTab(QString tab_name) {
   if (tab_name.isEmpty()) {
-    tab_name = QString("tab%1").arg(++tab_suffix_count_);
+    tab_name = tr("tab%1").arg(++tab_suffix_count_);
   }
   PlotDocker* docker = createDocker(tab_name);
   PlotTabFrame* frame = createTabFrame(tab_name);

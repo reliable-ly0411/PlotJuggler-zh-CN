@@ -12,12 +12,31 @@
 #include <pj_widgets/SectionHeaderBand.h>
 #include <pj_widgets/ToggleSwitch.h>
 
+#include <QBuffer>
+
+#include "pj_plugins/host_qt/bundled_translations.hpp"
+
 namespace PJ {
 
 PjUiLoader::PjUiLoader(QObject* parent) : QUiLoader(parent) {
   // Don't let QUiLoader pull in widgets from external designer plugin paths;
   // we only ever create standard Qt widgets + the ones registered below.
   setLanguageChangeEnabled(false);
+}
+
+QWidget* PjUiLoader::load(QIODevice* device, QWidget* parent) {
+  const QByteArray original = device->readAll();
+  QByteArray scope;
+  QByteArray localized = localizeBundledUi(original, &scope);
+  QBuffer buffer(&localized);
+  buffer.open(QIODevice::ReadOnly);
+  // The known UI is translated explicitly. Unknown UIs keep Qt's normal behavior.
+  setTranslationEnabled(scope.isEmpty());
+  auto* root = QUiLoader::load(&buffer, parent);
+  if (root && !scope.isEmpty()) {
+    initializeBundledWidgets(root, original, scope);
+  }
+  return root;
 }
 
 QWidget* PjUiLoader::createWidget(const QString& class_name, QWidget* parent, const QString& name) {

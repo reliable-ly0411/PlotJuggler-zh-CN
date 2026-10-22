@@ -4,6 +4,11 @@
 #include "pj_widgets/FileDialog.h"
 
 #include <QCheckBox>
+#include <QCoreApplication>
+#include <QFileSystemModel>
+#include <QIdentityProxyModel>
+#include <QLocale>
+#include <QMimeDatabase>
 #include <QComboBox>
 #include <QDialog>
 #include <QGridLayout>
@@ -15,6 +20,7 @@
 #include <QSize>
 #include <QString>
 #include <QToolButton>
+#include <filesystem>
 
 #include "pj_widgets/FrameworkTokens.h"
 #include "pj_widgets/SvgUtil.h"
@@ -23,6 +29,50 @@ using namespace Qt::StringLiterals;
 namespace PJ {
 
 namespace {
+
+// QFileSystemModel uses the OS locale for sizes and MIME descriptions, not
+// the application's translator. Localize presentation only; source roles,
+// indexes, filenames, selection and sorting remain owned by QFileSystemModel.
+class FileDetailsDisplayProxy final : public QIdentityProxyModel {
+ public:
+  explicit FileDetailsDisplayProxy(QObject* parent) : QIdentityProxyModel(parent) {}
+  QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override {
+    const auto* files = qobject_cast<const QFileSystemModel*>(sourceModel());
+    if (!files || role != Qt::DisplayRole || !index.isValid() ||
+        QCoreApplication::instance()->property("interfaceLanguage").toString() != u"zh_CN"_s) {
+      return QIdentityProxyModel::data(index, role);
+    }
+    if (index.column() != 1 && index.column() != 2) {
+      return QIdentityProxyModel::data(index, role);
+    }
+    const QModelIndex source = mapToSource(index);
+    const QFileInfo info = files->fileInfo(source);
+    // On Windows QFileInfo may report a dangling NTFS file symlink as an
+    // existing file. Only localize a real file target; do not resolve or replace
+    // the model path. Native .lnk shortcuts are not filesystem symbolic links.
+    bool regular_file = info.isFile();
+    if (regular_file && info.isSymbolicLink()) {
+      std::error_code error;
+      regular_file = std::filesystem::is_regular_file(info.filesystemFilePath(), error) && !error;
+    }
+    if (index.column() == 1 && regular_file) {
+      return QLocale(QLocale::Chinese, QLocale::China).formattedDataSize(files->size(source));
+    }
+    if (index.column() == 2 && regular_file) {
+      const QString mime = QMimeDatabase().mimeTypeForFile(info).name();
+      if (mime == u"application/octet-stream"_s) return QCoreApplication::translate("PJ::FileDialog", "Binary file");
+      if (mime == u"application/xml"_s || mime == u"text/xml"_s)
+        return QCoreApplication::translate("PJ::FileDialog", "XML document");
+      if (mime == u"text/plain"_s) return QCoreApplication::translate("PJ::FileDialog", "Plain text document");
+      if (mime == u"text/csv"_s) return QCoreApplication::translate("PJ::FileDialog", "CSV document");
+      if (mime == u"application/zip"_s) return QCoreApplication::translate("PJ::FileDialog", "ZIP archive");
+      // Unknown formats retain their machine-readable MIME identity, never an
+      // untrusted file name or an OS-specific English prose description.
+      return QCoreApplication::translate("PJ::FileDialog", "%1 file").arg(mime);
+    }
+    return QIdentityProxyModel::data(index, role);
+  }
+};
 
 // objectNames of the QFileDialog toolbar buttons we re-skin and re-size.
 constexpr const char* kToolbarButtons[] = {
@@ -60,6 +110,7 @@ FileDialog::FileDialog(QWidget* parent) : Dialog(parent) {
   inner_->setOption(QFileDialog::DontUseNativeDialog);
   inner_->setWindowFlags(Qt::Widget);
   inner_->setSizeGripEnabled(false);
+  inner_->setProxyModel(new FileDetailsDisplayProxy(inner_));
 
   contentLayout()->addWidget(inner_);
 

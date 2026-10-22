@@ -434,6 +434,13 @@ TEST_F(PluginCatalogTest, StaticPluginSetParticipatesInFilteringAndHandleCreatio
   EXPECT_NE(catalog.buildFileFilter().find("*.probe"), std::string::npos);
   EXPECT_EQ(catalog.buildFileFilter("Supported", "Any"), "Supported (*.probe);;Static File (*.probe);;Any (*)");
 
+  EXPECT_EQ(catalog.buildFileFilter("Supported", "Any", [](const RuntimeDataSourcePlugin& source) {
+              EXPECT_EQ(source.id, "static-file");
+              EXPECT_EQ(source.name, "Static File");
+              return std::string("显示名称 %1");
+            }), "Supported (*.probe);;显示名称 %1 (*.probe);;Any (*)");
+  EXPECT_EQ(catalog.dataSources().front().name, "Static File");
+
   catalog.scanDirectory();
   ASSERT_EQ(catalog.dataSources().size(), 1U);
   EXPECT_EQ(catalog.dataSources().front().path, "static://static-file");

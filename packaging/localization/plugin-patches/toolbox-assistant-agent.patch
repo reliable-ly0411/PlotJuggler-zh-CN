@@ -1,0 +1,216 @@
+--- a/toolbox_assistant_agent/src/chat_session.hpp
++++ b/toolbox_assistant_agent/src/chat_session.hpp
+@@ -1,3 +1,4 @@
++#include "../../pj_display_language.hpp"
+ // Copyright 2026 Davide Faconti
+ // SPDX-License-Identifier: MIT
+ #pragma once
+@@ -25,6 +26,7 @@
+   enum class Role { User, Assistant, System, Tool };
+   Role role;
+   std::string text;
++  std::string display_text = {};  // Presentation override, never sent to the backend or persisted.
+ };
+ 
+ // Pure, Qt-free transcript + turn-state model. Mutated on the GUI thread only;
+@@ -34,10 +36,10 @@
+ class ChatSession {
+  public:
+   void addUser(std::string text) {
+-    messages_.push_back({ChatMessage::Role::User, std::move(text)});
++    messages_.push_back({ChatMessage::Role::User, std::move(text), {}});
+   }
+   void addAssistant(std::string text) {
+-    messages_.push_back({ChatMessage::Role::Assistant, std::move(text)});
++    messages_.push_back({ChatMessage::Role::Assistant, std::move(text), {}});
+   }
+   // Grow the assistant's current reply instead of starting a new one. Backends
+   // that stream deliver a reply in many small pieces; without this each piece
+@@ -48,13 +50,13 @@
+       messages_.back().text += text;
+       return;
+     }
+-    messages_.push_back({ChatMessage::Role::Assistant, text});
+-  }
+-  void addSystem(std::string text) {
+-    messages_.push_back({ChatMessage::Role::System, std::move(text)});
++    messages_.push_back({ChatMessage::Role::Assistant, text, {}});
++  }
++  void addSystem(std::string text, std::string display_text = {}) {
++    messages_.push_back({ChatMessage::Role::System, std::move(text), std::move(display_text)});
+   }
+   void addTool(std::string text) {
+-    messages_.push_back({ChatMessage::Role::Tool, std::move(text)});
++    messages_.push_back({ChatMessage::Role::Tool, std::move(text), {}});
+   }
+ 
+   [[nodiscard]] const std::vector<ChatMessage>& messages() const {
+@@ -104,11 +106,11 @@
+   [[nodiscard]] std::string statusText() const {
+     switch (state_) {
+       case TurnState::Idle:
+-        return "Ready";
++        return pj_zh_localization::text("Ready", "就绪");
+       case TurnState::WaitingForLlm:
+-        return "Thinking…";
++        return pj_zh_localization::text("Thinking…", "正在思考…");
+       case TurnState::ExecutingTool:
+-        return "Running a tool…";
++        return pj_zh_localization::text("Running a tool…", "正在运行工具…");
+     }
+     return {};
+   }
+@@ -117,13 +119,13 @@
+   static const char* markdownSpeakerTag(ChatMessage::Role role) {
+     switch (role) {
+       case ChatMessage::Role::User:
+-        return "**You:**";
++        return pj_zh_localization::text("**You:**", "**你：**");
+       case ChatMessage::Role::Assistant:
+-        return "**Assistant:**";
++        return pj_zh_localization::text("**Assistant:**", "**助手：**");
+       case ChatMessage::Role::System:
+-        return "**System:**";
++        return pj_zh_localization::text("**System:**", "**系统：**");
+       case ChatMessage::Role::Tool:
+-        return "**Tool:**";
++        return pj_zh_localization::text("**Tool:**", "**工具：**");
+     }
+     return "";
+   }
+@@ -196,7 +198,7 @@
+   }
+ 
+   static std::string renderMarkdownMessage(const ChatMessage& message) {
+-    std::string body = message.text;
++    std::string body = message.display_text.empty() ? message.text : message.display_text;
+     if (message.role == ChatMessage::Role::System || message.role == ChatMessage::Role::Tool) {
+       body = escapeMarkdownLiteral(body);
+     } else {
+--- a/toolbox_assistant_agent/src/fake_backend.hpp
++++ b/toolbox_assistant_agent/src/fake_backend.hpp
+@@ -1,3 +1,4 @@
++#include "../../pj_display_language.hpp"
+ // Copyright 2026 Davide Faconti
+ // SPDX-License-Identifier: MIT
+ #pragma once
+@@ -108,7 +109,7 @@
+   }
+ 
+   [[nodiscard]] std::string name() const override {
+-    return "Fake (scripted, no LLM)";
++    return pj_zh_localization::text("Fake (scripted, no LLM)", "模拟（脚本驱动，不调用大模型）");
+   }
+ 
+  private:
+--- a/toolbox_assistant_agent/src/assistant_dialog.hpp
++++ b/toolbox_assistant_agent/src/assistant_dialog.hpp
+@@ -1,3 +1,4 @@
++#include "../../pj_display_language.hpp"
+ // Copyright 2026 Davide Faconti
+ // SPDX-License-Identifier: MIT
+ #pragma once
+@@ -72,7 +73,7 @@
+   ChatSession session;
+ 
+   // Human-readable active-backend name, shown on the status line.
+-  std::string backend_name = "Echo (no LLM)";
++  std::string backend_name = pj_zh_localization::text("Echo (no LLM)", "回显（不调用大模型）");
+ 
+   // Dirty flags so widget_data() re-pushes only what changed. The transcript
+   // re-push (setPlainText on a growing transcript) is the expensive one, so
+@@ -186,7 +187,7 @@
+ 
+   // Apply a BackendEvent to the ChatSession. Runs on the GUI thread (posted by
+   // the worker's sink through the event queue).
+-  void applyBackendEvent(const BackendEvent& ev);
++  void applyBackendEvent(const BackendEvent& ev, const std::string& display_error = {});
+ 
+   // Forward a one-shot message to the app's notification dropdown. Safe no-op
+ 
+--- a/toolbox_assistant_agent/src/assistant_dialog.cpp
++++ b/toolbox_assistant_agent/src/assistant_dialog.cpp
+@@ -1,3 +1,4 @@
++#include "../../pj_display_language.hpp"
+ // Copyright 2026 Davide Faconti
+ // SPDX-License-Identifier: MIT
+ #include "assistant_dialog.hpp"
+@@ -276,7 +277,7 @@
+   }
+   // Visible seam between then and now — the model's memory comes back through
+   // --resume regardless; this keeps the user able to SEE that it did.
+-  state_.session.addSystem("resumed previous conversation");
++  state_.session.addSystem("resumed previous conversation", pj_zh_localization::text("resumed previous conversation", "已恢复先前对话"));
+ 
+   const std::shared_ptr<HarnessMemory> memory = memoryFor(active_backend_key_);
+   *memory = HarnessMemory{};
+@@ -831,14 +832,14 @@
+       backend->sendUserMessage(text, tools, sink);
+     } else {
+       postEvent([this]() {
+-        applyBackendEvent({BackendEvent::Kind::Error, "No backend configured."});
++        applyBackendEvent({BackendEvent::Kind::Error, "No backend configured."}, pj_zh_localization::text("No backend configured.", "未配置后端。"));
+         applyBackendEvent({BackendEvent::Kind::TurnComplete, {}});
+       });
+     }
+   });
+ }
+ 
+-void AssistantDialog::applyBackendEvent(const BackendEvent& ev) {
++void AssistantDialog::applyBackendEvent(const BackendEvent& ev, const std::string& display_error) {
+   std::lock_guard<std::mutex> lock(state_.mu);
+   switch (ev.kind) {
+     case BackendEvent::Kind::AssistantText:
+@@ -851,13 +852,13 @@
+       state_.transcript_dirty = true;
+       break;
+     case BackendEvent::Kind::Error:
+-      state_.session.addSystem("Error: " + ev.text);
++      state_.session.addSystem("Error: " + ev.text, std::string(pj_zh_localization::text("Error: ", "错误：")) + (display_error.empty() ? ev.text : display_error));
+       if (ev.resume_failed) {
+         // The backend established that --resume itself failed (the session
+         // was purged between listing it and this turn): say the one thing the
+         // error text does not — retrying will not help. The transcript stays
+         // readable; New chat is the way forward.
+-        state_.session.addSystem("This conversation can no longer be continued; start a new one.");
++        state_.session.addSystem("This conversation can no longer be continued; start a new one.", pj_zh_localization::text("This conversation can no longer be continued; start a new one.", "此对话无法继续，请新建对话。"));
+       }
+       state_.transcript_dirty = true;
+       break;
+@@ -917,7 +918,7 @@
+ 
+   {
+     std::lock_guard<std::mutex> lock(state_.mu);
+-    state_.session.addSystem("Settings saved (backend: " + backend + ").");
++    state_.session.addSystem("Settings saved (backend: " + backend + ").", std::string(pj_zh_localization::text("Settings saved (backend: ", "设置已保存（后端：")) + backend + pj_zh_localization::text(").", "）。"));
+     state_.transcript_dirty = true;
+   }
+ 
+@@ -926,9 +927,9 @@
+   // swap the object out from under the probe.
+   postCommand([this, backend = backend_]() {
+     BackendTestResult t = backend ? backend->testConnection() : BackendTestResult{false, "no backend"};
+-    postEvent([this, t]() {
++    postEvent([this, t, has_backend = static_cast<bool>(backend)]() {
+       std::lock_guard<std::mutex> lock(state_.mu);
+-      state_.session.addSystem(std::string("Connection: ") + (t.ok ? "OK - " : "FAILED - ") + t.message);
++      state_.session.addSystem(std::string("Connection: ") + (t.ok ? "OK - " : "FAILED - ") + t.message, std::string(pj_zh_localization::text("Connection: ", "连接：")) + (t.ok ? pj_zh_localization::text("OK - ", "成功 - ") : pj_zh_localization::text("FAILED - ", "失败 - ")) + (has_backend ? t.message : pj_zh_localization::text("no backend", "无后端")));
+       state_.transcript_dirty = true;
+     });
+   });
+--- a/toolbox_assistant_agent/src/llm_backend.hpp
++++ b/toolbox_assistant_agent/src/llm_backend.hpp
+@@ -1,3 +1,4 @@
++#include "../../pj_display_language.hpp"
+ // Copyright 2026 Davide Faconti
+ // SPDX-License-Identifier: MIT
+ #pragma once
+@@ -133,7 +134,7 @@
+   }
+ 
+   [[nodiscard]] std::string name() const override {
+-    return "Echo (no LLM)";
++    return pj_zh_localization::text("Echo (no LLM)", "回显（无大语言模型）");
+   }
+ 
+  private:

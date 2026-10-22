@@ -40,6 +40,8 @@ class AppLanguage final {
   QString language_;
   QTranslator translator_;
   bool catalog_loaded_ = false;
+  QByteArray previous_plugin_language_;
+  bool previous_plugin_language_set_ = false;
 };
 
 }  // namespace PJ

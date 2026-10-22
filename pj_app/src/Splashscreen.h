@@ -28,8 +28,8 @@ inline constexpr int kMaxMemeExtent = 600;
 // which Qt::KeepAspectRatio alone would not guarantee.
 QPixmap capMemeToSplashBox(const QPixmap& pixmap);
 
-// Read at startup, without rewriting an explicit preference. Fresh Chinese
-// profiles use the translatable banner; English profiles retain the meme default.
+// Read at startup, without rewriting an explicit preference. Chinese
+// sessions use the translatable banner; English sessions retain the saved choice.
 QString startupSplashMode(const QSettings& settings);
 
 // Translate afresh for each call, never cache strings across translator lifetimes.
@@ -37,7 +37,7 @@ QStringList seriousSplashSubtitles();
 
 // Builds the startup splash pixmap honouring Preferences::splash_mode:
 // "serious" → a composed branded banner (logo + wordmark + random subtitle),
-// anything else → a random meme from the bundled pool. Returns a null QPixmap
+// English sessions otherwise use a random meme from the bundled pool. Returns a null QPixmap
 // when no image is available (e.g. an empty meme pool).
 QPixmap makeStartupSplash();
 

@@ -1,7 +1,8 @@
+#include <pj_widgets/BundledPluginText.h>
+
+#include <pj_plugins/host_qt/bundled_translations.hpp>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
-
-#include "MainWindow.h"
 
 #include <qwt_plot_curve.h>
 #include <qwt_text.h>
@@ -15,6 +16,8 @@
 #include <QColor>
 #include <QCoreApplication>
 #include <QDesktopServices>
+
+#include "MainWindow.h"
 #if QT_CONFIG(process)
 #include <QProcess>
 #endif
@@ -1989,7 +1992,7 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
         // retains the anti-flash delay below.
         ingest_show_timer_->start(kIngestStripShowDelayWasmMs);
 #else
-        ingest_show_timer_->start(kIngestStripShowDelayMs);
+    ingest_show_timer_->start(kIngestStripShowDelayMs);
 #endif
       });
   connect(file_loader_.get(), &FileLoader::ingestProgress, this, [this](int current, int maximum) {
@@ -4220,9 +4223,11 @@ void MainWindow::emitDiagnostic(DiagnosticLevel level, const char* source, const
 }
 
 void MainWindow::refreshStreamingCombo() {
-  QStringList names;
+  QList<QPair<QString, QString>> names;
   for (const auto* ds : session_->extensionCatalog().streamSources()) {
-    names << QString::fromStdString(ds->name);
+    const QString canonical = QString::fromStdString(ds->name);
+    names.push_back({canonical, bundledPluginText(QString::fromStdString(ds->id),
+                                                QString::fromStdString(ds->version), canonical)});
   }
   ui_->leftPanel->setStreamingSources(names);
 }
@@ -4767,7 +4772,9 @@ void MainWindow::onRebuildExtensionsMenu() {
   bool added_any = false;
   const auto append_plugins = [&]<typename Plugin>(const std::vector<Plugin>& plugins) {
     for (const auto& plugin : plugins) {
-      const QString name = QString::fromStdString(plugin.name);
+      const QString name = bundledPluginText(
+          QString::fromStdString(plugin.id), QString::fromStdString(plugin.version),
+          QString::fromStdString(plugin.name));
       const QString version = QString::fromStdString(plugin.version);
       const QString label = version.isEmpty() ? name : u"%1 (%2)"_s.arg(name, version);
       QAction* action = menu->addAction(label);
@@ -4905,11 +4912,15 @@ void MainWindow::onRebuildToolboxMenu() {
     }
 
     const QString id = QString::fromStdString(toolbox.id);
-    const QString name = toolbox.name.empty() ? id : QString::fromStdString(toolbox.name);
+    const QString name =
+        toolbox.name.empty()
+            ? id
+            : bundledPluginText(id, QString::fromStdString(toolbox.version), QString::fromStdString(toolbox.name));
     QAction* action = menu->addAction(name);
     if (manifest.is_object()) {
       if (auto desc = manifest.find("description"); desc != manifest.end() && desc->is_string()) {
-        action->setToolTip(QString::fromStdString(desc->get<std::string>()));
+        action->setToolTip(bundledPluginText(
+            id, QString::fromStdString(toolbox.version), QString::fromStdString(desc->get<std::string>())));
       }
     }
     connect(action, &QAction::triggered, this, [this, id]() { launchToolbox(id); });
@@ -9708,11 +9719,14 @@ std::shared_ptr<ToolboxPanelSession> MainWindow::buildToolboxPanelSession(
     Q_UNUSED(plugin_id_std);
 #endif
   };
-  callbacks.on_message = [this, source](PJ_toolbox_message_level_t level, std::string message) {
+  callbacks.on_message = [this, source, plugin_id, version = QString::fromStdString(toolbox.version)](
+                             PJ_toolbox_message_level_t level, std::string message) {
     if (diagnostic_history_ == nullptr) {
       return;
     }
-    diagnostic_history_->record(toolboxDiagnosticLevel(level), source, u"toolbox"_s, QString::fromStdString(message));
+    diagnostic_history_->record(
+        toolboxDiagnosticLevel(level), source, u"toolbox"_s,
+        bundledPluginMessage(plugin_id, version, QString::fromStdString(message)));
   };
 
   // Progressive bulk-import surface (all GUI-thread, marshalled by the host).
@@ -10134,7 +10148,7 @@ void MainWindow::launchToolbox(
   //    outlives no presenter, but a click queued across a teardown must
   //    find nothing rather than a dangling pointer.
   WrappedToolboxPanel wrapped = wrapToolboxPanel(
-      panel, source,
+      panel, bundledPluginText(plugin_id, QString::fromStdString(toolbox->version), source),
       ToolboxChromeHooks{
           .on_close = [this,
                        plugin_id]() { withToolbox(plugin_id, [](ToolboxPresenter& shown) { shown.requestClose(); }); },
@@ -10155,7 +10169,9 @@ void MainWindow::launchToolbox(
                      .engine = engine,
                      .session = session,
                      .host = session->host.get(),
-                     .title = pin_tab_name.isEmpty() ? source : pin_tab_name,
+                     .title = pin_tab_name.isEmpty()
+                                  ? bundledPluginText(plugin_id, QString::fromStdString(toolbox->version), source)
+                                  : pin_tab_name,
                      // The presenter owns `session`, so its raw pointer outlives this closure.
                      .save_config = [session = session.get()]() -> QString {
                        std::string config_json;
