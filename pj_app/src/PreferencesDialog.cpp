@@ -24,6 +24,7 @@
 #include <QPixmap>
 #include <QPushButton>
 #include <QRegularExpression>
+#include <QScrollArea>
 #include <QSettings>
 #include <QStackedWidget>
 #include <QStyle>
@@ -105,6 +106,19 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
   // we instantiate the .ui onto a child body widget rather than setupUi(this).
   auto* body = new QWidget;
   ui_->setupUi(body);
+  // Translated labels and the restart notice must remain reachable at the
+  // supported minimum size. Wrap wide form rows instead of squeezing fields,
+  // and scroll the Appearance page when its natural height exceeds the window.
+  ui_->appearanceLayout->setRowWrapPolicy(QFormLayout::WrapLongRows);
+  ui_->appearanceLayout->setSizeConstraint(QLayout::SetMinimumSize);
+  ui_->languageCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+  auto* appearance_scroll = new QScrollArea(ui_->pagesStack);
+  appearance_scroll->setObjectName(u"appearanceScrollArea"_s);
+  appearance_scroll->setFrameShape(QFrame::NoFrame);
+  appearance_scroll->setWidgetResizable(true);
+  ui_->pagesStack->removeWidget(ui_->pageAppearance);
+  appearance_scroll->setWidget(ui_->pageAppearance);
+  ui_->pagesStack->insertWidget(kAppearancePage, appearance_scroll);
   contentLayout()->addWidget(body);
   // Free the dialog to resize down. The base Dialog's top-level layout uses Qt's
   // default SetDefaultConstraint, which on every activation forces the window's
@@ -231,6 +245,7 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
   // the next launch's preference, even when --language overrides this session.
   ui_->languageCombo->addItem(QLocale(u"zh_CN"_s).nativeLanguageName(), u"zh_CN"_s);
   ui_->languageCombo->addItem(u"English"_s, u"en_US"_s);
+  ui_->languageCombo->setMinimumWidth(ui_->languageCombo->sizeHint().width());
   {
     QSettings settings;
     ui_->languageCombo->setCurrentIndex(ui_->languageCombo->findData(AppLanguage::preferredLanguage(settings)));
