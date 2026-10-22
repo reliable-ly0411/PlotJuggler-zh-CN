@@ -2,8 +2,9 @@ import contextlib
 import importlib.util
 import io
 import json
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import unittest
+from unittest.mock import patch
 import shutil
 import subprocess
 
@@ -42,13 +43,21 @@ class LiveProbeTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             probe.validate_records(*records, parse_argv=json.loads)
 
+    def test_windows_cache_path_without_windows_host(self):
+        with patch.object(probe, 'Path', PureWindowsPath):
+            argv = probe.fixture_arguments(PureWindowsPath('C:/test/setup.exe'),
+                                           PureWindowsPath('C:/test/controller.qs'),
+                                           PureWindowsPath('C:/test/unused'))
+        self.assertEqual(argv[argv.index('--cache-path') + 1],
+                         str(PureWindowsPath('C:/test/tmp/ifw-cache')))
+
     def test_gui_startup_has_authoritative_positional_target(self):
         target = Path("/isolated folder/中文 target")
         argv = probe.fixture_arguments(Path('/fixture.exe'), Path('/controller.qs'), target)
         self.assertEqual(argv[argv.index('--root') + 1], str(target))
         self.assertEqual([arg for arg in argv if arg.startswith('TargetDir=')], ['TargetDir=' + str(target)])
         self.assertEqual(argv[argv.index('--lang') + 1], 'zh_CN')
-        self.assertEqual(argv[argv.index('--cache-path') + 1], '/tmp/ifw-cache')
+        self.assertEqual(argv[argv.index('--cache-path') + 1], str(Path('/tmp') / 'ifw-cache'))
         self.assertIn('PJProbeMarker=中文 space user@example.test', argv)
 
     def test_cli_root_alone_cannot_pass_gui_contract(self):
