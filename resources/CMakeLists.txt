@@ -11,6 +11,9 @@ else()
     # in one native object, without compiling a large C++ byte array.
     # Keep lossless savings below rcc's default 70% threshold too; the input
     # assets and the bytes returned by Qt's resource API stay unchanged.
+    # Qt's RCC helper does not inherit PIC from Qt6::Core. Keep its object
+    # position-independent to avoid exporting Qt data through ELF copy relocations.
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     qt6_add_big_resources(pj_resource_objects resources.qrc OPTIONS --threshold 0)
     add_custom_target(pj_resources_object DEPENDS ${pj_resource_objects})
     add_library(pj_resources INTERFACE)
