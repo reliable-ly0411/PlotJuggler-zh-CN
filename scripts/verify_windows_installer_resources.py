@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""Build and probe a synthetic IFW GUI fixture; never install its payload.
+"""Probe synthetic IFW languages, then isolated synthetic install/replacement.
 
+The language fixture never installs. The separate upgrade fixture installs only
+its freshly generated inert receipt payload, through the production GUI slot.
 Windows-only integration smoke. Requires PowerShell, 7z and a Qt kit (Linguist,
 rcc and qtbase_zh_CN.qm). Downloads only the existing hash-pinned official IFW
 helper's package. This is not application packaging or installation acceptance.
@@ -124,7 +126,10 @@ def smoke(lrelease, rcc=None, qtbase=None):
         print('PASS: real IFW fixture PE embeds both Chinese catalogs and resource marker.')
         from windows_installer_live import probe_gui
         probe_gui(fixture, temporary, shell, ROOT / 'scripts/windows_installer_live.qs.in')
-        print('PASS: synthetic GUI mechanism only; no payload installed. Full application/human acceptance is separate.')
+        print('PASS: language GUI mechanism only; no payload installed by the language probe.')
+        from windows_installer_upgrade import probe_upgrade
+        probe_upgrade(tools / 'bin/binarycreator.exe', qrc, shell, stage_inputs)
+        print('PASS: synthetic mechanisms only. Full application/human acceptance is separate.')
 
 
 def main():
