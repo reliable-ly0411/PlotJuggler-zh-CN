@@ -1,4 +1,3 @@
-#include <pj_widgets/BundledPluginText.h>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
@@ -36,6 +35,7 @@
 #include "pj_marketplace/download_manager.hpp"
 #include "pj_marketplace/extension_manager.hpp"
 #include "pj_marketplace/marketplace_window.hpp"
+#include "pj_marketplace/marketplace_text.hpp"
 #include "pj_marketplace/platform_utils.hpp"
 #include "pj_marketplace/registry_manager.hpp"
 #include "pj_marketplace/version_compare.hpp"
@@ -612,7 +612,7 @@ void MarketplaceWindow::setupSignals() {
       QString name = id;
       for (const auto& ext : extensions_) {
         if (ext.id == id) {
-          name = PJ::bundledPluginText(ext.id, ext.version, ext.name);
+          name = PJ::marketplacePluginText(ext.id, ext.version, ext.name);
           break;
         }
       }
@@ -677,8 +677,8 @@ void MarketplaceWindow::rebuildTable(bool preserve_scroll) {
 
     // Name, with the full description as tooltip. Plain QTableWidgetItem — the
     // Name column sorts by case-insensitive text.
-    auto* name_item = new QTableWidgetItem(PJ::bundledPluginText(ext.id, ext.version, ext.name));
-    name_item->setToolTip(PJ::bundledPluginText(ext.id, ext.version, ext.description));
+    auto* name_item = new QTableWidgetItem(PJ::marketplacePluginText(ext.id, ext.version, ext.name));
+    name_item->setToolTip(PJ::marketplacePluginText(ext.id, ext.version, ext.description));
     name_item->setData(Qt::UserRole, ext.id);
     table->setItem(row, kColName, name_item);
 
@@ -726,7 +726,7 @@ void MarketplaceWindow::rebuildTable(bool preserve_scroll) {
     // Description: full text, wraps within the stretched column. No tooltip —
     // the cell already renders the whole string, so a tooltip repeating it
     // adds nothing and covers the row on hover.
-    auto* desc_item = new QTableWidgetItem(PJ::bundledPluginText(ext.id, ext.version, ext.description));
+    auto* desc_item = new QTableWidgetItem(PJ::marketplacePluginText(ext.id, ext.version, ext.description));
     table->setItem(row, kColDescription, desc_item);
   }
 
@@ -838,7 +838,7 @@ void MarketplaceWindow::updateDetailFooter() {
 
   // Title (plugin name) — a real header-row label so the enable toggle can sit
   // at its height. The green toggle is shown only for installed plugins.
-  ui_->detail_title_->setText(PJ::bundledPluginText(ext->id, ext->version, ext->name));
+  ui_->detail_title_->setText(PJ::marketplacePluginText(ext->id, ext->version, ext->name));
   {
     const bool title_installed = installed.contains(ext->id);
     ui_->detail_enable_toggle_->setVisible(title_installed);
@@ -901,7 +901,7 @@ void MarketplaceWindow::updateDetailFooter() {
 
   // Description.
   if (!ext->description.isEmpty()) {
-    html += u"<p style='margin:0 0 6px 0;'>%1</p>"_s.arg(esc(PJ::bundledPluginText(ext->id, ext->version, ext->description)));
+    html += u"<p style='margin:0 0 6px 0;'>%1</p>"_s.arg(esc(PJ::marketplacePluginText(ext->id, ext->version, ext->description)));
   }
 
   // Changelog: newest version first, matching the marketplace spec's examples.
@@ -1159,8 +1159,8 @@ void MarketplaceWindow::applyFilters() {
     if (!search.isEmpty()) {
       bool match = ext.name.toLower().contains(search) || ext.description.toLower().contains(search) ||
                    ext.id.toLower().contains(search) ||
-                   PJ::bundledPluginText(ext.id, ext.version, ext.name).toLower().contains(search) ||
-                   PJ::bundledPluginText(ext.id, ext.version, ext.description).toLower().contains(search);
+                   PJ::marketplacePluginText(ext.id, ext.version, ext.name).toLower().contains(search) ||
+                   PJ::marketplacePluginText(ext.id, ext.version, ext.description).toLower().contains(search);
       if (!match) {
         for (const auto& tag : ext.tags) {
           if (tag.toLower().contains(search)) {
@@ -1234,7 +1234,7 @@ void MarketplaceWindow::showInstallProgress(const QString& verb) {
     name = active_install_id_;
     for (const auto& ext : extensions_) {
       if (ext.id == active_install_id_) {
-        name = PJ::bundledPluginText(ext.id, ext.version, ext.name);
+        name = PJ::marketplacePluginText(ext.id, ext.version, ext.name);
         break;
       }
     }
@@ -1337,7 +1337,7 @@ QString MarketplaceWindow::installedStatusText(const QString& id, bool from_file
   }
   for (const auto& ext : extensions_) {
     if (ext.id == id) {
-      return tr("Installed %1 v%2").arg(PJ::bundledPluginText(ext.id, ext.version, ext.name), ext.version);
+      return tr("Installed %1 v%2").arg(PJ::marketplacePluginText(ext.id, ext.version, ext.name), ext.version);
     }
   }
   return tr("Installed %1").arg(id);

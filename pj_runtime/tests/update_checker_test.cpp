@@ -183,14 +183,13 @@ TEST(UpdateCheckerTest, SupersededCheckEmitsNothing) {
   EXPECT_TRUE(failed_spy.isEmpty());
 }
 
-TEST(UpdateCheckerTest, DefaultUrlTargetsPublicRepo) {
-  // The check must hit the PUBLIC PlotJuggler/PlotJuggler repo: the private
-  // PlotJuggler/PJ4 dev repo is invisible to anonymous clients, so aiming the
-  // default there makes every check fail (403 rate-limit / 404 not-found).
+TEST(UpdateCheckerTest, DefaultUrlTargetsLocalizedReleaseChannel) {
+  // Localized versions must query their own public release channel, not upstream.
   PJ::UpdateChecker checker;
+  checker.setCurrentVersion(u"4.0.0-zh.1.rc.2"_s);
   const std::string url = checker.releaseApiUrl().toString().toStdString();
   EXPECT_NE(url.find("api.github.com"), std::string::npos) << url;
-  EXPECT_NE(url.find("/repos/PlotJuggler/PlotJuggler/releases/latest"), std::string::npos) << url;
+  EXPECT_NE(url.find("/repos/reliable-ly0411/PlotJuggler-zh-CN/releases?per_page=100"), std::string::npos) << url;
   EXPECT_EQ(url.find("/PlotJuggler/PJ4/"), std::string::npos) << url;
 }
 
@@ -384,13 +383,18 @@ TEST(UpdateCheckerChannelTest, WindowsNoUpdateIsUpToDate) {
   EXPECT_TRUE(runCheck(checker).up_to_date);
 }
 
-TEST(UpdateCheckerChannelTest, WindowsMaintenanceToolErrorFails) {
+TEST(UpdateCheckerChannelTest, WindowsMaintenanceToolErrorFallsBackToGitHub) {
+  LocalHttpServer server;
+  server.setResponse("200 OK", R"({"tag_name":"4.1.0","html_url":"https://x/rel"})");
   FakeProgram tool("Cannot retrieve remote tree.\n", /*exit_code=*/1);
   PJ::UpdateChecker checker;
   checker.setInstallation(u"windows"_s);
   checker.setMaintenanceToolPath(tool.path());
   checker.setCurrentVersion(u"4.0.3"_s);
-  EXPECT_TRUE(runCheck(checker).failed);
+  checker.setReleaseApiUrl(server.url());
+  const Outcome outcome = runCheck(checker);
+  ASSERT_TRUE(outcome.update.has_value());
+  EXPECT_EQ(outcome.update->route, PJ::UpdateRoute::Download);
 }
 
 TEST(UpdateCheckerChannelTest, WindowsWithoutMaintenanceToolAsksGitHub) {

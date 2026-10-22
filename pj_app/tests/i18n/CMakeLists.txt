@@ -36,3 +36,7 @@ target_compile_definitions(pj_bundled_translations_test PRIVATE PJ_TEST_PRODUCTI
 add_test(NAME pj_bundled_translations_test COMMAND pj_bundled_translations_test
         -o -,txt -o "${CMAKE_BINARY_DIR}/Testing/Temporary/bundled-translations.txt,txt")
 set_tests_properties(pj_bundled_translations_test PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../../pj_marketplace/tests/catalog" marketplace-catalog)
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../../pj_runtime/tests/localized_seed" localized-seed)
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../rc2" rc2)

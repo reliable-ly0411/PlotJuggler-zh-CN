@@ -57,7 +57,17 @@ their Qt boundary before interpolating paths and IDs. The Qt-free archive policy
 keeps its original diagnostics; DownloadManager translates only recognized
 complete templates. Unknown plugin, system and library details remain verbatim.
 
-Pinned bundled-plugin names and descriptions use the same display mapping in
+All 30 entries in the pinned official registry have display-only name and description
+translations, including uninstalled plugins. The exact ID and English source text
+select the translation independently of version; unknown/changed metadata falls
+back unchanged. `marketplace_text.hpp` uses the same display mapping in
 list rows and the detail panel, before HTML escaping. Known category labels are
 translated only for presentation; category filtering and compound sorting retain
 registry tokens and original plugin names. Unknown categories remain verbatim.
+
+The host can construct `ExtensionManager` with `defer_initial_scan=true`: pending
+transactions and the store lease still initialize, but installed discovery and
+store reconciliation wait until `finishInitialScan()`. This lets bundled seeding
+replace DLLs before the initial installed-side DSO scan. Default callers retain
+the eager snapshot. A deferred caller must finish startup before consuming
+installed state or loading managed DSOs.

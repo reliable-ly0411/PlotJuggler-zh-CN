@@ -773,8 +773,11 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
 #endif
   help_menu->addAction(
       tr("Documentation"), this, []() { QDesktopServices::openUrl(QUrl(u"https://plotjuggler.io"_s)); });
-  help_menu->addAction(tr("Report an Issue"), this, []() {
-    QDesktopServices::openUrl(QUrl(u"https://github.com/PlotJuggler/PJ4/issues"_s));
+  help_menu->addAction(tr("Report a Localization Issue"), this, []() {
+    QDesktopServices::openUrl(QUrl(u"https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues"_s));
+  });
+  help_menu->addAction(tr("Report an Upstream Issue"), this, []() {
+    QDesktopServices::openUrl(QUrl(u"https://github.com/PlotJuggler/PlotJuggler/issues"_s));
   });
   help_menu->addSeparator();
   installed_extensions_menu_ = help_menu->addMenu(tr("Installed Extensions"));

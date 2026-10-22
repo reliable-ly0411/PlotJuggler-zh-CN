@@ -15,14 +15,14 @@
     </message>
     <message>
         <location line="+10"/>
-        <source>&lt;a href=&quot;https://github.com/PlotJuggler/PJ4&quot;&gt;github.com/PlotJuggler/PJ4&lt;/a&gt;</source>
-        <translation>&lt;a href=&quot;https://github.com/PlotJuggler/PJ4&quot;&gt;github.com/PlotJuggler/PJ4&lt;/a&gt;</translation>
+        <source>&lt;a href=&quot;https://github.com/PlotJuggler/PlotJuggler&quot;&gt;github.com/PlotJuggler/PlotJuggler&lt;/a&gt;</source>
+        <translation>&lt;a href=&quot;https://github.com/PlotJuggler/PlotJuggler&quot;&gt;github.com/PlotJuggler/PlotJuggler&lt;/a&gt;</translation>
     </message>
 </context>
 <context>
     <name>AppLanguage</name>
     <message>
-        <location filename="../src/main.cpp" line="+310"/>
+        <location filename="../src/main.cpp" line="+312"/>
         <source>Interface language for this session (zh_CN or en_US).</source>
         <translation>本次会话的界面语言（zh_CN 或 en_US）。</translation>
     </message>
@@ -3608,7 +3608,7 @@ Message: %3</source>
 <context>
     <name>PJ::ExtensionCatalogService</name>
     <message>
-        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+738"/>
+        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+804"/>
         <source>All supported files</source>
         <translation>所有支持的文件</translation>
     </message>
@@ -3621,7 +3621,7 @@ Message: %3</source>
 <context>
     <name>PJ::ExtensionManager</name>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+973"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+979"/>
         <source>Not available for this platform (%1)</source>
         <translation>此平台不可用（%1）</translation>
     </message>
@@ -3629,7 +3629,7 @@ Message: %3</source>
 <context>
     <name>PJ::FileDialog</name>
     <message>
-        <location filename="../../pj_widgets/src/FileDialog.cpp" line="+51"/>
+        <location filename="../../pj_widgets/src/FileDialog.cpp" line="+63"/>
         <source>Binary file</source>
         <translation>二进制文件</translation>
     </message>
@@ -4270,8 +4270,13 @@ already rectified and would otherwise be undistorted twice.</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Report an Issue</source>
-        <translation>报告问题</translation>
+        <source>Report a Localization Issue</source>
+        <translation>报告汉化问题</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Report an Upstream Issue</source>
+        <translation>报告上游问题</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -5398,6 +5403,309 @@ already rectified and would otherwise be undistorted twice.</source>
     </message>
 </context>
 <context>
+    <name>PJ::MarketplaceCatalog</name>
+    <message>
+        <location filename="../../pj_marketplace/include/pj_marketplace/marketplace_text.hpp" line="+17"/>
+        <source>Arrow IPC Parser</source>
+        <translation>Arrow IPC 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for self-describing Arrow IPC streams.</source>
+        <translation>解析自描述 Arrow IPC 数据流的消息解析器。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>BLF Loader</source>
+        <translation>BLF 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for Vector BLF (Binary Logging Format) CAN logs, decoded to signals via DBC.</source>
+        <translation>加载 Vector BLF（二进制日志格式）CAN 日志，并通过 DBC 解码为信号。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>CSV Loader</source>
+        <translation>CSV 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for CSV files.</source>
+        <translation>加载 CSV 文件的数据加载器。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DataTamer Parser</source>
+        <translation>DataTamer 解析器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Message parser for DataTamer encoded data. Efficient serialization for robotics.</source>
+        <translation>解析 DataTamer 编码数据的消息解析器，为机器人应用提供高效序列化。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Dummy Streamer</source>
+        <translation>模拟数据流</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Generates synthetic sine, cosine, sawtooth, and noise signals for testing and demonstration.</source>
+        <translation>生成正弦、余弦、锯齿和噪声信号，用于测试和演示。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Foxglove Bridge</source>
+        <translation>Foxglove 桥接</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connect to Foxglove WebSocket server for ROS data streaming. Compatible with Foxglove Studio.</source>
+        <translation>连接 Foxglove WebSocket 服务器以接收 ROS 数据流，兼容 Foxglove Studio。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>JSON Parser</source>
+        <translation>JSON 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for JSON, CBOR, MessagePack, and BSON encoded data.</source>
+        <translation>解析 JSON、CBOR、MessagePack 和 BSON 编码数据的消息解析器。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>LeRobot Loader</source>
+        <translation>LeRobot 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for LeRobot v2.x and v3.0 datasets: flattened numeric series + per-camera video on a shared timeline. v3.0 datasets use a consolidated per-shard Parquet/MP4 layout with relational metadata; the plugin reads meta/episodes/*.parquet to resolve each episode&apos;s row range and clip window.</source>
+        <translation>加载 LeRobot v2.x 和 v3.0 数据集：在共用时间轴上呈现展开的数值序列和各相机视频。v3.0 数据集采用按分片整合的 Parquet/MP4 布局和关系元数据；插件读取 meta/episodes/*.parquet，确定每个片段的行范围和视频裁剪时间段。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Lab Streaming Layer</source>
+        <translation>实验室数据流层（LSL）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Real-time streaming from Lab Streaming Layer (LSL) sources, including numeric and marker (string) streams.</source>
+        <translation>实时接收实验室数据流层（LSL）的数值数据流和标记（字符串）数据流。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>MCAP Loader</source>
+        <translation>MCAP 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for MCAP files and split ROS 2 bags (metadata.yaml). Supports ROS1, ROS2, Protobuf, and JSON message encodings.</source>
+        <translation>加载 MCAP 文件和分卷 ROS 2 数据包（metadata.yaml），支持 ROS1、ROS2、Protobuf 和 JSON 消息编码。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>MF4/MDF Loader</source>
+        <translation>MF4/MDF 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for ASAM MDF / MF4 measurement files (automotive, CAN/LIN bus logging).</source>
+        <translation>加载 ASAM MDF / MF4 测量文件（汽车及 CAN/LIN 总线日志）。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>MP4 Loader</source>
+        <translation>MP4 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for .mp4 video files. Reads the container&apos;s creation_time tag (when present) so the host can anchor the video on a wall-clock timeline; supports multi-file selection via the standard File dialog.</source>
+        <translation>加载 .mp4 视频文件。读取容器中的 creation_time 标签（如存在），供宿主将视频定位到实际时间轴；支持通过标准文件对话框选择多个文件。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>MQTT Subscriber</source>
+        <translation>MQTT 订阅器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Real-time data streaming via MQTT protocol. Subscribe to topics and visualize live data.</source>
+        <translation>通过 MQTT 协议实时传输数据，订阅主题并可视化实时数据。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Parquet Loader</source>
+        <translation>Parquet 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for Apache Parquet files. Efficient columnar storage format.</source>
+        <translation>加载采用高效列式存储格式的 Apache Parquet 文件。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>PlotJuggler Bridge</source>
+        <translation>PlotJuggler 桥接</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Connect to PlotJuggler Bridge server for generic data streaming over WebSocket.</source>
+        <translation>连接 PlotJuggler Bridge 服务器，通过 WebSocket 接收通用数据流。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>3D Loader (PLY/PCD)</source>
+        <translation>3D 加载器（PLY/PCD）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for static 3D files: .pcd and vertex-only .ply load as a point cloud; .ply with faces loads as a 3D mesh. One snapshot at timestamp 0.</source>
+        <translation>加载静态 3D 文件：.pcd 和仅含顶点的 .ply 加载为点云，包含面的 .ply 加载为 3D 网格。在时间戳 0 处生成一个快照。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Protobuf Parser</source>
+        <translation>Protobuf 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for Protocol Buffers encoded data. Promotes the well-known Foxglove schemas (PointCloud, CompressedVideo, CompressedImage, RawImage, ImageAnnotations, SceneUpdate, FrameTransform, PosesInFrame, CameraCalibration, VoxelGrid, Grid) to builtin scene objects.</source>
+        <translation>解析 Protocol Buffers 编码数据的消息解析器。将常见 Foxglove 模式（PointCloud、CompressedVideo、CompressedImage、RawImage、ImageAnnotations、SceneUpdate、FrameTransform、PosesInFrame、CameraCalibration、VoxelGrid、Grid）转换为内置场景对象。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>ROS CDR Parser</source>
+        <translation>ROS CDR 解析器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Message parser for ROS1 and ROS2 messages (ros1msg, ros2msg, omgidl). Promotes common sensor and visualization messages (Image, PointCloud2, OccupancyGrid, GridMap, TF, Markers, and yolo_msgs/DetectionArray to ImageAnnotations) to builtin scene objects.</source>
+        <translation>解析 ROS1 和 ROS2 消息（ros1msg、ros2msg、omgidl）。将常见传感器和可视化消息（Image、PointCloud2、OccupancyGrid、GridMap、TF、Markers，以及转换为 ImageAnnotations 的 yolo_msgs/DetectionArray）转换为内置场景对象。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>ROS 2 Topic Subscriber</source>
+        <translation>ROS 2 主题订阅器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Subscribe to ROS 2 topics in real time and stream the decoded fields into PlotJuggler.</source>
+        <translation>实时订阅 ROS 2 主题，将解码后的字段传入 PlotJuggler。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Anomaly Detector</source>
+        <translation>异常检测器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Write Lua anomaly rules over time series and emit plot markers (regions / events) when a rule fires.</source>
+        <translation>为时间序列编写 Lua 异常规则，规则触发时生成绘图标记（区域或事件）。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Assistant Agent</source>
+        <translation>智能助手</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>A chat assistant that drives PlotJuggler through the plugin SDK: lists and describes topics, reads series statistics, and creates derived timeseries, markers and plot tabs it owns. Uses the Claude Code or Codex CLI already installed and signed in on your machine; the plugin stores no API keys. Linux, macOS and Windows.</source>
+        <translation>通过插件 SDK 操作 PlotJuggler 的聊天助手：列出和描述主题，读取序列统计信息，并创建由其管理的派生时间序列、标记和绘图标签页。使用计算机上已安装并登录的 Claude Code 或 Codex CLI；插件不保存 API 密钥。支持 Linux、macOS 和 Windows。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>CSV/Parquet Exporter</source>
+        <translation>CSV/Parquet 导出器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Export selected time series to CSV or Parquet files.</source>
+        <translation>将选定的时间序列导出为 CSV 或 Parquet 文件。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Fast Fourier Transform</source>
+        <translation>快速傅里叶变换（FFT）</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Compute the frequency-domain amplitude of numeric time series using FFT.</source>
+        <translation>使用 FFT 计算数值时间序列的频域幅值。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Mosaico Cloud Server</source>
+        <translation>Mosaico 云服务器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Browse and import data from Mosaico cloud servers via Apache Arrow Flight. Scalar topics are handed to the host as arrow-ipc messages and decoded by the parser_arrow plugin (install it alongside). Includes Lua metadata predicate filter, multi-topic streaming, and time-range selection.</source>
+        <translation>通过 Apache Arrow Flight 浏览和导入 Mosaico 云服务器数据。标量主题以 arrow-ipc 消息交给宿主，由 parser_arrow 插件解码（需同时安装）。支持 Lua 元数据谓词筛选、多主题数据流和时间范围选择。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Quaternion to RPY</source>
+        <translation>四元数转欧拉角（RPY）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Converts quaternion (x, y, z, w) time series into Roll, Pitch, Yaw angles with optional unwrapping and degree/radian output.</source>
+        <translation>将四元数（x、y、z、w）时间序列转换为横滚、俯仰和偏航角，可选择角度展开以及角度或弧度输出。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Transform Editor</source>
+        <translation>变换编辑器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Create named derived time series using Lua functions. Equivalent to the Custom Series editor in PJ3.</source>
+        <translation>使用 Lua 函数创建命名的派生时间序列，相当于 PJ3 的自定义序列编辑器。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>UDP Server</source>
+        <translation>UDP 服务器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Real-time data streaming via UDP. Supports unicast and multicast IPv4/IPv6.</source>
+        <translation>通过 UDP 实时传输数据，支持 IPv4/IPv6 单播和组播。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ULog Loader</source>
+        <translation>ULog 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for PX4 ULog files. Flight log format for PX4 autopilot.</source>
+        <translation>加载 PX4 自动驾驶仪使用的 ULog 飞行日志文件。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>WebRTC Video Client</source>
+        <translation>WebRTC 视频客户端</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Receives live H.264 video via standard WHEP (mediamtx, go2rtc, LiveKit, Cloudflare Stream...) and feeds each stream to PlotJuggler as canonical PJ.VideoFrame messages. One HTTP request per stream, per-camera reconnect, mediamtx Control API discovery. H.264 pass-through; no transcode.</source>
+        <translation>通过标准 WHEP（mediamtx、go2rtc、LiveKit、Cloudflare Stream 等）接收实时 H.264 视频，并将各路视频流以标准 PJ.VideoFrame 消息传给 PlotJuggler。每路视频流使用一个 HTTP 请求，支持逐相机重连及 mediamtx Control API 发现。H.264 直接传输，不转码。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>ZMQ Subscriber</source>
+        <translation>ZMQ 订阅器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Real-time data streaming via ZeroMQ. High-performance messaging for distributed systems.</source>
+        <translation>通过 ZeroMQ 实时传输数据，为分布式系统提供高性能消息传递。</translation>
+    </message>
+</context>
+<context>
     <name>PJ::MarketplaceDiagnostics</name>
     <message>
         <location filename="../../pj_marketplace/src/core/DownloadManager.cpp" line="+19"/>
@@ -5467,7 +5775,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>校验和不匹配</translation>
     </message>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="-856"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="-862"/>
         <source>Extension id is empty</source>
         <translation>扩展 ID 为空</translation>
     </message>
@@ -5647,7 +5955,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>无法创建扩展目录“%1”</translation>
     </message>
     <message>
-        <location line="+191"/>
+        <location line="+197"/>
         <location line="+315"/>
         <source>Install of &quot;%1&quot; is already in progress</source>
         <translation>正在安装“%1”</translation>
@@ -6511,17 +6819,7 @@ Details: %1</source>
         <translation>简洁标识</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>memes (English images)</source>
-        <translation>趣图（英文图片）</translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>Chinese sessions always use the translated banner; the meme choice is kept for English sessions.</source>
-        <translation>中文界面始终显示中文横幅；趣图选项将保留供英文界面使用。</translation>
-    </message>
-    <message>
-        <location line="+35"/>
+        <location line="+60"/>
         <source>This folder does not exist.</source>
         <translation>此文件夹不存在。</translation>
     </message>
@@ -6585,6 +6883,16 @@ Details: %1</source>
         <location line="+7"/>
         <source>Open the source cache folder</source>
         <translation>打开数据源缓存文件夹</translation>
+    </message>
+    <message>
+        <location line="-215"/>
+        <source>memes (English images)</source>
+        <translation>趣图（英文图片）</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Chinese sessions always use the translated banner; the meme choice is kept for English sessions.</source>
+        <translation>中文界面始终显示中文横幅；趣图选项将保留供英文界面使用。</translation>
     </message>
 </context>
 <context>
@@ -7650,7 +7958,7 @@ Details: %1</source>
         <location filename="../src/FileLoader.cpp" line="-1991"/>
         <location line="+90"/>
         <location line="+7"/>
-        <location filename="../src/MainWindow.cpp" line="-9956"/>
+        <location filename="../src/MainWindow.cpp" line="-9959"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>

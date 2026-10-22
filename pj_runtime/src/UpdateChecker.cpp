@@ -6,6 +6,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkAccessManager>
@@ -31,6 +32,8 @@ namespace {
 // GitHub's REST endpoint returns the latest published, non-draft,
 // non-prerelease release — so betas never trigger the nag on their own.
 constexpr auto kDefaultReleaseApiUrl = "https://api.github.com/repos/PlotJuggler/PlotJuggler/releases/latest";
+constexpr auto kLocalizedReleaseApiUrl =
+    "https://api.github.com/repos/reliable-ly0411/PlotJuggler-zh-CN/releases?per_page=100";
 constexpr auto kReleaseTagUrl = "https://github.com/PlotJuggler/PlotJuggler/releases/tag/%1";
 constexpr auto kPackageName = "plotjuggler4";
 constexpr auto kComponentId = "io.plotjuggler.application";
@@ -92,6 +95,9 @@ void UpdateChecker::setReleaseApiUrl(const QUrl& url) {
 }
 
 QUrl UpdateChecker::releaseApiUrl() const {
+  if (release_api_url_ == QUrl(kDefaultReleaseApiUrl) && currentVersion().contains(u"-zh."_s)) {
+    return QUrl(kLocalizedReleaseApiUrl);
+  }
   return release_api_url_;
 }
 
@@ -136,6 +142,12 @@ void UpdateChecker::checkLatestRelease() {
     stale->deleteLater();
   }
 
+  // Localized builds have no IFW/APT update repository. Never offer upstream
+  // installers that would replace this fork, including when a maintenance tool exists.
+  if (currentVersion().contains(u"-zh."_s)) {
+    checkGitHub(UpdateRoute::Download);
+    return;
+  }
   if (installation_ == u"deb"_s) {
     runProbe(
         apt_cache_program_.isEmpty() ? u"apt-cache"_s : apt_cache_program_,
@@ -154,7 +166,7 @@ void UpdateChecker::checkLatestRelease() {
 }
 
 void UpdateChecker::checkGitHub(UpdateRoute route) {
-  QNetworkRequest request(release_api_url_);
+  QNetworkRequest request(releaseApiUrl());
   request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
   // api.github.com rejects requests without a User-Agent (HTTP 403).
   request.setHeader(QNetworkRequest::UserAgentHeader, u"PlotJuggler"_s);
@@ -190,6 +202,31 @@ void UpdateChecker::handleReply(QNetworkReply& reply, UpdateRoute route) {
   const QJsonDocument doc = QJsonDocument::fromJson(data, &parse_error);
   if (parse_error.error != QJsonParseError::NoError) {
     emit checkFailed(u"release JSON parse error: %1"_s.arg(parse_error.errorString()));
+    return;
+  }
+  if (currentVersion().contains(u"-zh."_s)) {
+    if (!doc.isArray()) {
+      emit checkFailed(u"localized release response was not a JSON array"_s);
+      return;
+    }
+    QString newest = currentVersion();
+    for (const QJsonValue& item : doc.array()) {
+      const QJsonObject release = item.toObject();
+      const QString tag = release.value(u"tag_name"_s).toString();
+      // Only this major's localized release channel is eligible. A 3.x latest,
+      // upstream tag, draft or development snapshot cannot replace the 4.x fork.
+      if (!release.value(u"draft"_s).toBool() && isNewerLocalizedVersion(tag, newest)) {
+        newest = tag;
+      }
+    }
+    if (newest == currentVersion()) {
+      emit upToDate();
+    } else {
+      emit updateAvailable(
+          ReleaseInfo{
+              newest, u"https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/%1"_s.arg(newest),
+              UpdateRoute::Download});
+    }
     return;
   }
   if (!doc.isObject()) {
@@ -287,7 +324,7 @@ void UpdateChecker::handleMaintenanceTool(int exit_code, const QString& output) 
   // IFW documents no exit code for check-updates; an offered update is the
   // signal, and a clean exit without one means there is none.
   if (version.isEmpty() && exit_code != 0) {
-    emit checkFailed(u"maintenance tool check-updates exited %1"_s.arg(exit_code));
+    checkGitHub(UpdateRoute::Download);
     return;
   }
   emit upToDate();

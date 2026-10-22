@@ -27,7 +27,9 @@ class ReleaseNotesConsistencyTest(unittest.TestCase):
         active = [m for m in root.findall('.//message') if
                   m.find('translation') is not None and
                   m.find('translation').get('type') not in ('obsolete', 'vanished')]
-        for text in [self.notes, self.readme]:
+        # Published release notes describe immutable rc.2 bytes, not later development.
+        # Keep their historical coverage number; the development README tracks source.
+        for text in [self.readme]:
             match = re.search(r'([\d,]+) 条\s*(?:Qt 可提取消息|已提取 Qt 消息)', text)
             self.assertIsNotNone(match)
             self.assertEqual(int(match.group(1).replace(',', '')), len(active))
