@@ -109,8 +109,40 @@ Component.prototype.componentSelectionPageEntered = function()
     }
 }
 
-// IFW loads standard and component translators at process startup. Restart only
-// from the language page, before a directory or installation is selected.
+// Quote one Windows argv entry using CommandLineToArgvW/CRT backslash rules.
+function quoteWindowsArgument(argument)
+{
+    return '"' + String(argument).replace(/(\\*)"/g, function(_, slashes) {
+        return slashes + slashes + '\\' + '"';
+    }).replace(/(\\+)$/g, function(slashes) { return slashes + slashes; }) + '"';
+}
+
+function restartArguments(arguments, language, target)
+{
+    var result = ["--lang", language];
+    var options = true;
+    for (var i = 1; i < arguments.length; ++i) {
+        var argument = arguments[i];
+        if (argument === "--") { options = false; result.push(argument); continue; }
+        if (argument.indexOf("TargetDir=") === 0) continue;
+        if (!options) { result.push(argument); continue; }
+        if (argument === "--lang") { ++i; continue; }
+        if (argument.indexOf("--lang=") === 0)
+            continue;
+        if (argument === "--root" || argument === "-t") {
+            result.push(argument, target); ++i; continue;
+        }
+        if (argument.indexOf("--root=") === 0 || argument.indexOf("-t=") === 0) {
+            result.push(argument.substring(0, argument.indexOf("=") + 1) + target); continue;
+        }
+        result.push(argument);
+    }
+    result.push("TargetDir=" + target);
+    return result;
+}
+
+// IFW's documented <key=value> positional arguments restore TargetDir. Other
+// real startup arguments are retained, including proxy/offline options.
 Component.prototype.applyLanguage = function()
 {
     var widget = component.userInterface("LanguageWidget");
@@ -118,22 +150,42 @@ Component.prototype.applyLanguage = function()
     if (installer.value("UILanguage") === language)
         return;
     var executable = installer.value("InstallerFilePath").replace(/'/g, "''");
+    var target = installer.value("TargetDir");
     var powershell = installer.environmentVariable("SystemRoot") + "/System32/WindowsPowerShell/v1.0/powershell.exe";
-    // Verify PowerShell/CIM access before closing this wizard. The synchronous
-    // child reports this installer's PID; restricted machines keep their UI.
-    var probe = installer.execute(powershell, ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command",
-        "$ErrorActionPreference = 'Stop'; (Get-CimInstance Win32_Process -Filter ('ProcessId=' + $PID)).ParentProcessId"]);
-    var parentId = probe.length === 2 ? String(probe[0]).replace(/\s/g, "") : "";
-    if (probe.length !== 2 || probe[1] !== 0 || !/^[1-9][0-9]*$/.test(parentId)) {
+    // Read only this synchronous child's actual parent. Never accept argv from
+    // a process-name search or caller-provided PID. Access/parse failures keep UI.
+    var probeCommand = "$ErrorActionPreference = 'Stop'; " +
+        "$child = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $PID); " +
+        "$parent = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $child.ParentProcessId); " +
+        "if (!$parent.ExecutablePath -or !$parent.CommandLine -or " +
+        "![String]::Equals([IO.Path]::GetFullPath($parent.ExecutablePath), [IO.Path]::GetFullPath('" + executable + "'), [StringComparison]::OrdinalIgnoreCase)) { throw 'Parent identity mismatch' }; " +
+        "Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public static class PJInstallerArgv { " +
+        "[DllImport(\"shell32.dll\", CharSet=CharSet.Unicode, SetLastError=true)] public static extern IntPtr CommandLineToArgvW(string text, out int count); " +
+        "[DllImport(\"kernel32.dll\")] public static extern IntPtr LocalFree(IntPtr memory); }'; " +
+        "$count = 0; $memory = [PJInstallerArgv]::CommandLineToArgvW($parent.CommandLine, [ref]$count); " +
+        "if ($memory -eq [IntPtr]::Zero -or $count -lt 1) { throw 'Invalid parent argv' }; " +
+        "try { $argv = @(); for ($i=0; $i -lt $count; $i++) { $argv += [Runtime.InteropServices.Marshal]::PtrToStringUni([Runtime.InteropServices.Marshal]::ReadIntPtr($memory, $i * [IntPtr]::Size)) }; " +
+        "$json = @{ pid=$parent.ProcessId; argv=$argv } | ConvertTo-Json -Compress -Depth 4; " +
+        "[regex]::Replace($json, '[^\\x00-\\x7F]', { param($m) '\\u{0:x4}' -f [int][char]$m.Value }) " +
+        "} finally { [void][PJInstallerArgv]::LocalFree($memory) }";
+    var probe = installer.execute(powershell, ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", probeCommand]);
+    var parent = null;
+    try { if (probe.length === 2 && probe[1] === 0) parent = JSON.parse(String(probe[0])); } catch (_) {}
+    if (!parent || !/^[1-9][0-9]*$/.test(String(parent.pid)) ||
+        !(parent.argv instanceof Array) || parent.argv.length === 0 || !target) {
         this.languageRestartFailed();
         return;
     }
-    // Wait for the verified old PID rather than a fixed sleep. Literal strings
-    // keep the installer filename outside PowerShell's command grammar.
+    for (var i = 0; i < parent.argv.length; ++i) {
+        if (typeof parent.argv[i] !== "string") { this.languageRestartFailed(); return; }
+    }
+    var arguments = restartArguments(parent.argv, language, target);
+    var quoted = [];
+    for (var j = 0; j < arguments.length; ++j) quoted.push(quoteWindowsArgument(arguments[j]));
     var command = "$ErrorActionPreference = 'Stop'; " +
-        "Wait-Process -Id " + parentId + " -Timeout 30 -ErrorAction SilentlyContinue; " +
-        "if (Get-Process -Id " + parentId + " -ErrorAction SilentlyContinue) { exit 1 }; " +
-        "Start-Process -FilePath '" + executable + "' -ArgumentList '--lang', '" + language + "'";
+        "Wait-Process -Id " + parent.pid + " -Timeout 30 -ErrorAction SilentlyContinue; " +
+        "if (Get-Process -Id " + parent.pid + " -ErrorAction SilentlyContinue) { exit 1 }; " +
+        "Start-Process -FilePath '" + executable + "' -ArgumentList '" + quoted.join(" ").replace(/'/g, "''") + "'";
     if (installer.executeDetached(powershell, ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", command])) {
         widget.applyLanguage.enabled = false;
         gui.rejectWithoutPrompt();

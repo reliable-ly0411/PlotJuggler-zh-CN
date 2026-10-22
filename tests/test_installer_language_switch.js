@@ -5,15 +5,15 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const script = fs.readFileSync(path.join(__dirname, '../packaging/installer/packages/io.plotjuggler.application/meta/installscript.qs'), 'utf8');
-function fixture(currentLanguage, selection, succeeds = true, probeResult = ['4321\r\n', 0]) {
+function fixture(currentLanguage, selection, succeeds = true, probeResult = [JSON.stringify({pid:4321, argv:['setup.exe', '--lang=en_US', '--proxy', 'http://user:pass@host/', 'Extra=quote"value', '--root', 'C:/old']}), 0]) {
   const events = [];
   const widget = { language: { currentIndex: selection }, applyLanguage: { enabled: true } };
   const context = {
     component: { userInterface: () => widget },
     installer: {
-      value: key => ({ UILanguage: currentLanguage, InstallerFilePath: "C:/My Folder/it's safe; & setup.exe" })[key],
+      value: key => ({ UILanguage: currentLanguage, InstallerFilePath: "C:/My Folder/it's safe; & setup.exe", TargetDir: 'C:/chosen folder/中文' })[key],
       environmentVariable: () => 'C:/Windows',
-      execute: () => probeResult,
+      execute: (program, args) => { widget.probe = args.at(-1); return probeResult; },
       executeDetached: (program, args) => { events.push({ program, args }); return succeeds; },
     },
     gui: { rejectWithoutPrompt: () => events.push('exit') },
@@ -33,7 +33,14 @@ for (const [current, selection, expected] of [['en_US', 0, 'zh_CN'], ['zh_CN', 1
   assert.match(events[0].program, /System32\/WindowsPowerShell\/v1.0\/powershell.exe$/);
   const command = events[0].args.at(-1);
   assert.ok(command.includes("'C:/My Folder/it''s safe; & setup.exe'"));
-  assert.ok(command.includes("'-" + "-lang', '" + expected + "'"));
+  assert.ok(command.includes('"--lang" "' + expected + '"'));
+  assert.ok(command.includes('"--proxy" "http://user:pass@host/"'));
+  assert.ok(command.includes('"--root" "C:/chosen folder/中文"'));
+  assert.ok(command.includes('"TargetDir=C:/chosen folder/中文"'));
+  assert.ok(!command.includes('--lang=en_US'));
+  assert.ok(widget.probe.includes('$child.ParentProcessId'));
+  assert.ok(widget.probe.includes('$parent.ExecutablePath'));
+  assert.ok(widget.probe.includes('CommandLineToArgvW'));
   assert.ok(command.indexOf('Wait-Process') < command.indexOf('Start-Process'));
   assert.ok(command.includes('-Timeout 30'));
 }
@@ -56,3 +63,32 @@ for (const [isInstaller, isCli] of [[false, false], [true, true], [false, true]]
   context.Component.prototype.installerLoaded();
 }
 console.log('Installer language switch script checks passed');
+
+// Test Windows argument escaping independently of the shell grammar.
+const quoting = {};
+vm.createContext(quoting);
+vm.runInContext(script, quoting);
+assert.equal(quoting.quoteWindowsArgument(''), '""');
+assert.equal(quoting.quoteWindowsArgument('a b'), '"a b"');
+assert.equal(quoting.quoteWindowsArgument('a"b'), '"a' + '\\' + '"b"');
+assert.equal(quoting.quoteWindowsArgument('x\\'), '"x' + '\\'.repeat(2) + '"');
+assert.equal(quoting.quoteWindowsArgument('x\\"y'), '"x' + '\\'.repeat(3) + '"y"');
+for (const invalid of [{pid:4321, argv:[]}, {pid:4321, argv:[1]}, {pid:'4321;evil', argv:['setup.exe']}]) {
+  assert.deepEqual(fixture('en_US', 0, true, [JSON.stringify(invalid),0]).events, ['warning']);
+}
+assert.deepEqual(Array.from(quoting.restartArguments(['setup.exe','--lang','en_US','--lang=fr_FR','-t=old','TargetDir=old','--','literal'], 'zh_CN', 'C:/new')), ['--lang','zh_CN','-t=C:/new','--','literal','TargetDir=C:/new']);
+// Optional real PowerShell parse/control-flow test; no process is started.
+const cp = require('node:child_process'), os = require('node:os');
+const shell = process.platform === 'win32' ? 'powershell.exe' : 'pwsh';
+const available = cp.spawnSync(shell, ['-NoProfile', '-Command', 'exit 0']);
+if (!available.error && available.status === 0) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'restart test '));
+  try {
+    const result = fixture('en_US', 0);
+    const data = path.join(dir, 'fixture.json');
+    fs.writeFileSync(data, JSON.stringify({probe:result.widget.probe, command:result.events[0].args.at(-1)}));
+    const run = cp.spawnSync(shell, ['-NoProfile','-NonInteractive','-File',path.join(__dirname,'test_installer_restart.ps1'),'-FixturePath',data], {encoding:'utf8',timeout:30000});
+    assert.equal(run.status,0,run.stdout + run.stderr);
+    console.log(run.stdout.trim());
+  } finally { fs.rmSync(dir,{recursive:true,force:true}); }
+} else { console.log('SKIP: PowerShell runtime unavailable'); }
