@@ -122,7 +122,7 @@ if (Test-Path '{dest}') {{ throw 'Partial destination survived failed download' 
         self.assertIn('if (answer !== QMessageBox.Yes)', script)
         self.assertIn('gui.rejectPage(QInstaller.ComponentSelection)', script)
         self.assertLess(script.index('if (answer !== QMessageBox.Yes)'),
-                        script.index('installer.execute(dir + "/maintenancetool.exe"'))
+                        script.index('result = installer.execute(powershell'))
 
 
 if __name__ == '__main__':

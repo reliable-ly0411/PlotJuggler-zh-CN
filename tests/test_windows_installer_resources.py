@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
 """Cross-platform unit checks, not the Windows integration result."""
+import base64
+import gzip
+import re
 import importlib.util
 from pathlib import Path
 import struct
@@ -21,8 +24,14 @@ class InstallerResourceSmokeTests(unittest.TestCase):
             self.assertNotIn('__PJ_', config.read_text(encoding='utf-8'))
             self.assertNotIn('__PJ_', (meta / 'package.xml').read_text(encoding='utf-8'))
             original = ROOT / 'packaging/installer/packages/io.plotjuggler.application/meta'
-            for name in ('installscript.qs', 'targetwidget.ui', 'languagewidget.ui', 'zh_CN.ts'):
+            for name in ('targetwidget.ui', 'languagewidget.ui', 'zh_CN.ts'):
                 self.assertEqual((meta / name).read_bytes(), (original / name).read_bytes())
+            script = (meta / 'installscript.qs').read_text(encoding='utf-8')
+            encoded = re.search(r'var replacementGuard = "([A-Za-z0-9+/=]+)";', script).group(1)
+            self.assertEqual(gzip.decompress(base64.b64decode(encoded)),
+                             (ROOT / 'packaging/installer/replacement_guard.ps1').read_bytes())
+            self.assertEqual(script.replace(encoded, '__PJ_REPLACEMENT_HELPER_GZIP__'),
+                             (original / 'installscript.qs').read_text(encoding='utf-8'))
             self.assertEqual([p.name for p in (meta.parent / 'data').iterdir()],
                              ['SYNTHETIC-NOT-AN-APPLICATION.txt'])
             group = ET.parse(qrc).getroot().find('qresource')

@@ -6,6 +6,8 @@ Windows-only integration smoke. Requires PowerShell, 7z and a Qt kit (Linguist,
 rcc and qtbase_zh_CN.qm). Downloads only the existing hash-pinned official IFW
 helper's package. This is not application packaging or installation acceptance.
 """
+import base64
+import gzip
 import argparse
 from pathlib import Path
 import shutil
@@ -34,6 +36,13 @@ def stage_inputs(root, temporary):
     packages = temporary / 'packages'
     component = packages / 'io.plotjuggler.application'
     shutil.copytree(installer / 'packages/io.plotjuggler.application/meta', component / 'meta')
+    script = component / 'meta/installscript.qs'
+    source = script.read_text(encoding='utf-8')
+    marker = '__PJ_REPLACEMENT_HELPER_GZIP__'
+    if source.count(marker) != 1:
+        raise ValueError('Replacement supervisor placeholder missing or duplicated')
+    helper = base64.b64encode(gzip.compress((installer / 'replacement_guard.ps1').read_bytes(), mtime=0)).decode('ascii')
+    script.write_text(source.replace(marker, helper), encoding='utf-8')
     config = temporary / 'config.xml'
     shutil.copy2(installer / 'config.xml', config)
     for path in (config, component / 'meta/package.xml'):

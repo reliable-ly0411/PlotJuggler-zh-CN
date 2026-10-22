@@ -624,6 +624,20 @@ foreach ($f in Get-ChildItem (Join-Path $pkgSrc "meta") -File | Where-Object { $
   Copy-Item $f.FullName $stageMeta -Force
 }
 
+# Embed the reviewed supervisor in the component script. Compression keeps the
+# eventual UTF-16LE EncodedCommand below Windows' command-line length limit.
+$guardBytes = [Text.Encoding]::UTF8.GetBytes((Get-Content -LiteralPath (Join-Path $installerRoot "replacement_guard.ps1") -Raw -Encoding UTF8))
+$guardBuffer = New-Object IO.MemoryStream
+$guardGzip = New-Object IO.Compression.GZipStream($guardBuffer, [IO.Compression.CompressionMode]::Compress, $true)
+$guardGzip.Write($guardBytes, 0, $guardBytes.Length)
+$guardGzip.Dispose()
+$guardEncoded = [Convert]::ToBase64String($guardBuffer.ToArray())
+$guardBuffer.Dispose()
+$installScriptPath = Join-Path $stageMeta "installscript.qs"
+$installScript = Get-Content -LiteralPath $installScriptPath -Raw -Encoding UTF8
+if (($installScript.Split(@('__PJ_REPLACEMENT_HELPER_GZIP__'), [StringSplitOptions]::None).Count - 1) -ne 1) { Die "Replacement supervisor placeholder missing or duplicated" }
+[IO.File]::WriteAllText($installScriptPath, $installScript.Replace('__PJ_REPLACEMENT_HELPER_GZIP__', $guardEncoded), (New-Object Text.UTF8Encoding($false)))
+
 # Compile the component catalog with the same pinned Qt kit as the application.
 $lrelease = Resolve-Exe "lrelease.exe" (Split-Path $windeployqt -Parent)
 if (-not $lrelease) { Die "lrelease.exe not found. Install Qt Linguist tools in the selected kit or add them to PATH." }

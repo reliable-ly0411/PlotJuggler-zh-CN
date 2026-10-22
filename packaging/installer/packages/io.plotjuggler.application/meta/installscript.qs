@@ -11,6 +11,9 @@
 //   (the earlier PJ3-inherited flow ran maintenancetool purge silently).
 
 var targetDirectoryPage = null;
+var replacementAttempted = false;
+// Filled from replacement_guard.ps1 by both real and synthetic builders.
+var replacementGuard = "__PJ_REPLACEMENT_HELPER_GZIP__";
 
 function Component()
 {
@@ -107,7 +110,34 @@ Component.prototype.componentSelectionPageEntered = function()
             gui.rejectPage(QInstaller.ComponentSelection);
             return;
         }
-        installer.execute(dir + "/maintenancetool.exe", ["purge", "-c"]);
+        if (replacementAttempted) {
+            gui.rejectWithoutPrompt();
+            return;
+        }
+        replacementAttempted = true;
+        var result = [];
+        try {
+            if (!/^[A-Za-z0-9+/]+=*$/.test(replacementGuard)) throw new Error("guard-not-built");
+            var command = "$ErrorActionPreference='Stop'; $bytes=[Convert]::FromBase64String('" + replacementGuard + "'); " +
+                "$memory=New-Object IO.MemoryStream(,$bytes); " +
+                "$gzip=New-Object IO.Compression.GZipStream($memory,[IO.Compression.CompressionMode]::Decompress); " +
+                "$reader=New-Object IO.StreamReader($gzip); " +
+                "& ([scriptblock]::Create($reader.ReadToEnd())) -TargetPath '" + String(dir).replace(/'/g, "''") + "'";
+            var powershell = installer.environmentVariable("SystemRoot") + "/System32/WindowsPowerShell/v1.0/powershell.exe";
+            result = installer.execute(powershell, ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-EncodedCommand", encodePowerShellCommand(command)]);
+        } catch (_) {}
+        if (result.length !== 2 || result[1] !== 0 || String(result[0]).trim() !== "PJ_REPLACEMENT_OK" ||
+            installer.value("TargetDir") !== dir || installer.fileExists(dir) || installer.fileExists(dir + "/maintenancetool.exe")) {
+            var failure = result.length === 2 ? /^PJ_REPLACEMENT_FAILED:(identity|start|wait|residual)\s*$/.exec(String(result[0])) : null;
+            console.log("PJ_REPLACEMENT_BLOCKED:" + (failure ? failure[1] : "supervisor-result"));
+            QMessageBox.warning("replacement.failed",
+                qsTranslate("PlotJugglerInstaller", "Replacement stopped"),
+                qsTranslate("PlotJugglerInstaller", "The previous installation could not be safely removed. Setup will close without installing. Its uninstaller may still be running in the background. Do not reinstall into this directory until it has fully finished. Automatic replacement supports verified current-user installations only. For an all-users installation, uninstall it manually and confirm that removal has fully finished."));
+            gui.rejectPage(QInstaller.ComponentSelection);
+            gui.rejectWithoutPrompt();
+            return;
+        }
+        console.log("PJ_REPLACEMENT_VERIFIED");
     }
 }
 
