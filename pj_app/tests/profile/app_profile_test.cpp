@@ -227,6 +227,35 @@ void checkIsolatedPaths(const QString& base, bool equals, bool widget) {
   writeFile(base + QStringLiteral("/paths.json"), QJsonDocument(receipt).toJson());
 }
 
+/// Regression for the Windows QTemporaryFile handle that survived close() and
+/// prevented the initializer's required atomic INI replacement.
+void checkAtomicSettingsProbe(const QString& base) {
+  const QString profile = base + QString::fromUtf8("/独立 profile");
+  const QString ini = profile + QStringLiteral("/settings/user/PlotJuggler/PlotJuggler4.ini");
+  const QByteArray before = "[General]\nexisting=preserve\n";
+  writeFile(ini, before);
+  QString error;
+  require(PJ::initializeAppProfile({QStringLiteral("app"), QStringLiteral("--profile-dir"), profile}, &error), error);
+  require(readFile(ini) == before, QStringLiteral("Settings probe modified the existing profile INI"));
+  const auto probes =
+      QDir(profile + QStringLiteral("/settings/user"))
+          .entryList({QStringLiteral(".pj-settings-probe-*")}, QDir::AllEntries | QDir::Hidden | QDir::NoDotAndDotDot);
+  require(probes.isEmpty(), QStringLiteral("Settings probe left a temporary file or lock behind"));
+  QSettings settings;
+  require(settings.isAtomicSyncRequired(), QStringLiteral("Profile disabled required atomic INI synchronization"));
+  require(
+      settings.value(QStringLiteral("existing")).toString() == QStringLiteral("preserve"),
+      QStringLiteral("Existing isolated settings were not preserved"));
+  for (int value : {1, 2}) {
+    settings.setValue(QStringLiteral("atomic/probe"), value);
+    settings.sync();
+    require(settings.status() == QSettings::NoError, QStringLiteral("Atomic profile INI replacement failed"));
+    require(
+        readFile(ini).contains("probe=" + QByteArray::number(value)),
+        QStringLiteral("Atomic profile INI replacement did not persist the new value"));
+  }
+}
+
 void checkDefaultPaths(const QString& base) {
   const auto original_format = QSettings::defaultFormat();
   const bool shader_disabled = QCoreApplication::testAttribute(Qt::AA_DisableShaderDiskCache);
@@ -330,6 +359,8 @@ int main(int argc, char* argv[]) {
         mode == QStringLiteral("IsolatedPaths") || mode == QStringLiteral("EqualsSyntax") ||
         mode == QStringLiteral("EarlyWidgetSettings")) {
       checkIsolatedPaths(base, mode == QStringLiteral("EqualsSyntax"), mode == QStringLiteral("EarlyWidgetSettings"));
+    } else if (mode == QStringLiteral("AtomicSettingsProbe")) {
+      checkAtomicSettingsProbe(base);
     } else if (mode == QStringLiteral("InvalidArguments")) {
       for (const QStringList& args :
            {QStringList{QStringLiteral("app"), QStringLiteral("--profile-dir")},

@@ -146,22 +146,29 @@ bool PlatformUtils::initializeProfile(const QString& directory, QString* error) 
   }
   // Probe the actual INI backend without touching the profile's real keys or
   // installing a half-validated process-wide settings configuration.
-  QTemporaryFile settings_probe(QDir(root).filePath(QStringLiteral("settings/user/.pj-settings-probe-XXXXXX.ini")));
-  if (!settings_probe.open()) {
-    return refuseProfile(
-        error, QStringLiteral("Cannot create profile settings probe: %1").arg(settings_probe.errorString()));
+  QString settings_probe_path;
+  {
+    QTemporaryFile settings_probe(QDir(root).filePath(QStringLiteral("settings/user/.pj-settings-probe-XXXXXX.ini")));
+    if (!settings_probe.open()) {
+      return refuseProfile(
+          error, QStringLiteral("Cannot create profile settings probe: %1").arg(settings_probe.errorString()));
+    }
+    settings_probe_path = settings_probe.fileName();
+    settings_probe.setAutoRemove(false);
+    // close() alone keeps QTemporaryFile's native handle open internally.
+    // Destroy it before QSettings atomically replaces the file on Windows.
   }
-  const QString settings_probe_path = settings_probe.fileName();
-  settings_probe.close();
   bool settings_ok = false;
   {
     QSettings probe(settings_probe_path, QSettings::IniFormat);
     probe.setFallbacksEnabled(false);
+    probe.setAtomicSyncRequired(true);
     probe.setValue(QStringLiteral("profile/probe"), true);
     probe.sync();
     settings_ok = probe.status() == QSettings::NoError;
   }
-  if (!settings_ok || !settings_probe.remove()) {
+  const bool probe_removed = QFile::remove(settings_probe_path);
+  if (!settings_ok || !probe_removed) {
     return refuseProfile(error, QStringLiteral("Cannot synchronize profile INI settings: %1").arg(settings_probe_path));
   }
   QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QDir(root).filePath(QStringLiteral("settings/user")));

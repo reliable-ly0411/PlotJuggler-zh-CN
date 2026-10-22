@@ -39,7 +39,7 @@ endif()
 # Every created file stays below this build-tree directory, including failures.
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test-data/tmp"
                     "${CMAKE_CURRENT_BINARY_DIR}/test-data/framework-cache")
-set(profile_cases DefaultPaths IsolatedPaths EqualsSyntax EarlyWidgetSettings
+set(profile_cases DefaultPaths IsolatedPaths EqualsSyntax EarlyWidgetSettings AtomicSettingsProbe
         InvalidArguments RootIsFile ChildIsFile UnwritableDirectory UnwritableSettings
         LinkedDirectory LinkedSettingsFile StartupOrder)
 if(WIN32)
