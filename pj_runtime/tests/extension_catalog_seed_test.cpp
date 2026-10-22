@@ -23,6 +23,7 @@
 
 #include "mock_data_source_vtable.h"
 #include "pj_base/plugin_data_api.h"
+#include "pj_marketplace/artifact_store.hpp"
 #include "pj_marketplace/download_manager.hpp"
 #include "pj_marketplace/extension_manager.hpp"
 #include "pj_marketplace/loaded_profile.hpp"
@@ -65,7 +66,8 @@ class ExtensionCatalogSeedTest : public ::testing::Test {
         ExtensionCatalogService::Paths{{}, marketplace_.path(), bundled_.path()}, DiagnosticSink{}, nullptr);
   }
 
-  // Service in --plugin-dir mode: override_ is the managed install dir.
+  // Service in --plugin-dir mode: override_ leads the load hierarchy, while
+  // marketplace_ remains the managed install dir.
   [[nodiscard]] std::unique_ptr<ExtensionCatalogService> makeOverrideModeService() const {
     return std::make_unique<ExtensionCatalogService>(
         ExtensionCatalogService::Paths{override_.path(), marketplace_.path(), bundled_.path()}, DiagnosticSink{},
@@ -110,6 +112,54 @@ class ExtensionCatalogSeedTest : public ::testing::Test {
     ASSERT_GT(file.write("legacy-build-fixture"), 0);
   }
 
+  // Reproduce a stop after promotion, with an actually verified old store object.
+  void checkLocalizedMappingRecovery(bool pending) const {
+    QTemporaryDir legacy;
+    ASSERT_TRUE(legacy.isValid());
+    const QString payload = bundled_.path() + "/" + kMockId;
+    const QString file_name = pluginFileName("ds");
+    placePlugin(payload, PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, file_name);
+    placePlugin(seededDir(), PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, file_name);
+    placePlugin(legacy.path(), PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, file_name);
+    QFile old_file(legacy.path() + "/" + file_name);
+    ASSERT_TRUE(old_file.open(QIODevice::Append));
+    ASSERT_GT(old_file.write("legacy-build-fixture"), 0);
+    old_file.close();
+    const QString old_hash = LocalizedPluginSeed::fileHash(old_file.fileName());
+    const QString new_hash = LocalizedPluginSeed::fileHash(payload + "/" + file_name);
+    ASSERT_NE(old_hash, new_hash);
+    markLocalized(old_hash);
+    const QString store_root = PlatformUtils::canonicalStoreRoot(marketplace_.path());
+    const QString profiles = store_root + ".profiles";
+    QString stale_path;
+    {
+      const auto store = ArtifactStore::acquire(store_root);
+      ASSERT_TRUE(store) << store.error().message;
+      const auto adopted = (*store)->adoptDirectory(legacy.path());
+      ASSERT_TRUE(adopted) << adopted.error().message;
+      stale_path = adopted->artifact_path;
+      ASSERT_TRUE(writeLoadedProfile(
+          profiles, {{QString::fromUtf8(kMockId), QString::fromStdString(adopted->artifact_digest)}}));
+    }
+    QSettings settings;
+    const QString key = LocalizedPluginSeed::receiptKey(store_root, QString::fromUtf8(kMockId), "1.0.0");
+    ASSERT_TRUE(
+        pending ? LocalizedPluginSeed::begin(settings, key, new_hash)
+                : LocalizedPluginSeed::complete(settings, key, new_hash));
+    {
+      ExtensionManager before(nullptr, marketplace_.path(), marketplace_.path() + "/.pending", {}, nullptr, true);
+      EXPECT_EQ(before.managedPluginDirs(), std::vector<QString>{stale_path});
+    }
+    const auto service = makeDefaultModeService();
+    EXPECT_FALSE(readLoadedProfile(profiles).contains(QString::fromUtf8(kMockId)));
+    EXPECT_EQ(service->extensionManager().managedPluginDirs(), std::vector<QString>{seededDir()});
+    EXPECT_EQ(LocalizedPluginSeed::fileHash(seededDir() + "/" + file_name), new_hash);
+    ASSERT_NE(findMock(*service), nullptr);
+    settings.sync();
+    EXPECT_FALSE(settings.contains(key + "/pending"));
+    EXPECT_EQ(settings.value(key + "/applied").toString(), new_hash);
+  }
+
   QTemporaryDir bundled_;
   QTemporaryDir marketplace_;
   QTemporaryDir override_;
@@ -137,6 +187,14 @@ TEST_F(ExtensionCatalogSeedTest, LocalizedSameVersionRefreshPrecedesInstalledSca
   ASSERT_NE(findMock(*service), nullptr);
   EXPECT_EQ(service->extensionManager().installedVersion(QString::fromUtf8(kMockId)), "1.0.0");
   EXPECT_TRUE(service->extensionManager().isInstalled(QString::fromUtf8(kMockId)));
+}
+
+TEST_F(ExtensionCatalogSeedTest, LocalizedPromotedPendingSeedRepairsStaleStoreMapping) {
+  checkLocalizedMappingRecovery(true);
+}
+
+TEST_F(ExtensionCatalogSeedTest, LocalizedAppliedSeedRepairsUnpersistedStoreMapping) {
+  checkLocalizedMappingRecovery(false);
 }
 
 TEST_F(ExtensionCatalogSeedTest, LocalizedSeedPreservesNewerUserBuildAndMarketplaceDisplay) {

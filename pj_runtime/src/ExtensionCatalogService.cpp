@@ -478,6 +478,10 @@ void ExtensionCatalogService::seedBundledPlugins() {
           localized_seed_settings.value(receipt_key + u"/applied"_s).toString(),
           localized_seed_settings.contains(receipt_key + u"/pending"_s));
       if (decision == LocalizedPluginSeed::Decision::AlreadyCurrent) {
+        // A previous launch may have promoted the localized bytes but stopped
+        // before dropping the old marketplace object mapping (or persisting it).
+        // Repair the load route before clearing the transaction receipt too.
+        extension_manager_->dropStoreMapping(id);
         if (!LocalizedPluginSeed::complete(localized_seed_settings, receipt_key, localized_build->sha256)) {
           qCWarning(lcCatalog) << "Could not save localized plugin seed receipt" << id;
         }
