@@ -153,9 +153,22 @@ The row itself carries the keep-or-discard choice (✕ keeps what arrived, bin d
 
 `IngestProgressController` is the policy layer wiring `SessionManager`'s dataset-scoped ingest lifecycle signals (`ingestBegan` / `ingestProgressed` / `ingestEnded`) to `CurveTreeView`'s plain-typed progress decoration (`setDatasetProgress`). The view-facing row key IS the ingest id (`IngestToken::id`), so a click on a row resolves back to its ingest by lookup and the two identities cannot drift apart. The controller owns the row label (the DATASET's name once resolvable, kept sticky so a discard that deletes the dataset cannot rename the row mid-flight; the producer's progress title — "Importing MCAP" — is only the pre-resolution fallback), the 1-second completion-state linger, the 3x ~180ms error flash, immediate retirement on cancellation (no linger: the user stopped it, and a discard has deleted the dataset the row described), ghost-row lifetime (transient progress-only rows for failed/discarded loads whose catalog entries vanished), and an injectable timer factory for headless tests. Both `FileLoader` and `HeadlessDescriptorProviderSession` produce ingest tokens on the same channel. The title-bar `IngestProgressWidget` strip is retained and wired, but suppressed behind a single `constexpr kShowTitleBarIngestStrip = false` at its show seam — re-enabling the title bar is one-line.
 
+## Native opt-in profile boundary
+
+`AppProfile` pre-parses `--profile-dir` immediately after the app identity is set,
+before WidgetTuner, any app-owned QSettings, or marketplace startup. It delegates
+validation and one-time activation to `PlatformUtils`: both INI scopes and core
+data/temp paths stay under the explicit absolute root; failure exits, never
+falls back to production. The core-only Python selftest honors the same option.
+No-option native behavior is unchanged. This is not a plugin/OS/installer
+sandbox; explicit user output paths are not rewritten. The Qt-only regression
+harness is `tests/profile`; the full native build adds real runtime service tests.
+Usage and boundary details: `docs/localization/ISOLATED_PROFILE.zh-CN.md`.
+
 ## Browser persistence boundary
 
-Native builds retain their normal `QSettings` behavior. WASM redirects ordinary
+Native builds retain their normal `QSettings` behavior unless explicitly isolated.
+WASM redirects ordinary
 `QSettings` callers to page-lifetime MEMFS and lets `BrowserPersistence` alone
 write `WebLocalStorageFormat`. Only its exact, typed preference allowlist and up
 to five bounded, source-free generic layout recipes are durable. File paths,

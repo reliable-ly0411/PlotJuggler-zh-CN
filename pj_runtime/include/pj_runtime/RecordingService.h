@@ -148,15 +148,16 @@ class RecordingService : public QObject {
   /// test injected its own sink through setSinkFactoryForTest.
   [[nodiscard]] static bool isSupported() noexcept;
 
-  /// `<QStandardPaths::AppLocalDataLocation>/recordings`.
+  /// `<AppLocalDataLocation>/recordings`, or `<profile>/data/recordings`.
   [[nodiscard]] static QString defaultDirectory();
   /// QSettings keys: Preferences::recording_directory,
   /// Preferences::recording_queue_budget_mib. The budget is clamped to the
   /// Preferences range (8..4096 MiB), so a hand-edited .ini cannot arm a
-  /// degenerate recording.
+  /// degenerate recording. An explicit profile fixes the output directory.
   [[nodiscard]] static Settings loadSettings();
   static void saveSettings(const Settings& settings);
   /// Takes effect on the next start(); a running capture keeps its options.
+  /// An explicit profile takes precedence over the supplied output directory.
   void setSettings(Settings settings);
 
   /// A source display name reduced to one filesystem-safe file name: NFC

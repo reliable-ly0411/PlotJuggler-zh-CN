@@ -12,6 +12,13 @@ App runtime services and contracts for PlotJuggler 4. This is the **services sea
 
 ## Public surface
 
+**Native opt-in test profile:** `pj_app` initializes `PlatformUtils` before any
+service exists. `SourceCacheStore::loadSettings/fromSettings` and
+`RecordingService::loadSettings/setSettings` then fix output under that profile,
+even when saved or caller-supplied directories point elsewhere. The host's
+default `QSettingsBackend` inherits the isolated INI configuration. Without an
+explicit profile, all existing preferences and default paths are unchanged.
+
 The authoritative source is `include/pj_runtime/`. Today:
 
 | Header | Role |

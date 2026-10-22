@@ -36,6 +36,9 @@
 #endif
 
 #include "AppLanguage.h"
+#ifndef PJ_TARGET_WASM
+#include "AppProfile.h"
+#endif
 #include "WindowsConsole.h"
 #include "BrowserPersistence.h"
 #include "DebugMode.h"
@@ -208,12 +211,23 @@ int validatePlugins(const QString& plugin_dir, const QStringList& expected_specs
 int main(int argc, char* argv[]) {
   PJ::attachParentConsoleStreams();
 #ifndef PJ_TARGET_WASM
-  // Handled before any Q(Core)Application exists: the selftest needs nothing
-  // from Qt, while a QApplication would demand a platform plugin — and the
+  // A core-only application preserves Unicode CLI arguments and profile
+  // validation without demanding a platform plugin — the
   // packaged AppImage ships only xcb, useless on the display-less CI
   // containers this flag exists for.
   for (int i = 1; i < argc; ++i) {
+    if (std::strcmp(argv[i], "--") == 0) {
+      break;
+    }
     if (std::strcmp(argv[i], "--selftest-python") == 0) {
+      QCoreApplication app(argc, argv);
+      QCoreApplication::setOrganizationName(u"PlotJuggler"_s);
+      QCoreApplication::setApplicationName(u"PlotJuggler4"_s);
+      QString profile_error;
+      if (!PJ::initializeAppProfile(app.arguments(), &profile_error)) {
+        std::fprintf(stderr, "[profile-dir] %s\n", qPrintable(profile_error));
+        return 64;
+      }
       return selftestPython();
     }
   }
@@ -255,6 +269,15 @@ int main(int argc, char* argv[]) {
 #endif
   QCoreApplication::setOrganizationName(u"PlotJuggler"_s);
   QCoreApplication::setApplicationName(u"PlotJuggler4"_s);
+#ifndef PJ_TARGET_WASM
+  // Before fonts, WidgetTuner, CLI processing, or any app-owned settings/store
+  // access. Failure must exit, never continue with the production profile.
+  QString profile_error;
+  if (!PJ::initializeAppProfile(app.arguments(), &profile_error)) {
+    std::fprintf(stderr, "[profile-dir] %s\n", qPrintable(profile_error));
+    return 64;
+  }
+#endif
   // PJ_VERSION_STRING comes from the root project(VERSION) via pj_app's
   // target_compile_definitions — the single source of truth read by the About
   // box and compared against the latest GitHub release.
@@ -316,9 +339,16 @@ int main(int argc, char* argv[]) {
       u"test-data"_s, u"Populate the datastore with generated sin/cos samples."_s);
   parser.addOption(test_data_option);
   const QCommandLineOption plugin_dir_option(
-      u"plugin-dir"_s, u"Override the directory where extensions are discovered and managed."_s, u"path"_s);
+      u"plugin-dir"_s, u"Override plugin discovery priority without changing the managed marketplace store."_s,
+      u"path"_s);
   parser.addOption(plugin_dir_option);
 #ifndef PJ_TARGET_WASM
+  const QCommandLineOption profile_dir_option(
+      u"profile-dir"_s,
+      QCoreApplication::translate(
+          "AppProfile", "Keep settings and core app data in an isolated absolute directory (not a plugin sandbox)."),
+      u"absolute-directory"_s);
+  parser.addOption(profile_dir_option);
   const QCommandLineOption validate_plugins_option(
       u"validate-plugins"_s, u"Load and validate every whitelisted plugin in this directory, then exit."_s, u"path"_s);
   parser.addOption(validate_plugins_option);

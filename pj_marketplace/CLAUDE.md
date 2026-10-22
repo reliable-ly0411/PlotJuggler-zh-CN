@@ -16,6 +16,13 @@ default sessions, and offers downgrade-to-bundled. See
 
 ## Layout
 
+`PlatformUtils::initializeProfile` is the native host's opt-in startup seam for
+an absolute dedicated test root. It validates/probes paths before installing
+both QSettings INI scopes, and routes store, staging, backup and all canonical
+store siblings under the profile. No argument means no global behavior change.
+`--plugin-dir` alone is a discovery override, not profile isolation. This is not
+a filesystem sandbox for arbitrary plugin code or the IFW installer.
+
 - `include/pj_marketplace/` — public headers (`marketplace.hpp`, `registry_manager.hpp`,
   `registry_resolver.hpp`,
   `download_manager.hpp`, `extension_manager.hpp`, `installed_extension.hpp`,

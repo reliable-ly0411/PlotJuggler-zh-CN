@@ -74,7 +74,7 @@ class SourceCacheStore {
   explicit SourceCacheStore(std::filesystem::path root, std::uintmax_t budget_bytes = kDefaultBudgetBytes);
 
   /// `<AppLocalDataLocation>/source_cache` — the cache's own folder, distinct
-  /// from the recordings folder (C6).
+  /// from the recordings folder (C6); `<profile>/data/source_cache` when isolated.
   [[nodiscard]] static std::filesystem::path defaultRoot();
 
   /// The user-facing configuration (Preferences), mirroring
@@ -92,10 +92,12 @@ class SourceCacheStore {
   };
   /// QSettings keys: Preferences::source_cache_directory,
   /// Preferences::source_cache_budget_gb (clamped on load),
-  /// Preferences::source_cache_capture_enabled.
+  /// Preferences::source_cache_capture_enabled. An explicit profile fixes the
+  /// directory even if its INI file contains an external override.
   [[nodiscard]] static Settings loadSettings();
   static void saveSettings(const Settings& settings);
-  /// A store built from `settings` (empty directory = defaultRoot()).
+  /// A store built from `settings` (empty directory = defaultRoot()). An explicit
+  /// profile takes precedence over the supplied directory.
   /// unique_ptr because the store is not movable (the SDK cache is not).
   [[nodiscard]] static std::unique_ptr<SourceCacheStore> fromSettings(const Settings& settings);
 

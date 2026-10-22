@@ -22,9 +22,17 @@
 <context>
     <name>AppLanguage</name>
     <message>
-        <location filename="../src/main.cpp" line="+312"/>
+        <location filename="../src/main.cpp" line="+335"/>
         <source>Interface language for this session (zh_CN or en_US).</source>
         <translation>本次会话的界面语言（zh_CN 或 en_US）。</translation>
+    </message>
+</context>
+<context>
+    <name>AppProfile</name>
+    <message>
+        <location line="+12"/>
+        <source>Keep settings and core app data in an isolated absolute directory (not a plugin sandbox).</source>
+        <translation>将设置及核心应用数据保存在独立的绝对路径目录中（不是插件沙箱）。</translation>
     </message>
 </context>
 <context>
@@ -3608,7 +3616,7 @@ Message: %3</source>
 <context>
     <name>PJ::ExtensionCatalogService</name>
     <message>
-        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+803"/>
+        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+818"/>
         <source>All supported files</source>
         <translation>所有支持的文件</translation>
     </message>
@@ -3621,7 +3629,7 @@ Message: %3</source>
 <context>
     <name>PJ::ExtensionManager</name>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+973"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+980"/>
         <source>Not available for this platform (%1)</source>
         <translation>此平台不可用（%1）</translation>
     </message>
@@ -5775,7 +5783,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>校验和不匹配</translation>
     </message>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="-856"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="-863"/>
         <source>Extension id is empty</source>
         <translation>扩展 ID 为空</translation>
     </message>
@@ -5865,7 +5873,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>下载的安装包必须且只能包含一个名为“%1”的顶层目录</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+27"/>
         <location line="+95"/>
         <source>no valid plugin DSO found</source>
         <translation>未找到有效的插件动态库</translation>
@@ -5955,7 +5963,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>无法创建扩展目录“%1”</translation>
     </message>
     <message>
-        <location line="+191"/>
+        <location line="+197"/>
         <location line="+315"/>
         <source>Install of &quot;%1&quot; is already in progress</source>
         <translation>正在安装“%1”</translation>
@@ -6185,7 +6193,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>无法保存内容寻址加载配置</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+47"/>
         <source>Content-addressed object for &quot;%1&quot; failed its integrity check; loading the local copy instead. Reinstall to regenerate it.</source>
         <translation>“%1”的内容寻址对象未通过完整性检查；将改为加载本地副本。请重新安装以重新生成该对象。</translation>
     </message>
@@ -6769,7 +6777,7 @@ Details: %1</source>
 <context>
     <name>PJ::PreferencesDialog</name>
     <message>
-        <location filename="../src/PreferencesDialog.cpp" line="+102"/>
+        <location filename="../src/PreferencesDialog.cpp" line="+103"/>
         <source>Preferences</source>
         <translation>首选项</translation>
     </message>
@@ -6893,6 +6901,12 @@ Details: %1</source>
         <location line="+7"/>
         <source>Open the source cache folder</source>
         <translation>打开数据源缓存文件夹</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <location line="+3"/>
+        <source>Fixed by --profile-dir: %1</source>
+        <translation>由 --profile-dir 固定为：%1</translation>
     </message>
 </context>
 <context>
@@ -7370,7 +7384,7 @@ Details: %1</source>
 <context>
     <name>PJ::Splashscreen</name>
     <message>
-        <location filename="../src/Splashscreen.cpp" line="+193"/>
+        <location filename="../src/Splashscreen.cpp" line="+203"/>
         <source>Now you&apos;re plotting</source>
         <translation>现在，开始绘图吧</translation>
     </message>
@@ -9769,7 +9783,7 @@ Details: %1</source>
 <context>
     <name>pj::scene3d::UrlFetcher</name>
     <message>
-        <location filename="../../pj_scene3D/widgets/src/url_fetcher.cpp" line="+114"/>
+        <location filename="../../pj_scene3D/widgets/src/url_fetcher.cpp" line="+112"/>
         <source>unsupported URL scheme &apos;%1&apos;</source>
         <translation>不支持的 URL 协议“%1”</translation>
     </message>

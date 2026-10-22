@@ -219,7 +219,7 @@ if(EMSCRIPTEN)
         src/main.cpp
         ${CMAKE_SOURCE_DIR}/resources/resources.qrc)
 else()
-    add_executable(pj_app src/main.cpp)
+    add_executable(pj_app src/main.cpp src/AppProfile.cpp src/AppProfile.h)
     if(WIN32)
         # Explorer launches a GUI process; main explicitly adopts inherited CLI streams.
         set_target_properties(pj_app PROPERTIES WIN32_EXECUTABLE TRUE)
@@ -311,6 +311,9 @@ if(PJ_BUILD_TESTS)
     endif()
     find_package(GTest REQUIRED)
     pj_add_app_language_test()
+    if(NOT EMSCRIPTEN)
+        add_subdirectory(tests/profile)
+    endif()
 
     # Qt-only helpers compile their implementation once without the shell's
     # dependency closure. Discovery keeps a fresh QApplication per test case.

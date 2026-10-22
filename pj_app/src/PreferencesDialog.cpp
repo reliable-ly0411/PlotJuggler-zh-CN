@@ -41,6 +41,7 @@
 #include "pj_runtime/HttpGet.h"
 #include "pj_runtime/RecordingService.h"
 #ifndef __EMSCRIPTEN__
+#include "pj_marketplace/platform_utils.hpp"
 #include "pj_runtime/SourceCacheStore.h"
 #endif
 #include "pj_widgets/DualOptionsWidget.h"
@@ -445,6 +446,16 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
       const QString field = ui_->lineEditSourceCacheDir->text().trimmed();
       openFolder(field.isEmpty() ? cache_default : field);
     });
+    // Core capture/cache output is fixed inside an explicit profile. Do not
+    // offer a picker whose value the runtime must ignore to preserve isolation.
+    if (!PlatformUtils::profileDir().isEmpty()) {
+      ui_->lineEditRecordingDir->setReadOnly(true);
+      ui_->lineEditRecordingDir->setToolTip(tr("Fixed by --profile-dir: %1").arg(stored.directory));
+      ui_->buttonRecordingDirBrowse->setEnabled(false);
+      ui_->lineEditSourceCacheDir->setReadOnly(true);
+      ui_->lineEditSourceCacheDir->setToolTip(tr("Fixed by --profile-dir: %1").arg(cache_stored.directory));
+      ui_->buttonSourceCacheDirBrowse->setEnabled(false);
+    }
 #endif
   }
 

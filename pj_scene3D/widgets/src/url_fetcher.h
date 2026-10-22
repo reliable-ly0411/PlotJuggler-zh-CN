@@ -48,7 +48,8 @@ struct FetchResult {
 //    is served from cache when the origin is unreachable, so a model fetched in a
 //    prior session still renders offline. Local-file reads bypass the cache. The
 //    cache directory is <AppData>/models, overridable via the PJ_MODEL_CACHE_DIR
-//    environment variable. In WASM, the browser owns HTTP caching and enforces
+//    environment variable unless --profile-dir fixes it inside the profile.
+//    In WASM, the browser owns HTTP caching and enforces
 //    CORS; the Qt disk-cache backend is deliberately absent.
 //  - The response is aborted once it exceeds kMaxFetchBytes — checked against
 //    the declared Content-Length as soon as the headers arrive, and against

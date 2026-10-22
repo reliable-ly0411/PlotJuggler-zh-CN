@@ -22,6 +22,7 @@
 #include <utility>
 
 #ifndef PJ_TARGET_WASM
+#include "pj_marketplace/platform_utils.hpp"
 #include "pj_runtime/McapRecordingWriter.h"
 #endif
 #include "pj_runtime/RecordingFormat.h"
@@ -151,7 +152,11 @@ bool RecordingService::isSupported() noexcept {
 }
 
 QString RecordingService::defaultDirectory() {
+#ifdef PJ_TARGET_WASM
   const QString base = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+#else
+  const QString base = PlatformUtils::localDataDir();
+#endif
   return QDir(base).absoluteFilePath(u"recordings"_s);
 }
 
@@ -159,6 +164,11 @@ RecordingService::Settings RecordingService::loadSettings() {
   QSettings settings;
   Settings loaded;
   loaded.directory = settings.value(QString::fromLatin1(kDirectoryKey)).toString();
+#ifndef PJ_TARGET_WASM
+  if (!PlatformUtils::profileDir().isEmpty()) {
+    loaded.directory = defaultDirectory();
+  }
+#endif
   loaded.queue_budget_mib = std::clamp(
       settings.value(QString::fromLatin1(kQueueBudgetKey), loaded.queue_budget_mib).toInt(), kMinQueueBudgetMiB,
       kMaxQueueBudgetMiB);
@@ -172,6 +182,11 @@ void RecordingService::saveSettings(const Settings& settings) {
 }
 
 void RecordingService::setSettings(Settings settings) {
+#ifndef PJ_TARGET_WASM
+  if (!PlatformUtils::profileDir().isEmpty()) {
+    settings.directory = defaultDirectory();
+  }
+#endif
   settings_ = std::move(settings);
 }
 
