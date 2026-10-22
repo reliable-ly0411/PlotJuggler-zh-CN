@@ -234,7 +234,7 @@ function Find-AppExe {
   foreach ($cfg in @("RelWithDebInfo","Release","*")) {
     foreach ($name in @("plotjuggler4.exe","pj_app.exe")) {
       $glob = if ($cfg -eq "*") { $name } else { "$cfg\$name" }
-      $hit = Get-ChildItem $BuildDir -Recurse -Filter $name -ErrorAction SilentlyContinue |
+      $hit = Get-ChildItem -LiteralPath $BuildDir -Recurse -Filter $name -ErrorAction SilentlyContinue |
              Where-Object { $_.FullName -like "*\$glob" -or $cfg -eq "*" } |
              Sort-Object LastWriteTime -Descending | Select-Object -First 1
       if ($hit) { return $hit }
@@ -397,6 +397,8 @@ if ($SkipPlugins) {
 # Merge the pinned fork payload before validating the sealed runtime closure.
 if ($ExtraPrefix) {
   if (-not (Test-Path -LiteralPath $ExtraPrefix -PathType Container)) { Die "extra prefix missing: $ExtraPrefix" }
+  python (Join-Path $PSScriptRoot "../localization/replace_localized_plugins.py") --extra-prefix $ExtraPrefix --destination $stageData
+  if ($LASTEXITCODE -ne 0) { Die "localized plugin replacement failed" }
   Get-ChildItem -LiteralPath $ExtraPrefix -Force | Copy-Item -Destination $stageData -Recurse -Force
   $extraManifest = Join-Path $stagePlugins "ardupilot-dataflash\manifest.json"
   $m = Get-Content -LiteralPath $extraManifest -Raw | ConvertFrom-Json
@@ -453,10 +455,10 @@ $graph = Get-Content -LiteralPath $graphPath -Raw | ConvertFrom-Json
 $runtimeDirs = @($graph.graph.nodes.PSObject.Properties.Value |
   Where-Object { $_.package_folder -and $_.context -eq "host" } |
   ForEach-Object { Join-Path $_.package_folder "bin" } |
-  Where-Object { Test-Path $_ } | Sort-Object -Unique)
+  Where-Object { Test-Path -LiteralPath $_ } | Sort-Object -Unique)
 if ($runtimeDirs.Count -eq 0) { Die "No active package runtime directories in $graphPath" }
 function Copy-ConanRuntime([string]$probeDll, [string]$label, [switch]$Required) {
-  $hit = Get-ChildItem $runtimeDirs -Filter $probeDll -ErrorAction SilentlyContinue |
+  $hit = Get-ChildItem -LiteralPath $runtimeDirs -Filter $probeDll -ErrorAction SilentlyContinue |
          Where-Object { $_.FullName -match '\\p\\(?:b\\)?[^\\]+\\p\\bin\\' } |
          Sort-Object LastWriteTime -Descending | Select-Object -First 1
   if (-not $hit) {
@@ -466,7 +468,7 @@ function Copy-ConanRuntime([string]$probeDll, [string]$label, [switch]$Required)
   }
   $srcDir = $hit.Directory.FullName
   $copied = 0
-  foreach ($d in (Get-ChildItem $srcDir -Filter "*.dll")) { Copy-Item $d.FullName $stageBin -Force; $copied++ }
+  foreach ($d in (Get-ChildItem -LiteralPath $srcDir -Filter "*.dll")) { Copy-Item -LiteralPath $d.FullName -Destination $stageBin -Force; $copied++ }
   Info "staged $copied $label DLL(s) from $srcDir"
 }
 
@@ -482,7 +484,7 @@ Copy-ConanRuntime "mcap*.dll"    "mcap"
 # initialise. Copy Lib/, DLLs/ and any python3XX._pth from the same Conan
 # package root as the python3XX.dll we just staged.
 function Copy-CPythonStdlib {
-  $pyDll = Get-ChildItem $runtimeDirs -Filter "python312.dll" -ErrorAction SilentlyContinue |
+  $pyDll = Get-ChildItem -LiteralPath $runtimeDirs -Filter "python312.dll" -ErrorAction SilentlyContinue |
            Where-Object { $_.FullName -match '\\p\\(?:b\\)?[^\\]+\\p\\bin\\' } |
            Sort-Object LastWriteTime -Descending | Select-Object -First 1
   if (-not $pyDll) { Warn "CPython DLL missing -- stdlib bundling skipped."; return }
@@ -492,8 +494,8 @@ function Copy-CPythonStdlib {
   $pyBin = $pyDll.Directory.FullName
   foreach ($sub in @("Lib", "DLLs")) {
     $src = Join-Path $pyBin $sub
-    if (Test-Path $src) {
-      Copy-Item $src $stageBin -Recurse -Force
+    if (Test-Path -LiteralPath $src) {
+      Copy-Item -LiteralPath $src -Destination $stageBin -Recurse -Force
       Info "staged CPython $sub/ from $src"
     } elseif ($sub -eq "Lib") {
       Warn "CPython Lib/ not found under $pyBin -- pj_scripting may fail to init the interpreter."
@@ -505,13 +507,13 @@ function Copy-CPythonStdlib {
   # which does not exist on the user's machine. Reuse the package's _pth if it ships
   # one; otherwise synthesize a minimal one named to match the DLL (python312.dll ->
   # python312._pth).
-  $pth = Get-ChildItem $pyBin -Filter "python3*._pth" -ErrorAction SilentlyContinue | Select-Object -First 1
+  $pth = Get-ChildItem -LiteralPath $pyBin -Filter "python3*._pth" -ErrorAction SilentlyContinue | Select-Object -First 1
   if ($pth) {
-    Copy-Item $pth.FullName $stageBin -Force
+    Copy-Item -LiteralPath $pth.FullName -Destination $stageBin -Force
     Info "staged $($pth.Name)"
   } else {
     $pthName = [System.IO.Path]::GetFileNameWithoutExtension($pyDll.Name) + "._pth"
-    Set-Content -Path (Join-Path $stageBin $pthName) -Value @(".", "Lib", "DLLs", "import site") -Encoding ASCII
+    Set-Content -LiteralPath (Join-Path $stageBin $pthName) -Value @(".", "Lib", "DLLs", "import site") -Encoding ASCII
     Info "generated $pthName (portable stdlib path, relative to the DLL)"
   }
 }
@@ -578,6 +580,12 @@ $closing
 foreach ($f in Get-ChildItem (Join-Path $pkgSrc "meta") -File | Where-Object { $_.Name -ne "package.xml" }) {
   Copy-Item $f.FullName $stageMeta -Force
 }
+
+# Compile the component catalog with the same pinned Qt kit as the application.
+$lrelease = Resolve-Exe "lrelease.exe" (Split-Path $windeployqt -Parent)
+if (-not $lrelease) { Die "lrelease.exe not found. Install Qt Linguist tools in the selected kit or add them to PATH." }
+& $lrelease (Join-Path $stageMeta "zh_CN.ts") -qm (Join-Path $stageMeta "zh_CN.qm")
+if ($LASTEXITCODE -ne 0) { Die "Installer translation compilation failed." }
 
 if ($ExtraPrefix) {
   Copy-Item (Join-Path $stageData "share/licenses/Qt-LGPL.txt") (Join-Path $stageMeta "license_lgpl.txt") -Force

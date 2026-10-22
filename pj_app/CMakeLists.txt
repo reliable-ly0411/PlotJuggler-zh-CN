@@ -342,7 +342,7 @@ if(PJ_BUILD_TESTS)
     target_include_directories(splash_meme_pool_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_compile_definitions(splash_meme_pool_test PRIVATE
         PJ_MEMES_SOURCE_DIR="${CMAKE_SOURCE_DIR}/resources/memes")
-    target_link_libraries(splash_meme_pool_test PRIVATE pj_widgets pj_resources Qt6::Widgets Qt6::Svg GTest::gtest)
+    target_link_libraries(splash_meme_pool_test PRIVATE pj_app_language pj_widgets pj_resources Qt6::Widgets Qt6::Svg GTest::gtest)
     if(DEFINED PJ_WARNING_FLAGS)
         target_compile_options(splash_meme_pool_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
@@ -553,7 +553,8 @@ if(PJ_BUILD_TESTS)
     # The left column's width belongs to the user: neither a window resize nor a
     # chart-area takeover may move the separator they dragged.
     list(APPEND PJ_APP_GUI_TEST_SOURCES
-        tests/main_window_panel_geometry_test.cpp)
+        tests/main_window_panel_geometry_test.cpp
+        tests/left_panel_localized_sources_test.cpp)
 
     # A toolbox panel with a download in flight folds into a background tab
     # instead of being destroyed: the banner X, the folded tab's own close, the

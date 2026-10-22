@@ -1,3 +1,4 @@
+#include "pj_plugins/host_qt/bundled_translations.hpp"
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MIT
 #include <pj_widgets/Dialog.h>
@@ -471,27 +472,33 @@ QWidget* PanelEngine::openPanel() {
     // widget_data() here doubled the cost of every high-frequency event (a
     // slider drag) for metadata that changes at most once per tick.
     const PJ::WidgetDataView& picker_view = impl_->prev_view;
+    const auto picker_text = [&](const char* property, const std::string& text) {
+      return bundledNamedDisplayText(impl_->root, QString::fromStdString(name), property, QString::fromStdString(text));
+    };
     if (picker_view.isFilePicker(name)) {
       const QString path = PJ::FileDialog::getOpenFileName(
           impl_->root,
-          QString::fromStdString(picker_view.filePickerTitle(name).value_or(QObject::tr("Select File").toStdString())),
-          QString(), QString::fromStdString(picker_view.filePickerFilter(name).value_or("")));
+          picker_text(
+              "pickerTitle", picker_view.filePickerTitle(name).value_or(QObject::tr("Select File").toStdString())),
+          QString(), picker_text("pickerFilter", picker_view.filePickerFilter(name).value_or("")));
       if (!path.isEmpty()) {
         forward(name, PJ::WidgetEventBuilder::fileSelected(path.toStdString()));
       }
     } else if (picker_view.isSaveFilePicker(name)) {
       const QString path = PJ::FileDialog::getSaveFileName(
           impl_->root,
-          QString::fromStdString(picker_view.filePickerTitle(name).value_or(QObject::tr("Save File").toStdString())),
-          QString(), QString::fromStdString(picker_view.filePickerFilter(name).value_or("")),
+          picker_text(
+              "pickerTitle", picker_view.filePickerTitle(name).value_or(QObject::tr("Save File").toStdString())),
+          QString(), picker_text("pickerFilter", picker_view.filePickerFilter(name).value_or("")),
           QString::fromStdString(picker_view.saveFilePickerDefaultSuffix(name).value_or("")));
       if (!path.isEmpty()) {
         forward(name, PJ::WidgetEventBuilder::fileSelected(path.toStdString()));
       }
     } else if (picker_view.isFolderPicker(name)) {
       const QString path = PJ::FileDialog::getExistingDirectory(
-          impl_->root, QString::fromStdString(
-                           picker_view.folderPickerTitle(name).value_or(QObject::tr("Select Folder").toStdString())));
+          impl_->root,
+          picker_text(
+              "pickerTitle", picker_view.folderPickerTitle(name).value_or(QObject::tr("Select Folder").toStdString())));
       if (!path.isEmpty()) {
         forward(name, PJ::WidgetEventBuilder::folderSelected(path.toStdString()));
       }

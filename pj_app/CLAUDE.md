@@ -83,7 +83,10 @@ These tests retain their standalone executable and ctest entry:
 - `layout_import_batch_test`: desktop-only, with both mock file-source and
   runtime host object-parser plugin paths.
 - `splash_meme_pool_test` (`SplashMemePoolTest`): compiles `Splashscreen.cpp`
-  standalone with `PJ_MEMES_SOURCE_DIR` and the shipped resources.
+  standalone with `PJ_MEMES_SOURCE_DIR`, the shipped resources and the production
+  language catalog. It covers meme geometry, translated banner subtitles across
+  translator lifetimes, and the Chinese fresh-profile banner default without
+  overwriting an explicitly saved meme preference.
 
 `ExportedSymbolsGuard` remains a script test, enabled when the platform and
 `nm` support inspecting the executable's exported symbols.
@@ -236,3 +239,9 @@ this separately licensed fallback before constructing the shell, keeping the exi
 Noto Sans UI family while allowing Chinese text on hosts without system CJK fonts.
 The native release packaging copies the pinned font and its OFL text together;
 source builds and WebAssembly do not download it at application startup.
+
+## Localized startup artwork
+
+Chinese sessions always compose the translated banner, even when an older saved
+profile selects memes. The saved mode is not rewritten and remains effective in
+English sessions. Preferences shows that saved choice and explains the override.

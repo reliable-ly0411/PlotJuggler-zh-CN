@@ -1,0 +1,44 @@
+{
+  "verified_at": "2026-10-20T09:49:19.410224+00:00",
+  "deleted_remote_branches": [
+    {
+      "branch": "zh-CN-4.x-ci/release-candidate",
+      "head_sha": "14c919f903936130c151818dbf1a0144ea6a6050",
+      "merged_pull_request": 8,
+      "ancestor_of_dev_and_stable": true,
+      "remote_absent": true
+    },
+    {
+      "branch": "zh-CN-4.x-feat/localization-foundation",
+      "head_sha": "bfb110d7542a6d90f95d0ebb4b640b05f70ea7db",
+      "merged_pull_request": 7,
+      "ancestor_of_dev_and_stable": true,
+      "remote_absent": true
+    }
+  ],
+  "retained_branches": [
+    {
+      "branch": "zh-CN-4.x-ci/publish-accepted-v4-0-0-zh-1-rc-1-run-39390859457-attempt-1",
+      "head_sha": "14c919f903936130c151818dbf1a0144ea6a6050",
+      "reason": "Version/run-specific audit ref must not be reused or rewritten."
+    },
+    {
+      "branch": "zh-CN-4.x-ci/release-asset-filenames",
+      "head_sha": "f1cb571251d6d1973893032065ae565d15169048",
+      "reason": "Unmerged future workflow change."
+    },
+    {
+      "branch": "zh-CN-4.x-docs/bin-curve-acceptance-20261020",
+      "head_sha": "f8dfc47323ef8084750dad2d20a781b481725cf0",
+      "reason": "Independent acceptance and final publication evidence."
+    },
+    {
+      "branch": "zh-CN-4.x-docs/bin-curve-reproduction",
+      "head_sha": "8c9aa7c40c193b25a6f3b8b1e2007cfe6961a9cd",
+      "reason": "Unmerged original defect reproduction evidence."
+    }
+  ],
+  "tags_unchanged": true,
+  "scope": "Only two fully merged ordinary 4.x temporary branches; unrelated refs untouched.",
+  "local_candidate_checkout": "Retained clean at accepted source for recovery; no worktree removed."
+}

@@ -3,6 +3,8 @@
 
 #include "pj_scene3d_widgets/layers/pointcloud_layer.h"
 
+#include "pj_widgets/Colormap.h"
+
 #include <QComboBox>
 #include <QFormLayout>
 #include <QHBoxLayout>
@@ -596,10 +598,10 @@ QWidget* PointCloudLayer::createConfigWidget(QWidget* parent) {
       PJ::theme::space(PJ::theme::Space::None), PJ::theme::space(PJ::theme::Space::None));
   colormap_row_layout->setSpacing(PJ::theme::space(PJ::theme::Space::Comfortable));
   auto* colormap_combo = new PJ::ComboBox(colormap_row);
-  colormap_combo->addItem(u"turbo"_s, static_cast<int>(PointcloudRenderPass::Colormap::kTurbo));
-  colormap_combo->addItem(u"viridis"_s, static_cast<int>(PointcloudRenderPass::Colormap::kViridis));
-  colormap_combo->addItem(u"plasma"_s, static_cast<int>(PointcloudRenderPass::Colormap::kPlasma));
-  colormap_combo->addItem(u"grayscale"_s, static_cast<int>(PointcloudRenderPass::Colormap::kGrayscale));
+  colormap_combo->addItem(PJ::colormapDisplayName(PJ::Colormap::kTurbo), static_cast<int>(PointcloudRenderPass::Colormap::kTurbo));
+  colormap_combo->addItem(PJ::colormapDisplayName(PJ::Colormap::kViridis), static_cast<int>(PointcloudRenderPass::Colormap::kViridis));
+  colormap_combo->addItem(PJ::colormapDisplayName(PJ::Colormap::kPlasma), static_cast<int>(PointcloudRenderPass::Colormap::kPlasma));
+  colormap_combo->addItem(PJ::colormapDisplayName(PJ::Colormap::kGrayscale), static_cast<int>(PointcloudRenderPass::Colormap::kGrayscale));
   colormap_combo->setCurrentIndex(static_cast<int>(colormap_));
   colormap_row_layout->addWidget(colormap_combo, 1);
   auto* invert_btn = new QPushButton(colormap_row);

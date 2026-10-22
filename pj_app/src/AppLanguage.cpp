@@ -33,6 +33,12 @@ AppLanguage::AppLanguage(QCoreApplication& app, const QString& language)
     : app_(app), language_(normalizedLanguage(language)) {
   initializeTranslationResources();
   app_.setProperty("interfaceLanguage", language_);
+  // Rebuilt pinned native plugins localize fixed text at its formatting site,
+  // before it is combined with source code or server/user data. No credentials,
+  // protocol data or persisted plugin configuration are passed through this hint.
+  previous_plugin_language_set_ = qEnvironmentVariableIsSet("PLOTJUGGLER_UI_LANGUAGE");
+  previous_plugin_language_ = qgetenv("PLOTJUGGLER_UI_LANGUAGE");
+  qputenv("PLOTJUGGLER_UI_LANGUAGE", language_.toUtf8());
   if (language_ == "zh_CN"_L1) {
     catalog_loaded_ = translator_.load(u":/i18n/plotjuggler4_zh_CN.qm"_s) && app_.installTranslator(&translator_);
     if (!catalog_loaded_) {
@@ -42,6 +48,11 @@ AppLanguage::AppLanguage(QCoreApplication& app, const QString& language)
 }
 
 AppLanguage::~AppLanguage() {
+  if (previous_plugin_language_set_) {
+    qputenv("PLOTJUGGLER_UI_LANGUAGE", previous_plugin_language_);
+  } else {
+    qunsetenv("PLOTJUGGLER_UI_LANGUAGE");
+  }
   if (catalog_loaded_) {
     app_.removeTranslator(&translator_);
   }
@@ -61,4 +72,24 @@ AppLanguage::~AppLanguage() {
     QT_TRANSLATE_NOOP("QPlatformTheme", "Cancel"),   QT_TRANSLATE_NOOP("QPlatformTheme", "Discard"),
     QT_TRANSLATE_NOOP("QPlatformTheme", "Help"),     QT_TRANSLATE_NOOP("QPlatformTheme", "Apply"),
     QT_TRANSLATE_NOOP("QPlatformTheme", "Reset"),    QT_TRANSLATE_NOOP("QPlatformTheme", "Restore Defaults"),
+};
+
+// Qt 6.11.1's qtbase_zh_CN still carries the older QFileDialog labels and
+// file-icon context. Keep the current runtime keys, including accelerators
+// and platform disambiguation, in the application catalog as a small override.
+[[maybe_unused]] static const char* const kQtFileDialogKeys[] = {
+    QT_TRANSLATE_NOOP("QFileDialog", "&Look in:"),
+    QT_TRANSLATE_NOOP("QFileDialog", "Files of &type:"),
+    QT_TRANSLATE_NOOP("QAbstractFileIconProvider", "Drive"),
+    QT_TRANSLATE_NOOP("QAbstractFileIconProvider", "File"),
+    QT_TRANSLATE_NOOP("QAbstractFileIconProvider", "Unknown"),
+};
+[[maybe_unused]] static const struct {
+  const char* source;
+  const char* comment;
+} kQtFileIconProviderKeys[] = {
+    QT_TRANSLATE_NOOP3("QAbstractFileIconProvider", "File Folder", "Match Windows Explorer"),
+    QT_TRANSLATE_NOOP3("QAbstractFileIconProvider", "Folder", "All other platforms"),
+    QT_TRANSLATE_NOOP3("QAbstractFileIconProvider", "Alias", "macOS Finder"),
+    QT_TRANSLATE_NOOP3("QAbstractFileIconProvider", "Shortcut", "All other platforms"),
 };

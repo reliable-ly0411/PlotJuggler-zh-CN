@@ -16,6 +16,8 @@ class PjUiLoader : public QUiLoader {
  public:
   explicit PjUiLoader(QObject* parent = nullptr);
 
+  QWidget* load(QIODevice* device, QWidget* parent = nullptr);
+
   QWidget* createWidget(const QString& class_name, QWidget* parent, const QString& name) override;
 };
 

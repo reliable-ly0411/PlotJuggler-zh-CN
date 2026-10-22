@@ -4,7 +4,7 @@
 
 Qt host for **plugin-provided dialogs**. Plugins (DataSource, MessageParser, Toolbox, Dialog) describe their UIs declaratively via the dialog protocol in `plotjuggler_sdk/pj_plugins`; this module turns those descriptions into actual `QWidget` trees and drives the typed event loop back to the plugin.
 
-Single static-library target: `pj_dialog_engine_qt`. Links `Qt6::Widgets`, `Qt6::UiTools`, `Qt6::SvgWidgets`, and the vendored `plotjuggler_qwt` (which backs `ChartPreviewWidget` — there is no `Qt6::Charts` dependency).
+Single static-library target: `pj_dialog_engine_qt`. Links `Qt6::Widgets`, `Qt6::UiTools`, `Qt6::SvgWidgets`, `Qt6::Xml`, and the vendored `plotjuggler_qwt` (which backs `ChartPreviewWidget` — there is no `Qt6::Charts` dependency).
 
 ## What belongs here
 
@@ -74,3 +74,17 @@ Two gtest runners on the shared gui test main (`pj_add_test_runner` in `cmake/Pj
 Add tests to one of these runners when extending the protocol coverage; test files carry no `main()`.
 
 `pj_dialog_host` has no `docs/` folder — the protocol itself is documented in `plotjuggler_sdk/pj_plugins/docs/dialog-plugin-guide.md`; this host just realizes that protocol in Qt.
+
+## Fixed bundled-plugin display localization
+
+`bundled_translations.hpp` implements the fork's pinned UI display boundary.
+`PjUiLoader::load` admits only exact reviewed UI hashes (CRLF normalized to LF
+for identity only); object name, property and source text must also match.
+Unknown UI bytes or dynamic values are returned unchanged. Noneditable combo
+items retain canonical text in a separate role for comparisons/events; editable
+inputs and raw data/code/table bodies are never translated by a broad matcher.
+Mixed user/internal prose is localized at its typed construction site in the
+five rebuilt source-patched plugins; Mosaico retains its official binary and
+remaining mixed English (issue #20), not by searching arbitrary plain-text bodies.
+See `packaging/localization/plugin-patches/README.md` for build provenance and
+`tests/test_bundled_translations.py` plus native Qt regressions for guards.

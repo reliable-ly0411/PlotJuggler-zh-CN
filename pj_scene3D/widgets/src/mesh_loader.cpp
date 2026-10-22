@@ -7,6 +7,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
+#include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
 #include <QtConcurrent/QtConcurrentRun>
@@ -330,7 +331,8 @@ void appendNode(
 MeshData buildMeshData(const aiScene* scene, bool flip_to_z_up, const QString& source, const QString& base_dir) {
   MeshData out;
   if (scene == nullptr || scene->mRootNode == nullptr) {
-    out.error = u"assimp returned no scene for %1"_s.arg(source);
+    out.error =
+        QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "assimp returned no scene for %1").arg(source);
     return out;
   }
 #ifdef PJ_TARGET_WASM
@@ -349,14 +351,20 @@ MeshData buildMeshData(const aiScene* scene, bool flip_to_z_up, const QString& s
     ++node_count;
     max_node_depth = std::max(max_node_depth, depth);
     if (!browserModelStructureFits(scene->mNumMaterials, node_count, max_node_depth)) {
-      out.error = u"model exceeds browser structure limits in %1 (%2 materials, %3 nodes, depth %4)"_s.arg(
-          source, QString::number(scene->mNumMaterials), QString::number(node_count), QString::number(max_node_depth));
+      out.error = QCoreApplication::translate(
+                      "pj::scene3d::MeshDiagnostics",
+                      "model exceeds browser structure limits in %1 (%2 materials, %3 nodes, depth %4)")
+                      .arg(
+                          source, QString::number(scene->mNumMaterials), QString::number(node_count),
+                          QString::number(max_node_depth));
       return out;
     }
     for (unsigned int child_index = 0; child_index < node->mNumChildren; ++child_index) {
       if (node->mChildren[child_index] == nullptr ||
           pending_nodes.size() + node_count >= kBrowserMaxModelNodesPerMesh) {
-        out.error = u"model has an invalid or over-limit node graph in %1"_s.arg(source);
+        out.error = QCoreApplication::translate(
+                        "pj::scene3d::MeshDiagnostics", "model has an invalid or over-limit node graph in %1")
+                        .arg(source);
         return out;
       }
       pending_nodes.emplace_back(node->mChildren[child_index], depth + 1U);
@@ -364,12 +372,15 @@ MeshData buildMeshData(const aiScene* scene, bool flip_to_z_up, const QString& s
     for (unsigned int reference_index = 0; reference_index < node->mNumMeshes; ++reference_index) {
       const unsigned int mesh_index = node->mMeshes[reference_index];
       if (mesh_index >= scene->mNumMeshes || scene->mMeshes[mesh_index] == nullptr) {
-        out.error = u"model has an invalid mesh reference in %1"_s.arg(source);
+        out.error =
+            QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "model has an invalid mesh reference in %1")
+                .arg(source);
         return out;
       }
       const aiMesh* mesh = scene->mMeshes[mesh_index];
       if (mesh->mNumVertices > std::numeric_limits<std::uint64_t>::max() - vertex_count) {
-        out.error = u"model vertex count overflow in %1"_s.arg(source);
+        out.error = QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "model vertex count overflow in %1")
+                        .arg(source);
         return out;
       }
       vertex_count += mesh->mNumVertices;
@@ -377,7 +388,8 @@ MeshData buildMeshData(const aiScene* scene, bool flip_to_z_up, const QString& s
         const aiFace& face = mesh->mFaces[face_index];
         if (face.mNumIndices == 3U) {
           if (index_count > std::numeric_limits<std::uint64_t>::max() - 3U) {
-            out.error = u"model index count overflow in %1"_s.arg(source);
+            out.error = QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "model index count overflow in %1")
+                            .arg(source);
             return out;
           }
           index_count += 3U;
@@ -389,8 +401,11 @@ MeshData buildMeshData(const aiScene* scene, bool flip_to_z_up, const QString& s
     }
   }
   if (!browserModelMeshCountsFit(vertex_count, index_count, submesh_count)) {
-    out.error = u"model exceeds browser geometry limits in %1 (%2 vertices, %3 indices, %4 submeshes)"_s.arg(
-        source, QString::number(vertex_count), QString::number(index_count), QString::number(submesh_count));
+    out.error =
+        QCoreApplication::translate(
+            "pj::scene3d::MeshDiagnostics",
+            "model exceeds browser geometry limits in %1 (%2 vertices, %3 indices, %4 submeshes)")
+            .arg(source, QString::number(vertex_count), QString::number(index_count), QString::number(submesh_count));
     return out;
   }
   out.vertices.reserve(static_cast<std::size_t>(vertex_count));
@@ -407,14 +422,16 @@ MeshData buildMeshData(const aiScene* scene, bool flip_to_z_up, const QString& s
   }
 #ifdef PJ_TARGET_WASM
   if (texture_budget.exceeded) {
-    out.error = u"model exceeds the browser embedded-texture limit in %1"_s.arg(source);
+    out.error = QCoreApplication::translate(
+                    "pj::scene3d::MeshDiagnostics", "model exceeds the browser embedded-texture limit in %1")
+                    .arg(source);
     return out;
   }
 #endif
   const glm::mat3 extra = flip_to_z_up ? zUpFromYUpRotation() : glm::mat3(1.0f);
   appendNode(scene, scene->mRootNode, glm::mat4(1.0f), extra, materials, out);
   if (out.vertices.empty() || out.indices.empty()) {
-    out.error = u"no renderable geometry in %1"_s.arg(source);
+    out.error = QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "no renderable geometry in %1").arg(source);
     out.ok = false;
     return out;
   }
@@ -424,8 +441,9 @@ MeshData buildMeshData(const aiScene* scene, bool flip_to_z_up, const QString& s
       texture_budget.bytes);
   if (!retained.has_value() || *retained > kBrowserMaxModelRetainedBytesPerMesh) {
     out = {};
-    out.error = u"model would retain more than %1 MiB in the browser"_s.arg(
-        kBrowserMaxModelRetainedBytesPerMesh / (1024ULL * 1024ULL));
+    out.error = QCoreApplication::translate(
+                    "pj::scene3d::MeshDiagnostics", "model would retain more than %1 MiB in the browser")
+                    .arg(kBrowserMaxModelRetainedBytesPerMesh / (1024ULL * 1024ULL));
     return out;
   }
 #endif
@@ -457,7 +475,8 @@ MeshData MeshLoader::importFromFile(const QString& path, bool flip_to_z_up) {
     if (source_info.size() < 0 || !browserModelSourceFits(static_cast<std::uint64_t>(source_info.size()))) {
       MeshData out;
       out.error =
-          u"model source exceeds the %1 MiB browser limit"_s.arg(kBrowserMaxModelSourceBytes / (1024ULL * 1024ULL));
+          QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "model source exceeds the %1 MiB browser limit")
+              .arg(kBrowserMaxModelSourceBytes / (1024ULL * 1024ULL));
       return out;
     }
 #endif
@@ -467,18 +486,21 @@ MeshData MeshLoader::importFromFile(const QString& path, bool flip_to_z_up) {
       MeshData out;
       out.error = QString::fromUtf8(importer.GetErrorString());
       if (out.error.isEmpty()) {
-        out.error = u"assimp failed to import %1"_s.arg(path);
+        out.error = QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "assimp failed to import %1").arg(path);
       }
       return out;
     }
     return buildMeshData(scene, flip_to_z_up, path, QFileInfo(path).absolutePath());
   } catch (const std::exception& ex) {
     MeshData out;
-    out.error = u"mesh import of %1 threw: %2"_s.arg(path, QString::fromUtf8(ex.what()));
+    out.error = QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "mesh import of %1 threw: %2")
+                    .arg(path, QString::fromUtf8(ex.what()));
     return out;
   } catch (...) {
     MeshData out;
-    out.error = u"mesh import of %1 threw an unknown exception"_s.arg(path);
+    out.error =
+        QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "mesh import of %1 threw an unknown exception")
+            .arg(path);
     return out;
   }
 }
@@ -490,7 +512,8 @@ MeshData MeshLoader::importFromMemory(const QByteArray& bytes, const QString& fo
     if (bytes.size() < 0 || !browserModelSourceFits(static_cast<std::uint64_t>(bytes.size()))) {
       MeshData out;
       out.error =
-          u"model source exceeds the %1 MiB browser limit"_s.arg(kBrowserMaxModelSourceBytes / (1024ULL * 1024ULL));
+          QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "model source exceeds the %1 MiB browser limit")
+              .arg(kBrowserMaxModelSourceBytes / (1024ULL * 1024ULL));
       return out;
     }
 #endif
@@ -503,7 +526,8 @@ MeshData MeshLoader::importFromMemory(const QByteArray& bytes, const QString& fo
       MeshData out;
       out.error = QString::fromUtf8(importer.GetErrorString());
       if (out.error.isEmpty()) {
-        out.error = u"assimp failed to import %1 buffer"_s.arg(format_hint);
+        out.error = QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "assimp failed to import %1 buffer")
+                        .arg(format_hint);
       }
       return out;
     }
@@ -513,11 +537,14 @@ MeshData MeshLoader::importFromMemory(const QByteArray& bytes, const QString& fo
     return buildMeshData(scene, flip_to_z_up, u"<memory:%1>"_s.arg(format_hint), QString{});
   } catch (const std::exception& ex) {
     MeshData out;
-    out.error = u"mesh import of %1 buffer threw: %2"_s.arg(format_hint, QString::fromUtf8(ex.what()));
+    out.error = QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "mesh import of %1 buffer threw: %2")
+                    .arg(format_hint, QString::fromUtf8(ex.what()));
     return out;
   } catch (...) {
     MeshData out;
-    out.error = u"mesh import of %1 buffer threw an unknown exception"_s.arg(format_hint);
+    out.error = QCoreApplication::translate(
+                    "pj::scene3d::MeshDiagnostics", "mesh import of %1 buffer threw an unknown exception")
+                    .arg(format_hint);
     return out;
   }
 }

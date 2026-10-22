@@ -32,19 +32,49 @@ jobs:
         run: |
           python3 scripts/check_branch_name.py "$SOURCE_BRANCH"
           python3 -m unittest discover -s .github/release_policy -p "test_*.py" -v
-          python3 tests/test_branch_policy.py -v
-          python3 tests/test_release_assets.py -v
-          python3 tests/test_release_versions.py -v
-          python3 tests/test_check_translations_4x.py -v
+          python3 -m unittest discover -s tests -p "test_*.py" -v
           python3 tests/check_translations_4x.py --catalog-only
           python3 tests/check_localization_provenance.py
           git diff --check
 
+  windows-source-checks:
+    # Real Windows defaults catch locale/path defects before any heavy build.
+    runs-on: windows-2022
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      PYTHONUTF8: '0'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Default-encoding source and packaging preflight
+        run: |
+          python -c "import locale,sys; print('default encoding:', locale.getencoding()); assert sys.flags.utf8_mode == 0"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s tests -p 'test_*.py' -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s .github/release_policy -p 'test_*.py' -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/check_translations_4x.py --catalog-only
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/check_localization_provenance.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./tests/check_windows_packaging.ps1
+          git diff --check
+          exit $LASTEXITCODE
+
   native:
-    # Ordinary pushes and PRs run source checks only. Native builds require
-    # an explicit manual dispatch or a new dedicated manual-build ref.
+    # Routine pushes and PRs run source checks only. Native builds require an
+    # explicit manual dispatch or first creation of a manual-build branch.
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.created && startsWith(github.ref_name, 'zh-CN-4.x-ci/manual-build-'))
-    needs: source-checks
+    needs: [source-checks, windows-source-checks]
     name: Native (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 180
@@ -159,11 +189,11 @@ jobs:
           from pathlib import Path
           import sys
           p = Path(sys.argv[1])
-          lines = p.read_text().splitlines() if p.exists() else []
+          lines = p.read_text(encoding='utf-8').splitlines() if p.exists() else []
           lines = [s for s in lines if not s.startswith(('core.sources:download_cache=', 'core.sources:download_urls='))]
           lines += [f'core.sources:download_cache={sys.argv[2]}',
                     'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources/"]']
-          p.write_text('\n'.join(lines) + '\n')
+          p.write_text('\n'.join(lines) + '\n', encoding='utf-8')
           PY
       - name: Resolve exact Linux SDK and dependencies
         if: runner.os == 'Linux'
@@ -202,7 +232,7 @@ jobs:
           for index, path in enumerate(home.glob('p/b/ffmpe*/b/build-*/ffbuild/config.log')):
               # configure starts this log with `set`, including the complete
               # process environment. Never publish that preamble as an artifact.
-              lines = path.read_text(errors='replace').splitlines()
+              lines = path.read_text(encoding='utf-8', errors='replace').splitlines()
               probes = [i for i, line in enumerate(lines)
                         if line.startswith(('require_pkg_config libdav1d ',
                                             'check_pkg_config libdav1d '))]
@@ -210,7 +240,7 @@ jobs:
                   print('No dav1d probe found; the environment-bearing log is omitted.')
                   continue
               diagnostic = '\n'.join(lines[probes[-1]:][:400]) + '\n'
-              (output / f'ffmpeg-{index}-dav1d-probe.log').write_text(diagnostic)
+              (output / f'ffmpeg-{index}-dav1d-probe.log').write_text(diagnostic, encoding='utf-8')
               print(f'--- {path.name}: {path.parent.parent.name} ---')
               print(diagnostic)
           PYLOG

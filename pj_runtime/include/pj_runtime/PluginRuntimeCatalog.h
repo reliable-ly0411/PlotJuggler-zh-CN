@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
@@ -202,7 +203,9 @@ class PluginRuntimeCatalog {
   [[nodiscard]] const RuntimeMessageParserPlugin* findParserById(std::string_view id) const;
 
   // Builds a QFileDialog-compatible filter string.
-  [[nodiscard]] std::string buildFileFilter() const;
+  [[nodiscard]] std::string buildFileFilter(
+      std::string_view supported_label = "All supported files", std::string_view all_label = "All files",
+      const std::function<std::string(const RuntimeDataSourcePlugin&)>& display_name = {}) const;
 
   // Lists parser encodings as a JSON string array.
   [[nodiscard]] std::string listAvailableEncodings() const;
