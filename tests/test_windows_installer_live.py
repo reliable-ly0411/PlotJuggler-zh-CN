@@ -19,9 +19,11 @@ class LiveProbeTests(unittest.TestCase):
         rows = []
         for stage, lang in enumerate(['zh_CN', 'en_US', 'zh_CN']):
             argv = [str(fixture), '--script', str(controller), '--root', str(targets[stage])]
-            argv += ['TargetDir=' + str(targets[stage])]
+            argv += ['TargetDir=' + str(targets[stage]), '--cache-path', '/tmp/ifw-cache',
+                     'PJProbeMarker=中文 space user@example.test']
             base = dict(language=lang, pid=10 + stage, target=str(targets[stage]),
-                        executable=str(fixture), commandLine=json.dumps(argv), liveFixturePids=[10 + stage])
+                        executable=str(fixture), commandLine=json.dumps(argv), liveFixturePids=[10 + stage],
+                        TEMP='/tmp', TMP='/tmp')
             chinese = lang == 'zh_CN'
             rows.append(dict(base, kind='introduction', title='欢迎' if chinese else 'Welcome',
                         message='欢迎使用 PlotJuggler 4 zh-CN 安装向导。' if chinese else 'Welcome to the PlotJuggler 4 zh-CN Setup.',
@@ -46,6 +48,8 @@ class LiveProbeTests(unittest.TestCase):
         self.assertEqual(argv[argv.index('--root') + 1], str(target))
         self.assertEqual([arg for arg in argv if arg.startswith('TargetDir=')], ['TargetDir=' + str(target)])
         self.assertEqual(argv[argv.index('--lang') + 1], 'zh_CN')
+        self.assertEqual(argv[argv.index('--cache-path') + 1], '/tmp/ifw-cache')
+        self.assertIn('PJProbeMarker=中文 space user@example.test', argv)
 
     def test_cli_root_alone_cannot_pass_gui_contract(self):
         data = self.records()
@@ -73,16 +77,20 @@ class LiveProbeTests(unittest.TestCase):
         data = self.records()
         for row in (data[0][4], data[0][8]):
             argv = json.loads(row['commandLine'])
-            argv[-1] = argv[-1].replace('/', '\\')
+            position = next(i for i, arg in enumerate(argv) if arg.startswith('TargetDir='))
+            argv[position] = argv[position].replace('/', '\\')
             row['commandLine'] = json.dumps(argv)
         self.check(data)
 
     def test_negative_cases(self):
-        for mutation in ('same_pid', 'missing_script', 'stale_root', 'wrong_language', 'english_standard_page', 'english_buttons', 'unexpected_page', 'stale_field', 'wrong_executable', 'lingering_previous', 'untranslated_custom'):
+        for mutation in ('same_pid', 'missing_script', 'stale_root', 'wrong_language', 'english_standard_page', 'english_buttons', 'unexpected_page', 'stale_field', 'wrong_executable', 'lingering_previous', 'untranslated_custom', 'wrong_cache', 'wrong_temp', 'missing_marker'):
             with self.subTest(mutation=mutation):
                 data = self.records()
                 row = data[0][4]
-                if mutation == 'lingering_previous': row['liveFixturePids'] = [10, 11]
+                if mutation == 'wrong_cache': row['commandLine'] = row['commandLine'].replace('/tmp/ifw-cache', '/outside-cache')
+                elif mutation == 'wrong_temp': row['TEMP'] = '/outside-temp'
+                elif mutation == 'missing_marker': row['commandLine'] = row['commandLine'].replace('user@example.test', 'lost')
+                elif mutation == 'lingering_previous': row['liveFixturePids'] = [10, 11]
                 elif mutation == 'untranslated_custom': data[0][1]['description'] = 'English'
                 elif mutation == 'same_pid': row['pid'] = 10
                 elif mutation == 'missing_script': row['commandLine'] = json.dumps(['/fixture.exe'])

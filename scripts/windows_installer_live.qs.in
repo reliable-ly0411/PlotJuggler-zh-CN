@@ -3,6 +3,24 @@
 var probe = __PROBE_CONFIG__;
 var stage = 0;
 var targetEdited = false;
+function encodePowerShellCommand(command)
+{
+    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    var bytes = [];
+    for (var i = 0; i < command.length; ++i) {
+        var code = command.charCodeAt(i);
+        bytes.push(code & 255, code >>> 8);
+    }
+    var encoded = "";
+    for (var j = 0; j < bytes.length; j += 3) {
+        var value = (bytes[j] << 16) | ((bytes[j + 1] || 0) << 8) | (bytes[j + 2] || 0);
+        encoded += alphabet.charAt((value >>> 18) & 63) + alphabet.charAt((value >>> 12) & 63);
+        encoded += j + 1 < bytes.length ? alphabet.charAt((value >>> 6) & 63) : "=";
+        encoded += j + 2 < bytes.length ? alphabet.charAt(value & 63) : "=";
+    }
+    return encoded;
+}
+
 function Controller() {
     if (installer.fileExists(probe.log)) {
         var lines = installer.readFile(probe.log, "UTF-8").split(/\r?\n/);
@@ -15,6 +33,8 @@ function record(kind, values) {
     values.kind = kind;
     values.language = installer.value("UILanguage");
     values.target = installer.value("TargetDir");
+    values.TEMP = installer.environmentVariable("TEMP");
+    values.TMP = installer.environmentVariable("TMP");
     // The observer gets this actual installer's PID and command line, not the
     // process name or launcher's PID. ASCII JSON avoids console-codepage loss.
     var payload = JSON.stringify(values).replace(/[\u007f-\uffff]/g, function(c) {
@@ -32,7 +52,7 @@ function record(kind, values) {
         "$json=$data | ConvertTo-Json -Compress -Depth 4; " +
         "[IO.File]::AppendAllText('" + probe.log.replace(/'/g, "''") +
         "', $json+[Environment]::NewLine, (New-Object Text.UTF8Encoding($false)))";
-    var result = installer.execute(probe.powershell, ["-NoProfile", "-NonInteractive", "-Command", command]);
+    var result = installer.execute(probe.powershell, ["-NoProfile", "-NonInteractive", "-EncodedCommand", encodePowerShellCommand(command)]);
     if (result.length !== 2 || result[1] !== 0) {
         gui.rejectWithoutPrompt();
         throw new Error("Live observer could not persist result: " + result);

@@ -50,6 +50,14 @@ def validate_records(records, fixture, controller, targets, parse_argv=windows_a
         if row['liveFixturePids'] != [row['pid']]:
             raise AssertionError('A previous fixture did not exit naturally before its successor')
         argv = parse_argv(row['commandLine'])
+        cache = Path(controller).parent / 'tmp' / 'ifw-cache'
+        if argv.count('--cache-path') != 1 or normalized(argv[argv.index('--cache-path') + 1]) != normalized(cache):
+            raise AssertionError('Explicit IFW cache path not preserved through restart')
+        if 'PJProbeMarker=中文 space user@example.test' not in argv:
+            raise AssertionError('Unicode/space/@ startup marker not preserved')
+        for variable in ('TEMP', 'TMP'):
+            if normalized(row[variable]) != normalized(cache.parent):
+                raise AssertionError('IFW temporary environment escaped the fixture')
         if argv[argv.index('--script') + 1] != str(controller):
             raise AssertionError('--script not preserved through restart')
         if normalized(argv[argv.index('--root') + 1]) != normalized(targets[i]):
@@ -89,7 +97,9 @@ def fixture_arguments(fixture, controller, target):
     # IFW 4.10 --root is CLI-only. GUI consumes positional userArguments.
     # Retain --root solely to exercise production restart argv preservation;
     # TargetDir is the authoritative GUI value, including the first process.
-    return [str(fixture), '--verbose', '--lang', 'zh_CN', '--script', str(controller),
+    return [str(fixture), '--verbose', '--lang', 'zh_CN',
+            '--cache-path', str(Path(controller).parent / 'tmp' / 'ifw-cache'),
+            'PJProbeMarker=中文 space user@example.test', '--script', str(controller),
             '--root', str(target), 'TargetDir=' + str(target)]
 
 
@@ -113,6 +123,9 @@ def probe_gui(fixture, temporary, powershell, template):
     finished = False
     records = []
     environment = dict(os.environ)
+    cache = temporary / 'tmp' / 'ifw-cache'
+    cache.mkdir(parents=True, exist_ok=False)
+    environment.update(TEMP=str(cache.parent), TMP=str(cache.parent))
     # Probe the real Windows platform, never an inherited offscreen backend or
     # plugins from the application's different Qt kit. IFW is self-contained.
     environment['QT_QPA_PLATFORM'] = 'windows'
@@ -139,6 +152,15 @@ def probe_gui(fixture, temporary, powershell, template):
                         wait_exit = "$end=(Get-Date).AddSeconds(5); do { $live=" + query + "; if (!$live.Count) { exit 0 }; Start-Sleep -Milliseconds 200 } while ((Get-Date) -lt $end); throw 'Final fixture did not quit naturally'"
                         subprocess.run([str(powershell), '-NoProfile', '-NonInteractive', '-Command', wait_exit],
                                        check=True, capture_output=True, timeout=15)
+                        diagnostic = output.read_text(encoding='utf-8', errors='replace')
+                        cache_lines = [line.split('Using metadata cache from ', 1)[1].strip().strip(chr(34))
+                                       for line in diagnostic.splitlines() if 'Using metadata cache from ' in line]
+                        if not cache_lines or any(normalized(Path(path).resolve()) != normalized(cache.resolve())
+                                                  for path in cache_lines):
+                            raise AssertionError('Observed IFW metadata cache escaped explicit cache path')
+                        if not cache.is_dir():
+                            raise AssertionError('Explicit metadata cache directory disappeared')
+                        print('PASS: explicit metadata cache observed; cache argv and TEMP/TMP preserved in all three processes.')
                         finished = True
                         break
                     if any(row.get('kind', '').startswith('unexpected-') for row in records):

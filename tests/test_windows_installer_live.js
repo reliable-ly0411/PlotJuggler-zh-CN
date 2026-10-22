@@ -7,7 +7,7 @@ for (let stage=0;stage<4;stage++) {
   const page={language:{currentIndex:stage%2?1:0}};
   const values={UILanguage:stage%2?'en_US':'zh_CN',TargetDir:'original'};
   const context={
-    installer:{fileExists:()=>stage>0,readFile:()=>Array(stage).fill('{"kind":"before-switch"}').join('\n'),value:key=>values[key],execute:(program,args)=>{observations.push(args);return ['',0]}},
+    installer:{environmentVariable:()=>'/tmp',fileExists:()=>stage>0,readFile:()=>Array(stage).fill('{"kind":"before-switch"}').join('\n'),value:key=>values[key],execute:(program,args)=>{observations.push(args);return ['',0]}},
     gui:{pageById:()=>({title:'Welcome'}),findChild:()=>({text:'Welcome'}),defaultButtonText:()=> 'Next',pageWidgetByObjectName:name=>name==='DynamicTargetWidget'?target:page,clickButton:(...args)=>clicks.push(args),rejectWithoutPrompt:()=>clicks.push(['reject'])},
     QInstaller:{Introduction:0},buttons:{NextButton:1,BackButton:0,CancelButton:4},
   };
