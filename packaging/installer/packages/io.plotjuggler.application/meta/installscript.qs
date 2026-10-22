@@ -65,7 +65,7 @@ Component.prototype.installerLoaded = function()
     targetDirectoryPage = gui.pageWidgetByObjectName("DynamicTargetWidget");
     targetDirectoryPage.targetDirectory.textChanged.connect(this, this.targetDirectoryChanged);
     targetDirectoryPage.targetDirectory.setText(installer.value("TargetDir"));
-    this.retranslateUi();
+    retranslateTargetDirectory();
     targetDirectoryPage.targetChooser.released.connect(this, this.targetChooserClicked);
 
     gui.pageById(QInstaller.ComponentSelection).entered.connect(this, this.componentSelectionPageEntered);
@@ -77,7 +77,7 @@ Component.prototype.targetChooserClicked = function()
     targetDirectoryPage.targetDirectory.setText(dir);
 }
 
-Component.prototype.targetDirectoryChanged = function()
+function updateTargetDirectory()
 {
     var dir = targetDirectoryPage.targetDirectory.text;
     if (installer.fileExists(dir) && installer.fileExists(dir + "/maintenancetool.exe")) {
@@ -91,6 +91,8 @@ Component.prototype.targetDirectoryChanged = function()
     }
     installer.setValue("TargetDir", dir);
 }
+
+Component.prototype.targetDirectoryChanged = updateTargetDirectory;
 
 Component.prototype.componentSelectionPageEntered = function()
 {
@@ -200,11 +202,15 @@ Component.prototype.languageRestartFailed = function()
         qsTranslate("PlotJugglerInstaller", "Could not restart the installer. Close it and run it with --lang zh_CN or --lang en_US."));
 }
 
-Component.prototype.retranslateUi = function()
+// IFW calls this reserved hook through QJSValue::call(), without binding the
+// script instance as its receiver. Keep its work independent of `this`.
+function retranslateTargetDirectory()
 {
     if (targetDirectoryPage === null)
         return;
     targetDirectoryPage.windowTitle = qsTranslate("PlotJugglerInstaller", "Choose Installation Directory");
     targetDirectoryPage.description.setText(qsTranslate("PlotJugglerInstaller", "Please select where PlotJuggler 4 will be installed:"));
-    this.targetDirectoryChanged();
+    updateTargetDirectory();
 }
+
+Component.prototype.retranslateUi = retranslateTargetDirectory;

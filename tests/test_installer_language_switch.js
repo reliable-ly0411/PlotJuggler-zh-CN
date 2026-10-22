@@ -92,3 +92,52 @@ if (!available.error && available.status === 0) {
     console.log(run.stdout.trim());
   } finally { fs.rmSync(dir,{recursive:true,force:true}); }
 } else { console.log('SKIP: PowerShell runtime unavailable'); }
+
+// IFW 4.10 Component::languageChanged -> ScriptEngine::callScriptMethod extracts
+// retranslateUi then QJSValue::call(arguments), not callWithInstance(context).
+// Exercise detached/global and foreign native-like receivers, not only method
+// calls on Component.prototype (which hid the production failure).
+for (const receiver of ['detached', 'native-like', 'script-instance']) {
+  const values = {}, shown = {};
+  let language = 'zh_CN', existing = false, maintained = false;
+  const translations = {
+    'Choose Installation Directory': '选择安装目录',
+    'Please select where PlotJuggler 4 will be installed:': '请选择 PlotJuggler 4 的安装位置：',
+  };
+  const context = {
+    installer: {
+      fileExists: name => name.endsWith('/maintenancetool.exe') ? maintained : existing,
+      setValue: (key, value) => { values[key] = value; },
+    },
+    qsTranslate: (_, source) => language === 'zh_CN' ? (translations[source] || '中文:' + source) : source,
+  };
+  vm.createContext(context);
+  vm.runInContext(script, context);
+  const hook = context.Component.prototype.retranslateUi;
+  const invoke = () => receiver === 'detached' ? hook() : hook.call(receiver === 'native-like' ? Object.create(null) : Object.create(context.Component.prototype));
+  invoke(); // The reserved hook is safe before a GUI page exists.
+  context.targetDirectoryPage = {
+    targetDirectory: {text: 'C:/isolated 中文 target'},
+    description: {setText: text => { shown.description = text; }},
+    warning: {setText: text => { shown.warning = text; }},
+  };
+  invoke();
+  assert.equal(context.targetDirectoryPage.windowTitle, '选择安装目录');
+  assert.equal(shown.description, '请选择 PlotJuggler 4 的安装位置：');
+  assert.equal(shown.warning, '');
+  assert.equal(values.TargetDir, 'C:/isolated 中文 target');
+  existing = true;
+  invoke();
+  assert.match(shown.warning, /中文:.*existing directory/);
+  maintained = true;
+  invoke();
+  assert.match(shown.warning, /中文:.*Existing installation detected/);
+  language = 'en_US';
+  context.targetDirectoryPage.targetDirectory.text = 'C:/another isolated target';
+  invoke();
+  assert.equal(context.targetDirectoryPage.windowTitle, 'Choose Installation Directory');
+  assert.equal(shown.description, 'Please select where PlotJuggler 4 will be installed:');
+  assert.ok(!shown.warning.startsWith('中文:'));
+  assert.equal(values.TargetDir, 'C:/another isolated target');
+}
+console.log('Reserved IFW translation hook receiver regression checks passed');
