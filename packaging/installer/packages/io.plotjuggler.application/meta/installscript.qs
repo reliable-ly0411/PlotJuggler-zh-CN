@@ -3,9 +3,10 @@
 // PlotJuggler 4 IFW install script.
 //
 // Behavior:
-// - Per-user install by default (no gainAdminRights). Runs from
-//   %LOCALAPPDATA%\PlotJuggler4-zh-CN unless the user picks another dir. Corporate
-//   locked-down machines that block UAC prompts still install cleanly.
+// - Per-user target by default: %LOCALAPPDATA%\PlotJuggler4-zh-CN.
+//   This script does not request elevation. IFW operations or a previous
+//   installation's undo history may still require additional rights; those
+//   administrator scenarios are not guaranteed by per-user registration.
 // - Creates Start Menu + Desktop shortcuts on Windows.
 // - Prompts before purging a previous installation in the same directory
 //   (the earlier PJ3-inherited flow ran maintenancetool purge silently).

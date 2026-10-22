@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 import copy
 import json
+import os
 from pathlib import Path, PureWindowsPath
 import shutil
 import subprocess
@@ -19,12 +20,26 @@ import verify_windows_installer_resources as resource
 
 class UpgradeTests(unittest.TestCase):
     def test_exact_registration(self):
-        rows = [dict(scope='user', location='C:/isolated/target', uninstall=json.dumps(['C:/isolated/target/maintenancetool.exe','--uninstall']))]
+        rows = [dict(scope='user', location='C:/isolated/target', uninstall=json.dumps(['C:/isolated/target/maintenancetool.exe','--start-uninstaller']))]
         upgrade.validate_registration(rows, 'C:/isolated/target', json.loads)
+        for flags in (['--uninstall'], ['--start-uninstaller','--extra'], ['--start-uninstaller','purge'], []):
+            invalid = [dict(rows[0], uninstall=json.dumps(['C:/isolated/target/maintenancetool.exe', *flags]))]
+            with self.assertRaises(AssertionError):
+                upgrade.validate_registration(invalid, 'C:/isolated/target', json.loads)
         for bad in [[], rows*2, [dict(rows[0], scope='machine64')], [dict(rows[0], location='C:/other')],
-                    [dict(rows[0], uninstall=json.dumps(['C:/other/maintenancetool.exe','--uninstall']))]]:
+                    [dict(rows[0], uninstall=json.dumps(['C:/other/maintenancetool.exe','--start-uninstaller']))]]:
             with self.assertRaises(AssertionError):
                 upgrade.validate_registration(bad, 'C:/isolated/target', json.loads)
+
+    @unittest.skipUnless(os.name == 'nt', 'Native CommandLineToArgvW requires Windows')
+    def test_native_official_uninstall_command(self):
+        target = 'C:/isolated target'
+        command = '"C:/isolated target/maintenancetool.exe" --start-uninstaller'
+        row = dict(scope='user', location=target, uninstall=command)
+        upgrade.validate_registration([row], target)
+        for invalid in (command+' --extra', command+' purge', command.replace('--start-uninstaller','--uninstall')):
+            with self.assertRaises(AssertionError):
+                upgrade.validate_registration([dict(row, uninstall=invalid)], target)
 
     def test_initial_scope_arguments(self):
         for path_type in (Path, PureWindowsPath):

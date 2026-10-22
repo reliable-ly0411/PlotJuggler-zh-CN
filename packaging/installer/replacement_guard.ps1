@@ -138,7 +138,9 @@ function Get-PJReplacementRegistration([string]$Target, [string]$Tool) {
                             if (![string]::Equals($location, $Target, [StringComparison]::OrdinalIgnoreCase)) { continue }
                             if ($name -notmatch '^\{[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\}$') { throw 'registry-uuid' }
                             $uninstall = [string]$key.GetValue('UninstallString')
-                            if ($uninstall -notmatch '^"([^"]+)" --uninstall$') { throw 'registry-command' }
+                            # IFW 4.10 registerApplication(): quoted tool + scStartUninstallerLong.
+                            # This registry entry launches its GUI; purge below is a separate CLI command.
+                            if ($uninstall -notmatch '^"([^"]+)" --start-uninstaller$') { throw 'registry-command' }
                             $registeredTool = Resolve-PJReplacementPath $Matches[1]
                             if (![string]::Equals($registeredTool, $Tool, [StringComparison]::OrdinalIgnoreCase)) { throw 'registry-tool' }
                             $registrations += [pscustomobject]@{ Hive=$hive; View=$view; Name=$name; Target=$Target; Tool=$Tool }

@@ -90,18 +90,21 @@ if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) {
             if ($base.OpenSubKey($prefix + $name)) { throw 'Test UUID already exists' }
         }
         $key = $base.CreateSubKey($prefix + $names[0]); $created += $names[0]
-        try { $key.SetValue('InstallLocation', $identityTarget); $key.SetValue('UninstallString', ('"' + $identityTool + '" --uninstall')) }
+        try { $key.SetValue('InstallLocation', $identityTarget); $key.SetValue('UninstallString', ('"' + $identityTool + '" --start-uninstaller')) }
         finally { $key.Dispose() }
         $registration = Get-PJReplacementRegistration $identityTarget $identityTool
         if ($registration.Name -ne $names[0] -or !(Test-PJReplacementRegistrationPresent $registration)) { throw 'Exact UUID not found' }
         $key = $base.CreateSubKey($prefix + $names[1]); $created += $names[1]
-        try { $key.SetValue('InstallLocation', $identityTarget); $key.SetValue('UninstallString', ('"' + $identityTool + '" --uninstall')) }
+        try { $key.SetValue('InstallLocation', $identityTarget); $key.SetValue('UninstallString', ('"' + $identityTool + '" --start-uninstaller')) }
         finally { $key.Dispose() }
         Assert-Fails { Get-PJReplacementRegistration $identityTarget $identityTool } 'registry-identity'
         $base.DeleteSubKey($prefix + $names[1]); $created = @($names[0])
-        $key = $base.OpenSubKey($prefix + $names[0], $true)
-        try { $key.SetValue('UninstallString', 'unexpected-command') } finally { $key.Dispose() }
-        Assert-Fails { Get-PJReplacementRegistration $identityTarget $identityTool } 'registry-command'
+        foreach ($invalid in @('unexpected-command', ('"' + $identityTool + '" --uninstall'),
+                ('"' + $identityTool + '" --start-uninstaller --extra'), ('"' + $identityTool + '" --start-uninstaller purge'))) {
+            $key = $base.OpenSubKey($prefix + $names[0], $true)
+            try { $key.SetValue('UninstallString', $invalid) } finally { $key.Dispose() }
+            Assert-Fails { Get-PJReplacementRegistration $identityTarget $identityTool } 'registry-command'
+        }
     } finally { foreach ($name in $created) { $base.DeleteSubKey($prefix + $name) } }
     if (Test-PJReplacementRegistrationPresent $registration) { throw 'Exact deleted UUID still present' }
     # Only test-owned marker and scratch are removed, after all descendants exit.

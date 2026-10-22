@@ -49,7 +49,7 @@ def validate_registration(rows, target, parse_argv=None):
     if normalized(rows[0]['location']) != normalized(target):
         raise AssertionError('Fixture UUID target identity mismatch')
     argv = parse_argv(rows[0]['uninstall'])
-    if len(argv) != 2 or argv[1] != '--uninstall' or normalized(argv[0]) != normalized(Path(target) / 'maintenancetool.exe'):
+    if len(argv) != 2 or argv[1] != '--start-uninstaller' or normalized(argv[0]) != normalized(Path(target) / 'maintenancetool.exe'):
         raise AssertionError('Fixture UUID maintenance-tool identity mismatch')
 
 
