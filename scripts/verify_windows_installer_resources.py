@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""Build, inspect, then delete a synthetic IFW fixture; never launch its GUI.
+"""Build and probe a synthetic IFW GUI fixture; never install its payload.
 
 Windows-only integration smoke. Requires PowerShell, 7z and a Qt kit (Linguist,
 rcc and qtbase_zh_CN.qm). Downloads only the existing hash-pinned official IFW
@@ -114,7 +114,9 @@ def smoke(lrelease, rcc=None, qtbase=None):
              '-c', config, '-p', packages, fixture], cwd=temporary)
         verify_pe_resources(fixture)
         print('PASS: real IFW fixture PE embeds both Chinese catalogs and resource marker.')
-        print('No generated installer was executed. Windows GUI behavior remains unverified.')
+        from windows_installer_live import probe_gui
+        probe_gui(fixture, temporary, shell, ROOT / 'scripts/windows_installer_live.qs.in')
+        print('PASS: synthetic GUI mechanism only; no payload installed. Full application/human acceptance is separate.')
 
 
 def main():

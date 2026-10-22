@@ -1,0 +1,92 @@
+// SPDX-License-Identifier: MPL-2.0
+// Synthetic fixture only. Never reaches component selection or installation.
+var probe = __PROBE_CONFIG__;
+var stage = 0;
+var targetEdited = false;
+function Controller() {
+    if (installer.fileExists(probe.log)) {
+        var lines = installer.readFile(probe.log, "UTF-8").split(/\r?\n/);
+        for (var i = 0; i < lines.length; ++i) {
+            if (lines[i] && JSON.parse(lines[i]).kind === "before-switch") ++stage;
+        }
+    }
+}
+function record(kind, values) {
+    values.kind = kind;
+    values.language = installer.value("UILanguage");
+    values.target = installer.value("TargetDir");
+    // The observer gets this actual installer's PID and command line, not the
+    // process name or launcher's PID. ASCII JSON avoids console-codepage loss.
+    var payload = JSON.stringify(values).replace(/[\u007f-\uffff]/g, function(c) {
+        return "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4);
+    });
+    var command = "$ErrorActionPreference='Stop'; " +
+        "$child=Get-CimInstance Win32_Process -Filter ('ProcessId='+$PID); " +
+        "$parent=Get-CimInstance Win32_Process -Filter ('ProcessId='+$child.ParentProcessId); " +
+        "$data='" + payload.replace(/'/g, "''") + "' | ConvertFrom-Json; " +
+        "$data | Add-Member -NotePropertyName pid -NotePropertyValue $parent.ProcessId; " +
+        "$data | Add-Member -NotePropertyName commandLine -NotePropertyValue $parent.CommandLine; " +
+        "$data | Add-Member -NotePropertyName executable -NotePropertyValue $parent.ExecutablePath; " +
+        "$live=@(Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -and [String]::Equals($_.ExecutablePath, $parent.ExecutablePath, [StringComparison]::OrdinalIgnoreCase) } | ForEach-Object { $_.ProcessId }); " +
+        "$data | Add-Member -NotePropertyName liveFixturePids -NotePropertyValue $live; " +
+        "$json=$data | ConvertTo-Json -Compress -Depth 4; " +
+        "[IO.File]::AppendAllText('" + probe.log.replace(/'/g, "''") +
+        "', $json+[Environment]::NewLine, (New-Object Text.UTF8Encoding($false)))";
+    var result = installer.execute(probe.powershell, ["-NoProfile", "-NonInteractive", "-Command", command]);
+    if (result.length !== 2 || result[1] !== 0) {
+        gui.rejectWithoutPrompt();
+        throw new Error("Live observer could not persist result: " + result);
+    }
+}
+Controller.prototype.IntroductionPageCallback = function() {
+    // Refuse to navigate if IFW did not honor the isolated target. This check
+    // runs before any component-selection signal could inspect an old install.
+    function normalizedTarget(path) { return String(path).replace(/\\/g, "/").toLowerCase(); }
+    if (stage > 2 || normalizedTarget(installer.value("TargetDir")) !== normalizedTarget(probe.targets[stage])) {
+        record("unexpected-target", {});
+        gui.rejectWithoutPrompt();
+        return;
+    }
+    var page = gui.pageById(QInstaller.Introduction);
+    record("introduction", {
+        title: String(page.title),
+        message: String(gui.findChild(page, "MessageLabel").text),
+        // In IFW 4.10 this cache is populated from live QWizard::buttonText(),
+        // not qsTranslate or the package's custom-page text.
+        nextButton: String(gui.defaultButtonText(buttons.NextButton)),
+        cancelButton: String(gui.defaultButtonText(buttons.CancelButton))
+    });
+    if (stage === 2) {
+        record("finished", {});
+        gui.rejectWithoutPrompt();
+        return;
+    }
+    gui.clickButton(buttons.NextButton, 250);
+};
+Controller.prototype.DynamicLanguageWidgetCallback = function() {
+    if (!targetEdited) {
+        gui.clickButton(buttons.NextButton, 250);
+        return;
+    }
+    record("before-switch", {});
+    var page = gui.pageWidgetByObjectName("DynamicLanguageWidget");
+    page.language.currentIndex = stage === 0 ? 1 : 0;
+    // Click the shipped control, never call a test replacement for its slot.
+    gui.clickButton("applyLanguage", 250);
+};
+Controller.prototype.DynamicTargetWidgetCallback = function() {
+    var target = gui.pageWidgetByObjectName("DynamicTargetWidget");
+    record("target-before-edit", {field: String(target.targetDirectory.text), title: String(target.windowTitle), description: String(target.description.text)});
+    target.targetDirectory.setText(probe.changedTargets[stage]);
+    targetEdited = true;
+    record("target-edited", {field: String(target.targetDirectory.text)});
+    gui.clickButton(buttons.BackButton, 250);
+};
+// Fail closed if the expected page order ever changes. There is intentionally
+// no callback which advances beyond the language page.
+Controller.prototype.ComponentSelectionPageCallback = function() {
+    record("unexpected-page", {}); gui.rejectWithoutPrompt();
+};
+Controller.prototype.ReadyForInstallationPageCallback = function() {
+    record("unexpected-page", {}); gui.rejectWithoutPrompt();
+};

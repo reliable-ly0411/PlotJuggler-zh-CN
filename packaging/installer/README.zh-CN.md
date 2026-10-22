@@ -71,10 +71,21 @@ https://download.qt.io/online/qtsdkrepository/windows_x86/ifw/tools_ifw_410/qt.t
 此流程不修改旧发布工作流，不运行安装器 GUI。标准页真实加载、中英文重启与
 安装/维护行为仍需要 Windows 原生验收，参数和静态测试不代表界面通过。
 
-## Windows 资源打包回归测试
+## Windows 资源与语言机制回归测试
 
 启用 `PJ_BUILD_TESTS` 时，`WindowsInstallerResourceContract` 使用已安装 Qt 的
 `lrelease` 与现有官方校验下载助手，实际运行 IFW 4.10 `binarycreator`。
 真实配置、标准/自定义中文词典与页面只配合明确标记的合成数据，生成临时离线
-fixture，断言 PE 及两份内嵌词典和独有资源标记，完成后清理。它从不运行生成的
-fixture，也不安装应用。此项验证资源打包，不代表 Windows GUI、语言切换或升级已验收。
+fixture，断言 PE 及两份内嵌词典和独有资源标记。随后使用 Windows 平台启动此合成
+fixture，读取真实欢迎页控件及 QWizard 默认按钮文字，并通过实际语言按钮执行
+中文→English→中文重启。测试在目录页修改路径后返回，检查重启保留 `--script`、
+`--root` 和所选目录（含空格、中文、单引号），读取中英文自定义目录页文字。
+三个进程必须依次自然退出，且始终不进入组件选择或安装阶段，不产生安装目标。
+超时只清理唯一临时 fixture 路径对应的进程，不按通用进程名终止其他程序。
+
+此项必须以对应提交的 Windows CTest 结果为准；Linux 的 mock/解析检查不是执行证据。
+默认按钮文字来自 IFW 对真实 QWizard 的缓存，不宣称是截图或当前按钮的无障碍读数。
+合成机制测试不替代完整应用安装/升级、Explorer/快捷方式和人工视觉验收。
+API 依据为 QtIFW 4.10 的
+[PackageManagerGui](https://github.com/qtproject/installer-framework/blob/4.10/src/libs/installer/packagemanagergui.cpp)
+与 [GuiProxy](https://github.com/qtproject/installer-framework/blob/4.10/src/libs/installer/scriptengine.cpp)。
