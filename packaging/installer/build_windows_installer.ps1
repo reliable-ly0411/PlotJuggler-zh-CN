@@ -574,9 +574,12 @@ if ($pluginDlls.Count -gt 0) {
     $validationArgs += "$id=$($resolvedPluginVersions[$id])"
   }
   Info "validating $($PluginIds.Count) whitelisted plugin(s) with the staged app ..."
-  & $stagedExe @validationArgs
-  if ($LASTEXITCODE -ne 0) {
-    Die "staged plugin validation failed (exit $LASTEXITCODE)"
+  . (Join-Path $PSScriptRoot '../../scripts/windows/native_process.ps1')
+  $validation = Invoke-PjNativeProcess -FilePath $stagedExe -ArgumentValues $validationArgs
+  [Console]::Out.Write($validation.StandardOutput)
+  [Console]::Error.Write($validation.StandardError)
+  if ($validation.ExitCode -ne 0) {
+    Die "staged plugin validation failed (exit $($validation.ExitCode))"
   }
 }
 

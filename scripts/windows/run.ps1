@@ -34,7 +34,8 @@ if (-not (Test-Path -LiteralPath (Join-Path $PjQtDir 'bin\Qt6Core.dll'))) {
 
 Add-PjRuntimeDllDirs $PjBuildDir
 
-# pj_app is a console-subsystem executable, so & waits for it and
-# $LASTEXITCODE is its exit code (a WIN32_EXECUTABLE would need Start-Process -Wait).
-& $Bin @appArgs
-exit $LASTEXITCODE
+# The application is GUI-subsystem. Wait explicitly and use this process's
+# exit code, preserving redirected CLI diagnostics and all argument boundaries.
+. (Join-Path $PSScriptRoot 'native_process.ps1')
+$result = Invoke-PjNativeProcess -FilePath $Bin -ArgumentValues $appArgs -InheritOutput
+exit $result.ExitCode
