@@ -41,6 +41,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../../pj_marketplace/tests/catalo
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../../pj_runtime/tests/localized_seed" localized-seed)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../rc2" rc2)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../profile" profile)
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../installer_script" installer-script)
 
 # Catch resource registration/linkage regressions before the full SDK build.
 # Use a Core-only executable to isolate the production resource object's
@@ -60,7 +61,7 @@ endif()
 
 if(WIN32)
     # Run the real synthetic wizard before SDK bootstrapping too. This uses
-    # pinned IFW tools and never installs the fixture or the application.
+    # pinned IFW tools and dedicated synthetic payloads, never user installations.
     find_program(PJ_TEST_PYTHON NAMES python python3 REQUIRED)
     add_test(NAME WindowsInstallerResourceContract
         COMMAND "${PJ_TEST_PYTHON}" "${pj_root}/scripts/verify_windows_installer_resources.py"

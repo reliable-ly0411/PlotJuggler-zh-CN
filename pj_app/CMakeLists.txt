@@ -303,7 +303,7 @@ if(PJ_BUILD_TESTS)
                     "$<TARGET_FILE:pj_app>" --runtime)
         set_tests_properties(WindowsApplicationContract PROPERTIES TIMEOUT 120)
         # Compile a synthetic offline installer with the real pinned IFW tools.
-        # This checks embedded standard/custom catalogs, never installs the fixture.
+        # Dedicated synthetic payloads only; this does not install the application.
         add_test(NAME WindowsInstallerResourceContract
             COMMAND "${PJ_TEST_PYTHON}" "${CMAKE_SOURCE_DIR}/scripts/verify_windows_installer_resources.py"
                     --lrelease $<TARGET_FILE:Qt6::lrelease>)
@@ -313,6 +313,7 @@ if(PJ_BUILD_TESTS)
     pj_add_app_language_test()
     if(NOT EMSCRIPTEN)
         add_subdirectory(tests/profile)
+        add_subdirectory(tests/installer_script)
     endif()
 
     # Qt-only helpers compile their implementation once without the shell's

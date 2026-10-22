@@ -149,12 +149,12 @@ function quoteWindowsArgument(argument)
     }).replace(/(\\+)$/g, function(slashes) { return slashes + slashes; }) + '"';
 }
 
-function restartArguments(arguments, language, target)
+function restartArguments(originalArgv, language, target)
 {
     var result = ["--lang", language];
     var options = true;
-    for (var i = 1; i < arguments.length; ++i) {
-        var argument = arguments[i];
+    for (var i = 1; i < originalArgv.length; ++i) {
+        var argument = originalArgv[i];
         if (argument === "--") { options = false; result.push(argument); continue; }
         if (argument.indexOf("TargetDir=") === 0) continue;
         if (!options) { result.push(argument); continue; }
@@ -251,9 +251,9 @@ Component.prototype.applyLanguage = function()
     for (var i = 0; i < parent.argv.length; ++i) {
         if (typeof parent.argv[i] !== "string") { this.languageRestartFailed("invalid-argv"); return; }
     }
-    var arguments = restartArguments(parent.argv, language, target);
+    var newArgv = restartArguments(parent.argv, language, target);
     var quoted = [];
-    for (var j = 0; j < arguments.length; ++j) quoted.push(quoteWindowsArgument(arguments[j]));
+    for (var j = 0; j < newArgv.length; ++j) quoted.push(quoteWindowsArgument(newArgv[j]));
     var command = "$ErrorActionPreference = 'Stop'; " +
         "Wait-Process -Id " + parent.pid + " -Timeout 30 -ErrorAction SilentlyContinue; " +
         "if (Get-Process -Id " + parent.pid + " -ErrorAction SilentlyContinue) { exit 1 }; " +
