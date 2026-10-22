@@ -111,6 +111,8 @@ def checked_process(argv, output, environment, timeout=180, allowed=(0,)):
     print('UPGRADE_PROCESS:' + output.stem + ':exit=' + str(code), flush=True)
     for marker in re.findall(r'\b(?:UPGRADE_CONTROLLER:(?:guard-failed|introduction|target|components|start-menu|ready|installed|finished)|PJ_REPLACEMENT_(?:VERIFIED|BLOCKED:(?:identity|start|wait|residual|supervisor-result)))\b', content):
         print(marker, flush=True)
+    if 'UPGRADE_CONTROLLER:guard-failed' in content:
+        raise AssertionError('Synthetic controller guard failed; not a production refusal: ' + output.stem)
     if code not in allowed:
         raise AssertionError('Synthetic process returned an unexpected exit status: ' + output.stem)
     return content

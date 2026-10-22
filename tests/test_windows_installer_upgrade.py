@@ -72,6 +72,18 @@ class UpgradeTests(unittest.TestCase):
             self.assertIn('componentSelectionPageEntered',script)
             self.assertNotIn('__PJ_REPLACEMENT_HELPER_GZIP__',script)
 
+    def test_controller_failure_cannot_masquerade_as_production_refusal(self):
+        for code in (0, 3):
+            class Exited:
+                def wait(self, timeout):
+                    return code
+            def fake_launch(*args, **kwargs):
+                kwargs['stdout'].write(b'PJ_REPLACEMENT_BLOCKED:identity\nUPGRADE_CONTROLLER:guard-failed\n')
+                return Exited()
+            with tempfile.TemporaryDirectory() as directory, patch.object(upgrade.subprocess,'Popen',side_effect=fake_launch):
+                with self.assertRaisesRegex(AssertionError,'not a production refusal'):
+                    upgrade.checked_process(['synthetic'],Path(directory)/'output',{},allowed=(0, 1, 3))
+
     def test_timeout_does_not_kill_or_retry(self):
         class Running:
             def wait(self, timeout):

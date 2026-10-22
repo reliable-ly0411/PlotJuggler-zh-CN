@@ -15,7 +15,7 @@ function run(options = {}) {
     QInstaller: {ComponentSelection: 3},
     QMessageBox: {Yes: 1, No: 2, question: () => {events.push('confirm'); return options.decline ? 2 : 1}, warning: () => events.push('warning')},
     qsTranslate: (_, text) => text,
-    gui: {rejectPage: () => events.push('block'), rejectWithoutPrompt: () => events.push('quit')},
+    gui: {rejectWithoutPrompt: () => events.push('quit')},
     installer: {
       value: () => target,
       fileExists: () => exists,
@@ -43,17 +43,22 @@ function run(options = {}) {
   return {events, logs, context, lastCommand};
 }
 assert.deepEqual(run({exists:false}).events, []); // Fresh install unchanged.
-assert.deepEqual(run({decline:true}).events, ['confirm','block']);
+assert.deepEqual(run({decline:true}).events, ['confirm','quit']);
 assert.deepEqual(run().events, ['confirm','execute']);
 for (const failure of [{startThrows:true}, {result:[]}, {result:['PJ_REPLACEMENT_OK',1]},
                        {result:['PJ_REPLACEMENT_FAILED:wait',0]}, {residual:true}, {targetChanged:true}]) {
   const result = run(failure);
-  assert.deepEqual(result.events, ['confirm','execute','warning','block','quit']);
+  assert.deepEqual(result.events, ['confirm','execute','warning','quit']);
   assert.ok(!result.logs.join(' ').includes('private-error'));
   // A repeated page signal can never silently retry a destructive operation.
-  result.context.installer.fileExists = () => true;
-  result.context.Component.prototype.componentSelectionPageEntered();
-  assert.equal(result.events.filter(event => event === 'execute').length, 1);
+  for (const targetStillExists of [true, false]) {
+    result.context.installer.fileExists = () => targetStillExists;
+    result.context.Component.prototype.componentSelectionPageEntered();
+    assert.equal(result.events.at(-1), 'quit');
+    assert.equal(result.context.replacementBlocked, true);
+    assert.equal(result.events.filter(event => event === 'execute').length, 1);
+    assert.equal(result.events.filter(event => event === 'confirm').length, 1);
+  }
 }
 console.log('Replacement slot: fresh, decline, startup/exit failures, residual, success and no retry passed');
 

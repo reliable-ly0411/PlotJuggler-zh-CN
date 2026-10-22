@@ -120,7 +120,9 @@ if (Test-Path '{dest}') {{ throw 'Partial destination survived failed download' 
     def test_replacement_is_still_confirmed(self):
         script = (META / 'installscript.qs').read_text(encoding='utf-8')
         self.assertIn('if (answer !== QMessageBox.Yes)', script)
-        self.assertIn('gui.rejectPage(QInstaller.ComponentSelection)', script)
+        self.assertNotIn('gui.rejectPage(', script)
+        self.assertIn('replacementBlocked = true', script)
+        self.assertIn('gui.rejectWithoutPrompt()', script)
         self.assertLess(script.index('if (answer !== QMessageBox.Yes)'),
                         script.index('result = installer.execute(powershell'))
 

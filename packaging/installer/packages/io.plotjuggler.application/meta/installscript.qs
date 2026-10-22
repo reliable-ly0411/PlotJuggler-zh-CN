@@ -13,6 +13,7 @@
 
 var targetDirectoryPage = null;
 var replacementAttempted = false;
+var replacementBlocked = false;
 // Filled from replacement_guard.ps1 by both real and synthetic builders.
 var replacementGuard = "__PJ_REPLACEMENT_HELPER_GZIP__";
 
@@ -100,6 +101,12 @@ Component.prototype.targetDirectoryChanged = updateTargetDirectory;
 
 Component.prototype.componentSelectionPageEntered = function()
 {
+    // A failed/declined replacement remains blocked even if its target later
+    // disappears. Only actual IFW GuiProxy APIs are used to close the wizard.
+    if (replacementBlocked) {
+        gui.rejectWithoutPrompt();
+        return;
+    }
     var dir = installer.value("TargetDir");
     if (installer.fileExists(dir) && installer.fileExists(dir + "/maintenancetool.exe")) {
         var answer = QMessageBox["question"]("existing.install",
@@ -108,10 +115,12 @@ Component.prototype.componentSelectionPageEntered = function()
             qsTranslate("PlotJugglerInstaller", "Continuing will uninstall it before the new version is installed. Continue?"),
             QMessageBox.Yes | QMessageBox.No);
         if (answer !== QMessageBox.Yes) {
-            gui.rejectPage(QInstaller.ComponentSelection);
+            replacementBlocked = true;
+            gui.rejectWithoutPrompt();
             return;
         }
         if (replacementAttempted) {
+            replacementBlocked = true;
             gui.rejectWithoutPrompt();
             return;
         }
@@ -129,12 +138,14 @@ Component.prototype.componentSelectionPageEntered = function()
         } catch (_) {}
         if (result.length !== 2 || result[1] !== 0 || String(result[0]).trim() !== "PJ_REPLACEMENT_OK" ||
             installer.value("TargetDir") !== dir || installer.fileExists(dir) || installer.fileExists(dir + "/maintenancetool.exe")) {
+            replacementBlocked = true;
             var failure = result.length === 2 ? /^PJ_REPLACEMENT_FAILED:(identity|start|wait|residual)\s*$/.exec(String(result[0])) : null;
             console.log("PJ_REPLACEMENT_BLOCKED:" + (failure ? failure[1] : "supervisor-result"));
             QMessageBox.warning("replacement.failed",
                 qsTranslate("PlotJugglerInstaller", "Replacement stopped"),
                 qsTranslate("PlotJugglerInstaller", "The previous installation could not be safely removed. Setup will close without installing. Its uninstaller may still be running in the background. Do not reinstall into this directory until it has fully finished. Automatic replacement supports verified current-user installations only. For an all-users installation, uninstall it manually and confirm that removal has fully finished."));
-            gui.rejectPage(QInstaller.ComponentSelection);
+            // GuiProxy has no rejectPage API. Calling it would throw before
+            // this real close and leave queued controller Next clicks active.
             gui.rejectWithoutPrompt();
             return;
         }
