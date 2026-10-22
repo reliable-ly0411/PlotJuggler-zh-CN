@@ -39,3 +39,20 @@ if(MSVC)
 endif()
 add_test(NAME LocalizedOriginalMemeTest COMMAND localized_original_meme_test)
 set_tests_properties(LocalizedOriginalMemeTest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_executable(appimage_external_url_test
+        appimage_external_url_test.cpp
+        "${root}/pj_widgets/src/ToastNotification.cpp"
+        "${root}/pj_widgets/include/pj_widgets/ToastNotification.h"
+        "${root}/pj_widgets/src/FrameworkTokens.cpp")
+    set_target_properties(appimage_external_url_test PROPERTIES AUTOMOC ON)
+    target_include_directories(appimage_external_url_test PRIVATE "${root}/pj_widgets/include")
+    target_link_libraries(appimage_external_url_test PRIVATE Qt6::Widgets Qt6::Test pj_resources)
+    target_compile_options(appimage_external_url_test PRIVATE ${PJ_WARNING_FLAGS})
+    target_compile_definitions(appimage_external_url_test PRIVATE
+        PJ_APPRUN_SOURCE="${root}/packaging/appimage/AppRun.sh")
+    add_test(NAME AppImageExternalUrlTest COMMAND appimage_external_url_test)
+    set_tests_properties(AppImageExternalUrlTest PROPERTIES
+        TIMEOUT 30 ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()

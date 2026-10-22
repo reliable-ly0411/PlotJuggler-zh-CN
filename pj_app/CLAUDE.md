@@ -255,6 +255,19 @@ source builds and WebAssembly do not download it at application startup.
 
 ## Localized startup artwork
 
-Chinese sessions always compose the translated banner, even when an older saved
-profile selects memes. The saved mode is not rewritten and remains effective in
-English sessions. Preferences shows that saved choice and explains the override.
+Chinese sessions respect the saved serious/meme artwork choice. The Chinese
+meme pool contains 33 available original-image entries plus eight composed
+extras; original entries 09/11/13/24 are omitted rather than falling back to
+English. This does not mean all 37 originals are translated or that all 41
+entries have received packaged-desktop visual acceptance.
+
+
+## External web links
+
+Help and About links use `pj_widgets/ExternalUrl.h`, also used by release toasts,
+the marketplace and plugin Markdown browsers. AppImage HTTP(S) launches restore
+the host environment only for the external child; other platforms/packages and
+non-HTTP schemes retain Qt handling. Preferences directory opening remains on
+Qt's file-URL path and is outside this fix. See
+[`packaging/appimage/README.md`](../packaging/appimage/README.md#external-web-links)
+for the contract and verification boundary.

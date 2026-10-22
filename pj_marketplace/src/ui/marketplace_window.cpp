@@ -1,8 +1,9 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
+#include "pj_marketplace/marketplace_window.hpp"
+
 #include <QColor>
-#include <QDesktopServices>
 #include <QDialog>
 #include <QDir>
 #include <QEvent>
@@ -34,7 +35,6 @@
 
 #include "pj_marketplace/download_manager.hpp"
 #include "pj_marketplace/extension_manager.hpp"
-#include "pj_marketplace/marketplace_window.hpp"
 #include "pj_marketplace/marketplace_text.hpp"
 #include "pj_marketplace/platform_utils.hpp"
 #include "pj_marketplace/registry_manager.hpp"
@@ -42,6 +42,7 @@
 #include "pj_widgets/CheckButton.h"
 #include "pj_widgets/ChromeMetrics.h"
 #include "pj_widgets/ElidingLabel.h"
+#include "pj_widgets/ExternalUrl.h"
 #include "pj_widgets/FileDialog.h"
 #include "pj_widgets/FrameworkTokens.h"
 #include "pj_widgets/MessageBox.h"
@@ -269,6 +270,17 @@ void MarketplaceWindow::setupUi() {
   ui_->setupUi(body);
   contentLayout()->addWidget(body);
   content_widget_ = body;  // exposed via contentWidget() for embedding
+
+  connect(ui_->detail_text_, &QTextBrowser::anchorClicked, this, [this](const QUrl& url) {
+    // Keep Qt's local/relative document navigation, without a second automatic
+    // open that would bypass the host-environment restoration for web links.
+    const auto scheme = url.scheme();
+    if (scheme.isEmpty() || scheme == u"file" || scheme == u"qrc") {
+      ui_->detail_text_->setSource(url);
+    } else {
+      openExternalUrl(url);
+    }
+  });
 
   ui_->update_all_btn_->setFixedWidth(90);
   ui_->update_all_btn_->setEnabled(false);
@@ -1022,7 +1034,7 @@ void MarketplaceWindow::updateDetailFooter() {
   if (!url.isEmpty()) {
     auto* web = new QPushButton(tr("Visit Website"));
     mark_footer_button(web);
-    connect(web, &QPushButton::clicked, this, [url]() { QDesktopServices::openUrl(QUrl(url)); });
+    connect(web, &QPushButton::clicked, this, [url]() { openExternalUrl(QUrl(url)); });
     ui_->detail_buttons_layout->addWidget(web);
   }
 }

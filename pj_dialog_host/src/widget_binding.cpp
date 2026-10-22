@@ -5,6 +5,7 @@
 #include <pj_runtime/AppSession.h>
 #include <pj_runtime/CatalogModel.h>
 #include <pj_widgets/DateRangePicker.h>
+#include <pj_widgets/ExternalUrl.h>
 #include <pj_widgets/FileDialog.h>
 #include <pj_widgets/HeaderDividerHighlight.h>
 #include <pj_widgets/HeaderResizePolicy.h>
@@ -24,7 +25,6 @@
 #include <QDate>
 #include <QDateTime>
 #include <QDateTimeEdit>
-#include <QDesktopServices>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QDoubleSpinBox>
@@ -1389,7 +1389,7 @@ static void configureMarkdownBrowser(QTextBrowser* browser) {
     const QString scheme = url.scheme();
     if (url.isValid() &&
         (scheme.compare(u"http", Qt::CaseInsensitive) == 0 || scheme.compare(u"https", Qt::CaseInsensitive) == 0)) {
-      QDesktopServices::openUrl(url);
+      PJ::openExternalUrl(url);
     }
   });
 }

@@ -78,3 +78,10 @@ store reconciliation wait until `finishInitialScan()`. This lets bundled seeding
 replace DLLs before the initial installed-side DSO scan. Default callers retain
 the eager snapshot. A deferred caller must finish startup before consuming
 installed state or loading managed DSOs.
+
+
+Website buttons and externally activated detail links use
+`pj_widgets/ExternalUrl.h`; HTTP(S) desktop openers in AppImage get the host
+environment without changing the marketplace process. Detail-browser relative,
+fragment, `file:` and `qrc:` links retain local QTextBrowser navigation; other
+schemes retain Qt desktop-services handling.
