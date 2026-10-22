@@ -5,16 +5,25 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const script = fs.readFileSync(path.join(__dirname, '../packaging/installer/packages/io.plotjuggler.application/meta/installscript.qs'), 'utf8');
+// Exact unknown-variable behavior of IFW PackageManagerCoreData::replaceVariables.
+function ifwReplaceVariables(value) { return value.replace(/@[^@]*@/g, ''); }
+function decodeTransport(args) {
+  assert.equal(args.at(-2), '-EncodedCommand');
+  const transmitted = ifwReplaceVariables(args.at(-1));
+  assert.equal(transmitted, args.at(-1));
+  return Buffer.from(transmitted, 'base64').toString('utf16le');
+}
 function fixture(currentLanguage, selection, succeeds = true, probeResult = [JSON.stringify({pid:4321, argv:['setup.exe', '--lang=en_US', '--proxy', 'http://user:pass@host/', 'Extra=quote"value', '--root', 'C:/old']}), 0]) {
-  const events = [];
+  const events = [], logs = [];
   const widget = { language: { currentIndex: selection }, applyLanguage: { enabled: true } };
   const context = {
+    console: { log: message => logs.push(message) },
     component: { userInterface: () => widget },
     installer: {
       value: key => ({ UILanguage: currentLanguage, InstallerFilePath: "C:/My Folder/it's safe; & setup.exe", TargetDir: 'C:/chosen folder/中文' })[key],
       environmentVariable: () => 'C:/Windows',
-      execute: (program, args) => { widget.probe = args.at(-1); return probeResult; },
-      executeDetached: (program, args) => { events.push({ program, args }); return succeeds; },
+      execute: (program, args) => { widget.probeTransport = args.at(-1); widget.probe = decodeTransport(args); return probeResult; },
+      executeDetached: (program, args) => { decodeTransport(args); events.push({ program, args }); return succeeds; },
     },
     gui: { rejectWithoutPrompt: () => events.push('exit') },
     qsTranslate: (context, source) => source,
@@ -23,7 +32,7 @@ function fixture(currentLanguage, selection, succeeds = true, probeResult = [JSO
   vm.createContext(context);
   vm.runInContext(script, context);
   context.Component.prototype.applyLanguage();
-  return { events, widget };
+  return { events, widget, logs };
 }
 for (const [current, selection, expected] of [['en_US', 0, 'zh_CN'], ['zh_CN', 1, 'en_US']]) {
   const { events, widget } = fixture(current, selection);
@@ -31,7 +40,7 @@ for (const [current, selection, expected] of [['en_US', 0, 'zh_CN'], ['zh_CN', 1
   assert.equal(events[1], 'exit');
   assert.equal(widget.applyLanguage.enabled, false);
   assert.match(events[0].program, /System32\/WindowsPowerShell\/v1.0\/powershell.exe$/);
-  const command = events[0].args.at(-1);
+  const command = decodeTransport(events[0].args);
   assert.ok(command.includes("'C:/My Folder/it''s safe; & setup.exe'"));
   assert.ok(command.includes('"--lang" "' + expected + '"'));
   assert.ok(command.includes('"--proxy" "http://user:pass@host/"'));
@@ -53,10 +62,12 @@ assert.equal(failed.events.at(-1), 'warning');
 assert.equal(failed.widget.applyLanguage.enabled, true);
 assert.ok(!failed.events.includes('exit'));
 
-for (const probe of [[], ['', 1], ['Access denied', 0], ['0', 0]]) {
+for (const probe of [[], ['', 1], ['secret-private-output', 0], ['0', 0], ['null', 0]]) {
   const denied = fixture('en_US', 0, true, probe);
   assert.deepEqual(denied.events, ['warning']);
   assert.equal(denied.widget.applyLanguage.enabled, true);
+  assert.match(denied.logs.find(line => line.startsWith('PJ_LANGUAGE_PROBE:')), /^PJ_LANGUAGE_PROBE:exit=(missing|0|1);stdout=(true|false);json=(true|false);pid=(true|false);argv=(true|false)$/);
+  assert.ok(!denied.logs.join(' ').includes('secret-private-output'));
 }
 for (const [isInstaller, isCli] of [[false, false], [true, true], [false, true]]) {
   const context = { installer: { isInstaller: () => isInstaller, isCommandLineInstance: () => isCli } };
@@ -80,6 +91,22 @@ for (const invalid of [{pid:4321, argv:[]}, {pid:4321, argv:[1]}, {pid:'4321;evi
   assert.deepEqual(fixture('en_US', 0, true, [JSON.stringify(invalid),0]).events, ['warning']);
 }
 assert.deepEqual(Array.from(quoting.restartArguments(['setup.exe','--lang','en_US','--lang=fr_FR','-t=old','TargetDir=old','--','literal'], 'zh_CN', 'C:/new')), ['--lang','zh_CN','-t=C:/new','--','literal','TargetDir=C:/new']);
+// Original raw PowerShell is corrupted BEFORE the child runs: IFW eats from
+// the array @ to the hashtable @ and leaves a scriptblock, explaining exit 0
+// without the intended JSON output (also reproduced in the PowerShell test).
+const rawProbe = fixture('en_US', 0).widget.probe;
+const corruptedProbe = ifwReplaceVariables(rawProbe);
+assert.notEqual(corruptedProbe, rawProbe);
+assert.ok(!corruptedProbe.includes('for ($i=0; $i -lt $count; $i++)'));
+assert.ok(corruptedProbe.includes('$argv = { pid=$parent.ProcessId; argv=$argv }'));
+for (const command of ['', 'x', 'xy', 'xyz', '中文 😀', '$x=@(); $json=@{argv=$x}',
+                       "'http://user:pass@host/' '@TargetDir@' 'C:/a@b@c/'", rawProbe]) {
+  const encoded = quoting.encodePowerShellCommand(command);
+  assert.equal(encoded, Buffer.from(command, 'utf16le').toString('base64'));
+  assert.equal(ifwReplaceVariables(encoded), encoded);
+  assert.equal(Buffer.from(encoded, 'base64').toString('utf16le'), command);
+}
+console.log('IFW variable-substitution transport regression checks passed');
 // Optional real PowerShell parse/control-flow test; no process is started.
 const cp = require('node:child_process'), os = require('node:os');
 const shell = process.platform === 'win32' ? 'powershell.exe' : 'pwsh';
@@ -89,7 +116,7 @@ if (!available.error && available.status === 0) {
   try {
     const result = fixture('en_US', 0);
     const data = path.join(dir, 'fixture.json');
-    fs.writeFileSync(data, JSON.stringify({probe:result.widget.probe, command:result.events[0].args.at(-1)}));
+    fs.writeFileSync(data, JSON.stringify({probe:result.widget.probe, command:decodeTransport(result.events[0].args), probeTransport:result.widget.probeTransport, commandTransport:result.events[0].args.at(-1)}));
     const run = cp.spawnSync(shell, ['-NoProfile','-NonInteractive','-File',path.join(__dirname,'test_installer_restart.ps1'),'-FixturePath',data], {encoding:'utf8',timeout:30000});
     assert.equal(run.status,0,run.stdout + run.stderr);
     console.log(run.stdout.trim());

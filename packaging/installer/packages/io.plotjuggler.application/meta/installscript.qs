@@ -143,6 +143,27 @@ function restartArguments(arguments, language, target)
     return result;
 }
 
+// IFW expands every @name@ pair in execute/executeDetached arguments, even
+// inside PowerShell @() / @{} syntax or user argv. UTF-16LE Base64 is the native
+// -EncodedCommand protocol and contains no @, so the transport is lossless.
+function encodePowerShellCommand(command)
+{
+    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    var bytes = [];
+    for (var i = 0; i < command.length; ++i) {
+        var code = command.charCodeAt(i);
+        bytes.push(code & 255, code >>> 8);
+    }
+    var encoded = "";
+    for (var j = 0; j < bytes.length; j += 3) {
+        var value = (bytes[j] << 16) | ((bytes[j + 1] || 0) << 8) | (bytes[j + 2] || 0);
+        encoded += alphabet.charAt((value >>> 18) & 63) + alphabet.charAt((value >>> 12) & 63);
+        encoded += j + 1 < bytes.length ? alphabet.charAt((value >>> 6) & 63) : "=";
+        encoded += j + 2 < bytes.length ? alphabet.charAt(value & 63) : "=";
+    }
+    return encoded;
+}
+
 // IFW's documented <key=value> positional arguments restore TargetDir. Other
 // real startup arguments are retained, including proxy/offline options.
 Component.prototype.applyLanguage = function()
@@ -157,7 +178,7 @@ Component.prototype.applyLanguage = function()
     var powershell = installer.environmentVariable("SystemRoot") + "/System32/WindowsPowerShell/v1.0/powershell.exe";
     // Read only this synchronous child's actual parent. Never accept argv from
     // a process-name search or caller-provided PID. Access/parse failures keep UI.
-    var probeCommand = "$ErrorActionPreference = 'Stop'; " +
+    var probeCommand = "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'; " +
         "$child = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $PID); " +
         "$parent = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $child.ParentProcessId); " +
         "Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public static class PJInstallerArgv { " +
@@ -175,12 +196,24 @@ Component.prototype.applyLanguage = function()
         "$json = @{ pid=$parent.ProcessId; argv=$argv } | ConvertTo-Json -Compress -Depth 4; " +
         "[regex]::Replace($json, '[^\\x00-\\x7F]', { param($m) '\\u{0:x4}' -f [int][char]$m.Value }) " +
         "} finally { [void][PJInstallerArgv]::LocalFree($memory) }";
-    var probe = installer.execute(powershell, ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", probeCommand]);
+    var probe = installer.execute(powershell, ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-EncodedCommand", encodePowerShellCommand(probeCommand)]);
     var parent = null;
-    try { if (probe.length === 2 && probe[1] === 0) parent = JSON.parse(String(probe[0])); } catch (_) {}
-    if (!parent || !/^[1-9][0-9]*$/.test(String(parent.pid)) ||
-        !(parent.argv instanceof Array) || parent.argv.length === 0 || !target) {
-        var reason = probe.length !== 2 || probe[1] !== 0 ? "probe-execute" : "probe-result";
+    var parsedJson = false;
+    try {
+        if (probe.length === 2 && probe[1] === 0) {
+            parent = JSON.parse(String(probe[0]));
+            parsedJson = true;
+        }
+    } catch (_) {}
+    var validPid = parent !== null && /^[1-9][0-9]*$/.test(String(parent.pid));
+    var validArray = parent !== null && parent.argv instanceof Array;
+    // Fixed metadata only: never log the JSON, raw command line or error text.
+    console.log("PJ_LANGUAGE_PROBE:exit=" + (probe.length === 2 ? probe[1] : "missing") +
+        ";stdout=" + (probe.length === 2 && String(probe[0]).length > 0) +
+        ";json=" + parsedJson + ";pid=" + validPid + ";argv=" + validArray);
+    if (!validPid || !validArray || parent.argv.length === 0 || !target) {
+        var reason = probe.length !== 2 || probe[1] !== 0 ? "probe-execute" :
+            !parsedJson ? "probe-json" : !validPid ? "probe-pid" : !validArray || parent.argv.length === 0 ? "probe-argv" : "probe-target";
         if (String(probe[0]).indexOf("Parent identity mismatch") !== -1) reason = "probe-identity";
         this.languageRestartFailed(reason);
         return;
@@ -195,7 +228,7 @@ Component.prototype.applyLanguage = function()
         "Wait-Process -Id " + parent.pid + " -Timeout 30 -ErrorAction SilentlyContinue; " +
         "if (Get-Process -Id " + parent.pid + " -ErrorAction SilentlyContinue) { exit 1 }; " +
         "Start-Process -FilePath '" + executable + "' -ArgumentList '" + quoted.join(" ").replace(/'/g, "''") + "'";
-    if (installer.executeDetached(powershell, ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", command])) {
+    if (installer.executeDetached(powershell, ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-EncodedCommand", encodePowerShellCommand(command)])) {
         console.log("PJ_LANGUAGE_RESTART:helper-started");
         widget.applyLanguage.enabled = false;
         gui.rejectWithoutPrompt();

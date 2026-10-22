@@ -2,6 +2,22 @@
 param([Parameter(Mandatory=$true)][string]$FixturePath)
 $ErrorActionPreference = 'Stop'
 $fixture = Get-Content -LiteralPath $FixturePath -Raw -Encoding UTF8 | ConvertFrom-Json
+foreach ($name in @('probe', 'command')) {
+    $encoded = $fixture.($name + 'Transport')
+    # Apply IFW's @...@ substitution before decoding the actual transport.
+    $adjusted = [regex]::Replace($encoded, '@[^@]*@', '')
+    $decoded = [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($adjusted))
+    if ($decoded -cne $fixture.$name) { throw 'IFW damaged encoded PowerShell transport' }
+}
+# Negative control for the actual bug: raw @() ... @{} is consumed as an
+# unknown IFW variable. PowerShell can still exit successfully, without JSON.
+$fragment = '$argv = @(); $argv += "setup.exe"; $json = @{ pid=4321; argv=$argv } | ConvertTo-Json -Compress -Depth 4; [string]$json'
+$good = & ([ScriptBlock]::Create($fragment)) | ConvertFrom-Json
+if ($good.pid -ne 4321 -or $good.argv[0] -ne 'setup.exe') { throw 'Probe fragment positive control failed' }
+$corrupted = [regex]::Replace($fragment, '@[^@]*@', '')
+$bad = & { $WarningPreference = 'SilentlyContinue'; & ([ScriptBlock]::Create($corrupted)) }
+if (![string]::IsNullOrWhiteSpace($bad)) { throw 'Raw IFW transport negative control failed' }
+Write-Output 'PASS: raw IFW substitution loses JSON; encoded transport preserves both scripts'
 foreach ($source in @($fixture.probe, $fixture.command)) {
     $tokens = $null; $errors = $null
     [void][System.Management.Automation.Language.Parser]::ParseInput($source, [ref]$tokens, [ref]$errors)
