@@ -43,6 +43,16 @@ class LiveProbeTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             probe.validate_records(*records, parse_argv=json.loads)
 
+    def test_qdebug_cache_paths_decode_quoted_windows_paths(self):
+        cache = str(PureWindowsPath("C:/temp/中文 path/tmp/ifw-cache"))
+        diagnostic = '[time] Using metadata cache from ' + json.dumps(cache, ensure_ascii=True)
+        self.assertEqual(probe.metadata_cache_paths(diagnostic), [cache])
+        self.assertEqual(probe.metadata_cache_paths('Using metadata cache from C:/temp/cache'), ['C:/temp/cache'])
+        with self.assertRaises(ValueError):
+            probe.metadata_cache_paths('Using metadata cache from "unterminated')
+        with self.assertRaises(AssertionError):
+            probe.metadata_cache_paths('Using metadata cache from ""')
+
     def test_windows_cache_path_without_windows_host(self):
         with patch.object(probe, 'Path', PureWindowsPath):
             argv = probe.fixture_arguments(PureWindowsPath('C:/test/setup.exe'),

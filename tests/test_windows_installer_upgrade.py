@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 import copy
 import json
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import shutil
 import subprocess
 import sys
@@ -27,15 +27,17 @@ class UpgradeTests(unittest.TestCase):
                 upgrade.validate_registration(bad, 'C:/isolated/target', json.loads)
 
     def test_initial_scope_arguments(self):
-        paths = {k:Path('C:/isolated')/k for k in ('target','userMenu','allMenu','desktop')}
-        paths['group']='SyntheticFixtureGroup'
-        args=upgrade.fixture_values(paths, '{test}')
-        self.assertIn('AllUsers=false',args)
-        self.assertIn('RunProgram=',args)
-        self.assertIn('StartMenuDir=SyntheticFixtureGroup',args)
-        self.assertIn('UserStartMenuProgramsPath=C:/isolated/userMenu',args)
-        self.assertIn('AllUsersStartMenuProgramsPath=C:/isolated/allMenu',args)
-        self.assertIn('DesktopDir=C:/isolated/desktop',args)
+        for path_type in (Path, PureWindowsPath):
+            with self.subTest(path_type=path_type.__name__):
+                paths = {k:path_type('C:/isolated')/k for k in ('target','userMenu','allMenu','desktop')}
+                paths['group']='SyntheticFixtureGroup'
+                args=upgrade.fixture_values(paths, '{test}')
+                self.assertIn('AllUsers=false',args)
+                self.assertIn('RunProgram=',args)
+                self.assertIn('StartMenuDir=SyntheticFixtureGroup',args)
+                for flag,key in (('TargetDir','target'),('UserStartMenuProgramsPath','userMenu'),
+                                 ('AllUsersStartMenuProgramsPath','allMenu'),('DesktopDir','desktop')):
+                    self.assertIn(flag+'='+str(paths[key]),args)
 
     def test_build_only_inert_fixture_and_real_script(self):
         with tempfile.TemporaryDirectory() as directory:

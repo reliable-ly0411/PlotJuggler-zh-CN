@@ -14,7 +14,8 @@ for (let stage=0;stage<4;stage++) {
   vm.createContext(context);vm.runInContext(template.replace('__PROBE_CONFIG__',JSON.stringify(data)),context);
   const controller=new context.Controller();
   controller.IntroductionPageCallback();
-  if(stage>=2){assert.deepEqual(clicks,[['reject']]);continue;}
+  if(stage===2){assert.deepEqual(clicks,[[4,250]]);assert.equal(observations.length,2);continue;}
+  if(stage>2){assert.deepEqual(clicks,[['reject']]);continue;}
   controller.DynamicLanguageWidgetCallback();
   controller.DynamicTargetWidgetCallback();
   controller.DynamicLanguageWidgetCallback();
@@ -27,4 +28,4 @@ for (let stage=0;stage<4;stage++) {
   controller.IntroductionPageCallback();
   assert.deepEqual(clicks,[['reject']]);
 }
-console.log('Controller mock callbacks: both switches, final reject and target guard passed; not native GUI evidence.');
+console.log('Controller mock callbacks: both switches, deferred final Cancel and target guard passed; not native GUI evidence.');

@@ -30,6 +30,22 @@ def normalized(path):
     return ntpath.normcase(ntpath.abspath(str(path)))
 
 
+def metadata_cache_paths(diagnostic):
+    result = []
+    for line in diagnostic.splitlines():
+        if 'Using metadata cache from ' not in line:
+            continue
+        value = line.split('Using metadata cache from ', 1)[1].strip()
+        # QDebug quotes QStrings and escapes backslashes/Unicode. Stripping
+        # quotes alone leaves a different Windows path (including double \\).
+        if value.startswith('"'):
+            value = json.loads(value)
+        if not isinstance(value, str) or not value:
+            raise AssertionError('Invalid metadata cache diagnostic')
+        result.append(value)
+    return result
+
+
 def validate_records(records, fixture, controller, targets, parse_argv=windows_argv):
     expected = ['introduction', 'target-before-edit', 'target-edited', 'before-switch',
                 'introduction', 'target-before-edit', 'target-edited', 'before-switch',
@@ -153,8 +169,7 @@ def probe_gui(fixture, temporary, powershell, template):
                         subprocess.run([str(powershell), '-NoProfile', '-NonInteractive', '-Command', wait_exit],
                                        check=True, capture_output=True, timeout=15)
                         diagnostic = output.read_text(encoding='utf-8', errors='replace')
-                        cache_lines = [line.split('Using metadata cache from ', 1)[1].strip().strip(chr(34))
-                                       for line in diagnostic.splitlines() if 'Using metadata cache from ' in line]
+                        cache_lines = metadata_cache_paths(diagnostic)
                         if not cache_lines or any(normalized(Path(path).resolve()) != normalized(cache.resolve())
                                                   for path in cache_lines):
                             raise AssertionError('Observed IFW metadata cache escaped explicit cache path')

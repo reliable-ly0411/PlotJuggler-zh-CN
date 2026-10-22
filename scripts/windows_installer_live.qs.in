@@ -78,7 +78,11 @@ Controller.prototype.IntroductionPageCallback = function() {
     });
     if (stage === 2) {
         record("finished", {});
-        gui.rejectWithoutPrompt();
+        // IFW clickButton schedules the real click with QTimer::singleShot.
+        // The introduction callback may run before show()/exec(); synchronously
+        // rejecting here can be undone by startup showing the dialog afterward.
+        // Cancel on Introduction directly rejects without a confirmation box.
+        gui.clickButton(buttons.CancelButton, 250);
         return;
     }
     gui.clickButton(buttons.NextButton, 250);
