@@ -1008,6 +1008,15 @@ TEST_F(ExtensionManagerTest, InstallFromLocalZipRejectsAnIdWithAStagedUninstall)
   EXPECT_TRUE(mgr_->hasPendingUninstall("mock-data-source")) << "the pending removal must survive the refused install";
 }
 
+// Native filesystem conversion must not depend on the Windows ANSI code page.
+TEST_F(ExtensionManagerTest, DiscoversManifestFromUnicodeDirectory) {
+  const QString directory = ext_dir_.path() + u"/独立 插件"_s;
+  ASSERT_TRUE(copyFixturePlugin(directory, "mock-data-source"));
+  mgr_->refreshInstalledFromDisk();
+  ASSERT_TRUE(mgr_->isInstalled("mock-data-source"));
+  EXPECT_EQ(mgr_->installedVersion("mock-data-source"), "1.0.0");
+}
+
 // The scan takes the id from the embedded manifest, so an extension directory
 // placed by hand can be named anything. The journal records the path uninstall()
 // actually found, keyed by id; reporting the pending state by looking only under
