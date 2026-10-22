@@ -2476,10 +2476,17 @@ void ExtensionManager::dropStoreMapping(const QString& id) {
 
 std::vector<QString> ExtensionManager::managedPluginDirs() {
   std::vector<QString> dirs;
+  const QFileInfo pending_info(pending_dir_);
   // Enumerate the managed dir from disk rather than the cached installed set: the
   // bundled seed writes extensions/<id>/ AFTER that snapshot is taken, so a cached
   // view would miss freshly-seeded plugins. The subdirectory name is the id.
   for (const QFileInfo& entry : QDir(extensions_dir_).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+    // A dot prefix is not the Windows Hidden attribute. Never expose an
+    // in-store staging area or transaction/quarantine scratch as a load root.
+    if (entry == pending_info || isTransactionDirectoryName(entry.fileName()) ||
+        entry.fileName().startsWith(kQuarantinePrefix)) {
+      continue;
+    }
     // Prefer the immutable store object when it backs this id and its bytes still
     // verify against the recorded content manifest; fall back to the classic
     // directory when the store does not (yet) hold it, was rejected, has been

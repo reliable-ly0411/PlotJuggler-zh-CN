@@ -537,6 +537,29 @@ TEST_F(ExtensionManagerTest, InstallRecordsStoreObjectForRuntimeLoad) {
   EXPECT_TRUE(mgr_->managedPluginDirs().empty());
 }
 
+TEST(ExtensionManagerPaths, ManagedLoadDirsExcludeStagingAndTransactionScratch) {
+  QTemporaryDir temporary;
+  ASSERT_TRUE(temporary.isValid());
+  const QString extensions = temporary.path() + "/extensions";
+  // A visible name makes the old bug reproduce on Unix too, rather than
+  // depending on Windows treating a dot-prefixed directory as non-hidden.
+  const QString pending = extensions + "/staging";
+  const QString installed = extensions + "/installed-plugin";
+  ExtensionManager manager(nullptr, extensions, pending + "/.", {}, nullptr, true);
+  ASSERT_TRUE(QDir().mkpath(pending));
+  ASSERT_TRUE(QDir().mkpath(installed));
+  ASSERT_TRUE(QDir().mkpath(extensions + "/.pj_install_unfinished"));
+  ASSERT_TRUE(QDir().mkpath(extensions + "/.pj_quarantine_rejected"));
+
+  const std::vector<QString> managed = manager.managedPluginDirs();
+  ASSERT_EQ(managed.size(), 1u);
+  EXPECT_EQ(managed.front().toStdString(), installed.toStdString());
+  // Enumeration must not delete staging or quarantine contents.
+  EXPECT_TRUE(QDir(pending).exists());
+  EXPECT_TRUE(QDir(extensions + "/.pj_install_unfinished").exists());
+  EXPECT_TRUE(QDir(extensions + "/.pj_quarantine_rejected").exists());
+}
+
 // installProgress signals are forwarded during the download phase.
 // Each signal must carry the correct extension id and a percent in [0, 100].
 TEST_F(ExtensionManagerTest, InstallEmitsProgressSignals) {
