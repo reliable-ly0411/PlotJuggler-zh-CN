@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package>
-    <DisplayName>PlotJuggler 4</DisplayName>
-    <Description>Install PlotJuggler 4 with its bundled Qt, FFmpeg and Python runtime.</Description>
-    <Description xml:lang="zh_CN">安装 PlotJuggler 4 及随附的 Qt、FFmpeg 和 Python 运行库。</Description>
+    <DisplayName>PlotJuggler 4 zh-CN</DisplayName>
+    <DisplayName xml:lang="zh_CN">PlotJuggler 4 简体中文版</DisplayName>
+    <Description>Install PlotJuggler 4 zh-CN with its bundled Qt, FFmpeg and Python runtime.</Description>
+    <Description xml:lang="zh_CN">安装 PlotJuggler 4 简体中文版及随附的 Qt、FFmpeg 和 Python 运行库。</Description>
     <Version>__PJ_VERSION__</Version>
     <ReleaseDate>__PJ_RELEASE_DATE__</ReleaseDate>
     <Licenses>
@@ -16,5 +17,6 @@
     </Translations>
     <UserInterfaces>
         <UserInterface>targetwidget.ui</UserInterface>
+        <UserInterface>languagewidget.ui</UserInterface>
     </UserInterfaces>
 </Package>

@@ -39,5 +39,7 @@
             <source>Continuing will uninstall it before the new version is installed. Continue?</source>
             <translation>继续操作将先卸载旧版本，再安装新版本。是否继续？</translation>
         </message>
+        <message><source>Language selection</source><translation>语言选择</translation></message>
+        <message><source>Could not restart the installer. Close it and run it with --lang zh_CN or --lang en_US.</source><translation>无法重新启动安装器。请关闭后使用 --lang zh_CN 或 --lang en_US 参数运行。</translation></message>
     </context>
 </TS>
