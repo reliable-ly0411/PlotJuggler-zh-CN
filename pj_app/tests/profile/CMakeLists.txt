@@ -63,6 +63,9 @@ if(TARGET pj_runtime)
     add_dependencies(app_profile_services_test mock_data_source_v2_plugin)
     set_target_properties(app_profile_services_test PROPERTIES WIN32_EXECUTABLE FALSE)
     if(TARGET pj_scene3d_widgets)
+        # This source directly includes GLM; a sibling's non-GLOBAL imported
+        # target is not visible in this directory's scope.
+        find_package(glm CONFIG REQUIRED)
         target_sources(app_profile_services_test PRIVATE
             "${profile_root}/pj_scene3D/widgets/src/urdf_package_resolver.cpp")
         target_include_directories(app_profile_services_test PRIVATE
