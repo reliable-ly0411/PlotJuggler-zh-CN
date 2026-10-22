@@ -3608,7 +3608,7 @@ Message: %3</source>
 <context>
     <name>PJ::ExtensionCatalogService</name>
     <message>
-        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+804"/>
+        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+803"/>
         <source>All supported files</source>
         <translation>所有支持的文件</translation>
     </message>
@@ -3621,7 +3621,7 @@ Message: %3</source>
 <context>
     <name>PJ::ExtensionManager</name>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+979"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+973"/>
         <source>Not available for this platform (%1)</source>
         <translation>此平台不可用（%1）</translation>
     </message>
@@ -5775,7 +5775,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>校验和不匹配</translation>
     </message>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="-862"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="-856"/>
         <source>Extension id is empty</source>
         <translation>扩展 ID 为空</translation>
     </message>
@@ -5955,7 +5955,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>无法创建扩展目录“%1”</translation>
     </message>
     <message>
-        <location line="+197"/>
+        <location line="+191"/>
         <location line="+315"/>
         <source>Install of &quot;%1&quot; is already in progress</source>
         <translation>正在安装“%1”</translation>
@@ -6819,7 +6819,17 @@ Details: %1</source>
         <translation>简洁标识</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+0"/>
+        <source>memes</source>
+        <translation>趣图</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Choose funny images or the serious banner. Both modes support the selected language.</source>
+        <translation>选择趣图或简洁横幅，两种模式均支持所选界面语言。</translation>
+    </message>
+    <message>
+        <location line="+35"/>
         <source>This folder does not exist.</source>
         <translation>此文件夹不存在。</translation>
     </message>
@@ -6883,16 +6893,6 @@ Details: %1</source>
         <location line="+7"/>
         <source>Open the source cache folder</source>
         <translation>打开数据源缓存文件夹</translation>
-    </message>
-    <message>
-        <location line="-215"/>
-        <source>memes (English images)</source>
-        <translation>趣图（英文图片）</translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>Chinese sessions always use the translated banner; the meme choice is kept for English sessions.</source>
-        <translation>中文界面始终显示中文横幅；趣图选项将保留供英文界面使用。</translation>
     </message>
 </context>
 <context>
@@ -7370,7 +7370,7 @@ Details: %1</source>
 <context>
     <name>PJ::Splashscreen</name>
     <message>
-        <location filename="../src/Splashscreen.cpp" line="+157"/>
+        <location filename="../src/Splashscreen.cpp" line="+193"/>
         <source>Now you&apos;re plotting</source>
         <translation>现在，开始绘图吧</translation>
     </message>
@@ -7443,6 +7443,86 @@ Details: %1</source>
         <location line="+1"/>
         <source>An AI helped. Allegedly.</source>
         <translation>据说，AI 也帮了忙</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>The bug only happens in production</source>
+        <translation>这个问题只在现场出现</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Good thing I recorded the data</source>
+        <translation>还好，我录了数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Staring at ten thousand log lines</source>
+        <translation>盯着一万行日志找问题</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>One plot later: found it</source>
+        <translation>画条曲线：找到了</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>It must be the sensor</source>
+        <translation>一定是传感器坏了</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>It was milliseconds versus seconds</source>
+        <translation>原来是毫秒当成了秒</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Just one more printf</source>
+        <translation>再加一行打印就能找到</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Drag, drop, mystery solved</source>
+        <translation>拖进来一画，真相大白</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The demo worked yesterday</source>
+        <translation>昨天演示明明还好好的</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Replay the good recording</source>
+        <translation>还好有录好的数据能回放</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>My signal is all noise</source>
+        <translation>我的信号怎么全是噪声</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>FFT: allow me to introduce myself</source>
+        <translation>FFT：该我出场了</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Two curves, two different clocks</source>
+        <translation>两条曲线，各过各的时间</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Time offset to the rescue</source>
+        <translation>时间偏移，一下对齐</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>I forgot to save the layout</source>
+        <translation>关了窗口才想起没存布局</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This time I saved the layout</source>
+        <translation>这次我先保存了布局</translation>
     </message>
 </context>
 <context>

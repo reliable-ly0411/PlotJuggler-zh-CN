@@ -85,8 +85,8 @@ These tests retain their standalone executable and ctest entry:
 - `splash_meme_pool_test` (`SplashMemePoolTest`): compiles `Splashscreen.cpp`
   standalone with `PJ_MEMES_SOURCE_DIR`, the shipped resources and the production
   language catalog. It covers meme geometry, translated banner subtitles across
-  translator lifetimes, and the Chinese fresh-profile banner default without
-  overwriting an explicitly saved meme preference.
+  translator lifetimes, and Chinese two-panel localized memes while
+  respecting the saved meme/banner preference in both languages.
 
 `ExportedSymbolsGuard` remains a script test, enabled when the platform and
 `nm` support inspecting the executable's exported symbols.

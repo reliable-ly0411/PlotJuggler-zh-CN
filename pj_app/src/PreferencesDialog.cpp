@@ -225,7 +225,7 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
   ui_->scrubberFloatPrecision->setRange(1, 6);
   ui_->scrubberFloatPrecision->setSingleStep(1);
   ui_->curveColorMode->setOptions(tr("global"), tr("per plot"));
-  ui_->splashMode->setOptions(tr("memes (English images)"), tr("serious"));
+  ui_->splashMode->setOptions(tr("memes"), tr("serious"));
   // Endonyms stay recognizable in either interface language. The selection is
   // the next launch's preference, even when --language overrides this session.
   ui_->languageCombo->addItem(QLocale(u"zh_CN"_s).nativeLanguageName(), u"zh_CN"_s);
@@ -250,7 +250,7 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
     ui_->splashMode->setSelectedIndex(
         settings.value(kSplashModeKey, startupSplashMode(settings)).toString() == kSplashModeSerious ? 1 : 0);
     ui_->splashMode->setToolTip(
-        tr("Chinese sessions always use the translated banner; the meme choice is kept for English sessions."));
+        tr("Choose funny images or the serious banner. Both modes support the selected language."));
     if (!MainWindow::customFrameSelectable()) {
       ui_->labelCustomTitleBar->hide();
       ui_->customTitleBarToggle->hide();
