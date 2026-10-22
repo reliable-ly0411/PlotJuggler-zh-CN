@@ -50,6 +50,7 @@ def verify(path, runtime=False):
             result = subprocess.run([str(Path(path).resolve()), option], capture_output=True, timeout=60)
             assert result.returncode == 0, (option, result.returncode, result.stderr)
             assert expected in result.stdout, (option, result.stdout, result.stderr)
+    print('Windows executable bytes:', Path(path).stat().st_size)
     print('Windows PE: GUI subsystem, embedded icon groups; redirected CLI:', runtime)
 
 

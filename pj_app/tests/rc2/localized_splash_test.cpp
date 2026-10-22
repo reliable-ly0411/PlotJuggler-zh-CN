@@ -6,6 +6,7 @@
 #include <QTest>
 
 #include "AppLanguage.h"
+#include "LocalizedOriginalMeme.h"
 #include "Splashscreen.h"
 using namespace Qt::StringLiterals;
 class LocalizedSplashTest : public QObject {
@@ -22,6 +23,25 @@ class LocalizedSplashTest : public QObject {
       settings.setValue(PJ::kSplashModeKey, PJ::kSplashModeMemes);
       QCOMPARE(PJ::startupSplashMode(settings), PJ::kSplashModeMemes);
     }
+  }
+  void reviewedOriginalPoolRenders() {
+    const PJ::AppLanguage translator(*qApp, u"zh_CN"_s);
+    const auto originals = PJ::localizedOriginalMemeIds();
+    QCOMPARE(originals.size(), 33);
+    QVERIFY(!originals.contains(u"09"_s));
+    QVERIFY(!originals.contains(u"13"_s));
+    const auto ids = PJ::chineseMemeIds();
+    QCOMPARE(ids.size(), originals.size() + 8);
+    QVERIFY(!ids.contains(u"11"_s));
+    QVERIFY(!ids.contains(u"24"_s));
+    for (const auto& id : ids) {
+      QVERIFY2(!PJ::chineseMemePixmap(id).isNull(), qPrintable(id));
+    }
+    QVERIFY(PJ::chineseMemePixmap(u"11"_s).isNull());
+    QVERIFY(PJ::chineseMemePixmap(u"24"_s).isNull());
+    QVERIFY(PJ::chineseMemePixmap(u"extra:99"_s).isNull());
+    QVERIFY(PJ::localizedOriginalMeme(0).isNull());
+    QVERIFY(PJ::localizedOriginalMeme(38).isNull());
   }
   void allCompositionsTranslateAndRender() {
     QStringList english;

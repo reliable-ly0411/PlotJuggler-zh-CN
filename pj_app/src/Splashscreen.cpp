@@ -19,6 +19,7 @@
 #include <Qt>
 #include <algorithm>
 
+#include "LocalizedOriginalMeme.h"
 #include "pj_widgets/FrameworkTokens.h"
 using namespace Qt::StringLiterals;
 
@@ -57,15 +58,24 @@ QPixmap makeLocalizedMeme(int index) {
 // edit. Returns a null QPixmap when the pool is empty.
 QPixmap getFunnySplashscreen() {
   if (QCoreApplication::instance()->property("interfaceLanguage").toString() == "zh_CN"_L1) {
-    QSettings settings;
-    const int count = static_cast<int>(localizedMemeCaptions().size() / 2);
-    const int previous = settings.value(u"previousLocalizedMeme"_s, -1).toInt();
-    int chosen = QRandomGenerator::global()->bounded(count);
-    if (chosen == previous) {
-      chosen = (chosen + 1) % count;
+    const QStringList ids = chineseMemeIds();
+    if (ids.isEmpty()) {
+      return {};
     }
-    settings.setValue(u"previousLocalizedMeme"_s, chosen);
-    return makeLocalizedMeme(chosen);
+    QSettings settings;
+    QStringList recent = settings.value(u"previousLocalizedFunnyMemesList"_s).toStringList();
+    const qsizetype avoid_count = std::min<qsizetype>(recent.size(), ids.size() - 1);
+    QStringList choices = ids;
+    for (const auto& id : recent.mid(recent.size() - avoid_count)) {
+      choices.removeAll(id);
+    }
+    const QString chosen = choices.at(QRandomGenerator::global()->bounded(static_cast<int>(choices.size())));
+    recent.append(chosen);
+    while (recent.size() > 10) {
+      recent.removeFirst();
+    }
+    settings.setValue(u"previousLocalizedFunnyMemesList"_s, recent);
+    return capMemeToSplashBox(chineseMemePixmap(chosen));
   }
   QDir memes_dir(u":/resources/memes"_s);
   const QStringList files = memes_dir.entryList({u"*.jpg"_s}, QDir::Files, QDir::Name);
@@ -227,6 +237,24 @@ QStringList localizedMemeCaptions() {
       QCoreApplication::translate("PJ::Splashscreen", "I forgot to save the layout"),
       QCoreApplication::translate("PJ::Splashscreen", "This time I saved the layout"),
   };
+}
+
+QStringList chineseMemeIds() {
+  QStringList ids = localizedOriginalMemeIds();
+  for (qsizetype i = 0; i < localizedMemeCaptions().size() / 2; ++i) {
+    ids.append(u"extra:%1"_s.arg(i));
+  }
+  return ids;
+}
+
+QPixmap chineseMemePixmap(const QString& id) {
+  if (!chineseMemeIds().contains(id)) {
+    return {};
+  }
+  if (id.startsWith(u"extra:"_s)) {
+    return makeLocalizedMeme(id.mid(6).toInt());
+  }
+  return localizedOriginalMeme(id.toInt());
 }
 
 QPixmap localizedMemeForTest(int index) {

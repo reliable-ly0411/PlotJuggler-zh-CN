@@ -37,6 +37,10 @@ QStringList seriousSplashSubtitles();
 // Paired captions for the text-free two-panel meme compositions, translated afresh.
 QStringList localizedMemeCaptions();
 
+// Reviewed original variants plus the eight additional compositions.
+QStringList chineseMemeIds();
+QPixmap chineseMemePixmap(const QString& id);
+
 // Deterministic composition entry point for pixel/translation regression tests.
 QPixmap localizedMemeForTest(int index);
 
