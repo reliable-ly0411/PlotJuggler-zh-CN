@@ -774,13 +774,13 @@ ExtensionManager::ExtensionManager()
 
 ExtensionManager::ExtensionManager(
     DownloadManager* downloader, const QString& extensions_dir, const QString& pending_dir, DiagnosticSink sink,
-    QObject* parent)
+    QObject* parent, bool defer_initial_scan)
     : QObject(parent),
       downloader_(downloader),
       extensions_dir_(extensions_dir),
       pending_dir_(pending_dir),
       sink_(std::move(sink)) {
-  initComponents();
+  initComponents(defer_initial_scan);
 }
 
 ExtensionManager::~ExtensionManager() {
@@ -887,7 +887,7 @@ void ExtensionManager::acquireStoreLock() {
   store_lock_refusal_.clear();
 }
 
-void ExtensionManager::initComponents() {
+void ExtensionManager::initComponents(bool defer_initial_scan) {
   if (!downloader_) {
     // Not parented to `this`: the destructor deletes it explicitly, before the lock
     // is released, and a QObject child would instead be destroyed after that.
@@ -940,6 +940,12 @@ void ExtensionManager::initComponents() {
   // AFTER promotion, so the path's first in-process open is the new version.
   applyPendingUninstalls();
   applyPendingInstalls();
+  if (!defer_initial_scan) {
+    finishInitialScan();
+  }
+}
+
+void ExtensionManager::finishInitialScan() {
   refreshInstalledFromDisk();
   // With the installed set now settled, drop store objects that no surviving
   // install references. Runs here, before the runtime maps any object.

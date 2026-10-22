@@ -23,6 +23,7 @@
 #include "pj_marketplace/extension_manager.hpp"
 #include "pj_marketplace/platform_utils.hpp"
 #include "pj_marketplace/version_compare.hpp"
+#include "pj_runtime/LocalizedPluginSeed.h"
 #endif
 #include "pj_base/plugin_data_api.h"
 #include "pj_marketplace/plugin_compatibility.hpp"
@@ -223,7 +224,7 @@ ExtensionCatalogService::ExtensionCatalogService(
   // only reorders the LOAD scan hierarchy via buildScanHierarchy). Passing
   // extensions_dir_ here would make the marketplace UI look at the CLI override
   // dir and lose sight of every plugin the user actually installed.
-  extension_manager_ = std::make_unique<ExtensionManager>(nullptr, marketplace_dir_, pending_dir, sink_, this);
+  extension_manager_ = std::make_unique<ExtensionManager>(nullptr, marketplace_dir_, pending_dir, sink_, this, true);
 
   // Sync bundled plugins into the marketplace dir BEFORE the scan — the bundled
   // dir is never scanned, so the seed is the only route by which shipped
@@ -231,6 +232,7 @@ ExtensionCatalogService::ExtensionCatalogService(
   // pending staged installs above, so a staged upgrade is promoted before the
   // seed's version comparison sees it.
   seedBundledPlugins();
+  extension_manager_->finishInitialScan();
 #else
   (void)pending_dir;
 #endif
@@ -392,7 +394,7 @@ void ExtensionCatalogService::seedBundledPlugins() {
   // next to the extensions dir (see PlatformUtils::canonicalStoreRoot): beside a
   // symlinked store the staging area can land on another filesystem, and then the
   // promoting rename below is EXDEV instead of an atomic move.
-  const std::filesystem::path market_root(marketplace_dir_.toStdString());
+  const std::filesystem::path market_root(PlatformUtils::canonicalStoreRoot(marketplace_dir_).toStdString());
   const std::filesystem::path stage_root(
       (PlatformUtils::canonicalStoreRoot(marketplace_dir_) + u".seed_stage"_s).toStdString());
   std::error_code ec;
@@ -428,6 +430,7 @@ void ExtensionCatalogService::seedBundledPlugins() {
   // from the first-loaded image, so the scan snapshot is frozen at the pre-seed
   // version for the rest of the process.
   QMap<QString, QString> seeded_versions;
+  QSettings localized_seed_settings;
   // Set when a failed promote could not restore the old copy: the stage dir
   // then holds the only surviving payload and must not be deleted below.
   bool stage_has_orphans = false;
@@ -452,14 +455,49 @@ void ExtensionCatalogService::seedBundledPlugins() {
     const std::filesystem::path src = root / *rel.begin();
     const std::filesystem::path installed_dso = installedDsoPath(dst, rel);
 
+    const QString payload_path = QString::fromStdString(src.string());
+    const auto localized_build = LocalizedPluginSeed::readBuild(
+        payload_path, QString::fromStdString(dso.string()), id, QString::fromStdString(descriptor.version));
+    const bool has_marker =
+        QFileInfo::exists(QDir(payload_path).filePath(QString::fromLatin1(LocalizedPluginSeed::kMarker)));
+    const QString receipt_key = LocalizedPluginSeed::receiptKey(
+        QString::fromStdString(market_root.string()), id, QString::fromStdString(descriptor.version));
+    bool localized_migration = false;
+    std::error_code localized_exists_ec;
+    const bool destination_exists = std::filesystem::exists(dst, localized_exists_ec);
+    if (localized_exists_ec) {
+      continue;
+    }
+    if (has_marker && !localized_build) {
+      qCWarning(lcCatalog) << "Invalid localized plugin build marker; preserving installed plugin" << id;
+      continue;
+    }
+    if (localized_build && destination_exists) {
+      const auto decision = LocalizedPluginSeed::decide(
+          *localized_build, LocalizedPluginSeed::fileHash(QString::fromStdString(installed_dso.string())),
+          localized_seed_settings.value(receipt_key + u"/applied"_s).toString(),
+          localized_seed_settings.contains(receipt_key + u"/pending"_s));
+      if (decision == LocalizedPluginSeed::Decision::AlreadyCurrent) {
+        if (!LocalizedPluginSeed::complete(localized_seed_settings, receipt_key, localized_build->sha256)) {
+          qCWarning(lcCatalog) << "Could not save localized plugin seed receipt" << id;
+        }
+        continue;
+      }
+      if (decision == LocalizedPluginSeed::Decision::Preserve) {
+        continue;
+      }
+      localized_migration = true;
+    }
+
     // Steady-state fast path: an installed DSO matching the bundled one by
     // size and (seed-stamped) mtime is the same build — skip without paying
     // the installed-side dlopen.
-    if (sameDsoSignature(installed_dso, dso)) {
+    if (!localized_build && sameDsoSignature(installed_dso, dso)) {
       continue;
     }
 
-    // The marketplace dir stays at least as new as the bundled set: absent or
+    // For packages without a localized marker, the marketplace dir stays at
+    // least as new as the bundled set: absent or
     // unreadable -> copy; older -> refresh; same-or-newer -> untouched (a
     // marketplace update above the bundled version is never downgraded, and an
     // equal version never refreshes — ship a change by bumping the version).
@@ -470,10 +508,14 @@ void ExtensionCatalogService::seedBundledPlugins() {
     // dead "installed" that never loads and no bundled fallback (the bundled
     // dir is never scanned as a load path). Rescue by refreshing to the bundled
     // build — compatible by construction, since it ships with this host.
-    const std::optional<PluginDescriptor> installed = installedPluginDescriptor(dst, descriptor.id);
+    // Exact migration hashes already bind the installed ID/version. Do not dlopen
+    // a Windows DLL that must be renamed by this transaction.
+    const std::optional<PluginDescriptor> installed = localized_migration
+                                                          ? std::optional<PluginDescriptor>{descriptor}
+                                                          : installedPluginDescriptor(dst, descriptor.id);
     bool rescue_incompat = false;
     QString rescue_reason;
-    if (installed && comparePluginVersions(descriptor.version, installed->version) <= 0) {
+    if (!localized_migration && installed && comparePluginVersions(descriptor.version, installed->version) <= 0) {
       const QString installed_reason = ExtensionCatalogService::descriptorIncompatReason(*installed);
       if (installed_reason.isEmpty()) {
         continue;  // Installed is compatible — user's marketplace update wins.
@@ -501,7 +543,24 @@ void ExtensionCatalogService::seedBundledPlugins() {
     const std::filesystem::path stage_new = stage_root / descriptor.id;
     const std::filesystem::path aside = stage_root / (descriptor.id + ".old");
     bool aside_orphaned = false;
-    std::error_code step_ec = stagePayload(src, dso, stage_new);
+    std::error_code step_ec;
+    // Preserve user-added files for an identity-authorized same-version refresh.
+    // Reject symlinks rather than following a user path while overlaying a package.
+    if (localized_migration) {
+      step_ec = LocalizedPluginSeed::preserveFiles(dst, stage_new);
+    }
+    if (!step_ec) {
+      step_ec = stagePayload(src, dso, stage_new);
+    }
+    if (!step_ec && localized_build &&
+        LocalizedPluginSeed::fileHash(QString::fromStdString(installedDsoPath(stage_new, rel).string())) !=
+            localized_build->sha256) {
+      step_ec = std::make_error_code(std::errc::io_error);
+    }
+    if (!step_ec && localized_build &&
+        !LocalizedPluginSeed::begin(localized_seed_settings, receipt_key, localized_build->sha256)) {
+      step_ec = std::make_error_code(std::errc::io_error);
+    }
     if (!step_ec) {
       step_ec = promoteStaged(stage_new, dst, aside, &aside_orphaned);
     }
@@ -517,6 +576,9 @@ void ExtensionCatalogService::seedBundledPlugins() {
           id);
     }
     if (step_ec) {
+      if (localized_build && !aside_orphaned) {
+        LocalizedPluginSeed::failed(localized_seed_settings, receipt_key);
+      }
       std::error_code cleanup_ec;
       std::filesystem::remove_all(stage_new, cleanup_ec);
       const QString context = rescue_incompat ? u" (attempted rescue of an incompatible installed copy)"_s : QString{};
@@ -536,6 +598,10 @@ void ExtensionCatalogService::seedBundledPlugins() {
       std::filesystem::last_write_time(installed_dso, bundled_mtime, stamp_ec);
     }
 
+    if (localized_build &&
+        !LocalizedPluginSeed::complete(localized_seed_settings, receipt_key, localized_build->sha256)) {
+      qCWarning(lcCatalog) << "Could not save localized plugin seed receipt after promotion" << id;
+    }
     seeded_versions.insert(id, QString::fromStdString(descriptor.version));
 
     // The seed just wrote extensions/<id>/ outside the adopt path, so any store

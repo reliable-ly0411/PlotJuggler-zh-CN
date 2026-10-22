@@ -51,9 +51,12 @@ class ExtensionManager : public QObject {
   // Uses the supplied downloader and directories; tests pass isolated temp paths.
   // The optional sink receives the same diagnostics as diagnosticReported() —
   // hosts can subscribe to one stream that also carries non-marketplace events.
+  // A host replacing bundled files during startup can defer the initial DSO
+  // scan, then call finishInitialScan() after its transaction.
   explicit ExtensionManager(
       DownloadManager* downloader, const QString& extensions_dir = PlatformUtils::extensionsDir(),
-      const QString& pending_dir = PlatformUtils::pendingDir(), DiagnosticSink sink = {}, QObject* parent = nullptr);
+      const QString& pending_dir = PlatformUtils::pendingDir(), DiagnosticSink sink = {}, QObject* parent = nullptr,
+      bool defer_initial_scan = false);
 
   // Stops all in-flight work and THEN releases the single-writer lock, in that
   // order: an extraction worker writes into the store, so letting go of the lock
@@ -263,6 +266,11 @@ class ExtensionManager : public QObject {
   // instance (the single source of truth for the QSettings key).
   static QStringList disabledExtensionIds();
 
+  // Completes a deferred startup after the host seeds bundled payloads. Pending
+  // installs and the writer lease are already initialized by the constructor.
+  // Must run before querying installed state or loading managed plugin DSOs.
+  void finishInitialScan();
+
   // Rebuilds installed state by scanning extension directories for plugin DSOs.
   void refreshInstalledFromDisk();
 
@@ -454,7 +462,7 @@ class ExtensionManager : public QObject {
   void dropReplaceConfirmation();
 
   // Called by both constructors to finish setup after members are assigned.
-  void initComponents();
+  void initComponents(bool defer_initial_scan = false);
 
   // Takes the store's single-writer lock, or leaves this instance read-only and
   // reports why. Must run before any startup cleanup.
