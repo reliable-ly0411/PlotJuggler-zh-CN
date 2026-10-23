@@ -1,0 +1,74 @@
+{
+  "completed_at": "2026-10-23T13:29:20.979907+00:00",
+  "verified_at": "2026-10-23T13:30:13.581391+00:00",
+  "recovery_commit": "bc65a474251c1d2fdd5b291cb143c2169e2de4e2",
+  "scope": "Paths relative to the historical rc2-followup-20261022 test root only.",
+  "deleted": [
+    {
+      "path": "tmp/cache/7zip",
+      "allocated_bytes": 6377472
+    },
+    {
+      "path": "tmp/cache/aqt",
+      "allocated_bytes": 12288
+    },
+    {
+      "path": "tmp/cache/build-temp",
+      "allocated_bytes": 4096
+    },
+    {
+      "path": "tmp/cache/build-tools",
+      "allocated_bytes": 58859520
+    },
+    {
+      "path": "tmp/cache/ccache",
+      "allocated_bytes": 1957888
+    },
+    {
+      "path": "tmp/cache/conan-source",
+      "allocated_bytes": 70365184
+    },
+    {
+      "path": "tmp/cache/conan2/p",
+      "allocated_bytes": 1041600512
+    },
+    {
+      "path": "tmp/cache/pip",
+      "allocated_bytes": 2785280
+    },
+    {
+      "path": "tmp/cache/qt",
+      "allocated_bytes": 1548935168
+    },
+    {
+      "path": "tmp/cache/system-deps",
+      "allocated_bytes": 868352
+    },
+    {
+      "path": "build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da",
+      "allocated_bytes": 719974400
+    },
+    {
+      "path": "build/ba34808c6bab7f0f97b55d8d24454076aecec7c6",
+      "allocated_bytes": 2469888
+    },
+    {
+      "path": "build/fc1582c6938557a8366f8fb76b51944559939462",
+      "allocated_bytes": 523296768
+    }
+  ],
+  "deleted_allocated_bytes": 3977506816,
+  "observed_filesystem_available_increase_during_deletion_bytes": 3977498624,
+  "remaining_allocated_bytes": {
+    "tmp/cache": 81920,
+    "build": 4096
+  },
+  "retained": "All source worktrees, uncommitted changes, evidence, original packages and temporary profiles/scripts outside the two cleanup roots; Conan profiles/configuration/metadata/extensions inside tmp/cache/conan2.",
+  "protected_entries_verified_unchanged": 9577,
+  "git_worktrees_verified_unchanged": 3,
+  "preserved_small_build_config_log_files": 12,
+  "public_recovery_files_read_back_and_verified": 24,
+  "original_browser_patch_sha256": "a4a3f230d23695dbf085b1d81d63c76f9c415d43f09805acc438c17a1ac2dc9d",
+  "product_browser_integration_commit": "6a00435fb097f1baa61ebaef1ca3f72f5d245b68",
+  "validation_scope": "Filesystem/hash/Git/open-file/mount checks only; no product development, test run, build, GUI interaction or release mutation."
+}
