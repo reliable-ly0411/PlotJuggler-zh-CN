@@ -1,0 +1,374 @@
+diff --git a/packaging/appimage/AppRun.sh b/packaging/appimage/AppRun.sh
+index caa534c5..708aec9c 100755
+--- a/packaging/appimage/AppRun.sh
++++ b/packaging/appimage/AppRun.sh
+@@ -15,6 +15,21 @@ set -e
+ HERE="$(dirname "$(readlink -f "${0}")")"
+ APPDIR="${APPDIR:-${HERE}}"
+ 
++# Desktop URL handlers need the host's libraries, Qt plugins and Python. Keep
++# unset and explicitly empty values distinct; only the external child restores
++# them, while this process retains the bundle environment for plugin loading.
++for _name in LD_LIBRARY_PATH QT_PLUGIN_PATH XDG_DATA_DIRS PYTHONHOME \
++             GRPC_DEFAULT_SSL_ROOTS_FILE_PATH QT_IM_MODULE; do
++  if [[ -v "${_name}" ]]; then
++    export "PJ_APPIMAGE_HOST_${_name}_SET=1"
++    export "PJ_APPIMAGE_HOST_${_name}=${!_name}"
++  else
++    export "PJ_APPIMAGE_HOST_${_name}_SET=0"
++    unset "PJ_APPIMAGE_HOST_${_name}"
++  fi
++done
++export PJ_APPIMAGE_HOST_ENV=1
++
+ # Key off the payload marker so renaming the AppImage keeps these defaults.
+ # detect_leaks=0 is deliberate: this artifact hunts use-after-free at teardown;
+ # Qt/plugin teardown leaks would bury that signal. Leak detection belongs to
+diff --git a/pj_app/CLAUDE.md b/pj_app/CLAUDE.md
+index d3b71b2a..6ecdbb73 100644
+--- a/pj_app/CLAUDE.md
++++ b/pj_app/CLAUDE.md
+@@ -258,3 +258,13 @@ source builds and WebAssembly do not download it at application startup.
+ Chinese sessions always compose the translated banner, even when an older saved
+ profile selects memes. The saved mode is not rewritten and remains effective in
+ English sessions. Preferences shows that saved choice and explains the override.
++
++## External web links
++
++Help and About HTTP(S) links use ExternalUrl.h. AppImage's launcher snapshots
++the host values of the environment variables it changes, including unset versus
++empty values. The URL opener restores those values only for its xdg-open child;
++the application's bundled Qt/Python/plugin environment remains unchanged. Other
++packages, platforms and custom URL schemes use Qt's normal desktop services.
++AppImageExternalUrlTest runs the real launcher and child-process path with a
++private desktop-opener fixture; it is not a browser GUI acceptance test.
+diff --git a/pj_app/src/ExternalUrl.h b/pj_app/src/ExternalUrl.h
+new file mode 100644
+index 00000000..da1d4238
+--- /dev/null
++++ b/pj_app/src/ExternalUrl.h
+@@ -0,0 +1,64 @@
++// SPDX-License-Identifier: MPL-2.0
++#pragma once
++
++#include <QDesktopServices>
++#include <QUrl>
++
++#if defined(Q_OS_LINUX) && QT_CONFIG(process)
++#include <QProcess>
++#include <QProcessEnvironment>
++
++namespace PJ::external_url_detail {
++
++// Restore the exact pre-AppRun environment in a child-only copy. An incomplete
++// snapshot must not silently hand bundled libraries to a system application.
++inline bool restoreHostEnvironment(QProcessEnvironment& environment) {
++  constexpr const char* names[] = {
++      "LD_LIBRARY_PATH", "QT_PLUGIN_PATH", "XDG_DATA_DIRS", "PYTHONHOME", "GRPC_DEFAULT_SSL_ROOTS_FILE_PATH",
++      "QT_IM_MODULE"};
++  for (const char* name : names) {
++    const auto key = QString::fromLatin1(name);
++    const auto saved = QStringLiteral("PJ_APPIMAGE_HOST_") + key;
++    const auto flag = saved + QStringLiteral("_SET");
++    const auto state = environment.value(flag);
++    if (state == QStringLiteral("1") && environment.contains(saved)) {
++      environment.insert(key, environment.value(saved));
++    } else if (state == QStringLiteral("0")) {
++      environment.remove(key);
++    } else {
++      return false;
++    }
++    environment.remove(saved);
++    environment.remove(flag);
++  }
++  environment.remove(QStringLiteral("PJ_APPIMAGE_HOST_ENV"));
++  return true;
++}
++
++}  // namespace PJ::external_url_detail
++#endif
++
++namespace PJ {
++
++// Keep default URL handling outside AppImage HTTP(S), including custom schemes.
++// A successful return means the desktop opener started, not that navigation
++// completed. No process-global environment is changed around a browser launch.
++inline bool openExternalUrl(const QUrl& url) {
++#if defined(Q_OS_LINUX) && QT_CONFIG(process)
++  auto environment = QProcessEnvironment::systemEnvironment();
++  if (environment.value(QStringLiteral("PJ_APPIMAGE_HOST_ENV")) == QStringLiteral("1") &&
++      (url.scheme() == QStringLiteral("http") || url.scheme() == QStringLiteral("https"))) {
++    if (!url.isValid() || !external_url_detail::restoreHostEnvironment(environment)) {
++      return false;
++    }
++    QProcess opener;
++    opener.setProcessEnvironment(environment);
++    opener.setProgram(QStringLiteral("xdg-open"));
++    opener.setArguments({url.toString(QUrl::FullyEncoded)});
++    return opener.startDetached();
++  }
++#endif
++  return QDesktopServices::openUrl(url);
++}
++
++}  // namespace PJ
+diff --git a/pj_app/src/MainWindow.cpp b/pj_app/src/MainWindow.cpp
+index 31a6087c..1f00cb3d 100644
+--- a/pj_app/src/MainWindow.cpp
++++ b/pj_app/src/MainWindow.cpp
+@@ -18,6 +18,7 @@
+ #include <QDesktopServices>
+ 
+ #include "MainWindow.h"
++#include "ExternalUrl.h"
+ #if QT_CONFIG(process)
+ #include <QProcess>
+ #endif
+@@ -772,12 +773,12 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
+   help_menu->addAction(tr("Check for Updates..."), this, &MainWindow::onCheckForUpdates);
+ #endif
+   help_menu->addAction(
+-      tr("Documentation"), this, []() { QDesktopServices::openUrl(QUrl(u"https://plotjuggler.io"_s)); });
++      tr("Documentation"), this, []() { openExternalUrl(QUrl(u"https://plotjuggler.io"_s)); });
+   help_menu->addAction(tr("Report a Localization Issue"), this, []() {
+-    QDesktopServices::openUrl(QUrl(u"https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues"_s));
++    openExternalUrl(QUrl(u"https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues"_s));
+   });
+   help_menu->addAction(tr("Report an Upstream Issue"), this, []() {
+-    QDesktopServices::openUrl(QUrl(u"https://github.com/PlotJuggler/PlotJuggler/issues"_s));
++    openExternalUrl(QUrl(u"https://github.com/PlotJuggler/PlotJuggler/issues"_s));
+   });
+   help_menu->addSeparator();
+   installed_extensions_menu_ = help_menu->addMenu(tr("Installed Extensions"));
+diff --git a/pj_app/src/ui/AboutDialog.cpp b/pj_app/src/ui/AboutDialog.cpp
+index d83bd632..bab14242 100644
+--- a/pj_app/src/ui/AboutDialog.cpp
++++ b/pj_app/src/ui/AboutDialog.cpp
+@@ -6,6 +6,7 @@
+ #include <QApplication>
+ #include <QLayout>
+ 
++#include "ExternalUrl.h"
+ #include "pj_widgets/SvgUtil.h"
+ #include "ui_AboutDialog.h"
+ using namespace Qt::StringLiterals;
+@@ -23,6 +24,8 @@ AboutDialog::AboutDialog(QWidget* parent) : Dialog(parent), ui_(new Ui::AboutDia
+   ui_->logoLabel->setPixmap(loadSvg(u":/resources/svg/plotjuggler.svg"_s, currentTheme()));
+   ui_->versionLabel->setText(tr("Version %1").arg(QApplication::applicationVersion()));
+ 
++  connect(ui_->linkLabel, &QLabel::linkActivated, this, [](const QString& link) { openExternalUrl(QUrl(link)); });
++
+   // The frameless Dialog chrome otherwise opens at its 320x120 base minimum and
+   // clips the content. Lock the box to the content's hint so it opens showing
+   // everything and cannot be resized — a fixed About box, as in PJ3.
+diff --git a/pj_app/src/ui/AboutDialog.ui b/pj_app/src/ui/AboutDialog.ui
+index ba89b8b2..cc6868b0 100644
+--- a/pj_app/src/ui/AboutDialog.ui
++++ b/pj_app/src/ui/AboutDialog.ui
+@@ -81,7 +81,7 @@
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+      <property name="openExternalLinks">
+-      <bool>true</bool>
++      <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+diff --git a/pj_app/tests/rc2/CMakeLists.txt b/pj_app/tests/rc2/CMakeLists.txt
+index 01e46311..ad7246b9 100644
+--- a/pj_app/tests/rc2/CMakeLists.txt
++++ b/pj_app/tests/rc2/CMakeLists.txt
+@@ -39,3 +39,14 @@ if(MSVC)
+ endif()
+ add_test(NAME LocalizedOriginalMemeTest COMMAND localized_original_meme_test)
+ set_tests_properties(LocalizedOriginalMemeTest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
++
++if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
++    add_executable(appimage_external_url_test appimage_external_url_test.cpp)
++    set_target_properties(appimage_external_url_test PROPERTIES AUTOMOC ON)
++    target_link_libraries(appimage_external_url_test PRIVATE Qt6::Gui Qt6::Test)
++    target_compile_options(appimage_external_url_test PRIVATE ${PJ_WARNING_FLAGS})
++    target_compile_definitions(appimage_external_url_test PRIVATE
++        PJ_APPRUN_SOURCE="${root}/packaging/appimage/AppRun.sh")
++    add_test(NAME AppImageExternalUrlTest COMMAND appimage_external_url_test)
++    set_tests_properties(AppImageExternalUrlTest PROPERTIES TIMEOUT 30)
++endif()
+diff --git a/pj_app/tests/rc2/appimage_external_url_test.cpp b/pj_app/tests/rc2/appimage_external_url_test.cpp
+new file mode 100644
+index 00000000..fa41421d
+--- /dev/null
++++ b/pj_app/tests/rc2/appimage_external_url_test.cpp
+@@ -0,0 +1,173 @@
++// SPDX-License-Identifier: MPL-2.0
++#include <QCoreApplication>
++#include <QDir>
++#include <QFile>
++#include <QTemporaryDir>
++#include <QtTest/QtTest>
++
++#include "../../src/ExternalUrl.h"
++
++using namespace Qt::StringLiterals;
++
++namespace {
++
++// Decode env -0 without losing empty values, Unicode, or newlines.
++QProcessEnvironment readEnvironment(const QByteArray& bytes) {
++  QProcessEnvironment result;
++  for (const auto& entry : bytes.split('\0')) {
++    const auto separator = entry.indexOf('=');
++    if (separator > 0) {
++      result.insert(QString::fromUtf8(entry.first(separator)), QString::fromUtf8(entry.sliced(separator + 1)));
++    }
++  }
++  return result;
++}
++
++// All fixture executables live in a temporary test tree and only record input.
++bool writeExecutable(const QString& path, const QByteArray& bytes) {
++  QFile file(path);
++  return file.open(QIODevice::WriteOnly) && file.write(bytes) == bytes.size() &&
++         file.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
++}
++
++QByteArray readBytes(const QString& path) {
++  QFile file(path);
++  return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{};
++}
++
++}  // namespace
++
++class AppImageExternalUrlTest : public QObject {
++  Q_OBJECT
++
++ private slots:
++  void restoreAndLaunch_data() {
++    QTest::addColumn<int>("state");
++    QTest::addColumn<bool>("complete");
++    QTest::newRow("unset") << 0 << true;
++    QTest::newRow("empty") << 1 << true;
++    QTest::newRow("unicode-spaces-newline") << 2 << true;
++    QTest::newRow("incomplete-snapshot") << 2 << false;
++  }
++
++  void restoreAndLaunch() {
++    QFETCH(int, state);
++    QFETCH(bool, complete);
++    QTemporaryDir directory;
++    QVERIFY(directory.isValid());
++    const auto root = directory.path();
++    QVERIFY(QDir().mkpath(root + u"/usr/bin"_s));
++    QVERIFY(QDir().mkpath(root + u"/desktop opener"_s));
++    QVERIFY(writeExecutable(root + u"/usr/bin/plotjuggler4"_s, "#!/bin/sh\nexec /usr/bin/env -0\n"));
++    QVERIFY(writeExecutable(
++        root + u"/desktop opener/xdg-open"_s,
++        "#!/bin/sh\nset -e\n/usr/bin/env -0 > \"$PJ_TEST_OPEN_ENV\"\n"
++        "printf '%s\\0' \"$@\" > \"$PJ_TEST_OPEN_ARGS\"\n"
++        "printf done > \"$PJ_TEST_OPEN_DONE\"\n"));
++
++    auto host = QProcessEnvironment::systemEnvironment();
++    const QStringList keys = {u"LD_LIBRARY_PATH"_s,
++                              u"QT_PLUGIN_PATH"_s,
++                              u"XDG_DATA_DIRS"_s,
++                              u"PYTHONHOME"_s,
++                              u"GRPC_DEFAULT_SSL_ROOTS_FILE_PATH"_s,
++                              u"QT_IM_MODULE"_s};
++    for (const auto& key : keys) {
++      host.remove(key);
++      if (state != 0) {
++        host.insert(key, state == 1 ? QString{} : u"/host path/中文\nsecond line"_s);
++      }
++    }
++    host.insert(u"APPDIR"_s, root);
++    host.insert(u"PATH"_s, root + u"/desktop opener:"_s + host.value(u"PATH"_s));
++    host.insert(u"PJ_TEST_OPEN_ENV"_s, root + u"/opened.env"_s);
++    host.insert(u"PJ_TEST_OPEN_ARGS"_s, root + u"/opened.args"_s);
++    host.insert(u"PJ_TEST_OPEN_DONE"_s, root + u"/opened.done"_s);
++    host.insert(u"PJ_TEST_AFTER"_s, root + u"/after.txt"_s);
++    host.insert(u"PJ_TEST_UNRELATED"_s, u"retained 中文"_s);
++
++    QProcess launcher;
++    launcher.setProcessEnvironment(host);
++    launcher.start(u"/bin/bash"_s, {QString::fromUtf8(PJ_APPRUN_SOURCE)});
++    QVERIFY(launcher.waitForFinished(5000));
++    QCOMPARE(launcher.exitCode(), 0);
++    auto bundled = readEnvironment(launcher.readAllStandardOutput());
++    QCOMPARE(bundled.value(u"PJ_APPIMAGE_HOST_ENV"_s), u"1"_s);
++    QVERIFY(bundled.value(u"LD_LIBRARY_PATH"_s).startsWith(root + u"/usr/lib"_s));
++    QVERIFY(!bundled.contains(u"QT_IM_MODULE"_s));
++    if (!complete) {
++      bundled.remove(u"PJ_APPIMAGE_HOST_QT_PLUGIN_PATH_SET"_s);
++    }
++
++    const QUrl url(u"https://example.invalid/中文?space=one two&literal=$(nothing);quote=\"x\""_s);
++    QProcess helper;
++    helper.setProcessEnvironment(bundled);
++    helper.start(QCoreApplication::applicationFilePath(), {u"--launch-test-url"_s, url.toString(QUrl::FullyEncoded)});
++    QVERIFY(helper.waitForFinished(5000));
++    QCOMPARE(helper.exitCode(), complete ? 0 : 1);
++    QCOMPARE(readBytes(root + u"/after.txt"_s), QByteArray("unchanged"));
++    if (!complete) {
++      QVERIFY(!QFile::exists(root + u"/opened.done"_s));
++      return;
++    }
++    QTRY_VERIFY_WITH_TIMEOUT(QFile::exists(root + u"/opened.done"_s), 5000);
++    const auto opened = readEnvironment(readBytes(root + u"/opened.env"_s));
++    for (const auto& key : keys) {
++      QCOMPARE(opened.contains(key), host.contains(key));
++      QCOMPARE(opened.value(key), host.value(key));
++      QVERIFY(!opened.contains(u"PJ_APPIMAGE_HOST_"_s + key));
++      QVERIFY(!opened.contains(u"PJ_APPIMAGE_HOST_"_s + key + u"_SET"_s));
++    }
++    QCOMPARE(opened.value(u"PJ_TEST_UNRELATED"_s), host.value(u"PJ_TEST_UNRELATED"_s));
++    QVERIFY(!opened.contains(u"PJ_APPIMAGE_HOST_ENV"_s));
++    QCOMPARE(readBytes(root + u"/opened.args"_s), url.toString(QUrl::FullyEncoded).toUtf8() + QByteArray(1, '\0'));
++  }
++
++  void defaultHandlerWithoutAppImage() {
++    QVERIFY(!qEnvironmentVariableIsSet("PJ_APPIMAGE_HOST_ENV"));
++    QDesktopServices::setUrlHandler(u"https"_s, this, "rememberUrl");
++    const QUrl url(u"https://example.invalid/native"_s);
++    QVERIFY(PJ::openExternalUrl(url));
++    QCOMPARE(received_, url);
++  }
++
++  void customSchemeRemainsQtHandled() {
++    QDesktopServices::setUrlHandler(u"pj-url-test"_s, this, "rememberUrl");
++    const QUrl url(u"pj-url-test:manual-update"_s);
++    QVERIFY(PJ::openExternalUrl(url));
++    QCOMPARE(received_, url);
++  }
++
++  void cleanup() {
++    QDesktopServices::unsetUrlHandler(u"https"_s);
++    QDesktopServices::unsetUrlHandler(u"pj-url-test"_s);
++    received_.clear();
++  }
++
++ public slots:
++  void rememberUrl(const QUrl& url) {
++    received_ = url;
++  }
++
++ private:
++  QUrl received_;
++};
++
++int main(int argc, char** argv) {
++  QCoreApplication application(argc, argv);
++  const auto arguments = application.arguments();
++  if (arguments.size() == 3 && arguments.at(1) == u"--launch-test-url"_s) {
++    const auto before = QProcessEnvironment::systemEnvironment();
++    const bool started = PJ::openExternalUrl(QUrl(arguments.at(2)));
++    QFile result(before.value(u"PJ_TEST_AFTER"_s));
++    if (!result.open(QIODevice::WriteOnly)) {
++      return 2;
++    }
++    result.write(before == QProcessEnvironment::systemEnvironment() ? "unchanged" : "changed");
++    return started ? 0 : 1;
++  }
++  AppImageExternalUrlTest test;
++  return QTest::qExec(&test, argc, argv);
++}
++
++#include "appimage_external_url_test.moc"

@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+"""Compile/run isolated Qt regressions; pause only our Conan process while compiling."""
+from pathlib import Path
+import datetime
+import json
+import os
+import signal
+import subprocess
+import sys
+import threading
+import time
+
+R = Path('$TEST_ROOT')
+S = R / 'source/PlotJuggler-zh-CN'
+B = R / 'build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused'
+Q = R / 'tmp/cache/qt/6.11.1/gcc_64'
+E = R / 'evidence'
+
+def now():
+    return datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+def child():
+    env = os.environ.copy()
+    env.update(TMPDIR=str(R / 'tmp'), CONAN_HOME=str(R / 'tmp/cache/conan2'),
+        CCACHE_DIR=str(R / 'tmp/cache/ccache'), CCACHE_MAXSIZE='512M',
+        XDG_CACHE_HOME=str(R / 'tmp/cache/focused-framework'),
+        PJ_DISABLE_TELEMETRY='1', OMP_NUM_THREADS='1', PYTHONDONTWRITEBYTECODE='1')
+    group = Path('/sys/fs/cgroup' + Path('/proc/self/cgroup').read_text().strip().split(':', 2)[2])
+    result = {'source_sha': '6ddc44a4e4c59da374c3d11ea56825a9bc0590da',
+              'kind': 'Qt-only-native-regressions-not-full-app-GUI', 'started_at': now(), 'steps': []}
+    assert json.loads((E / 'local-qt-prepared-6ddc44a4.json').read_text())['status'] == 'verified'
+    commands = [
+        ['cmake', '-S', str(S / 'pj_app/tests/i18n'), '-B', str(B), '-G', 'Ninja',
+         '-DCMAKE_PREFIX_PATH=' + str(Q), '-DCMAKE_BUILD_TYPE=Release',
+         '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache'],
+        ['cmake', '--build', str(B), '--parallel', '1'],
+        ['ctest', '--test-dir', str(B), '--output-on-failure', '--timeout', '60', '--parallel', '1'],
+    ]
+    code = 0
+    for name, cmd in zip(['configure', 'build', 'ctest'], commands):
+        record = {'name': name, 'command': cmd, 'started_at': now()}
+        with (E / ('local-focused-early-' + name + '-6ddc44a4.log')).open('x') as log:
+            proc = subprocess.Popen(cmd, cwd=S, env=env, stdout=log, stderr=subprocess.STDOUT,
+                                    start_new_session=True)
+            peak = 0
+            while proc.poll() is None:
+                current = int((group / 'memory.current').read_text())
+                peak = max(peak, current)
+                available = next(int(l.split()[1]) * 1024 for l in
+                                 Path('/proc/meminfo').read_text().splitlines()
+                                 if l.startswith('MemAvailable:'))
+                if current > 650 * 1024**2 or available < 512 * 1024**2:
+                    record['resource_stop'] = {'memory_current': current, 'host_mem_available': available}
+                    os.killpg(proc.pid, signal.SIGTERM)
+                    break
+                time.sleep(1)
+            code = proc.wait()
+        record.update(returncode=code, observed_peak_bytes=peak, finished_at=now())
+        result['steps'].append(record)
+        if code:
+            break
+    result.update(returncode=code, finished_at=now())
+    result['cgroup_memory_peak'] = (group / 'memory.peak').read_text().strip()
+    result['cgroup_memory_events'] = (group / 'memory.events').read_text().strip()
+    (E / 'local-focused-early-result-6ddc44a4.json').write_text(json.dumps(result, indent=2) + '\n')
+    return code
+
+def main():
+    state = json.loads((E / 'local-build-state-6ddc44a4-private-deps.json').read_text())
+    phase = state['phases']['conan-install']
+    assert phase['status'] == 'running'
+    pid = phase['pid']
+    command = Path('/proc/' + str(pid) + '/cmdline').read_bytes()
+    assert str(R / 'tmp/cache/build-tools/bin/conan').encode() in command
+    assert str(S).encode() in command and b'install' in command
+    assert os.getpgid(pid) == pid
+    record = {'conan_pid': pid, 'paused_at': now(), 'reason': 'one compiler at a time; use source-download waiting time for focused native regressions'}
+    os.killpg(pid, signal.SIGSTOP)
+    (E / 'local-conan-focused-pause-6ddc44a4.json').write_text(json.dumps(record, indent=2) + '\n')
+    try:
+        code = subprocess.call(['systemd-run', '--user', '--scope', '--quiet', '--collect',
+            '--unit=pj4-6dd-focused-early', '-p', 'MemoryHigh=805306368', '-p', 'MemoryMax=1073741824',
+            '-p', 'MemorySwapMax=268435456', '-p', 'CPUQuota=100%',
+            'nice', '-n', '15', 'ionice', '-c', '3', sys.executable, __file__, '--child'])
+        record['focused_returncode'] = code
+        return code
+    finally:
+        try:
+            os.killpg(pid, signal.SIGCONT)
+            record['resumed_at'] = now()
+        except ProcessLookupError:
+            record['conan_already_exited_at'] = now()
+        (E / 'local-conan-focused-pause-6ddc44a4.json').write_text(json.dumps(record, indent=2) + '\n')
+
+if __name__ == '__main__':
+    raise SystemExit(child() if sys.argv[1:] == ['--child'] else main())

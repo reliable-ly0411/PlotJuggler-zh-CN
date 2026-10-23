@@ -1,0 +1,12 @@
+PJ4 zh_CN: 1968/1968 active messages translated; 0 unfinished; 26 numerus; 29 unchanged identifiers/format strings.
+Source coverage: 1968 Qt-extractable messages, 0 missing, 0 stale.
+  pj_app: 667/667
+  pj_dialog_host: 334/334
+  pj_marketplace: 270/270
+  pj_plotting: 131/131
+  pj_runtime: 2/2
+  pj_scene2D: 19/19
+  pj_scene3D: 419/419
+  pj_widgets: 126/126
+Placeholders, plural forms, and rich-text tags/attributes: OK
+Source contexts: OK

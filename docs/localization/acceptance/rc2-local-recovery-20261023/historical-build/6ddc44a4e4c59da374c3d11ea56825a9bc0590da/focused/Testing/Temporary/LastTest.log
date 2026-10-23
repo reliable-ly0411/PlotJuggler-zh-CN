@@ -1,0 +1,86 @@
+Start testing: Oct 22 20:08 CST
+----------------------------------------------------------
+8/24 Testing: LocalizedUpdateTest
+8/24 Test: LocalizedUpdateTest
+Command: "$TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/rc2/localized_update_test"
+Directory: $TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/rc2
+"LocalizedUpdateTest" start time: Oct 22 20:08 CST
+Output:
+----------------------------------------------------------
+********* Start testing of LocalizedUpdateTest *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-11)), ubuntu 24.04
+PASS   : LocalizedUpdateTest::initTestCase()
+PASS   : LocalizedUpdateTest::versions()
+PASS   : LocalizedUpdateTest::localizedDefault()
+PASS   : LocalizedUpdateTest::newestForkOnly()
+PASS   : LocalizedUpdateTest::noEligibleUpdate()
+PASS   : LocalizedUpdateTest::malformedResponse()
+PASS   : LocalizedUpdateTest::maintenanceErrorFallsBack()
+PASS   : LocalizedUpdateTest::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 11ms
+********* Finished testing of LocalizedUpdateTest *********
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"LocalizedUpdateTest" end time: Oct 22 20:08 CST
+"LocalizedUpdateTest" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/24 Testing: AppProfile.IsolatedPaths
+12/24 Test: AppProfile.IsolatedPaths
+Command: "$TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/profile/app_profile_test" "IsolatedPaths" "$TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/profile/test-data"
+Directory: $TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/profile
+"AppProfile.IsolatedPaths" start time: Oct 22 20:08 CST
+Output:
+----------------------------------------------------------
+[app-profile] PASS IsolatedPaths; test data: $TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/profile/test-data/IsolatedPaths-MSrexi
+<end of output>
+Test time =   0.18 sec
+----------------------------------------------------------
+Test Passed.
+"AppProfile.IsolatedPaths" end time: Oct 22 20:08 CST
+"AppProfile.IsolatedPaths" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/24 Testing: AppProfile.EqualsSyntax
+13/24 Test: AppProfile.EqualsSyntax
+Command: "$TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/profile/app_profile_test" "EqualsSyntax" "$TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/profile/test-data"
+Directory: $TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/profile
+"AppProfile.EqualsSyntax" start time: Oct 22 20:08 CST
+Output:
+----------------------------------------------------------
+[app-profile] PASS EqualsSyntax; test data: $TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/profile/test-data/EqualsSyntax-eepCvG
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"AppProfile.EqualsSyntax" end time: Oct 22 20:08 CST
+"AppProfile.EqualsSyntax" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/24 Testing: AppProfile.EarlyWidgetSettings
+14/24 Test: AppProfile.EarlyWidgetSettings
+Command: "$TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/profile/app_profile_test" "EarlyWidgetSettings" "$TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/profile/test-data"
+Directory: $TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/profile
+"AppProfile.EarlyWidgetSettings" start time: Oct 22 20:08 CST
+Output:
+----------------------------------------------------------
+pj.widgets.framework_tokens: Framework palette resource unavailable: ":/resources/stylesheet_light.qss" - self-painted widgets will get invalid values; link resources.qrc into the target.
+pj.widgets.framework_tokens: Framework token missing from QSS palette: "input"
+pj.widgets.framework_tokens: Framework token missing from QSS palette: "on_input_default"
+pj.widgets.framework_tokens: Framework token missing from QSS palette: "input"
+pj.widgets.framework_tokens: Framework token missing from QSS palette: "on_input_default"
+pj.widgets.framework_tokens: Framework token missing from QSS palette: "input"
+pj.widgets.framework_tokens: Framework token missing from QSS palette: "on_input_default"
+pj.widgets.framework_tokens: Framework token missing from QSS palette: "input"
+[app-profile] PASS EarlyWidgetSettings; test data: $TEST_ROOT/build/6ddc44a4e4c59da374c3d11ea56825a9bc0590da/focused/profile/test-data/EarlyWidgetSettings-dunhSb
+<end of output>
+Test time =   0.13 sec
+----------------------------------------------------------
+Test Passed.
+"AppProfile.EarlyWidgetSettings" end time: Oct 22 20:08 CST
+"AppProfile.EarlyWidgetSettings" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 22 20:08 CST

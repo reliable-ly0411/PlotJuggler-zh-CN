@@ -1,0 +1,36 @@
+Internal ctest changing into directory: $TEST_ROOT/build/ba34808c6bab7f0f97b55d8d24454076aecec7c6/url-focused
+UpdateCTestConfiguration  from :$TEST_ROOT/build/ba34808c6bab7f0f97b55d8d24454076aecec7c6/url-focused/DartConfiguration.tcl
+UpdateCTestConfiguration  from :$TEST_ROOT/build/ba34808c6bab7f0f97b55d8d24454076aecec7c6/url-focused/DartConfiguration.tcl
+Test project $TEST_ROOT/build/ba34808c6bab7f0f97b55d8d24454076aecec7c6/url-focused
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 11
+    Start 11: AppImageExternalUrlTest
+
+11: Test command: $TEST_ROOT/build/ba34808c6bab7f0f97b55d8d24454076aecec7c6/url-focused/rc2/appimage_external_url_test
+11: Working Directory: $TEST_ROOT/build/ba34808c6bab7f0f97b55d8d24454076aecec7c6/url-focused/rc2
+11: Test timeout computed to be: 30
+11: ********* Start testing of AppImageExternalUrlTest *********
+11: Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-11)), ubuntu 24.04
+11: PASS   : AppImageExternalUrlTest::initTestCase()
+11: PASS   : AppImageExternalUrlTest::restoreAndLaunch(unset)
+11: PASS   : AppImageExternalUrlTest::restoreAndLaunch(empty)
+11: PASS   : AppImageExternalUrlTest::restoreAndLaunch(unicode-spaces-newline)
+11: PASS   : AppImageExternalUrlTest::restoreAndLaunch(incomplete-snapshot)
+11: PASS   : AppImageExternalUrlTest::defaultHandlerWithoutAppImage()
+11: PASS   : AppImageExternalUrlTest::customSchemeRemainsQtHandled()
+11: PASS   : AppImageExternalUrlTest::cleanupTestCase()
+11: Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 165ms
+11: ********* Finished testing of AppImageExternalUrlTest *********
+1/1 Test #11: AppImageExternalUrlTest ..........   Passed    0.18 sec
+
+The following tests passed:
+	AppImageExternalUrlTest
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.19 sec

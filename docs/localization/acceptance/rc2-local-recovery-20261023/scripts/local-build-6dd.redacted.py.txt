@@ -1,0 +1,212 @@
+#!/usr/bin/env python3
+"""Dedicated, resource-limited local source build. Never launches the application."""
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+import datetime
+import hashlib
+import json
+import os
+import shutil
+import signal
+import subprocess
+import sys
+import threading
+import time
+
+ROOT = Path('$TEST_ROOT')
+SHA = '6ddc44a4e4c59da374c3d11ea56825a9bc0590da'
+SRC = ROOT / 'source/PlotJuggler-zh-CN'
+BUILD = ROOT / 'build' / SHA
+EVIDENCE = ROOT / 'evidence'
+CACHE = ROOT / 'tmp/cache'
+TOOLS = CACHE / 'build-tools/bin'
+QT = CACHE / 'qt/6.11.1/gcc_64'
+RESUME = sys.argv[1:] == ['--resume-private-deps']
+SUFFIX = '-private-deps' if RESUME else ''
+STATE = EVIDENCE / ('local-build-state-6ddc44a4' + SUFFIX + '.json')
+ENV = os.environ.copy()
+ENV.update(PATH=str(TOOLS) + ':/usr/bin:/bin', CONAN_HOME=str(CACHE / 'conan2'),
+           TMPDIR=str(ROOT / 'tmp'), CCACHE_DIR=str(CACHE / 'ccache'),
+           CCACHE_MAXSIZE='512M', OMP_NUM_THREADS='1', CMAKE_BUILD_PARALLEL_LEVEL='1',
+           PJ_DISABLE_TELEMETRY='1', PYTHONDONTWRITEBYTECODE='1',
+           PKG_CONFIG_PATH=str(CACHE / 'system-deps/usr/lib/x86_64-linux-gnu/pkgconfig'))
+STOP = threading.Event()
+LOCK = threading.Lock()
+PROCESSES = {}
+RESULTS = {'source_sha': SHA, 'build_directory': str(BUILD),
+           'kind': 'local-source-build-not-CI-package', 'phases': {}}
+
+
+def stamp():
+    return datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+
+def save():
+    STATE.write_text(
+        json.dumps(RESULTS, ensure_ascii=False, indent=2) + '\n')
+
+
+def phase(name, args, cwd=SRC):
+    if STOP.is_set():
+        return 125
+    log = EVIDENCE / ('local-' + name + '-6ddc44a4' + SUFFIX + '.log')
+    with LOCK:
+        RESULTS['phases'][name] = dict(started_at=stamp(), command=list(map(str, args)),
+                                       cwd=str(cwd), log=str(log), status='running')
+        save()
+    with log.open('x') as output:
+        process = subprocess.Popen(list(map(str, args)), cwd=cwd, env=ENV,
+                                   stdout=output, stderr=subprocess.STDOUT,
+                                   start_new_session=True)
+        with LOCK:
+            PROCESSES[name] = process
+            RESULTS['phases'][name]['pid'] = process.pid
+            save()
+        code = process.wait()
+    with LOCK:
+        PROCESSES.pop(name, None)
+        RESULTS['phases'][name].update(status='passed' if code == 0 else 'failed',
+                                       returncode=code, finished_at=stamp())
+        save()
+    print(json.dumps({'phase': name, 'returncode': code, 'time': stamp()}), flush=True)
+    return code
+
+
+def monitor():
+    group = Path('/sys/fs/cgroup' + Path('/proc/self/cgroup').read_text().strip().split(':', 2)[2])
+    with (EVIDENCE / ('local-build-resources-6ddc44a4' + SUFFIX + '.jsonl')).open('x') as log:
+        tick = 0
+        while not STOP.wait(1):
+            row = {'time': stamp(), 'disk_free': shutil.disk_usage(ROOT).free}
+            for key in ['memory.current', 'memory.peak', 'memory.swap.current', 'memory.events', 'cpu.stat']:
+                p = group / key
+                if p.exists():
+                    row[key] = p.read_text().strip()
+            available = next(int(line.split()[1]) * 1024 for line in
+                             Path('/proc/meminfo').read_text().splitlines()
+                             if line.startswith('MemAvailable:'))
+            row['host_mem_available'] = available
+            tick += 1
+            reason = None
+            if row['disk_free'] < 4 * 1024**3:
+                reason = 'disk reserve below 4 GiB'
+            elif int(row.get('memory.current', 0)) > 1280 * 1024**2:
+                reason = 'own build memory exceeds conservative 1.25 GiB working budget'
+            elif available < 512 * 1024**2:
+                reason = 'host available memory below 512 MiB'
+            if tick % 10 == 0 or reason:
+                log.write(json.dumps(row) + '\n')
+                log.flush()
+            if reason:
+                STOP.set()
+                with LOCK:
+                    RESULTS['resource_stop'] = dict(reason=reason, observation=row, time=stamp())
+                    for process in PROCESSES.values():
+                        try:
+                            os.killpg(process.pid, signal.SIGTERM)
+                        except ProcessLookupError:
+                            pass
+                    save()
+                return
+
+
+def prepare_conan():
+    if phase('conan-remote', ['bash', SRC / 'scripts/configure_conan_remote.sh']):
+        return 1
+    args = [TOOLS / 'conan', 'install', SRC,
+        '--output-folder=' + str(BUILD), '--build=missing',
+        '-r=plotjuggler-conan', '-r=conancenter', '--lockfile=' + str(SRC / 'conan.lock'),
+        '--lockfile-partial', '-s', 'build_type=RelWithDebInfo', '-s', 'compiler.cppstd=20',
+        '-c', 'tools.build:jobs=1', '-c', 'tools.cmake.cmaketoolchain:user_presets=',
+        '--format=json', '--out-file=' + str(BUILD / 'conan-graph.json')]
+    if RESUME:
+        # The verified private headers/runtime passed a real compile/link probe.
+        # Keep dpkg's missing-package result visible without installing globally.
+        args.extend(['-c', 'vaapi/*:tools.system.package_manager:mode=report-installed'])
+    return phase('conan-install', args)
+
+
+def prepare_qt():
+    if RESUME:
+        marker = EVIDENCE / 'local-qt-prepared-6ddc44a4.json'
+        deadline = time.monotonic() + 1800
+        while not marker.exists() and not STOP.wait(1):
+            if time.monotonic() > deadline:
+                return 124
+        if STOP.is_set():
+            return 125
+        metadata = json.loads(marker.read_text())
+        if metadata.get('status') != 'verified' or metadata.get('version') != '6.11.1':
+            return 1
+        RESULTS['qt_preparation'] = metadata
+        save()
+        return 0
+    if QT.exists():
+        raise RuntimeError('Unexpected existing Qt kit; inspect before resuming')
+    return phase('qt-install', [TOOLS / 'aqt', 'install-qt', 'linux', 'desktop', '6.11.1',
+        'linux_gcc_64', '--outputdir', CACHE / 'qt', '--keep',
+        '--archive-dest', ROOT / 'packages/qt-6.11.1'], EVIDENCE)
+
+
+def focused_build():
+    target = BUILD / 'focused'
+    args = ['cmake', '-S', SRC / 'pj_app/tests/i18n', '-B', target, '-G', 'Ninja',
+            '-DCMAKE_PREFIX_PATH=' + str(QT), '-DCMAKE_BUILD_TYPE=Release',
+            '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']
+    if phase('focused-configure', args):
+        return 1
+    # Tests are built now; their settings isolation is reviewed before execution.
+    return phase('focused-build', ['cmake', '--build', target, '--parallel', '1'])
+
+
+def main():
+    assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=SRC, text=True).strip() == SHA
+    if STATE.exists():
+        raise RuntimeError('Prior pipeline exists; no blind restart')
+    group = Path('/sys/fs/cgroup' + Path('/proc/self/cgroup').read_text().strip().split(':', 2)[2])
+    RESULTS['resource_limits'] = {k: (group / k).read_text().strip()
+        for k in ['memory.high', 'memory.max', 'memory.swap.max', 'cpu.max']}
+    assert RESULTS['resource_limits']['memory.max'] == '1610612736'
+    assert RESULTS['resource_limits']['cpu.max'] == '100000 100000'
+    RESULTS['started_at'] = stamp()
+    save()
+    watcher = threading.Thread(target=monitor, daemon=True)
+    watcher.start()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        qt_job = pool.submit(prepare_qt)
+        conan_job = pool.submit(prepare_conan)
+        qt_code = qt_job.result()
+        conan_code = conan_job.result()
+        # Downloads may overlap; compile stages remain serial at one compiler.
+        focused_code = focused_build() if qt_code == 0 and not STOP.is_set() else 125
+    if qt_code or conan_code or STOP.is_set():
+        RESULTS['outcome'] = 'dependencies_incomplete'
+        RESULTS['finished_at'] = stamp()
+        save()
+        STOP.set()
+        return 1
+    args = ['cmake', '-S', SRC, '-B', BUILD, '-G', 'Ninja',
+        '-DCMAKE_TOOLCHAIN_FILE=' + str(BUILD / 'conan_toolchain.cmake'),
+        '-DCMAKE_PREFIX_PATH=' + str(QT), '-DCMAKE_BUILD_TYPE=RelWithDebInfo',
+        '-DPJ_DEBUG_INFO=none', '-DPJ_BUILD_TESTS=OFF', '-DPJ_BUILD_DEMOS=OFF',
+        '-DPJ_INSTALLATION=source', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache']
+    code = phase('app-configure', args)
+    if code == 0:
+        code = phase('app-build', ['cmake', '--build', BUILD, '--target', 'pj_app', '--parallel', '1'])
+    binary = BUILD / 'pj_app/plotjuggler4'
+    if code == 0:
+        digest = hashlib.sha256()
+        with binary.open('rb') as stream:
+            for chunk in iter(lambda: stream.read(1024**2), b''):
+                digest.update(chunk)
+        RESULTS['binary'] = dict(path=str(binary), size=binary.stat().st_size,
+                                 sha256=digest.hexdigest(), source_sha=SHA)
+    RESULTS.update(outcome='application_built' if code == 0 else 'application_build_failed',
+                   focused_build_returncode=focused_code, finished_at=stamp())
+    save()
+    STOP.set()
+    return code
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

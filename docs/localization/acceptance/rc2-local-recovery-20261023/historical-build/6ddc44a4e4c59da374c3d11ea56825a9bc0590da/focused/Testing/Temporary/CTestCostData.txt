@@ -1,0 +1,25 @@
+AppLanguageTest 1 0.10289
+TranslationCatalog4x 1 1.14408
+pj_bundled_translations_test 1 0.122643
+ResourceObjectRegistration 1 0.00578292
+ResourceObjectSymbolContract 1 0.125874
+MarketplaceCatalogTest 1 0.0510271
+LocalizedPluginSeedTest 1 0.0719107
+LocalizedUpdateTest 1 0.0324517
+LocalizedSplashTest 1 1.26643
+LocalizedOriginalMemeTest 1 1.23521
+AppProfile.DefaultPaths 1 0.0601859
+AppProfile.IsolatedPaths 1 0.176109
+AppProfile.EqualsSyntax 1 0.119748
+AppProfile.EarlyWidgetSettings 1 0.125245
+AppProfile.AtomicSettingsProbe 1 0.0767185
+AppProfile.InvalidArguments 1 0.0225571
+AppProfile.RootIsFile 1 0.0267809
+AppProfile.ChildIsFile 1 0.0238037
+AppProfile.UnwritableDirectory 1 0.0220143
+AppProfile.UnwritableSettings 1 0.0250154
+AppProfile.LinkedDirectory 1 0.0225791
+AppProfile.LinkedSettingsFile 1 0.0216089
+AppProfile.StartupOrder 1 0.0233824
+InstallerScriptQtEngine 1 0.0189075
+---

@@ -1,0 +1,35 @@
+{
+  "checked_at": "2026-10-22T15:24:09.369844+00:00",
+  "base_commit": "ba34808c6bab7f0f97b55d8d24454076aecec7c6",
+  "reproduced_package_source": "fc1582c6938557a8366f8fb76b51944559939462",
+  "command": [
+    "/usr/bin/microsoft-edge-stable",
+    "--version"
+  ],
+  "test_binary_sha256": "333b85294716d507f57ed412237c2d37fff26a106ec542429437a101f0ac2683",
+  "cases": [
+    {
+      "case": "host_environment",
+      "exit": 0,
+      "stdout": "Microsoft Edge 152.0.4191.66 \n",
+      "stderr": ""
+    },
+    {
+      "case": "appimage_environment",
+      "exit": 127,
+      "stdout": "",
+      "stderr": "/usr/bin/microsoft-edge-stable: symbol lookup error: /lib/x86_64-linux-gnu/libatspi.so.0: undefined symbol: g_once_init_leave_pointer\n"
+    },
+    {
+      "case": "production_external_url_restored_child",
+      "helper_exit": 0,
+      "helper_stdout": "",
+      "helper_stderr": "",
+      "exit": 0,
+      "stdout": "Microsoft Edge 152.0.4191.66 \n",
+      "stderr": "",
+      "application_environment_unchanged": true
+    }
+  ],
+  "scope": "Version commands only. Patched production helper launches a private xdg-open fixture that executes the same installed browser with --version; no browser window or GUI click. Full patched AppImage acceptance remains pending."
+}

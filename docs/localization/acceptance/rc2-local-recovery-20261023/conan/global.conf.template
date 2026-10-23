@@ -1,0 +1,5 @@
+core.sources:download_cache=$TEST_ROOT/tmp/cache/conan-source
+core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources/"]
+tools.system.package_manager:mode=check
+tools.system.package_manager:sudo=False
+tools.build:jobs=1

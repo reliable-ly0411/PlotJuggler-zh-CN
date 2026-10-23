@@ -1,0 +1,30 @@
+Start testing: Oct 22 23:23 CST
+----------------------------------------------------------
+11/25 Testing: AppImageExternalUrlTest
+11/25 Test: AppImageExternalUrlTest
+Command: "$TEST_ROOT/build/ba34808c6bab7f0f97b55d8d24454076aecec7c6/url-focused/rc2/appimage_external_url_test"
+Directory: $TEST_ROOT/build/ba34808c6bab7f0f97b55d8d24454076aecec7c6/url-focused/rc2
+"AppImageExternalUrlTest" start time: Oct 22 23:23 CST
+Output:
+----------------------------------------------------------
+********* Start testing of AppImageExternalUrlTest *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-11)), ubuntu 24.04
+PASS   : AppImageExternalUrlTest::initTestCase()
+PASS   : AppImageExternalUrlTest::restoreAndLaunch(unset)
+PASS   : AppImageExternalUrlTest::restoreAndLaunch(empty)
+PASS   : AppImageExternalUrlTest::restoreAndLaunch(unicode-spaces-newline)
+PASS   : AppImageExternalUrlTest::restoreAndLaunch(incomplete-snapshot)
+PASS   : AppImageExternalUrlTest::defaultHandlerWithoutAppImage()
+PASS   : AppImageExternalUrlTest::customSchemeRemainsQtHandled()
+PASS   : AppImageExternalUrlTest::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 165ms
+********* Finished testing of AppImageExternalUrlTest *********
+<end of output>
+Test time =   0.18 sec
+----------------------------------------------------------
+Test Passed.
+"AppImageExternalUrlTest" end time: Oct 22 23:23 CST
+"AppImageExternalUrlTest" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 22 23:23 CST
