@@ -170,6 +170,14 @@
       "sha256": "9d8a110e22da9237c48adaa6535c196cdc6537216268d69a3610e5fb5628ed39",
       "bytes": 1632,
       "redacted": true
+    },
+    {
+      "path": "cleanup-receipt.json",
+      "source_relative_path": "evidence/cleanup-20261023/public-ready/cleanup-receipt.json",
+      "source_sha256": "b93e6f4a3dee8a8120c0fb0d190f16a08323498a0528fd0ce9eead3af1dcee2c",
+      "sha256": "b93e6f4a3dee8a8120c0fb0d190f16a08323498a0528fd0ce9eead3af1dcee2c",
+      "bytes": 2378,
+      "redacted": false
     }
   ]
 }
