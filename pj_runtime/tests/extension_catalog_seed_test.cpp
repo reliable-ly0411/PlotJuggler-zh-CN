@@ -12,6 +12,10 @@
 
 #include <QDir>
 #include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QSettings>
 #include <QString>
 #include <QTemporaryDir>
 #include <memory>
@@ -19,12 +23,14 @@
 
 #include "mock_data_source_vtable.h"
 #include "pj_base/plugin_data_api.h"
+#include "pj_marketplace/artifact_store.hpp"
 #include "pj_marketplace/download_manager.hpp"
 #include "pj_marketplace/extension_manager.hpp"
 #include "pj_marketplace/loaded_profile.hpp"
 #include "pj_marketplace/platform_utils.hpp"
 #include "pj_plugins/host/plugin_catalog.hpp"
 #include "pj_runtime/ExtensionCatalogService.h"
+#include "pj_runtime/LocalizedPluginSeed.h"
 #include "plugin_test_utils.h"
 
 namespace PJ {
@@ -60,7 +66,8 @@ class ExtensionCatalogSeedTest : public ::testing::Test {
         ExtensionCatalogService::Paths{{}, marketplace_.path(), bundled_.path()}, DiagnosticSink{}, nullptr);
   }
 
-  // Service in --plugin-dir mode: override_ is the managed install dir.
+  // Service in --plugin-dir mode: override_ leads the load hierarchy, while
+  // marketplace_ remains the managed install dir.
   [[nodiscard]] std::unique_ptr<ExtensionCatalogService> makeOverrideModeService() const {
     return std::make_unique<ExtensionCatalogService>(
         ExtensionCatalogService::Paths{override_.path(), marketplace_.path(), bundled_.path()}, DiagnosticSink{},
@@ -81,10 +88,159 @@ class ExtensionCatalogSeedTest : public ::testing::Test {
     return marketplace_.path() + "/" + kMockId;
   }
 
+  // Write a marker around real test DSO bytes; no manifest or SDK fields change.
+  void markLocalized(const QString& installed_hash) const {
+    const QString payload = bundled_.path() + "/" + kMockId;
+    const QString dso = payload + "/" + pluginFileName("ds");
+    const QJsonObject object{
+        {"schema", 1},
+        {"kind", "fork-localized-rebuild"},
+        {"id", kMockId},
+        {"version", "1.0.0"},
+        {"dso", pluginFileName("ds")},
+        {"sha256", LocalizedPluginSeed::fileHash(dso)},
+        {"legacy_sha256", QJsonArray{installed_hash}}};
+    QFile marker(payload + "/" + QString::fromLatin1(LocalizedPluginSeed::kMarker));
+    ASSERT_TRUE(marker.open(QIODevice::WriteOnly));
+    ASSERT_GT(marker.write(QJsonDocument(object).toJson()), 0);
+  }
+
+  // A harmless trailing overlay creates distinguishable same-version PE/ELF bytes.
+  void appendLegacyOverlay() const {
+    QFile file(seededDir() + "/" + pluginFileName("ds"));
+    ASSERT_TRUE(file.open(QIODevice::Append));
+    ASSERT_GT(file.write("legacy-build-fixture"), 0);
+  }
+
+  // Reproduce a stop after promotion, with an actually verified old store object.
+  void checkLocalizedMappingRecovery(bool pending) const {
+    QTemporaryDir legacy;
+    ASSERT_TRUE(legacy.isValid());
+    const QString payload = bundled_.path() + "/" + kMockId;
+    const QString file_name = pluginFileName("ds");
+    placePlugin(payload, PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, file_name);
+    placePlugin(seededDir(), PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, file_name);
+    placePlugin(legacy.path(), PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, file_name);
+    QFile old_file(legacy.path() + "/" + file_name);
+    ASSERT_TRUE(old_file.open(QIODevice::Append));
+    ASSERT_GT(old_file.write("legacy-build-fixture"), 0);
+    old_file.close();
+    const QString old_hash = LocalizedPluginSeed::fileHash(old_file.fileName());
+    const QString new_hash = LocalizedPluginSeed::fileHash(payload + "/" + file_name);
+    ASSERT_NE(old_hash, new_hash);
+    markLocalized(old_hash);
+    const QString store_root = PlatformUtils::canonicalStoreRoot(marketplace_.path());
+    const QString profiles = store_root + ".profiles";
+    QString stale_path;
+    {
+      const auto store = ArtifactStore::acquire(store_root);
+      ASSERT_TRUE(store) << store.error().message;
+      const auto adopted = (*store)->adoptDirectory(legacy.path());
+      ASSERT_TRUE(adopted) << adopted.error().message;
+      stale_path = adopted->artifact_path;
+      ASSERT_TRUE(writeLoadedProfile(
+          profiles, {{QString::fromUtf8(kMockId), QString::fromStdString(adopted->artifact_digest)}}));
+    }
+    QSettings settings;
+    const QString key = LocalizedPluginSeed::receiptKey(store_root, QString::fromUtf8(kMockId), "1.0.0");
+    ASSERT_TRUE(
+        pending ? LocalizedPluginSeed::begin(settings, key, new_hash)
+                : LocalizedPluginSeed::complete(settings, key, new_hash));
+    {
+      ExtensionManager before(nullptr, marketplace_.path(), marketplace_.path() + "/.pending", {}, nullptr, true);
+      EXPECT_EQ(before.managedPluginDirs(), std::vector<QString>{stale_path});
+    }
+    const auto service = makeDefaultModeService();
+    EXPECT_FALSE(readLoadedProfile(profiles).contains(QString::fromUtf8(kMockId)));
+    EXPECT_EQ(service->extensionManager().managedPluginDirs(), std::vector<QString>{seededDir()});
+    EXPECT_EQ(LocalizedPluginSeed::fileHash(seededDir() + "/" + file_name), new_hash);
+    ASSERT_NE(findMock(*service), nullptr);
+    settings.sync();
+    EXPECT_FALSE(settings.contains(key + "/pending"));
+    EXPECT_EQ(settings.value(key + "/applied").toString(), new_hash);
+  }
+
   QTemporaryDir bundled_;
   QTemporaryDir marketplace_;
   QTemporaryDir override_;
 };
+
+TEST_F(ExtensionCatalogSeedTest, LocalizedSameVersionRefreshPrecedesInstalledScanAndPreservesExtras) {
+  const QString payload = bundled_.path() + "/" + kMockId;
+  placePlugin(payload, PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, pluginFileName("ds"));
+  placePlugin(seededDir(), PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, pluginFileName("ds"));
+  appendLegacyOverlay();
+  markLocalized(LocalizedPluginSeed::fileHash(seededDir() + "/" + pluginFileName("ds")));
+  QFile extra(seededDir() + "/user-notes.txt");
+  ASSERT_TRUE(extra.open(QIODevice::WriteOnly));
+  extra.write("preserve this");
+  extra.close();
+  const QString profiles = PlatformUtils::canonicalStoreRoot(marketplace_.path()) + ".profiles";
+  ASSERT_TRUE(writeLoadedProfile(profiles, {{QString::fromUtf8(kMockId), "sha256:" + QString(64, QChar('a'))}}));
+
+  const auto service = makeDefaultModeService();
+  EXPECT_EQ(
+      LocalizedPluginSeed::fileHash(seededDir() + "/" + pluginFileName("ds")),
+      LocalizedPluginSeed::fileHash(payload + "/" + pluginFileName("ds")));
+  EXPECT_TRUE(QFile::exists(extra.fileName()));
+  EXPECT_FALSE(readLoadedProfile(profiles).contains(QString::fromUtf8(kMockId)));
+  ASSERT_NE(findMock(*service), nullptr);
+  EXPECT_EQ(service->extensionManager().installedVersion(QString::fromUtf8(kMockId)), "1.0.0");
+  EXPECT_TRUE(service->extensionManager().isInstalled(QString::fromUtf8(kMockId)));
+}
+
+TEST_F(ExtensionCatalogSeedTest, LocalizedPromotedPendingSeedRepairsStaleStoreMapping) {
+  checkLocalizedMappingRecovery(true);
+}
+
+TEST_F(ExtensionCatalogSeedTest, LocalizedAppliedSeedRepairsUnpersistedStoreMapping) {
+  checkLocalizedMappingRecovery(false);
+}
+
+TEST_F(ExtensionCatalogSeedTest, LocalizedSeedPreservesNewerUserBuildAndMarketplaceDisplay) {
+  const QString payload = bundled_.path() + "/" + kMockId;
+  placePlugin(payload, PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, pluginFileName("ds"));
+  placePlugin(seededDir(), PJ_MOCK_DATA_SOURCE_V2_PLUGIN_PATH, pluginFileName("ds"));
+  const QString user_hash = LocalizedPluginSeed::fileHash(seededDir() + "/" + pluginFileName("ds"));
+  markLocalized(QString(64, QChar('b')));
+  const auto service = makeDefaultModeService();
+  EXPECT_EQ(LocalizedPluginSeed::fileHash(seededDir() + "/" + pluginFileName("ds")), user_hash);
+  ASSERT_NE(findMock(*service), nullptr);
+  EXPECT_EQ(findMock(*service)->version, "2.0.0");
+  EXPECT_EQ(service->extensionManager().installedVersion(QString::fromUtf8(kMockId)), "2.0.0");
+}
+
+TEST_F(ExtensionCatalogSeedTest, LocalizedSeedReceiptPreservesUserReturnToKnownOfficialBytes) {
+  const QString payload = bundled_.path() + "/" + kMockId;
+  placePlugin(payload, PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, pluginFileName("ds"));
+  placePlugin(seededDir(), PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, pluginFileName("ds"));
+  appendLegacyOverlay();
+  const QString user_hash = LocalizedPluginSeed::fileHash(seededDir() + "/" + pluginFileName("ds"));
+  markLocalized(user_hash);
+  QSettings settings;
+  const QString key = LocalizedPluginSeed::receiptKey(
+      PlatformUtils::canonicalStoreRoot(marketplace_.path()), QString::fromUtf8(kMockId), "1.0.0");
+  ASSERT_TRUE(
+      LocalizedPluginSeed::complete(
+          settings, key, LocalizedPluginSeed::fileHash(payload + "/" + pluginFileName("ds"))));
+  const auto service = makeDefaultModeService();
+  EXPECT_EQ(LocalizedPluginSeed::fileHash(seededDir() + "/" + pluginFileName("ds")), user_hash);
+  EXPECT_EQ(service->extensionManager().installedVersion(QString::fromUtf8(kMockId)), "1.0.0");
+}
+
+TEST_F(ExtensionCatalogSeedTest, DeferredManagerHoldsLeaseButLeavesDllUnopenedUntilHostFinishes) {
+  placePlugin(seededDir(), PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, pluginFileName("ds"));
+  ExtensionManager manager(nullptr, marketplace_.path(), marketplace_.path() + "/.pending", {}, nullptr, true);
+  ASSERT_TRUE(manager.hasStoreWriteAccess());
+  EXPECT_TRUE(manager.installedExtensions().isEmpty());
+  // Renaming the installed directory catches an early in-process DLL load on Windows.
+  const QString moved = marketplace_.path() + "/before-scan";
+  ASSERT_TRUE(QDir().rename(seededDir(), moved));
+  ASSERT_TRUE(QDir().rename(moved, seededDir()));
+  manager.finishInitialScan();
+  EXPECT_TRUE(manager.isInstalled(QString::fromUtf8(kMockId)));
+  EXPECT_EQ(manager.installedVersion(QString::fromUtf8(kMockId)), "1.0.0");
+}
 
 TEST_F(ExtensionCatalogSeedTest, FirstLaunchSeedsBundledIntoMarketplaceDir) {
   placePlugin(bundled_.path(), PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, pluginFileName("ds"));

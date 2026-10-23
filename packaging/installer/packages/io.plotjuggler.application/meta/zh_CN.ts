@@ -39,5 +39,15 @@
             <source>Continuing will uninstall it before the new version is installed. Continue?</source>
             <translation>继续操作将先卸载旧版本，再安装新版本。是否继续？</translation>
         </message>
-    </context>
+        <message><source>Language selection</source><translation>语言选择</translation></message>
+        <message><source>Could not restart the installer. Close it and run it with --lang zh_CN or --lang en_US.</source><translation>无法重新启动安装器。请关闭后使用 --lang zh_CN 或 --lang en_US 参数运行。</translation></message>
+        <message>
+      <source>Replacement stopped</source>
+      <translation>替换已停止</translation>
+    </message>
+    <message>
+      <source>The previous installation could not be safely removed. Setup will close without installing. Its uninstaller may still be running in the background. Do not reinstall into this directory until it has fully finished. Automatic replacement supports verified current-user installations only. For an all-users installation, uninstall it manually and confirm that removal has fully finished.</source>
+      <translation>无法安全移除旧安装。安装程序将关闭，不会安装新版本。旧卸载程序可能仍在后台运行，请等待其完全结束后再使用此目录安装。自动替换仅支持经过验证的当前用户安装；全用户安装请先手动卸载，并确认卸载已完全结束。</translation>
+    </message>
+</context>
 </TS>

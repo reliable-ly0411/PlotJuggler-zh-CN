@@ -18,6 +18,8 @@ if ($p.ExitCode -ne 0) { throw "Final installer failed: $($p.ExitCode)" }
 $installed = ($components.Packages.Package | Where-Object { $_.Name -eq "io.plotjuggler.application" }).Version
 $release = Get-Content (Join-Path $root "share/plotjuggler4/release.json") -Raw | ConvertFrom-Json
 if ($installed -ne $release.ifw_package_version) { throw "IFW version mismatch" }
+python -X utf8 scripts/verify_windows_application.py "$root/bin/PlotJuggler4.exe" --runtime
+if ($LASTEXITCODE -ne 0) { throw "Installed Windows executable verification failed" }
 $version = (Get-Content versions.env | Where-Object { $_ -match "^PJ_APP_VERSION=" }) -replace "^PJ_APP_VERSION=", ""
 python -X utf8 packaging/localization/verify_package.py --prefix $root --executable "$root/bin/PlotJuggler4.exe" `
     --real-bin 3rdparty/plotjuggler-apbin-plugins/tests/logs/00000001.BIN --output "$outputPath/runtime" --expected-source $env:GITHUB_SHA --expected-version $version --capture

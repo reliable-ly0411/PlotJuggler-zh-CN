@@ -31,6 +31,7 @@ namespace PJ {
 // Loaded DataSource plugin plus metadata used by host UIs and sessions.
 struct RuntimeDataSourcePlugin {
   DataSourceLibrary library;
+  // UTF-8 canonical filename, or a static:// identity (not a native narrow path).
   std::string path;
   std::string name;
   std::string id;
@@ -43,6 +44,7 @@ struct RuntimeDataSourcePlugin {
 // Loaded MessageParser plugin plus lookup metadata.
 struct RuntimeMessageParserPlugin {
   MessageParserLibrary library;
+  // UTF-8 canonical filename, or a static:// identity (not a native narrow path).
   std::string path;
   std::string name;
   std::string id;
@@ -58,6 +60,7 @@ struct RuntimeMessageParserPlugin {
 // Loaded Toolbox plugin plus metadata used by Tools menus.
 struct RuntimeToolboxPlugin {
   ToolboxLibrary library;
+  // UTF-8 canonical filename, or a static:// identity (not a native narrow path).
   std::string path;
   std::string name;
   std::string id;

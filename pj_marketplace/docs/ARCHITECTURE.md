@@ -492,12 +492,22 @@ The lock file is a **sibling** of `extensions/`, never a file inside it
 from the store's **canonical** path — via `PlatformUtils::canonicalStoreRoot()`,
 the one policy every store sibling follows (writer lease,
 `extensions.install_stage/`, and the seed's `extensions.seed_stage/` in
-`pj_runtime`). So a `--plugin-dir` session or a test over its own temp dir never
-contends with the default store, while two *names* for one store (a symlinked
+`pj_runtime`). A test using its own managed store (including an explicit
+`--profile-dir`) never contends with the default store; `--plugin-dir` alone
+only changes discovery and retains the default managed store. Two *names* for one store (a symlinked
 install) always contend instead of handing out two leases. The same resolution
 keeps every staging sibling on the store's filesystem, which is what makes
 promote-by-rename atomic; an install whose staging area lands on a different
 filesystem is refused rather than degraded to a copy.
+
+Native hosts can activate `PlatformUtils::initializeProfile()` once, before any
+QSettings or service construction. Both INI scopes are then rooted under
+`<profile>/settings`, and `configDir()`/`localDataDir()` resolve to
+`<profile>/data`. The normal store and its lifecycle siblings consequently stay
+inside that dedicated root, including backup and seed staging. Invalid or
+unwritable paths fail startup rather than falling back to production; no-profile
+behavior remains unchanged. The profile is a test-data boundary, not an OS or
+third-party-plugin sandbox.
 
 `ExtensionCatalogService::seedBundledPlugins()` (`pj_runtime`) is the one store
 writer outside `ExtensionManager`'s mutating API, so it is gated on

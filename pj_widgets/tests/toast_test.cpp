@@ -41,9 +41,8 @@ TEST(ToastTest, ShowToastCreatesNotification) {
   EXPECT_NE(host.findChild<PJ::ToastNotification*>(), nullptr);
 }
 
-// The message label is rich text with external links enabled — this is what
-// makes an `<a href>` in the message open in the system browser with no extra
-// wiring (the release-check "View on GitHub" link relies on it).
+// Rich-text links use the shared explicit opener rather than QLabel's implicit
+// desktop-services path (the release-check "View on GitHub" link relies on it).
 TEST(ToastTest, MessageLabelIsRichTextWithClickableLink) {
   QWidget host;
   host.resize(800, 600);
@@ -60,7 +59,8 @@ TEST(ToastTest, MessageLabelIsRichTextWithClickableLink) {
   auto* label = toast->findChild<QLabel*>("toastMessage");
   ASSERT_NE(label, nullptr);
   EXPECT_EQ(label->textFormat(), Qt::RichText);
-  EXPECT_TRUE(label->openExternalLinks());
+  EXPECT_FALSE(label->openExternalLinks());
+  EXPECT_TRUE(label->textInteractionFlags().testFlag(Qt::LinksAccessibleByMouse));
   EXPECT_TRUE(label->text().contains("github.com/PlotJuggler/PJ4"));
 }
 

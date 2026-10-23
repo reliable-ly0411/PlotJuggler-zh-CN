@@ -49,7 +49,9 @@ QString parseMaintenanceToolUpdate(const QString& output, const QString& compone
 // One-shot "is there a newer release?" check, asked of whatever will deliver it.
 //
 // setInstallation() picks the source from the compile-time PJ_INSTALLATION stamp:
-// "deb" asks apt (the repository the package is upgraded from), "windows" asks
+// Localized -zh builds use only this fork's major-version release channel and
+// a manual download, never upstream APT or an unconfigured maintenance tool.
+// Otherwise "deb" asks apt (the repository the package is upgraded from), "windows" asks
 // the installed maintenance tool, anything else asks GitHub's `releases/latest`.
 // A channel reports only what its own updater can install, so the notification
 // never promises a version the user's update path does not have yet. A .deb

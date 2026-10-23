@@ -4,12 +4,15 @@
 #include <QApplication>
 #include <QComboBox>
 #include <QDir>
+#include <QFontInfo>
 #include <QFontMetrics>
 #include <QImage>
 #include <QLabel>
 #include <QMenu>
 #include <QPixmap>
+#include <QScrollArea>
 #include <QSettings>
+#include <QStackedWidget>
 #include <QTemporaryDir>
 #include <QTest>
 #include <iomanip>
@@ -158,6 +161,87 @@ TEST(PreferencesLanguageTest, SessionOverrideDoesNotChangeTheNextLaunchSelection
   ASSERT_NE(combo, nullptr);
   EXPECT_EQ(combo->currentData().toString(), u"zh_CN"_s);
   EXPECT_EQ(qApp->property("interfaceLanguage").toString(), u"en_US"_s);
+}
+
+TEST(PreferencesLanguageTest, LanguageSelectorHonorsBothSizeHintsAcrossFonts) {
+  struct RestoreApplicationFont {
+    QFont original = qApp->font();
+    ~RestoreApplicationFont() { QApplication::setFont(original); }
+  } restore_font;
+  for (const QFont& font : {restore_font.original, QFont(u"DejaVu Sans"_s, 9), QFont(u"DejaVu Sans"_s, 12),
+                            QFont(u"Liberation Sans"_s, 9)}) {
+    SCOPED_TRACE(font.toString().toStdString());
+    QApplication::setFont(font);
+    SCOPED_TRACE(QFontInfo(qApp->font()).family().toStdString());
+    for (const QString& requested : {u"en_US"_s, u"zh_CN"_s}) {
+      SCOPED_TRACE(requested.toStdString());
+      const PJ::AppLanguage running(*qApp, requested);
+      PJ::Theme theme;
+      PJ::PreferencesDialog dialog(theme);
+      auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+      ASSERT_NE(combo, nullptr);
+      dialog.resize(420, 300);
+      dialog.show();
+      QTest::qWait(20);
+
+      // Compare against a freshly populated control as well as Qt's cached
+      // minimum: a cached empty-model hint can be wider OR narrower than text.
+      QComboBox populated(combo->parentWidget());
+      populated.setObjectName(combo->objectName());
+      populated.setFont(combo->font());
+      populated.setSizeAdjustPolicy(combo->sizeAdjustPolicy());
+      for (int index = 0; index < combo->count(); ++index) {
+        populated.addItem(combo->itemText(index), combo->itemData(index));
+      }
+      populated.ensurePolished();
+      EXPECT_GE(combo->width(), combo->minimumSizeHint().width());
+      EXPECT_GE(combo->width(), populated.sizeHint().expandedTo(populated.minimumSizeHint()).width());
+      dialog.reject();
+    }
+  }
+}
+
+TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReachable) {
+  for (const QString& requested : {u"en_US"_s, u"zh_CN"_s}) {
+    SCOPED_TRACE(requested.toStdString());
+    const PJ::AppLanguage running(*qApp, requested);
+    EXPECT_EQ(running.catalogLoaded(), requested == u"zh_CN"_s);
+    PJ::Theme theme;
+    PJ::PreferencesDialog dialog(theme);
+    dialog.resize(420, 300);
+    dialog.show();
+    QTest::qWait(20);
+    ASSERT_EQ(dialog.size(), QSize(420, 300));
+    auto* pages = dialog.findChild<QStackedWidget*>(u"pagesStack"_s);
+    auto* scroll = dialog.findChild<QScrollArea*>(u"appearanceScrollArea"_s);
+    auto* label = dialog.findChild<QLabel*>(u"labelLanguage"_s);
+    auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+    auto* notice = dialog.findChild<QLabel*>(u"labelLanguageRestart"_s);
+    auto* last_control = dialog.findChild<QWidget*>(u"telemetryToggle"_s);
+    ASSERT_NE(pages, nullptr);
+    ASSERT_NE(scroll, nullptr);
+    ASSERT_NE(label, nullptr);
+    ASSERT_NE(combo, nullptr);
+    ASSERT_NE(notice, nullptr);
+    ASSERT_NE(last_control, nullptr);
+    EXPECT_EQ(pages->widget(PJ::PreferencesDialog::kAppearancePage), scroll);
+    dialog.showPage(PJ::PreferencesDialog::kPluginsPage);
+    ASSERT_NE(pages->currentWidget(), nullptr);
+    EXPECT_EQ(pages->currentWidget()->objectName(), u"pagePlugins"_s);
+    dialog.showPage(PJ::PreferencesDialog::kAppearancePage);
+    EXPECT_EQ(pages->currentWidget(), scroll);
+    EXPECT_GE(combo->width(), combo->minimumSizeHint().width());
+    EXPECT_GE(notice->height(), notice->heightForWidth(notice->width()));
+    for (QWidget* control :
+         {static_cast<QWidget*>(label), static_cast<QWidget*>(combo), static_cast<QWidget*>(notice), last_control}) {
+      scroll->ensureWidgetVisible(control, 0, 0);
+      QCoreApplication::processEvents();
+      EXPECT_TRUE(control->isVisible());
+      const QRect visible_rect(control->mapTo(scroll->viewport(), QPoint(0, 0)), control->size());
+      EXPECT_TRUE(scroll->viewport()->rect().contains(visible_rect)) << control->objectName().toStdString();
+    }
+    dialog.reject();
+  }
 }
 
 // Each discovered case gets a private settings file, like the other shell

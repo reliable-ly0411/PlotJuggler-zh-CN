@@ -4,7 +4,6 @@
 #include "pj_runtime/SourceCacheStore.h"
 
 #include <QSettings>
-#include <QStandardPaths>
 #include <QString>
 #include <algorithm>
 #include <array>
@@ -13,6 +12,8 @@
 #include <fstream>
 #include <string>
 #include <system_error>
+
+#include "pj_marketplace/platform_utils.hpp"
 
 namespace PJ {
 namespace {
@@ -127,7 +128,7 @@ SourceCacheStore::SourceCacheStore(std::filesystem::path root, std::uintmax_t bu
     : cache_(makeSpec(std::move(root)), &looksLikeMcap), budget_bytes_(budget_bytes) {}
 
 std::filesystem::path SourceCacheStore::defaultRoot() {
-  const QString base = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+  const QString base = PlatformUtils::localDataDir();
   // Empty or relative (no QCoreApplication, misconfigured platform): fall
   // back to a temp-rooted cache rather than resolving against the cwd.
   std::filesystem::path base_path(base.toStdU16String());
@@ -149,7 +150,9 @@ constexpr int kMaxBudgetGb = 1000;
 SourceCacheStore::Settings SourceCacheStore::loadSettings() {
   QSettings settings;
   Settings loaded;
-  loaded.directory = settings.value(QString::fromLatin1(kCacheDirectoryKey)).toString();
+  loaded.directory = PlatformUtils::profileDir().isEmpty()
+                         ? settings.value(QString::fromLatin1(kCacheDirectoryKey)).toString()
+                         : QString::fromStdU16String(defaultRoot().u16string());
   loaded.budget_gb = std::clamp(
       settings.value(QString::fromLatin1(kCacheBudgetKey), loaded.budget_gb).toInt(), kMinBudgetGb, kMaxBudgetGb);
   loaded.capture_enabled =
@@ -165,7 +168,7 @@ void SourceCacheStore::saveSettings(const Settings& settings) {
 }
 
 std::unique_ptr<SourceCacheStore> SourceCacheStore::fromSettings(const Settings& settings) {
-  const std::filesystem::path root = settings.directory.trimmed().isEmpty()
+  const std::filesystem::path root = !PlatformUtils::profileDir().isEmpty() || settings.directory.trimmed().isEmpty()
                                          ? defaultRoot()
                                          : std::filesystem::path(settings.directory.toStdU16String());
   const auto budget =

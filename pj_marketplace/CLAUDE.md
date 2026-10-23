@@ -16,6 +16,13 @@ default sessions, and offers downgrade-to-bundled. See
 
 ## Layout
 
+`PlatformUtils::initializeProfile` is the native host's opt-in startup seam for
+an absolute dedicated test root. It validates/probes paths before installing
+both QSettings INI scopes, and routes store, staging, backup and all canonical
+store siblings under the profile. No argument means no global behavior change.
+`--plugin-dir` alone is a discovery override, not profile isolation. This is not
+a filesystem sandbox for arbitrary plugin code or the IFW installer.
+
 - `include/pj_marketplace/` — public headers (`marketplace.hpp`, `registry_manager.hpp`,
   `registry_resolver.hpp`,
   `download_manager.hpp`, `extension_manager.hpp`, `installed_extension.hpp`,
@@ -57,7 +64,24 @@ their Qt boundary before interpolating paths and IDs. The Qt-free archive policy
 keeps its original diagnostics; DownloadManager translates only recognized
 complete templates. Unknown plugin, system and library details remain verbatim.
 
-Pinned bundled-plugin names and descriptions use the same display mapping in
+All 30 entries in the pinned official registry have display-only name and description
+translations, including uninstalled plugins. The exact ID and English source text
+select the translation independently of version; unknown/changed metadata falls
+back unchanged. `marketplace_text.hpp` uses the same display mapping in
 list rows and the detail panel, before HTML escaping. Known category labels are
 translated only for presentation; category filtering and compound sorting retain
 registry tokens and original plugin names. Unknown categories remain verbatim.
+
+The host can construct `ExtensionManager` with `defer_initial_scan=true`: pending
+transactions and the store lease still initialize, but installed discovery and
+store reconciliation wait until `finishInitialScan()`. This lets bundled seeding
+replace DLLs before the initial installed-side DSO scan. Default callers retain
+the eager snapshot. A deferred caller must finish startup before consuming
+installed state or loading managed DSOs.
+
+
+Website buttons and externally activated detail links use
+`pj_widgets/ExternalUrl.h`; HTTP(S) desktop openers in AppImage get the host
+environment without changing the marketplace process. Detail-browser relative,
+fragment, `file:` and `qrc:` links retain local QTextBrowser navigation; other
+schemes retain Qt desktop-services handling.

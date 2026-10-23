@@ -16,6 +16,8 @@ import shutil
 import subprocess
 import sys
 
+from localized_plugin_identity import write_identity
+
 ROOT = Path(__file__).resolve().parents[2]
 PATCHES = ROOT / 'packaging/localization/plugin-patches'
 
@@ -158,6 +160,7 @@ def build_one(item, lock, work, prefix, platform):
     assert len(binaries) == 1, binaries
     destination = prefix / 'lib/plotjuggler/plugins' / identifier
     shutil.copytree(staged, destination)
+    write_identity(destination, item, platform)
     notices = prefix / 'share/licenses/localized-plugins' / identifier
     notices.mkdir(parents=True)
     for candidate in source.glob('LICENSE*'):

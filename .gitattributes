@@ -11,3 +11,6 @@ packaging/localization/plugin-patches/pj_display_language.hpp text eol=lf
 # Preserve byte-stable provenance and offline fixture inputs on every checkout.
 packaging/localization/plugin-patches/source-lock.json text eol=lf
 packaging/localization/plugin-patches/display_language_test.cpp text eol=lf
+
+# Unmodified, byte-hashed Qt IFW catalog includes intentional source-string spaces.
+packaging/installer/translations/ifw_zh_CN.ts text eol=lf whitespace=-blank-at-eol

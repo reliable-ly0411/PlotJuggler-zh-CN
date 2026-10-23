@@ -15,6 +15,40 @@
          whole weight axis, so font-weight 400/600/700 resolve to real masters
          (not synthesized bold). -->
     <file alias="fonts/NotoSans/NotoSans-Variable.ttf">fonts/NotoSans/NotoSans-Variable.ttf</file>
+
+    <!-- Original-meme Chinese variants; English JPEG pool remains unchanged. -->
+    <file alias="memes/zh_CN.json">memes/zh_CN.json</file>
+    <file alias="memes/zh_CN/meme_00.png">memes/zh_CN/meme_00.png</file>
+    <file alias="memes/zh_CN/meme_08.png">memes/zh_CN/meme_08.png</file>
+    <file alias="memes/zh_CN/meme_4x_01.png">memes/zh_CN/meme_4x_01.png</file>
+    <file alias="memes/zh_CN/meme_4x_03.png">memes/zh_CN/meme_4x_03.png</file>
+    <file alias="memes/zh_CN/meme_4x_04.png">memes/zh_CN/meme_4x_04.png</file>
+    <file alias="memes/zh_CN/meme_4x_05.png">memes/zh_CN/meme_4x_05.png</file>
+    <file alias="memes/zh_CN/meme_4x_06.png">memes/zh_CN/meme_4x_06.png</file>
+    <file alias="memes/zh_CN/meme_4x_07.png">memes/zh_CN/meme_4x_07.png</file>
+    <file alias="memes/zh_CN/meme_4x_08.png">memes/zh_CN/meme_4x_08.png</file>
+    <file alias="memes/zh_CN/meme_4x_10.png">memes/zh_CN/meme_4x_10.png</file>
+    <file alias="memes/zh_CN/meme_4x_12.png">memes/zh_CN/meme_4x_12.png</file>
+    <file alias="memes/zh_CN/meme_4x_14.png">memes/zh_CN/meme_4x_14.png</file>
+    <file alias="memes/zh_CN/meme_4x_22.png">memes/zh_CN/meme_4x_22.png</file>
+    <file alias="memes/zh_CN/meme_4x_28.png">memes/zh_CN/meme_4x_28.png</file>
+    <file alias="memes/zh_CN/meme_4x_36.png">memes/zh_CN/meme_4x_36.png</file>
+    <file alias="memes/zh_CN/meme_4x_37.png">memes/zh_CN/meme_4x_37.png</file>
+    <file alias="memes/zh_CN/meme_52.png">memes/zh_CN/meme_52.png</file>
+    <file alias="memes/zh_CN/meme_60.png">memes/zh_CN/meme_60.png</file>
+    <file alias="memes/zh_CN/meme_93.png">memes/zh_CN/meme_93.png</file>
+    <file alias="memes/zh_CN/meme_97.png">memes/zh_CN/meme_97.png</file>
+    <file alias="memes/zh_CN/patches/atlas_103.png">memes/zh_CN/patches/atlas_103.png</file>
+    <file alias="memes/zh_CN/patches/atlas_14.png">memes/zh_CN/patches/atlas_14.png</file>
+    <file alias="memes/zh_CN/patches/atlas_25.png">memes/zh_CN/patches/atlas_25.png</file>
+    <file alias="memes/zh_CN/patches/atlas_35.png">memes/zh_CN/patches/atlas_35.png</file>
+    <file alias="memes/zh_CN/patches/atlas_42.png">memes/zh_CN/patches/atlas_42.png</file>
+    <file alias="memes/zh_CN/patches/atlas_45.png">memes/zh_CN/patches/atlas_45.png</file>
+    <file alias="memes/zh_CN/patches/atlas_61.png">memes/zh_CN/patches/atlas_61.png</file>
+    <file alias="memes/zh_CN/patches/atlas_71.png">memes/zh_CN/patches/atlas_71.png</file>
+    <file alias="memes/zh_CN/patches/atlas_79.png">memes/zh_CN/patches/atlas_79.png</file>
+    <file alias="memes/zh_CN/patches/atlas_89.png">memes/zh_CN/patches/atlas_89.png</file>
+    <file alias="memes/zh_CN/patches/atlas_95.png">memes/zh_CN/patches/atlas_95.png</file>
   </qresource>
   <qresource prefix="/resources">
     <!-- Funny splashscreen pool. The startup splash enumerates this directory

@@ -1,0 +1,95 @@
+// SPDX-License-Identifier: MPL-2.0
+// ONLY this invocation's synthetic receipt payload is authorized for installation.
+var probe = __UPGRADE_CONFIG__;
+function encodePowerShellCommand(command) {
+    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", bytes = [], encoded = "";
+    for (var i = 0; i < command.length; ++i) { var code = command.charCodeAt(i); bytes.push(code & 255, code >>> 8); }
+    for (var j = 0; j < bytes.length; j += 3) {
+        var value = (bytes[j] << 16) | ((bytes[j + 1] || 0) << 8) | (bytes[j + 2] || 0);
+        encoded += alphabet.charAt((value >>> 18) & 63) + alphabet.charAt((value >>> 12) & 63);
+        encoded += j + 1 < bytes.length ? alphabet.charAt((value >>> 6) & 63) : "=";
+        encoded += j + 2 < bytes.length ? alphabet.charAt(value & 63) : "=";
+    }
+    return encoded;
+}
+function normalized(path) { return String(path).replace(/\\/g, "/").toLowerCase().replace(/\/$/, ""); }
+function requireSafe(condition) {
+    if (!condition) { console.log("UPGRADE_CONTROLLER:guard-failed"); gui.rejectWithoutPrompt(); throw new Error("Synthetic upgrade guard failed"); }
+}
+function record(kind) {
+    var values = {kind:kind, target:installer.value("TargetDir"), uuid:installer.value("ProductUUID"),
+        userMenu:installer.value("UserStartMenuProgramsPath"), allMenu:installer.value("AllUsersStartMenuProgramsPath"),
+        menu:installer.value("StartMenuDir"), desktop:installer.value("DesktopDir"), allUsers:installer.value("AllUsers"),
+        runProgram:installer.value("RunProgram"), TEMP:installer.environmentVariable("TEMP"), TMP:installer.environmentVariable("TMP"),
+        status:installer.status, targetPresent:installer.fileExists(probe.target), toolPresent:installer.fileExists(probe.tool)};
+    var payload = JSON.stringify(values).replace(/[\u007f-\uffff]/g, function(c) { return "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4); });
+    var command = "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; " +
+        "$child=Get-CimInstance Win32_Process -Filter ('ProcessId='+$PID); " +
+        "$parent=Get-CimInstance Win32_Process -Filter ('ProcessId='+$child.ParentProcessId); " +
+        "$data='" + payload.replace(/'/g, "''") + "' | ConvertFrom-Json; " +
+        "$data | Add-Member -NotePropertyName pid -NotePropertyValue $parent.ProcessId; " +
+        "$data | Add-Member -NotePropertyName executable -NotePropertyValue $parent.ExecutablePath; " +
+        "$data | Add-Member -NotePropertyName commandLine -NotePropertyValue $parent.CommandLine; " +
+        "$key=[Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + probe.oldUuid + "'); " +
+        "$present=$null -ne $key; if ($key) { $key.Dispose() }; " +
+        "$data | Add-Member -NotePropertyName oldKeyPresent -NotePropertyValue $present; " +
+        "if ($data.kind -eq 'ready' -and $present) { throw 'Old UUID remains' }; " +
+        "$json=$data | ConvertTo-Json -Compress -Depth 4; [IO.File]::AppendAllText('" + probe.log.replace(/'/g, "''") +
+        "', $json+[Environment]::NewLine,(New-Object Text.UTF8Encoding($false)))";
+    var result = installer.execute(probe.powershell, ["-NoProfile", "-NonInteractive", "-EncodedCommand", encodePowerShellCommand(command)]);
+    requireSafe(result.length === 2 && result[1] === 0);
+    console.log("UPGRADE_CONTROLLER:" + kind);
+}
+function Controller() {
+    installer.autoRejectMessageBoxes();
+    installer.setMessageBoxAutomaticAnswer("existing.install", QMessageBox.Yes);
+    installer.installationFinished.connect(this, this.installed);
+}
+Controller.prototype.IntroductionPageCallback = function() {
+    requireSafe(normalized(installer.value("TargetDir")) === normalized(probe.target));
+    requireSafe(installer.value("ProductUUID") === probe.newUuid && installer.value("AllUsers") === "false");
+    requireSafe(installer.value("RunProgram") === "");
+    requireSafe(normalized(installer.value("UserStartMenuProgramsPath")) === normalized(probe.userMenu));
+    requireSafe(normalized(installer.value("AllUsersStartMenuProgramsPath")) === normalized(probe.allMenu));
+    requireSafe(normalized(installer.value("DesktopDir")) === normalized(probe.desktop));
+    requireSafe(normalized(installer.environmentVariable("TEMP")) === normalized(probe.temporary));
+    requireSafe(normalized(installer.environmentVariable("TMP")) === normalized(probe.temporary));
+    requireSafe(installer.readFile(probe.receipt, "UTF-8") === probe.oldReceipt && installer.fileExists(probe.tool));
+    record("introduction"); gui.clickButton(buttons.NextButton, 250);
+};
+Controller.prototype.DynamicLanguageWidgetCallback = function() { gui.clickButton(buttons.NextButton, 250); };
+Controller.prototype.DynamicTargetWidgetCallback = function() {
+    var page = gui.pageWidgetByObjectName("DynamicTargetWidget");
+    requireSafe(normalized(page.targetDirectory.text) === normalized(probe.target));
+    record("target"); gui.clickButton(buttons.NextButton, 250);
+};
+Controller.prototype.ComponentSelectionPageCallback = function() {
+    record("components"); gui.clickButton(buttons.NextButton, 250);
+};
+Controller.prototype.LicenseAgreementPageCallback = function() {
+    // This dedicated fixture has no license page or real application payload.
+    requireSafe(false);
+};
+Controller.prototype.StartMenuDirectoryPageCallback = function() {
+    var page = gui.pageById(QInstaller.StartMenuSelection);
+    requireSafe(String(gui.findChild(page, "StartMenuPathLineEdit").text) === probe.group);
+    record("start-menu"); gui.clickButton(buttons.NextButton, 250);
+};
+Controller.prototype.ReadyForInstallationPageCallback = function() {
+    requireSafe(probe.mode === "replace");
+    requireSafe(!installer.fileExists(probe.target) && !installer.fileExists(probe.tool));
+    requireSafe(normalized(installer.value("StartMenuDir")) === normalized(probe.userMenu + "/" + probe.group));
+    requireSafe(installer.value("RunProgram") === "");
+    record("ready"); // Observer also requires the exact old UUID to be absent.
+    gui.clickButton(buttons.CommitButton, 250);
+};
+Controller.prototype.installed = function() {
+    requireSafe(installer.status === QInstaller.Success);
+    requireSafe(installer.readFile(probe.receipt, "UTF-8") === probe.newReceipt);
+    // --verbose keeps the details page visible; its continuation is CommitButton.
+    record("installed"); gui.clickButton(buttons.CommitButton, 250);
+};
+Controller.prototype.FinishedPageCallback = function() {
+    requireSafe(installer.status === QInstaller.Success && installer.value("RunProgram") === "");
+    record("finished"); gui.clickButton(buttons.FinishButton, 250);
+};
