@@ -62,7 +62,9 @@ class BundledTranslationTest(unittest.TestCase):
         self.assertIn('    if: ' + condition, workflow)
         branches = re.search(r"branches: \[(.*?)\]", workflow).group(1)
         admitted = re.findall(r"'([^']+)'", branches)
-        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final8'})
+        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate',
+                                        'zh-CN-4.x-ci/release-candidate-rc2-final8',
+                                        'zh-CN-4.x-ci/release-candidate-rc3-final1'})
         def runs(event, branch, created):
             trigger = event == 'workflow_dispatch' or (event == 'push' and branch in admitted)
             gate = event == 'workflow_dispatch' or (event == 'push' and created)
