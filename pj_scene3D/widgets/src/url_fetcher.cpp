@@ -5,10 +5,11 @@
 #include <QFile>
 #ifndef PJ_TARGET_WASM
 #include <QNetworkDiskCache>
+
+#include "pj_marketplace/platform_utils.hpp"
 #endif
 #include <QNetworkReply>
 #include <QNetworkRequest>
-#include <QStandardPaths>
 #include <QString>
 #include <QTimer>
 #include <QVariant>
@@ -83,13 +84,10 @@ UrlFetcher::UrlFetcher(QObject* parent) : QObject(parent) {
   // an older copy). Local file reads bypass the cache.
   //
   // The directory defaults to <AppData>/models, overridable via the
-  // PJ_MODEL_CACHE_DIR environment variable — both to relocate the cache and to
-  // let tests redirect it to a throwaway dir without touching the real home.
+  // PJ_MODEL_CACHE_DIR environment variable unless an explicit isolated profile
+  // owns the cache. PlatformUtils gives that profile precedence over the env.
 #ifndef PJ_TARGET_WASM
-  QString cache_dir = qEnvironmentVariable("PJ_MODEL_CACHE_DIR");
-  if (cache_dir.isEmpty()) {
-    cache_dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + u"/models"_s;
-  }
+  const QString cache_dir = PJ::PlatformUtils::modelCacheDir();
   auto* cache = new QNetworkDiskCache(this);
   cache->setCacheDirectory(cache_dir);
   cache->setMaximumCacheSize(256LL * 1024 * 1024);

@@ -221,3 +221,32 @@ script points `linuxdeploy` at both (`QMAKE`, `PATH`, and sourcing
    deploys modules based on `plotjuggler4`; a plugin needing a Qt module that the
    app does not pull would be missed. None observed yet; revisit if a plugin
    fails to load with a missing-`libQt6*` error.
+
+
+## External web links
+
+`AppRun.sh` snapshots the host values of `LD_LIBRARY_PATH`, `QT_PLUGIN_PATH`,
+`XDG_DATA_DIRS`, `PYTHONHOME`, `GRPC_DEFAULT_SSL_ROOTS_FILE_PATH` and `QT_IM_MODULE`
+before configuring the bundle. Each snapshot records whether the variable was
+unset, explicitly empty or populated. `pj_widgets/ExternalUrl.h` restores those
+six values in a child-only environment for HTTP(S) links and launches `xdg-open`
+with one fully encoded URL argument, without shell interpolation. The app keeps
+its bundled Qt/Python/plugin environment unchanged. An incomplete snapshot
+fails closed instead of handing bundle paths to a host browser.
+
+Help/About, release-toast links, marketplace websites/detail links and the
+plugin Markdown browser's existing HTTP(S) allowlist use this helper. The
+marketplace retains internal relative/fragment/file/qrc navigation. Other
+packages/platforms and non-HTTP URL schemes still use Qt's normal desktop
+services; Preferences directory opening is intentionally not changed. Host
+file-manager/custom-scheme handlers can therefore still inherit the bundled
+environment in an AppImage session; this change does not claim to fix them.
+
+`AppImageExternalUrlTest` (also available in the standalone
+`pj_app/tests/i18n` harness) runs the real AppRun and a real detached child
+against a private desktop-opener fixture. It checks exact unset/empty/value
+restoration, mixed states, Unicode/newlines, literal URL arguments, every missing
+snapshot field, invalid state flags, Qt fallback and an unchanged app environment.
+A successful launcher return or browser `--version` probe is not GUI navigation
+acceptance: final original-package checks must still click the links in an
+actual desktop session and verify the browser reaches the intended page.

@@ -2,6 +2,7 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
+#include <QRegularExpression>
 #include <QString>
 #include <QStringList>
 
@@ -63,6 +64,34 @@ inline int versionToComparable(const QString& version) {
     components[i] = n;
   }
   return components[0] * 1'000'000 + components[1] * 1'000 + components[2];
+}
+
+// Compare the fork's release channel, including rc sequence numbers. Development
+// builds and other major versions are ineligible; build metadata has no precedence.
+inline bool isNewerLocalizedVersion(const QString& candidate, const QString& current) {
+  static const QRegularExpression pattern(
+      QStringLiteral(R"(^v?(\d+)\.(\d+)\.(\d+)-zh\.(\d+)(?:\.rc\.(\d+))?(?:\+[0-9A-Za-z.-]+)?$)"));
+  const auto a = pattern.match(candidate);
+  const auto b = pattern.match(current);
+  if (!a.hasMatch() || !b.hasMatch() || a.captured(1) != b.captured(1)) {
+    return false;
+  }
+  for (int field = 1; field <= 4; ++field) {
+    bool a_ok = false;
+    bool b_ok = false;
+    const auto av = a.captured(field).toULongLong(&a_ok);
+    const auto bv = b.captured(field).toULongLong(&b_ok);
+    if (!a_ok || !b_ok) {
+      return false;
+    }
+    if (av != bv) {
+      return av > bv;
+    }
+  }
+  if (a.captured(5).isEmpty() != b.captured(5).isEmpty()) {
+    return a.captured(5).isEmpty();
+  }
+  return a.captured(5).toULongLong() > b.captured(5).toULongLong();
 }
 
 // True only when `candidate` is a strictly newer, parseable version than

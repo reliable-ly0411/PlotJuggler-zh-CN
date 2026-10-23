@@ -29,3 +29,5 @@ if ($p.ExitCode -ne 0) { throw 'Native argument probe failed' }
 $argsRead = Get-Content -LiteralPath $out -Raw -Encoding utf8 | ConvertFrom-Json
 if ($argsRead.Count -ne 2 -or $argsRead[0] -ne '--root' -or $argsRead[1] -ne $BuildDir) { throw 'Installer root argument was split or corrupted' }
 Write-Host "PowerShell syntax and native literal-path/argument checks passed ($($paths.Count) scripts)."
+
+& (Join-Path $PSScriptRoot 'test_windows_native_process.ps1')

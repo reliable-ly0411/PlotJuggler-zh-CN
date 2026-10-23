@@ -39,16 +39,16 @@ QStringList sourcePool() {
 // it explicitly. A file added to the directory but left out of the manifest is
 // invisible at runtime with no build error and no warning — it simply never
 // shows, and the only symptom is a meme nobody ever sees.
-TEST(SplashLocalization, ChineseAlwaysUsesBannerWithoutOverwritingExplicitMemePreference) {
+TEST(SplashLocalization, ChineseHonorsExplicitMemePreference) {
   QTemporaryDir directory;
   ASSERT_TRUE(directory.isValid());
   QSettings settings(directory.filePath(u"settings.ini"_s), QSettings::IniFormat);
   const AppLanguage language(*QCoreApplication::instance(), u"zh_CN"_s);
   ASSERT_TRUE(language.catalogLoaded());
-  EXPECT_EQ(startupSplashMode(settings), kSplashModeSerious);
+  EXPECT_EQ(startupSplashMode(settings), kSplashModeMemes);
   EXPECT_FALSE(settings.contains(kSplashModeKey));
   settings.setValue(kSplashModeKey, kSplashModeMemes);
-  EXPECT_EQ(startupSplashMode(settings), kSplashModeSerious);
+  EXPECT_EQ(startupSplashMode(settings), kSplashModeMemes);
   EXPECT_EQ(settings.value(kSplashModeKey).toString(), kSplashModeMemes);
 }
 
@@ -59,7 +59,7 @@ TEST(SplashLocalization, SavedMemeChoiceSurvivesLanguageRoundTrip) {
   settings.setValue(kSplashModeKey, kSplashModeMemes);
   for (const QString& code : {u"zh_CN"_s, u"en_US"_s, u"zh_CN"_s}) {
     const AppLanguage language(*QCoreApplication::instance(), code);
-    EXPECT_EQ(startupSplashMode(settings), code == u"zh_CN"_s ? kSplashModeSerious : kSplashModeMemes);
+    EXPECT_EQ(startupSplashMode(settings), kSplashModeMemes);
     EXPECT_EQ(settings.value(kSplashModeKey).toString(), kSplashModeMemes);
   }
 }

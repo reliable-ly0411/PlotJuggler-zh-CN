@@ -85,8 +85,8 @@ These tests retain their standalone executable and ctest entry:
 - `splash_meme_pool_test` (`SplashMemePoolTest`): compiles `Splashscreen.cpp`
   standalone with `PJ_MEMES_SOURCE_DIR`, the shipped resources and the production
   language catalog. It covers meme geometry, translated banner subtitles across
-  translator lifetimes, and the Chinese fresh-profile banner default without
-  overwriting an explicitly saved meme preference.
+  translator lifetimes, and Chinese two-panel localized memes while
+  respecting the saved meme/banner preference in both languages.
 
 `ExportedSymbolsGuard` remains a script test, enabled when the platform and
 `nm` support inspecting the executable's exported symbols.
@@ -153,9 +153,22 @@ The row itself carries the keep-or-discard choice (✕ keeps what arrived, bin d
 
 `IngestProgressController` is the policy layer wiring `SessionManager`'s dataset-scoped ingest lifecycle signals (`ingestBegan` / `ingestProgressed` / `ingestEnded`) to `CurveTreeView`'s plain-typed progress decoration (`setDatasetProgress`). The view-facing row key IS the ingest id (`IngestToken::id`), so a click on a row resolves back to its ingest by lookup and the two identities cannot drift apart. The controller owns the row label (the DATASET's name once resolvable, kept sticky so a discard that deletes the dataset cannot rename the row mid-flight; the producer's progress title — "Importing MCAP" — is only the pre-resolution fallback), the 1-second completion-state linger, the 3x ~180ms error flash, immediate retirement on cancellation (no linger: the user stopped it, and a discard has deleted the dataset the row described), ghost-row lifetime (transient progress-only rows for failed/discarded loads whose catalog entries vanished), and an injectable timer factory for headless tests. Both `FileLoader` and `HeadlessDescriptorProviderSession` produce ingest tokens on the same channel. The title-bar `IngestProgressWidget` strip is retained and wired, but suppressed behind a single `constexpr kShowTitleBarIngestStrip = false` at its show seam — re-enabling the title bar is one-line.
 
+## Native opt-in profile boundary
+
+`AppProfile` pre-parses `--profile-dir` immediately after the app identity is set,
+before WidgetTuner, any app-owned QSettings, or marketplace startup. It delegates
+validation and one-time activation to `PlatformUtils`: both INI scopes and core
+data/temp paths stay under the explicit absolute root; failure exits, never
+falls back to production. The core-only Python selftest honors the same option.
+No-option native behavior is unchanged. This is not a plugin/OS/installer
+sandbox; explicit user output paths are not rewritten. The Qt-only regression
+harness is `tests/profile`; the full native build adds real runtime service tests.
+Usage and boundary details: `docs/localization/ISOLATED_PROFILE.zh-CN.md`.
+
 ## Browser persistence boundary
 
-Native builds retain their normal `QSettings` behavior. WASM redirects ordinary
+Native builds retain their normal `QSettings` behavior unless explicitly isolated.
+WASM redirects ordinary
 `QSettings` callers to page-lifetime MEMFS and lets `BrowserPersistence` alone
 write `WebLocalStorageFormat`. Only its exact, typed preference allowlist and up
 to five bounded, source-free generic layout recipes are durable. File paths,
@@ -242,6 +255,19 @@ source builds and WebAssembly do not download it at application startup.
 
 ## Localized startup artwork
 
-Chinese sessions always compose the translated banner, even when an older saved
-profile selects memes. The saved mode is not rewritten and remains effective in
-English sessions. Preferences shows that saved choice and explains the override.
+Chinese sessions respect the saved serious/meme artwork choice. The Chinese
+meme pool contains 33 available original-image entries plus eight composed
+extras; original entries 09/11/13/24 are omitted rather than falling back to
+English. This does not mean all 37 originals are translated or that all 41
+entries have received packaged-desktop visual acceptance.
+
+
+## External web links
+
+Help and About links use `pj_widgets/ExternalUrl.h`, also used by release toasts,
+the marketplace and plugin Markdown browsers. AppImage HTTP(S) launches restore
+the host environment only for the external child; other platforms/packages and
+non-HTTP schemes retain Qt handling. Preferences directory opening remains on
+Qt's file-URL path and is outside this fix. See
+[`packaging/appimage/README.md`](../packaging/appimage/README.md#external-web-links)
+for the contract and verification boundary.

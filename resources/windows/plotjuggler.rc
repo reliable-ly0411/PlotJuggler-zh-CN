@@ -1,0 +1,3 @@
+// SPDX-License-Identifier: MPL-2.0
+// Resource 1 is the first icon group (shortcut icon index 0).
+1 ICON "plotjuggler.ico"

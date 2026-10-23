@@ -89,6 +89,15 @@ its release manifest. Each version uses a new ref; never reuse or force-update a
 previous promotion ref. Only its first creation triggers publication. This
 keeps the default 3.x branch independent of the 4.x publication mechanism.
 
+## rc.3 candidate
+
+The first creation of `zh-CN-4.x-ci/release-candidate-rc3-final1` requests new
+rc.3 packages from the exact promoted stable commit. It runs both native suites,
+all original-package clean acceptance jobs and the release-manifest gate.
+Ordinary updates to the ref do not rebuild. Publication uses a separate new
+version/run/attempt-bound promotion ref after reviewing those final screenshots;
+no rc.1 or rc.2 tag, promotion ref or asset is reused.
+
 
 ## rc.2 fixed-plugin display rebuilds
 

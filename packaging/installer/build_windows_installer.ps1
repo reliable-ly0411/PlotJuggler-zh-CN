@@ -40,8 +40,9 @@
   If empty, windeployqt is taken from PATH.
 
 .PARAMETER IfwDir
-  Directory containing binarycreator.exe. If empty, it is taken from PATH or
-  auto-detected under C:\Qt\Tools\QtInstallerFramework\*\bin.
+  Directory containing binarycreator.exe and installerbase.exe (IFW >=4.10).
+  Explicit paths never fall back. If empty, reuse pinned tools or discover PATH /
+  Qt tools; if missing or too old, fetch the official hash-verified 4.10 tools.
 
 .PARAMETER SkipPlugins
   Skip downloading/bundling plugins for a fast core-only installer.
@@ -129,7 +130,7 @@ param(
   [string]$UpdateUrl  = "",
   [string]$RepoOutDir = "",
   [string]$ExtraPrefix = "",
-  [string]$NameSuffix = "",
+  [string]$NameSuffix = "-zh-CN",
   [string]$PackageVersion = ""
 )
 
@@ -193,7 +194,15 @@ Info "windeployqt : $windeployqt"
 # binarycreator and repogen ship in the same IFW bin directory, so one search
 # serves both.
 function Resolve-IfwTool([string]$name) {
-  $found = Resolve-Exe $name $IfwDir
+  # An explicit tool directory is a boundary, not a discovery hint.
+  if ($IfwDir) {
+    $explicit = Join-Path $IfwDir $name
+    if (Test-Path $explicit) { return $explicit }
+    return $null
+  }
+  $pinned = Join-Path $repoRoot ".qt/Tools/QtInstallerFramework/4.10.0-pinned/bin/$name"
+  if (Test-Path $pinned) { return $pinned }
+  $found = Resolve-Exe $name ""
   if ($found) { return $found }
   # Search the usual IFW-tool locations. aqt lays them under <aqt-base>\Tools\
   # QtInstallerFramework, where <aqt-base> is two levels above the kit dir
@@ -213,9 +222,43 @@ function Resolve-IfwTool([string]$name) {
   return $null
 }
 
+# binarycreator has no --version option. installerbase handles this CLI option
+# before loading package metadata (IFW src/sdk/main.cpp).
+function Get-IfwVersion([string]$creator) {
+  if (-not $creator) { return $null }
+  $installerbase = Join-Path (Split-Path $creator -Parent) "installerbase.exe"
+  if (-not (Test-Path $installerbase)) { return $null }
+  try {
+    $output = (& $installerbase --version 2>&1 | Out-String)
+    if ($LASTEXITCODE -ne 0) { return $null }
+    if ($output -match 'IFW Version:\s+(\d+\.\d+\.\d+)(?:,|\s|$)') {
+      return [version]$Matches[1]
+    }
+  } catch {
+    Warn "Could not query IFW runtime: $_"
+  }
+  return $null
+}
+
 $binarycreator = Resolve-IfwTool "binarycreator.exe"
-if (-not $binarycreator) { Die "binarycreator.exe not found. Install the Qt Installer Framework tools (aqt install-tool --outputdir .qt windows desktop tools_ifw) and/or pass -IfwDir." }
-Info "binarycreator: $binarycreator"
+$ifwVersion = Get-IfwVersion $binarycreator
+if (-not $ifwVersion -or $ifwVersion -lt [version]'4.10.0') {
+  if ($IfwDir) {
+    Die "Explicit -IfwDir requires Qt Installer Framework 4.10.0 or newer with a working installerbase.exe. It will not be replaced or bypassed: $IfwDir"
+  }
+  Info "No compatible default IFW found; fetching verified official IFW 4.10.0 tools."
+  try {
+    $IfwDir = & (Join-Path $installerRoot "install_ifw.ps1")
+  } catch {
+    Die "Official IFW setup failed; no fallback will be used. Install IFW 4.10 or newer manually and pass -IfwDir <bin>: $_"
+  }
+  $binarycreator = Resolve-IfwTool "binarycreator.exe"
+  $ifwVersion = Get-IfwVersion $binarycreator
+  if (-not $ifwVersion -or $ifwVersion -lt [version]'4.10.0') { Die "Verified IFW setup did not yield a compatible runtime." }
+}
+# Keep repogen and binarycreator from the same validated tool installation.
+$IfwDir = Split-Path $binarycreator -Parent
+Info "binarycreator: $binarycreator (IFW $ifwVersion)"
 
 # Resolved up front, not after the long staging run: a missing repogen should
 # fail in the first seconds, not after windeployqt and the plugin downloads.
@@ -531,9 +574,12 @@ if ($pluginDlls.Count -gt 0) {
     $validationArgs += "$id=$($resolvedPluginVersions[$id])"
   }
   Info "validating $($PluginIds.Count) whitelisted plugin(s) with the staged app ..."
-  & $stagedExe @validationArgs
-  if ($LASTEXITCODE -ne 0) {
-    Die "staged plugin validation failed (exit $LASTEXITCODE)"
+  . (Join-Path $PSScriptRoot '../../scripts/windows/native_process.ps1')
+  $validation = Invoke-PjNativeProcess -FilePath $stagedExe -ArgumentValues $validationArgs
+  [Console]::Out.Write($validation.StandardOutput)
+  [Console]::Error.Write($validation.StandardError)
+  if ($validation.ExitCode -ne 0) {
+    Die "staged plugin validation failed (exit $($validation.ExitCode))"
   }
 }
 
@@ -581,11 +627,45 @@ foreach ($f in Get-ChildItem (Join-Path $pkgSrc "meta") -File | Where-Object { $
   Copy-Item $f.FullName $stageMeta -Force
 }
 
+# Embed the reviewed supervisor in the component script. Compression keeps the
+# eventual UTF-16LE EncodedCommand below Windows' command-line length limit.
+$guardBytes = [Text.Encoding]::UTF8.GetBytes((Get-Content -LiteralPath (Join-Path $installerRoot "replacement_guard.ps1") -Raw -Encoding UTF8))
+$guardBuffer = New-Object IO.MemoryStream
+$guardGzip = New-Object IO.Compression.GZipStream($guardBuffer, [IO.Compression.CompressionMode]::Compress, $true)
+$guardGzip.Write($guardBytes, 0, $guardBytes.Length)
+$guardGzip.Dispose()
+$guardEncoded = [Convert]::ToBase64String($guardBuffer.ToArray())
+$guardBuffer.Dispose()
+$installScriptPath = Join-Path $stageMeta "installscript.qs"
+$installScript = Get-Content -LiteralPath $installScriptPath -Raw -Encoding UTF8
+if (($installScript.Split(@('__PJ_REPLACEMENT_HELPER_GZIP__'), [StringSplitOptions]::None).Count - 1) -ne 1) { Die "Replacement supervisor placeholder missing or duplicated" }
+[IO.File]::WriteAllText($installScriptPath, $installScript.Replace('__PJ_REPLACEMENT_HELPER_GZIP__', $guardEncoded), (New-Object Text.UTF8Encoding($false)))
+
 # Compile the component catalog with the same pinned Qt kit as the application.
 $lrelease = Resolve-Exe "lrelease.exe" (Split-Path $windeployqt -Parent)
 if (-not $lrelease) { Die "lrelease.exe not found. Install Qt Linguist tools in the selected kit or add them to PATH." }
-& $lrelease (Join-Path $stageMeta "zh_CN.ts") -qm (Join-Path $stageMeta "zh_CN.qm")
-if ($LASTEXITCODE -ne 0) { Die "Installer translation compilation failed." }
+
+# Explicit resources are required: IFW's SDK wildcard omits zh_CN catalogs.
+$translationStage = Join-Path $StageDir "translations"
+New-Item -ItemType Directory -Force -Path $translationStage | Out-Null
+# IFW 4.10 component catalogs follow the OS locale, not --lang. Merge the
+# custom context into the catalog selected by the SDK --lang path instead.
+& $lrelease (Join-Path $installerRoot "translations/ifw_zh_CN.ts") (Join-Path $stageMeta "zh_CN.ts") -qm (Join-Path $translationStage "ifw_zh_CN.qm")
+if ($LASTEXITCODE -ne 0) { Die "IFW standard-page translation compilation failed." }
+$qtChinese = Join-Path (Split-Path (Split-Path $windeployqt -Parent) -Parent) "translations/qtbase_zh_CN.qm"
+if (-not (Test-Path $qtChinese)) { Die "Missing Qt Base Chinese translation: $qtChinese" }
+Copy-Item $qtChinese (Join-Path $translationStage "qt_zh_CN.qm")
+$translationQrc = Join-Path $translationStage "translations.qrc"
+@'
+<RCC><qresource prefix="/translations_new">
+  <file>ifw_zh_CN.qm</file>
+  <file>qt_zh_CN.qm</file>
+</qresource></RCC>
+'@ | Set-Content -Encoding UTF8 $translationQrc
+$ifwLicenseDir = Join-Path $stageData "share/licenses/QtInstallerFramework"
+New-Item -ItemType Directory -Force -Path $ifwLicenseDir | Out-Null
+Copy-Item (Join-Path $installerRoot "translations/LICENSE.GPL3-EXCEPT") $ifwLicenseDir
+Copy-Item (Join-Path $installerRoot "translations/README.md") $ifwLicenseDir
 
 if ($ExtraPrefix) {
   Copy-Item (Join-Path $stageData "share/licenses/Qt-LGPL.txt") (Join-Path $stageMeta "license_lgpl.txt") -Force
@@ -609,7 +689,7 @@ if ($CleanReleaseName) {
   $outExe = Join-Path (Resolve-Path $OutDir) "PlotJuggler-$Version-Windows-x64.$shortHash$NameSuffix.exe"
 }
 Info "running binarycreator -> $outExe"
-& $binarycreator --offline-only -c (Join-Path $StageDir "config.xml") -p $stagePackages $outExe
+& $binarycreator --offline-only -r $translationQrc -c (Join-Path $StageDir "config.xml") -p $stagePackages $outExe
 if ($LASTEXITCODE -ne 0) { Die "binarycreator failed (exit $LASTEXITCODE)." }
 
 # --- update repository (optional) ------------------------------------------

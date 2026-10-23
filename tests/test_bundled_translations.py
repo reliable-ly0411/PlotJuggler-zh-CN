@@ -39,8 +39,8 @@ class BundledTranslationTest(unittest.TestCase):
         self.assertIn('category_item->setData(kCategoryTokenRole, ext.category)', source)
         self.assertIn('data(kCategoryTokenRole).toString(), other.data(kCategoryTokenRole).toString()', source)
         self.assertIn('category_item->setData(kCategoryNameKeyRole, ext.name)', source)
-        self.assertIn('detail_title_->setText(PJ::bundledPluginText(ext->id, ext->version, ext->name))', source)
-        self.assertIn('esc(PJ::bundledPluginText(ext->id, ext->version, ext->description))', source)
+        self.assertIn('detail_title_->setText(PJ::marketplacePluginText(ext->id, ext->version, ext->name))', source)
+        self.assertIn('esc(PJ::marketplacePluginText(ext->id, ext->version, ext->description))', source)
         self.assertIn('meta << esc(displayCategory(ext->category))', source)
         self.assertIn('return category;', source)
         self.assertIn('const ExtensionDiagnostic diagnostic = ext_mgr_->diagnostics().back();', source)
@@ -62,7 +62,9 @@ class BundledTranslationTest(unittest.TestCase):
         self.assertIn('    if: ' + condition, workflow)
         branches = re.search(r"branches: \[(.*?)\]", workflow).group(1)
         admitted = re.findall(r"'([^']+)'", branches)
-        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final8'})
+        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate',
+                                        'zh-CN-4.x-ci/release-candidate-rc2-final8',
+                                        'zh-CN-4.x-ci/release-candidate-rc3-final1'})
         def runs(event, branch, created):
             trigger = event == 'workflow_dispatch' or (event == 'push' and branch in admitted)
             gate = event == 'workflow_dispatch' or (event == 'push' and created)

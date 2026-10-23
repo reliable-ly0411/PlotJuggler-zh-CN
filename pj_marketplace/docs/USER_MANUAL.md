@@ -460,3 +460,29 @@ Update this manual when:
 - New troubleshooting items discovered
 - Developer workflow changes
 - New platforms supported
+
+## Chinese catalog presentation
+
+The Chinese interface translates names and descriptions for all 30 entries in
+`packaging/localization/registry-lock.json`, including plugins that are not installed
+or bundled. The same metadata was present in the official development registry on
+2026-10-22. Platform filtering still applies (29 Windows x86_64 entries, 30 Linux
+x86_64 entries); this count does not promise that all plugins are installed or loaded.
+
+List rows, description tooltips, details, search and installation notifications share
+one translation boundary. Search accepts both the original English metadata/IDs and
+Chinese display text. Categories translate only for display; sorting/filtering retains
+canonical category tokens. IDs, versions, URLs, checksums, authors and licenses are
+not rewritten. Exact source matching means changed or newly published upstream
+metadata remains verbatim until reviewed translations are added. Changelogs (none
+in the pinned registry) are also shown verbatim. Bundled plugin runtime UI coverage,
+including the Mosaico mixed-body exception, is separate from catalog presentation.
+
+The focused production-catalog test runs without downloading or installing plugins:
+
+```sh
+cmake -S pj_marketplace/tests/catalog -B build-marketplace-catalog \
+  -DCMAKE_PREFIX_PATH=/path/to/Qt/6.11.1/gcc_64
+cmake --build build-marketplace-catalog
+ctest --test-dir build-marketplace-catalog --output-on-failure
+```

@@ -60,6 +60,7 @@ add_library(pj_widgets STATIC
     include/pj_widgets/Dialog.h
     include/pj_widgets/DoubleScrubber.h
     include/pj_widgets/ElidingLabel.h
+    include/pj_widgets/ExternalUrl.h
     include/pj_widgets/FileDialog.h
     include/pj_widgets/FlowLayout.h
     include/pj_widgets/FrameworkTokens.h
