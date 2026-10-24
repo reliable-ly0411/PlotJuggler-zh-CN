@@ -10,18 +10,18 @@
      std::string single_term;
      if (output_name_.empty()) {
 -      single_term += "Create a name for the new series\n";
-+      single_term += pj_zh_localization::text("Create a name for the new series\n", "请为新曲线命名\n");
++      single_term += pj_zh_localization::text("Create a name for the new series\n", "请为新曲线命名\n", "請為新曲線命名\n");
      } else if (std::find(sources_.begin(), sources_.end(), output_name_) != sources_.end()) {
 -      single_term += "Give the new series a name that isn't one of its inputs\n";
-+      single_term += pj_zh_localization::text("Give the new series a name that isn't one of its inputs\n", "新曲线名称不能与输入曲线相同\n");
++      single_term += pj_zh_localization::text("Give the new series a name that isn't one of its inputs\n", "新曲线名称不能与输入曲线相同\n", "新曲線名稱不能與輸入曲線相同\n");
      }
      if (sources_.empty()) {
 -      single_term += "Add an input time series (drag & drop)\n";
-+      single_term += pj_zh_localization::text("Add an input time series (drag & drop)\n", "请拖入输入时间序列\n");
++      single_term += pj_zh_localization::text("Add an input time series (drag & drop)\n", "请拖入输入时间序列\n", "請拖入輸入時間序列\n");
      }
      if (function_body_.empty()) {
 -      single_term += "Write your function body\n";
-+      single_term += pj_zh_localization::text("Write your function body\n", "请编写函数体\n");
++      single_term += pj_zh_localization::text("Write your function body\n", "请编写函数体\n", "請撰寫函式主體\n");
      }
      if (!validation_error_.empty()) {
        single_term += validation_error_ + "\n";
@@ -30,7 +30,7 @@
      std::string batch_term;
      if (batch_function_body_.empty()) {
 -      batch_term += "Write your function body\n";
-+      batch_term += pj_zh_localization::text("Write your function body\n", "请编写函数体\n");
++      batch_term += pj_zh_localization::text("Write your function body\n", "请编写函数体\n", "請撰寫函式主體\n");
      }
      if (!batch_validation_error_.empty()) {
        batch_term += batch_validation_error_ + "\n";
@@ -39,16 +39,16 @@
        if (auto loaded = loadSnippetsFromPath(std::filesystem::path(path))) {
          if (loaded->empty()) {
 -          io_status_ = "The selected file contains no functions.";
-+          io_status_ = pj_zh_localization::text("The selected file contains no functions.", "所选文件不包含函数。");
++          io_status_ = pj_zh_localization::text("The selected file contains no functions.", "所选文件不包含函数。", "所選檔案不含任何函式。");
          } else {
            mergeSnippets(*loaded);
            saveSnippetsToDisk(snippets_);
 -          io_status_ = "Imported " + std::to_string(loaded->size()) + " function(s).";
-+          io_status_ = pj_zh_localization::text("Imported ", "已导入 ") + std::to_string(loaded->size()) + pj_zh_localization::text(" function(s).", " 个函数。");
++          io_status_ = pj_zh_localization::text("Imported ", "已导入 ", "已匯入 ") + std::to_string(loaded->size()) + pj_zh_localization::text(" function(s).", " 个函数。", " 個函式。");
          }
        } else {
 -        io_status_ = "Could not read a function library from the selected file.";
-+        io_status_ = pj_zh_localization::text("Could not read a function library from the selected file.", "无法从所选文件读取函数库。");
++        io_status_ = pj_zh_localization::text("Could not read a function library from the selected file.", "无法从所选文件读取函数库。", "無法從所選檔案讀取函式庫。");
        }
        return true;
      }
@@ -57,7 +57,7 @@
        const bool ok = saveSnippetsToPath(snippets_, std::filesystem::path(path));
        io_status_ =
 -          ok ? "Exported " + std::to_string(snippets_.size()) + " function(s)." : "Could not write the selected file.";
-+          ok ? pj_zh_localization::text("Exported ", "已导出 ") + std::to_string(snippets_.size()) + pj_zh_localization::text(" function(s).", " 个函数。") : pj_zh_localization::text("Could not write the selected file.", "无法写入所选文件。");
++          ok ? pj_zh_localization::text("Exported ", "已导出 ", "已匯出 ") + std::to_string(snippets_.size()) + pj_zh_localization::text(" function(s).", " 个函数。", " 個函式。") : pj_zh_localization::text("Could not write the selected file.", "无法写入所选文件。", "無法寫入所選檔案。");
        return true;
      }
      return false;
@@ -66,7 +66,7 @@
        const std::string n = std::to_string(num_outputs);
        const std::string plural = num_outputs == 1 ? "" : "s";
 -      const std::string msg = "function produced no output — declared " + n + " output" + plural +
-+      const std::string msg = pj_zh_localization::isChinese() ? "函数未产生输出；已声明 " + n + " 个输出，因此每个点必须恰好返回 " + n + " 个值" : "function produced no output — declared " + n + " output" + plural +
++      const std::string msg = pj_zh_localization::language() == pj_zh_localization::Language::TraditionalChinese ? "函式未產生輸出；已宣告 " + n + " 個輸出，因此每個點必須剛好傳回 " + n + " 個值" : pj_zh_localization::isChinese() ? "函数未产生输出；已声明 " + n + " 个输出，因此每个点必须恰好返回 " + n + " 个值" : "function produced no output — declared " + n + " output" + plural +
                                ", so it must return exactly " + n + " value" + plural + " per point";
        dialog_.setValidationError(msg);
      }

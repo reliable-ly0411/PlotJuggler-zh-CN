@@ -23,8 +23,8 @@
     <name>AppLanguage</name>
     <message>
         <location filename="../src/main.cpp" line="+335"/>
-        <source>Interface language for this session (zh_CN or en_US).</source>
-        <translation>本次会话的界面语言（zh_CN 或 en_US）。</translation>
+        <source>Interface language for this session (zh_CN, zh_TW or en_US).</source>
+        <translation>本次会话的界面语言（zh_CN、zh_TW 或 en_US）。</translation>
     </message>
 </context>
 <context>

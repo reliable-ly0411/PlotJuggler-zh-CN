@@ -24,15 +24,28 @@ The patches translate only fixed prose at its construction site:
 
 The host publishes `PLOTJUGGLER_UI_LANGUAGE` before loading any plugin. Each
 plugin reads an immutable copy on its first display call; preference changes
-require restart. No locale, credentials or protocol settings are conveyed.
+require restart. The accepted IDs are `en_US`, `zh_CN` and `zh_TW`; missing,
+empty, noncanonical and unknown values use English. `text(english, simplified,
+traditional)` selects only fixed prose, while `isChinese()` covers both Chinese
+scripts for display grammar. Traditional Chinese uses Taiwan terminology such
+as 檔案, 匯入, 訊息 and 函式. No locale, credentials or protocol settings are conveyed.
+The deferred Mosaico patch uses the same interface, but remains unapplied.
 
 `build_localized_plugins.py` runs the unchanged upstream English tests except
 live/smoke scenarios. Assistant uses an explicit pure-model allowlist, excluding
-dialog tests that can probe installed CLIs. Additional four-process display
-fixtures check Chinese, English, unknown and empty-language fallback, including
-Assistant raw user/model/system data and existing Markdown escaping. These
+dialog tests that can probe installed CLIs. Additional five-process display
+fixtures check Simplified Chinese, Traditional Chinese, English, unknown and
+empty-language fallback, including Assistant raw user/model/system/tool data,
+MCAP paths, existing Markdown escaping and the immutable startup selection. These
 checks make no external AI requests. Native application tests and final original
 package visual acceptance remain separately required.
+
+For a fast offline check without Qt, Conan or the SDK, run
+`python3 packaging/localization/plugin-patches/test_display_language.py` from
+the repository root. It compiles the helper fixture and every fixed-prose tuple
+from all maintained patches, tests three languages plus absent/invalid/oversized
+values, and checks format placeholders and protocol names. It does not compile
+plugin binaries or establish Mosaico release eligibility.
 
 The rebuilt binary keeps upstream ID/version for ABI and configuration
 compatibility. Package `release.json` marks it as a fork-localized rebuild and

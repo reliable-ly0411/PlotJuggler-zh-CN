@@ -7,12 +7,30 @@ import json
 from pathlib import Path
 import re
 import unittest
+import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('bundled_generator', ROOT / 'packaging/localization/generate_bundled_ui_translations.py')
 generator = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(generator)
 
 class BundledTranslationTest(unittest.TestCase):
+    def test_all_catalogs_preserve_plugin_filter_and_action_identifiers(self):
+        data = json.loads((ROOT / 'packaging/localization/bundled-ui-translations.json').read_text(encoding='utf-8'))
+        for language in ('zh_CN', 'zh_TW'):
+            catalog = ET.parse(ROOT / f'pj_app/translations/plotjuggler4_{language}.ts').getroot()
+            context = catalog.find("context[name='PJ::BundledPlugins']")
+            translations = {message.findtext('source'): message.findtext('translation')
+                            for message in context.findall('message')}
+            for row in data['exact'] + data['templates']:
+                with self.subTest(language=language, source=row['source']):
+                    translated = translations[row['source']]
+                    if row['property'] == 'pickerFilter':
+                        self.assertEqual(re.findall(r'\([^)]*\)', row['source']),
+                                         re.findall(r'\([^)]*\)', translated))
+                    if row['property'] == 'pj_context_actions':
+                        self.assertEqual([part.split('=', 1)[0] for part in row['source'].split(';')],
+                                         [part.split('=', 1)[0] for part in translated.split(';')])
+
     def test_generated_source_current(self):
         self.assertEqual(generator.generated(), (ROOT / 'pj_dialog_host/src/bundled_translation_entries.hpp').read_text(encoding='utf-8'))
 

@@ -21,8 +21,19 @@ static void initializeTranslationResources() {
 
 namespace PJ {
 
+QList<AppLanguage::Choice> AppLanguage::supportedLanguages() {
+  return {{u"zh_CN"_s, u"简体中文"_s}, {u"zh_TW"_s, u"繁體中文（台灣）"_s}, {u"en_US"_s, u"English"_s}};
+}
+
 QString AppLanguage::normalizedLanguage(const QString& language) {
-  return language == "zh_CN"_L1 || language == "zh-CN"_L1 ? u"zh_CN"_s : u"en_US"_s;
+  QString canonical = language;
+  canonical.replace(u'-', u'_');
+  for (const auto& choice : supportedLanguages()) {
+    if (canonical == choice.code) {
+      return choice.code;
+    }
+  }
+  return u"en_US"_s;
 }
 
 QString AppLanguage::preferredLanguage(const QSettings& settings) {
@@ -39,10 +50,11 @@ AppLanguage::AppLanguage(QCoreApplication& app, const QString& language)
   previous_plugin_language_set_ = qEnvironmentVariableIsSet("PLOTJUGGLER_UI_LANGUAGE");
   previous_plugin_language_ = qgetenv("PLOTJUGGLER_UI_LANGUAGE");
   qputenv("PLOTJUGGLER_UI_LANGUAGE", language_.toUtf8());
-  if (language_ == "zh_CN"_L1) {
-    catalog_loaded_ = translator_.load(u":/i18n/plotjuggler4_zh_CN.qm"_s) && app_.installTranslator(&translator_);
+  if (language_ != "en_US"_L1) {
+    catalog_loaded_ = translator_.load(u":/i18n/plotjuggler4_%1.qm"_s.arg(language_)) &&
+                      app_.installTranslator(&translator_);
     if (!catalog_loaded_) {
-      qWarning("Simplified Chinese translation catalog is missing; using English source text");
+      qWarning().noquote() << "Translation catalog is missing for" << language_ << "; using English source text";
     }
   }
 }
@@ -74,7 +86,7 @@ AppLanguage::~AppLanguage() {
     QT_TRANSLATE_NOOP("QPlatformTheme", "Reset"),    QT_TRANSLATE_NOOP("QPlatformTheme", "Restore Defaults"),
 };
 
-// Qt 6.11.1's qtbase_zh_CN still carries the older QFileDialog labels and
+// Qt kits can still carry older QFileDialog labels and
 // file-icon context. Keep the current runtime keys, including accelerators
 // and platform disambiguation, in the application catalog as a small override.
 [[maybe_unused]] static const char* const kQtFileDialogKeys[] = {

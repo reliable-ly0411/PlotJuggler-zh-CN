@@ -47,6 +47,47 @@ class Translation : public QTranslator {
 class BundledTranslationsTest : public QObject {
   Q_OBJECT
  private slots:
+  void traditionalCatalogKeepsPinnedUiAndUserDataBoundaries() {
+#ifdef PJ_TEST_PRODUCTION_CATALOG
+    PJ::AppLanguage language(*qApp, QStringLiteral("zh_TW"));
+    QVERIFY(language.catalogLoaded());
+    QFile file(QStringLiteral(PJ_CSV_UI_FIXTURE));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    const auto raw = file.readAll().replace("\r\n", "\n");
+    QByteArray scope;
+    const auto localized = PJ::localizeBundledUi(raw, &scope);
+    QVERIFY(!scope.isEmpty());
+    QVERIFY(localized.contains(QStringLiteral("CSV 載入器").toUtf8()));
+    QComboBox combo;
+    combo.setObjectName(QStringLiteral("timeAxisModeCombo"));
+    combo.setProperty(PJ::kBundledUiScope, scope);
+    const QString canonical = QStringLiteral("Number of Rows");
+    const QString display = PJ::bundledDisplayText(&combo, "text", canonical);
+    QVERIFY(display != canonical);
+    combo.addItem(display);
+    combo.setItemData(0, canonical, PJ::kCanonicalComboTextRole);
+    QCOMPARE(PJ::canonicalComboText(&combo, 0), canonical);
+    combo.setEditable(true);
+    const QString field = QStringLiteral("使用者 %1 %2 / Number of Rows <raw> / 檔案");
+    combo.setEditText(field);
+    QCOMPARE(PJ::canonicalComboText(&combo, 0), field);
+    QLabel label;
+    label.setObjectName(QStringLiteral("labelWarning"));
+    label.setProperty(PJ::kBundledUiScope, scope);
+    const QString warning = QStringLiteral("Values in \"") + field +
+        QStringLiteral("\" are not monotonically increasing. Will sort these automatically");
+    const QString translated = PJ::bundledDisplayText(&label, "text", warning);
+    QVERIFY(translated != warning);
+    QVERIFY(translated.contains(field));
+    label.setObjectName(QStringLiteral("userData"));
+    QCOMPARE(PJ::bundledDisplayText(&label, "text", warning), warning);
+    QCOMPARE(PJ::localizeBundledUi(raw + "\n", &scope), raw + "\n");
+    QVERIFY(scope.isEmpty());
+#else
+    QSKIP("Production application catalog is unavailable when PJ4_BUILD_APP is disabled");
+#endif
+  }
+
   void pinnedPlaceholdersUseProductionCatalogWithoutChangingValues() {
 #ifdef PJ_TEST_PRODUCTION_CATALOG
     PJ::AppLanguage language(*qApp, QStringLiteral("zh_CN"));

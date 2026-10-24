@@ -245,6 +245,19 @@ transient tab. Replacing another busy takeover folds that panel before showing
 the incoming one. If docking cannot claim the chart slot, the live panel
 remains available as a tab.
 
+## Interface language lifecycle
+
+`AppLanguage` owns one startup translator for the full UI lifetime. Its choices
+are `zh_CN` (the fresh-profile default), `zh_TW` (Taiwan terminology), and `en_US`
+(English source text). Preferences save only on acceptance for the next launch;
+`--language` is session-only. Exact hyphen aliases are accepted at startup, while
+browser durable storage accepts only canonical supported codes. Never change the
+numeric/data locale when selecting a UI language. Both Chinese catalogs and Qt
+dialog translations are embedded; source checks validate both against lupdate.
+Traditional Chinese splash memes use only the eight text-free-artwork caption
+compositions, not the reviewed Simplified Chinese raster variants. See
+`docs/localization/MULTILINGUAL.zh-CN.md` for plugin and installer boundaries.
+
 ## Native package font fallback
 
 Native packages may include `bin/fonts/NotoSansCJKsc-Regular.otf`. `main.cpp` registers
