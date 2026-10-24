@@ -138,12 +138,12 @@ TEST(BrowserPersistencePolicy, RejectsWrongTypesRangesAndPathShapedIdentifiers) 
 }
 
 TEST(BrowserPersistencePolicy, LanguagePreferenceAcceptsOnlyCanonicalSupportedCodes) {
-  for (const QString& language : {u"zh_CN"_s, u"en_US"_s}) {
+  for (const QString& language : {u"zh_CN"_s, u"zh_TW"_s, u"en_US"_s}) {
     EXPECT_EQ(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, language), QVariant(language));
     const QByteArray stored = u"{\"version\":1,\"values\":{\"Preferences::language\":\"%1\"}}"_s.arg(language).toUtf8();
     EXPECT_EQ(BrowserPersistenceTestPeer::decodeValues(stored).value(u"Preferences::language"_s), QVariant(language));
   }
-  for (const QString& rejected : {u"zh-CN"_s, u"fr_FR"_s, u"/private/path"_s, QString{}}) {
+  for (const QString& rejected : {u"zh-CN"_s, u"zh-TW"_s, u"zh_HK"_s, u"zh-Hant"_s, u"fr_FR"_s, u"/private/path"_s, QString{}}) {
     EXPECT_FALSE(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, rejected).has_value());
   }
   EXPECT_FALSE(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, true).has_value());
