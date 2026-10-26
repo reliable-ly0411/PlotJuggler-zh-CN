@@ -13,6 +13,7 @@ import signal
 import subprocess
 import tempfile
 import time
+import xml.etree.ElementTree as ET
 
 FONT_SHA = '2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b'
 LOG_SHA = '28dcbac522ceb75eee10f6af37b0d6e342c1dc79e2be1a9f766fe18a14336766'
@@ -114,8 +115,56 @@ manifest_id="ardupilot-dataflash" filepath_mode="source"><![CDATA[{}]]></plugin>
 </previouslyLoaded_Datafiles></root>''', encoding='utf-8')
     return layout
 
+
+def write_csv_layout(work, unicode_path):
+    """Generate every byte; no user log or externally sourced fixture is used."""
+    directory = work / ('csv-测试' if unicode_path else 'csv-ascii')
+    directory.mkdir()
+    source = directory / ('合成.csv' if unicode_path else 'synthetic.csv')
+    source.write_bytes(b'sample_index,synthetic_signal\n0,-2\n1,3.5\n2,0\n')
+    root = ET.Element('root', format='PlotJuggler', pj4_version='4', binding='source')
+    widget = ET.SubElement(root, 'tabbed_widget', parent='main_window')
+    tab = ET.SubElement(widget, 'Tab', id='csv-tab', tab_name='CSV', containers='1')
+    area = ET.SubElement(ET.SubElement(tab, 'Container'), 'DockArea', id='csv-area', name='CSV')
+    plot = ET.SubElement(area, 'plot', id='csv-plot', mode='TimeSeries')
+    for field in ['sample_index', 'synthetic_signal']:
+        ET.SubElement(plot, 'curve', topic=source.stem, field=field)
+    file_info = ET.SubElement(ET.SubElement(root, 'previouslyLoaded_Datafiles'),
+                              'fileInfo', filename=str(source.resolve()))
+    plugin = ET.SubElement(file_info, 'plugin', ID='CSV Loader', manifest_id='csv-loader', filepath_mode='source')
+    plugin.text = json.dumps({'filepath': str(source.resolve()), 'delimiter': ',',
+                              'detect_delimiter': False, 'time_mode': 'row_number'})
+    layout = directory / 'layout.pj4.xml'
+    ET.ElementTree(root).write(layout, encoding='utf-8', xml_declaration=True)
+    return layout, source.stem
+
+
+def validate_csv_plot_state(state, topic):
+    """Require the actual CSV adapters, samples and visible synthetic bounds."""
+    assert state['version'] == 1, 'unsupported plot snapshot schema'
+    plots = [plot for plot in state['plots'] if plot['id'] == 'csv-plot']
+    assert len(plots) == 1, 'CSV plot missing or duplicated'
+    plot = plots[0]
+    expected = {'sample_index': (0.0, 2.0), 'synthetic_signal': (-2.0, 3.5)}
+    assert len(plot['curves']) == len(expected), 'CSV curves missing or duplicated'
+    assert {curve['field'] for curve in plot['curves']} == set(expected)
+    for curve in plot['curves']:
+        assert curve['topic'] == topic and curve['visible'] is True
+        assert curve['sample_count'] == curve['finite_sample_count'] == curve['finite_samples_in_view'] == 3
+        data, view = curve['sample_bounds'], plot['viewport']
+        for bounds in [data, view]:
+            assert all(type(bounds[key]) in (int, float) and math.isfinite(bounds[key])
+                       for key in ['x_min', 'x_max', 'y_min', 'y_max'])
+        assert math.isclose(data['x_min'], 0.0, abs_tol=1e-9)
+        assert math.isclose(data['x_max'], 2.0, abs_tol=1e-9)
+        low, high = expected[curve['field']]
+        assert math.isclose(data['y_min'], low, abs_tol=1e-9)
+        assert math.isclose(data['y_max'], high, abs_tol=1e-9)
+        assert view['x_min'] <= data['x_min'] < data['x_max'] <= view['x_max']
+        assert view['y_min'] <= data['y_min'] < data['y_max'] <= view['y_max']
+
 def verify(prefix, executable, log, output, expected_source, expected_version, capture=False):
-    """Check provenance, native plugins, Python and real BIN curve restoration."""
+    """Check provenance, plugins, Python and synthetic CSV/real BIN restoration."""
     prefix, executable, output = prefix.resolve(), executable.resolve(), output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     record = json.loads((prefix / 'share/plotjuggler4/release.json').read_text(encoding='utf-8'))
@@ -137,7 +186,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
         assert hashlib.sha256((prefix / 'share/licenses' / item['path']).read_bytes()).hexdigest() == item['sha256']
     assert hashlib.sha256(log.read_bytes()).hexdigest() == LOG_SHA, 'unexpected real BIN fixture'
     rebuilt = record.get('localized_plugin_rebuilds', [])
-    required_rebuilt = {'protobuf-parser', 'toolbox-transform-editor', 'webrtc-client', 'mcap-loader'}
+    required_rebuilt = {'protobuf-parser', 'toolbox-transform-editor', 'webrtc-client', 'mcap-loader', 'csv-loader'}
     if os.name != 'nt':
         required_rebuilt.add('toolbox-assistant-agent')
     assert {item['id'] for item in rebuilt} == required_rebuilt, 'missing localized plugin provenance'
@@ -223,6 +272,24 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
             args.extend(['--expect-plugin', spec])
         unavailable = []
         run('plugins', args, validate_plugins=True)
+        csv_cases = [(name, *write_csv_layout(work, unicode_path))
+                     for name, unicode_path in [('ascii', False), ('unicode', True)]]
+        for language in ['zh_CN', 'en_US']:
+            for name, csv_layout, topic in csv_cases:
+                case = f'csv-{name}-{language}'
+                diagnostics = output / f'{case}-diagnostics.json'
+                plot_state = output / f'{case}-plot-state.json'
+                text = run(case, ['--language', language, '--nosplash', '--layout', str(csv_layout),
+                                 '--exit-after-layout', '--exit-after-layout-timeout', '90',
+                                 '--dump-diagnostics', str(diagnostics), '--dump-plot-state', str(plot_state)])
+                assert '[exit-after-layout] layout restore settled: success' in text
+                validate_csv_plot_state(json.loads(plot_state.read_text(encoding='utf-8')), topic)
+                records = json.loads(diagnostics.read_text(encoding='utf-8'))['records']
+                rejected = [x for x in records if
+                            (x['level'] in ['warning', 'error'] and not
+                             (unavailable and x['id'] == 'ros2-topic-subscriber' and optional_ros_error(x['message']))) or
+                            x['id'] in ['layout-import-unresolved-curves', 'layout-import-unresolved-curves-sync']]
+                assert not rejected, rejected
         layout = write_bin_layout(work, log)
         for language in ['zh_CN', 'en_US']:
             diagnostics = output / f'bin-{language}.json'
@@ -260,6 +327,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
                'loaded_plugin_count': len(expected) - len(unavailable), 'unavailable_plugins': unavailable,
                'checks': ['embedded version', 'CJK font bytes', 'licenses', 'Python backend',
                           'bundled plugin inventory and explicit external dependency boundary', 'real BIN in Unicode path',
+                          'synthetic CSV in ASCII and Unicode paths: both fields, all finite samples and visible bounds',
                           'Chinese and English curve restoration with finite visible samples and non-default viewport']}
     (output / 'acceptance.json').write_text(json.dumps(summary, indent=2) + '\n', encoding='utf-8')
 

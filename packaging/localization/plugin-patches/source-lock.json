@@ -83,6 +83,21 @@
       ],
       "tag_object": "a7772e412b9cb344a40d8a1791d19fede11ce684",
       "patch_sha256": "3c097994690ab60bc36db55129f9ceecd584b4d16991cf1d8f8c937fc53ea3e4"
+    },
+    {
+      "id": "csv-loader",
+      "module": "data_load_csv",
+      "version": "1.0.7",
+      "tag": "data_load_csv/v1.0.7",
+      "commit": "ba6ee417d91a01aae778a0ec3a4443a024671123",
+      "sdk": "0.34.1",
+      "target": "csv_source_plugin",
+      "platforms": [
+        "Linux",
+        "Windows"
+      ],
+      "patch_sha256": "00ecc1514fde0b6d8b97750a1cac1d2a251c0aa955c884e1dde7fa995f95c02c",
+      "tag_object": "f6e50746f80b6c34450e12a443914135f07ebf3f"
     }
   ],
   "sdk_tag_objects": {

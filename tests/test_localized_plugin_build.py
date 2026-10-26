@@ -5,6 +5,8 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+import subprocess
+import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,7 +19,7 @@ spec.loader.exec_module(replacement)
 class LocalizedPluginBuildTest(unittest.TestCase):
     def test_locked_patches_and_peeled_commits(self):
         lock = json.loads((PATCHES / 'source-lock.json').read_text(encoding='utf-8'))
-        self.assertEqual(len(lock['plugins']), 5)
+        self.assertEqual(len(lock['plugins']), 6)
         self.assertIn('packaging/localization/plugin-patches/pj_display_language.hpp text eol=lf',
                       (ROOT / '.gitattributes').read_text(encoding='utf-8'))
         self.assertEqual(hashlib.sha256((PATCHES / 'pj_display_language.hpp').read_bytes()).hexdigest(), lock['helper_sha256'])
@@ -67,6 +69,51 @@ class LocalizedPluginBuildTest(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 replacement.replace(extra, dest)
             self.assertEqual((dest / relative / 'new.so').read_bytes(), b'localized')
+
+    def test_csv_is_pinned_to_reviewed_source_and_packaging_consumes_it(self):
+        lock = json.loads((PATCHES / 'source-lock.json').read_text(encoding='utf-8'))
+        csv = next(item for item in lock['plugins'] if item['id'] == 'csv-loader')
+        self.assertEqual(csv['module'], 'data_load_csv')
+        self.assertEqual(csv['commit'], 'ba6ee417d91a01aae778a0ec3a4443a024671123')
+        self.assertEqual(csv['sdk'], '0.34.1')
+        self.assertEqual(csv['platforms'], ['Linux', 'Windows'])
+        self.assertEqual(csv['target'], 'csv_source_plugin')
+        patch = (PATCHES / 'csv-loader.patch').read_text(encoding='utf-8')
+        self.assertIn('std::filesystem::path(std::u8string', patch)
+        self.assertIn('csv_file_paths_test', patch)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            extra, destination = root / 'extra', root / 'destination'
+            relative = Path('lib/plotjuggler/plugins/csv-loader')
+            (extra / relative).mkdir(parents=True)
+            (destination / relative).mkdir(parents=True)
+            (destination / relative / 'old.dll').write_bytes(b'old synthetic DLL')
+            binary = extra / relative / 'csv_source_plugin.dll'
+            binary.write_bytes(b'new synthetic DLL')
+            record = extra / 'share/plotjuggler4/release.json'
+            record.parent.mkdir(parents=True)
+            record.write_text(json.dumps({'localized_plugin_rebuilds': [{
+                'id': 'csv-loader', 'files': [{'path': (relative / binary.name).as_posix(),
+                'sha256': hashlib.sha256(binary.read_bytes()).hexdigest()}]}]}), encoding='utf-8')
+            replacement.replace(extra, destination)
+            self.assertEqual([f.name for f in (destination / relative).iterdir()], [binary.name])
+            binary.write_bytes(b'corrupt synthetic DLL')
+            with self.assertRaises(AssertionError):
+                replacement.replace(extra, destination)
+            self.assertEqual((destination / relative / binary.name).read_bytes(), b'new synthetic DLL')
+
+    def test_scoped_preflight_cannot_stage_partial_release_or_unknown_plugin(self):
+        script = ROOT / 'packaging/localization/build_localized_plugins.py'
+        for options, message in [(['--plugin', 'csv-loader'], '--plugin requires --preflight'),
+                                 (['--preflight', '--plugin', 'unknown-plugin'], 'not locked for this platform')]:
+            with self.subTest(options=options), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                result = subprocess.run([sys.executable, str(script), '--work', str(root / 'work'),
+                                         '--prefix', str(root / 'prefix'), *options],
+                                        capture_output=True, text=True, timeout=10)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(message, result.stderr)
+                self.assertFalse((root / 'prefix').exists())
 
     def test_native_build_offline_and_separate_sdk_graphs(self):
         script = (ROOT / 'packaging/localization/build_localized_plugins.py').read_text(encoding='utf-8')

@@ -3,6 +3,7 @@
 """Regression guards for clean-host acceptance, without needing packaged binaries."""
 import importlib.util
 import copy
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -188,6 +189,82 @@ class BinPlotStateTests(unittest.TestCase):
             self.assertEqual(root.find('.//plot').attrib, {'id': 'p1', 'mode': 'TimeSeries'})
             self.assertEqual(root.find('.//curve').attrib, {'topic': '/RCOU', 'field': 'C1\t[us]'})
             self.assertEqual(root.find('.//fileInfo').get('filename'), '飞行日志.BIN')
+
+
+class CsvPlotStateTests(unittest.TestCase):
+    def setUp(self):
+        self.state = {'version': 1, 'plots': [{'id': 'csv-plot',
+            'viewport': {'x_min': -0.1, 'x_max': 2.1, 'y_min': -3.0, 'y_max': 4.0},
+            'curves': [{'topic': 'synthetic', 'field': field, 'visible': True,
+                        'sample_count': 3, 'finite_sample_count': 3, 'finite_samples_in_view': 3,
+                        'sample_bounds': {'x_min': 0.0, 'x_max': 2.0, 'y_min': low, 'y_max': high}}
+                       for field, low, high in [('sample_index', 0.0, 2.0), ('synthetic_signal', -2.0, 3.5)]]}]}
+
+    def test_two_complete_visible_synthetic_curves_pass_without_mutation(self):
+        before = copy.deepcopy(self.state)
+        module.validate_csv_plot_state(self.state, 'synthetic')
+        self.assertEqual(self.state, before)
+
+    def test_empty_duplicate_unbound_hidden_or_partial_data_fail(self):
+        changes = [
+            lambda state: state.update(plots=[]),
+            lambda state: state['plots'].append(copy.deepcopy(state['plots'][0])),
+            lambda state: state['plots'][0].update(curves=[]),
+            lambda state: state['plots'][0]['curves'][1].update(field='sample_index'),
+            lambda state: state['plots'][0]['curves'][0].update(topic='wrong-topic'),
+            lambda state: state['plots'][0]['curves'][0].update(visible=False),
+            lambda state: state['plots'][0]['curves'][0].update(sample_count=0),
+            lambda state: state['plots'][0]['curves'][0].update(finite_sample_count=2),
+            lambda state: state['plots'][0]['curves'][0].update(finite_samples_in_view=2),
+            lambda state: state['plots'][0]['curves'][1]['sample_bounds'].update(y_max=3.0),
+            lambda state: state['plots'][0]['curves'][0]['sample_bounds'].update(x_max=1.0),
+            lambda state: state['plots'][0]['viewport'].update(x_max=1.0),
+            lambda state: state['plots'][0]['viewport'].update(y_min=0.0),
+        ]
+        for number, change in enumerate(changes):
+            with self.subTest(change=number):
+                state = copy.deepcopy(self.state)
+                change(state)
+                with self.assertRaises(AssertionError):
+                    module.validate_csv_plot_state(state, 'synthetic')
+
+    def test_nonfinite_or_nonnumeric_bounds_fail(self):
+        for target in ['view', 'data']:
+            for key in ['x_min', 'x_max', 'y_min', 'y_max']:
+                for value in [float('nan'), float('inf'), '0', False]:
+                    with self.subTest(target=target, key=key, value=value):
+                        state = copy.deepcopy(self.state)
+                        plot = state['plots'][0]
+                        bounds = plot['viewport'] if target == 'view' else plot['curves'][0]['sample_bounds']
+                        bounds[key] = value
+                        with self.assertRaises(AssertionError):
+                            module.validate_csv_plot_state(state, 'synthetic')
+
+    def test_generated_layouts_use_identical_synthetic_bytes_and_native_paths(self):
+        with tempfile.TemporaryDirectory(prefix='csv fixture & ') as temporary:
+            work = Path(temporary)
+            inputs = []
+            for unicode_path in [False, True]:
+                layout, topic = module.write_csv_layout(work, unicode_path)
+                root = ET.parse(layout).getroot()
+                info = root.find('.//fileInfo')
+                source = Path(info.get('filename'))
+                self.assertTrue(source.is_file())
+                self.assertEqual(source.stem, topic)
+                self.assertEqual(root.find('.//plot').get('id'), 'csv-plot')
+                self.assertEqual({curve.get('field') for curve in root.findall('.//curve')},
+                                 {'sample_index', 'synthetic_signal'})
+                self.assertEqual({curve.get('topic') for curve in root.findall('.//curve')}, {topic})
+                plugin = info.find('plugin')
+                self.assertEqual(plugin.get('manifest_id'), 'csv-loader')
+                config = json.loads(plugin.text)
+                self.assertEqual(Path(config['filepath']), source)
+                self.assertEqual(config['time_mode'], 'row_number')
+                self.assertEqual(config['delimiter'], ',')
+                self.assertFalse(config['detect_delimiter'])
+                inputs.append(source.read_bytes())
+            self.assertEqual(inputs[0], inputs[1])
+            self.assertEqual(inputs[0], b'sample_index,synthetic_signal\n0,-2\n1,3.5\n2,0\n')
 
 
 if __name__ == '__main__':

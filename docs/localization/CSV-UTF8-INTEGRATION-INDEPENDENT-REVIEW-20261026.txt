@@ -1,0 +1,77 @@
+CSV fork integration independent review — 2026-10-26
+
+Input
+Integration patch: 18 files, 71,828 bytes.
+SHA-256: 94eb0d25b8d5bbb3514b9b8798ef896ae31085cf808190901443687555644fcc
+Development baseline: 9f38ffd4bd625723ef96c8a49ad320846b98bc2b
+Stable baseline: 057f707e017c4e296da93efc1272e932eb672738
+
+Decision
+No blocking defect found in the CSV source-consumption/identity/package-verifier
+changes. Focused integration source review PASS.
+This is not approval of a completed release or of stable promotion before the
+repository's applicable full-platform build/package acceptance gates.
+
+Independently executed in the cloud
+- Clean patch application on both exact development and stable baselines: PASS.
+- Embedded CSV four-file patch SHA-256 is unchanged:
+  00ecc1514fde0b6d8b97750a1cac1d2a251c0aa955c884e1dde7fa995f95c02c.
+- Embedded core source patch identity matches the previously reviewed bytes.
+- Development Python suite: 119 PASS, 5 Windows-only SKIPPED (124 total).
+- Stable Python suite: 119 PASS, 5 Windows-only SKIPPED (124 total).
+- Release-policy suite: 4/4 PASS; branch-name/provenance checks PASS.
+- Qt migration executable compiled with -Werror: 8/8 PASS, comprising six
+  test bodies plus initialization/cleanup, not eight independent scenarios.
+- Existing display helper independently compiled and run: 4/4 processes PASS.
+- Translation extraction: 1,968/1,968; zero missing/stale/unfinished entries;
+  placeholders, plurals, rich-text structure and source contexts PASS.
+- CSV CTest selection guard executed in isolation: exact expected set accepted;
+  missing path-test and unexpected-test sets rejected.
+- Official Linux and Windows CSV 1.0.7 ZIPs independently retrieved from public
+  release URLs. Both archive SHA-256 values and contained DSO SHA-256 values
+  exactly match the new audited predecessor records.
+- Official CSV tag object and peeled source commit match the source lock.
+- git diff --check PASS on both integration worktrees.
+
+Consumption review
+The source lock now reaches the real builder, which verifies the fixed source,
+SDK/version and patch digest, compiles the plugin and tests, enforces the CSV
+CTest selection, and records distribution/license/content provenance. Replacement
+and final package provenance allowlists both include CSV. The generated identity
+uses only the exact official predecessor for the matching version and platform;
+unknown same-version binaries are not newly admitted. No upstream ZIP checksum,
+immutable release byte, plugin ID/version, or host ABI is rewritten.
+The scoped --plugin option is restricted to preflight; partial release staging
+and unknown IDs fail before creating a prefix. Existing full lock consumption
+and the deferred-plugin exclusion remain intact.
+The added host acceptance generator contains only fixed synthetic bytes. Its
+validator checks both fields, all three finite/in-view sample counts, exact
+extrema/time bounds and viewport containment. It does NOT compare every interior
+value at the host-rendering layer. The separate plugin ABI test does compare each
+synthetic value and timestamp; the supplied integration supplement correctly
+states this distinction.
+
+Not independently repeated here
+The complete Conan CSV preflight, all-plugin/release packaging, and six full-host
+GUI runs reported by the originating task were not repeated in this cloud review.
+Their reported results are corroborative evidence, not new independent passes.
+The prior independently compiled CSV tests passed: parser 49/49, path ABI 12/12
+and 240/240 repeated path cases. SDK 0.34.1 required the supported SDK-only
+PJ_WARNINGS_AS_ERRORS=OFF option for a GCC 14 Release warning in unchanged
+parser_module_abi.cpp; CSV plugin and tests retained -Werror. This is not a
+warning-free full-SDK certification. No Windows or
+MSVC execution was performed by this independent reviewer.
+
+Contribution / promotion distinction
+The core four-file repair plus sanitized public source review is suitable for an
+independent draft upstream PR, subject to fresh target-head/conflict checks and
+its CI. At reviewed upstream main 37e1bde18b8a425b9b64d7fe54c165464942b5eb,
+data_load_csv itself is identical to the tested ba6ee417 baseline, but SDK_VERSION
+is 0.38.0-dev.3 rather than 0.34.1. Clean patch application is not a new-SDK build
+pass. Do not claim ready-to-merge until relevant CI/builds establish that result.
+The fork integration is suitable for a development draft PR with the sanitized
+source review and integration reports.
+Stable promotion must still meet the repository's applicable full Linux/Windows
+build and package acceptance requirements. Focused checks do not waive those
+requirements. The upstream and development draft reviews must not be represented
+as completed stable promotion or certified release packages.
