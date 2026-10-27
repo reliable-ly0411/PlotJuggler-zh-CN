@@ -252,6 +252,34 @@
           "sha256": "026333452067d7df7caef4bd5326b4138e956cc85475cf688e5d739587b2278c"
         }
       ]
+    },
+    {
+      "id": "csv-loader",
+      "version": "1.0.7",
+      "platform": "linux-x86_64",
+      "url": "https://github.com/PlotJuggler/pj-official-plugins/releases/download/data_load_csv/v1.0.7/csv-loader-1.0.7-linux-x86_64.zip",
+      "archive_sha256": "d7840de6827b57c7cdcfc8a10b00fa5c4defc176f75c94c8c940896aecc026d9",
+      "files": [
+        {
+          "path": "csv-loader/libcsv_source_plugin.so",
+          "sha256": "448f2648a76fe454ef441c0161f7f1ad8f6c13dd7bc4045ada44b9f71a8bf3f6"
+        }
+      ],
+      "kind": "official-registry-artifact"
+    },
+    {
+      "id": "csv-loader",
+      "version": "1.0.7",
+      "platform": "windows-x86_64",
+      "url": "https://github.com/PlotJuggler/pj-official-plugins/releases/download/data_load_csv/v1.0.7/csv-loader-1.0.7-windows-x64.zip",
+      "archive_sha256": "d92c99015c912ee7afafa7771b487a6f561be734ddcc6448a02cfc1b81441151",
+      "files": [
+        {
+          "path": "csv-loader/csv_source_plugin.dll",
+          "sha256": "6244802ca7ce6f294e0d466ca10cee38bfa815bfb33785d6fff78184f6c4f312"
+        }
+      ],
+      "kind": "official-registry-artifact"
     }
   ]
 }

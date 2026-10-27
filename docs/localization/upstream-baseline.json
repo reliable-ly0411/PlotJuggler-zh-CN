@@ -31,5 +31,15 @@
     "commit": "d278b1fe98f699d27b820867f454a697e50def2e",
     "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.0.0",
     "relationship": "The pinned main-4.x snapshot is a descendant of 4.0.0; it is not the unchanged 4.0.0 release."
+  },
+  "csv_path_fix": {
+    "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
+    "commit": "ba6ee417d91a01aae778a0ec3a4443a024671123",
+    "tag": "data_load_csv/v1.0.7",
+    "module": "data_load_csv",
+    "sdk_version": "0.34.1",
+    "patch": "packaging/localization/plugin-patches/csv-loader.patch",
+    "patch_sha256": "00ecc1514fde0b6d8b97750a1cac1d2a251c0aa955c884e1dde7fa995f95c02c",
+    "scope": "UTF-8 filesystem paths in preview and import; synthetic ABI regressions; no parsing-locale or data-value changes"
   }
 }
