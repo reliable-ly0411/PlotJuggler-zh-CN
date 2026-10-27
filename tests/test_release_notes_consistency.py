@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""Keep current release prose synchronized with catalogs and pinned payload scope."""
+"""Check source catalogs while preserving the scope of published release prose."""
 import ast
 import json
 from pathlib import Path
@@ -34,14 +34,23 @@ class ReleaseNotesConsistencyTest(unittest.TestCase):
             self.assertIsNotNone(match)
             self.assertEqual(int(match.group(1).replace(',', '')), len(active))
 
-    def test_rebuilt_plugin_list_matches_active_source_lock(self):
+    def test_rebuilt_plugin_list_preserves_published_scope(self):
         line = next(line for line in self.notes.splitlines() if '本版汉化重建集合共' in line)
-        self.assertEqual(set(re.findall(r'`([a-z0-9-]+)`', line)),
-                         {item['id'] for item in self.lock['plugins']})
+        active = {item['id'] for item in self.lock['plugins']}
+        if self.versions['PJ_APP_VERSION'] == '4.0.0-zh.1.rc.3':
+            # Published bytes predate the CSV path repair; a source change must
+            # not retroactively advertise it as part of that release.
+            published = {'mcap-loader', 'protobuf-parser', 'toolbox-transform-editor',
+                         'webrtc-client', 'toolbox-assistant-agent'}
+            self.assertEqual(active - published, {'csv-loader'})
+            self.assertTrue(published <= active)
+        else:
+            published = active
+        self.assertEqual(set(re.findall(r'`([a-z0-9-]+)`', line)), published)
         counts = list(map(int, re.findall(r'\d+', line)))
-        self.assertEqual(counts, [len(self.lock['plugins']),
-                                 sum('Windows' in x['platforms'] for x in self.lock['plugins']),
-                                 sum('Linux' in x['platforms'] for x in self.lock['plugins'])])
+        entries = [item for item in self.lock['plugins'] if item['id'] in published]
+        self.assertEqual(counts, [len(entries), sum('Windows' in x['platforms'] for x in entries),
+                                 sum('Linux' in x['platforms'] for x in entries)])
         self.assertNotIn('toolbox-mosaico', {x['id'] for x in self.lock['plugins']})
         self.assertIn('Mosaico 1.3.0 明确保留官方原始二进制', self.notes)
 

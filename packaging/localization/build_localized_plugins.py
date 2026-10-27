@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""Rebuild only pinned official plugins with source-local display patches.
+"""Rebuild only pinned official plugins with reviewed source-local patches.
 
 No upstream upload, credentials, protocol changes, version masquerading or AI
 calls. Each source/SDK and Conan graph is isolated and recorded. A missing
@@ -148,6 +148,13 @@ def build_one(item, lock, work, prefix, platform):
                     ['ChatSession', 'UsageLedger', 'SettingsStore', 'ConversationState', 'SeriesStats', 'StreamJson']}
         expected |= {'LocalizedDisplay_' + name for name in ['zh_CN', 'en_US', 'unknown', 'empty']}
         assert selected == expected, (selected, expected)
+    if identifier == 'csv-loader':
+        test_selection = ['-R', '^(LocalizedDisplay_.*|csv_(parser|file_paths)_test)$']
+        listing = subprocess.check_output(['ctest', '--test-dir', build / 'native', '--show-only=json-v1', *test_selection], env=env, text=True, encoding='utf-8')
+        selected = {test['name'] for test in json.loads(listing)['tests']}
+        expected = {'csv_parser_test', 'csv_file_paths_test'}
+        expected |= {'LocalizedDisplay_' + name for name in ['zh_CN', 'en_US', 'unknown', 'empty']}
+        assert selected == expected, (selected, expected)
     run(['ctest', '--test-dir', build / 'native', '--no-tests=error', '--output-on-failure', '--timeout', '120',
          '--output-junit', str(build / 'offline-tests.xml'), *test_selection], env=env)
     run([sys.executable, '-X', 'utf8', source / 'scripts/release_tools.py', 'verify-version-consistency',
@@ -201,7 +208,8 @@ def build_one(item, lock, work, prefix, platform):
             'sdk_acquisition': sdk_acquisition,
             'conan_graph_sha256': digest(graph), 'conan_lock_sha256': digest(build / 'conan.lock'),
             'dependencies': dependencies, 'files': files, 'license_files': notice_files,
-            'test_policy': 'pure-model Assistant allowlist; other upstream tests exclude live/smoke; no external AI',
+            'test_policy': ('CSV parser/path and display allowlist; no external services' if identifier == 'csv-loader' else
+                            'pure-model Assistant allowlist; other upstream tests exclude live/smoke; no external AI'),
             'ctest_selection': test_selection,
             'upstream_update_notice': 'Marketplace updates may replace this localized build; ID/version are preserved for compatibility.'}
 
@@ -211,10 +219,20 @@ def main():
     parser.add_argument('--work', type=Path, required=True)
     parser.add_argument('--prefix', type=Path, required=True)
     parser.add_argument('--preflight', action='store_true', help='isolated plugin proof only; never a release payload')
+    parser.add_argument('--plugin', action='append', default=[],
+                        help='limit a preflight to these locked IDs; forbidden for release payloads')
     args = parser.parse_args()
+    if args.plugin and not args.preflight:
+        parser.error('--plugin requires --preflight; release payloads must build the complete lock')
     lock = json.loads((PATCHES / 'source-lock.json').read_text(encoding='utf-8'))
     assert digest(PATCHES / 'pj_display_language.hpp') == lock['helper_sha256']
     platform = 'Windows' if os.name == 'nt' else 'Linux'
+    selected = [item for item in lock['plugins'] if platform in item['platforms']]
+    if args.plugin:
+        requested = set(args.plugin)
+        if not requested <= {item['id'] for item in selected}:
+            parser.error('requested plugin is not locked for this platform')
+        selected = [item for item in selected if item['id'] in requested]
     if platform == 'Windows':
         os.environ.pop('PKG_CONFIG_PATH', None)
     work, prefix = args.work.resolve(), args.prefix.resolve()
@@ -226,10 +244,9 @@ def main():
         record_path.write_text(json.dumps({'kind': 'plugin-preflight-only-not-a-release', 'source_commit': commit}) + '\n', encoding='utf-8')
     assert (prefix / 'share/plotjuggler4/release.json').is_file(), 'stage base payload first'
     results = []
-    for item in lock['plugins']:
-        if platform in item['platforms']:
-            results.append(build_one(item, lock, work, prefix, platform))
-            (work / 'completed.json').write_text(json.dumps(results, indent=2) + '\n', encoding='utf-8')
+    for item in selected:
+        results.append(build_one(item, lock, work, prefix, platform))
+        (work / 'completed.json').write_text(json.dumps(results, indent=2) + '\n', encoding='utf-8')
     record_path = prefix / 'share/plotjuggler4/release.json'
     record = json.loads(record_path.read_text(encoding='utf-8'))
     record['localized_plugin_rebuilds'] = results

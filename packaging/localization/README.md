@@ -34,7 +34,10 @@ removed, then uninstalls it. MSVC CRT DLLs are explicitly supplied app-local;
 the runner's existing VC installation is not used as proof that they shipped.
 
 `verify_package.py` checks package provenance, CJK font bytes, legal texts, the
-real app `--version`, Python, and every expected plugin/version. It then restores
+real app `--version`, Python, and every expected plugin/version. It restores
+entirely generated CSVs from ASCII and Chinese paths in English and Chinese
+sessions, requiring both fields, all three finite samples, exact synthetic
+bounds and a viewport containing those samples. It then restores
 a real BIN from a Chinese path in each language, requiring a successful exit,
 1,940 imported numeric series, and no unresolved-curve or error diagnostic.
 The opt-in `--dump-plot-state` snapshot reads the actual attached Qwt adapters
@@ -107,3 +110,18 @@ also permits the first creation of `zh-CN-4.x-ci/release-candidate-rc2-final8`;
 ordinary subsequent pushes and merges still skip heavy packaging. No candidate
 branch creation publishes a release. rc.2 uses its own accepted-run promotion
 ref and never reuses or overwrites rc.1.
+
+## CSV path repair integration
+
+The pinned rebuild chain additionally consumes `csv-loader.patch` on Linux and
+Windows. Source/tag/SDK and patch hashes, native CSV parser/path test selection,
+MIT and dependency notices, rebuilt payload hashes and exact predecessor seed
+identities are recorded by the same builder. Replacement removes the official
+CSV directory before copying and verifying the rebuilt files; it does not change
+the number of bundled plugins or relabel an upstream download checksum.
+
+The normal package workflow builds the complete lock. The optional
+`--preflight --plugin csv-loader` isolates this plugin for local review and emits
+a preflight-only record, never an accepted release. Existing Windows preflight
+and package workflows consume the new lock and tests without a new publication
+trigger. See [the scoped results and remaining gates](../../docs/localization/CSV-UTF8-INTEGRATION-20261026.md).

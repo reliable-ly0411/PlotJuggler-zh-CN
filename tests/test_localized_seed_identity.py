@@ -18,7 +18,7 @@ spec.loader.exec_module(identity)
 class LocalizedSeedIdentityTest(unittest.TestCase):
     def test_exact_predecessors_and_registry_provenance(self):
         entries = json.loads(identity.LOCK.read_text(encoding='utf-8'))['builds']
-        self.assertEqual(len(entries), 18)
+        self.assertEqual(len(entries), 20)
         registry = {x['id']: x for x in json.loads((PACKAGING / 'registry-lock.json').read_text(encoding='utf-8'))['extensions']}
         keys = set()
         for entry in entries:
@@ -51,6 +51,23 @@ class LocalizedSeedIdentityTest(unittest.TestCase):
             (directory / 'other.dll').write_bytes(b'other')
             with self.assertRaises(ValueError):
                 identity.write_identity(directory, {'id': 'mcap-loader', 'version': '1.3.0'}, 'Windows')
+
+    def test_csv_marker_accepts_only_audited_platform_and_version_predecessor(self):
+        entries = json.loads(identity.LOCK.read_text(encoding='utf-8'))['builds']
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            (directory / 'csv_source_plugin.dll').write_bytes(b'synthetic repaired CSV DLL')
+            for platform, key in [('Windows', 'windows-x86_64'), ('Linux', 'linux-x86_64')]:
+                with self.subTest(platform=platform):
+                    marker = identity.write_identity(directory, {'id': 'csv-loader', 'version': '1.0.7'}, platform)
+                    expected = [entry['files'][0]['sha256'] for entry in entries
+                                if (entry['id'], entry['version'], entry['platform']) == ('csv-loader', '1.0.7', key)]
+                    self.assertEqual(len(expected), 1)
+                    self.assertEqual(marker['legacy_sha256'], expected)
+                    self.assertEqual(marker['sha256'], hashlib.sha256(b'synthetic repaired CSV DLL').hexdigest())
+            for version in ['1.0.6', '1.0.8']:
+                marker = identity.write_identity(directory, {'id': 'csv-loader', 'version': version}, 'Windows')
+                self.assertEqual(marker['legacy_sha256'], [])
 
     def test_migration_avoids_loading_installed_dll_and_validates_staging(self):
         source = (ROOT / 'pj_runtime/src/ExtensionCatalogService.cpp').read_text(encoding='utf-8')
