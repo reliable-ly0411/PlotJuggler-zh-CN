@@ -148,7 +148,9 @@ Debian 包内版本 `4.0.0~zh.1~rc.4-1`，IFW 数字包版本 `4.0.0.1.0.4`。
   每组检查两个字段、全部三个有限且可见样本、精确极值/时间范围和视口；
   宿主层不声称逐个内部数据点比较，该比较由插件 ABI 测试完成。
 - 公共 BIN fixture 的截断尾记录警告保留，不将其改写成无警告样本。
-  包验收要求没有未绑定曲线或错误级诊断，并检查可见有限采样和非默认视口。
+  包验收要求除限定的缺少 ROS 2 环境诊断外，无其他错误级诊断、无未绑定曲线，
+  并检查可见有限采样和非默认视口。该例外只匹配 ROS 2 插件实例创建失败及加载失败
+  两种消息，不放行其他插件或其他错误；实际出现次数随本次验收附录列出。
   中英文最终截图检查文字和曲线，不只依赖非空导入消息。
 - 发布前核对源/tag、版本映射、SDK/插件来源、实际载入 DSO 与原包哈希；
   草稿上传及公开后分别重新下载，对齐资产名称、大小、SHA-256 和已验原包。
@@ -198,3 +200,59 @@ Qt、官方插件和字体按各自许可分发，许可文本与对应源码链
 ## 原包校验
 
 @ASSET_TABLE@
+
+## 本次最终验收附录
+
+本附录只统计 [run 40471386398，attempt 1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/40471386398/attempts/1) 的新 rc.4 构建。
+源码和 workflow SHA 均为 `14c5be74a1977ba4d80187d67579f0e610c70077`；源码树 `f44195ed715a21b8e8ac390e4f32adef54b0f97f`。
+本附录为独立的发布说明修订，不是二进制构建提交；原包未因正文修订而重新编译或改写。
+
+| 平台与测试集合 | 通过 | 失败 | 跳过 | 总数 |
+| --- | ---: | ---: | ---: | ---: |
+| Linux 完整原生 CTest | 3433 | 0 | 38 | 3471 |
+| Linux 独立语言 CTest | 25 | 0 | 0 | 25 |
+| Linux Python 规则 | 122 | 0 | 2 | 124 |
+| Linux 发布策略 | 4 | 0 | 0 | 4 |
+| Linux CSV 重建 CTest | 6 | 0 | 0 | 6 |
+| Windows 完整原生 CTest | 3391 | 0 | 74 | 3465 |
+| Windows 独立语言 CTest | 24 | 0 | 1 | 25 |
+| Windows Python 规则 | 120 | 0 | 4 | 124 |
+| Windows 发布策略 | 4 | 0 | 0 | 4 |
+| Windows CSV 重建 CTest | 6 | 0 | 0 | 6 |
+
+每个平台的 CSV CTest 含 49 个解析用例、12 个路径 ABI 用例及 4 个显示辅助进程；
+61 个 GTest 子用例包含在前两个 CTest 进程内，不与 CTest 进程数相加。
+CSV JUnit 对通过进程的标准输出截断为 1,024 字节；通过状态取 CTest 进程结果，
+49/12 取 GTest 声明运行数，不将截断片段当作完整逐行日志。
+翻译提取为 1,968/1,968，缺失、过时、未完成及占位符/结构错误均为 0。
+完整 CTest 中禁用的测试按跳过列出；对应 LastTestsDisabled.log 保留在各平台原生报告工件中。
+Windows 独立语言测试跳过：`AppProfile.UnwritableDirectory`。
+
+最终原包验收：5/5 通过（Windows IFW 1 组，Ubuntu 22.04/24.04 × AppImage/DEB 4 组）；
+合成 CSV 宿主导入 20/20 通过；10/10 截图哈希与清单匹配且完成离线目视检查。
+10 份截图包含 6 份不同画面，均已检查可见菜单、中文字符和恢复曲线；
+任务栏和截图边界限制了边缘控件的可见范围，不代表完整桌面交互测试。
+重新检查 20 份 CSV 和 10 份 BIN 诊断，共 30 份：仅有 48 条限定的 ROS 2 缺依赖错误，
+均来自四组 Linux 验收，每次启动恰为实例创建失败与插件加载失败两条；Windows 为 0。
+其他错误级诊断和未绑定曲线均为 0。此结果没有将缺失外部 ROS 2 的运行功能计为通过。
+
+实际 CSV 二进制与 SDK 身份：
+
+| 平台 | CSV DSO SHA-256 | SDK Conan 身份 |
+| --- | --- | --- |
+| Linux | `60f0f4e2d4e3e3d54aff946a419f91ca5644158902a1b423bf7c8b146b441c2b` | `plotjuggler_sdk/0.34.1#57b2c19bd0f1e7f856176a4ee49f506c:aa049858edfe2fdb7691660985bfe869b2122850#5e52c701be2d4cfec1696bf916d646ff` |
+| Windows | `f18eaac04e625f433876d39212139c74138d2705a3d7df6d37af5a6930ea3c32` | `plotjuggler_sdk/0.34.1#57b2c19bd0f1e7f856176a4ee49f506c:453cc9c423a64317613f91d459240ee97ff1970c#4738389f6b52455a0289dfc1f34306dd` |
+
+上述 SDK 为构建来源图确认的公开 Conan 二进制身份；不把源码回退提交等同于本次取件方式。
+最终验收 manifest SHA-256：`40e39aeffe7a59b36b232984b4e33a57f275cc783a06121fbefeda5900062ddf`。
+
+原始公开构建证据：
+
+- [zh4-final-linux-1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/40471386398/artifacts/12723740467)：`sha256:ec7e8feffed457d3974f460acd4422d5060cca7514d2d715d81c0a56c8840368`。
+- [zh4-final-Windows](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/40471386398/artifacts/12723142926)：`sha256:4cd371a16d5f57a7109c4d5f49cca2a8c3ebee3259c8a51caaca967dbd2502ce`。
+- [zh4-candidate-reports-Linux](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/40471386398/artifacts/12722931258)：`sha256:7315ec4638fc9e28f8ae881320f98012c43fa88478f6143a4616edbe63aa2560`。
+- [localized-plugin-build-Linux](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/40471386398/artifacts/12722811818)：`sha256:b167c91ea53ec2dbfd32884a8a3796b0ea084add38cecad8e044cb65bbbb8749`。
+- [zh4-final-linux-0](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/40471386398/artifacts/12722809615)：`sha256:24ca78d30e01eadc8eb1aa511b8b7a27d4db9bf749e8710fe234daa9092943b1`。
+- [zh4-release-manifest](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/40471386398/artifacts/12722639752)：`sha256:f3b7011e8922fd8271398e33ed549112e35a18ae0d8cf73c84cc7bf5fef05e83`。
+- [localized-plugin-build-Windows](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/40471386398/artifacts/12722239242)：`sha256:a2c84acf8f5f89119fe687a2f5cc45a880e62599e7ec54165bccc553d61afd2b`。
+- [zh4-candidate-reports-Windows](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/40471386398/artifacts/12722123785)：`sha256:733aa3d807d99b84658577af5d71246d8cc2c4c01c7578a8deb3eff41795dfed`。
