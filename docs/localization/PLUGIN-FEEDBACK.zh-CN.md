@@ -269,3 +269,11 @@ attempt 1）的 Linux 和 Windows 完整编译在 `pj_bundled_translations_test`
 下一轮精确提交的原生构建与包验收仍为必要门槛。
 本地完整 Python 辅助检查为 158 项中 153 通过、5 跳过，发布策略 4/4 通过；
 没有重新构建完整主程序，也没有把合成日志包装器测试计入原生 GUI 通过数。
+
+第四轮 `40731661989`（源码/工作流 `c016dca1c51d333771bad129230926ed3ff69ee4`，
+attempt 1）Windows 轻量预检发现新增夹具的生成器选择错误：在 Windows 默认的
+多配置生成器下模拟 Linux shell，没有传入配置，四项 CTest 均未运行，严格断言失败。
+5 项子进程日志测试在该 Windows 预检中通过；本轮未进入 Windows 主程序构建。
+后续将这个同时模拟两平台的夹具显式固定为 Ninja 单配置，并另以真实
+Ninja Multi-Config 加 `-C Release` 验证共享日志函数。没有修改生产 workflow 的
+配置选择或过滤这些失败；新的 Windows 预检及完整候选结果须重新确认。

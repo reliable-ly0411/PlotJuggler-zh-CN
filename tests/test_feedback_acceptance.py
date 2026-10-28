@@ -255,10 +255,29 @@ class WorkflowExecutionTests(unittest.TestCase):
         source = self.root/'source'
         source.mkdir()
         (source/'CMakeLists.txt').write_text('\n'.join(commands)+'\n', encoding='utf-8')
-        result = subprocess.run([shutil.which('cmake'), '-S', str(source), '-B', str(self.build),
+        # Both emulated workflow branches share a single-config fixture. In
+        # particular, a Windows host must not silently select Visual Studio
+        # for the Linux branch, whose real build does not need ctest -C.
+        result = subprocess.run([shutil.which('cmake'), '-G', 'Ninja',
+                                 '-S', str(source), '-B', str(self.build),
                                  '-DPython3_EXECUTABLE=' + sys.executable],
                                 capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_real_multi_config_registration_with_explicit_configuration(self):
+        build = self.root/'multi-config'
+        result = subprocess.run([shutil.which('cmake'), '-G', 'Ninja Multi-Config',
+                                 '-S', str(self.root/'source'), '-B', str(build),
+                                 '-DPython3_EXECUTABLE=' + sys.executable],
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        report = self.root/'multi-config.xml'
+        result = subprocess.run([shutil.which('ctest'), '--test-dir', str(build), '-C', 'Release',
+                                 '--test-output-size-passed', '262144', '--output-junit', str(report)],
+                                env={**os.environ, 'RUNNER_OS': 'Linux'},
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(len(gate.audit_cases(ET.parse(report).getroot())), 4)
 
     def ctest(self, *args, runner_os='Linux'):
         return subprocess.run([shutil.which('ctest'), '--test-dir', str(self.build), *args],
