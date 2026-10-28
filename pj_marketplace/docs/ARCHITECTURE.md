@@ -203,6 +203,10 @@ struct InstalledExtension {
     QString name;
     QString description;
     QString category;
+    QString author;
+    QString license;
+    QString website;
+    QString repository;
     uint32_t abi_major;
     QString min_sdk_required;
     QString min_plotjuggler_version;
@@ -256,6 +260,8 @@ A companion no-arg `ExtensionManager()` overload also exists; it creates an owne
 - No `detectPlatform()` private method — delegated to `PlatformUtils::currentPlatform()`
 - Local installation state (`QMap<QString, InstalledExtension>`) is a private cache in `ExtensionManager` — populated at construction by scanning `extensions_dir`, loading plugin DSOs, and reading their embedded manifests; testability is preserved via the `extensions_dir` parameter pointing to a temp directory
 - No local installed-state sidecars — disk is scanned, but `id` and `version` come from the embedded DSO manifest
+- Display-only `author`, `license`, `website` and `repository` travel with the installed record and the admission helper's JSON. SDK 0.34.1's `PluginDescriptor` does not contain them: `internal/plugin_display_metadata.hpp` uses the SDK's validated public family loaders to read the embedded manifest, requiring the admitted ID/version to match. Direct-vtable families are not instantiated. SDK headers, ABI and admission identity are unchanged; missing/malformed optional display fields stay empty. Sidecar display values are not trusted.
+- Registry display fields take precedence when nonempty. Installed metadata fills empty author/license/website/repository fields and supplies local-only or staged-uninstall rows. The website action uses trimmed `website`, then `repository`; no URL means no action. This fallback never provides download artifacts, update versions or checksums.
 - Staged updates write a transient `.pj_pending_install` intent containing the registry id/version. It is deleted after promotion and exists only so restart-time validation can compare the staged DSO against the registry request that created it. Both the id and the version inside the intent file are validated against the same safe-path/regex rules used elsewhere, so a tampered intent cannot escape `extensions_dir`.
 - Embedding apps may seed the marketplace with a loaded-plugin snapshot before first render. That snapshot is initialization data, not a second source of truth; the embedded manifest remains the authority for installed state.
 - **Pending queues drained at construction.** `ExtensionManager::initComponents()` runs `applyPendingUninstalls()` then `applyPendingInstalls()` before computing the installed snapshot, so restart-deferred work is processed regardless of which `MarketplaceWindow` constructor (or host wiring) ends up using the manager.

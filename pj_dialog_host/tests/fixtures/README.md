@@ -9,3 +9,5 @@ CRLF to LF for identity, exactly as the production UI admission boundary does.
 - `protobuf_1_2_0.ui`: tag `parser_protobuf/v1.2.0`, commit `c843cb210af16cb5832cef85c125513c94f65d50`, path `parser_protobuf/protobuf_parser_options.ui`; SHA-256 `b67df33d9454ef56ebb14973d81506a2a651f74375ee2cb01d624744b2e65658`.
 - `quaternion_1_0_1.ui`: tag `toolbox_quaternion/v1.0.1`, commit `2bc991cae2dba7f9f1468dbf8dd72d89797699bc`, path `toolbox_quaternion/quaternion_dialog.ui`; SHA-256 `7c826680efbe07cb23b581828e3106ec10db69e9b000ef356981163ecd89fca0`.
 - `webrtc_1_0_1.ui`: tag `data_stream_webrtc/v1.0.1`, commit `2bc991cae2dba7f9f1468dbf8dd72d89797699bc`, path `data_stream_webrtc/datastream_webrtc.ui`; SHA-256 `65272563c7f3fb6cc347dfc1c1d5ec03e6dd2a7b551f3a6f4305cbc22a371558`.
+
+- `fft_1_0_1.ui`: tag `toolbox_fft/v1.0.1`, commit `2bc991cae2dba7f9f1468dbf8dd72d89797699bc`, path `toolbox_fft/fft_dialog.ui`; SHA-256 `f7d484492d4b2033fc141c9ea3a9f83e9a976049947ba9dd90079df2d19099c0`.

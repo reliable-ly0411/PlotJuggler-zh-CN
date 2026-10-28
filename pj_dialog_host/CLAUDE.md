@@ -88,3 +88,14 @@ five rebuilt source-patched plugins; Mosaico retains its official binary and
 remaining mixed English (issue #20), not by searching arbitrary plain-text bodies.
 See `packaging/localization/plugin-patches/README.md` for build provenance and
 `tests/test_bundled_translations.py` plus native Qt regressions for guards.
+
+Official FFT 1.0.1 is also admitted by its exact reviewed UI hash, without
+rebuilding its binary. Fixed statuses and anchored templates belong only to its
+`status_label`; captured field names, numeric formatting and external error
+details are appended verbatim. `selected_value` can contain an arbitrary field
+name: its empty-state text is translated only when the same widget-data payload
+explicitly disables `btn_compute` (or during static UI loading). Missing state
+never consults a stale painted button. See
+`docs/localization/PLUGIN-FEEDBACK.zh-CN.md` at the repository root for provenance
+and the optional official-binary acceptance harness, including its integration
+limits.

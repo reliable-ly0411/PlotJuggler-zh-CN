@@ -44,7 +44,7 @@ void captureAcceptance(QWidget& widget, const QString& name) {
   // A nonempty screenshot and correct translated strings can still contain
   // only missing-glyph boxes when a headless platform has no font database.
   const QFontMetrics metrics(widget.font());
-  for (const auto codepoint : u"PlotJuggler中文文件语言首选项"_s.toUcs4()) {
+  for (const auto codepoint : u"PlotJuggler中文文件语言首选项繁體檔案儲存語言偏好設定台灣"_s.toUcs4()) {
     EXPECT_TRUE(metrics.inFontUcs4(codepoint)) << "Missing UI glyph U+" << std::hex << codepoint;
   }
 }
@@ -53,14 +53,14 @@ void captureAcceptance(QWidget& widget, const QString& name) {
 // discovered test owns a fresh process, as required by MainWindow teardown.
 void renderMainWindow(const QString& language) {
   const PJ::AppLanguage running(*qApp, language);
-  EXPECT_EQ(running.catalogLoaded(), language == u"zh_CN"_s);
+  EXPECT_EQ(running.catalogLoaded(), language != u"en_US"_s);
   const QTemporaryDir extensions;
   ASSERT_TRUE(extensions.isValid());
   PJ::MainWindow window(extensions.path());
   ASSERT_TRUE(window.populateTestData());
   window.resize(1280, 800);
   const QString file_title = window.titleBar()->fileMenu()->title();
-  if (language == u"zh_CN"_s) {
+  if (language != u"en_US"_s) {
     EXPECT_NE(file_title, u"&File"_s);
     EXPECT_EQ(file_title, QCoreApplication::translate("PJ::TitleBar", "&File"));
   } else {
@@ -76,7 +76,7 @@ void renderPreferences(const QString& language) {
   dialog.showPage(PJ::PreferencesDialog::kAppearancePage);
   const auto* label = dialog.findChild<QLabel*>(u"labelLanguage"_s);
   ASSERT_NE(label, nullptr);
-  if (language == u"zh_CN"_s) {
+  if (language != u"en_US"_s) {
     EXPECT_NE(label->text(), u"Language:"_s);
     EXPECT_EQ(label->text(), QCoreApplication::translate("PreferencesContent", "Language:"));
   } else {
@@ -97,6 +97,10 @@ TEST(PreferencesLanguageTest, EnglishMainWindowRendersWithSourceMenus) {
   renderMainWindow(u"en_US"_s);
 }
 
+TEST(PreferencesLanguageTest, TraditionalMainWindowRendersWithTranslatedMenus) {
+  renderMainWindow(u"zh_TW"_s);
+}
+
 TEST(PreferencesLanguageTest, ChinesePreferencesRendersLanguageControls) {
   renderPreferences(u"zh_CN"_s);
 }
@@ -105,14 +109,20 @@ TEST(PreferencesLanguageTest, EnglishPreferencesRendersLanguageControls) {
   renderPreferences(u"en_US"_s);
 }
 
-TEST(PreferencesLanguageTest, FreshProfileOffersChineseAndEnglishWithARestartNotice) {
+TEST(PreferencesLanguageTest, TraditionalPreferencesRendersLanguageControls) {
+  renderPreferences(u"zh_TW"_s);
+}
+
+TEST(PreferencesLanguageTest, FreshProfileOffersThreeLanguagesWithARestartNotice) {
   PJ::Theme theme;
   PJ::PreferencesDialog dialog(theme);
   const auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
   ASSERT_NE(combo, nullptr);
-  ASSERT_EQ(combo->count(), 2);
+  ASSERT_EQ(combo->count(), 3);
   EXPECT_EQ(combo->currentData().toString(), u"zh_CN"_s);
-  EXPECT_EQ(combo->itemData(1).toString(), u"en_US"_s);
+  EXPECT_EQ(combo->itemData(1).toString(), u"zh_TW"_s);
+  EXPECT_EQ(combo->itemText(1), u"繁體中文（台灣）"_s);
+  EXPECT_EQ(combo->itemData(2).toString(), u"en_US"_s);
   const auto* notice = dialog.findChild<QLabel*>(u"labelLanguageRestart"_s);
   ASSERT_NE(notice, nullptr);
   EXPECT_FALSE(notice->text().isEmpty());
@@ -153,6 +163,31 @@ TEST(PreferencesLanguageTest, CancelLeavesTheSavedLanguageAlone) {
   EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"en_US"_s);
 }
 
+TEST(PreferencesLanguageTest, TraditionalChoicePersistsOnAcceptButNotOnCancel) {
+  PJ::Theme theme;
+  {
+    const PJ::AppLanguage running(*qApp, u"en_US"_s);
+    PJ::PreferencesDialog dialog(theme);
+    auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+    ASSERT_NE(combo, nullptr);
+    combo->setCurrentIndex(combo->findData(u"zh_TW"_s));
+    dialog.accept();
+    EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"zh_TW"_s);
+    EXPECT_EQ(qApp->property("interfaceLanguage").toString(), u"en_US"_s);
+    EXPECT_EQ(QCoreApplication::translate("PreferencesContent", "Language:"), u"Language:"_s);
+  }
+  const PJ::AppLanguage restarted(*qApp, PJ::AppLanguage::preferredLanguage(QSettings()));
+  ASSERT_TRUE(restarted.catalogLoaded());
+  EXPECT_EQ(restarted.language(), u"zh_TW"_s);
+  PJ::PreferencesDialog reopened(theme);
+  auto* combo = reopened.findChild<QComboBox*>(u"languageCombo"_s);
+  ASSERT_NE(combo, nullptr);
+  EXPECT_EQ(combo->currentData().toString(), u"zh_TW"_s);
+  combo->setCurrentIndex(combo->findData(u"zh_CN"_s));
+  reopened.reject();
+  EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"zh_TW"_s);
+}
+
 TEST(PreferencesLanguageTest, SessionOverrideDoesNotChangeTheNextLaunchSelection) {
   const PJ::AppLanguage running(*qApp, u"en_US"_s);
   PJ::Theme theme;
@@ -173,7 +208,7 @@ TEST(PreferencesLanguageTest, LanguageSelectorHonorsBothSizeHintsAcrossFonts) {
     SCOPED_TRACE(font.toString().toStdString());
     QApplication::setFont(font);
     SCOPED_TRACE(QFontInfo(qApp->font()).family().toStdString());
-    for (const QString& requested : {u"en_US"_s, u"zh_CN"_s}) {
+    for (const QString& requested : {u"en_US"_s, u"zh_CN"_s, u"zh_TW"_s}) {
       SCOPED_TRACE(requested.toStdString());
       const PJ::AppLanguage running(*qApp, requested);
       PJ::Theme theme;
@@ -202,10 +237,10 @@ TEST(PreferencesLanguageTest, LanguageSelectorHonorsBothSizeHintsAcrossFonts) {
 }
 
 TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReachable) {
-  for (const QString& requested : {u"en_US"_s, u"zh_CN"_s}) {
+  for (const QString& requested : {u"en_US"_s, u"zh_CN"_s, u"zh_TW"_s}) {
     SCOPED_TRACE(requested.toStdString());
     const PJ::AppLanguage running(*qApp, requested);
-    EXPECT_EQ(running.catalogLoaded(), requested == u"zh_CN"_s);
+    EXPECT_EQ(running.catalogLoaded(), requested != u"en_US"_s);
     PJ::Theme theme;
     PJ::PreferencesDialog dialog(theme);
     dialog.resize(420, 300);

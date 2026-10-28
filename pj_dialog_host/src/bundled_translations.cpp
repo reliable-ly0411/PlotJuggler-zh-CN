@@ -17,6 +17,13 @@ struct DisplayEntry {
   const char* property;
   const char* source;
 };
+struct GuardedDisplayEntry {
+  const char* scope;
+  const char* widget;
+  const char* property;
+  const char* disabled_widget;
+  const char* source;
+};
 struct TemplateEntry {
   const char* scope;
   const char* widget;
@@ -26,7 +33,20 @@ struct TemplateEntry {
 };
 #include "bundled_translation_entries.hpp"
 
-QString translate(const QByteArray& scope, const QString& widget, const QString& property, const QString& source) {
+QString translate(
+    const QByteArray& scope, const QString& widget, const QString& property, const QString& source,
+    const BundledEnabledLookup& enabled = {}, bool static_ui = false) {
+  for (const auto& entry : kGuardedDisplayEntries) {
+    if (scope == entry.scope && widget == QLatin1String(entry.widget) && property == QLatin1String(entry.property)) {
+      // This label can carry either fixed empty-state prose or an arbitrary field name.
+      // Only the same update's explicit control state distinguishes their origins.
+      const auto state = enabled ? enabled(entry.disabled_widget) : std::nullopt;
+      if (source == QString::fromUtf8(entry.source) && (static_ui || (state && !*state))) {
+        return QCoreApplication::translate("PJ::BundledPlugins", entry.source);
+      }
+      return source;
+    }
+  }
   for (const auto& entry : kDisplayEntries) {
     if (scope == entry.scope && widget == QLatin1String(entry.widget) && property == QLatin1String(entry.property) &&
         source == QString::fromUtf8(entry.source)) {
@@ -105,7 +125,8 @@ QByteArray localizeBundledUi(const QByteArray& ui, QByteArray* scope) {
       continue;
     }
     const auto original = element.text();
-    const auto translated = translate(hash, ownerName(parent), parent.attribute(QStringLiteral("name")), original);
+    const auto translated =
+        translate(hash, ownerName(parent), parent.attribute(QStringLiteral("name")), original, {}, true);
     if (translated == original) {
       continue;
     }
@@ -147,9 +168,10 @@ void initializeBundledWidgets(QWidget* root, const QByteArray& original, const Q
   }
 }
 
-QString bundledDisplayText(const QWidget* widget, const char* property, const QString& source) {
+QString bundledDisplayText(
+    const QWidget* widget, const char* property, const QString& source, const BundledEnabledLookup& enabled) {
   return translate(
-      widget->property(kBundledUiScope).toByteArray(), widget->objectName(), QLatin1String(property), source);
+      widget->property(kBundledUiScope).toByteArray(), widget->objectName(), QLatin1String(property), source, enabled);
 }
 
 QString bundledNamedDisplayText(

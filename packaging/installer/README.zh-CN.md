@@ -6,6 +6,13 @@ Output filenames carry `-zh-CN.exe`; development builds also include their sourc
 
 ## Chinese installer and language switching
 
+The development application's new `zh_TW` interface is independent of this
+installer. The wizard and maintenance tool remain Simplified Chinese / English;
+after installation select 繁體中文（台灣） in application Preferences, or run
+`PlotJuggler4.exe --language zh_TW`. No installer Traditional Chinese coverage,
+new package identity, installation path migration, or new release is implied.
+See [multilingual development scope](../../docs/localization/MULTILINGUAL.zh-CN.md).
+
 The installer, component display name, Start Menu group and shortcuts carry
 `zh-CN`. The default folder is ASCII-named `PlotJuggler4-zh-CN`; no existing
 upstream installation is silently removed or migrated. The canonical IFW

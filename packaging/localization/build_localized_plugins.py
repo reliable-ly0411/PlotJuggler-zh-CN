@@ -81,7 +81,7 @@ def build_one(item, lock, work, prefix, platform):
     if identifier == 'mcap-loader':
         checks += 'target_compile_definitions(pj_localized_display_test PRIVATE PJ_TEST_MCAP=1)\n'
         checks += 'target_include_directories(pj_localized_display_test PRIVATE "${CMAKE_SOURCE_DIR}/data_load_mcap/contrib")\n'
-    for language in ['zh_CN', 'en_US']:
+    for language in ['zh_CN', 'zh_TW', 'en_US']:
         name = 'LocalizedDisplay_' + language
         checks += f'add_test(NAME {name} COMMAND pj_localized_display_test {language})\n'
         checks += f'set_tests_properties({name} PROPERTIES ENVIRONMENT "PLOTJUGGLER_UI_LANGUAGE={language}")\n'
@@ -146,14 +146,14 @@ def build_one(item, lock, work, prefix, platform):
         selected = {test['name'] for test in json.loads(listing)['tests']}
         expected = {'ToolboxAssistantAgent' + name + 'Test' for name in
                     ['ChatSession', 'UsageLedger', 'SettingsStore', 'ConversationState', 'SeriesStats', 'StreamJson']}
-        expected |= {'LocalizedDisplay_' + name for name in ['zh_CN', 'en_US', 'unknown', 'empty']}
+        expected |= {'LocalizedDisplay_' + name for name in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']}
         assert selected == expected, (selected, expected)
     if identifier == 'csv-loader':
         test_selection = ['-R', '^(LocalizedDisplay_.*|csv_(parser|file_paths)_test)$']
         listing = subprocess.check_output(['ctest', '--test-dir', build / 'native', '--show-only=json-v1', *test_selection], env=env, text=True, encoding='utf-8')
         selected = {test['name'] for test in json.loads(listing)['tests']}
         expected = {'csv_parser_test', 'csv_file_paths_test'}
-        expected |= {'LocalizedDisplay_' + name for name in ['zh_CN', 'en_US', 'unknown', 'empty']}
+        expected |= {'LocalizedDisplay_' + name for name in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']}
         assert selected == expected, (selected, expected)
     run(['ctest', '--test-dir', build / 'native', '--no-tests=error', '--output-on-failure', '--timeout', '120',
          '--output-junit', str(build / 'offline-tests.xml'), *test_selection], env=env)

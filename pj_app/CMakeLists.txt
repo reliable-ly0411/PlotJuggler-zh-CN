@@ -788,4 +788,26 @@ if(PJ_BUILD_TESTS)
         LIBS pj_app_shell pj_resources Qt6::Test
     )
     set_target_properties(pj_app_gui_tests PROPERTIES AUTOMOC ON)
+
+    # Real installed-plugin acceptance is opt-in and never downloads plugins.
+    option(PJ_PLUGIN_FEEDBACK_ACCEPTANCE "Build full-shell APBIN/FFT acceptance" OFF)
+    if(PJ_PLUGIN_FEEDBACK_ACCEPTANCE)
+        add_executable(plugin_feedback_test tests/plugin_feedback_test.cpp)
+        # Keep bundled seeding out of the installed-only marketplace scenario.
+        set_target_properties(plugin_feedback_test PROPERTIES AUTOMOC ON WIN32_EXECUTABLE FALSE
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/feedback-acceptance")
+        target_include_directories(plugin_feedback_test PRIVATE src)
+        target_link_libraries(plugin_feedback_test PRIVATE pj_app_shell pj_resources Qt6::Test)
+        target_link_options(plugin_feedback_test PRIVATE $<TARGET_PROPERTY:pj_app,LINK_OPTIONS>)
+        target_compile_options(plugin_feedback_test PRIVATE ${PJ_WARNING_FLAGS})
+        add_dependencies(plugin_feedback_test pj-plugin-check)
+        add_custom_command(TARGET plugin_feedback_test POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                $<TARGET_FILE:pj-plugin-check> $<TARGET_FILE_DIR:plugin_feedback_test>)
+        foreach(language zh_CN zh_TW en_US)
+            add_test(NAME PluginFeedbackMainWindow-${language} COMMAND plugin_feedback_test)
+            set_tests_properties(PluginFeedbackMainWindow-${language} PROPERTIES
+                TIMEOUT 90 ENVIRONMENT "QT_QPA_PLATFORM=offscreen;PJ_FEEDBACK_LANGUAGE=${language}")
+        endforeach()
+    endif()
 endif()

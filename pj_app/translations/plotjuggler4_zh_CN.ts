@@ -23,14 +23,14 @@
     <name>AppLanguage</name>
     <message>
         <location filename="../src/main.cpp" line="+335"/>
-        <source>Interface language for this session (zh_CN or en_US).</source>
-        <translation>本次会话的界面语言（zh_CN 或 en_US）。</translation>
+        <source>Interface language for this session (zh_CN, zh_TW or en_US).</source>
+        <translation>本次会话的界面语言（zh_CN、zh_TW 或 en_US）。</translation>
     </message>
 </context>
 <context>
     <name>AppProfile</name>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Keep settings and core app data in an isolated absolute directory (not a plugin sandbox).</source>
         <translation>将设置及核心应用数据保存在独立的绝对路径目录中（不是插件沙箱）。</translation>
     </message>
@@ -555,7 +555,7 @@
         <translation>font-weight:700; font-size:14px;</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+50"/>
         <source>Details</source>
         <translation>详情</translation>
     </message>
@@ -568,7 +568,7 @@
 <context>
     <name>PJ::AboutDialog</name>
     <message>
-        <location filename="../src/ui/AboutDialog.cpp" line="+16"/>
+        <location filename="../src/ui/AboutDialog.cpp" line="+17"/>
         <source>About PlotJuggler</source>
         <translation>关于 PlotJuggler</translation>
     </message>
@@ -867,7 +867,7 @@
 <context>
     <name>PJ::BundledPluginDiagnostics</name>
     <message>
-        <location filename="../../pj_widgets/include/pj_widgets/BundledPluginText.h" line="+142"/>
+        <location filename="../../pj_widgets/include/pj_widgets/BundledPluginText.h" line="+146"/>
         <source>ArduPilot BIN requires a string filepath</source>
         <translation>ArduPilot BIN 需要字符串类型的文件路径</translation>
     </message>
@@ -1134,11 +1134,21 @@
         <source>ArduPilot DataFlash BIN logs: numeric fields, sensor instances, units, parameters and message timelines.</source>
         <translation>ArduPilot DataFlash BIN 日志：数值字段、传感器实例、单位、参数及消息时间线。</translation>
     </message>
+    <message>
+        <location line="-112"/>
+        <source>Fast Fourier Transform</source>
+        <translation>快速傅里叶变换（FFT）</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Compute the frequency-domain amplitude of numeric time series using FFT.</source>
+        <translation>使用 FFT 计算数值时间序列的频域幅值。</translation>
+    </message>
 </context>
 <context>
     <name>PJ::BundledPlugins</name>
     <message>
-        <location filename="../../pj_dialog_host/src/bundled_translation_entries.hpp" line="+29"/>
+        <location filename="../../pj_dialog_host/src/bundled_translation_entries.hpp" line="+30"/>
         <source>Select ROS messages</source>
         <translation>选择 ROS 消息</translation>
     </message>
@@ -2923,7 +2933,7 @@ p, li { white-space: pre-wrap; }
         <translation>例如 timestamp, ts, time</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+58"/>
         <location line="+1"/>
         <source>Values in &quot;%1&quot; are not monotonically increasing. Will sort these automatically</source>
         <translation>“%1”列中的值不是单调递增的，将自动排序</translation>
@@ -3124,6 +3134,258 @@ Message: %3</source>
         <location line="-20"/>
         <source>Control API: %1 (manual paths still work)</source>
         <translation>控制 API：%1（仍可使用手动路径）</translation>
+    </message>
+    <message>
+        <location line="-65"/>
+        <source>FFT Toolbox</source>
+        <translation>FFT 工具箱</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Input signal - Time (s)</source>
+        <translation>输入信号 - 时间 (s)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Input:</source>
+        <translation>输入：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Clear</source>
+        <translation>清除</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Range of data to be processed:</source>
+        <translation>待处理的数据范围：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>All Data</source>
+        <translation>全部数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Only data in zoomed area</source>
+        <translation>仅缩放区域内的数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Remove Average (DC, 0 Hz)</source>
+        <translation>去除均值（直流分量，0 Hz）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Window:</source>
+        <translation>窗函数：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hann (recommended)</source>
+        <translation>汉宁窗（推荐）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Rectangular</source>
+        <translation>矩形窗</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Requires evenly sampled data (maximum 1% interval deviation). Resample irregular signals first.</source>
+        <translation>需要等间隔采样数据（间隔偏差不超过 1%）。请先对不规则信号重采样。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Output topic suffix:</source>
+        <translation>输出主题后缀：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Calculate Spectrum</source>
+        <translation>计算频谱</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Export Spectrum Data</source>
+        <translation>导出频谱数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Spectrum - Frequency (Hz) vs amplitude</source>
+        <translation>频谱 - 频率 (Hz) 与幅值</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Drag and drop one numeric time series here
+(from the left panel)</source>
+        <translation>将一条数值时间序列拖放到这里
+（从左侧面板拖入）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Calculate the spectrum to preview it here</source>
+        <translation>计算频谱后在此预览</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>No input selected</source>
+        <translation>未选择输入</translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <source>The dropped field is unavailable or is not numeric</source>
+        <translation>拖入的字段不可用或不是数值字段</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Zoom range changed — calculate again</source>
+        <translation>缩放范围已改变，请重新计算</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DC removal changed — calculate again</source>
+        <translation>去直流设置已改变，请重新计算</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Input range changed — calculate again</source>
+        <translation>输入范围已改变，请重新计算</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Zoom the input chart to choose a time range</source>
+        <translation>请缩放输入图表以选择时间范围</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Window function changed — calculate again</source>
+        <translation>窗函数已改变，请重新计算</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Selection cleared</source>
+        <translation>已清除选择</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The selected input is not available yet</source>
+        <translation>所选输入尚不可用</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Input selection restored</source>
+        <translation>已恢复输入选择</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Input data changed — calculate again</source>
+        <translation>输入数据已改变，请重新计算</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: toolbox host not bound</source>
+        <translation>错误：工具箱宿主未绑定</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No field selected</source>
+        <translation>未选择字段</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Zoom the input chart before calculating the selected range</source>
+        <translation>请先缩放输入图表，再计算所选范围</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: no data in selected range</source>
+        <translation>错误：所选范围内没有数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing to save — run Calculate first</source>
+        <translation>没有可导出的数据，请先计算</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Need at least 8 samples</source>
+        <translation>错误：至少需要 8 个样本</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Input is too large for the FFT backend</source>
+        <translation>错误：输入数据超过 FFT 后端的大小限制</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Input contains NaN or infinity</source>
+        <translation>错误：输入包含 NaN 或无穷大</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Timestamps must be strictly increasing</source>
+        <translation>错误：时间戳必须严格递增</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Timestamps must span a positive duration</source>
+        <translation>错误：时间戳的跨度必须大于零</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: FFT window has zero coherent gain</source>
+        <translation>错误：FFT 窗函数的相干增益为零</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: FFT backend allocation failed</source>
+        <translation>错误：FFT 后端内存分配失败</translation>
+    </message>
+    <message>
+        <location line="+59"/>
+        <source>Selected &apos;%1&apos; (FFT accepts one input at a time)</source>
+        <translation>已选择“%1”（FFT 每次仅接受一个输入）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Selected &apos;%1&apos;</source>
+        <translation>已选择“%1”</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Need at least 8 samples (got %1)</source>
+        <translation>至少需要 8 个样本（当前 %1 个）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Sampling is irregular (maximum interval deviation %1%; resample the signal first)</source>
+        <translation>错误：采样不规则（最大间隔偏差 %1%；请先对信号重采样）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Computed %1 bins from %2 samples · %3 Hz sample rate · %4 Hz resolution</source>
+        <translation>已用 %2 个样本计算 %1 个频点 · 采样率 %3 Hz · 分辨率 %4 Hz</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>createDataSource failed: %1</source>
+        <translation>创建数据源失败：%1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>ensureTopic failed: %1</source>
+        <translation>创建主题失败：%1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Export failed after %1 points: %2</source>
+        <translation>导出 %1 个点后失败：%2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Exported &apos;%1&apos; with frequency_hz and amplitude columns (%2 rows)</source>
+        <translation>已导出“%1”，包含 frequency_hz 和 amplitude 列（%2 行）</translation>
     </message>
 </context>
 <context>
@@ -3629,7 +3891,7 @@ Message: %3</source>
 <context>
     <name>PJ::ExtensionManager</name>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+980"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+990"/>
         <source>Not available for this platform (%1)</source>
         <translation>此平台不可用（%1）</translation>
     </message>
@@ -4272,7 +4534,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>检查更新…</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Documentation</source>
         <translation>文档</translation>
     </message>
@@ -5783,7 +6045,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>校验和不匹配</translation>
     </message>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="-863"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="-872"/>
         <source>Extension id is empty</source>
         <translation>扩展 ID 为空</translation>
     </message>
@@ -5874,19 +6136,19 @@ already rectified and would otherwise be undistorted twice.</source>
     </message>
     <message>
         <location line="+27"/>
-        <location line="+95"/>
+        <location line="+100"/>
         <source>no valid plugin DSO found</source>
         <translation>未找到有效的插件动态库</translation>
     </message>
     <message>
-        <location line="-63"/>
-        <location line="+93"/>
+        <location line="-68"/>
+        <location line="+98"/>
         <source>multiple embedded plugin ids in one extension directory: &quot;%1&quot; and &quot;%2&quot;</source>
         <translation>同一扩展目录中包含多个插件 ID：“%1”和“%2”</translation>
     </message>
     <message>
-        <location line="-85"/>
-        <location line="+93"/>
+        <location line="-90"/>
+        <location line="+98"/>
         <source>multiple embedded plugin versions in one extension directory for &quot;%1&quot;</source>
         <translation>同一扩展目录中包含插件“%1”的多个版本</translation>
     </message>
@@ -5896,7 +6158,7 @@ already rectified and would otherwise be undistorted twice.</source>
         <translation>插件准入检查辅助程序失败</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+79"/>
         <source>Installed artifact is not a valid plugin: %1</source>
         <translation>安装内容不是有效插件：%1</translation>
     </message>
@@ -6246,12 +6508,12 @@ already rectified and would otherwise be undistorted twice.</source>
 <context>
     <name>PJ::MarketplaceWindow</name>
     <message>
-        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="+267"/>
+        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="+286"/>
         <source>PlotJuggler Marketplace</source>
         <translation>PlotJuggler 扩展市场</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+69"/>
         <source>Name</source>
         <translation>名称</translation>
     </message>
@@ -6432,7 +6694,7 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
         <translation>正在安装</translation>
     </message>
     <message>
-        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="-876"/>
+        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="-905"/>
         <source>Data loaders</source>
         <translation>数据加载器</translation>
     </message>
@@ -6452,7 +6714,7 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
         <translation>工具箱</translation>
     </message>
     <message>
-        <location line="+877"/>
+        <location line="+906"/>
         <source>Needs Restart</source>
         <translation>需要重启</translation>
     </message>
@@ -6777,12 +7039,12 @@ Details: %1</source>
 <context>
     <name>PJ::PreferencesDialog</name>
     <message>
-        <location filename="../src/PreferencesDialog.cpp" line="+103"/>
+        <location filename="../src/PreferencesDialog.cpp" line="+104"/>
         <source>Preferences</source>
         <translation>首选项</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+50"/>
         <source>Appearance</source>
         <translation>外观</translation>
     </message>
@@ -6832,7 +7094,7 @@ Details: %1</source>
         <translation>趣图</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+30"/>
         <source>Choose funny images or the serious banner. Both modes support the selected language.</source>
         <translation>选择趣图或简洁横幅，两种模式均支持所选界面语言。</translation>
     </message>
@@ -7384,7 +7646,7 @@ Details: %1</source>
 <context>
     <name>PJ::Splashscreen</name>
     <message>
-        <location filename="../src/Splashscreen.cpp" line="+203"/>
+        <location filename="../src/Splashscreen.cpp" line="+204"/>
         <source>Now you&apos;re plotting</source>
         <translation>现在，开始绘图吧</translation>
     </message>
@@ -7983,7 +8245,7 @@ Details: %1</source>
 <context>
     <name>QAbstractFileIconProvider</name>
     <message>
-        <location filename="../src/AppLanguage.cpp" line="+83"/>
+        <location filename="../src/AppLanguage.cpp" line="+95"/>
         <source>Drive</source>
         <translation>驱动器</translation>
     </message>
@@ -8052,7 +8314,7 @@ Details: %1</source>
         <location filename="../src/FileLoader.cpp" line="-1991"/>
         <location line="+90"/>
         <location line="+7"/>
-        <location filename="../src/MainWindow.cpp" line="-9959"/>
+        <location filename="../src/MainWindow.cpp" line="-9958"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>

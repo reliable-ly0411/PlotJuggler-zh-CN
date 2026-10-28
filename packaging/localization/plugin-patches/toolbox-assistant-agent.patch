@@ -50,13 +50,13 @@
      switch (state_) {
        case TurnState::Idle:
 -        return "Ready";
-+        return pj_zh_localization::text("Ready", "就绪");
++        return pj_zh_localization::text("Ready", "就绪", "就緒");
        case TurnState::WaitingForLlm:
 -        return "Thinking…";
-+        return pj_zh_localization::text("Thinking…", "正在思考…");
++        return pj_zh_localization::text("Thinking…", "正在思考…", "正在思考…");
        case TurnState::ExecutingTool:
 -        return "Running a tool…";
-+        return pj_zh_localization::text("Running a tool…", "正在运行工具…");
++        return pj_zh_localization::text("Running a tool…", "正在运行工具…", "正在執行工具…");
      }
      return {};
    }
@@ -65,16 +65,16 @@
      switch (role) {
        case ChatMessage::Role::User:
 -        return "**You:**";
-+        return pj_zh_localization::text("**You:**", "**你：**");
++        return pj_zh_localization::text("**You:**", "**你：**", "**你：**");
        case ChatMessage::Role::Assistant:
 -        return "**Assistant:**";
-+        return pj_zh_localization::text("**Assistant:**", "**助手：**");
++        return pj_zh_localization::text("**Assistant:**", "**助手：**", "**助手：**");
        case ChatMessage::Role::System:
 -        return "**System:**";
-+        return pj_zh_localization::text("**System:**", "**系统：**");
++        return pj_zh_localization::text("**System:**", "**系统：**", "**系統：**");
        case ChatMessage::Role::Tool:
 -        return "**Tool:**";
-+        return pj_zh_localization::text("**Tool:**", "**工具：**");
++        return pj_zh_localization::text("**Tool:**", "**工具：**", "**工具：**");
      }
      return "";
    }
@@ -99,7 +99,7 @@
  
    [[nodiscard]] std::string name() const override {
 -    return "Fake (scripted, no LLM)";
-+    return pj_zh_localization::text("Fake (scripted, no LLM)", "模拟（脚本驱动，不调用大模型）");
++    return pj_zh_localization::text("Fake (scripted, no LLM)", "模拟（脚本驱动，不调用大模型）", "模擬（由指令碼驅動，不使用大型語言模型）");
    }
  
   private:
@@ -115,7 +115,7 @@
  
    // Human-readable active-backend name, shown on the status line.
 -  std::string backend_name = "Echo (no LLM)";
-+  std::string backend_name = pj_zh_localization::text("Echo (no LLM)", "回显（不调用大模型）");
++  std::string backend_name = pj_zh_localization::text("Echo (no LLM)", "回显（不调用大模型）", "回顯（不使用大型語言模型）");
  
    // Dirty flags so widget_data() re-pushes only what changed. The transcript
    // re-push (setPlainText on a growing transcript) is the expensive one, so
@@ -140,7 +140,7 @@
    // Visible seam between then and now — the model's memory comes back through
    // --resume regardless; this keeps the user able to SEE that it did.
 -  state_.session.addSystem("resumed previous conversation");
-+  state_.session.addSystem("resumed previous conversation", pj_zh_localization::text("resumed previous conversation", "已恢复先前对话"));
++  state_.session.addSystem("resumed previous conversation", pj_zh_localization::text("resumed previous conversation", "已恢复先前对话", "已恢復先前的對話"));
  
    const std::shared_ptr<HarnessMemory> memory = memoryFor(active_backend_key_);
    *memory = HarnessMemory{};
@@ -149,7 +149,7 @@
      } else {
        postEvent([this]() {
 -        applyBackendEvent({BackendEvent::Kind::Error, "No backend configured."});
-+        applyBackendEvent({BackendEvent::Kind::Error, "No backend configured."}, pj_zh_localization::text("No backend configured.", "未配置后端。"));
++        applyBackendEvent({BackendEvent::Kind::Error, "No backend configured."}, pj_zh_localization::text("No backend configured.", "未配置后端。", "尚未設定後端。"));
          applyBackendEvent({BackendEvent::Kind::TurnComplete, {}});
        });
      }
@@ -166,14 +166,14 @@
        break;
      case BackendEvent::Kind::Error:
 -      state_.session.addSystem("Error: " + ev.text);
-+      state_.session.addSystem("Error: " + ev.text, std::string(pj_zh_localization::text("Error: ", "错误：")) + (display_error.empty() ? ev.text : display_error));
++      state_.session.addSystem("Error: " + ev.text, std::string(pj_zh_localization::text("Error: ", "错误：", "錯誤：")) + (display_error.empty() ? ev.text : display_error));
        if (ev.resume_failed) {
          // The backend established that --resume itself failed (the session
          // was purged between listing it and this turn): say the one thing the
          // error text does not — retrying will not help. The transcript stays
          // readable; New chat is the way forward.
 -        state_.session.addSystem("This conversation can no longer be continued; start a new one.");
-+        state_.session.addSystem("This conversation can no longer be continued; start a new one.", pj_zh_localization::text("This conversation can no longer be continued; start a new one.", "此对话无法继续，请新建对话。"));
++        state_.session.addSystem("This conversation can no longer be continued; start a new one.", pj_zh_localization::text("This conversation can no longer be continued; start a new one.", "此对话无法继续，请新建对话。", "無法繼續此對話，請建立新對話。"));
        }
        state_.transcript_dirty = true;
        break;
@@ -182,7 +182,7 @@
    {
      std::lock_guard<std::mutex> lock(state_.mu);
 -    state_.session.addSystem("Settings saved (backend: " + backend + ").");
-+    state_.session.addSystem("Settings saved (backend: " + backend + ").", std::string(pj_zh_localization::text("Settings saved (backend: ", "设置已保存（后端：")) + backend + pj_zh_localization::text(").", "）。"));
++    state_.session.addSystem("Settings saved (backend: " + backend + ").", std::string(pj_zh_localization::text("Settings saved (backend: ", "设置已保存（后端：", "設定已儲存（後端：")) + backend + pj_zh_localization::text(").", "）。", "）。"));
      state_.transcript_dirty = true;
    }
  
@@ -194,7 +194,7 @@
 +    postEvent([this, t, has_backend = static_cast<bool>(backend)]() {
        std::lock_guard<std::mutex> lock(state_.mu);
 -      state_.session.addSystem(std::string("Connection: ") + (t.ok ? "OK - " : "FAILED - ") + t.message);
-+      state_.session.addSystem(std::string("Connection: ") + (t.ok ? "OK - " : "FAILED - ") + t.message, std::string(pj_zh_localization::text("Connection: ", "连接：")) + (t.ok ? pj_zh_localization::text("OK - ", "成功 - ") : pj_zh_localization::text("FAILED - ", "失败 - ")) + (has_backend ? t.message : pj_zh_localization::text("no backend", "无后端")));
++      state_.session.addSystem(std::string("Connection: ") + (t.ok ? "OK - " : "FAILED - ") + t.message, std::string(pj_zh_localization::text("Connection: ", "连接：", "連線：")) + (t.ok ? pj_zh_localization::text("OK - ", "成功 - ", "成功 - ") : pj_zh_localization::text("FAILED - ", "失败 - ", "失敗 - ")) + (has_backend ? t.message : pj_zh_localization::text("no backend", "无后端", "無後端")));
        state_.transcript_dirty = true;
      });
    });
@@ -210,7 +210,7 @@
  
    [[nodiscard]] std::string name() const override {
 -    return "Echo (no LLM)";
-+    return pj_zh_localization::text("Echo (no LLM)", "回显（无大语言模型）");
++    return pj_zh_localization::text("Echo (no LLM)", "回显（无大语言模型）", "回顯（不使用大型語言模型）");
    }
  
   private:

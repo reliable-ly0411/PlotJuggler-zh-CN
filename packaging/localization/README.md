@@ -125,3 +125,26 @@ The normal package workflow builds the complete lock. The optional
 a preflight-only record, never an accepted release. Existing Windows preflight
 and package workflows consume the new lock and tests without a new publication
 trigger. See [the scoped results and remaining gates](../../docs/localization/CSV-UTF8-INTEGRATION-20261026.md).
+
+## Native feedback and three-language acceptance
+
+The native workflows explicitly enable `PJ_PLUGIN_FEEDBACK_ACCEPTANCE` and stage
+exactly two isolated inputs with `prepare_feedback_tests.py`: the APBIN binary
+selected by this build's generated path file, and the platform-matching official
+FFT ZIP verified against the locked registry hash. This is test input only;
+FFT is not added to the release's 19/21 bundled-plugin inventory.
+CTest selection must contain all three `PluginFeedbackMainWindow-*` cases plus
+the metadata case. `audit_feedback_results.py` rejects missing cases, JUnit and
+Qt-level skips/errors/blacklists, or absent actual APBIN/host-flow PASS markers.
+The 18 PNG files must exist; this structural check does not replace pixel review.
+
+Final-package CSV/BIN runs, screenshots and report aggregation cover `zh_CN`,
+`zh_TW` and `en_US`. This remains separate from native MainWindow feedback tests:
+an installed-host APBIN/FFT UI acceptance run is still required for that claim.
+IFW wizard languages and the original Mosaico exception remain unchanged.
+Release payload staging refuses dirty or uncommitted source before copying or
+downloading anything. The existing workflows' generated `build-i18n/` and
+`.conan-source-cache/` directories are explicitly ignored; other untracked source
+remains a refusal. A local feedback tree must not masquerade as its HEAD.
+These changes require new native/package execution; historical reports do not
+become three-language package passes merely by rerunning the report generator.
