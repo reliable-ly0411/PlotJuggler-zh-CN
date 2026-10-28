@@ -86,7 +86,7 @@ if(PJ_BUILD_TESTS)
     set_target_properties(pj_dialog_host_panel_tests PROPERTIES AUTOMOC ON)
     add_executable(pj_bundled_translations_test tests/bundled_translations_qtest.cpp)
     set_target_properties(pj_bundled_translations_test PROPERTIES AUTOMOC ON WIN32_EXECUTABLE FALSE)
-    target_link_libraries(pj_bundled_translations_test PRIVATE pj_dialog_engine_qt Qt6::Test)
+    target_link_libraries(pj_bundled_translations_test PRIVATE pj_dialog_engine_qt Qt6::Xml Qt6::Test)
     if(PJ4_BUILD_APP)
         # pj_app is configured later; CMake resolves this target at generation.
         target_link_libraries(pj_bundled_translations_test PRIVATE pj_app_language)
