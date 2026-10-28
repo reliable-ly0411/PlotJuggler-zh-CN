@@ -120,7 +120,7 @@ class BundledTranslationsTest : public QObject {
       for (auto* button : {compute, save}) {
         QVERIFY(button->isVisible());
         QVERIFY(panel->rect().contains(QRect(button->mapTo(panel.get(), QPoint()), button->size())));
-        QVERIFY(button->visibleRegion().contains(button->rect()));
+        QVERIFY(QRegion(button->rect()).subtracted(button->visibleRegion()).isEmpty());
         QVERIFY(button->width() >= button->sizeHint().width());
         QVERIFY(button->height() >= button->sizeHint().height());
         QTest::mouseClick(button, Qt::LeftButton);

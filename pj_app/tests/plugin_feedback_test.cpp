@@ -65,13 +65,13 @@ class PluginFeedbackTest : public QObject {
   static bool actionFits(const QWidget& panel, const QAbstractButton* button) {
     const QRect bounds(button->mapTo(&panel, QPoint()), button->size());
     return button->isVisible() && button->isEnabled() && panel.rect().contains(bounds) &&
-           button->visibleRegion().contains(button->rect()) &&
+           QRegion(button->rect()).subtracted(button->visibleRegion()).isEmpty() &&
            button->width() >= button->sizeHint().width() && button->height() >= button->sizeHint().height();
   }
 
   /// Wrapped status must remain readable without taking space from the actions.
   static bool statusFits(const QLabel* status) {
-    return status->isVisible() && status->visibleRegion().contains(status->rect()) &&
+    return status->isVisible() && QRegion(status->rect()).subtracted(status->visibleRegion()).isEmpty() &&
            status->height() >= status->heightForWidth(status->width());
   }
 };
