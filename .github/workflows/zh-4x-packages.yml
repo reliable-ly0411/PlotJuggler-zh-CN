@@ -247,8 +247,6 @@ jobs:
           export PJ_FEEDBACK_PLUGIN_DIR="$(python -c 'import os; print(os.path.abspath("build/feedback-plugins").replace(chr(92), "/"))')"
           export PJ_APBIN_TEST_DIR="$PJ_FEEDBACK_PLUGIN_DIR/ardupilot-dataflash"
           native_report="$(python -c 'import os; print(os.path.abspath("build/native-tests.xml").replace(chr(92), "/"))')"
-          ctest --test-dir build --build-config RelWithDebInfo --show-only=json-v1 -R '^(PluginFeedbackMainWindow-(en_US|zh_CN|zh_TW)|PluginDisplayMetadataTest)$' > build/feedback-tests.json
-          python -X utf8 packaging/localization/audit_feedback_results.py --ctest-list build/feedback-tests.json --output build/feedback-selection.json
           if [[ "$RUNNER_OS" == Windows ]]; then
             for list in build/pj_ffmpeg_bin_dirs.txt build/pj_python_bin_dirs.txt; do
               if [[ -f "$list" ]]; then
@@ -257,11 +255,19 @@ jobs:
                 done < "$list"
               fi
             done
+          fi
+          # PRE_TEST discovery launches runners even for --show-only. It needs
+          # the same runtime DLL search path as the execution below.
+          ctest --test-dir build --build-config RelWithDebInfo --show-only=json-v1 -R '^(PluginFeedbackMainWindow-(en_US|zh_CN|zh_TW)|PluginDisplayMetadataTest)$' > build/feedback-tests.json
+          python -X utf8 packaging/localization/audit_feedback_results.py --ctest-list build/feedback-tests.json --output build/feedback-selection.json
+          # Keep trailing Qt summaries in JUnit; CTest's 1 KiB default truncates
+          # successful cases. The result gate still rejects truncated evidence.
+          if [[ "$RUNNER_OS" == Windows ]]; then
             # Widget runners choose offscreen themselves; leave GL runners on
             # the native platform, matching upstream Windows CI.
-            ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --output-junit "$native_report"
+            ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
           else
-            PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --output-junit "$native_report"
+            PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
           fi
           python -X utf8 packaging/localization/audit_feedback_results.py --junit "$native_report" --screenshots "$PJ_GUI_ACCEPTANCE_DIR" --allow-other-cases --output build/feedback-results.json
       - name: Validate release identity

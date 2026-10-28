@@ -6,9 +6,13 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shlex
+import shutil
 import struct
+import subprocess
 import sys
 import tempfile
+import textwrap
 import unittest
 from unittest import mock
 import xml.etree.ElementTree as ET
@@ -164,6 +168,115 @@ class EvidenceTests(unittest.TestCase):
         root = self.root(); root.remove(next(c for c in root if c.get('name').endswith('zh_TW')))
         with self.assertRaisesRegex(ValueError, 'Missing required'):
             gate.audit_cases(root)
+
+    def test_truncation_rejected_even_with_visible_pass_and_totals(self):
+        root = self.root()
+        root[0].find('system-out').text += (
+            '[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]')
+        with self.assertRaisesRegex(ValueError, 'truncated CTest output'):
+            gate.audit_cases(root)
+
+
+@unittest.skipUnless(shutil.which('ctest') and shutil.which('bash'), 'CTest and Bash are required')
+class WorkflowExecutionTests(unittest.TestCase):
+    """Execute the checked-in shell steps with real CTest and synthetic runners.
+
+    Discovery needs two simulated runtime paths, just as PRE_TEST executables
+    need their DLL search paths. No native plugin, GUI, compiler or network runs.
+    """
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix='feedback ctest ')
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.build = self.root/'build'
+        self.build.mkdir()
+        self.screens = self.build/'gui-acceptance'
+        self.screens.mkdir()
+        png = b'\x89PNG\r\n\x1a\n' + struct.pack('>I', 13) + b'IHDR' + struct.pack('>II', 1, 1) + bytes(9)
+        for language in gate.LANGUAGES:
+            for stage in gate.STAGES:
+                (self.screens/f'full-{stage}-{language}.png').write_bytes(png)
+        scripts = self.root/'packaging/localization'
+        scripts.mkdir(parents=True)
+        shutil.copyfile(ROOT/'packaging/localization/audit_feedback_results.py',
+                        scripts/'audit_feedback_results.py')
+        for dependency in ('ffmpeg', 'python'):
+            (self.build/f'pj_{dependency}_bin_dirs.txt').write_text(
+                f'fixture-runtime-{dependency}\n', encoding='utf-8')
+        self.runner = self.root/'synthetic_qt.py'
+        self.runner.write_text(textwrap.dedent("""\
+            import os
+            import sys
+            if os.environ.get('RUNNER_OS') == 'Windows':
+                for dependency in ('ffmpeg', 'python'):
+                    if 'fixture-runtime-' + dependency not in os.environ['PATH']:
+                        raise SystemExit('Missing simulated runtime path: ' + dependency)
+            if sys.argv[1] == '--discover':
+                raise SystemExit(0)
+            print(('QDEBUG: synthetic fixture output ' + 'x' * 80 + '\\n') * 40)
+            print('PASS   : ' + sys.argv[1])
+            print('Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms')
+            """), encoding='utf-8')
+        # CTest evaluates this include during --show-only as well as execution.
+        python = Path(sys.executable).as_posix()
+        runner = self.runner.as_posix()
+        commands = [
+            f'execute_process(COMMAND [==[{python}]==] [==[{runner}]==] --discover RESULT_VARIABLE result)',
+            'if(NOT result EQUAL 0)',
+            '  message(FATAL_ERROR "Synthetic PRE_TEST discovery lacks runtime paths")',
+            'endif()',
+        ]
+        for name in sorted(gate.EXPECTED):
+            marker = ('PluginDisplayMetadataTest::installedApbin()' if name == 'PluginDisplayMetadataTest'
+                      else 'PluginFeedbackTest::mainWindowFlow()')
+            commands.append(f'add_test({name} [==[{python}]==] [==[{runner}]==] "{marker}")')
+        (self.build/'CTestTestfile.cmake').write_text('\n'.join(commands)+'\n', encoding='utf-8')
+
+    def ctest(self, *args, runner_os='Linux'):
+        return subprocess.run([shutil.which('ctest'), '--test-dir', str(self.build), *args],
+                              env={**os.environ, 'RUNNER_OS': runner_os}, capture_output=True,
+                              text=True, timeout=30)
+
+    def test_real_ctest_truncation_rejected(self):
+        report = self.root/'truncated.xml'
+        result = self.ctest('--test-output-size-passed', '1024', '--output-junit', str(report))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        with self.assertRaisesRegex(ValueError, 'truncated CTest output'):
+            gate.audit_cases(ET.parse(report).getroot())
+
+    def test_discovery_without_runtime_environment_fails(self):
+        result = self.ctest('--show-only=json-v1', runner_os='Windows')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Synthetic PRE_TEST discovery lacks runtime paths', result.stderr)
+
+    def test_workflows_preserve_runtime_and_complete_evidence(self):
+        for workflow in ('zh-4x-ci.yml', 'zh-4x-packages.yml'):
+            content = (ROOT/'.github/workflows'/workflow).read_text(encoding='utf-8')
+            marker = '      - name: Run native tests\n        run: |\n'
+            self.assertEqual(content.count(marker), 1)
+            body = textwrap.dedent(content.split(marker)[1].split('\n      - ', 1)[0])
+            body = body.replace('${{ matrix.qt_arch }}', 'fixture')
+            # Run the actual step. Only platform path conversion and the GUI
+            # wrapper are replaced; CTest, discovery and the auditor are real.
+            wrapper = (
+                'set -euo pipefail\n'
+                f'python() {{ command {shlex.quote(Path(sys.executable).as_posix())} "$@"; }}\n'
+                'cygpath() { printf "%s\\n" "$2"; }\n'
+                'xvfb-run() { shift; "$@"; }\n'
+            )
+            for platform in ('Linux', 'Windows'):
+                with self.subTest(workflow=workflow, platform=platform):
+                    result = subprocess.run([shutil.which('bash'), '-c', wrapper + body],
+                                            cwd=self.root, env={**os.environ, 'RUNNER_OS': platform,
+                                                               'PJ_QT_VERSION': 'fixture'},
+                                            capture_output=True, text=True, timeout=30)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    report = json.loads((self.build/'feedback-results.json').read_text(encoding='utf-8'))
+                    self.assertEqual(report['required_ctest_cases'], 4)
+                    self.assertEqual(len(report['images']), 18)
+                    for case in report['cases']:
+                        self.assertEqual(case['qt_passed_including_init_cleanup'], 3)
 
 
 class PackageLanguagesTests(unittest.TestCase):

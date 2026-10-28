@@ -42,6 +42,8 @@ def audit_cases(root, allow_other_cases=False):
         require(not any(case.find(tag) is not None for tag in ('failure', 'error', 'skipped')),
                 name + ': JUnit failure/error/skip')
         output = '\n'.join(case.findtext(tag) or '' for tag in ('system-out', 'system-err'))
+        require('[This part of the test output was removed' not in output,
+                name + ': truncated CTest output')
         require(not re.search(r'(^|\n)\s*(?:SKIP\s*:|FAIL!\s*:|QFATAL\s*:|\[\s*SKIPPED\s*\])', output),
                 name + ': underlying runner reports a skip/failure')
         totals = re.findall(r'Totals:\s*(\d+) passed,\s*(\d+) failed,\s*(\d+) skipped,\s*(\d+) blacklisted', output)
