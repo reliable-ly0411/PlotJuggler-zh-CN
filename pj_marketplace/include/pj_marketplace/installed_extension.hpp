@@ -10,7 +10,7 @@ namespace PJ {
 
 // Installed extension discovered from an embedded plugin manifest on disk.
 //
-// The name/description/category trio mirrors the same fields on Extension, but
+// Display metadata mirrors the same fields on Extension, but
 // is sourced from the manifest rather than the registry. It exists so an
 // extension NO registry lists can still be rendered as an ordinary row: without
 // it, the manifest metadata read during discovery would be discarded and the
@@ -29,6 +29,10 @@ struct InstalledExtension {
   /// what the filter row matches against. A plugin declaring anything else simply
   /// matches no category facet.
   QString category;
+  QString author;
+  QString license;
+  QString website;
+  QString repository;
   /// ABI major read from the DSO protocol. Zero means an older descriptor did
   /// not expose it, in which case the loader's ABI-symbol check remains the
   /// authoritative gate.

@@ -20,6 +20,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
+#include "../src/internal/plugin_display_metadata.hpp"
 #include "pj_plugins/host/plugin_catalog.hpp"
 
 namespace {
@@ -54,6 +55,11 @@ nlohmann::json descriptorToJson(const PJ::PluginDescriptor& descriptor) {
   // what the parent must not open for itself.
   j["description"] = descriptor.description;
   j["category"] = descriptor.category;
+  const auto display = PJ::marketplace_internal::readPluginDisplayMetadata(descriptor);
+  j["author"] = display.author;
+  j["license"] = display.license;
+  j["website"] = display.website;
+  j["repository"] = display.repository;
   j["family"] = familyToString(descriptor.family);
   j["abi_major"] = descriptor.abi_major;
   j["min_sdk_required"] = descriptor.min_sdk_required;

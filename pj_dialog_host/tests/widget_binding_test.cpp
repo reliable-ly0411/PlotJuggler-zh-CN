@@ -896,6 +896,45 @@ TEST(WidgetBindingCombo, BundledTranslationPreservesCanonicalValueAndStableRefre
   QCoreApplication::removeTranslator(&translator);
 }
 
+TEST(WidgetBindingLabel, FftEmptySelectionUsesSamePayloadState) {
+  qapp();
+  class Translator : public QTranslator {
+   public:
+    bool isEmpty() const override {
+      return false;
+    }
+    QString translate(const char* context, const char* source, const char*, int) const override {
+      if (QByteArray(context) == "PJ::BundledPlugins" && QByteArray(source) == "No input selected") {
+        return QStringLiteral("未选择输入");
+      }
+      return {};
+    }
+  } translator;
+  QCoreApplication::installTranslator(&translator);
+  QWidget root;
+  auto* label = new QLabel(&root);
+  label->setObjectName("selected_value");
+  label->setProperty(
+      PJ::kBundledUiScope, QByteArray("f7d484492d4b2033fc141c9ea3a9f83e9a976049947ba9dd90079df2d19099c0"));
+  auto* compute = new QPushButton(&root);
+  compute->setObjectName("btn_compute");
+  compute->setEnabled(true);  // Deliberately stale painted state.
+  PJ::WidgetData empty;
+  empty.setText("selected_value", "No input selected").setEnabled("btn_compute", false);
+  PJ::applyWidgetData(&root, PJ::WidgetDataView(empty.toJson()));
+  EXPECT_EQ(label->text(), QStringLiteral("未选择输入"));
+  PJ::WidgetData selected;
+  selected.setText("selected_value", "No input selected").setEnabled("btn_compute", true);
+  PJ::applyWidgetData(&root, PJ::WidgetDataView(selected.toJson()));
+  EXPECT_EQ(label->text(), QStringLiteral("No input selected"));
+  PJ::WidgetData ambiguous;
+  ambiguous.setText("selected_value", "No input selected");
+  compute->setEnabled(false);
+  PJ::applyWidgetData(&root, PJ::WidgetDataView(ambiguous.toJson()));
+  EXPECT_EQ(label->text(), QStringLiteral("No input selected"));
+  QCoreApplication::removeTranslator(&translator);
+}
+
 TEST(WidgetBindingCombo, ChangedItemsRebuild) {
   qapp();
   QWidget root;

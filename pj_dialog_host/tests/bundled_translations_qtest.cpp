@@ -1,17 +1,23 @@
 // SPDX-License-Identifier: MPL-2.0
 #include <QApplication>
+#include <QBuffer>
 #ifdef PJ_TEST_PRODUCTION_CATALOG
 #include "AppLanguage.h"
 #endif
 #include <QComboBox>
 #include <QCryptographicHash>
+#include <QDir>
+#include <QDomDocument>
 #include <QFile>
 #include <QFileInfo>
-#include <QDir>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPushButton>
+#include <QSignalSpy>
 #include <QTest>
 #include <QTranslator>
+#include <QUiLoader>
+#include <memory>
 #include <pj_plugins/host_qt/bundled_translations.hpp>
 
 class Translation : public QTranslator {
@@ -47,6 +53,195 @@ class Translation : public QTranslator {
 class BundledTranslationsTest : public QObject {
   Q_OBJECT
  private slots:
+  void fftCompactActions_data() {
+    QTest::addColumn<QString>("code");
+    QTest::addColumn<QSize>("size");
+    for (const auto* code : {"en_US", "zh_CN", "zh_TW"}) {
+      for (const QSize size : {QSize(1050, 690), QSize(830, 580)}) {
+        const auto name = QByteArray(code) + '-' + QByteArray::number(size.width());
+        QTest::newRow(name.constData()) << QString::fromLatin1(code) << size;
+      }
+    }
+  }
+
+  void fftCompactActions() {
+#ifdef PJ_TEST_PRODUCTION_CATALOG
+    QFETCH(QString, code);
+    QFETCH(QSize, size);
+    PJ::AppLanguage language(*qApp, code);
+    QFile file(QFileInfo(QStringLiteral(PJ_CSV_UI_FIXTURE)).dir().filePath(QStringLiteral("fft_1_0_1.ui")));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    const auto original = file.readAll();
+    QByteArray scope;
+    auto localized = PJ::localizeBundledUi(original, &scope);
+    QVERIFY(!scope.isEmpty());
+    QBuffer buffer(&localized);
+    QVERIFY(buffer.open(QIODevice::ReadOnly));
+    // Only the decorative header uses a stand-in in this Qt-only harness;
+    // the full-shell acceptance runs the real header, theme and widget adapters.
+    class Loader : public QUiLoader {
+      QWidget* createWidget(const QString& name, QWidget* parent, const QString& object) override {
+        if (name != QStringLiteral("SectionHeaderBand")) {
+          return QUiLoader::createWidget(name, parent, object);
+        }
+        auto* label = new QLabel(parent);
+        label->setObjectName(object);
+        return label;
+      }
+    } loader;
+    loader.setTranslationEnabled(false);
+    std::unique_ptr<QWidget> panel(loader.load(&buffer));
+    QVERIFY(panel);
+    auto* status = panel->findChild<QLabel*>(QStringLiteral("status_label"));
+    auto* compute = panel->findChild<QPushButton*>(QStringLiteral("btn_compute"));
+    auto* save = panel->findChild<QPushButton*>(QStringLiteral("btn_save"));
+    QVERIFY(status && compute && save);
+    QSignalSpy compute_clicks(compute, &QPushButton::clicked);
+    QSignalSpy save_clicks(save, &QPushButton::clicked);
+    PJ::initializeBundledWidgets(panel.get(), original, scope);
+    QCOMPARE(panel->findChild<QLabel*>(QStringLiteral("status_label")), status);
+    QCOMPARE(panel->findChild<QPushButton*>(QStringLiteral("btn_compute")), compute);
+    QCOMPARE(panel->findChild<QPushButton*>(QStringLiteral("btn_save")), save);
+    QVERIFY(!compute->isEnabled() && !save->isEnabled());
+    compute->setEnabled(true);
+    save->setEnabled(true);
+    panel->resize(size);
+    panel->show();
+    int clicks = 0;
+    for (const auto* source : {
+             "Computed 501 bins from 1000 samples · 99.900 Hz sample rate · 0.100 Hz resolution",
+             "Exported 'test/sin/value_FFT' with frequency_hz and amplitude columns (501 rows)",
+             "Error: Sampling is irregular (maximum interval deviation 5.000%; resample the signal first)"}) {
+      status->setText(PJ::bundledDisplayText(status, "text", QString::fromUtf8(source)));
+      QTest::qWait(20);
+      QCOMPARE(panel->size(), size);
+      QVERIFY(status->wordWrap());
+      QVERIFY(status->height() >= status->heightForWidth(status->width()));
+      for (auto* button : {compute, save}) {
+        QVERIFY(button->isVisible());
+        QVERIFY(panel->rect().contains(QRect(button->mapTo(panel.get(), QPoint()), button->size())));
+        QVERIFY(QRegion(button->rect()).subtracted(button->visibleRegion()).isEmpty());
+        QVERIFY(button->width() >= button->sizeHint().width());
+        QVERIFY(button->height() >= button->sizeHint().height());
+        QTest::mouseClick(button, Qt::LeftButton);
+      }
+      ++clicks;
+      QCOMPARE(compute_clicks.count(), clicks);
+      QCOMPARE(save_clicks.count(), clicks);
+    }
+#else
+    QSKIP("Production application catalog unavailable");
+#endif
+  }
+
+  void fftStaticDynamicAndDataBoundaries() {
+#ifdef PJ_TEST_PRODUCTION_CATALOG
+    QFile file(QFileInfo(QStringLiteral(PJ_CSV_UI_FIXTURE)).dir().filePath(QStringLiteral("fft_1_0_1.ui")));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    const auto raw = file.readAll().replace("\r\n", "\n");
+    for (const QString& code : {QStringLiteral("zh_CN"), QStringLiteral("zh_TW"), QStringLiteral("en_US")}) {
+      PJ::AppLanguage language(*qApp, code);
+      QByteArray scope;
+      const auto localized = PJ::localizeBundledUi(raw, &scope);
+      QCOMPARE(scope, QByteArray("f7d484492d4b2033fc141c9ea3a9f83e9a976049947ba9dd90079df2d19099c0"));
+      QDomDocument original, translated;
+      QVERIFY(original.setContent(raw));
+      QVERIFY(translated.setContent(localized));
+      const auto before = original.elementsByTagName(QStringLiteral("string"));
+      const auto after = translated.elementsByTagName(QStringLiteral("string"));
+      QCOMPARE(before.size(), after.size());
+      for (int i = 0; i < before.size(); ++i) {
+        const auto value = before.at(i).toElement().text();
+        const auto shown = after.at(i).toElement().text();
+        if (value.isEmpty() || value == QStringLiteral("_FFT") || value == QStringLiteral("rangeGroup") ||
+            code == QStringLiteral("en_US")) {
+          QCOMPARE(shown, value);
+        } else {
+          QVERIFY2(shown != value, qPrintable(value));
+        }
+      }
+      QLabel label;
+      label.setProperty(PJ::kBundledUiScope, scope);
+      label.setObjectName(QStringLiteral("selected_value"));
+      const QString empty = QStringLiteral("No input selected");
+      const auto inactive = [](const char*) -> std::optional<bool> { return false; };
+      const auto active = [](const char*) -> std::optional<bool> { return true; };
+      const auto missing = [](const char*) -> std::optional<bool> { return std::nullopt; };
+      QCOMPARE(PJ::bundledDisplayText(&label, "text", empty, active), empty);
+      QCOMPARE(PJ::bundledDisplayText(&label, "text", empty, missing), empty);
+      QCOMPARE(PJ::bundledDisplayText(&label, "text", empty), empty);
+      QCOMPARE(PJ::bundledDisplayText(&label, "text", empty, inactive) == empty, code == QStringLiteral("en_US"));
+      label.setObjectName(QStringLiteral("status_label"));
+      const QString field = QStringLiteral("用户/使用者 %1 %2 ' <raw>\nNo input selected_FFT");
+      const QString status =
+          QStringLiteral("Exported '") + field + QStringLiteral("' with frequency_hz and amplitude columns (65 rows)");
+      const auto shown = PJ::bundledDisplayText(&label, "text", status);
+      QVERIFY(shown.contains(field));
+      QVERIFY(shown.contains(QStringLiteral("frequency_hz")) && shown.contains(QStringLiteral("amplitude")));
+      QCOMPARE(shown == status, code == QStringLiteral("en_US"));
+      const QString numeric =
+          QStringLiteral("Computed 65 bins from 128 samples · 1000.000 Hz sample rate · 7.812 Hz resolution");
+      const auto numeric_shown = PJ::bundledDisplayText(&label, "text", numeric);
+      for (const auto* value : {"65", "128", "1000.000 Hz", "7.812 Hz"}) {
+        QVERIFY(numeric_shown.contains(QLatin1String(value)));
+      }
+      QCOMPARE(numeric_shown == numeric, code == QStringLiteral("en_US"));
+      const auto unknown = QStringLiteral("A new upstream status: %1 42.125 Hz");
+      QCOMPARE(PJ::bundledDisplayText(&label, "text", unknown), unknown);
+      label.setObjectName(QStringLiteral("user_field"));
+      QCOMPARE(PJ::bundledDisplayText(&label, "text", status), status);
+      QByteArray crlf = raw;
+      crlf.replace("\n", "\r\n");
+      QCOMPARE(PJ::localizeBundledUi(crlf, &scope), localized);
+      QCOMPARE(PJ::localizeBundledUi(raw + "\n", &scope), raw + "\n");
+      QVERIFY(scope.isEmpty());
+    }
+#else
+    QSKIP("Production application catalog unavailable");
+#endif
+  }
+
+  void traditionalCatalogKeepsPinnedUiAndUserDataBoundaries() {
+#ifdef PJ_TEST_PRODUCTION_CATALOG
+    PJ::AppLanguage language(*qApp, QStringLiteral("zh_TW"));
+    QVERIFY(language.catalogLoaded());
+    QFile file(QStringLiteral(PJ_CSV_UI_FIXTURE));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    const auto raw = file.readAll().replace("\r\n", "\n");
+    QByteArray scope;
+    const auto localized = PJ::localizeBundledUi(raw, &scope);
+    QVERIFY(!scope.isEmpty());
+    QVERIFY(localized.contains(QStringLiteral("CSV 載入器").toUtf8()));
+    QComboBox combo;
+    combo.setObjectName(QStringLiteral("timeAxisModeCombo"));
+    combo.setProperty(PJ::kBundledUiScope, scope);
+    const QString canonical = QStringLiteral("Number of Rows");
+    const QString display = PJ::bundledDisplayText(&combo, "text", canonical);
+    QVERIFY(display != canonical);
+    combo.addItem(display);
+    combo.setItemData(0, canonical, PJ::kCanonicalComboTextRole);
+    QCOMPARE(PJ::canonicalComboText(&combo, 0), canonical);
+    combo.setEditable(true);
+    const QString field = QStringLiteral("使用者 %1 %2 / Number of Rows <raw> / 檔案");
+    combo.setEditText(field);
+    QCOMPARE(PJ::canonicalComboText(&combo, 0), field);
+    QLabel label;
+    label.setObjectName(QStringLiteral("labelWarning"));
+    label.setProperty(PJ::kBundledUiScope, scope);
+    const QString warning = QStringLiteral("Values in \"") + field +
+        QStringLiteral("\" are not monotonically increasing. Will sort these automatically");
+    const QString translated = PJ::bundledDisplayText(&label, "text", warning);
+    QVERIFY(translated != warning);
+    QVERIFY(translated.contains(field));
+    label.setObjectName(QStringLiteral("userData"));
+    QCOMPARE(PJ::bundledDisplayText(&label, "text", warning), warning);
+    QCOMPARE(PJ::localizeBundledUi(raw + "\n", &scope), raw + "\n");
+    QVERIFY(scope.isEmpty());
+#else
+    QSKIP("Production application catalog is unavailable when PJ4_BUILD_APP is disabled");
+#endif
+  }
+
   void pinnedPlaceholdersUseProductionCatalogWithoutChangingValues() {
 #ifdef PJ_TEST_PRODUCTION_CATALOG
     PJ::AppLanguage language(*qApp, QStringLiteral("zh_CN"));

@@ -15,6 +15,11 @@ def generated():
         args = [quote(row[key]) for key in ('scope', 'widget', 'property')]
         args.append('QT_TRANSLATE_NOOP("PJ::BundledPlugins", ' + quote(row['source']) + ')')
         lines.append('    {' + ', '.join(args) + '},')
+    lines += ['};', 'constexpr GuardedDisplayEntry kGuardedDisplayEntries[] = {']
+    for row in data.get('guarded', []):
+        args = [quote(row[key]) for key in ('scope', 'widget', 'property', 'disabled_widget')]
+        args.append('QT_TRANSLATE_NOOP("PJ::BundledPlugins", ' + quote(row['source']) + ')')
+        lines.append('    {' + ', '.join(args) + '},')
     lines += ['};', 'constexpr TemplateEntry kTemplateEntries[] = {']
     for row in data['templates']:
         args = [quote(row[key]) for key in ('scope', 'widget', 'property', 'pattern')]

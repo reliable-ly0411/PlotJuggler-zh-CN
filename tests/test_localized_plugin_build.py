@@ -8,12 +8,17 @@ import tempfile
 import subprocess
 import sys
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 PATCHES = ROOT / 'packaging/localization/plugin-patches'
 spec = importlib.util.spec_from_file_location('replace_plugins', ROOT / 'packaging/localization/replace_localized_plugins.py')
 replacement = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(replacement)
+with mock.patch.object(sys, 'path', [str(ROOT / 'packaging/localization'), *sys.path]):
+    build_spec = importlib.util.spec_from_file_location('build_plugins', ROOT / 'packaging/localization/build_localized_plugins.py')
+    builder = importlib.util.module_from_spec(build_spec)
+    build_spec.loader.exec_module(builder)
 
 
 class LocalizedPluginBuildTest(unittest.TestCase):
@@ -113,6 +118,58 @@ class LocalizedPluginBuildTest(unittest.TestCase):
                                         capture_output=True, text=True, timeout=10)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn(message, result.stderr)
+                self.assertFalse((root / 'prefix').exists())
+
+    def test_csv_preflight_requires_the_complete_three_language_test_set(self):
+        """Exercise the real builder up to dispatch, without fetching or compiling sources."""
+        lock = json.loads((PATCHES / 'source-lock.json').read_text(encoding='utf-8'))
+        item = next(entry for entry in lock['plugins'] if entry['id'] == 'csv-loader')
+        expected = {'csv_parser_test', 'csv_file_paths_test', 'LocalizedDisplay_zh_CN',
+                    'LocalizedDisplay_zh_TW', 'LocalizedDisplay_en_US',
+                    'LocalizedDisplay_unknown', 'LocalizedDisplay_empty'}
+
+        class TestsDispatched(Exception):
+            pass
+
+        cases = [('complete', expected, TestsDispatched),
+                 ('missing-traditional', expected - {'LocalizedDisplay_zh_TW'}, AssertionError),
+                 ('missing-paths', expected - {'csv_file_paths_test'}, AssertionError),
+                 ('unexpected', expected | {'LocalizedDisplay_unexpected'}, AssertionError)]
+        for name, selected, outcome in cases:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                source = root / 'work/csv-loader/source'
+
+                def checkout(url, commit, directory):
+                    self.assertEqual((url, commit), (lock['repository'], item['commit']))
+                    directory.mkdir(parents=True)
+                    (directory / item['module']).mkdir()
+                    (directory / 'SDK_VERSION').write_text(item['sdk'], encoding='utf-8')
+                    (directory / 'CMakeLists.txt').write_text('', encoding='utf-8')
+                    (directory / item['module'] / 'manifest.json').write_text(
+                        json.dumps({'id': item['id'], 'version': item['version']}), encoding='utf-8')
+
+                def listing(args, **kwargs):
+                    self.assertEqual(args[0], 'ctest')
+                    self.assertIn('--show-only=json-v1', args)
+                    self.assertEqual(args[-2:], ['-R', '^(LocalizedDisplay_.*|csv_(parser|file_paths)_test)$'])
+                    generated = (source / 'CMakeLists.txt').read_text(encoding='utf-8')
+                    for language in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']:
+                        self.assertIn('add_test(NAME LocalizedDisplay_' + language + ' ', generated)
+                    return json.dumps({'tests': [{'name': test} for test in sorted(selected)]})
+
+                def run(args, **kwargs):
+                    if args[0] == 'ctest':
+                        self.assertIn('--no-tests=error', args)
+                        self.assertEqual(args[-2:], ['-R', '^(LocalizedDisplay_.*|csv_(parser|file_paths)_test)$'])
+                        raise TestsDispatched()
+
+                with mock.patch.object(builder, 'checkout', side_effect=checkout), \
+                     mock.patch.object(builder, 'run', side_effect=run), \
+                     mock.patch.object(builder.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0)), \
+                     mock.patch.object(builder.subprocess, 'check_output', side_effect=listing):
+                    with self.assertRaises(outcome):
+                        builder.build_one(item, lock, root / 'work', root / 'prefix', 'Linux')
                 self.assertFalse((root / 'prefix').exists())
 
     def test_native_build_offline_and_separate_sdk_graphs(self):

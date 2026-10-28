@@ -28,6 +28,10 @@ struct PluginCheckDescriptor {
   /// is what the helper exists to avoid.
   QString description;
   QString category;
+  QString author;
+  QString license;
+  QString website;
+  QString repository;
   QString family;
   quint32 abi_major = 0;
   QString min_sdk_required;

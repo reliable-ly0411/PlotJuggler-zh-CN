@@ -91,6 +91,22 @@ These tests retain their standalone executable and ctest entry:
 `ExportedSymbolsGuard` remains a script test, enabled when the platform and
 `nm` support inspecting the executable's exported symbols.
 
+`PJ_PLUGIN_FEEDBACK_ACCEPTANCE=ON` builds `plugin_feedback_test`, an optional
+full-shell acceptance runner. `PJ_FEEDBACK_PLUGIN_DIR` must name isolated,
+verified APBIN and official FFT plugin copies; without it the test skips.
+The three `PluginFeedbackMainWindow-*` CTest entries each use a fresh process
+and temporary application profile. They drive the installed-only marketplace
+website button, the actual Toolbox menu, PanelEngine drag/drop, calculation
+and export using generated sin/cos data. URL handling is intercepted locally.
+The flow keeps the default splitter allocation at 1500×830 and 1280×720,
+asserts fully visible action geometry and wrapped status height, and uses mouse
+clicks for calculation/export. Compact computed/exported captures are required
+alongside the original stage captures by the candidate evidence gate.
+The real Preferences dialog also saves the next language while the running
+FFT display remains unchanged; each process starts by reading its saved language.
+`PJ_GUI_ACCEPTANCE_DIR` optionally saves synthetic-only window captures. The
+runner never downloads plugins or opens the user's installed profile.
+
 ## Session recording
 
 Nothing here is gated at build time: the `RecordingService` member, its connections and the shutdown `stop()`
@@ -244,6 +260,19 @@ confirmation, floating through the window, a busy takeover folds into a
 transient tab. Replacing another busy takeover folds that panel before showing
 the incoming one. If docking cannot claim the chart slot, the live panel
 remains available as a tab.
+
+## Interface language lifecycle
+
+`AppLanguage` owns one startup translator for the full UI lifetime. Its choices
+are `zh_CN` (the fresh-profile default), `zh_TW` (Taiwan terminology), and `en_US`
+(English source text). Preferences save only on acceptance for the next launch;
+`--language` is session-only. Exact hyphen aliases are accepted at startup, while
+browser durable storage accepts only canonical supported codes. Never change the
+numeric/data locale when selecting a UI language. Both Chinese catalogs and Qt
+dialog translations are embedded; source checks validate both against lupdate.
+Traditional Chinese splash memes use only the eight text-free-artwork caption
+compositions, not the reviewed Simplified Chinese raster variants. See
+`docs/localization/MULTILINGUAL.zh-CN.md` for plugin and installer boundaries.
 
 ## Native package font fallback
 

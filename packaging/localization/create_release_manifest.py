@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 
 from version_map import versions
+from verify_package import ACCEPTANCE_LANGUAGES
 
 
 def sha256(path):
@@ -30,6 +31,7 @@ def main():
     for path in reports:
         report = json.loads(path.read_text(encoding='utf-8'))
         assert report['status'] == 'automated_checks_passed'
+        assert report.get('languages') == list(ACCEPTANCE_LANGUAGES), 'Incomplete language acceptance'
         assert report['release']['source_commit'] == source
         assert report['release']['source_tree'] == tree
         assert report['release']['version'] == version
@@ -45,7 +47,7 @@ def main():
         accepted.append({'path': path.as_posix(), 'sha256': sha256(path),
                          'plugin_count': report['plugin_count'], 'loaded_plugin_count': report['loaded_plugin_count'],
                          'unavailable_plugins': report['unavailable_plugins'], 'checks': report['checks']})
-        for language in ['zh_CN', 'en_US']:
+        for language in ACCEPTANCE_LANGUAGES:
             png = path.parent / f'gui-{language}.png'
             assert png.stat().st_size > 10000
             screenshots.append({'path': png.as_posix(), 'sha256': sha256(png), 'size': png.stat().st_size})

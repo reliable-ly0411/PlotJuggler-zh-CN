@@ -7,7 +7,7 @@
     "0.32.0": "e325fe38138690a79c8b4bbea28fa6b63066b75c",
     "0.34.1": "4d59e7de81455afe73a77051075e8fb4b9f6b0fd"
   },
-  "helper_sha256": "db5880ef63e77c9974d6b53bec624399ffcd01882a97ed1cb143f1301d203aa5",
+  "helper_sha256": "ecaa306b2cfe29940ed0d418e72739aef3d4d019dd1a01f212b6ac937f5badae",
   "mosaico_sdk_archive_sha256": "110ffbe2ffbdaaef41cc7bbb507d8fed14a002ec21ebc281edc788b8ffea1dbb",
   "plugins": [
     {
@@ -22,7 +22,7 @@
         "Linux",
         "Windows"
       ],
-      "patch_sha256": "8fd912588d83f3a6dd6a4271d094394cf87a5c901a22cb13b48ea495b71055c6",
+      "patch_sha256": "26049732d9c4d61e1a6a4b2a91496433796b7e1cf59985e356af86bfdf2ab15c",
       "tag_object": "b2f8a6469d19ecd431d06ee3a7d717ebd374179e"
     },
     {
@@ -36,7 +36,7 @@
       "platforms": [
         "Linux"
       ],
-      "patch_sha256": "cdb9667ce1a34cdabbc07d87040ca74705d5057c5d250c03a988527f93a6d929",
+      "patch_sha256": "fd002cd4775369212507c13b987f023d1986b25fdcbfea80685807669908bd59",
       "tag_object": "44e9a37dd061624e1e8bb662e6905fd41cd4ac3f"
     },
     {
@@ -51,7 +51,7 @@
         "Linux",
         "Windows"
       ],
-      "patch_sha256": "170f17b6d95b821f8fb91b7918e81bdb45f60183f4eca876b617271a14efab59",
+      "patch_sha256": "09f0334bb952016842c793e310ce0e562040753b97993b13a9e80ca00ae2a27c",
       "tag_object": "89baa764a37828f648691d955a5e5d20cd80f557"
     },
     {
@@ -66,7 +66,7 @@
         "Linux",
         "Windows"
       ],
-      "patch_sha256": "05b7fb482a9d04676de211403ce44cc11c2bf4afdfeb024ed7c8c0a8af81c9ee",
+      "patch_sha256": "d058138356e5010bf3d42ee5fba5e3c805c31dcbae5b21fc08c82304cf41bf3b",
       "tag_object": "be930b717926649fe4e4748d6af5b099a3b4ea80"
     },
     {
@@ -82,7 +82,7 @@
         "Windows"
       ],
       "tag_object": "a7772e412b9cb344a40d8a1791d19fede11ce684",
-      "patch_sha256": "3c097994690ab60bc36db55129f9ceecd584b4d16991cf1d8f8c937fc53ea3e4"
+      "patch_sha256": "61b20166c3de71e588103f331389ceb80c1de81b869e6a6ef20753c47fc2d0a1"
     },
     {
       "id": "csv-loader",
@@ -118,7 +118,7 @@
         "Linux",
         "Windows"
       ],
-      "patch_sha256": "7faa5cffd8202a66ce9e37d4581b99d5c582828c6a7605f5da1fec298ee4a7a7",
+      "patch_sha256": "188468e9030131d05ec21168c6fb002c6a4a03ee2440a24d6b5a3eada3652822",
       "tag_object": "1769de48f8f4aa40420ccd51e1228f03f263d7ae",
       "reason": "Keep original official binary; remaining English tracked by issue #20. SDK redistribution evidence unresolved."
     }

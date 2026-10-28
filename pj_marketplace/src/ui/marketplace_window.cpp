@@ -167,6 +167,22 @@ class MarketplaceCellDelegate : public QStyledItemDelegate {
   QColor fg_;
 };
 
+// Only presentation fields may fall back from a local manifest into a registry row.
+void fillInstalledDisplayMetadata(Extension& extension, const InstalledExtension& installed) {
+  if (extension.author.trimmed().isEmpty()) {
+    extension.author = installed.author;
+  }
+  if (extension.license.trimmed().isEmpty()) {
+    extension.license = installed.license;
+  }
+  if (extension.website.trimmed().isEmpty()) {
+    extension.website = installed.website;
+  }
+  if (extension.repository.trimmed().isEmpty()) {
+    extension.repository = installed.repository;
+  }
+}
+
 bool installedStatesEqual(const QMap<QString, InstalledExtension>& lhs, const QMap<QString, InstalledExtension>& rhs) {
   if (lhs.size() != rhs.size()) {
     return false;
@@ -179,6 +195,8 @@ bool installedStatesEqual(const QMap<QString, InstalledExtension>& lhs, const QM
     const InstalledExtension& a = it.value();
     const InstalledExtension& b = rhs_it.value();
     if (a.id != b.id || a.version != b.version || a.enabled != b.enabled || a.abi_major != b.abi_major ||
+        a.name != b.name || a.description != b.description || a.category != b.category || a.author != b.author ||
+        a.license != b.license || a.website != b.website || a.repository != b.repository ||
         a.min_sdk_required != b.min_sdk_required || a.min_plotjuggler_version != b.min_plotjuggler_version ||
         a.suggested_sdk_version != b.suggested_sdk_version) {
       return false;
@@ -1030,7 +1048,7 @@ void MarketplaceWindow::updateDetailFooter() {
   }
 
   // Visit Website / repository (right edge).
-  const QString url = !ext->website.isEmpty() ? ext->website : ext->repository;
+  const QString url = !ext->website.trimmed().isEmpty() ? ext->website.trimmed() : ext->repository.trimmed();
   if (!url.isEmpty()) {
     auto* web = new QPushButton(tr("Visit Website"));
     mark_footer_button(web);
@@ -1050,16 +1068,14 @@ bool MarketplaceWindow::rebuildExtensionList() {
 
   extensions_ = registry_extensions_;
 
-  // An installed id the registry does not list has no row to reuse, so build one
-  // from what the plugin declares about itself. The registry-sourced fields
-  // (author, license, website, changelog, platforms…) stay empty; every consumer
-  // guards them with isEmpty(), and the footer's primary action is disabled for an
-  // installed extension anyway, so no install path can be driven off this row.
+  // Registry metadata wins when present. Installed manifests fill display gaps;
+  // they never supply registry download URLs, checksums or update versions.
   const auto installed = ext_mgr_->installedExtensions();
   for (auto it = installed.cbegin(); it != installed.cend(); ++it) {
-    if (std::any_of(registry_extensions_.cbegin(), registry_extensions_.cend(), [&](const Extension& ext) {
-          return ext.id == it.key();
-        })) {
+    const auto registered =
+        std::find_if(extensions_.begin(), extensions_.end(), [&](const Extension& ext) { return ext.id == it.key(); });
+    if (registered != extensions_.end()) {
+      fillInstalledDisplayMetadata(*registered, it.value());
       continue;
     }
     const InstalledExtension& record = it.value();
@@ -1068,6 +1084,7 @@ bool MarketplaceWindow::rebuildExtensionList() {
     local.name = record.name;
     local.description = record.description;
     local.category = record.category;
+    fillInstalledDisplayMetadata(local, record);
     // Use installedVersion(), not record.version: the scan snapshot can be stale
     // when the seed refreshed a bundled plugin to a newer version than the scan
     // saw (installedVersion() reports what the seed wrote). Reading record.version
@@ -1094,6 +1111,7 @@ bool MarketplaceWindow::rebuildExtensionList() {
     staged.name = record.name;
     staged.description = record.description;
     staged.category = record.category;
+    fillInstalledDisplayMetadata(staged, record);
     staged.version = record.version;
     staged.min_plotjuggler_version = record.min_plotjuggler_version;
     extensions_.append(staged);
