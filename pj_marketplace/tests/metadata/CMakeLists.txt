@@ -49,7 +49,8 @@ if(MSVC)
   target_compile_options(plugin_display_metadata_test PRIVATE /utf-8)
 endif()
 add_dependencies(plugin_display_metadata_test metadata_fixture pj-plugin-check)
-add_test(NAME PluginDisplayMetadataTest COMMAND plugin_display_metadata_test)
+include("${CMAKE_CURRENT_LIST_DIR}/../../../cmake/PjQtTestLog.cmake")
+pj_add_logged_qt_test(PluginDisplayMetadataTest plugin_display_metadata_test TIMEOUT 120)
 set_tests_properties(PluginDisplayMetadataTest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
 # Optional acceptance against an unchanged, independently verified official DSO.

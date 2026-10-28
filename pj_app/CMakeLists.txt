@@ -804,10 +804,11 @@ if(PJ_BUILD_TESTS)
         add_custom_command(TARGET plugin_feedback_test POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 $<TARGET_FILE:pj-plugin-check> $<TARGET_FILE_DIR:plugin_feedback_test>)
+        include("${CMAKE_CURRENT_LIST_DIR}/../cmake/PjQtTestLog.cmake")
         foreach(language zh_CN zh_TW en_US)
-            add_test(NAME PluginFeedbackMainWindow-${language} COMMAND plugin_feedback_test)
+            pj_add_logged_qt_test(PluginFeedbackMainWindow-${language} plugin_feedback_test TIMEOUT 90)
             set_tests_properties(PluginFeedbackMainWindow-${language} PROPERTIES
-                TIMEOUT 90 ENVIRONMENT "QT_QPA_PLATFORM=offscreen;PJ_FEEDBACK_LANGUAGE=${language}")
+                ENVIRONMENT "QT_QPA_PLATFORM=offscreen;PJ_FEEDBACK_LANGUAGE=${language}")
         endforeach()
     endif()
 endif()

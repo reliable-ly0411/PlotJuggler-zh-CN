@@ -177,7 +177,8 @@ class EvidenceTests(unittest.TestCase):
             gate.audit_cases(root)
 
 
-@unittest.skipUnless(shutil.which('ctest') and shutil.which('bash'), 'CTest and Bash are required')
+@unittest.skipUnless(all(shutil.which(tool) for tool in ('cmake', 'ctest', 'bash')),
+                     'CMake, CTest and Bash are required')
 class WorkflowExecutionTests(unittest.TestCase):
     """Execute the checked-in shell steps with real CTest and synthetic runners.
 
@@ -207,6 +208,7 @@ class WorkflowExecutionTests(unittest.TestCase):
         self.runner = self.root/'synthetic_qt.py'
         self.runner.write_text(textwrap.dedent("""\
             import os
+            from pathlib import Path
             import sys
             if os.environ.get('RUNNER_OS') == 'Windows':
                 for dependency in ('ffmpeg', 'python'):
@@ -214,24 +216,49 @@ class WorkflowExecutionTests(unittest.TestCase):
                         raise SystemExit('Missing simulated runtime path: ' + dependency)
             if sys.argv[1] == '--discover':
                 raise SystemExit(0)
-            print(('QDEBUG: synthetic fixture output ' + 'x' * 80 + '\\n') * 40)
-            print('PASS   : ' + sys.argv[1])
-            print('Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms')
+            # Model a Qt process whose console output is absent on Windows.
+            # Only its explicit file logger makes the result observable.
+            if '-o' in sys.argv:
+                output = sys.argv[sys.argv.index('-o') + 1]
+                assert output.endswith(',txt')
+                Path(output[:-4]).write_text(
+                    ('QDEBUG: synthetic fixture output ' + 'x' * 80 + '\\n') * 40 +
+                    'PASS   : ' + sys.argv[1] + '\\n' +
+                    'Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms\\n',
+                    encoding='utf-8')
             """), encoding='utf-8')
         # CTest evaluates this include during --show-only as well as execution.
         python = Path(sys.executable).as_posix()
         runner = self.runner.as_posix()
-        commands = [
+        discovery = [
             f'execute_process(COMMAND [==[{python}]==] [==[{runner}]==] --discover RESULT_VARIABLE result)',
             'if(NOT result EQUAL 0)',
             '  message(FATAL_ERROR "Synthetic PRE_TEST discovery lacks runtime paths")',
             'endif()',
         ]
+        discovery_file = self.root/'runtime-discovery.cmake'
+        discovery_file.write_text('\n'.join(discovery)+'\n', encoding='utf-8')
+        commands = [
+            'cmake_minimum_required(VERSION 3.22)',
+            'project(SyntheticQtEvidence NONE)',
+            'enable_testing()',
+            'add_executable(synthetic_qt IMPORTED GLOBAL)',
+            f'set_target_properties(synthetic_qt PROPERTIES IMPORTED_LOCATION [==[{python}]==])',
+            f'include([==[{(ROOT/"cmake/PjQtTestLog.cmake").as_posix()}]==])',
+            f'set_property(DIRECTORY PROPERTY TEST_INCLUDE_FILES [==[{discovery_file.as_posix()}]==])',
+        ]
         for name in sorted(gate.EXPECTED):
             marker = ('PluginDisplayMetadataTest::installedApbin()' if name == 'PluginDisplayMetadataTest'
                       else 'PluginFeedbackTest::mainWindowFlow()')
-            commands.append(f'add_test({name} [==[{python}]==] [==[{runner}]==] "{marker}")')
-        (self.build/'CTestTestfile.cmake').write_text('\n'.join(commands)+'\n', encoding='utf-8')
+            commands.append(f'pj_add_logged_qt_test({name} synthetic_qt TIMEOUT 15 '
+                            f'ARGS [==[{runner}]==] "{marker}")')
+        source = self.root/'source'
+        source.mkdir()
+        (source/'CMakeLists.txt').write_text('\n'.join(commands)+'\n', encoding='utf-8')
+        result = subprocess.run([shutil.which('cmake'), '-S', str(source), '-B', str(self.build),
+                                 '-DPython3_EXECUTABLE=' + sys.executable],
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def ctest(self, *args, runner_os='Linux'):
         return subprocess.run([shutil.which('ctest'), '--test-dir', str(self.build), *args],
@@ -249,6 +276,20 @@ class WorkflowExecutionTests(unittest.TestCase):
         result = self.ctest('--show-only=json-v1', runner_os='Windows')
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('Synthetic PRE_TEST discovery lacks runtime paths', result.stderr)
+
+    def test_empty_console_without_file_relay_is_rejected(self):
+        commands = []
+        for name in sorted(gate.EXPECTED):
+            marker = ('PluginDisplayMetadataTest::installedApbin()' if name == 'PluginDisplayMetadataTest'
+                      else 'PluginFeedbackTest::mainWindowFlow()')
+            commands.append(f'add_test({name} [==[{Path(sys.executable).as_posix()}]==] '
+                            f'[==[{self.runner.as_posix()}]==] "{marker}")')
+        (self.build/'CTestTestfile.cmake').write_text('\n'.join(commands)+'\n', encoding='utf-8')
+        report = self.root/'empty-console.xml'
+        result = self.ctest('--output-junit', str(report))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        with self.assertRaisesRegex(ValueError, 'missing or ambiguous Qt result summary'):
+            gate.audit_cases(ET.parse(report).getroot())
 
     def test_workflows_preserve_runtime_and_complete_evidence(self):
         for workflow in ('zh-4x-ci.yml', 'zh-4x-packages.yml'):
