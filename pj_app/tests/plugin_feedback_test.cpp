@@ -60,6 +60,20 @@ class PluginFeedbackTest : public QObject {
     return !image.isNull() && (directory.isEmpty() ||
                                (QDir().mkpath(directory) && image.save(QDir(directory).filePath(name + u".png"_s))));
   }
+
+  /// Check actual laid-out actions, not just their enabled flags or click slots.
+  static bool actionFits(const QWidget& panel, const QAbstractButton* button) {
+    const QRect bounds(button->mapTo(&panel, QPoint()), button->size());
+    return button->isVisible() && button->isEnabled() && panel.rect().contains(bounds) &&
+           button->visibleRegion().contains(button->rect()) &&
+           button->width() >= button->sizeHint().width() && button->height() >= button->sizeHint().height();
+  }
+
+  /// Wrapped status must remain readable without taking space from the actions.
+  static bool statusFits(const QLabel* status) {
+    return status->isVisible() && status->visibleRegion().contains(status->rect()) &&
+           status->height() >= status->heightForWidth(status->width());
+  }
 };
 
 void PluginFeedbackTest::mainWindowFlow() {
@@ -86,9 +100,10 @@ void PluginFeedbackTest::mainWindowFlow() {
   }
   PJ::MainWindow window;
   QVERIFY(window.populateTestData());
-  window.resize(1500, 1000);
+  window.resize(1500, 830);
   window.show();
   QTest::qWait(100);
+  QCOMPARE(window.size(), QSize(1500, 830));
 
   const QTemporaryDir registry_directory;
   QVERIFY(registry_directory.isValid());
@@ -161,9 +176,8 @@ void PluginFeedbackTest::mainWindowFlow() {
   QCOMPARE(selected->text(), QCoreApplication::translate("PJ::BundledPlugins", "No input selected"));
   QVERIFY(!calculate->isEnabled());
   QCOMPARE(suffix->text(), u"_FFT"_s);
-  auto* splitter = panel->findChild<QSplitter*>(u"mainSplitter"_s);
-  QVERIFY(splitter);
-  splitter->setSizes({500, 320});
+  // Preserve the default splitter sizes: enlarging the input pane masks the
+  // compact-window regression caused by long dynamic status text.
   QVERIFY(capture(window, u"full-fft-initial-"_s + language));
 
   QString key;
@@ -197,12 +211,16 @@ void PluginFeedbackTest::mainWindowFlow() {
   QVERIFY(drop.isAccepted());
   QTRY_VERIFY(calculate->isEnabled());
   QVERIFY(selected->text().contains(u"test/sin"_s));
-  calculate->click();
+  QVERIFY(actionFits(*panel, calculate));
+  QTest::mouseClick(calculate, Qt::LeftButton);
   QTRY_VERIFY_WITH_TIMEOUT(save->isEnabled(), 10000);
   QVERIFY(status->text().contains(u"Hz"_s));
   QCOMPARE(status->text().startsWith(u"Computed"_s), language == u"en_US"_s);
+  QTRY_VERIFY(actionFits(*panel, calculate));
+  QTRY_VERIFY(actionFits(*panel, save));
+  QVERIFY(statusFits(status));
   QVERIFY(capture(window, u"full-fft-computed-"_s + language));
-  save->click();
+  QTest::mouseClick(save, Qt::LeftButton);
   QTRY_VERIFY(status->text().contains(u"_FFT"_s));
   QVERIFY(status->text().contains(u"frequency_hz"_s));
   QVERIFY(status->text().contains(u"amplitude"_s));
@@ -225,7 +243,30 @@ void PluginFeedbackTest::mainWindowFlow() {
   };
   QTRY_VERIFY(exported_field(u"frequency_hz"_s));
   QTRY_VERIFY(exported_field(u"amplitude"_s));
+  QVERIFY(actionFits(*panel, calculate));
+  QVERIFY(actionFits(*panel, save));
+  QVERIFY(statusFits(status));
   QVERIFY(capture(window, u"full-fft-exported-"_s + language));
+
+  window.resize(1280, 720);
+  QTest::qWait(100);
+  QCOMPARE(window.size(), QSize(1280, 720));
+  QVERIFY(actionFits(*panel, calculate));
+  QVERIFY(actionFits(*panel, save));
+  QTest::mouseClick(calculate, Qt::LeftButton);
+  QTRY_VERIFY(!status->text().contains(u"_FFT"_s));
+  QVERIFY(status->text().contains(u"Hz"_s));
+  QVERIFY(actionFits(*panel, calculate));
+  QVERIFY(actionFits(*panel, save));
+  QVERIFY(statusFits(status));
+  QVERIFY(capture(window, u"full-fft-computed-compact-"_s + language));
+  QTest::mouseClick(save, Qt::LeftButton);
+  QTRY_VERIFY(status->text().contains(u"frequency_hz"_s));
+  QVERIFY(status->text().contains(u"amplitude"_s));
+  QVERIFY(actionFits(*panel, calculate));
+  QVERIFY(actionFits(*panel, save));
+  QVERIFY(statusFits(status));
+  QVERIFY(capture(window, u"full-fft-exported-compact-"_s + language));
 
   // Language selection is saved for restart; the live FFT data and display
   // remain in the running language until the next application process.

@@ -6,7 +6,11 @@
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDomDocument>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
 #include <QRegularExpression>
+#include <QVBoxLayout>
 #include <QWidget>
 
 namespace PJ {
@@ -90,6 +94,41 @@ QString ownerName(QDomNode node) {
   }
   return {};
 }
+
+/// Keep the pinned FFT's wrapped status and actions outside the chart splitter.
+/// A narrow control column cannot reserve enough height for dynamic status text.
+void adaptFftActions(QWidget* root, const QByteArray& scope) {
+  if (scope != "f7d484492d4b2033fc141c9ea3a9f83e9a976049947ba9dd90079df2d19099c0") {
+    return;
+  }
+  auto* main = root->findChild<QVBoxLayout*>(QStringLiteral("mainLayout"));
+  auto* controls = root->findChild<QVBoxLayout*>(QStringLiteral("ctrlCol"));
+  auto* actions = root->findChild<QVBoxLayout*>(QStringLiteral("calcWrap"));
+  auto* status = root->findChild<QLabel*>(QStringLiteral("status_label"));
+  auto* compute = root->findChild<QPushButton*>(QStringLiteral("btn_compute"));
+  auto* save = root->findChild<QPushButton*>(QStringLiteral("btn_save"));
+  if (!main || !controls || !actions || !status || !compute || !save ||
+      controls->indexOf(status) < 0 || controls->indexOf(actions) < 0 ||
+      actions->indexOf(compute) < 0 || actions->indexOf(save) < 0) {
+    return;
+  }
+  controls->removeWidget(status);
+  actions->removeWidget(compute);
+  actions->removeWidget(save);
+  controls->removeItem(actions);
+  delete actions;
+
+  // Reparent the same widgets, retaining their names, bindings and enabled state.
+  auto* footer = new QHBoxLayout;
+  footer->setObjectName(QStringLiteral("fftActionsFooter"));
+  footer->setContentsMargins(8, 8, 8, 8);
+  status->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  footer->addWidget(status, 1);
+  footer->addWidget(compute);
+  footer->addWidget(save);
+  main->addLayout(footer);
+  main->setStretch(0, 1);
+}
 }  // namespace
 
 QByteArray localizeBundledUi(const QByteArray& ui, QByteArray* scope) {
@@ -166,6 +205,7 @@ void initializeBundledWidgets(QWidget* root, const QByteArray& original, const Q
       }
     }
   }
+  adaptFftActions(root, scope);
 }
 
 QString bundledDisplayText(

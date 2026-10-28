@@ -136,7 +136,10 @@ FFT is not added to the release's 19/21 bundled-plugin inventory.
 CTest selection must contain all three `PluginFeedbackMainWindow-*` cases plus
 the metadata case. `audit_feedback_results.py` rejects missing cases, JUnit and
 Qt-level skips/errors/blacklists, or absent actual APBIN/host-flow PASS markers.
-The 18 PNG files must exist; this structural check does not replace pixel review.
+The 24 PNG files must exist, including computed/exported FFT at 1500×830 and
+1280×720 host sizes in all three languages. The host checks full action geometry
+and real mouse clicks without enlarging the input splitter. This structural
+check does not replace pixel review.
 
 Final-package CSV/BIN runs, screenshots and report aggregation cover `zh_CN`,
 `zh_TW` and `en_US`. This remains separate from native MainWindow feedback tests:

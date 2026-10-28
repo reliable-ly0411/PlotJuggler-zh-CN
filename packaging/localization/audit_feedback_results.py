@@ -17,7 +17,8 @@ LANGUAGES = ('en_US', 'zh_CN', 'zh_TW')
 EXPECTED = {'PluginDisplayMetadataTest'} | {
     'PluginFeedbackMainWindow-' + language for language in LANGUAGES
 }
-STAGES = ('apbin', 'fft-menu', 'fft-initial', 'fft-computed', 'fft-exported', 'language-switch')
+STAGES = ('apbin', 'fft-menu', 'fft-initial', 'fft-computed', 'fft-exported',
+          'fft-computed-compact', 'fft-exported-compact', 'language-switch')
 
 
 def require(condition, message):

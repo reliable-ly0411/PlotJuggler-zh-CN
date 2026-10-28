@@ -334,7 +334,7 @@ class WorkflowExecutionTests(unittest.TestCase):
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                     report = json.loads((self.build/'feedback-results.json').read_text(encoding='utf-8'))
                     self.assertEqual(report['required_ctest_cases'], 4)
-                    self.assertEqual(len(report['images']), 18)
+                    self.assertEqual(len(report['images']), 24)
                     for case in report['cases']:
                         self.assertEqual(case['qt_passed_including_init_cleanup'], 3)
 

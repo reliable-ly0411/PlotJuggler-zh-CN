@@ -99,3 +99,11 @@ never consults a stale painted button. See
 `docs/localization/PLUGIN-FEEDBACK.zh-CN.md` at the repository root for provenance
 and the optional official-binary acceptance harness, including its integration
 limits.
+
+The same pinned FFT UI also receives a display-only layout adaptation: the
+existing status label and calculate/export buttons move into a full-width footer
+outside the chart splitter. Wrapped status text cannot consume the narrow input
+column's action height. Widget identities, bindings, enabled states, official
+plugin bytes and data semantics remain unchanged; unknown UI hashes receive no
+layout adaptation. Qt-only geometry tests and the full-shell acceptance cover
+three languages and compact sizes, including dynamic computed/exported text.

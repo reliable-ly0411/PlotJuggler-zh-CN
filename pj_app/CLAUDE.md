@@ -98,6 +98,10 @@ The three `PluginFeedbackMainWindow-*` CTest entries each use a fresh process
 and temporary application profile. They drive the installed-only marketplace
 website button, the actual Toolbox menu, PanelEngine drag/drop, calculation
 and export using generated sin/cos data. URL handling is intercepted locally.
+The flow keeps the default splitter allocation at 1500×830 and 1280×720,
+asserts fully visible action geometry and wrapped status height, and uses mouse
+clicks for calculation/export. Compact computed/exported captures are required
+alongside the original stage captures by the candidate evidence gate.
 The real Preferences dialog also saves the next language while the running
 FFT display remains unchanged; each process starts by reading its saved language.
 `PJ_GUI_ACCEPTANCE_DIR` optionally saves synthetic-only window captures. The

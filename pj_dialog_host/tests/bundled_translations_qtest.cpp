@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 #include <QApplication>
+#include <QBuffer>
 #ifdef PJ_TEST_PRODUCTION_CATALOG
 #include "AppLanguage.h"
 #endif
@@ -11,8 +12,12 @@
 #include <QFileInfo>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPushButton>
+#include <QSignalSpy>
 #include <QTest>
 #include <QTranslator>
+#include <QUiLoader>
+#include <memory>
 #include <pj_plugins/host_qt/bundled_translations.hpp>
 
 class Translation : public QTranslator {
@@ -48,6 +53,87 @@ class Translation : public QTranslator {
 class BundledTranslationsTest : public QObject {
   Q_OBJECT
  private slots:
+  void fftCompactActions_data() {
+    QTest::addColumn<QString>("code");
+    QTest::addColumn<QSize>("size");
+    for (const auto* code : {"en_US", "zh_CN", "zh_TW"}) {
+      for (const QSize size : {QSize(1050, 690), QSize(830, 580)}) {
+        const auto name = QByteArray(code) + '-' + QByteArray::number(size.width());
+        QTest::newRow(name.constData()) << QString::fromLatin1(code) << size;
+      }
+    }
+  }
+
+  void fftCompactActions() {
+#ifdef PJ_TEST_PRODUCTION_CATALOG
+    QFETCH(QString, code);
+    QFETCH(QSize, size);
+    PJ::AppLanguage language(*qApp, code);
+    QFile file(QFileInfo(QStringLiteral(PJ_CSV_UI_FIXTURE)).dir().filePath(QStringLiteral("fft_1_0_1.ui")));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    const auto original = file.readAll();
+    QByteArray scope;
+    auto localized = PJ::localizeBundledUi(original, &scope);
+    QVERIFY(!scope.isEmpty());
+    QBuffer buffer(&localized);
+    QVERIFY(buffer.open(QIODevice::ReadOnly));
+    // Only the decorative header uses a stand-in in this Qt-only harness;
+    // the full-shell acceptance runs the real header, theme and widget adapters.
+    class Loader : public QUiLoader {
+      QWidget* createWidget(const QString& name, QWidget* parent, const QString& object) override {
+        if (name != QStringLiteral("SectionHeaderBand")) {
+          return QUiLoader::createWidget(name, parent, object);
+        }
+        auto* label = new QLabel(parent);
+        label->setObjectName(object);
+        return label;
+      }
+    } loader;
+    loader.setTranslationEnabled(false);
+    std::unique_ptr<QWidget> panel(loader.load(&buffer));
+    QVERIFY(panel);
+    auto* status = panel->findChild<QLabel*>(QStringLiteral("status_label"));
+    auto* compute = panel->findChild<QPushButton*>(QStringLiteral("btn_compute"));
+    auto* save = panel->findChild<QPushButton*>(QStringLiteral("btn_save"));
+    QVERIFY(status && compute && save);
+    QSignalSpy compute_clicks(compute, &QPushButton::clicked);
+    QSignalSpy save_clicks(save, &QPushButton::clicked);
+    PJ::initializeBundledWidgets(panel.get(), original, scope);
+    QCOMPARE(panel->findChild<QLabel*>(QStringLiteral("status_label")), status);
+    QCOMPARE(panel->findChild<QPushButton*>(QStringLiteral("btn_compute")), compute);
+    QCOMPARE(panel->findChild<QPushButton*>(QStringLiteral("btn_save")), save);
+    QVERIFY(!compute->isEnabled() && !save->isEnabled());
+    compute->setEnabled(true);
+    save->setEnabled(true);
+    panel->resize(size);
+    panel->show();
+    int clicks = 0;
+    for (const auto* source : {
+             "Computed 501 bins from 1000 samples · 99.900 Hz sample rate · 0.100 Hz resolution",
+             "Exported 'test/sin/value_FFT' with frequency_hz and amplitude columns (501 rows)",
+             "Error: Sampling is irregular (maximum interval deviation 5.000%; resample the signal first)"}) {
+      status->setText(PJ::bundledDisplayText(status, "text", QString::fromUtf8(source)));
+      QTest::qWait(20);
+      QCOMPARE(panel->size(), size);
+      QVERIFY(status->wordWrap());
+      QVERIFY(status->height() >= status->heightForWidth(status->width()));
+      for (auto* button : {compute, save}) {
+        QVERIFY(button->isVisible());
+        QVERIFY(panel->rect().contains(QRect(button->mapTo(panel.get(), QPoint()), button->size())));
+        QVERIFY(button->visibleRegion().contains(button->rect()));
+        QVERIFY(button->width() >= button->sizeHint().width());
+        QVERIFY(button->height() >= button->sizeHint().height());
+        QTest::mouseClick(button, Qt::LeftButton);
+      }
+      ++clicks;
+      QCOMPARE(compute_clicks.count(), clicks);
+      QCOMPARE(save_clicks.count(), clicks);
+    }
+#else
+    QSKIP("Production application catalog unavailable");
+#endif
+  }
+
   void fftStaticDynamicAndDataBoundaries() {
 #ifdef PJ_TEST_PRODUCTION_CATALOG
     QFile file(QFileInfo(QStringLiteral(PJ_CSV_UI_FIXTURE)).dir().filePath(QStringLiteral("fft_1_0_1.ui")));
