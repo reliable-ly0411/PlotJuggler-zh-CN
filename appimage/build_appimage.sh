@@ -11,6 +11,11 @@ ARCH="${ARCH:-$(uname -m)}"
 BUILD_DIR="${BUILD_DIR:-${REPO_ROOT}/build-appimage}"
 APPDIR="${APPDIR:-${REPO_ROOT}/AppDir}"
 
+if [[ "$(qmake -query QT_VERSION)" == 5.15.3 && -z "${PJ_QT5_CORE_BACKPORT:-}" ]]; then
+    echo "Qt 5.15.3 requires scripts/build_qt5_core_backport.sh and PJ_QT5_CORE_BACKPORT before packaging." >&2
+    exit 1
+fi
+
 # In CI, the previous step (`Build Plotjuggler`) already produced a build tree
 # under ./build with ccache warm. Set SKIP_BUILD=1 to reuse it instead of
 # reconfiguring/rebuilding from scratch.
@@ -65,6 +70,15 @@ else
       | tar -C "$APPDIR/usr/lib/python${PY_VER}" -xf -
 fi
 
+# Use the same real QtCore dependency as the Ubuntu22 native/memory tests.
+# Never rely on LD_PRELOAD or a builder-only LD_LIBRARY_PATH for the package.
+if [[ -n "${PJ_QT5_CORE_BACKPORT:-}" ]]; then
+    (cd "$PJ_QT5_CORE_BACKPORT/lib"; sha256sum --check SHA256SUMS)
+    mkdir -p "$APPDIR/usr/lib" "$APPDIR/usr/share/qt5-core-backport"
+    cp -a "$PJ_QT5_CORE_BACKPORT/lib/"libQt5Core.so* "$APPDIR/usr/lib/"
+    cp -a "$PJ_QT5_CORE_BACKPORT/source/." "$APPDIR/usr/share/qt5-core-backport/"
+fi
+
 echo "==> Fetching linuxdeploy"
 LDPLOY="${REPO_ROOT}/linuxdeploy-${ARCH}.AppImage"
 LDPLOY_QT="${REPO_ROOT}/linuxdeploy-plugin-qt-${ARCH}.AppImage"
@@ -100,6 +114,11 @@ if [[ -n "$PY_VER" ]]; then
 export PYTHONHOME="\$APPDIR/usr"
 unset PYTHONPATH
 EOF
+fi
+
+if [[ -n "${PJ_QT5_CORE_BACKPORT:-}" ]]; then
+    python3 "$REPO_ROOT/scripts/check_qt5_core_backport.py" \
+        "$PJ_QT5_CORE_BACKPORT/lib/libQt5Core.so.5" "$APPDIR/usr/lib/libQt5Core.so.5"
 fi
 
 echo "==> Packaging AppImage"

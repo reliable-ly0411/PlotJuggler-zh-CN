@@ -64,6 +64,13 @@ jobs:
         echo 'GIT_CONFIG_KEY_0=safe.directory' >> "$GITHUB_ENV"
         echo "GIT_CONFIG_VALUE_0=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
         git -c safe.directory="$GITHUB_WORKSPACE" rev-parse --verify HEAD
+    - name: Backport the Ubuntu22 QtCore semaphore dependency
+      if: matrix.target == 'appimage'
+      run: |
+        apt-get install -y curl patch perl libicu-dev libglib2.0-dev libpcre2-dev libdouble-conversion-dev zlib1g-dev libzstd-dev
+        bash scripts/build_qt5_core_backport.sh "$RUNNER_TEMP/qt5-core-backport"
+        echo "PJ_QT5_CORE_BACKPORT=$RUNNER_TEMP/qt5-core-backport/stage" >> "$GITHUB_ENV"
+        echo "LD_LIBRARY_PATH=$RUNNER_TEMP/qt5-core-backport/stage/lib" >> "$GITHUB_ENV"
     - name: Install Apache Arrow for Parquet support
       shell: bash
       run: |
@@ -132,7 +139,12 @@ jobs:
       env:
         APPIMAGE_EXTRACT_AND_RUN: '1'
       run: |
-        xvfb-run -a python3 scripts/zh_acceptance.py --app "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --plugin AppDir/usr/bin/libDataAPBin.so --out acceptance/packaged
+        # Do not let workspace libraries make a broken package pass.
+        extracted="$(mktemp -d)"
+        appimage="$PWD/PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage"
+        (cd "$extracted"; env -u LD_LIBRARY_PATH "$appimage" --appimage-extract >/dev/null)
+        python3 scripts/check_qt5_core_backport.py "$PJ_QT5_CORE_BACKPORT/lib/libQt5Core.so.5" "$extracted/squashfs-root/usr/lib/libQt5Core.so.5"
+        env -u LD_LIBRARY_PATH xvfb-run -a python3 scripts/zh_acceptance.py --app "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --plugin AppDir/usr/bin/libDataAPBin.so --out acceptance/packaged
         python3 scripts/package_size_audit.py --payload AppDir --package "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --out acceptance/package-size.json
     - name: Build and validate native Debian or Ubuntu package
       if: matrix.target != 'appimage'

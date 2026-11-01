@@ -4,11 +4,15 @@ name: Minimal Qt5 hash memory diagnostic
     branches: [zh-CN-dev, 'zh-CN-fix/**']
     paths:
     - tests/localized_meme_test.cpp
+    - scripts/build_qt5_core_backport.sh
+    - third_party/qt5-core-backport/**
     - tests/image-tools/**
     - .github/workflows/zh-scaling-diagnostic.yml
   pull_request:
     branches: [zh-CN-dev]
     paths:
+    - scripts/build_qt5_core_backport.sh
+    - third_party/qt5-core-backport/**
     - tests/image-tools/**
     - tests/localized_meme_test.cpp
     - .github/workflows/zh-scaling-diagnostic.yml
@@ -19,7 +23,7 @@ jobs:
   isolate-hash:
     runs-on: ubuntu-22.04
     container: ubuntu:22.04
-    timeout-minutes: 25
+    timeout-minutes: 50
     defaults:
       run:
         shell: bash
@@ -27,10 +31,17 @@ jobs:
     - name: Install isolated Qt5 and memory diagnostics
       run: |
         apt-get update
-        DEBIAN_FRONTEND=noninteractive apt-get install -y cmake build-essential git ca-certificates python3 python3-pil qtbase5-dev valgrind gdb libc6-dbg
+        DEBIAN_FRONTEND=noninteractive apt-get install -y cmake build-essential git ca-certificates python3 python3-pil qtbase5-dev valgrind gdb libc6-dbg curl patch perl dpkg-dev libicu-dev libglib2.0-dev libpcre2-dev libdouble-conversion-dev zlib1g-dev libzstd-dev
     - uses: actions/checkout@v6
       with:
         persist-credentials: false
+    - name: Build the actual Ubuntu22 QtCore dependency backport
+      run: |
+        mkdir -p diagnostic
+        bash scripts/build_qt5_core_backport.sh "$RUNNER_TEMP/qt5-core-backport"
+        echo "LD_LIBRARY_PATH=$RUNNER_TEMP/qt5-core-backport/stage/lib" >> "$GITHUB_ENV"
+        cp "$RUNNER_TEMP/qt5-core-backport/stage/lib/SHA256SUMS" diagnostic/qtcore-backport.sha256
+        cp "$RUNNER_TEMP/qt5-core-backport/stage/source/VERSION" diagnostic/qtcore-backport-version.txt
     - name: Freeze and independently verify the captured public input
       run: |
         mkdir -p diagnostic
@@ -65,9 +76,10 @@ jobs:
         for mode in rows offset once; do
           hash-build/hash_buffer_probe diagnostic/fixture.rgba 1031 310 "$mode" 8192 "diagnostic/native-$mode" "$expected" || failed=1
         done
-        for profile in default serial; do
+        for profile in default serial two-thread; do
           export PJ_SCALE_THREADS=0
           if [ "$profile" = serial ]; then export PJ_SCALE_THREADS=1; fi
+          if [ "$profile" = two-thread ]; then export PJ_SCALE_THREADS=2; fi
           for mode in image-direct image-copy; do
             hash-build/hash_image_probe diagnostic/fixture.rgba 1031 310 "$mode" 8192 "diagnostic/native-$profile-$mode" "$expected" || failed=1
           done
@@ -126,7 +138,11 @@ jobs:
       if: always()
       with:
         name: minimal-hash-${{ github.sha }}
-        path: diagnostic/
+        path: |
+          diagnostic/
+          ${{ runner.temp }}/qt5-core-backport/build/*.log
+          ${{ runner.temp }}/qt5-core-backport/stage/source/
+          ${{ runner.temp }}/qt5-core-backport/stage/lib/Qt5Core.debug
         if-no-files-found: error
         retention-days: 14
     - name: Propagate diagnostic failures
