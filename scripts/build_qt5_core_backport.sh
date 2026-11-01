@@ -49,6 +49,12 @@ SRC="$OUT/source/qtbase-everywhere-src-5.15.3"
   MAKEFLAGS="-j${PJ_QT_BUILD_JOBS:-2}" "$SRC/configure" \
     -opensource -confirm-license -release -shared \
     -prefix /usr -libdir "/usr/lib/$MULTIARCH" \
+    -bindir /usr/lib/qt5/bin -docdir /usr/share/qt5/doc \
+    -headerdir "/usr/include/$MULTIARCH/qt5" \
+    -importdir "/usr/lib/$MULTIARCH/qt5/imports" \
+    -translationdir /usr/share/qt5/translations \
+    -hostdatadir "/usr/lib/$MULTIARCH/qt5" -sysconfdir /etc/xdg \
+    -examplesdir "/usr/lib/$MULTIARCH/qt5/examples" \
     -archdatadir "/usr/lib/$MULTIARCH/qt5" -datadir /usr/share/qt5 \
     -plugindir "/usr/lib/$MULTIARCH/qt5/plugins" \
     -no-gui -no-widgets -no-dbus -no-openssl \
@@ -75,6 +81,32 @@ if missing:
     raise SystemExit("Backport lost original QtCore ABI symbols: " + repr(sorted(missing)))
 print("Original QtCore exports, including private ABI, retained")
 PYABI
+# ABI compatibility is not enough: QLibraryInfo also controls translations,
+# plugins and global settings. Compare every installed path with distro Qt.
+cat > "$OUT/build/library-paths.cpp" <<'CPP'
+#include <QCoreApplication>
+#include <QLibraryInfo>
+#include <iostream>
+int main(int argc, char **argv) {
+  QCoreApplication app(argc, argv);
+  const QLibraryInfo::LibraryLocation paths[] = {
+    QLibraryInfo::PrefixPath, QLibraryInfo::DocumentationPath,
+    QLibraryInfo::HeadersPath, QLibraryInfo::LibrariesPath,
+    QLibraryInfo::LibraryExecutablesPath, QLibraryInfo::BinariesPath,
+    QLibraryInfo::PluginsPath, QLibraryInfo::ImportsPath,
+    QLibraryInfo::Qml2ImportsPath, QLibraryInfo::ArchDataPath,
+    QLibraryInfo::DataPath, QLibraryInfo::TranslationsPath,
+    QLibraryInfo::ExamplesPath, QLibraryInfo::TestsPath, QLibraryInfo::SettingsPath};
+  for (auto path : paths)
+    std::cout << int(path) << ':' << QLibraryInfo::location(path).toStdString() << '\n';
+}
+CPP
+g++ -std=c++11 -fPIC -I"/usr/include/$MULTIARCH/qt5" \
+  -I"/usr/include/$MULTIARCH/qt5/QtCore" "$OUT/build/library-paths.cpp" \
+  -lQt5Core -o "$OUT/build/library-paths"
+env -u LD_LIBRARY_PATH "$OUT/build/library-paths" > "$OUT/stage/source/distro-library-paths.txt"
+LD_LIBRARY_PATH="$OUT/stage/lib" "$OUT/build/library-paths" > "$OUT/stage/source/backport-library-paths.txt"
+diff -u "$OUT/stage/source/distro-library-paths.txt" "$OUT/stage/source/backport-library-paths.txt"
 # Keep debug symbols separate, but never remove the dependency's public ABI.
 objcopy --only-keep-debug "$OUT/stage/lib/libQt5Core.so.5.15.3" "$OUT/stage/lib/Qt5Core.debug"
 strip --strip-unneeded "$OUT/stage/lib/libQt5Core.so.5.15.3"

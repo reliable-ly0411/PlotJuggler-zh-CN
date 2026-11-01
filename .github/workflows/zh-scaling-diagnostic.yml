@@ -65,6 +65,8 @@ jobs:
         ldd hash-build/hash_buffer_probe > diagnostic/buffer-dependencies.txt
         ldd hash-build/hash_image_probe > diagnostic/image-dependencies.txt
         ! grep -q Qt5Gui diagnostic/buffer-dependencies.txt
+        grep -F "$RUNNER_TEMP/qt5-core-backport/stage/lib/libQt5Core.so.5" diagnostic/buffer-dependencies.txt
+        grep -F "$RUNNER_TEMP/qt5-core-backport/stage/lib/libQt5Core.so.5" diagnostic/image-dependencies.txt
     - name: Verify diagnostic success and mismatch exit codes
       run: python3 tests/image-tools/test_hash_probe.py hash-build/hash_buffer_probe hash-build/hash_image_probe
     - name: Native independent buffer and image loops

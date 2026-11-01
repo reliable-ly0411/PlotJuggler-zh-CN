@@ -17,7 +17,8 @@ a = p.parse_args()
 def text_digest(path):
     with tempfile.TemporaryDirectory() as tmp:
         section = Path(tmp) / 'text'
-        subprocess.run(['objcopy', '--dump-section', f'.text={section}', str(path)], check=True)
+        subprocess.run(['objcopy', '--dump-section', f'.text={section}', str(path),
+                        str(Path(tmp) / 'copy.elf')], check=True)
         return hashlib.sha256(section.read_bytes()).hexdigest()
 
 expected = text_digest(a.expected)

@@ -15,7 +15,9 @@ Official fixes, preserved here verbatim with their authors and commit IDs:
 Ubuntu source and Debian patch archives, applies **all** distro patches first,
 and verifies the final semaphore source. Only QtCore is rebuilt; the distro's
 QtGui, headers, qmake and other modules remain in use. Original versioned exports,
-including the private ABI, must be retained. A different installed Qt version
+including the private ABI, must be retained. A runtime `QLibraryInfo` probe also
+requires every installed path (including translations and settings) to match
+the original distro library. A different installed Qt version
 fails closed and requires reviewing the source pin rather than silently
 reintroducing old security fixes or mixing unrelated Qt versions.
 
