@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
 # Rebuild Ubuntu Jammy's QtCore, retaining all distro patches, with upstream
 # QTBUG-92188 + QTBUG-102484. Never install into the host's system directories.
-set -euo pipefail
+set -Eeuo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="${1:?usage: build_qt5_core_backport.sh ABSOLUTE_OUTPUT_DIRECTORY}"
 [[ "$OUT" = /* && "$OUT" != / ]]
+report_failure() {
+  local status=$?
+  trap - ERR
+  for log in "$OUT/build/"*.log; do
+    [[ -f "$log" ]] || continue
+    echo "==> Last build output: $log" >&2
+    tail -n 80 "$log" >&2
+  done
+  exit "$status"
+}
+trap report_failure ERR
 VERSION=5.15.3+dfsg-2ubuntu0.2
 [[ "$(dpkg-query -W -f='${Version}' libqt5core5a)" = "$VERSION" ]] || {
   echo "Refusing to replace a QtCore version other than $VERSION; review the source pin." >&2; exit 1;

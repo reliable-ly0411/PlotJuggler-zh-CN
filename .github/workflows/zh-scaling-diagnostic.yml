@@ -136,15 +136,24 @@ jobs:
             > "diagnostic/gdb-$mode.log" 2>&1 || failed=1
         done
         exit "$failed"
+    - name: Collect backport logs through container-local paths
+      if: always()
+      run: |
+        mkdir -p diagnostic/qtcore-build
+        for log in "$RUNNER_TEMP/qt5-core-backport/build/"*.log; do
+          if [ -f "$log" ]; then cp "$log" diagnostic/qtcore-build/; fi
+        done
+        if [ -d "$RUNNER_TEMP/qt5-core-backport/stage/source" ]; then
+          cp -a "$RUNNER_TEMP/qt5-core-backport/stage/source" diagnostic/qtcore-source
+        fi
+        if [ -f "$RUNNER_TEMP/qt5-core-backport/stage/lib/Qt5Core.debug" ]; then
+          cp "$RUNNER_TEMP/qt5-core-backport/stage/lib/Qt5Core.debug" diagnostic/qtcore-build/
+        fi
     - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: minimal-hash-${{ github.sha }}
-        path: |
-          diagnostic/
-          ${{ runner.temp }}/qt5-core-backport/build/*.log
-          ${{ runner.temp }}/qt5-core-backport/stage/source/
-          ${{ runner.temp }}/qt5-core-backport/stage/lib/Qt5Core.debug
+        path: diagnostic/
         if-no-files-found: error
         retention-days: 14
     - name: Propagate diagnostic failures
