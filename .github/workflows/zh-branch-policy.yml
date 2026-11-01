@@ -20,6 +20,7 @@ jobs:
         run: python3 scripts/check_branch_name.py "$SOURCE_BRANCH"
       - name: Check workflow and branch-policy regressions
         run: |
+          python3 -m unittest discover -s .github/release_policy -p "test_*.py" -v
           python3 tests/test_branch_policy.py -v
           python3 tests/test_sync_upstream.py -v
           python3 tests/check_release_assets.py -v

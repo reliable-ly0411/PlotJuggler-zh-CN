@@ -7,11 +7,15 @@ name: zh-CN Windows build
         type: string
         required: false
         default: ''
+      release_manifest:
+        type: string
+        required: false
+        default: ''
 permissions:
   contents: read
 concurrency:
   group: zh-windows-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: false
 jobs:
   windows:
     runs-on: windows-2022
@@ -25,6 +29,11 @@ jobs:
       with:
         persist-credentials: false
         ref: ${{ inputs.ref || github.sha }}
+        fetch-depth: 0
+    - name: Reconstruct exact formal upstream tag plus pinned downstream patch
+      env:
+        RELEASE_MANIFEST: ${{ inputs.release_manifest }}
+      run: python .github/release_policy/policy.py materialize
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:

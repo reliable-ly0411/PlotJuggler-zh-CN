@@ -1,12 +1,5 @@
 name: Resource and released package audit
 'on':
-  push:
-    branches: [zh-CN, zh-CN-dev, 'zh-CN-*/**']
-    paths:
-      - .github/workflows/zh-resource-audit.yml
-      - scripts/audit_release_packages.py
-      - scripts/resource_size_audit.py
-      - tests/data/release-size-baseline.json
   workflow_dispatch: {}
 permissions:
   contents: read

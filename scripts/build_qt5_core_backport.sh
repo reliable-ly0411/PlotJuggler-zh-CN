@@ -55,8 +55,8 @@ SRC="$OUT/source/qtbase-everywhere-src-5.15.3"
     -nomake tests -nomake examples -system-zlib -system-doubleconversion \
     -system-pcre -glib -icu -no-rpath -no-feature-relocatable \
     -no-mimetype-database -no-strip -no-separate-debug-info -no-use-gold-linker \
-    "QMAKE_CFLAGS=$(dpkg-buildflags --get CFLAGS)" \
-    "QMAKE_CXXFLAGS=$(dpkg-buildflags --get CXXFLAGS)" \
+    "QMAKE_CFLAGS=$(dpkg-buildflags --get CFLAGS) $(dpkg-buildflags --get CPPFLAGS) $(getconf LFS_CFLAGS)" \
+    "QMAKE_CXXFLAGS=$(dpkg-buildflags --get CXXFLAGS) $(dpkg-buildflags --get CPPFLAGS) $(getconf LFS_CFLAGS)" \
     "QMAKE_LFLAGS=$(dpkg-buildflags --get LDFLAGS)" \
     > configure.log 2>&1
   make sub-src-qmake_all > qmake.log 2>&1

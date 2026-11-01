@@ -1,25 +1,5 @@
 name: Isolated image compatibility and benchmark tools
 'on':
-  push:
-    branches: [zh-CN, zh-CN-dev, 'zh-CN-*/**']
-    paths:
-    - .github/workflows/zh-image-tools.yml
-    - tests/image-tools/**
-    - tests/resource_image_test.cpp
-    - plotjuggler_app/resource_image.*
-    - scripts/prepare_image_benchmarks.py
-    - scripts/export_generic_resource_patch.py
-    - scripts/check_upstream_resource_patch.py
-  pull_request:
-    branches: [zh-CN, zh-CN-dev]
-    paths:
-    - .github/workflows/zh-image-tools.yml
-    - tests/image-tools/**
-    - tests/resource_image_test.cpp
-    - plotjuggler_app/resource_image.*
-    - scripts/prepare_image_benchmarks.py
-    - scripts/export_generic_resource_patch.py
-    - scripts/check_upstream_resource_patch.py
   workflow_dispatch: {}
 permissions:
   contents: read

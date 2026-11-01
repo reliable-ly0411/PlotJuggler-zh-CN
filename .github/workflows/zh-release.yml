@@ -1,23 +1,32 @@
 name: zh-CN seven-platform build and verification
 'on':
-  pull_request:
-    branches: [zh-CN, zh-CN-dev]
-  push:
-    branches: [zh-CN, zh-CN-dev]
   workflow_dispatch: {}
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+      release_manifest:
+        type: string
+        required: true
 permissions:
   contents: read
 concurrency:
   group: zh-seven-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: false
 jobs:
   policy:
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v6
       with:
-        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        ref: ${{ inputs.ref || github.sha }}
         persist-credentials: false
+        fetch-depth: 0
+    - name: Reconstruct exact formal upstream tag plus pinned downstream patch
+      env:
+        RELEASE_MANIFEST: ${{ inputs.release_manifest }}
+      run: python3 .github/release_policy/policy.py materialize
     - run: |
         python3 tests/check_package_privacy.py -v
         python3 tests/check_release_assets.py -v
@@ -25,20 +34,27 @@ jobs:
     needs: policy
     uses: ./.github/workflows/zh-windows.yml
     with:
-      ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      ref: ${{ inputs.ref || github.sha }}
+      release_manifest: ${{ inputs.release_manifest }}
   linux:
     needs: policy
     uses: ./.github/workflows/zh-linux.yml
     with:
-      ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      ref: ${{ inputs.ref || github.sha }}
+      release_manifest: ${{ inputs.release_manifest }}
   verify-seven:
     needs: [windows, linux]
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v6
       with:
-        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        ref: ${{ inputs.ref || github.sha }}
         persist-credentials: false
+        fetch-depth: 0
+    - name: Reconstruct exact formal upstream tag plus pinned downstream patch
+      env:
+        RELEASE_MANIFEST: ${{ inputs.release_manifest }}
+      run: python3 .github/release_policy/policy.py materialize
     - uses: actions/download-artifact@v4
       with:
         pattern: Software-*
@@ -48,9 +64,8 @@ jobs:
         pattern: Metadata-*
         path: downloaded/metadata
     - name: Verify seven source-matched packages without publishing
-      env:
-        SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       run: |
+        SOURCE_SHA="$(git rev-parse HEAD)"
         python3 scripts/release_assets.py collect --software downloaded/software --metadata downloaded/metadata \
           --source "$SOURCE_SHA" --output release-software --report release-report
     - uses: actions/upload-artifact@v4
