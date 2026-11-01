@@ -20,6 +20,10 @@ VERSION=5.15.3+dfsg-2ubuntu0.2
 [[ "$(dpkg-query -W -f='${Version}' libqt5core5a)" = "$VERSION" ]] || {
   echo "Refusing to replace a QtCore version other than $VERSION; review the source pin." >&2; exit 1;
 }
+# Qt 5.15.3's inline-assembly qt_version_tag aliases are not compatible with
+# modern Ubuntu dpkg-buildflags' automatic LTO (assembler rejects @@Qt_5.15).
+# Keep all hardening flags; disable only this unsupported link optimization.
+export DEB_BUILD_MAINT_OPTIONS="${DEB_BUILD_MAINT_OPTIONS:-} optimize=-lto"
 MULTIARCH="$(dpkg-architecture -qDEB_HOST_MULTIARCH)"
 mkdir -p "$OUT/downloads" "$OUT/source" "$OUT/build" "$OUT/stage/lib" "$OUT/stage/source"
 PATCHES="$ROOT/third_party/qt5-core-backport"
