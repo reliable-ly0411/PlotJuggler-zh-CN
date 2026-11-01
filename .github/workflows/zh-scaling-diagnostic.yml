@@ -27,7 +27,7 @@ jobs:
     - name: Install isolated Qt5 and memory diagnostics
       run: |
         apt-get update
-        DEBIAN_FRONTEND=noninteractive apt-get install -y cmake build-essential git ca-certificates python3 python3-pil qtbase5-dev valgrind
+        DEBIAN_FRONTEND=noninteractive apt-get install -y cmake build-essential git ca-certificates python3 python3-pil qtbase5-dev valgrind gdb libc6-dbg
     - uses: actions/checkout@v6
       with:
         persist-credentials: false
@@ -47,8 +47,9 @@ jobs:
         Path("diagnostic/fixture.rgba").write_bytes(raw)
         Path("diagnostic/fixture.sha256").write_text(expected)
         PY
-        dpkg-query -W libqt5core5a libqt5gui5 valgrind > diagnostic/runtime.txt
-        cmake -S tests/image-tools -B hash-build -DPJ_IMAGE_TOOLS_QT_MAJOR=5 -DCMAKE_BUILD_TYPE=Release
+        dpkg-query -W libqt5core5a libqt5gui5 valgrind gdb > diagnostic/runtime.txt
+        { uname -a; nproc; lscpu; } > diagnostic/host.txt
+        cmake -S tests/image-tools -B hash-build -DPJ_IMAGE_TOOLS_QT_MAJOR=5 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-g
         cmake --build hash-build --target hash_buffer_probe hash_image_probe --parallel 2
         ldd hash-build/hash_buffer_probe > diagnostic/buffer-dependencies.txt
         ldd hash-build/hash_image_probe > diagnostic/image-dependencies.txt
@@ -98,6 +99,27 @@ jobs:
         done
         for mode in image-direct image-copy; do
           PJ_HASH_SECONDS=60 valgrind --tool=memcheck --track-origins=yes --error-exitcode=99 --log-file="diagnostic/memcheck-$mode.log" hash-build/hash_image_probe diagnostic/fixture.rgba 1031 310 "$mode" 8 "diagnostic/memcheck-$mode" "$expected" || failed=1
+        done
+        exit "$failed"
+    - name: Capture native crash backtraces without relaxing the failure gate
+      if: always() && steps.native.outcome == 'failure'
+      continue-on-error: true
+      run: |
+        # A clean sanitizer/Valgrind result cannot exonerate the distro's
+        # uninstrumented Qt library. Keep the original native failure and
+        # collect all thread stacks on that same Qt5 runtime, without forcing
+        # serial execution. Debugger timing may make the race disappear.
+        expected="$(cat diagnostic/fixture.sha256)"
+        failed=0
+        for mode in image-direct image-copy; do
+          PJ_SCALE_THREADS=0 PJ_HASH_SECONDS=45 timeout 120s \
+            gdb --batch --return-child-result \
+            -ex 'set pagination off' -ex 'set print thread-events off' \
+            -ex 'set disable-randomization off' \
+            -ex run -ex 'thread apply all bt full' -ex 'info sharedlibrary' \
+            --args hash-build/hash_image_probe diagnostic/fixture.rgba \
+            1031 310 "$mode" 8192 "diagnostic/gdb-$mode" "$expected" \
+            > "diagnostic/gdb-$mode.log" 2>&1 || failed=1
         done
         exit "$failed"
     - uses: actions/upload-artifact@v4
