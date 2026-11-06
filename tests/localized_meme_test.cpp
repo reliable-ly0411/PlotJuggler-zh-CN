@@ -48,7 +48,7 @@ int main(int argc, char** argv)
       return 1;
     }
     root = QJsonDocument::fromJson(catalog.readAll()).object();
-    if (root["images"].toArray().size() != 106)
+    if (root["images"].toArray().size() != 107)
     {
       return 2;
     }
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
   }
   QJsonArray proofs;
   int translated_count = 0, unavailable_count = 0, checked_crops = 0;
-  for (int i = 0; i < 106; ++i)
+  for (int i = 0; i < 107; ++i)
   {
     const auto entry = i < images.size() ? images[i].toObject() : QJsonObject();
     const QString original_path = QString(":/resources/memes/meme_%1.jpg").arg(i, 2, 10, QChar('0'));
@@ -216,7 +216,7 @@ int main(int argc, char** argv)
   {
     return 18;
   }
-  for (int invalid : {-1, 106})
+  for (int invalid : {-1, 107})
   {
     bool ok = true;
     if (!localizedMeme(invalid, true, &ok).isNull() || ok)
@@ -238,7 +238,7 @@ int main(int argc, char** argv)
       return 21;
     }
     const auto records = QJsonDocument::fromJson(report.readAll()).array();
-    if (records.size() != 106)
+    if (records.size() != 107)
     {
       return 22;
     }
@@ -269,11 +269,11 @@ int main(int argc, char** argv)
     }
     report.write(QJsonDocument(QJsonObject{
         {"translated_images", translated_count}, {"pixel_identical_crops", checked_crops},
-        {"originals", 106}, {"localized_resource_stored_bytes", double(stored_bytes)},
+        {"originals", 107}, {"localized_resource_stored_bytes", double(stored_bytes)},
         {"localized_resource_source_bytes", double(uncompressed_bytes)}, {"images", proofs}
     }).toJson());
   }
   std::cout << "PASS: " << translated_count << " localized variants, " << checked_crops
-            << " native caption crops, 106 intact English originals, reference scaling and exports\n";
+            << " native caption crops, 107 intact English originals, reference scaling and exports\n";
   return 0;
 }

@@ -184,6 +184,7 @@ private:
   QMenu* _recent_layout_files;
 
   QString _skin_path;
+  QString _base_window_title;
 
   // Toast notification manager
   ToastManager* _toast_manager;
@@ -239,6 +240,7 @@ private:
 
   void updateRecentDataMenu(QStringList new_filenames);
   void updateRecentLayoutMenu(QStringList new_filenames);
+  void updateWindowTitle();
 
   void updatedDisplayTime();
 

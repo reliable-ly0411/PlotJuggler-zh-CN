@@ -7414,6 +7414,14 @@
         "/odom/pose/pose",
         "ROS series paths, source file names, numbers and formulas"
       ]
+    },
+    {
+      "id": 106,
+      "original_sha256": "d85430493f8155df5d680236cf6b2e57ca5842d25dc6d2f259f92f1f8f26dde6",
+      "original_source_revision": "30ac3b9c947d68bfe3fa9ea1fb161186ba119466",
+      "regions": [],
+      "note": "New upstream image retained unchanged; Chinese image localization pending.",
+      "localization_status": "original-translation-pending"
     }
   ],
   "rendering": "lossless-native-variants",
