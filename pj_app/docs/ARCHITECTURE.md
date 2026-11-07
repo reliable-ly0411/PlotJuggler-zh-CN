@@ -70,6 +70,13 @@ object fetches. `FanoutConfig` extracts a plugin config's `__pj_fanout` entries
 `MainWindow` dependency (`setFilePicker` is the seam), which is why the loader
 test suites compile it standalone.
 
+The single-load terminal flush publishes its committed topics once, after the
+catalog and time reference are final and the load context is retired. A
+`samplesIngested` observer may synchronously shut down and reuse the loader;
+the completed generation must not reset the successor's context or state.
+`FileLoaderTest` covers terminal-only producers, already-bound curves, and
+shutdown/reuse during terminal publication.
+
 ### Load diagnostics
 
 `MainWindow` wires `FileLoader::setDiagnosticSink` to the bridge sink.

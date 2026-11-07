@@ -38,7 +38,7 @@ if(VARIANT STREQUAL "after_kill")
     # No --exit-after-layout: the run stays up with the widget live until the timeout kills it.
     # --foreground: only the application gets the SIGKILL, so timeout lives on to reap it.
     execute_process(
-        COMMAND timeout --foreground -s KILL 15 ${APP} --layout "${layout_file}" --plugin-dir "${PLUGIN_DIR}"
+        COMMAND timeout --foreground -s KILL 15 ${APP} --language en_US --layout "${layout_file}" --plugin-dir "${PLUGIN_DIR}"
         RESULT_VARIABLE killed_result
         OUTPUT_VARIABLE killed_out
         ERROR_VARIABLE killed_err)
@@ -59,7 +59,8 @@ if(VARIANT STREQUAL "after_kill")
     file(WRITE "${live_record}" "{\"version\":1,\"widgets\":[{\"plugin\":\"running_widgets\",\"type\":\"gauge\"}]}")
 endif()
 
-set(args --layout "${layout_file}" --plugin-dir "${PLUGIN_DIR}" --exit-after-layout --exit-after-layout-timeout 60
+# The diagnostic wording assertions below use the English source text.
+set(args --language en_US --layout "${layout_file}" --plugin-dir "${PLUGIN_DIR}" --exit-after-layout --exit-after-layout-timeout 60
     --dump-diagnostics "${dump}")
 
 execute_process(

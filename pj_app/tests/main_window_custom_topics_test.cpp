@@ -198,8 +198,11 @@ struct CustomTopicsFixture {
     MainWindowCustomTopicsTestPeer::setCustomTopicsEditorId(window, QString::fromLatin1(kEditor));
     QObject::connect(
         window.diagnosticBridge(), &PJ::QtDiagnosticBridge::diagnosticReported, &window,
-        [this](int /*level*/, const QString& /*source*/, const QString& id, const QString& message) {
-          reported.push_back(id + u": "_s + message);
+        [this](int /*level*/, const QString& source, const QString& id, const QString& message) {
+          // Extension discovery can deliver queued diagnostics after this fixture connects.
+          if (source == u"CustomTopics"_s) {
+            reported.push_back(id + u": "_s + message);
+          }
         });
     return true;
   }
