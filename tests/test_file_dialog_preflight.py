@@ -21,5 +21,8 @@ class FileDialogPreflightPolicy(unittest.TestCase):
         self.assertIn('Qt6::Svg', text)
         self.assertIn('/utf-8', text)
         self.assertNotIn('CMAKE_CXX_FLAGS', text)
+        self.assertIn('add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../../resources" resources)', text)
+        self.assertIn('PRIVATE pj_resources Qt6::Core', text)
+        self.assertNotIn('file_dialog_preflight.cpp ../../../resources/resources.qrc', text)
 if __name__ == '__main__':
     unittest.main()

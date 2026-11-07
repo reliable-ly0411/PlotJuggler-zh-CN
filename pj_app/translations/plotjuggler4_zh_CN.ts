@@ -27,7 +27,7 @@
 <context>
     <name>AppLanguage</name>
     <message>
-        <location filename="../src/main.cpp" line="+354"/>
+        <location filename="../src/main.cpp" line="+396"/>
         <source>Interface language for this session (zh_CN, zh_TW or en_US).</source>
         <translation>本次会话的界面语言（zh_CN、zh_TW 或 en_US）。</translation>
     </message>
@@ -4435,7 +4435,7 @@ from %2</source>
         <translation>诊断信息</translation>
     </message>
     <message>
-        <location line="+129"/>
+        <location line="+130"/>
         <source>All sources</source>
         <translation>全部来源</translation>
     </message>
@@ -4496,7 +4496,7 @@ from %2</source>
 <context>
     <name>PJ::ExtensionCatalogService</name>
     <message>
-        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+875"/>
+        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+882"/>
         <source>All supported files</source>
         <translation>所有支持的文件</translation>
     </message>
@@ -4547,12 +4547,12 @@ from %2</source>
         <translation>%1 文件</translation>
     </message>
     <message>
-        <location line="+129"/>
+        <location line="+130"/>
         <source>Open File</source>
         <translation>打开文件</translation>
     </message>
     <message>
-        <location line="+128"/>
+        <location line="+156"/>
         <source>The folder %1 is not responding, showing your home folder instead.</source>
         <translation>文件夹 %1 无响应，改为显示您的主文件夹。</translation>
     </message>
@@ -4566,7 +4566,7 @@ from %2</source>
         <translation>加载数据</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+41"/>
         <location line="+3"/>
         <source>Replace Data</source>
         <translation>替换数据</translation>
@@ -4672,12 +4672,12 @@ from %2</source>
         <translation>无法替换数据集 %1：选中的配置会生成 %2 个数据集。</translation>
     </message>
     <message>
-        <location line="-720"/>
+        <location line="-730"/>
         <source>Plugin &apos;%1&apos;: saveConfig failed: %2 — layout save will skip plugin config</source>
         <translation>插件“%1”：saveConfig 失败：%2；保存布局时将跳过插件配置</translation>
     </message>
     <message>
-        <location line="+937"/>
+        <location line="+947"/>
         <source>Could not create the time domain for %1: %2</source>
         <translation>无法为 %1 创建时间域：%2</translation>
     </message>
@@ -4723,7 +4723,7 @@ from %2</source>
         <translation>插件“%1”：派生序列重放失败：%2</translation>
     </message>
     <message>
-        <location line="+213"/>
+        <location line="+208"/>
         <source>Could not load &apos;%1&apos;: %2</source>
         <translation>无法加载 &apos;%1&apos;：%2</translation>
     </message>
@@ -5171,12 +5171,12 @@ for example when the stream is already rectified.</source>
 <context>
     <name>PJ::MainWindow</name>
     <message>
-        <location filename="../src/MainWindow.cpp" line="+409"/>
+        <location filename="../src/MainWindow.cpp" line="+416"/>
         <source>PlotJuggler 4 Layout (*.pj4.xml)</source>
         <translation>PlotJuggler 4 布局 (*.pj4.xml)</translation>
     </message>
     <message>
-        <location line="+433"/>
+        <location line="+450"/>
         <source>Open Data File...</source>
         <translation>打开数据文件…</translation>
     </message>
@@ -5327,7 +5327,7 @@ for example when the stream is already rectified.</source>
         <location line="+1"/>
         <location line="+1448"/>
         <location line="+169"/>
-        <location line="+1996"/>
+        <location line="+2023"/>
         <location line="+305"/>
         <location line="+2074"/>
         <location line="+1219"/>
@@ -5335,7 +5335,7 @@ for example when the stream is already rectified.</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-7121"/>
+        <location line="-7148"/>
         <source>Undo</source>
         <translation>撤销</translation>
     </message>
@@ -5391,12 +5391,12 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+87"/>
-        <location line="+2354"/>
+        <location line="+2381"/>
         <source>The layout still contains an ephemeral browser path and was not downloaded.</source>
         <translation>布局仍包含临时浏览器路径，因此未下载。</translation>
     </message>
     <message>
-        <location line="-2222"/>
+        <location line="-2249"/>
         <source>Remove all Datasets</source>
         <translation>移除全部数据集</translation>
     </message>
@@ -5434,12 +5434,12 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+2"/>
-        <location line="+4544"/>
+        <location line="+4571"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="-4381"/>
+        <location line="-4408"/>
         <source>Are you sure you want to remove &apos;%1&apos; and its data?</source>
         <translation>确定要移除“%1”及其数据吗？</translation>
     </message>
@@ -5509,7 +5509,7 @@ for example when the stream is already rectified.</source>
         <translation>无法启动 PlotJuggler 维护工具。</translation>
     </message>
     <message>
-        <location line="+794"/>
+        <location line="+821"/>
         <source>Nothing to record: start a streaming source first.</source>
         <translation>没有可录制的内容：请先启动一个流数据源。</translation>
     </message>
@@ -7855,7 +7855,7 @@ Details: %1</source>
         <translation>选择趣图或简洁横幅，两种模式均支持所选界面语言。</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+45"/>
         <source>This folder does not exist.</source>
         <translation>此文件夹不存在。</translation>
     </message>
@@ -8874,7 +8874,17 @@ Details: %1</source>
 <context>
     <name>PreferencesContent</name>
     <message>
-        <location filename="../src/PreferencesDialog.ui" line="+167"/>
+        <location filename="../src/PreferencesDialog.ui" line="+478"/>
+        <source>System file dialog:</source>
+        <translation>系统文件对话框：</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Open and save files with the system&apos;s own file dialog instead of PlotJuggler&apos;s (Save Layout keeps PlotJuggler&apos;s). It does not stall on disconnected network drives, but does not follow the app&apos;s theme.</source>
+        <translation>使用系统自带的文件对话框打开和保存文件，而不是 PlotJuggler 的对话框（保存布局仍使用 PlotJuggler 的对话框）。它不会因已断开的网络驱动器而卡住，但不会采用应用的主题。</translation>
+    </message>
+    <message>
+        <location line="-308"/>
         <source>Language:</source>
         <translation>界面语言：</translation>
     </message>
@@ -8964,7 +8974,7 @@ Details: %1</source>
         <translation>匿名使用统计：</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+72"/>
         <source>Rescale a plot&apos;s vertical axis to fit its curves whenever a curve is added or removed (the shared time axis is left unchanged).</source>
         <translation>添加或移除曲线时，自动调整图表纵轴以适合曲线范围（共享时间轴保持不变）。</translation>
     </message>
@@ -9229,10 +9239,10 @@ Details: %1</source>
     </message>
     <message>
         <location line="+2"/>
-        <location filename="../src/FileLoader.cpp" line="-2033"/>
+        <location filename="../src/FileLoader.cpp" line="-2038"/>
         <location line="+90"/>
         <location line="+7"/>
-        <location filename="../src/MainWindow.cpp" line="-10445"/>
+        <location filename="../src/MainWindow.cpp" line="-10489"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>

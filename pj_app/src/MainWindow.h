@@ -48,6 +48,9 @@
 class QAction;
 class QButtonGroup;
 class QCloseEvent;
+class QDragEnterEvent;
+class QDragMoveEvent;
+class QDropEvent;
 class QMenu;
 class QPaintEvent;
 class QPushButton;
@@ -135,6 +138,7 @@ class MainWindow : public QMainWindow {
   // Headless layout round-trip test reaches the private data-source save/apply
   // seam and the Source Timeline controller through this peer.
   friend class MainWindowSourceLayoutTestPeer;
+  friend class MainWindowFileDropTestPeer;
   friend class MainWindowFanoutAmbiguousTestPeer;
   friend class MainWindowViewportReframeTestPeer;
   friend class MainWindowPluginViewsTestPeer;
@@ -350,6 +354,11 @@ class MainWindow : public QMainWindow {
   // instead of the system's. Read once at construction, so a change applies
   // on the next launch.
   static constexpr QLatin1StringView kCustomTitleBarKey{"Preferences::custom_title_bar"};
+
+  // Preferences key (bool): open/save through the platform's file picker
+  // (FileDialog::setUseSystemDialog). Applied at construction and on
+  // Preferences OK.
+  static constexpr QLatin1StringView kSystemFileDialogKey{"Preferences::system_file_dialog"};
 
   // Whether the user gets a choice of frame on this platform. False on macOS
   // (the platform's window controls are not ours to imitate) and in the
@@ -1330,6 +1339,15 @@ class MainWindow : public QMainWindow {
   // ourselves or any descendant widget, updates the cursor near edges, and
   // starts a system-resize on press.
   bool eventFilter(QObject* watched, QEvent* event) override;
+
+  // Local files dragged onto the window (from a file manager) load as if picked
+  // in Load Data. Plots and placeholders ignore file drags, and Qt offers an
+  // ignored drag-enter to each ancestor that accepts drops, so a drop on them
+  // reaches here too. Floating docks are separate windows and do not take file
+  // drops. Folders are not expanded.
+  void dragEnterEvent(QDragEnterEvent* event) override;
+  void dragMoveEvent(QDragMoveEvent* event) override;
+  void dropEvent(QDropEvent* event) override;
 
   // Paints a 1-px border flush with the window edge. Self-painted via
   // PJ::theme:: token accessors — FrameworkTokens.h is built for exactly this

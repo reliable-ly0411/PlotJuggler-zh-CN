@@ -38,7 +38,7 @@ class BranchPolicyTest(unittest.TestCase):
 
 
     def test_new_upstream_workflows_do_not_enable_fork_publication(self):
-        for workflow in ['conda-release.yml', 'macos-ci.yml']:
+        for workflow in ['conda-release.yml', 'macos-ci.yml', 'macos-release.yml']:
             text = (ROOT / '.github/workflows' / workflow).read_text(encoding='utf-8')
             events = text.split('\non:', 1)[1].split('\n\n', 1)[0]
             self.assertIn('  workflow_dispatch:', events)
