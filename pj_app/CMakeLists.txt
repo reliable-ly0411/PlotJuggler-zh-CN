@@ -271,12 +271,6 @@ if(EMSCRIPTEN)
         ${CMAKE_SOURCE_DIR}/resources/resources.qrc)
 else()
     add_executable(pj_app src/main.cpp src/AppProfile.cpp src/AppProfile.h)
-    if(WIN32)
-        # Explorer launches a GUI process; main explicitly adopts inherited CLI streams.
-        set_target_properties(pj_app PROPERTIES WIN32_EXECUTABLE TRUE)
-        target_sources(pj_app PRIVATE "${CMAKE_SOURCE_DIR}/resources/windows/plotjuggler.rc")
-        target_include_directories(pj_app PRIVATE "${CMAKE_SOURCE_DIR}/resources/windows")
-    endif()
 endif()
 set_target_properties(pj_app PROPERTIES
     # The CMake target id stays `pj_app` (internal module name), but the installed
@@ -284,6 +278,27 @@ set_target_properties(pj_app PROPERTIES
     # (e.g. /usr/bin/plotjuggler4). Keeps the source module rename a separate concern.
     OUTPUT_NAME plotjuggler4
 )
+if(WIN32)
+    # GUI subsystem: no console window next to the app when it starts from the
+    # Start menu or Explorer. main() stays the entry point, and main.cpp attaches
+    # to the parent console when the app is started from a terminal. PowerShell's
+    # `&` does not wait for a GUI-subsystem exe; run.ps1 uses native_process.ps1.
+    set_target_properties(pj_app PROPERTIES WIN32_EXECUTABLE TRUE)
+    if(MSVC)
+        target_link_options(pj_app PRIVATE /ENTRY:mainCRTStartup)
+    endif()
+    # Explorer, the installer's shortcuts and the taskbar read the icon and the
+    # version details from the exe's own resources: the Qt window icon
+    # (resources.qrc) never reaches them.
+    set(PJ_APP_ICON "${CMAKE_SOURCE_DIR}/resources/plotjuggler.ico")
+    string(REPLACE "." ";" _pj_rc_parts "${PJ_PROJECT_VERSION}.0.0.0")
+    list(SUBLIST _pj_rc_parts 0 4 _pj_rc_parts)
+    list(JOIN _pj_rc_parts "," PJ_RC_VERSION)
+    configure_file(plotjuggler.rc.in ${CMAKE_CURRENT_BINARY_DIR}/plotjuggler.rc @ONLY)
+    target_sources(pj_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/plotjuggler.rc)
+    # The build tracks the .rc's #includes, not the icon file it embeds.
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/plotjuggler.rc PROPERTIES OBJECT_DEPENDS "${PJ_APP_ICON}")
+endif()
 target_include_directories(pj_app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(pj_app PRIVATE
     pj_app_shell
@@ -318,7 +333,9 @@ endif()
 # build failure instead of a silent regression.
 if(DEFINED PJ_WARNING_FLAGS)
     target_compile_options(pj_app_shell PRIVATE ${PJ_WARNING_FLAGS})
-    target_compile_options(pj_app PRIVATE ${PJ_WARNING_FLAGS})
+    # CXX only: pj_app also compiles plotjuggler.rc on Windows, and rc.exe rejects
+    # MSVC warning options such as /W4.
+    target_compile_options(pj_app PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${PJ_WARNING_FLAGS}>")
 endif()
 
 # Don't re-export symbols pulled in from static archive members. Without
@@ -366,7 +383,7 @@ if(PJ_BUILD_TESTS)
         find_program(PJ_TEST_PYTHON NAMES python python3 REQUIRED)
         add_test(NAME WindowsApplicationContract
             COMMAND "${PJ_TEST_PYTHON}" "${CMAKE_SOURCE_DIR}/scripts/verify_windows_application.py"
-                    "$<TARGET_FILE:pj_app>" --runtime)
+                    "$<TARGET_FILE:pj_app>" --runtime --expected-version "${PJ_VERSION}")
         set_tests_properties(WindowsApplicationContract PROPERTIES TIMEOUT 120)
         # Compile a synthetic offline installer with the real pinned IFW tools.
         # Dedicated synthetic payloads only; this does not install the application.

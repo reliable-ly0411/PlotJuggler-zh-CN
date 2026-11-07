@@ -119,3 +119,15 @@ non-HTTP schemes retain Qt handling. Preferences directory opening remains on
 Qt's file-URL path and is outside this fix. See
 [`packaging/appimage/README.md`](../packaging/appimage/README.md#external-web-links)
 for the contract and verification boundary.
+
+## Windows executable contract
+
+The application uses the GUI subsystem and one configured resource,
+`plotjuggler.rc.in`, embedding `resources/plotjuggler.ico` plus numeric and full
+version metadata from the central version settings. C++ warning flags must not
+reach the resource compiler. `WindowsConsole.h` preserves inherited pipes/files
+and binds GUI CRT streams before Qt starts; terminal interrupts queue window
+closure only for a QApplication, not a core-only self-test. `run.ps1` uses the
+explicit native-process wrapper to preserve waiting, arguments and exit status.
+`WindowsApplicationContract` checks the linked PE, full version strings and
+redirected CLI output; this is not an Explorer/shortcut visual acceptance.
