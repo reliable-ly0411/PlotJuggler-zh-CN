@@ -24,6 +24,25 @@ MISSING_ROS = '''[plugin-validation][info] ardupilot-dataflash: Loaded DataSourc
 '''
 
 class CleanAcceptanceTests(unittest.TestCase):
+    def test_both_linux_artifacts_run_upstream_smoke_before_localized_acceptance(self):
+        root = Path(__file__).resolve().parents[1]
+        script = (root / 'packaging/localization/verify_linux.sh').read_text(encoding='utf-8')
+        deb = script.index('bash /src/packaging/deb/smoke_test.sh')
+        appimage = script.index('bash /src/packaging/appimage/smoke_test.sh /pkg/*.AppImage')
+        self.assertLess(deb, appimage)
+        self.assertLess(appimage, script.index('verify_package.py'))
+        for kind in ('deb', 'appimage'):
+            smoke = (root / 'packaging' / kind / 'smoke_test.sh').read_text(encoding='utf-8')
+            self.assertIn('wayland_check.sh', smoke)
+
+    def test_window_lifetime_ci_selects_real_platforms(self):
+        workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/zh-4x-ci.yml').read_text(encoding='utf-8')
+        step = workflow.split('- name: Verify native window lifetime on X11 and Wayland', 1)[1].split('- name:', 1)[0]
+        self.assertIn('MainWindowRhiWindowTest', step)
+        self.assertIn('QT_QPA_PLATFORM=xcb xvfb-run', step)
+        self.assertIn('env -u DISPLAY QT_QPA_PLATFORM=wayland ctest', step)
+        self.assertEqual(step.count('--no-tests=error'), 2)
+
     def test_acceptance_forces_qt_logs_to_stderr(self):
         for inherited in [{}, {'QT_FORCE_STDERR_LOGGING': '0', 'QT_LOGGING_RULES': '*.info=false'}]:
             env = module.acceptance_environment(inherited)

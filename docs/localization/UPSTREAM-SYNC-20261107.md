@@ -4,8 +4,8 @@
 
 - 开发输入：`5544b1cbfc87f73c2060af031544081bc29e7f3c`（含 PR #33）。
 - 稳定输入：`1f42375cb861e529a2e04d56f11cdee14e4638b7`。
-- 官方 `main-4.x`：`b428b6d58972bff94d6ac48d05d6795b926ed7af`。
-- 旧上游 `0345ec513bde7f05ad3148548ac30401f2b6f7a7` 之后新增 168 个提交。
+- 官方 `main-4.x`：`a3640d63d820f1ab1df2b01dbd9ac06142119545`。
+- 旧上游 `0345ec513bde7f05ad3148548ac30401f2b6f7a7` 之后新增 171 个提交。
 - 开发版本 `4.1.0-zh.1.dev.1`；Qt `6.12.0`；宿主 SDK `0.39.0`。
 
 这是未发布开发快照，不是新的已验安装包。已有 rc.4 和更早发布文档、标签、
@@ -70,3 +70,26 @@ Windows PE 验证扩展到 RT_VERSION 和实际 FileVersion/ProductVersion 字�
 26/26；source-sync 8/8、发布策略 4/4；简繁全量提取各 2,091 条且完整；
 相关 Bash 语法、分支与差异检查通过。Windows 版本 API 和完整新图例回归
 尚待原生构建执行，不以 mock/结构检查代替 Windows 或绘图实测。
+
+### Wayland 与窗口生命周期补充（a3640d63）
+
+在 `52ab40a4` 之上，以普通双父合并纳入官方 `53983e37`、`72151643`、
+`a3640d63`：避免无父 ElidingLabel 被 setter 显示为顶层窗口；桌面主窗口
+首次显示即采用 QRhi 合成以避免首个 GPU dock 引起 native window 重建；
+Linux AppImage/Debian 补齐原生 Wayland 插件、依赖与 Weston 冒烟验证。
+GPU 禁用偏好和浏览器边界保留，汉化、配置隔离、Unicode 参数与 Windows 修复不变。
+
+本分支原包验收显式调用 AppImage 的 X11/Wayland smoke，避免只有 Debian
+继承新检查。新增 Linux CI 步骤让 MainWindowRhiWindowTest 在 X11/Xvfb 与
+原生 Wayland/Weston 各执行一次，而非把默认 offscreen 结果当真实平台证据。
+原包前后校验和、只读挂载、只测试的 native 触发门禁与发布权限保持不变。
+
+本补充的本地验证：Python 172 项中 162 通过、10 跳过；其中新增真实 ELF
+依赖扫描验证生成 Debian Depends 包含 libwayland-client0。Qt 6.12 专项
+26/26，简繁全量提取各 2,091 条且完整；同步策略 8/8、发布策略 4/4、
+工作流 YAML、相关 shell 语法与差异检查通过。实际生产 ElidingLabel 头的
+Qt 6.12 严格编译/offscreen 行为对照中，旧版 4 个断言失败，新版 8 个断言
+全部通过；这仅验证标签行为，不是 Wayland/GPU 或完整宿主验收。
+
+新提交仍需独立 Linux/Windows 完整 native、GPU 窗口生命周期和最终原包
+X11/Wayland 验证。旧 SHA 的运行结果不替代本补充验收。

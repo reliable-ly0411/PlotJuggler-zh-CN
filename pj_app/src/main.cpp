@@ -252,9 +252,7 @@ int main(int argc, char* argv[]) {
 #endif
 #ifndef PJ_TARGET_WASM
   // A core-only application preserves Unicode CLI arguments and profile
-  // validation without demanding a platform plugin — the
-  // packaged AppImage ships only xcb, useless on the display-less CI
-  // containers this flag exists for.
+  // validation without demanding a platform plugin or display in headless CI.
   for (int i = 1; i < argc; ++i) {
     if (std::strcmp(argv[i], "--") == 0) {
       break;

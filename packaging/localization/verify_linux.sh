@@ -7,6 +7,9 @@ cd /pkg
 sha256sum -c SHA256SUMS-Linux.txt
 # First prove Depends and uninstall behavior using the upstream smoke contract.
 bash /src/packaging/deb/smoke_test.sh
+# Exercise the same immutable AppImage through both X11 and native Wayland.
+# The Debian smoke installed the runtime and compositor prerequisites above.
+bash /src/packaging/appimage/smoke_test.sh /pkg/*.AppImage
 # Reinstall the same immutable package for language/BIN acceptance.
 apt-get install -y -qq /pkg/*.deb >/dev/null
 apt-get install -y -qq python3 imagemagick >/dev/null
