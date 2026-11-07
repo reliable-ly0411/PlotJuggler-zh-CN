@@ -75,7 +75,7 @@ TEST(CDRAlignment, XCDR2StandardAlignment) {
   // Deserialize 48 booleans
   for (int i = 0; i < 48; i++) {
     auto value = deserializer.deserialize(BuiltinType::BOOL);
-    EXPECT_EQ(value.convert<bool>(), (i % 2) == 1) << "Boolean " << i;
+    EXPECT_EQ(value.convert<uint8_t>(), static_cast<uint8_t>(i % 2)) << "Boolean " << i;
   }
 
   // Deserialize double - should work without "not enough data" error
@@ -105,7 +105,7 @@ TEST(CDRAlignment, RTILegacyAlignment) {
   // Deserialize 48 booleans
   for (int i = 0; i < 48; i++) {
     auto value = deserializer.deserialize(BuiltinType::BOOL);
-    EXPECT_EQ(value.convert<bool>(), (i % 2) == 1) << "Boolean " << i;
+    EXPECT_EQ(value.convert<uint8_t>(), static_cast<uint8_t>(i % 2)) << "Boolean " << i;
   }
 
   // Deserialize double - should work with proper padding
@@ -129,7 +129,7 @@ TEST(CDRAlignment, WrongAlignmentModeDetection) {
   // Deserialize 48 booleans
   for (int i = 0; i < 48; i++) {
     auto value = deserializer.deserialize(BuiltinType::BOOL);
-    EXPECT_EQ(value.convert<bool>(), (i % 2) == 1) << "Boolean " << i;
+    EXPECT_EQ(value.convert<uint8_t>(), static_cast<uint8_t>(i % 2)) << "Boolean " << i;
   }
 
   // Try to deserialize double - will read from wrong position
@@ -158,7 +158,7 @@ TEST(CDRAlignment, WrongAlignmentModeXCDR2) {
   // Deserialize 48 booleans
   for (int i = 0; i < 48; i++) {
     auto value = deserializer.deserialize(BuiltinType::BOOL);
-    EXPECT_EQ(value.convert<bool>(), (i % 2) == 1) << "Boolean " << i;
+    EXPECT_EQ(value.convert<uint8_t>(), static_cast<uint8_t>(i % 2)) << "Boolean " << i;
   }
 
   // Try to deserialize double - will try to align to byte 56 but data is at byte 52
