@@ -181,13 +181,30 @@ jobs:
           conan profile detect --force
           ./scripts/configure_conan_remote.sh
           cache_dir="$(python -c 'import os; print(os.path.abspath(".conan-source-cache").replace(chr(92), "/"))')"
-          mkdir -p "$cache_dir/s"
-          find .github/conan/source-backup -maxdepth 1 -type f ! -name README.md -exec cp {} "$cache_dir/s/" \;
           conan_home="$(conan config home)"
           mkdir -p "$conan_home"
           python - "$conan_home/global.conf" "$cache_dir" <<'PY'
           from pathlib import Path
+          import hashlib
+          import json
+          import re
+          import shutil
           import sys
+          # Conan 2.34 trusts local cache hits without rehashing. Validate every
+          # repository seed before copying any bytes into that trusted cache.
+          seeds = Path('.github/conan/source-backup')
+          blobs = sorted(p for p in seeds.iterdir() if re.fullmatch(r'[0-9a-f]{64}', p.name))
+          for blob in blobs:
+              if hashlib.sha256(blob.read_bytes()).hexdigest() != blob.name:
+                  raise SystemExit(f'Conan source backup SHA256 mismatch: {blob.name}')
+              metadata = json.loads(blob.with_suffix('.json').read_text(encoding='utf-8'))
+              if not metadata.get('references'):
+                  raise SystemExit(f'Conan source backup metadata missing references: {blob.name}')
+          target = Path(sys.argv[2]) / 's'
+          target.mkdir(parents=True, exist_ok=True)
+          for blob in blobs:
+              shutil.copy2(blob, target / blob.name)
+              shutil.copy2(blob.with_suffix('.json'), target / (blob.name + '.json'))
           p = Path(sys.argv[1])
           lines = p.read_text(encoding='utf-8').splitlines() if p.exists() else []
           lines = [s for s in lines if not s.startswith(('core.sources:download_cache=', 'core.sources:download_urls='))]

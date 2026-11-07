@@ -25,9 +25,10 @@ upstream is healthy: the mirror is not contacted at all.
 Coverage is partial and not contractual: the mirror holds what ConanCenter's CI
 happened to back up, which skews old (spot-checked 2026-09: `elfutils/0.190` and
 `kissfft/131.1.0` present; `ffmpeg/9.0.1`, `openssl/3.6.4`, `assimp/6.0.5`
-absent — those fetch fine from their own hosts today). So it is a safety net,
+absent). So it is a safety net,
 not a guarantee; this directory remains the answer whenever a source must be
-under our control.
+under our control. The FFmpeg 9.0.1 source is now included here after a Windows
+runner timed out connecting to ffmpeg.org and the mirror returned HTTP 401.
 
 ## Why this exists
 
@@ -55,12 +56,15 @@ when the `cpython` recipe moves macOS off 2.5.0.
 - Each backed-up source is stored as **two files**, exactly as Conan's source
   download-cache layout expects:
   - `<sha256>` — the tarball itself, named by the sha256 of its contents. This
-    is the same checksum the recipe's `conandata.yml` pins, and Conan re-verifies
-    it on every use — a corrupted or tampered file can never be consumed.
+    is the same checksum the recipe's `conandata.yml` pins. Conan verifies network
+    downloads, but Conan 2.34.0 does **not** rehash an existing local cache hit.
+    The 4.x development CI therefore verifies all seed hashes before copying.
   - `<sha256>.json` — Conan's metadata sidecar (`{"references": {...}}`). Without
-    it Conan treats the blob as missing. Generate it by letting Conan download
-    the source once with `core.sources:download_cache=<dir>` set, then copy the
-    pair out of `<dir>/s/`.
+    it some Conan versions treat the blob as missing. Generate it with Conan's
+    `source()` operation using `core.sources:download_cache=<dir>`, then copy
+    the pair out of `<dir>/s/`. Conan 2.34.0 can generate it from a preverified
+    blob when the recipe's original URL is used; do not record only a mirror
+    URL because a subsequent original-URL request may then re-download.
 - CI wires it up in the "Seed Conan source download cache" step of every
   workflow that runs Conan: copy both files into `<download_cache>/s/` and
   append `core.sources:download_cache=<dir>` (plus the mirror's
@@ -78,6 +82,22 @@ when the `cpython` recipe moves macOS off 2.5.0.
 |---|---|---|
 | `b3a24de97a8fdb…` | `zlib-1.2.13.tar.gz` (byte-identical to the official release; also mirrored at `github.com/madler/zlib/releases/download/v1.2.13/`) | `minizip/1.2.13` ← `assimp` |
 | `15417edc8e12a5…` | `mpdecimal-2.5.0.tar.gz` (sha256 pinned by the recipe; recovered from the Internet Archive's copy of the bytereef.org release) | `mpdecimal/2.5.0` ← `cpython`, macOS only |
+| `cf38e0e28c7e5605…` | `ffmpeg-9.0.1.tar.xz` (12,036,420 bytes; unmodified official release mirrored by MacPorts) | `ffmpeg/9.0.1` |
+
+## FFmpeg 9.0.1 provenance
+
+- Original release URL: <https://ffmpeg.org/releases/ffmpeg-9.0.1.tar.xz>.
+- Retrieved from the MacPorts project's distribution mirror:
+  <https://distfiles.macports.org/ffmpeg/ffmpeg-9.0.1.tar.xz>.
+- SHA256: `cf38e0e28c7e5605942c4a77755349b0145804a397af37eb1fb4c77cb237f635`.
+  This matches the exact locked Conan recipe
+  `ffmpeg/9.0.1#e1b7a11d16ed758bcbc0771208d32597`, the
+  [ConanCenter source declaration](https://github.com/conan-io/conan-center-index/blob/597f2a3314af809b0be8aaf1f2c2b32c6080a09f/recipes/ffmpeg/all/conandata.yml),
+  and the [MacPorts version and checksum record](https://github.com/macports/macports-ports/blob/60403e730a8bfa82bc823625e74ad12243b3506c/multimedia/ffmpeg/Portfile).
+- Conan 2.34.0 generated the sidecar by running that locked recipe's `source()`
+  against the preverified cache blob; the original source URL is preserved.
+- The archive remains unmodified, including upstream licenses. No dependency
+  version, recipe revision, TLS verification, or repository permissions change.
 
 ## Adding a new file
 
