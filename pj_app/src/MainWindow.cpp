@@ -3899,24 +3899,35 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
   }
 }
 
-// Copy, never the proposed Move: a source may delete a file whose move was accepted.
+// Copy must be offered: Qt falls back to Move if asked to select an unavailable Copy.
 void MainWindow::dragEnterEvent(QDragEnterEvent* event) {
-  if (event->mimeData() != nullptr && !FileLoader::droppedFilePaths(*event->mimeData()).isEmpty()) {
-    event->setDropAction(Qt::CopyAction);
-    event->accept();
+  if (!event->possibleActions().testFlag(Qt::CopyAction) || event->mimeData() == nullptr ||
+      FileLoader::droppedFilePaths(*event->mimeData()).isEmpty()) {
+    event->ignore();
+    return;
   }
+  event->setDropAction(Qt::CopyAction);
+  event->accept();
 }
 
 void MainWindow::dragMoveEvent(QDragMoveEvent* event) {
-  if (event->mimeData() != nullptr && event->mimeData()->hasUrls()) {
-    event->setDropAction(Qt::CopyAction);
-    event->accept();
+  if (!event->possibleActions().testFlag(Qt::CopyAction) || event->mimeData() == nullptr ||
+      FileLoader::droppedFilePaths(*event->mimeData()).isEmpty()) {
+    event->ignore();
+    return;
   }
+  event->setDropAction(Qt::CopyAction);
+  event->accept();
 }
 
 void MainWindow::dropEvent(QDropEvent* event) {
+  if (!event->possibleActions().testFlag(Qt::CopyAction) || event->mimeData() == nullptr) {
+    event->ignore();
+    return;
+  }
   const QStringList paths = FileLoader::droppedFilePaths(*event->mimeData());
   if (paths.isEmpty()) {
+    event->ignore();
     return;
   }
   event->setDropAction(Qt::CopyAction);
