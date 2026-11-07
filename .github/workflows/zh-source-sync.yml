@@ -1,0 +1,89 @@
+name: Localization source-only upstream sync
+
+on:
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Merge and validate locally without pushing development branches
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+concurrency:
+  group: zh-upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync-three:
+    if: github.repository == 'reliable-ly0411/PlotJuggler-zh-CN'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: zh-CN-dev
+          fetch-depth: 0
+      - name: Install translation validation tool
+        run: sudo apt-get update && sudo apt-get install -y qttools5-dev-tools
+      - name: Verify existing Qt5 merge and version protections
+        run: python3 tests/test_sync_upstream.py
+      - name: Merge official Qt5 source into development only
+        env:
+          PUSH: ${{ github.event_name == 'schedule' || !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          args=()
+          if [[ "$PUSH" == true ]]; then args+=(--push); fi
+          python3 scripts/sync_upstream.py --repo . --branch zh-CN-dev \
+            --upstream-ref main --validate "${args[@]}" \
+            --report "$RUNNER_TEMP/pj3-sync.json"
+      - name: Preserve Qt5 sync report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pj3-source-sync-report
+          path: ${{ runner.temp }}/pj3-sync.json
+          if-no-files-found: error
+
+  sync-four:
+    if: github.repository == 'reliable-ly0411/PlotJuggler-zh-CN'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify and copy controller before selecting development source
+        run: |
+          set -euo pipefail
+          python3 .github/sync/test_sync_four.py
+          mkdir -p "$RUNNER_TEMP/pj4-sync"
+          cp .github/sync/sync_four.py .github/sync/pj4-sync.json "$RUNNER_TEMP/pj4-sync/"
+      - name: Merge independent Qt6 source into development only
+        env:
+          PUSH: ${{ github.event_name == 'schedule' || !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git fetch --no-recurse-submodules --no-tags origin refs/heads/zh-CN-4.x-dev
+          git checkout -B zh-CN-4.x-dev FETCH_HEAD
+          args=()
+          if [[ "$PUSH" == true ]]; then args+=(--push); fi
+          python3 "$RUNNER_TEMP/pj4-sync/sync_four.py" \
+            --config "$RUNNER_TEMP/pj4-sync/pj4-sync.json" "${args[@]}" \
+            --report "$RUNNER_TEMP/pj4-sync.json"
+      - name: Preserve Qt6 sync report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pj4-source-sync-report
+          path: ${{ runner.temp }}/pj4-sync.json
+          if-no-files-found: error

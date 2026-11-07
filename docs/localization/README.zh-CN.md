@@ -1,7 +1,7 @@
 # PlotJuggler 4 中文与多语言开发说明
 
 本开发线在官方 `main-4.x` 的真实 Git 历史上实现中文界面及 ArduPilot
-DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.rc.4`**，为第四个开发发布候选，GitHub 状态仍为预发布。
+DataFlash BIN 加载器。当前版本为 **`4.1.0-zh.1.dev.1`**，属于上游同步开发快照，尚未发布或完成最终原包验收。
 `zh-CN-4.x` 为稳定线，`zh-CN-4.x-dev` 为开发集成线；主题变更通过保留提交的
 合并进入开发线，验证及发布准备完成后再晋级稳定线。初始化为空白上游基线的稳定分支
 不表示已经交付汉化版本。参见[分支规范](../BRANCHING.zh-CN.md)。
@@ -11,19 +11,22 @@ DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.rc.4`**，为第四个�
 | 项目 | 基准 |
 |---|---|
 | PlotJuggler 官方上游 | `PlotJuggler/PlotJuggler`，`main-4.x` |
-| 精确上游提交 | `0345ec513bde7f05ad3148548ac30401f2b6f7a7` |
+| 精确上游提交 | `a8a8a70b7c8019debf5c75f59555067c407a225c` |
 | 3.x 翻译参考 | 本仓库 `zh-CN` 的 `766a88d8e689c7803f32acb315ac872a0a67a57b` |
-| Qt | `6.11.1`，以 `versions.env` 为准 |
+| Qt | `6.12.0`，以 `versions.env` 为准 |
 | C++ / 构建 | C++20、CMake、Conan 2 |
-| 插件 SDK | `plotjuggler_sdk/0.34.1`，以 `conanfile.txt` 及锁文件为准 |
+| 插件 SDK | `plotjuggler_sdk/0.39.0`，以 `conanfile.txt` 及锁文件为准 |
 
 4.x 是重新设计的模块化应用：界面、数据存储、脚本、插件宿主和 2D/3D 视图已分离。
 3.x 的 Qt5 插件不能直接加载；旧工程配置、发布工作流及诊断补丁没有整体合并进来。
 基准与来源的机器可读记录位于 [upstream-baseline.json](upstream-baseline.json)。
+本快照纳入旧上游基线之后的 163 个上游提交，保留 #33 插件反馈、FFT、
+简繁目录与稳定线构建配置；具体范围和未验证项见[同步记录](UPSTREAM-SYNC-20261107.md)。
+宿主 SDK 已升级，固定插件自身的历史 SDK 来源锁不因此改写；新宿主兼容性须另行验证。
 
 ## 界面语言
 
-- 本地整合新增繁體中文（台灣），尚未纳入开发线或已发布的 rc.4；不改变历史发布内容。
+- 开发线包含繁體中文（台灣），未随已发布的 rc.4 提供；不改变历史发布内容。
   具体 locale、术语、插件、安装器及验证边界见[多语言开发说明](MULTILINGUAL.zh-CN.md)。
 - 新配置默认使用简体中文。首选项的“语言”可选择简体中文、繁體中文（台灣）或 English，确认后在下次启动生效；取消不保存。
 - `plotjuggler4 --language en_US`、`--language zh_CN` 或 `--language zh_TW` 只覆盖当前会话，不改写保存的选择。
@@ -32,7 +35,7 @@ DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.rc.4`**，为第四个�
 - 英文源字符串和数据、主题、插件等序列化标识保留原值，便于合并上游更新。
 
 当前目录覆盖应用、插件市场、插件对话框宿主、绘图、2D/3D 场景和通用控件中
-简中与繁中各 **2,020 条 Qt 可提取消息**，未完成条目为 0。简中其中 97 条精确复用了 3.x 中文翻译。
+简中与繁中各 **2,091 条 Qt 可提取消息**，未完成条目为 0。简中其中 97 条精确复用了 3.x 中文翻译。
 这个数字是指定提取范围的目录覆盖率，不代表所有可见内容均已汉化。
 内置 Lua 滤波器的名称、说明及参数标签仅在显示时翻译，稳定 ID、参数值、源码和生成的
 曲线名称保持不变，自定义滤波器元数据不改写。启动横幅的 15 条随机文案可翻译。
@@ -95,7 +98,7 @@ git submodule update --init --recursive
 ./build.sh
 ```
 
-Windows 使用上游的 `build.bat` 入口及固定的 MSVC 2022 / Qt 6.11.1 工具链。
+Windows 使用上游的 `build.bat` 入口及固定的 MSVC 2022 / Qt 6.12.0 工具链。
 `PJ_BUILD_ARDUPILOT_PLUGIN=OFF` 可以显式关闭原生 BIN 插件。没有初始化插件子模块且保持
 默认启用时，配置会明确失败，避免生成看似完整却缺少 BIN 功能的构建。
 WebAssembly 不启用这个原生共享插件。
@@ -105,9 +108,9 @@ WebAssembly 不启用这个原生共享插件。
 ```sh
 python3 tests/test_branch_policy.py
 python3 tests/test_check_translations_4x.py
-python3 tests/check_translations_4x.py --lupdate .qt/6.11.1/gcc_64/bin/lupdate
+python3 tests/check_translations_4x.py --lupdate .qt/6.12.0/gcc_64/bin/lupdate
 cmake -S pj_app/tests/i18n -B build-i18n \
-  -DCMAKE_PREFIX_PATH="$PWD/.qt/6.11.1/gcc_64"
+  -DCMAKE_PREFIX_PATH="$PWD/.qt/6.12.0/gcc_64"
 cmake --build build-i18n
 ctest --test-dir build-i18n --output-on-failure
 ```

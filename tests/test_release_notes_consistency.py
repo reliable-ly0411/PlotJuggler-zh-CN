@@ -16,8 +16,15 @@ class ReleaseNotesConsistencyTest(unittest.TestCase):
         self.versions = dict(line.split('=', 1) for line in
                              (ROOT / 'versions.env').read_text(encoding='utf-8').splitlines()
                              if line and not line.startswith('#'))
+        baseline = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
+        # Development snapshots have no release prose or accepted packages.
+        # Check the explicit historical release without rewriting its claims.
+        published = baseline.get('published_localization_release', {})
+        development = '.dev.' in self.versions['PJ_APP_VERSION']
+        self.notes_version = published['version'] if development else self.versions['PJ_APP_VERSION']
+        self.notes_qt = published['qt_version'] if development else self.versions['PJ_QT_VERSION']
         self.notes = (ROOT / 'docs/localization' /
-                      ('RELEASE-' + self.versions['PJ_APP_VERSION'] + '.md')).read_text(encoding='utf-8')
+                      ('RELEASE-' + self.notes_version + '.md')).read_text(encoding='utf-8')
         self.readme = (ROOT / 'docs/localization/README.zh-CN.md').read_text(encoding='utf-8')
         self.lock = json.loads((ROOT / 'packaging/localization/plugin-patches/source-lock.json')
                                .read_text(encoding='utf-8'))
@@ -37,7 +44,7 @@ class ReleaseNotesConsistencyTest(unittest.TestCase):
     def test_rebuilt_plugin_list_preserves_published_scope(self):
         line = next(line for line in self.notes.splitlines() if '本版汉化重建集合共' in line)
         active = {item['id'] for item in self.lock['plugins']}
-        if self.versions['PJ_APP_VERSION'] == '4.0.0-zh.1.rc.3':
+        if self.notes_version == '4.0.0-zh.1.rc.3':
             # Published bytes predate the CSV path repair; a source change must
             # not retroactively advertise it as part of that release.
             published = {'mcap-loader', 'protobuf-parser', 'toolbox-transform-editor',
@@ -74,7 +81,7 @@ class ReleaseNotesConsistencyTest(unittest.TestCase):
 
     def test_platform_and_source_boundaries_are_explicit(self):
         self.assertIn('Windows 未进行人工可见桌面目视验收', self.notes)
-        self.assertIn('Qt ' + self.versions['PJ_QT_VERSION'], self.notes)
+        self.assertIn('Qt ' + self.notes_qt, self.notes)
         for sdk in {x['sdk'] for x in self.lock['plugins']}:
             self.assertIn(sdk, self.notes)
         self.assertIn('上游 4.0.0 发布说明（全文）', self.notes)

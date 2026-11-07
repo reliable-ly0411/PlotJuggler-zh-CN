@@ -16,3 +16,7 @@ docs/localization/CSV-UTF8-INTEGRATION-INDEPENDENT-REVIEW-20261026.txt text eol=
 
 # Unmodified, byte-hashed Qt IFW catalog includes intentional source-string spaces.
 packaging/installer/translations/ifw_zh_CN.ts text eol=lf whitespace=-blank-at-eol
+# Sample presets deploy byte for byte (layouts pin each data file's content_sha256).
+resources/wasm-presets/** -text
+resources/wasm-presets/*/data.* -diff
+resources/wasm-presets/**/*.png -diff

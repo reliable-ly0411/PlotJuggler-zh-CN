@@ -305,7 +305,7 @@ int main(int argc, char** argv) {
     qCritical("Cannot initialize isolated acceptance profile: %s", qPrintable(error));
     return 1;
   }
-  PJ::PlotWidgetBase::setOpenGlDisabledOverride(true);
+  PJ::PlotWidgetBase::setGpuCanvasDisabledOverride(true);
   PluginFeedbackTest test;
   return QTest::qExec(&test, argc, argv);
 }

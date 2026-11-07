@@ -7,6 +7,7 @@
 #include <pj_plugins/host/message_parser_library.hpp>
 #include <pj_plugins/host/plugin_catalog.hpp>
 #include <pj_plugins/host/toolbox_library.hpp>
+#include <pj_plugins/host/widget_library.hpp>
 #include <string>
 #include <string_view>
 
@@ -49,7 +50,7 @@ PluginDisplayMetadata directPluginDisplayMetadata(const PluginDescriptor& descri
   return decodePluginDisplayMetadata(library->vtable()->manifest_json, descriptor);
 }
 
-/// Supplement an already-discovered DSO using public SDK 0.34.1 APIs, never a sidecar.
+/// Supplement an already-discovered DSO using public SDK APIs, never a sidecar.
 /// Admission callers must run this in the same disposable helper as discovery.
 inline PluginDisplayMetadata readPluginDisplayMetadata(const PluginDescriptor& descriptor) {
   switch (descriptor.family) {
@@ -59,6 +60,8 @@ inline PluginDisplayMetadata readPluginDisplayMetadata(const PluginDescriptor& d
       return directPluginDisplayMetadata<MessageParserLibrary>(descriptor);
     case PluginFamily::kToolbox:
       return directPluginDisplayMetadata<ToolboxLibrary>(descriptor);
+    case PluginFamily::kWidget:
+      return directPluginDisplayMetadata<WidgetLibrary>(descriptor);
     case PluginFamily::kDialog: {
       auto library = DialogLibrary::load(descriptor.dso_path);
       if (!library) {

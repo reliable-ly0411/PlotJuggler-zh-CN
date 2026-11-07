@@ -239,7 +239,7 @@ TEST(BuiltinFilterPresentationTest, ParameterWidgetsTranslateLabelsAndKeepTypedV
 
 TEST(BuiltinFilterPresentationTest, EditorUsesLocalizedMetadataButPersistsCanonicalNamesAndSource) {
   PresentationTranslator translator;
-  PJ::PlotWidgetBase::setOpenGlDisabledOverride(true);
+  PJ::PlotWidgetBase::setGpuCanvasDisabledOverride(true);
   PJ::SessionManager session;
   PJ::CatalogModel catalog(&session);
   const auto dataset = session.dataEngine().createDataset(PJ::DatasetDescriptor{.source_name = "filter-test"});
@@ -283,7 +283,7 @@ TEST(BuiltinFilterPresentationTest, EditorUsesLocalizedMetadataButPersistsCanoni
 
 TEST(BuiltinFilterPresentationTest, EditorPreservesUnknownCatalogDisplayNamesAndAliases) {
   PresentationTranslator translator;
-  PJ::PlotWidgetBase::setOpenGlDisabledOverride(true);
+  PJ::PlotWidgetBase::setGpuCanvasDisabledOverride(true);
   PJ::SessionManager session;
   PJ::CatalogModel catalog(&session);
   auto custom_catalogue = std::make_shared<PJ::scripting::FilterCatalogue>(PJ::scripting::makeLuauEngine());

@@ -128,8 +128,9 @@ QString composeDatasetMergeWarning(const AppSession& session, const std::vector<
   return text;
 }
 
-std::optional<DatasetId> confirmAndMergeDatasets(
-    QWidget* parent, AppSession& session, const std::vector<DatasetId>& ids) {
+void confirmAndMergeDatasets(
+    QWidget* parent, AppSession& session, const std::vector<DatasetId>& ids,
+    std::function<void(DatasetId anchor)> on_merged) {
   // Keep only data-bearing datasets; need at least two to merge.
   std::vector<DatasetId> datasets;
   datasets.reserve(ids.size());
@@ -139,7 +140,7 @@ std::optional<DatasetId> confirmAndMergeDatasets(
     }
   }
   if (datasets.size() < 2) {
-    return std::nullopt;
+    return;
   }
 
   const DatasetId active_streaming_dataset = session.activeStreamingDataset();
@@ -147,11 +148,8 @@ std::optional<DatasetId> confirmAndMergeDatasets(
       std::find(datasets.begin(), datasets.end(), active_streaming_dataset) != datasets.end()) {
     MessageBox::warning(
         parent, QCoreApplication::translate("DatasetMergeActions", "Cannot merge datasets"),
-        u"<p>"_s +
-            QCoreApplication::translate(
-                "DatasetMergeActions", "Stop streaming the live source before merging it with other datasets.") +
-            u"</p>"_s);
-    return std::nullopt;
+        u"<p>"_s + QCoreApplication::translate("DatasetMergeActions", "Stop streaming the live source before merging it with other datasets.") + u"</p>"_s);
+    return;
   }
 
   // Canonical-type conflict gate (shared by BOTH merge entry points — timeline and
@@ -164,6 +162,13 @@ std::optional<DatasetId> confirmAndMergeDatasets(
     const auto shown = std::min<qsizetype>(static_cast<qsizetype>(conflicts.size()), kMaxConflictItems);
     for (qsizetype i = 0; i < shown; ++i) {
       const ObjectMergeConflict& c = conflicts[static_cast<std::size_t>(i)];
+      if (c.marker_description_differs) {
+        list += u"<li>"_s +
+                QCoreApplication::translate("DatasetMergeActions", "\"%1\": marker sets with a different scope, target or owner")
+                    .arg(QString::fromStdString(c.topic_name).toHtmlEscaped()) +
+                u"</li>"_s;
+        continue;
+      }
       // Same type means the payload formats differ: name those instead.
       const auto describe = [&c](sdk::BuiltinObjectType type, const std::string& format) {
         if (c.anchor_type != c.source_type) {
@@ -188,31 +193,23 @@ std::optional<DatasetId> confirmAndMergeDatasets(
     MessageBox::warning(
         parent, QCoreApplication::translate("DatasetMergeActions", "Cannot merge datasets"),
         u"<p>"_s +
-            QCoreApplication::translate(
-                "DatasetMergeActions",
-                "These object topics share a name but have incompatible types or formats, so the datasets cannot be "
-                "merged:") +
-            u"</p>"_s + list + u"<p>"_s +
-            QCoreApplication::translate(
-                "DatasetMergeActions", "Remove or rename the conflicting topic and try again.") +
-            u"</p>"_s);
-    return std::nullopt;
+            QCoreApplication::translate("DatasetMergeActions", "These object topics share a name but have incompatible types, formats or marker descriptions, so the "
+               "datasets cannot be merged:") +
+            u"</p>"_s + list + u"<p>"_s + QCoreApplication::translate("DatasetMergeActions", "Remove or rename the conflicting topic and try again.") + u"</p>"_s);
+    return;
   }
 
-  const int choice = MessageBox::question(
-      parent, QCoreApplication::translate("DatasetMergeActions", "Merge datasets"),
-      composeDatasetMergeWarning(session, datasets),
-      {{QCoreApplication::translate("DatasetMergeActions", "Merge"), MessageBox::kDestructiveRole},
-       {QCoreApplication::translate("DatasetMergeActions", "Cancel"), MessageBox::kCancelRole}});
-  if (choice != 0) {
-    return std::nullopt;  // Cancel / Esc
-  }
-
-  const DatasetId anchor = session.mergeDatasets(datasets);
-  if (anchor == 0) {
-    return std::nullopt;
-  }
-  return anchor;
+  MessageBox::questionAsync(
+      parent, QCoreApplication::translate("DatasetMergeActions", "Merge datasets"), composeDatasetMergeWarning(session, datasets),
+      {{QCoreApplication::translate("DatasetMergeActions", "Merge"), MessageBox::kDestructiveRole}, {QCoreApplication::translate("DatasetMergeActions", "Cancel"), MessageBox::kCancelRole}},
+      [&session, datasets, on_merged = std::move(on_merged)](int choice, bool) {
+        if (choice != 0) {
+          return;  // Cancel / Esc
+        }
+        if (const DatasetId anchor = session.mergeDatasets(datasets); anchor != 0) {
+          on_merged(anchor);
+        }
+      });
 }
 
 }  // namespace PJ

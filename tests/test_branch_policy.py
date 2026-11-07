@@ -37,5 +37,18 @@ class BranchPolicyTest(unittest.TestCase):
         self.assertIn("zh-CN-4.x-*/**", text)
 
 
+    def test_new_upstream_workflows_do_not_enable_fork_publication(self):
+        for workflow in ['conda-release.yml', 'macos-ci.yml']:
+            text = (ROOT / '.github/workflows' / workflow).read_text(encoding='utf-8')
+            events = text.split('\non:', 1)[1].split('\n\n', 1)[0]
+            self.assertIn('  workflow_dispatch:', events)
+            self.assertNotIn('  push:', events)
+            self.assertNotIn('  pull_request:', events)
+            self.assertNotIn('  schedule:', events)
+        conda = (ROOT / '.github/workflows/conda-release.yml').read_text(encoding='utf-8')
+        self.assertIn("if: github.repository == 'PlotJuggler/PlotJuggler' && startsWith(github.ref, 'refs/tags/')", conda)
+        self.assertIn("if: github.repository == 'PlotJuggler/PlotJuggler' && github.event_name == 'workflow_dispatch'", conda)
+
+
 if __name__ == "__main__":
     unittest.main()
