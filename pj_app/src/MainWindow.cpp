@@ -15,6 +15,10 @@
 #include <QCloseEvent>
 #include <QColor>
 #include <QCoreApplication>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
+#include <QMimeData>
 
 #include "MainWindow.h"
 #include "pj_widgets/ExternalUrl.h"
@@ -705,7 +709,11 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
     rhi_compositing_anchor->setApi(preferredGraphicsApi());
     rhi_compositing_anchor->hide();
   }
+  // Files dropped anywhere load like a Load Data pick (dragEnterEvent). Not in
+  // the browser, whose drops carry no local paths.
+  setAcceptDrops(true);
 #endif
+  FileDialog::setUseSystemDialog(QSettings().value(kSystemFileDialogKey, false).toBool());
   // Pull saved icon metrics before setupUi so the literals we feed into
   // build*Toolbar() pick up the correct values on first paint. Widgets
   // that auto-construct from the .ui still draw at their default sizes
@@ -3889,6 +3897,33 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
   if (toast_manager_) {
     toast_manager_->updatePosition();
   }
+}
+
+// Copy, never the proposed Move: a source may delete a file whose move was accepted.
+void MainWindow::dragEnterEvent(QDragEnterEvent* event) {
+  if (event->mimeData() != nullptr && !FileLoader::droppedFilePaths(*event->mimeData()).isEmpty()) {
+    event->setDropAction(Qt::CopyAction);
+    event->accept();
+  }
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent* event) {
+  if (event->mimeData() != nullptr && event->mimeData()->hasUrls()) {
+    event->setDropAction(Qt::CopyAction);
+    event->accept();
+  }
+}
+
+void MainWindow::dropEvent(QDropEvent* event) {
+  const QStringList paths = FileLoader::droppedFilePaths(*event->mimeData());
+  if (paths.isEmpty()) {
+    return;
+  }
+  event->setDropAction(Qt::CopyAction);
+  event->accept();
+  // Load after the drop returns: the file manager waits inside the OS drag
+  // loop until then, and a load can open dialogs.
+  QTimer::singleShot(0, this, [this, paths] { file_loader_->loadFiles(paths, this); });
 }
 
 void MainWindow::paintEvent(QPaintEvent* event) {

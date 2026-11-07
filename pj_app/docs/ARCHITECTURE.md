@@ -62,6 +62,20 @@ Tests: `MainWindowStartupTest` (real mock file-source DSO).
 
 ## File loading
 
+Desktop file-manager drops enter through `MainWindow` as `Qt::CopyAction` and
+queue a copied path list with the window as callback context. The load starts
+after the OS drag loop returns; destroying the window cancels that callback.
+Only existing local files are accepted, without expanding directories. Text
+inputs keep their URL-as-text behavior, and floating docks are separate windows.
+`MainWindowFileDropLoadingTest` drives real drop events through the loader with
+a synthetic static ABI source, checking deferred loads, Chinese paths, repeated
+and multiple imports, retained source bytes and destruction before the callback.
+
+The optional system file-dialog preference is Windows/macOS-only and defaults
+off. Saving a layout still uses the embedded dialog for its extra controls.
+Native dialog presentation follows the platform; application translations do not
+promise to replace the operating system's labels or theme.
+
 `FileLoader` runs file loads (one queue, sequential, progressive on a worker
 thread); `LoadInput` carries the display name, backing path, reload identity and
 (in the browser) the storage lease that keeps an upload alive for deferred

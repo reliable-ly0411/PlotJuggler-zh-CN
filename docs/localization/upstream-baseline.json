@@ -1,7 +1,7 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
   "upstream_branch": "main-4.x",
-  "upstream_commit": "a3640d63d820f1ab1df2b01dbd9ac06142119545",
+  "upstream_commit": "349c74e3b0ada0081b7d0006e729de66e8e3b6e5",
   "upstream_version_file": "versions.env",
   "baseline_recorded_utc": "2026-11-07",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
@@ -63,5 +63,15 @@
     "qt_version": "6.11.1",
     "host_sdk_version": "0.34.1",
     "note": "Historical released package scope; not an acceptance claim for the new development snapshot."
+  },
+  "latest_sync": {
+    "previous_upstream_commit": "a3640d63d820f1ab1df2b01dbd9ac06142119545",
+    "development_parent": "88a6025ec330c743f6ce78e1f5a46a3cb55adbc6",
+    "upstream_commits": [
+      "fda4e555dfbb0278a85041107a81148f792fddb2",
+      "4b7ec5f04199b818058982642c32c8c0eba39158",
+      "349c74e3b0ada0081b7d0006e729de66e8e3b6e5"
+    ],
+    "macos_package_status": "Upstream source integrated; localization, native package acceptance and publication are not enabled."
   }
 }
