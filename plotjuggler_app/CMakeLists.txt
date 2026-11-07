@@ -237,3 +237,11 @@ if(PJ_BUILD_FORK_TESTS)
   set_target_properties(semver_test PROPERTIES WIN32_EXECUTABLE FALSE RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests_bin")
   add_test(NAME SemanticVersioning COMMAND semver_test)
 endif()
+
+if(BUILD_TESTING)
+  add_executable(test_nlohmann_layout tests/nlohmann_layout_probe.cpp nlohmann_parsers.cpp)
+  target_link_libraries(test_nlohmann_layout PRIVATE ${QT_LINK_LIBRARIES} plotjuggler_base
+                                                   nlohmann_json::nlohmann_json fmt::fmt)
+  add_test(NAME NlohmannLayout COMMAND test_nlohmann_layout)
+  set_tests_properties(NlohmannLayout PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()

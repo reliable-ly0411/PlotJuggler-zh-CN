@@ -5975,6 +5975,18 @@ p, li { white-space: pre-wrap; }
     <context>
         <name>dialog_mcap</name>
         <message>
+            <source>Enable for RTI DDS Micro and older CDR implementations that align from byte 0.
+Modern XCDR2 standard aligns from byte 4 (after CDR header).
+Only affects OMGIDL-encoded channels in this file.</source>
+            <translation>适用于 RTI DDS Micro 及从字节 0 开始对齐的旧版 CDR 实现。
+现代 XCDR2 标准从字节 4（CDR 头之后）开始对齐。
+仅影响此文件中采用 OMGIDL 编码的通道。</translation>
+        </message>
+        <message>
+            <source>Use legacy CDR alignment (byte 0) for OMGIDL messages</source>
+            <translation>对 OMGIDL 消息使用旧版 CDR 对齐方式（字节 0）</translation>
+        </message>
+        <message>
             <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="14" />
             <source>MCAP Parser</source>
             <translation>MCAP 解析器</translation>

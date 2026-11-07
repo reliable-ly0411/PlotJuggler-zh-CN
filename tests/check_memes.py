@@ -20,12 +20,12 @@ directory = root / "plotjuggler_app/resources/memes"
 catalog = json.loads((directory / "zh_CN.json").read_text(encoding="utf-8"))
 assert catalog["schema"] == 2 and catalog["rendering"] == "lossless-native-variants"
 images = catalog["images"]
-assert [image["id"] for image in images] == list(range(106))
-assert {p.name for p in directory.glob("meme_*.jpg")} == {f"meme_{i:02d}.jpg" for i in range(106)}
+assert [image["id"] for image in images] == list(range(107))
+assert {p.name for p in directory.glob("meme_*.jpg")} == {f"meme_{i:02d}.jpg" for i in range(107)}
 base_qrc = {f.text for f in ET.parse(root / "plotjuggler_app/resource.qrc").findall(".//file")}
 localized_qrc = {f.text for f in ET.parse(root / "plotjuggler_app/localized_resources.qrc").findall(".//file")}
 assert not any(f.startswith("resources/memes/zh_CN") for f in base_qrc)
-assert {"resources/memes/" + f"meme_{i:02d}.jpg" for i in range(106)} <= base_qrc
+assert {"resources/memes/" + f"meme_{i:02d}.jpg" for i in range(107)} <= base_qrc
 assets = catalog["assets"]
 assert {"resources/memes/zh_CN.json", *("resources/memes/" + name for name in assets)} == localized_qrc
 
@@ -92,7 +92,7 @@ assert {"zh_CN/" + p.relative_to(directory / "zh_CN").as_posix()
         for p in (directory / "zh_CN").rglob("*.png")} == set(assets)
 assert sum(m["bytes"] for m in assets.values()) < 70_000_000
 
-report = {"originals": 106, "translated": full + overlay, "overlays": overlay,
+report = {"originals": 107, "translated": full + overlay, "overlays": overlay,
           "complete_images": full, "original_fallbacks": unavailable,
           "translation_regions": count, "asset_bytes": sum(m["bytes"] for m in assets.values())}
 if args.reference_rev:
@@ -105,7 +105,12 @@ if args.reference_rev:
     checked_patches = 0
     for image in images:
         relative = f"plotjuggler_app/resources/memes/meme_{image['id']:02d}.jpg"
-        assert reference(relative) == (root / relative).read_bytes(), relative
+        source_revision = image.get("original_source_revision", args.reference_rev)
+        if source_revision != args.reference_rev:
+            assert image["id"] == 106
+            assert source_revision == "30ac3b9c947d68bfe3fa9ea1fb161186ba119466"
+        original_bytes = subprocess.check_output(["git", "show", source_revision + ":" + relative], cwd=root)
+        assert original_bytes == (root / relative).read_bytes(), relative
         if not image.get("variant"):
             continue
         ref = image["reference"]
