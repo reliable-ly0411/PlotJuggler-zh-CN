@@ -195,8 +195,8 @@ class AppLanguageTest : public QObject {
           QCoreApplication::translate("pj::scene3d::UrdfParser", "Parse error: <robot> has no <link> elements"),
           u"解析错误：<robot> 中没有 <link> 元素"_s);
       QCOMPARE(
-          QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "mesh load threw: %1").arg(path),
-          u"加载网格时发生异常：%1"_s.arg(path));
+          QCoreApplication::translate("pj::scene3d::MeshDiagnostics", "mesh import threw: %1").arg(path),
+          u"网格导入时发生异常：%1"_s.arg(path));
     }
     const PJ::AppLanguage english(*QCoreApplication::instance(), u"en_US"_s);
     QCOMPARE(

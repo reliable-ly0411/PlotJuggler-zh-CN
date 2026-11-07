@@ -202,11 +202,11 @@ void PluginFeedbackTest::mainWindowFlow() {
   mime.setData(u"plotjuggler/catalog-items"_s, encoded);
   auto* input = panel->findChild<QWidget*>(u"inputFrame"_s);
   QVERIFY(input);
-  const QPoint point = input->mapTo(panel, input->rect().center());
+  const QPointF point = input->mapTo(panel, input->rect().center());
   QDragEnterEvent enter(point, Qt::CopyAction, &mime, Qt::LeftButton, Qt::NoModifier);
   QCoreApplication::sendEvent(panel, &enter);
   QVERIFY(enter.isAccepted());
-  QDropEvent drop(QPointF(point), Qt::CopyAction, &mime, Qt::LeftButton, Qt::NoModifier);
+  QDropEvent drop(point, Qt::CopyAction, &mime, Qt::LeftButton, Qt::NoModifier);
   QCoreApplication::sendEvent(panel, &drop);
   QVERIFY(drop.isAccepted());
   QTRY_VERIFY(calculate->isEnabled());
@@ -305,7 +305,7 @@ int main(int argc, char** argv) {
     qCritical("Cannot initialize isolated acceptance profile: %s", qPrintable(error));
     return 1;
   }
-  PJ::PlotWidgetBase::setOpenGlDisabledOverride(true);
+  PJ::PlotWidgetBase::setGpuCanvasDisabledOverride(true);
   PluginFeedbackTest test;
   return QTest::qExec(&test, argc, argv);
 }

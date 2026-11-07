@@ -1,16 +1,16 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
   "upstream_branch": "main-4.x",
-  "upstream_commit": "0345ec513bde7f05ad3148548ac30401f2b6f7a7",
+  "upstream_commit": "a3640d63d820f1ab1df2b01dbd9ac06142119545",
   "upstream_version_file": "versions.env",
-  "baseline_recorded_utc": "2026-10-19",
+  "baseline_recorded_utc": "2026-11-07",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
   "localization_source_branch": "zh-CN",
   "localization_source_commit": "766a88d8e689c7803f32acb315ac872a0a67a57b",
   "port_strategy": "Module-level port, preserving English source strings and independent plugin licensing; no merge of PJ3 history.",
   "stable_branch": "zh-CN-4.x",
   "development_branch": "zh-CN-4.x-dev",
-  "status": "prerelease",
+  "status": "development",
   "ardupilot_plugin": {
     "upstream_repository": "https://github.com/ArduPilot/plotjuggler-apbin-plugins",
     "upstream_branch": "main",
@@ -30,7 +30,7 @@
     "tag": "4.0.0",
     "commit": "d278b1fe98f699d27b820867f454a697e50def2e",
     "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.0.0",
-    "relationship": "The pinned main-4.x snapshot is a descendant of 4.0.0; it is not the unchanged 4.0.0 release."
+    "relationship": "The 4.1.0 development snapshot contains this historical 4.0.0 baseline and later upstream commits; it is not an unchanged upstream release."
   },
   "csv_path_fix": {
     "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
@@ -50,5 +50,18 @@
     "ui_sha256_lf": "f7d484492d4b2033fc141c9ea3a9f83e9a976049947ba9dd90079df2d19099c0",
     "license": "MIT",
     "strategy": "Host display mapping for the unchanged official binary; no plugin rebuild or SDK change."
+  },
+  "host_sdk_version": "0.39.0",
+  "qt_version": "6.12.0",
+  "previous_upstream_commit": "0345ec513bde7f05ad3148548ac30401f2b6f7a7",
+  "integration_parents": {
+    "development": "5544b1cbfc87f73c2060af031544081bc29e7f3c",
+    "stable": "1f42375cb861e529a2e04d56f11cdee14e4638b7"
+  },
+  "published_localization_release": {
+    "version": "4.0.0-zh.1.rc.4",
+    "qt_version": "6.11.1",
+    "host_sdk_version": "0.34.1",
+    "note": "Historical released package scope; not an acceptance claim for the new development snapshot."
   }
 }

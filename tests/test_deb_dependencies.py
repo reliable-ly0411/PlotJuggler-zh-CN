@@ -52,6 +52,14 @@ class DebDependenciesTest(unittest.TestCase):
             self.assertIn('libunmapped_fixture.so.1', result.stderr)
             self.assertFalse((Path(tmp) / 'out').exists())
 
+    def test_wayland_dependency_is_declared(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = self.build_fixture(tmp, 'libwayland-client.so.0')
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            package = next((Path(tmp) / 'out').glob('*.deb'))
+            depends = subprocess.check_output(['dpkg-deb', '-f', str(package), 'Depends'], text=True)
+            self.assertIn('libwayland-client0', depends)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -339,6 +339,26 @@ class WorkflowExecutionTests(unittest.TestCase):
                         self.assertEqual(case['qt_passed_including_init_cleanup'], 3)
 
 
+class VulkanWorkflowSetupTests(unittest.TestCase):
+    def test_lavapipe_is_prepared_before_native_test_execution(self):
+        for workflow in ('zh-4x-ci.yml', 'zh-4x-packages.yml'):
+            with self.subTest(workflow=workflow):
+                content = (ROOT/'.github/workflows'/workflow).read_text(encoding='utf-8')
+                setup = content.split('      - name: Linux build dependencies\n', 1)[1].split('\n      - ', 1)[0]
+                self.assertIn("if: runner.os == 'Linux'", setup)
+                self.assertIn('mesa-vulkan-drivers libvulkan-dev', setup)
+                selection = setup.index('VK_ICD_FILENAMES="$(ls /usr/share/vulkan/icd.d/lvp_icd*.json')
+                validation = setup.index('test -f "${VK_ICD_FILENAMES}"')
+                persistence = setup.index('>> "$GITHUB_ENV"')
+                self.assertLess(setup.index('sudo apt-get install'), selection)
+                self.assertLess(selection, validation)
+                self.assertLess(validation, persistence)
+                self.assertIn("printf 'VK_ICD_FILENAMES=%s\\n'", setup)
+                native = content.split('      - name: Run native tests\n', 1)[1].split('\n      - ', 1)[0]
+                self.assertNotIn('/usr/share/vulkan', native)
+                self.assertIn('PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest', native)
+
+
 class PackageLanguagesTests(unittest.TestCase):
     def run_manifest(self, languages, png_languages):
         with tempfile.TemporaryDirectory() as tmp:
