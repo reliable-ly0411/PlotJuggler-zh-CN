@@ -2394,8 +2394,8 @@ void CurveTreeView::updateWasmDrag(
   }
   if (wasm_drag_target_ != nullptr && target_is_ancestor) {
     QDragMoveEvent move_event(
-        wasm_drag_target_->mapFromGlobal(global_pos), Qt::CopyAction | Qt::MoveAction, wasm_drag_mime_.get(), buttons,
-        modifiers);
+        QPointF(wasm_drag_target_->mapFromGlobal(global_pos)), Qt::CopyAction | Qt::MoveAction, wasm_drag_mime_.get(),
+        buttons, modifiers);
     QApplication::sendEvent(wasm_drag_target_, &move_event);
     if (move_event.isAccepted()) {
       return;
@@ -2422,7 +2422,8 @@ void CurveTreeView::updateWasmDrag(
       continue;
     }
     QDragEnterEvent enter_event(
-        current->mapFromGlobal(global_pos), Qt::CopyAction | Qt::MoveAction, wasm_drag_mime_.get(), buttons, modifiers);
+        QPointF(current->mapFromGlobal(global_pos)), Qt::CopyAction | Qt::MoveAction, wasm_drag_mime_.get(), buttons,
+        modifiers);
     QApplication::sendEvent(current, &enter_event);
     if (enter_event.isAccepted() && current != nullptr) {
       wasm_drag_target_ = current;
