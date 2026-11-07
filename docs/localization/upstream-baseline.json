@@ -41,5 +41,14 @@
     "patch": "packaging/localization/plugin-patches/csv-loader.patch",
     "patch_sha256": "00ecc1514fde0b6d8b97750a1cac1d2a251c0aa955c884e1dde7fa995f95c02c",
     "scope": "UTF-8 filesystem paths in preview and import; synthetic ABI regressions; no parsing-locale or data-value changes"
+  },
+  "fft_display_mapping": {
+    "repository": "https://github.com/PlotJuggler/pj-official-plugins",
+    "release_tag": "toolbox_fft/v1.0.1",
+    "commit": "2bc991cae2dba7f9f1468dbf8dd72d89797699bc",
+    "ui_path": "toolbox_fft/fft_dialog.ui",
+    "ui_sha256_lf": "f7d484492d4b2033fc141c9ea3a9f83e9a976049947ba9dd90079df2d19099c0",
+    "license": "MIT",
+    "strategy": "Host display mapping for the unchanged official binary; no plugin rebuild or SDK change."
   }
 }

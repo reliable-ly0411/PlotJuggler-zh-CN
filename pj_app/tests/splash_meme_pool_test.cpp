@@ -57,7 +57,7 @@ TEST(SplashLocalization, SavedMemeChoiceSurvivesLanguageRoundTrip) {
   ASSERT_TRUE(directory.isValid());
   QSettings settings(directory.filePath(u"settings.ini"_s), QSettings::IniFormat);
   settings.setValue(kSplashModeKey, kSplashModeMemes);
-  for (const QString& code : {u"zh_CN"_s, u"en_US"_s, u"zh_CN"_s}) {
+  for (const QString& code : {u"zh_CN"_s, u"zh_TW"_s, u"en_US"_s, u"zh_CN"_s}) {
     const AppLanguage language(*QCoreApplication::instance(), code);
     EXPECT_EQ(startupSplashMode(settings), kSplashModeMemes);
     EXPECT_EQ(settings.value(kSplashModeKey).toString(), kSplashModeMemes);
@@ -74,9 +74,9 @@ TEST(SplashLocalization, AllSubtitlesTranslateAndDoNotLeakIntoEnglish) {
     EXPECT_EQ(startupSplashMode(settings), kSplashModeMemes);
   }
   ASSERT_EQ(english.size(), 15);
-  for (int repeat = 0; repeat < 2; ++repeat) {
+  for (const QString& code : {u"zh_CN"_s, u"zh_TW"_s, u"zh_CN"_s}) {
     {
-      const AppLanguage language(*QCoreApplication::instance(), u"zh_CN"_s);
+      const AppLanguage language(*QCoreApplication::instance(), code);
       ASSERT_TRUE(language.catalogLoaded());
       const QStringList chinese = seriousSplashSubtitles();
       ASSERT_EQ(chinese.size(), english.size());

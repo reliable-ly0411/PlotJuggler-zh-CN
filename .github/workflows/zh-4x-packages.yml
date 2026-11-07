@@ -234,13 +234,19 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
             -DCMAKE_PREFIX_PATH="$PWD/.qt/$PJ_QT_VERSION/${{ matrix.qt_arch }}" \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPJ_BUILD_TESTS=ON -DPJ_BUILD_DEMOS=OFF \
+            -DPJ_PLUGIN_FEEDBACK_ACCEPTANCE=ON \
             -DPJ_INSTALLATION=${{ matrix.installation }} \
             -DCMAKE_POLICY_DEFAULT_CMP0141=NEW -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
           cmake --build build --config RelWithDebInfo --parallel 2
+      - name: Prepare verified native feedback inputs
+        run: python -X utf8 packaging/localization/prepare_feedback_tests.py --build build --config RelWithDebInfo --output build/feedback-plugins
       - name: Run native tests
         run: |
           export PATH="$PWD/.qt/$PJ_QT_VERSION/${{ matrix.qt_arch }}/bin:$PATH"
           export PJ_GUI_ACCEPTANCE_DIR="$(python -c 'import os; print(os.path.abspath("build/gui-acceptance").replace(chr(92), "/"))')"
+          export PJ_FEEDBACK_PLUGIN_DIR="$(python -c 'import os; print(os.path.abspath("build/feedback-plugins").replace(chr(92), "/"))')"
+          export PJ_APBIN_TEST_DIR="$PJ_FEEDBACK_PLUGIN_DIR/ardupilot-dataflash"
+          native_report="$(python -c 'import os; print(os.path.abspath("build/native-tests.xml").replace(chr(92), "/"))')"
           if [[ "$RUNNER_OS" == Windows ]]; then
             for list in build/pj_ffmpeg_bin_dirs.txt build/pj_python_bin_dirs.txt; do
               if [[ -f "$list" ]]; then
@@ -249,12 +255,21 @@ jobs:
                 done < "$list"
               fi
             done
+          fi
+          # PRE_TEST discovery launches runners even for --show-only. It needs
+          # the same runtime DLL search path as the execution below.
+          ctest --test-dir build --build-config RelWithDebInfo --show-only=json-v1 -R '^(PluginFeedbackMainWindow-(en_US|zh_CN|zh_TW)|PluginDisplayMetadataTest)$' > build/feedback-tests.json
+          python -X utf8 packaging/localization/audit_feedback_results.py --ctest-list build/feedback-tests.json --output build/feedback-selection.json
+          # Keep trailing Qt summaries in JUnit; CTest's 1 KiB default truncates
+          # successful cases. The result gate still rejects truncated evidence.
+          if [[ "$RUNNER_OS" == Windows ]]; then
             # Widget runners choose offscreen themselves; leave GL runners on
             # the native platform, matching upstream Windows CI.
-            ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120
+            ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
           else
-            PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120
+            PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
           fi
+          python -X utf8 packaging/localization/audit_feedback_results.py --junit "$native_report" --screenshots "$PJ_GUI_ACCEPTANCE_DIR" --allow-other-cases --output build/feedback-results.json
       - name: Validate release identity
         run: |
           python tests/check_localization_provenance.py
@@ -337,6 +352,11 @@ jobs:
           name: zh4-candidate-reports-${{ runner.os }}
           path: |
             build/Testing/Temporary/
+            build/native-tests.xml
+            build/feedback-tests.json
+            build/feedback-selection.json
+            build/feedback-results.json
+            build/feedback-plugins-identity.json
             build-i18n/Testing/Temporary/
             build/diagnostics/
             build/gui-acceptance/

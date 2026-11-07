@@ -332,7 +332,7 @@ int main(int argc, char* argv[]) {
   parser.addVersionOption();
   const QCommandLineOption language_option(
       u"language"_s,
-      QCoreApplication::translate("AppLanguage", "Interface language for this session (zh_CN or en_US)."),
+      QCoreApplication::translate("AppLanguage", "Interface language for this session (zh_CN, zh_TW or en_US)."),
       u"language"_s);
   parser.addOption(language_option);
   const QCommandLineOption test_data_option(

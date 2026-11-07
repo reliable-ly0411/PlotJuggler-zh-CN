@@ -15,6 +15,8 @@ import tempfile
 import time
 import xml.etree.ElementTree as ET
 
+ACCEPTANCE_LANGUAGES = ('zh_CN', 'zh_TW', 'en_US')
+
 FONT_SHA = '2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b'
 LOG_SHA = '28dcbac522ceb75eee10f6af37b0d6e342c1dc79e2be1a9f766fe18a14336766'
 
@@ -274,7 +276,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
         run('plugins', args, validate_plugins=True)
         csv_cases = [(name, *write_csv_layout(work, unicode_path))
                      for name, unicode_path in [('ascii', False), ('unicode', True)]]
-        for language in ['zh_CN', 'en_US']:
+        for language in ACCEPTANCE_LANGUAGES:
             for name, csv_layout, topic in csv_cases:
                 case = f'csv-{name}-{language}'
                 diagnostics = output / f'{case}-diagnostics.json'
@@ -291,7 +293,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
                             x['id'] in ['layout-import-unresolved-curves', 'layout-import-unresolved-curves-sync']]
                 assert not rejected, rejected
         layout = write_bin_layout(work, log)
-        for language in ['zh_CN', 'en_US']:
+        for language in ACCEPTANCE_LANGUAGES:
             diagnostics = output / f'bin-{language}.json'
             plot_state = output / f'plot-state-{language}.json'
             text = run('bin-' + language, ['--language', language, '--nosplash', '--layout', str(layout),
@@ -322,13 +324,13 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
                         assert png.stat().st_size > 10000, 'empty GUI screenshot'
                     finally:
                         stop(process)
-    summary = {'status': 'automated_checks_passed',
-               'visual_review': 'required separately for the captured Chinese and English screenshots', 'release': record, 'plugin_count': len(expected),
+    summary = {'status': 'automated_checks_passed', 'languages': list(ACCEPTANCE_LANGUAGES),
+               'visual_review': 'required separately for the captured Simplified Chinese, Traditional Chinese and English screenshots', 'release': record, 'plugin_count': len(expected),
                'loaded_plugin_count': len(expected) - len(unavailable), 'unavailable_plugins': unavailable,
                'checks': ['embedded version', 'CJK font bytes', 'licenses', 'Python backend',
                           'bundled plugin inventory and explicit external dependency boundary', 'real BIN in Unicode path',
                           'synthetic CSV in ASCII and Unicode paths: both fields, all finite samples and visible bounds',
-                          'Chinese and English curve restoration with finite visible samples and non-default viewport']}
+                          'Simplified Chinese, Traditional Chinese and English curve restoration with finite visible samples and non-default viewport']}
     (output / 'acceptance.json').write_text(json.dumps(summary, indent=2) + '\n', encoding='utf-8')
 
 

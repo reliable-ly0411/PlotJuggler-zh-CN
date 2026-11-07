@@ -2,6 +2,7 @@
 #pragma once
 
 #include <QString>
+#include <QList>
 #include <QTranslator>
 
 class QCoreApplication;
@@ -16,7 +17,16 @@ class AppLanguage final {
  public:
   static inline const QString kPreferenceKey = QStringLiteral("Preferences::language");
 
-  // Accepts zh_CN/zh-CN; all other values safely use the English source text.
+  // Canonical persisted code plus an endonym recognizable in every UI locale.
+  struct Choice {
+    QString code;
+    QString native_name;
+  };
+
+  [[nodiscard]] static QList<Choice> supportedLanguages();
+
+  // Accepts the exact supported locale codes, also with BCP-47 hyphens.
+  // Other regions/scripts are not guessed; unsupported values use English.
   [[nodiscard]] static QString normalizedLanguage(const QString& language);
 
   // A fresh profile starts in Simplified Chinese, independent of the OS locale.

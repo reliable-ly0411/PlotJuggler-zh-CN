@@ -28,7 +28,7 @@ inline constexpr int kMaxMemeExtent = 600;
 // which Qt::KeepAspectRatio alone would not guarantee.
 QPixmap capMemeToSplashBox(const QPixmap& pixmap);
 
-// Read at startup without rewriting an explicit preference, in either language.
+// Read at startup without rewriting an explicit preference, in every language.
 QString startupSplashMode(const QSettings& settings);
 
 // Translate afresh for each call, never cache strings across translator lifetimes.
@@ -37,7 +37,8 @@ QStringList seriousSplashSubtitles();
 // Paired captions for the text-free two-panel meme compositions, translated afresh.
 QStringList localizedMemeCaptions();
 
-// Reviewed original variants plus the eight additional compositions.
+// Simplified Chinese: reviewed raster variants plus eight compositions.
+// Traditional Chinese: the eight captioned, text-free-artwork compositions only.
 QStringList chineseMemeIds();
 QPixmap chineseMemePixmap(const QString& id);
 

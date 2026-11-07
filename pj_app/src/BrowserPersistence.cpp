@@ -499,7 +499,7 @@ std::optional<QVariant> BrowserPersistence::sanitizePreference(const QString& ke
     }
     case ValueKind::kLanguage: {
       if (value.metaType().id() != QMetaType::QString ||
-          (value.toString() != "zh_CN"_L1 && value.toString() != "en_US"_L1)) {
+          (value.toString() != "zh_CN"_L1 && value.toString() != "zh_TW"_L1 && value.toString() != "en_US"_L1)) {
         return std::nullopt;
       }
       return value.toString();

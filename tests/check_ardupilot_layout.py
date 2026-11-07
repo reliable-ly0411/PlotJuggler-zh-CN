@@ -29,7 +29,7 @@ def check(app, plugins, log):
                    XDG_DATA_HOME=str(work / 'data'), XDG_CACHE_HOME=str(work / 'cache'),
                    QT_FORCE_STDERR_LOGGING='1', QT_LOGGING_RULES='pj.runtime.ingest.info=true',
                    PJ_DISABLE_TELEMETRY='1')
-        for language in ['zh_CN', 'en_US']:
+        for language in ['zh_CN', 'zh_TW', 'en_US']:
             state = work / f'plot-{language}.json'
             command = [str(app), '--plugin-dir', str(plugins), '--language', language, '--nosplash',
                        '--disable-opengl', '--layout', str(layout), '--exit-after-layout',

@@ -48,6 +48,10 @@ PluginCheckDescriptor descriptorFromJson(const QJsonObject& obj) {
   d.version = obj.value("version").toString();
   d.description = obj.value("description").toString();
   d.category = obj.value("category").toString();
+  d.author = obj.value("author").toString();
+  d.license = obj.value("license").toString();
+  d.website = obj.value("website").toString();
+  d.repository = obj.value("repository").toString();
   d.family = obj.value("family").toString();
   d.abi_major = static_cast<quint32>(obj.value("abi_major").toInt());
   d.min_sdk_required = obj.value("min_sdk_required").toString();

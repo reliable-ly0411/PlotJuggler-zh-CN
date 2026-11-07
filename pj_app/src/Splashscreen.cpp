@@ -57,7 +57,8 @@ QPixmap makeLocalizedMeme(int index) {
 // enumerated at runtime, so adding a meme is a pure resource change — no code
 // edit. Returns a null QPixmap when the pool is empty.
 QPixmap getFunnySplashscreen() {
-  if (QCoreApplication::instance()->property("interfaceLanguage").toString() == "zh_CN"_L1) {
+  const QString language = QCoreApplication::instance()->property("interfaceLanguage").toString();
+  if (language == "zh_CN"_L1 || language == "zh_TW"_L1) {
     const QStringList ids = chineseMemeIds();
     if (ids.isEmpty()) {
       return {};
@@ -240,7 +241,10 @@ QStringList localizedMemeCaptions() {
 }
 
 QStringList chineseMemeIds() {
-  QStringList ids = localizedOriginalMemeIds();
+  // The reviewed raster variants contain Simplified Chinese pixels. Traditional
+  // Chinese uses only text-free artwork with captions from its own Qt catalog.
+  const bool traditional = QCoreApplication::instance()->property("interfaceLanguage").toString() == "zh_TW"_L1;
+  QStringList ids = traditional ? QStringList{} : localizedOriginalMemeIds();
   for (qsizetype i = 0; i < localizedMemeCaptions().size() / 2; ++i) {
     ids.append(u"extra:%1"_s.arg(i));
   }

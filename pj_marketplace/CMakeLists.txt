@@ -122,6 +122,7 @@ target_link_libraries(pj_marketplace_ui PUBLIC
 # than picking it up through pj_base or pj_plugin_catalog, which it deliberately
 # does not link so its packaging closure stays Qt-free and headless.
 find_package(nlohmann_json REQUIRED)
+target_link_libraries(pj_marketplace PRIVATE nlohmann_json::nlohmann_json)
 
 # Standalone configure (this directory as the CMake root) resolves the SDK
 # itself; in the PJ4 tree the root CMakeLists.txt already did.
@@ -299,5 +300,9 @@ target_compile_definitions(extension_manager_check_plugin_management PRIVATE
   RESULTS_DIR="${CMAKE_CURRENT_BINARY_DIR}/tests/results"
 )
 target_compile_options(extension_manager_check_plugin_management PRIVATE ${PJ_WARNING_FLAGS})
+
+if(PJ4_BUILD_APP)
+  add_subdirectory(tests/metadata)
+endif()
 
 endif() # PJ_BUILD_TESTS

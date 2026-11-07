@@ -2060,11 +2060,13 @@ static void applyToWidget(
   // --- QLabel ---
   if (auto* lbl = qobject_cast<QLabel*>(w)) {
     if (auto v = view.label(name)) {
-      lbl->setText(bundledDisplayText(lbl, "text", QString::fromStdString(*v)));
+      lbl->setText(bundledDisplayText(
+          lbl, "text", QString::fromStdString(*v), [&](const char* control) { return view.enabled(control); }));
     }
     // Also allow "text" for labels
     if (auto v = view.text(name)) {
-      lbl->setText(bundledDisplayText(lbl, "text", QString::fromStdString(*v)));
+      lbl->setText(bundledDisplayText(
+          lbl, "text", QString::fromStdString(*v), [&](const char* control) { return view.enabled(control); }));
     }
     return;
   }
