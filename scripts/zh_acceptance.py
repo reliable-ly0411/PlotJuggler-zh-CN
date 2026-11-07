@@ -44,7 +44,7 @@ for language in ("zh_CN", "en_US"):
     (out / "memes.log").write_bytes(exported.stdout)
     assert exported.returncode == 0, exported.stdout.decode("utf-8", errors="replace")
     memes = json.loads((meme_out / "memes.json").read_text(encoding="utf-8"))
-    assert len(memes) == 106 and all(m["text_fits"] and m["saved"] and m["english_original"] for m in memes), memes
+    assert len(memes) == 107 and all(m["text_fits"] and m["saved"] and m["english_original"] for m in memes), memes
     assert sum(m["rendering"] in ("localized-overlay", "localized-full-image") for m in memes) == (localized_count if language == "zh_CN" else 0), memes
     reports.append({"language": language, **report, "meme_images": len(memes)})
 Path(a.out, "summary.json").write_text(json.dumps(reports, ensure_ascii=False, indent=2), encoding="utf-8")

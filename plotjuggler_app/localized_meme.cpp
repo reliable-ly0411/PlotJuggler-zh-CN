@@ -41,11 +41,11 @@ QPixmap localizedMeme(int index, bool chinese, bool* text_fits)
 {
   const QPixmap original(originalPath(index));
   const auto images = catalog();
-  bool ok = !original.isNull() && index >= 0 && index < 106;
+  bool ok = !original.isNull() && index >= 0 && index < 107;
   QJsonObject entry;
   if (ok && chinese && PJ_ENABLE_LOCALIZED_IMAGES)
   {
-    ok = images.size() == 106;
+    ok = images.size() == 107;
     if (ok)
     {
       entry = images[index].toObject();
@@ -94,7 +94,7 @@ bool exportLocalizedMemes(const QString& directory, bool chinese)
   QJsonArray results;
   bool all_ok = true;
   const auto images = catalog();
-  for (int i = 0; i < 106; ++i)
+  for (int i = 0; i < 107; ++i)
   {
     bool fits = false;
     const auto image = localizedMeme(i, chinese, &fits);

@@ -246,6 +246,9 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
     }
   }
 
+  // Remember the startup title; loaded file names are appended to it later.
+  _base_window_title = windowTitle();
+
   QSettings settings;
 
   if (commandline_parser.isSet("buffer_size"))
@@ -341,6 +344,19 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
   _default_streamer = commandline_parser.value("start_streamer");
 
   loadAllPlugins(plugin_extra_folders);
+
+  // builtin messageParsers
+  auto json_parser = std::make_shared<JSON_ParserFactory>();
+  _parser_factories.insert({ json_parser->encoding(), json_parser });
+
+  auto cbor_parser = std::make_shared<CBOR_ParserFactory>();
+  _parser_factories.insert({ cbor_parser->encoding(), cbor_parser });
+
+  auto bson_parser = std::make_shared<BSON_ParserFactory>();
+  _parser_factories.insert({ bson_parser->encoding(), bson_parser });
+
+  auto msgpack = std::make_shared<MessagePack_ParserFactory>();
+  _parser_factories.insert({ msgpack->encoding(), msgpack });
 
   //------------------------------------
 
@@ -480,19 +496,6 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
     theme = "light";
   }
   loadStyleSheet(tr(":/resources/stylesheet_%1.qss").arg(theme));
-
-  // builtin messageParsers
-  auto json_parser = std::make_shared<JSON_ParserFactory>();
-  _parser_factories.insert({ json_parser->encoding(), json_parser });
-
-  auto cbor_parser = std::make_shared<CBOR_ParserFactory>();
-  _parser_factories.insert({ cbor_parser->encoding(), cbor_parser });
-
-  auto bson_parser = std::make_shared<BSON_ParserFactory>();
-  _parser_factories.insert({ bson_parser->encoding(), bson_parser });
-
-  auto msgpack = std::make_shared<MessagePack_ParserFactory>();
-  _parser_factories.insert({ msgpack->encoding(), msgpack });
 
   if (!_default_streamer.isEmpty())
   {
@@ -1094,7 +1097,9 @@ QDomDocument MainWindow::xmlSaveState() const
   return doc;
 }
 
-void MainWindow::checkAllCurvesFromLayout(const QDomElement& root)
+// Collect all curve names from a layout XML (numeric, XY endpoints, string).
+// Shared by checkAllCurvesFromLayout() and loadLayoutFromFile().
+static std::set<std::string> collectCurvesFromLayoutXML(const QDomElement& root)
 {
   std::set<std::string> curves;
 
@@ -1108,8 +1113,7 @@ void MainWindow::checkAllCurvesFromLayout(const QDomElement& root)
            pl = pl.nextSiblingElement("plot"))
       {
         QDomElement tran_elem = pl.firstChildElement("transform");
-        std::string trans = tran_elem.attribute("value").toStdString();
-        bool is_XY_plot = (trans == "XYPlot");
+        const bool is_XY_plot = (tran_elem.attribute("value") == "XYPlot");
 
         for (QDomElement cv = pl.firstChildElement("curve"); !cv.isNull();
              cv = cv.nextSiblingElement("curve"))
@@ -1127,16 +1131,20 @@ void MainWindow::checkAllCurvesFromLayout(const QDomElement& root)
       }
     }
   }
+  curves.erase(std::string());
+  return curves;
+}
+
+void MainWindow::checkAllCurvesFromLayout(const QDomElement& root)
+{
+  auto curves = collectCurvesFromLayoutXML(root);
 
   std::vector<std::string> missing_curves;
 
   for (auto& curve_name : curves)
   {
-    if (_mapped_plot_data.numeric.count(curve_name) == 0)
-    {
-      missing_curves.push_back(curve_name);
-    }
-    if (_mapped_plot_data.strings.count(curve_name) == 0)
+    if (_mapped_plot_data.numeric.count(curve_name) == 0 &&
+        _mapped_plot_data.strings.count(curve_name) == 0)
     {
       missing_curves.push_back(curve_name);
     }
@@ -1358,6 +1366,7 @@ void MainWindow::deleteAllData()
   _transform_functions.clear();
   _curvelist_widget->clear();
   _loaded_datafiles_history.clear();
+  updateWindowTitle();
   _undo_states.clear();
   _redo_states.clear();
 
@@ -1519,10 +1528,30 @@ bool MainWindow::loadDataFromFiles(QStringList filenames, bool auto_prefix)
   if (loaded_filenames.size() > 0)
   {
     updateRecentDataMenu(loaded_filenames);
+    updateWindowTitle();
     linkedZoomOut();
     return true;
   }
   return false;
+}
+
+void MainWindow::updateWindowTitle()
+{
+  if (_loaded_datafiles_history.empty())
+  {
+    setWindowTitle(_base_window_title);
+    return;
+  }
+
+  const QString first = QFileInfo(_loaded_datafiles_history.front().filename).fileName();
+  QString window_title = QString("%1 - %2").arg(_base_window_title, first);
+
+  const int others = static_cast<int>(_loaded_datafiles_history.size()) - 1;
+  if (others > 0)
+  {
+    window_title += QString(" (+%1)").arg(others);
+  }
+  setWindowTitle(window_title);
 }
 
 std::unordered_set<std::string> MainWindow::loadDataFromFile(const FileLoadInfo& info,
@@ -2043,6 +2072,13 @@ void MainWindow::loadPluginState(const QDomElement& root)
     {
       toolboxes().at(plugin_name)->xmlLoadState(plugin_elem);
     }
+    const auto parser =
+        std::find_if(_parser_factories.begin(), _parser_factories.end(),
+                     [&](const auto& entry) { return plugin_name == entry.second->name(); });
+    if (parser != _parser_factories.end())
+    {
+      parser->second->xmlLoadState(plugin_elem);
+    }
     if (statePublishers().find(plugin_name) != statePublishers().end())
     {
       StatePublisherPtr publisher = statePublishers().at(plugin_name);
@@ -2072,6 +2108,14 @@ QDomElement MainWindow::savePluginState(QDomDocument& doc)
   AddPlugins(dataStreamers());
   AddPlugins(toolboxes());
   AddPlugins(statePublishers());
+
+  // A factory can provide several encodings; save its configuration once.
+  std::map<QString, ParserFactoryPtr> parser_plugins;
+  for (const auto& [encoding, parser] : _parser_factories)
+  {
+    parser_plugins.emplace(parser->name(), parser);
+  }
+  AddPlugins(parser_plugins);
 
   for (auto& it : statePublishers())
   {
@@ -2202,6 +2246,34 @@ bool MainWindow::loadLayoutFromFile(QString filename, bool load_datafiles)
       datafile_elem = datafile_elem.nextSiblingElement("fileInfo");
     }
   }
+  updateWindowTitle();
+
+  // Create placeholders for layout curves not yet in _mapped_plot_data,
+  // so they appear in the Timeseries list before live data arrives.
+  {
+    auto layout_curves = collectCurvesFromLayoutXML(root);
+
+    bool any_added = false;
+    for (const auto& curve_name : layout_curves)
+    {
+      // Skip curves already known as data or as a transform/custom function.
+      if (_mapped_plot_data.numeric.count(curve_name) > 0 ||
+          _mapped_plot_data.strings.count(curve_name) > 0 ||
+          _transform_functions.count(curve_name) > 0)
+      {
+        continue;
+      }
+      _mapped_plot_data.addNumeric(curve_name);
+      if (_curvelist_widget->addCurve(curve_name))
+      {
+        any_added = true;
+      }
+    }
+    if (any_added)
+    {
+      _curvelist_widget->refreshColumns();
+    }
+  }
 
   QDomElement previous_streamer = root.firstChildElement("previouslyLoaded_Streamer");
   if (!previous_streamer.isNull())
@@ -2221,18 +2293,6 @@ bool MainWindow::loadLayoutFromFile(QString filename, bool load_datafiles)
     {
       if (dataStreamers().count(streamer_name) != 0)
       {
-        auto allCurves = readAllCurvesFromXML(root);
-
-        // create placeholders, if necessary
-        for (auto curve_name : allCurves)
-        {
-          std::string curve_str = curve_name.toStdString();
-          if (_mapped_plot_data.numeric.count(curve_str) == 0)
-          {
-            _mapped_plot_data.addNumeric(curve_str);
-          }
-        }
-
         startStreamingPlugin(streamer_name);
       }
       else
@@ -3759,6 +3819,7 @@ void MainWindow::on_buttonReloadData_clicked()
     loadDataFromFile(info, false);
   }
   ui->buttonReloadData->setEnabled(!_loaded_datafiles_previous.empty());
+  updateWindowTitle();
 }
 
 void MainWindow::on_buttonCloseStatus_clicked()

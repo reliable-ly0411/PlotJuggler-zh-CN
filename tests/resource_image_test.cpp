@@ -117,7 +117,7 @@ int main(int argc, char** argv)
   {
     const QDir english(QString::fromLocal8Bit(argv[1]));
     const auto names = english.entryList({"meme_*.jpg"}, QDir::Files);
-    if (names.size() != 106)
+    if (names.size() != 107)
     {
       return 13;
     }
@@ -131,7 +131,7 @@ int main(int argc, char** argv)
         return 14;
       }
     }
-    std::cout << "PASS: all 106 official 3.17.2 English images remain pixel-identical "
+    std::cout << "PASS: all 107 upstream English images remain pixel-identical "
                  "with the default empty variant\n";
   }
   std::cout << "PASS: native atlas pixels, high DPI, alpha, full-image/empty fallbacks, "
