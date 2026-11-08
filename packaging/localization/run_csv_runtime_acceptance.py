@@ -4,10 +4,12 @@
 import argparse
 import hashlib
 import json
+import os
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 import subprocess
+import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 EXPECTED = {'CsvRuntimeFileLoader_' + language for language in ['zh_CN', 'zh_TW', 'en_US']}
@@ -58,6 +60,28 @@ def staged_csv(prefix):
     return binary
 
 
+def runtime_environment(build):
+    """Give Windows CTest the DLL paths of this build, including during discovery."""
+    env = os.environ.copy()
+    if sys.platform != 'win32':
+        return env
+    cache = (build / 'CMakeCache.txt').read_text(encoding='utf-8')
+    qt_dirs = re.findall(r'^Qt6_DIR:PATH=(.+)$', cache, re.M)
+    if len(qt_dirs) != 1:
+        raise ValueError('Require the configured Qt6_DIR for Windows CSV runtime tests')
+    qt = Path(qt_dirs[0].strip()).parents[2]
+    dirs = [str(qt / 'bin')]
+    for name in ['pj_ffmpeg_bin_dirs.txt', 'pj_python_bin_dirs.txt']:
+        listing = build / name
+        if listing.is_file():
+            dirs.extend(line.strip() for line in listing.read_text(encoding='utf-8').splitlines() if line.strip())
+    # Like test.bat, prefer the exact configured dependencies over unrelated
+    # system Qt/Python installs. Staging has not yet deployed a complete runtime.
+    env['PATH'] = ';'.join([*dirs, env.get('PATH', '')])
+    env['QT_PLUGIN_PATH'] = str(qt / 'plugins')
+    return env
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--build', type=Path, required=True)
@@ -69,15 +93,16 @@ def main():
                     '-DPJ_CSV_RUNTIME_PLUGIN=' + binary.as_posix()], check=True)
     subprocess.run(['cmake', '--build', str(build), '--config', 'RelWithDebInfo',
                     '--target', 'csv_runtime_file_loader_test', '--parallel', '2'], check=True)
+    env = runtime_environment(build)
     selection = ['-R', '^CsvRuntimeFileLoader_']
     listing = subprocess.check_output(['ctest', '--test-dir', str(build), '-C', 'RelWithDebInfo',
-                                       '--show-only=json-v1', *selection], text=True, encoding='utf-8')
+                                       '--show-only=json-v1', *selection], env=env, text=True, encoding='utf-8')
     selected = {test['name'] for test in json.loads(listing)['tests']}
     assert selected == EXPECTED, (selected, EXPECTED)
     subprocess.run(['ctest', '--test-dir', str(build), '-C', 'RelWithDebInfo', '--no-tests=error',
                     '--output-on-failure', '--timeout', '120', '--test-output-size-passed', '262144',
                     '--output-junit', str(build / 'csv-runtime.xml'),
-                    *selection], check=True)
+                    *selection], env=env, check=True)
     audit_results(build / 'csv-runtime.xml')
 
 

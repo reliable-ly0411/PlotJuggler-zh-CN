@@ -31,6 +31,15 @@ three tools before dependency installation or application compilation. It does
 not execute downloaded content. Payload staging rehashes the same local files
 (including size), fails on tampering rather than replacing it, and records the
 lock in `release.json`. The existing clean-source provenance gate is unchanged.
+The shared `download_retry.py` reader makes at most three attempts for HTTP
+500/502/503/504 or explicit connection/read timeouts, waiting 2 then 4 seconds.
+This applies to both metadata and asset bytes. Other HTTP errors, TLS/permission
+errors, invalid JSON, identity mismatches and size/checksum failures fail closed
+without retries. Each attempt discards any partial response and starts a fresh
+request to the same official URL; validation still precedes writing/chmod.
+The unchanged 180-second urllib timeout applies to blocking socket operations,
+not a strict whole-download deadline. A hard wall-clock limit requires a runner
+step/job timeout; the retry count does not provide one.
 To independently run the network preflight in an empty directory:
 
 ```sh
@@ -187,6 +196,10 @@ exactly two isolated inputs with `prepare_feedback_tests.py`: the APBIN binary
 selected by this build's generated path file, and the platform-matching official
 FFT ZIP verified against the locked registry hash. This is test input only;
 FFT is not added to the release's 19/21 bundled-plugin inventory.
+FFT acquisition uses the same bounded retry policy as Linux packaging tools,
+with the existing 120-second socket timeout and 32 MiB archive limit. Archive
+validation and APBIN assembly still occur after compilation. `--fft-archive`
+continues to verify a local archive without network requests or replacement.
 CTest selection must contain all three `PluginFeedbackMainWindow-*` cases plus
 the metadata case. `audit_feedback_results.py` rejects missing cases, JUnit and
 Qt-level skips/errors/blacklists, or absent actual APBIN/host-flow PASS markers.

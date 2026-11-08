@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+import urllib.error
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'packaging/localization'))
@@ -48,11 +49,66 @@ class LinuxToolsTest(unittest.TestCase):
                 linux_tools.prepare_linux_tools(self.out, verify_metadata=True)
         self.assertEqual(fetch.call_count, 1)
 
+    def test_transient_metadata_and_asset_failures_retry_independently(self):
+        metadata = dict(id=123, name=self.tool['name'], size=len(self.data),
+                        digest='sha256:' + self.tool['sha256'], state='uploaded')
+        error = urllib.error.HTTPError('https://api.github.com/locked', 503, 'unavailable', {}, None)
+        with patch.object(linux_tools.urllib.request, 'urlopen', side_effect=[
+                error, io.BytesIO(json.dumps(metadata).encode()), TimeoutError(), io.BytesIO(self.data)]) as fetch, \
+             patch.object(linux_tools.download_retry.time, 'sleep') as sleep:
+            linux_tools.prepare_linux_tools(self.out, verify_metadata=True)
+        self.assertEqual(fetch.call_count, 4)
+        requests = [item.args[0] for item in fetch.call_args_list]
+        self.assertIs(requests[0], requests[1])
+        self.assertIs(requests[2], requests[3])
+        self.assertEqual(requests[0].full_url, requests[2].full_url)
+        self.assertEqual(requests[0].get_header('Accept'), 'application/vnd.github+json')
+        self.assertEqual(requests[2].get_header('Accept'), 'application/octet-stream')
+        self.assertEqual(sleep.call_count, 2)
+        self.assertEqual((self.out / self.tool['name']).read_bytes(), self.data)
+
+    def test_invalid_json_and_all_metadata_identity_fields_fail_without_retry(self):
+        metadata = dict(id=123, name=self.tool['name'], size=len(self.data),
+                        digest='sha256:' + self.tool['sha256'], state='uploaded')
+        invalid = [b'{', b'\xff']
+        invalid += [json.dumps({**metadata, key: 'wrong'}).encode() for key in metadata]
+        for raw in invalid:
+            with self.subTest(raw=raw), \
+                 patch.object(linux_tools.urllib.request, 'urlopen', return_value=io.BytesIO(raw)) as fetch, \
+                 patch.object(linux_tools.download_retry.time, 'sleep') as sleep:
+                with self.assertRaises(ValueError):
+                    linux_tools.prepare_linux_tools(self.out, verify_metadata=True)
+                self.assertEqual(fetch.call_count, 1)
+                sleep.assert_not_called()
+                self.assertFalse((self.out / self.tool['name']).exists())
+
+    def test_exhausted_metadata_does_not_fetch_asset_or_write(self):
+        with patch.object(linux_tools.urllib.request, 'urlopen', side_effect=TimeoutError()) as fetch, \
+             patch.object(linux_tools.download_retry.time, 'sleep'):
+            with self.assertRaises(TimeoutError):
+                linux_tools.prepare_linux_tools(self.out, verify_metadata=True)
+        self.assertEqual(fetch.call_count, 3)
+        self.assertTrue(all(item.args[0].get_header('Accept') == 'application/vnd.github+json'
+                            for item in fetch.call_args_list))
+        self.assertFalse((self.out / self.tool['name']).exists())
+
+    def test_write_permission_failure_does_not_redownload(self):
+        with patch.object(linux_tools.urllib.request, 'urlopen', return_value=io.BytesIO(self.data)) as fetch, \
+             patch.object(Path, 'write_bytes', side_effect=PermissionError('denied')), \
+             patch.object(linux_tools.download_retry.time, 'sleep') as sleep:
+            with self.assertRaises(PermissionError):
+                linux_tools.prepare_linux_tools(self.out)
+        self.assertEqual(fetch.call_count, 1)
+        sleep.assert_not_called()
+
     def test_bad_download_is_not_written(self):
         for data in [b'wrong length', b'x' * len(self.data)]:
-            with patch.object(linux_tools.urllib.request, 'urlopen', return_value=io.BytesIO(data)):
+            with patch.object(linux_tools.urllib.request, 'urlopen', return_value=io.BytesIO(data)) as fetch, \
+                 patch.object(linux_tools.download_retry.time, 'sleep') as sleep:
                 with self.assertRaisesRegex(ValueError, 'size/checksum mismatch'):
                     linux_tools.prepare_linux_tools(self.out)
+                self.assertEqual(fetch.call_count, 1)
+                sleep.assert_not_called()
             self.assertFalse((self.out / self.tool['name']).exists())
 
     def test_cached_bytes_are_rehashed_without_network(self):
