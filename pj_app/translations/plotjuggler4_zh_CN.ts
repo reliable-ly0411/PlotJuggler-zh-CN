@@ -4744,6 +4744,20 @@ from %2</source>
     </message>
 </context>
 <context>
+    <name>PJ::FileSelectionService</name>
+    <message>
+        <location filename="../src/FileSelectionService.cpp" line="+197"/>
+        <location line="+38"/>
+        <source>Browser file staging is unavailable.</source>
+        <translation>浏览器文件暂存不可用。</translation>
+    </message>
+    <message>
+        <location line="-21"/>
+        <source>The browser could not read %1 (moved or changed since it was picked?).</source>
+        <translation>浏览器无法读取 %1（选择后文件是否已被移动或更改？）。</translation>
+    </message>
+</context>
+<context>
     <name>PJ::FilterEditorPanel</name>
     <message>
         <location filename="../../pj_plotting/widget/src/FilterEditorPanel.cpp" line="+119"/>
@@ -5265,13 +5279,13 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+151"/>
-        <location line="+2192"/>
+        <location line="+2206"/>
         <location line="+87"/>
         <source>dataset removed</source>
         <translation>数据集已移除</translation>
     </message>
     <message>
-        <location line="-1899"/>
+        <location line="-1913"/>
         <source>Start Streaming</source>
         <translation>开始接收流数据</translation>
     </message>
@@ -5325,9 +5339,9 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+1448"/>
+        <location line="+1462"/>
         <location line="+169"/>
-        <location line="+2023"/>
+        <location line="+2054"/>
         <location line="+305"/>
         <location line="+2074"/>
         <location line="+1219"/>
@@ -5335,7 +5349,7 @@ for example when the stream is already rectified.</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-7148"/>
+        <location line="-7193"/>
         <source>Undo</source>
         <translation>撤销</translation>
     </message>
@@ -5345,7 +5359,7 @@ for example when the stream is already rectified.</source>
         <translation>重做</translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+91"/>
         <source>No widget selected</source>
         <translation>未选择视图组件</translation>
     </message>
@@ -5391,12 +5405,12 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+87"/>
-        <location line="+2381"/>
+        <location line="+2412"/>
         <source>The layout still contains an ephemeral browser path and was not downloaded.</source>
         <translation>布局仍包含临时浏览器路径，因此未下载。</translation>
     </message>
     <message>
-        <location line="-2249"/>
+        <location line="-2280"/>
         <source>Remove all Datasets</source>
         <translation>移除全部数据集</translation>
     </message>
@@ -5434,12 +5448,12 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+2"/>
-        <location line="+4571"/>
+        <location line="+4602"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="-4408"/>
+        <location line="-4439"/>
         <source>Are you sure you want to remove &apos;%1&apos; and its data?</source>
         <translation>确定要移除“%1”及其数据吗？</translation>
     </message>
@@ -5464,7 +5478,7 @@ for example when the stream is already rectified.</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location line="+247"/>
+        <location line="+248"/>
         <source>New release available: &lt;b&gt;%1&lt;/b&gt;</source>
         <translation>有新版本可用：&lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
@@ -5509,7 +5523,7 @@ for example when the stream is already rectified.</source>
         <translation>无法启动 PlotJuggler 维护工具。</translation>
     </message>
     <message>
-        <location line="+821"/>
+        <location line="+844"/>
         <source>Nothing to record: start a streaming source first.</source>
         <translation>没有可录制的内容：请先启动一个流数据源。</translation>
     </message>
@@ -5596,7 +5610,7 @@ for example when the stream is already rectified.</source>
         <translation>应用程序关闭</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+111"/>
         <location line="+461"/>
         <location line="+101"/>
         <location line="+13"/>
@@ -6202,12 +6216,7 @@ for example when the stream is already rectified.</source>
         <translation>在回放位置添加蓝色参考线；数值显示为相对于该位置的差值</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Use time offset: show time relative to each dataset&apos;s start (axis begins at 0) instead of absolute time</source>
-        <translation>使用时间偏移：显示相对于各数据集起点的时间（横轴从 0 开始），而非绝对时间</translation>
-    </message>
-    <message>
-        <location line="+138"/>
+        <location line="+126"/>
         <source>Align sources: line every source&apos;s start up at the earliest start</source>
         <translation>对齐数据源：将各数据源的起点对齐到最早的起点</translation>
     </message>
@@ -7850,7 +7859,17 @@ Details: %1</source>
         <translation>手动</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+3"/>
+        <source>local</source>
+        <translation>本地</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>UTC</source>
+        <translation>UTC</translation>
+    </message>
+    <message>
+        <location line="+26"/>
         <source>Choose funny images or the serious banner. Both modes support the selected language.</source>
         <translation>选择趣图或简洁横幅，两种模式均支持所选界面语言。</translation>
     </message>
@@ -9015,7 +9034,17 @@ Details: %1</source>
         <translation> Hz</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+7"/>
+        <source>Time zone of the clock times shown while the date-time toggle (bottom left) is on.</source>
+        <translation>开启左下角的日期时间开关时，时钟时间显示所使用的时区。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Clock time zone:</source>
+        <translation>时钟时区：</translation>
+    </message>
+    <message>
+        <location line="+46"/>
         <source>Coming soon</source>
         <translation>即将推出</translation>
     </message>
@@ -9242,7 +9271,7 @@ Details: %1</source>
         <location filename="../src/FileLoader.cpp" line="-2038"/>
         <location line="+90"/>
         <location line="+7"/>
-        <location filename="../src/MainWindow.cpp" line="-10489"/>
+        <location filename="../src/MainWindow.cpp" line="-10519"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
@@ -9391,7 +9420,7 @@ Details: %1</source>
         <translation>时长</translation>
     </message>
     <message>
-        <location filename="../src/BrowserPersistence.cpp" line="+589"/>
+        <location filename="../src/BrowserPersistence.cpp" line="+591"/>
         <source>The layout is not a bounded, source-free browser recipe.</source>
         <translation>此布局不符合浏览器布局配置的要求：大小受限且不包含数据源。</translation>
     </message>
@@ -9603,7 +9632,17 @@ Details: %1</source>
 <context>
     <name>TimelineWidget</name>
     <message>
-        <location filename="../src/ui/TimelineWidget.ui" line="+90"/>
+        <location filename="../src/ui/TimelineWidget.ui" line="+42"/>
+        <source>Use time offset: show time relative to each dataset&apos;s start (axis begins at 0) instead of absolute time</source>
+        <translation>使用时间偏移：显示相对于各数据集起点的时间（坐标轴从 0 开始），而不是绝对时间</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Show time as clock time (HH:mm:ss) instead of seconds</source>
+        <translation>以时钟时间（HH:mm:ss）显示时间，而不是秒数</translation>
+    </message>
+    <message>
+        <location line="+85"/>
         <source>Loop</source>
         <translation>循环</translation>
     </message>

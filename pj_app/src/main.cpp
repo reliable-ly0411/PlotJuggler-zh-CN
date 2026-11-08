@@ -44,9 +44,9 @@
 #ifndef PJ_TARGET_WASM
 #include "AppProfile.h"
 #endif
-#include "WindowsConsole.h"
 #include "BrowserPersistence.h"
 #include "DebugMode.h"
+#include "WindowsConsole.h"
 #ifndef PJ_TARGET_WASM
 #include "DiagnosticDump.h"
 #endif
@@ -635,6 +635,12 @@ int main(int argc, char* argv[]) {
     }
   }
 
+#ifndef PJ_TARGET_WASM
+  // Before show(), so the window maps directly at the saved place and state. An empty
+  // or stale blob is rejected and leaves the default; a screen that is no longer
+  // connected is replaced by one that is.
+  window.restoreGeometry(QSettings().value(u"MainWindow.geometry"_s).toByteArray());
+#endif
   window.show();
 
   if (splash) {

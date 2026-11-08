@@ -320,11 +320,11 @@ jobs:
           # Keep trailing Qt summaries in JUnit; CTest's 1 KiB default truncates
           # successful cases. The result gate still rejects truncated evidence.
           if [[ "$RUNNER_OS" == Windows ]]; then
-            # Widget runners choose offscreen themselves; leave GL runners on
-            # the native platform, matching upstream Windows CI.
-            ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
+            # Explicit display selection preserves native QRhi coverage. Standalone
+            # offscreen tests keep their own CTest environment overrides.
+            QT_QPA_PLATFORM=windows ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
           else
-            PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
+            QT_QPA_PLATFORM=xcb PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
           fi
           python -X utf8 packaging/localization/audit_feedback_results.py --junit "$native_report" --screenshots "$PJ_GUI_ACCEPTANCE_DIR" --allow-other-cases --output build/feedback-results.json
       - name: Verify native window lifetime on X11 and Wayland

@@ -13,9 +13,9 @@
 #include <QLabel>
 #include <QPointer>
 #include <QPushButton>
-#include <QtGlobal>
-#include <QTranslator>
 #include <QScopeGuard>
+#include <QTranslator>
+#include <QtGlobal>
 
 #include "pj_plotting/PlotDocker.h"
 #include "pj_plotting/TabbedPlotWidget.h"
@@ -28,10 +28,14 @@ TEST(TabbedWidgetTab, LocalizedDefaultsPreserveExplicitNamesAndStableState) {
   class Labels final : public QTranslator {
    public:
     QString translate(const char* context, const char* source, const char*, int) const override {
-      if (QByteArray(context) == "PJ::TabbedPlotWidget" && QByteArray(source) == "tab%1") return u"标签页%1"_s;
+      if (QByteArray(context) == "PJ::TabbedPlotWidget" && QByteArray(source) == "tab%1") {
+        return u"标签页%1"_s;
+      }
       return {};
     }
-    bool isEmpty() const override { return false; }
+    bool isEmpty() const override {
+      return false;
+    }
   } labels;
   qApp->installTranslator(&labels);
   const auto remove = qScopeGuard([&] { qApp->removeTranslator(&labels); });
@@ -210,6 +214,29 @@ TEST(TabbedWidgetTab, WidgetTabNameReadableWritableAndSurvivesRestore) {
 
   // A docker page is not a widget tab: the accessors ignore it.
   EXPECT_TRUE(tabbed.widgetTabName(tabbed.dockerAt(0)).isEmpty());
+}
+
+// The labels the tab strip shows, in tab order.
+QStringList stripLabels(const PJ::TabbedPlotWidget& tabbed) {
+  QStringList labels;
+  for (const QFrame* frame : tabbed.findChildren<QFrame*>(u"plotTabFrame"_s)) {
+    for (const QLabel* label : frame->findChildren<QLabel*>()) {
+      labels << label->text();
+    }
+  }
+  return labels;
+}
+
+TEST(TabbedWidgetTab, RenameTabUpdatesDockerAndStripLabel) {
+  PJ::TabbedPlotWidget tabbed;
+  PJ::PlotDocker* docker = tabbed.addTab(u"Before"_s);
+  ASSERT_TRUE(stripLabels(tabbed).contains(u"Before"_s));
+
+  tabbed.renameTab(docker, u"After"_s);
+
+  EXPECT_EQ(docker->name(), u"After"_s);
+  EXPECT_TRUE(stripLabels(tabbed).contains(u"After"_s));
+  EXPECT_FALSE(stripLabels(tabbed).contains(u"Before"_s));
 }
 
 TEST(TabbedWidgetTab, SerializerSkipsWidgetTabsAndLoadPreservesThem) {
