@@ -128,3 +128,20 @@ Windows 开发与候选打包流程采用三个互斥且完整的主测试分组
 以上修正必须在新的精确提交重新运行双平台全量 native 和Windows 9项专项。
 首轮Linux通过不能代替新头结果，Windows两个失败在新头实跑前仍视为待复验。
 不因本地source/专项通过而晋级稳定线或发布。
+
+
+### CTest 输出完整性补充
+
+Windows 修正快照 `b08248dda46ea9d7c169824a137ee5a2aacbb461`（tree
+`b3c24599306a5f0ac6fa88262bef38d8f8996ba4`）的9项 native 门禁已拒绝 CTest 实际截断标记
+`[This part of the test output was removed ...]`。后续将同一检查前移到三组通用汇总，
+对每个 testcase 的 stdout/stderr 均失败关闭，不修改正常失败、跳过或 disabled 的计数规则。
+
+新增真实 CTest 3.31.10 负控：9个合成 runner 均退出0，XML记0失败，保留前缀
+`[  PASSED  ] 1 test.`，但256字节限额移除了其余输出。通用汇总、native专项验证及命令行
+均拒绝该报告；不能只凭成功前缀接受不完整证据。另覆盖stdout/stderr和正常、失败、跳过状态。
+此前原始双平台JUnit没有该截断标记；旧报告的通过/失败/跳过数和testcase子树原样保留。
+
+本次完整source suite为195项：190通过、5项既有平台限制跳过；聚合13/13、显示边界5/5、
+反馈/工作流24/24、发行策略5/5通过。193项旧结果仍对应上一补丁，不被追加负控改写。
+本次只验证报告门禁，不重复Qt编译，也不代表新头双平台native、真实Windows或最终包已通过。

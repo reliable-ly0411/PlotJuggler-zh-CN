@@ -9,6 +9,9 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 
+CTEST_TRUNCATION_MARKER = '[This part of the test output was removed'
+
+
 NATIVE_CASES = {
     'pj_dialog_host_tests.WidgetBindingMarkdown.RendersGitHubMarkdownUnicodeAndBlocksEmbeddedResources',
     'pj_widgets_tests.FileDialogStartFolderTest.PersistedQtMemoryDropsLastVisitedAndDeadShortcuts',
@@ -62,6 +65,8 @@ def merge_reports(listing, reports):
             require((status == 'fail') == failed, f'Failure/status mismatch: {name}')
             require((status == 'notrun') == skip, f'Skip/status mismatch: {name}')
             require(case.find('system-out') is not None, f'Missing captured stdout element: {name}')
+            require(all(CTEST_TRUNCATION_MARKER not in (case.findtext(stream) or '')
+                        for stream in ('system-out', 'system-err')), f'Truncated CTest output: {name}')
             case_time = Decimal(case.get('time', '0'))
             require(case_time.is_finite() and case_time >= 0, f'Invalid testcase time: {name}')
             failures += int(failed)
@@ -99,7 +104,7 @@ def validate_native_regressions(listing, report):
     for case in checked.findall('testcase'):
         output = case.findtext('system-out') or ''
         require('[  PASSED  ] 1 test.' in output and '[  SKIPPED ]' not in output and
-                '[  FAILED  ]' not in output and '[This part of the test output was removed' not in output, f'Missing native GTest pass evidence: {case.get("name")}')
+                '[  FAILED  ]' not in output, f'Missing native GTest pass evidence: {case.get("name")}')
 
 
 def main():

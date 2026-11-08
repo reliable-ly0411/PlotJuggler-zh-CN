@@ -108,6 +108,54 @@ class CTestMergeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'GTest pass evidence'):
             gate.validate_native_regressions(listing(names), source)
 
+    def test_truncated_stdout_or_stderr_rejected(self):
+        marker = '[This part of the test output was removed since it exceeds the threshold of 256 bytes.]'
+        for stream in ('system-out', 'system-err'):
+            for status, tag in (('run', None), ('fail', 'failure'), ('notrun', 'skipped')):
+                source = report(['one'], status, tag)
+                source[0].find(stream).text += marker
+                with self.subTest(stream=stream, status=status), self.assertRaisesRegex(ValueError, 'Truncated'):
+                    gate.merge_reports(listing(['one']), [source])
+
+    @unittest.skipUnless(shutil.which('ctest'), 'CTest is required for its real truncation marker')
+    def test_real_ctest_truncation_with_pass_prefix_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            python = Path(sys.executable).as_posix()
+            names = sorted(gate.NATIVE_CASES)
+            # Keep the success prefix while CTest removes the remaining evidence.
+            code = "print('[  PASSED  ] 1 test.'); print('x' * 8192)"
+            commands = [f'add_test({name} [==[{python}]==] -c [==[{code}]==])' for name in names]
+            (root / 'CTestTestfile.cmake').write_text('\n'.join(commands) + '\n', encoding='utf-8')
+            discovered = json.loads(subprocess.check_output(
+                [shutil.which('ctest'), '--test-dir', str(root), '--show-only=json-v1'],
+                text=True, encoding='utf-8'))
+            result = subprocess.run(
+                [shutil.which('ctest'), '--test-dir', str(root), '--output-junit', str(root / 'result.xml'),
+                 '--test-output-size-passed', '256', '--test-output-truncation', 'tail'],
+                capture_output=True, text=True, encoding='utf-8')
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            source = ET.parse(root / 'result.xml').getroot()
+            self.assertEqual(source.get('tests'), '9')
+            self.assertEqual(source.get('failures'), '0')
+            for case in source.findall('testcase'):
+                output = case.findtext('system-out') or ''
+                self.assertIn('[  PASSED  ] 1 test.', output)
+                self.assertIn('[This part of the test output was removed since it exceeds the threshold of 256 bytes.]',
+                              output)
+            with self.assertRaisesRegex(ValueError, 'Truncated'):
+                gate.merge_reports(discovered, [source])
+            with self.assertRaisesRegex(ValueError, 'Truncated'):
+                gate.validate_native_regressions(discovered, source)
+            (root / 'list.json').write_text(json.dumps(discovered), encoding='utf-8')
+            rejected = subprocess.run(
+                [sys.executable, str(SCRIPT), '--ctest-list', str(root / 'list.json'),
+                 '--output', str(root / 'merged.xml'), str(root / 'result.xml')],
+                capture_output=True, text=True, encoding='utf-8')
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn('Truncated CTest output', rejected.stderr)
+            self.assertFalse((root / 'merged.xml').exists())
+
     @unittest.skipUnless(shutil.which('ctest'), 'CTest is required for its real result schema')
     def test_real_ctest_pass_fail_skip_and_disabled_are_preserved(self):
         with tempfile.TemporaryDirectory() as directory:
