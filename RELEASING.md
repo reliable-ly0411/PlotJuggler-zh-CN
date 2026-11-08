@@ -70,7 +70,9 @@ IFW `4.1.0.1.1.0`；`+zh.1` 是构建元数据，不影响 SemVer 优先级。
 保留已审阅汉化与发行补丁；发布晋级普通合并进入稳定线，不回退开发线，不改写镜像。
 固定范围记录见 `docs/localization/RELEASE-4.1.0-INTEGRATION.md`。
 
-本次候选通过首次创建 `zh-CN-4.x-ci/release-candidate-4-1-0-zh-1` 触发。
+首次候选通过首次创建 `zh-CN-4.x-ci/release-candidate-4-1-0-zh-1` 触发。
+打包工具锁修复后的新候选使用独立的 `zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r2`，
+不重写首轮源码身份或把旧 run 当作新提交的验收；两者仍仅在首次创建时构建，不发布。
 最终验收须有两种 Windows 格式、两版 Ubuntu 各两种 Linux 格式的六份完整报告，
 每种三语言，合计18张实际截图；portable 使用独立干净runner，不借用IFW安装目录。
 审核截图后，首次创建 `zh-CN-4.x-ci/publish-accepted-v4-1-0-plus-zh-1-run-RUN-attempt-ATTEMPT`，

@@ -3,7 +3,7 @@ name: Chinese 4.x candidate packages
 on:
   push:
     # Explicit candidate entries; only branch creation runs native jobs.
-    branches: ['zh-CN-4.x-ci/release-candidate-4-1-0-zh-1']
+    branches: ['zh-CN-4.x-ci/release-candidate-4-1-0-zh-1', 'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r2']
   workflow_dispatch:
 
 permissions:

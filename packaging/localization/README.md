@@ -209,8 +209,10 @@ become three-language package passes merely by rerunning the report generator.
 ## 4.1.0 portable release acceptance
 
 The first creation of `zh-CN-4.x-ci/release-candidate-4-1-0-zh-1` requests the
-version-specific candidate. Ordinary pushes do not rebuild it. Windows packaging
-uses the upstream portable builder on the same staged payload as IFW, before
+version-specific candidate. The explicit `zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r2`
+entry requests a new candidate after the Linux packaging-tool lock repair,
+preserving the first source/run identity. Ordinary pushes do not rebuild either.
+Windows packaging uses the upstream portable builder on the same staged payload as IFW, before
 hashing both original assets. The ZIP extracts directly to `bin/`, `lib/` and
 the packaged provenance/license directories.
 
