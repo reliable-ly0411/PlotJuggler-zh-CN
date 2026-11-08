@@ -73,18 +73,24 @@ class CsvRuntimeAcceptanceTest(unittest.TestCase):
         return binary, manifest, record
 
     def test_staged_plugin_must_match_current_source_and_bytes(self):
-        for field in ['version', 'commit', 'sdk', 'patch_sha256', 'binary', 'duplicate', 'path']:
+        for field in ['version', 'commit', 'sdk', 'patch_sha256', 'binary', 'duplicate', 'path', 'escape']:
             with self.subTest(field=field), tempfile.TemporaryDirectory() as tmp:
-                root = Path(tmp)
+                root = Path(tmp) / 'staged'
+                root.mkdir()
+                # Exercise equivalent path spellings even without Windows 8.3 aliases.
+                root = root / '..' / 'staged'
                 binary, manifest, record = self.stage(root)
-                self.assertEqual(acceptance.staged_csv(root), binary)
+                self.assertEqual(acceptance.staged_csv(root), binary.resolve())
                 records = [record]
                 if field == 'binary':
                     binary.write_bytes(b'tampered')
                 elif field == 'duplicate':
                     records.append(record)
-                elif field == 'path':
-                    record['files'][0]['path'] = 'other/csv_source_plugin.dll'
+                elif field in ['path', 'escape']:
+                    record['files'][0]['path'] = ('other/' if field == 'path' else '../outside/') + 'csv_source_plugin.dll'
+                    outside = root / record['files'][0]['path']
+                    outside.parent.mkdir(parents=True)
+                    outside.write_bytes(binary.read_bytes())  # Valid bytes cannot authorize the wrong location.
                 else:
                     record[field] = 'not-the-locked-value'
                 manifest.write_text(json.dumps({'localized_plugin_rebuilds': records}), encoding='utf-8')
