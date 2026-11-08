@@ -71,29 +71,9 @@
 #endif
 #include "pj_version.h"
 #include "pj_widgets/Style.h"
-#if defined(_WIN32)
-#include <windows.h>  // backward.hpp already pulls it in (with NOMINMAX)
-#endif
 using namespace Qt::StringLiterals;
 
 namespace {
-
-#if defined(_WIN32)
-// Ctrl+C / Ctrl+Break in the attached terminal, which the user may press long
-// after the shell prompt came back, would otherwise end the process at once and
-// skip MainWindow's close handling. Close the windows instead. Runs on a thread
-// the console creates, hence the queued call.
-BOOL WINAPI onConsoleInterrupt(DWORD event) {
-  auto* application = qobject_cast<QApplication*>(QCoreApplication::instance());
-  if ((event != CTRL_C_EVENT && event != CTRL_BREAK_EVENT) || application == nullptr) {
-    return FALSE;
-  }
-  QMetaObject::invokeMethod(application, [] { QApplication::closeAllWindows(); }, Qt::QueuedConnection);
-  return TRUE;
-}
-
-#endif
-
 // One process-wide crash handler. Its constructor (run at static-init, before
 // main) registers handlers for SIGSEGV/SIGABRT/SIGFPE/... that dump a
 // symbolized stack trace to stderr. We instantiate it explicitly rather than
@@ -246,9 +226,6 @@ bool isUnattendedRun(
 
 int main(int argc, char* argv[]) {
   PJ::attachParentConsoleStreams();
-#if defined(_WIN32)
-  SetConsoleCtrlHandler(onConsoleInterrupt, TRUE);
-#endif
 #ifndef PJ_TARGET_WASM
   // A core-only application preserves Unicode CLI arguments and profile
   // validation without demanding a platform plugin or display in headless CI.

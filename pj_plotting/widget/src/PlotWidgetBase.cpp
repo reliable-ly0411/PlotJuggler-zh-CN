@@ -231,7 +231,14 @@ PlotWidgetBase::PlotWidgetBase(QWidget* parent) : QWidget(parent) {
   // is applied after construction or toggled at runtime.
   const QColor canvas_bg = dataBackdropForCurrentTheme();
 
-  const bool gpu_canvas = gpuCanvasEnabled();
+  // The browser has no raster canvas; on desktop the "GPU canvas" preference and
+  // --disable-opengl select it.
+#ifdef PJ_TARGET_WASM
+  const bool gpu_canvas = true;
+#else
+  const bool gpu_canvas =
+      !g_gpu_canvas_disabled_override && QSettings().value("Preferences::use_opengl", true).toBool();
+#endif
   PlotRhiCanvas* rhi_canvas = nullptr;
   QWidget* canvas = nullptr;
   if (gpu_canvas) {
@@ -780,16 +787,6 @@ QColor PlotWidgetBase::paletteColor(int index) {
 
 void PlotWidgetBase::setGpuCanvasDisabledOverride(bool disabled) {
   g_gpu_canvas_disabled_override = disabled;
-}
-
-bool PlotWidgetBase::gpuCanvasEnabled() {
-  // The browser has no raster canvas; on desktop the "GPU canvas" preference and
-  // --disable-opengl select it.
-#ifdef PJ_TARGET_WASM
-  return true;
-#else
-  return !g_gpu_canvas_disabled_override && QSettings().value("Preferences::use_opengl", true).toBool();
-#endif
 }
 
 QWidget* PlotWidgetBase::canvasWidget() const {
