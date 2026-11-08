@@ -182,6 +182,7 @@ jobs:
             zh4-conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt', 'conan.lock') }}-partial-
             zh4-conan-${{ matrix.os }}-
       - name: Prepare Conan sources
+        timeout-minutes: 12
         run: |
           conan profile detect --force
           ./scripts/configure_conan_remote.sh
@@ -217,6 +218,7 @@ jobs:
                     'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources/"]']
           p.write_text('\n'.join(lines) + '\n', encoding='utf-8')
           PY
+          python scripts/prefetch_assimp_source.py --cache-dir "$cache_dir"
       - name: Resolve exact Linux SDK and dependencies
         if: runner.os == 'Linux'
         id: conan-linux
