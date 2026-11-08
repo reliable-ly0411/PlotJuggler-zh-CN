@@ -31,6 +31,7 @@ def load(name):
 
 fixtures = load('prepare_feedback_tests')
 gate = load('audit_feedback_results')
+picker_gate = load('audit_file_dialog_results')
 payload = load('prepare_payload')
 manifest = load('create_release_manifest')
 
@@ -202,6 +203,8 @@ class WorkflowExecutionTests(unittest.TestCase):
         scripts.mkdir(parents=True)
         shutil.copyfile(ROOT/'packaging/localization/audit_feedback_results.py',
                         scripts/'audit_feedback_results.py')
+        shutil.copyfile(ROOT/'packaging/localization/audit_file_dialog_results.py',
+                        scripts/'audit_file_dialog_results.py')
         for dependency in ('ffmpeg', 'python'):
             (self.build/f'pj_{dependency}_bin_dirs.txt').write_text(
                 f'fixture-runtime-{dependency}\n', encoding='utf-8')
@@ -311,6 +314,26 @@ class WorkflowExecutionTests(unittest.TestCase):
             gate.audit_cases(ET.parse(report).getroot())
 
     def test_workflows_preserve_runtime_and_complete_evidence(self):
+        # The package workflow also requires four native-platform picker cases.
+        # Model their protocol only; this fixture does not exercise a real GUI.
+        picker_runner = self.root/'synthetic_picker.py'
+        picker_runner.write_text(textwrap.dedent("""\
+            import os
+            import sys
+            print('QPA_PLATFORM=' + os.environ.get('QT_QPA_PLATFORM', '<unset>'))
+            print('[       OK ] ' + sys.argv[1] + ' (1 ms)')
+            print('[  PASSED  ] 1 test.')
+            """), encoding='utf-8')
+        registration = []
+        for name in sorted(picker_gate.CASES):
+            registration.append(
+                f'add_test(NAME {name} COMMAND [==[{Path(sys.executable).as_posix()}]==] '
+                f'[==[{picker_runner.as_posix()}]==] "{name.removeprefix("pj_widgets_tests.")}")')
+        with (self.root/'source/CMakeLists.txt').open('a', encoding='utf-8') as output:
+            output.write('\n'.join(registration) + '\n')
+        configured = subprocess.run([shutil.which('cmake'), '-S', str(self.root/'source'),
+                                     '-B', str(self.build)], capture_output=True, text=True, timeout=30)
+        self.assertEqual(configured.returncode, 0, configured.stdout + configured.stderr)
         for workflow in ('zh-4x-ci.yml', 'zh-4x-packages.yml'):
             content = (ROOT/'.github/workflows'/workflow).read_text(encoding='utf-8')
             marker = '      - name: Run native tests\n        run: |\n'
@@ -337,6 +360,11 @@ class WorkflowExecutionTests(unittest.TestCase):
                     self.assertEqual(len(report['images']), 24)
                     for case in report['cases']:
                         self.assertEqual(case['qt_passed_including_init_cleanup'], 3)
+                    if workflow == 'zh-4x-packages.yml' and platform == 'Windows':
+                        native = self.build/'native-file-dialog.xml'
+                        self.assertEqual(set(picker_gate.audit(native)), picker_gate.CASES)
+                        for case in ET.parse(native).getroot().iter('testcase'):
+                            self.assertIn('QPA_PLATFORM=windows', case.findtext('system-out'))
 
 
 class VulkanWorkflowSetupTests(unittest.TestCase):
