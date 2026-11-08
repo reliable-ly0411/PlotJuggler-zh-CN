@@ -177,3 +177,13 @@ screenshots and all four original assets with complete unique checksums are
 required. Automated acceptance does not replace visual review of screenshots.
 Run `python3 tests/test_release_manifest.py -v` for offline coverage of these
 gates; successful local tests are not a native package acceptance claim.
+
+Host dependency provenance is read by `host_versions.py`: Qt comes only from
+`PJ_QT_VERSION` in `versions.env`, and the host SDK from the exact
+`plotjuggler_sdk` requirement in `conanfile.txt`. Payload staging records both in
+`release.json`; clean acceptance compares them against the candidate's source.
+License collection checks the selected Qt SDK's `mkspecs/qconfig.pri` and the
+resolved Conan host graph before collecting notices. Its Qt notice directory and
+source URL follow that Qt pin, while the unchanged checksum-locked generic
+license texts retain their own source provenance. Independent plugin source/SDK
+locks and historical BIN dependency notices do not become host-version claims.

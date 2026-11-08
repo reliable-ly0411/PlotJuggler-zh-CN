@@ -11,6 +11,7 @@ import urllib.request
 
 from version_map import versions
 from collect_licenses import collect
+from host_versions import read_host_versions
 
 ROOT = Path(__file__).resolve().parents[2]
 FONT_REV = '523d033d6cb47f4a80c58a35753646f5c3608a78'
@@ -53,6 +54,7 @@ def require_clean_source():
 def stage(build, prefix, config, linux_tools):
     """Copy the exact CMake-selected DSO plus its legal and font payload."""
     revision, tree = require_clean_source()
+    host = read_host_versions(ROOT)
     build, prefix = build.resolve(), prefix.resolve()
     if prefix.exists():
         raise ValueError(f'Use an empty staging destination: {prefix}')
@@ -79,21 +81,19 @@ def stage(build, prefix, config, linux_tools):
     download(base + 'Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf',
              prefix / 'bin/fonts/NotoSansCJKsc-Regular.otf', FONT_SHA)
     download(base + 'LICENSE', licenses / 'NotoSansCJK-OFL.txt', FONT_LICENSE_SHA)
-    qt = ROOT / '.qt/6.11.1' / ('gcc_64' if linux_tools else 'msvc2022_64')
+    qt = ROOT / '.qt' / host['qt_version'] / ('gcc_64' if linux_tools else 'msvc2022_64')
     collect(ROOT, build, qt, licenses, download)
-    values = dict(x.split('=', 1) for x in (ROOT / 'versions.env').read_text(encoding='utf-8').splitlines()
-                  if x and not x.startswith('#'))
     baseline = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
     plugin_manifest = json.loads(manifest.read_text(encoding='utf-8'))
     assert plugin_manifest['license'] == baseline['ardupilot_plugin']['license'] == 'LGPL-3.0-only'
     assert plugin_manifest['version'] == baseline['ardupilot_plugin']['version']
-    record = {'version': values['PJ_APP_VERSION'], 'source_commit': revision, 'source_tree': tree,
-              'upstream_commit': baseline['upstream_commit'], 'sdk_version': '0.34.1',
+    record = {**host, 'source_commit': revision, 'source_tree': tree,
+              'upstream_commit': baseline['upstream_commit'],
               'bin_plugin_commit': baseline['ardupilot_plugin']['commit'],
               'bin_plugin_version': plugin_manifest['version'], 'bin_plugin_license': plugin_manifest['license'],
               'registry_commit': REGISTRY_REV, 'cjk_font_sha256': FONT_SHA,
-              'ifw_package_version': versions(values['PJ_APP_VERSION'])['ifw'],
-              'debian_version': versions(values['PJ_APP_VERSION'])['deb']}
+              'ifw_package_version': versions(host['version'])['ifw'],
+              'debian_version': versions(host['version'])['deb']}
     locked = json.loads((ROOT / 'packaging/localization/registry-lock.json').read_text(encoding='utf-8'))
     ids = CORE_PLUGINS + (['toolbox-assistant-agent', 'ros2-topic-subscriber'] if linux_tools else [])
     record['expected_plugins'] = [f"{x['id']}={x['version']}" for x in locked['extensions'] if x['id'] in ids]

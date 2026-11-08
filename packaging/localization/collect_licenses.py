@@ -7,10 +7,21 @@ from pathlib import Path
 import re
 import shutil
 
+from host_versions import read_host_versions
+
 
 def collect(root, build, qt, licenses, download):
     """Retain full dependency notices; never substitute a license identifier."""
     graph = json.loads((build / 'conan-graph.json').read_text(encoding='utf-8'))['graph']['nodes']
+    host = read_host_versions(root)
+    resolved_sdk = [node['ref'].split('#', 1)[0] for node in graph.values()
+                    if node.get('context') != 'build' and
+                    (node.get('ref') or '').startswith('plotjuggler_sdk/')]
+    if resolved_sdk != [f"plotjuggler_sdk/{host['sdk_version']}"]:
+        raise ValueError('Resolved host SDK differs from conanfile pin')
+    qt_config = (qt / 'mkspecs/qconfig.pri').read_text(encoding='utf-8')
+    if re.findall(r'^QT_VERSION\s*=\s*(\S+)\s*$', qt_config, re.MULTILINE) != [host['qt_version']]:
+        raise ValueError('Selected Qt SDK differs from versions.env pin')
     components = []
     for node in graph.values():
         ref = node.get('ref')
@@ -48,7 +59,8 @@ def collect(root, build, qt, licenses, download):
         else:
             shutil.copy2(source, destination / source.name)
         components.append({'component': name, 'notices': name})
-    qt_dest = licenses / 'Qt-6.11.1'
+    qt_version = host['qt_version']
+    qt_dest = licenses / f'Qt-{qt_version}'
     qt_dest.mkdir()
     lock = json.loads((root / 'packaging/localization/qt-license-lock.json').read_text(encoding='utf-8'))
     for name, digest in lock['files'].items():
@@ -74,7 +86,7 @@ def collect(root, build, qt, licenses, download):
             notice_text.extend([str(extracted.get('licenseId', '')), str(extracted.get('extractedText', ''))])
     (qt_dest / 'THIRD-PARTY-NOTICES.txt').write_text('\n\n'.join(notice_text), encoding='utf-8')
     (qt_dest / 'SOURCE.txt').write_text(
-        'Qt 6.11.1 source: https://download.qt.io/official_releases/qt/6.11/6.11.1/single/\n'
+        f'Qt {qt_version} source: https://download.qt.io/official_releases/qt/{qt_version.rsplit(".", 1)[0]}/{qt_version}/single/\n'
         'Qt libraries are dynamically linked and remain replaceable.\n', encoding='utf-8')
     # The generic LGPL text is the official unmodified Qt license, not the
     # historical PJ3 installer license with a different attribution header.

@@ -167,17 +167,21 @@ def validate_csv_plot_state(state, topic):
 
 def verify(prefix, executable, log, output, expected_source, expected_version, capture=False):
     """Check provenance, plugins, Python and synthetic CSV/real BIN restoration."""
+    from host_versions import read_host_versions
+    host = read_host_versions(Path(__file__).resolve().parents[2])
     prefix, executable, output = prefix.resolve(), executable.resolve(), output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     record = json.loads((prefix / 'share/plotjuggler4/release.json').read_text(encoding='utf-8'))
     assert record['source_commit'] == expected_source, 'package source differs from candidate run'
     assert record['version'] == expected_version, 'package version differs from source version'
+    assert record['qt_version'] == host['qt_version'], 'package Qt differs from source pin'
+    assert record['sdk_version'] == host['sdk_version'], 'package host SDK differs from source pin'
     font = prefix / 'bin/fonts/NotoSansCJKsc-Regular.otf'
     assert hashlib.sha256(font.read_bytes()).hexdigest() == FONT_SHA
     for name in ['ardupilot-dataflash/LICENSE', 'ardupilot-dataflash/COPYING.GPL3',
                  'ardupilot-dataflash/LICENSE.APACHE2', 'ardupilot-dataflash/UPSTREAM.md',
                  'NotoSansCJK-OFL.txt', 'PlotJuggler-MPL-2.0.txt', 'Qt-LGPL.txt', 'DEPENDENCIES.json',
-                 'Qt-6.11.1/HPND-sell-variant.txt',
+                 f'Qt-{host["qt_version"]}/HPND-sell-variant.txt',
                  'ardupilot-dataflash/dependencies/fmt-12.1.0-LICENSE.txt',
                  'ardupilot-dataflash/dependencies/fast-float-8.1.0-LICENSE.txt',
                  'ardupilot-dataflash/dependencies/nlohmann-json-3.12.0-LICENSE.txt',
