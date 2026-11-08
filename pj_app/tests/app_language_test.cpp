@@ -133,8 +133,8 @@ class AppLanguageTest : public QObject {
         QCOMPARE(QCoreApplication::translate("QPlatformTheme", "Save"), u"儲存"_s);
         QCOMPARE(QCoreApplication::translate("QPlatformTheme", "Cancel"), u"取消"_s);
         QCOMPARE(QCoreApplication::translate("QAbstractFileIconProvider", "File"), u"檔案"_s);
-        QCOMPARE(QCoreApplication::translate("QAbstractFileIconProvider", "Folder", "All other platforms"),
-                 u"資料夾"_s);
+        QCOMPARE(
+            QCoreApplication::translate("QAbstractFileIconProvider", "Folder", "All other platforms"), u"資料夾"_s);
         const QString path = u"/資料/%2/{raw}/測試.bin"_s;
         const QString source = u"Cannot read \"%1\""_s;
         const QString translated = QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Cannot read \"%1\"");
@@ -151,6 +151,41 @@ class AppLanguageTest : public QObject {
       QVERIFY(!unsupported.catalogLoaded());
       QCOMPARE(QCoreApplication::translate("QPlatformTheme", "Save"), u"Save"_s);
     }
+  }
+
+  void clockControlsAndBrowserReadErrorsUseTheirLiveContexts_data() {
+    QTest::addColumn<QString>("language");
+    QTest::addColumn<QString>("local_label");
+    QTest::addColumn<QString>("zone_label");
+    QTest::newRow("simplified") << u"zh_CN"_s << u"本地"_s << u"时钟时区："_s;
+    QTest::newRow("traditional") << u"zh_TW"_s << u"本機"_s << u"時鐘時區："_s;
+  }
+
+  void clockControlsAndBrowserReadErrorsUseTheirLiveContexts() {
+    QFETCH(QString, language);
+    QFETCH(QString, local_label);
+    QFETCH(QString, zone_label);
+    const QLocale data_locale;
+    const PJ::AppLanguage selected(*QCoreApplication::instance(), language);
+    QVERIFY(selected.catalogLoaded());
+    QCOMPARE(QCoreApplication::translate("PJ::PreferencesDialog", "local"), local_label);
+    QCOMPARE(QCoreApplication::translate("PJ::PreferencesDialog", "UTC"), u"UTC"_s);
+    QCOMPARE(QCoreApplication::translate("PreferencesContent", "Clock time zone:"), zone_label);
+    const char* offset =
+        "Use time offset: show time relative to each dataset's start (axis begins at 0) "
+        "instead of absolute time";
+    QVERIFY(QCoreApplication::translate("TimelineWidget", offset) != QString::fromUtf8(offset));
+    QCOMPARE(QCoreApplication::translate("PJ::MainWindow", offset), QString::fromUtf8(offset));
+    const char* clock = "Show time as clock time (HH:mm:ss) instead of seconds";
+    const QString translated_clock = QCoreApplication::translate("TimelineWidget", clock);
+    QVERIFY(translated_clock != QString::fromUtf8(clock));
+    QVERIFY(translated_clock.contains(u"HH:mm:ss"_s));
+    const char* read_error = "The browser could not read %1 (moved or changed since it was picked?).";
+    const QString translated_error = QCoreApplication::translate("PJ::FileSelectionService", read_error);
+    QVERIFY(translated_error != QString::fromUtf8(read_error));
+    const QString browser_name = u"原始資料 %2 测试.bin"_s;
+    QVERIFY(translated_error.arg(browser_name).contains(browser_name));
+    QCOMPARE(QLocale(), data_locale);
   }
 
   void invalidSavedLanguageFallsBackWithoutOverwritingIt() {

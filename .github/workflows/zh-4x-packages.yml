@@ -268,11 +268,22 @@ jobs:
           # Keep trailing Qt summaries in JUnit; CTest's 1 KiB default truncates
           # successful cases. The result gate still rejects truncated evidence.
           if [[ "$RUNNER_OS" == Windows ]]; then
-            # Widget runners choose offscreen themselves; leave GL runners on
-            # the native platform, matching upstream Windows CI.
-            ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
+            # Ordinary widget tests retain upstream's offscreen contract. The
+            # unlabelled main-window QRhi lifecycle suite needs its own real QPA.
+            window_suite='^pj_app_gui_tests\.MainWindowRhiWindowTest\.'
+            ctest --test-dir build --build-config RelWithDebInfo --show-only=json-v1 > build/native-test-list.json
+            status=0
+            env -u QT_QPA_PLATFORM ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 -LE qrhi -E "$window_suite" --output-junit "$PWD/build/native-headless.xml" || status=1
+            QT_QPA_PLATFORM=windows QSG_RHI_PREFER_SOFTWARE_RENDERER=1 PJ_REQUIRE_GPU_TESTS=1 ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 -L qrhi --output-junit "$PWD/build/native-qrhi.xml" || status=1
+            QT_QPA_PLATFORM=windows QSG_RHI_PREFER_SOFTWARE_RENDERER=1 PJ_REQUIRE_GPU_TESTS=1 ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 -LE qrhi -R "$window_suite" --output-junit "$PWD/build/native-window.xml" || status=1
+            # Supplemental native-platform regressions are separate from the
+            # unique full-suite count: both prior failures and all seven drops.
+            native_regressions='^(pj_dialog_host_tests\.WidgetBindingMarkdown\.RendersGitHubMarkdownUnicodeAndBlocksEmbeddedResources|pj_widgets_tests\.FileDialogStartFolderTest\.PersistedQtMemoryDropsLastVisitedAndDeadShortcuts|pj_app_gui_tests\.MainWindowFileDrop(Loading)?Test\..*)$'
+            QT_QPA_PLATFORM=windows ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 -R "$native_regressions" --output-junit "$PWD/build/native-widget-regressions.xml" || status=1
+            python scripts/ci/merge_ctest_reports.py --ctest-list build/native-test-list.json --output "$native_report" --native-regressions build/native-widget-regressions.xml build/native-headless.xml build/native-qrhi.xml build/native-window.xml || status=1
+            test "$status" -eq 0
           else
-            PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
+            QT_QPA_PLATFORM=xcb PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
           fi
           python -X utf8 packaging/localization/audit_feedback_results.py --junit "$native_report" --screenshots "$PJ_GUI_ACCEPTANCE_DIR" --allow-other-cases --output build/feedback-results.json
       - name: Validate release identity
@@ -358,6 +369,11 @@ jobs:
           path: |
             build/Testing/Temporary/
             build/native-tests.xml
+            build/native-headless.xml
+            build/native-qrhi.xml
+            build/native-window.xml
+            build/native-widget-regressions.xml
+            build/native-test-list.json
             build/feedback-tests.json
             build/feedback-selection.json
             build/feedback-results.json
