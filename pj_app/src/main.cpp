@@ -5,7 +5,9 @@
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 #include <QDateTime>
+#include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QFont>
 #include <QFontDatabase>
 #include <QGuiApplication>
@@ -78,6 +80,19 @@
 using namespace Qt::StringLiterals;
 
 namespace {
+
+#if defined(Q_OS_MACOS)
+// Both the core-only Python self-test and the GUI resolve the bundled stdlib
+// after constructing their application. An explicit user PYTHONHOME wins.
+void configureBundledPythonHome() {
+  if (qEnvironmentVariableIsEmpty("PYTHONHOME")) {
+    const QString bundled_python = QDir::cleanPath(QCoreApplication::applicationDirPath() + u"/../Resources/python"_s);
+    if (QFileInfo(bundled_python).isDir()) {
+      qputenv("PYTHONHOME", QFile::encodeName(bundled_python));
+    }
+  }
+}
+#endif
 
 #if defined(_WIN32)
 // Ctrl+C / Ctrl+Break in the attached terminal, which the user may press long
@@ -266,6 +281,9 @@ int main(int argc, char* argv[]) {
         std::fprintf(stderr, "[profile-dir] %s\n", qPrintable(profile_error));
         return 64;
       }
+#if defined(Q_OS_MACOS)
+      configureBundledPythonHome();
+#endif
       return selftestPython();
     }
   }
@@ -295,6 +313,9 @@ int main(int argc, char* argv[]) {
   QSurfaceFormat::setDefaultFormat(core_format);
 #endif
   QApplication app(argc, argv);
+#if defined(Q_OS_MACOS)
+  configureBundledPythonHome();
+#endif
   // Fixes (and logs) the graphics API, with its Metal-to-OpenGL fallback, before
   // any QRhiWidget exists: each top-level can pick its API only once.
   (void)PJ::preferredGraphicsApi();
