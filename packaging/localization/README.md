@@ -16,6 +16,48 @@ The official registry snapshot and its artifact checksums are frozen in
 The Linux-only ROS distro-specific binaries keep their upstream external-runtime
 contract. The optional GPL retro game payload is not included in this candidate.
 
+## Linux packaging tool lock
+
+`linux-tools-lock.json` records the official repository, release/asset IDs,
+source commit, byte count and SHA-256 of all three x86_64 packaging tools.
+Downloads use GitHub's numeric asset API with `Accept: application/octet-stream`,
+not the moving `continuous` download URL. Asset IDs identify uploads, not an
+upstream promise of permanent retention: deletion fails closed, with no rolling
+fallback. Source commits describe official release provenance, not a claim of
+reproducible builds from those commits.
+
+The Linux candidate preflight checks official asset metadata and downloads all
+three tools before dependency installation or application compilation. It does
+not execute downloaded content. Payload staging rehashes the same local files
+(including size), fails on tampering rather than replacing it, and records the
+lock in `release.json`. The existing clean-source provenance gate is unchanged.
+To independently run the network preflight in an empty directory:
+
+```sh
+python3 packaging/localization/linux_tools.py --directory /tmp/pj-linux-tools
+```
+
+The 4.1.0 packaging repair updates two build tools whose rolling uploads no
+longer matched the prior SHA-256 locks. The official releases list did not expose
+an asset with either prior digest; existing historical release/package bytes are
+not changed. The Qt plugin retains its original bytes.
+
+- linuxdeploy: asset `699514588`, source
+  `07333c6e942c7d71782b66be924c5d867f9dfdfc` (Update binutils to latest release).
+- linuxdeploy-plugin-qt: asset `525032210`, source
+  `9b9fca179e7312ae4a433ad6c3183d73c116180b` (Make qmlimportscanner more robust).
+- appimagetool: asset `715388534`, source
+  `11d54c9acc7f246df1398050a4b880314ac76862` (ELF section-header byte-order fix).
+
+All three source SHAs were resolved through the official commit API; they are
+not branch names inferred from `target_commitish`. Each downloaded asset's size
+and SHA-256 matched the official asset metadata. The lock's release tag is audit
+context only and is never used to select bytes. Updating this lock requires
+reviewing the official release/source metadata and independently hashing all
+new downloads; a checksum error is not permission to accept replacement bytes.
+Upstream Docker/AppImage convenience download paths are unchanged; this fork's
+candidate always stages the three checked files before calling the packager.
+
 `version_map.py` owns the platform metadata mapping. Application and tag retain
 SemVer; `4.0.0-zh.1.rc.1` maps to IFW `4.0.0.1.0.1` and Debian
 `4.0.0~zh.1~rc.1-1`. Tests cover rc.1, rc.2, final, the next Chinese revision and
