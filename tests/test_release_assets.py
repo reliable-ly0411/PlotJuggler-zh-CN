@@ -14,6 +14,7 @@ import textwrap
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'packaging/localization'))
 spec = importlib.util.spec_from_file_location('release_assets', ROOT / 'packaging/localization/release_assets.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
@@ -33,6 +34,7 @@ class ReleaseAssetsTest(unittest.TestCase):
         self.source.mkdir()
         self.target = self.work / 'release-assets'
         names = [f'PlotJuggler-{VERSION}-Windows-x64-zh-CN.exe',
+                 f'PlotJuggler-{VERSION}-Windows-x64-portable-zh-CN.zip',
                  f'PlotJuggler-{VERSION}-x86_64-zh-CN.AppImage', DEB]
         self.assets = []
         for index, name in enumerate(names):
@@ -202,7 +204,20 @@ class ReleaseAssetsTest(unittest.TestCase):
 
     @unittest.skipUnless(sys.platform == 'linux' and shutil.which('bash') and shutil.which('sha256sum'), 'Workflow runs on Linux')
     def test_workflow_only_publishes_after_successful_draft_verification(self):
+        self.exercise_workflow()
+
+    @unittest.skipUnless(sys.platform == 'linux' and shutil.which('bash') and shutil.which('sha256sum'), 'Workflow runs on Linux')
+    def test_stable_workflow_preserves_plus_names_and_formal_flags(self):
+        self.exercise_workflow(stable=True)
+
+    def exercise_workflow(self, stable=False):
         """Reproduce GitHub's tilde rename with a mock API; no real network writes."""
+        tag = 'v4.1.0+zh.1' if stable else TAG
+        if stable:
+            for asset in self.assets:
+                name = asset['name'].replace(VERSION, '4.1.0+zh.1').replace('4.0.0~zh.1~rc.1-1', '4.1.0+zh.1-1')
+                (self.source / asset['name']).rename(self.source / name)
+                asset['name'] = name
         self.stage()
         (self.work / 'packaging').symlink_to(ROOT / 'packaging', target_is_directory=True)
         (self.work / 'release-notes.md').write_text(NOTES, encoding='utf-8')
@@ -212,26 +227,33 @@ class ReleaseAssetsTest(unittest.TestCase):
         mock.write_text('#!' + sys.executable + '\n' + textwrap.dedent('''\
             import hashlib, json, os
             from pathlib import Path
-            import shutil, sys
+            import shutil, sys, urllib.parse
             args = sys.argv[1:]
             state = Path('mock-release.json')
             repo = os.environ['GITHUB_REPOSITORY']
             if args[:2] == ['release', 'create']:
+                assert '--latest=false' in args, 'A draft cannot be Latest'
                 state.write_text(json.dumps({
-                    'id': 123, 'tag_name': os.environ['RELEASE_TAG'], 'draft': True, 'prerelease': True,
+                    'id': 123, 'tag_name': os.environ['RELEASE_TAG'], 'draft': True, 'prerelease': '--prerelease=true' in args,
                     'body': Path('release-notes.md').read_text(encoding='utf-8'), 'assets': [],
                     'upload_url': f'https://uploads.github.com/repos/{repo}/releases/123/assets{{?name,label}}'}), encoding='utf-8')
                 Path('server-bytes').mkdir()
             elif args[:2] == ['release', 'download']:
                 shutil.copytree('server-bytes', args[args.index('-D') + 1])
             elif args[:2] == ['release', 'edit']:
+                stable = '+zh.' in os.environ['RELEASE_TAG']
+                assert ('--prerelease=false' if stable else '--prerelease=true') in args
+                assert ('--latest=true' if stable else '--latest=false') in args
                 Path('published').write_text('yes', encoding='utf-8')
             elif args[0] == 'api':
                 if any('/actions/runs/' in a for a in args):
                     print(os.environ['CANDIDATE_ATTEMPT'])
                 elif '--input' in args:
                     path = Path(args[args.index('--input') + 1])
-                    name = path.name.replace('~', '.')
+                    url = next(a for a in args if a.startswith('https://uploads.github.com/'))
+                    name = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)['name'][0]
+                    assert name == path.name, (name, path.name)
+                    name = name.replace('~', '.')
                     if os.environ.get('MOCK_RENAME'):
                         name = 'unexpected-' + name
                     body = path.read_bytes()
@@ -255,7 +277,7 @@ class ReleaseAssetsTest(unittest.TestCase):
             'Verify actual draft names and bytes before publication',
             'Publish only the verified draft'])
         env = dict(os.environ, PATH=str(mock_bin) + os.pathsep + os.environ['PATH'],
-                   GITHUB_REPOSITORY='reliable-ly0411/PlotJuggler-zh-CN', RELEASE_TAG=TAG,
+                   GITHUB_REPOSITORY='reliable-ly0411/PlotJuggler-zh-CN', RELEASE_TAG=tag,
                    SOURCE_SHA='a' * 40, CANDIDATE_RUN='12345', CANDIDATE_ATTEMPT='1')
         # The fixed public names pass upload responses, actual inventory, and
         # re-download verification before the workflow reaches draft=false.
@@ -265,6 +287,13 @@ class ReleaseAssetsTest(unittest.TestCase):
         for directory in ['upload-responses', 'server-bytes', 'draft-check']:
             shutil.rmtree(self.work / directory)
         (self.work / 'published').unlink()
+        if stable:
+            result = subprocess.run(['bash', '-c', script], cwd=self.work, env=dict(env, MOCK_RENAME='1'),
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((self.work / 'published').exists())
+            self.assertIn('renamed assets', result.stderr)
+            return
         # The original incident: candidate tilde names/checksums reach upload,
         # GitHub returns dotted names, and publication must never be attempted.
         (self.target / PUBLIC_DEB).rename(self.target / DEB)
@@ -284,6 +313,60 @@ class ReleaseAssetsTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((self.work / 'published').exists())
         self.assertIn('renamed assets', result.stderr)
+
+    def test_stable_release_rejects_prerelease_state(self):
+        self.stage()
+        self.release['tag_name'] = 'v4.1.0+zh.1'
+        self.release['prerelease'] = False
+        module.verify_release(self.target, self.release, self.responses, 'v4.1.0+zh.1', True, NOTES)
+        self.release['prerelease'] = True
+        with self.assertRaisesRegex(ValueError, 'publication state'):
+            module.verify_release(self.target, self.release, self.responses, 'v4.1.0+zh.1', True, NOTES)
+
+    def test_publish_requires_six_distinct_formats_and_all_language_screenshots(self):
+        preparation = self.workflow_run('Download and verify the original accepted packages')
+        self.assertIn("len(manifest['acceptance_reports']) == 6", preparation)
+        self.assertIn("len(manifest['screenshots']) == len(manifest['acceptance_reports']) * len(ACCEPTANCE_LANGUAGES)", preparation)
+        self.assertIn("(r['platform'], r['format'])", preparation)
+        self.assertIn("('windows-2022', 'portable')", preparation)
+        self.assertIn('Windows-x64-portable-zh-CN.zip', preparation)
+
+    def test_postpublication_keeps_old_assets_and_expected_latest(self):
+        script = self.workflow_run('Re-download and verify publication without touching older releases')
+        code = script.split("python3 - <<'PY'\n", 1)[1].rsplit('\nPY', 1)[0]
+        (self.work / 'packaging').symlink_to(ROOT / 'packaging', target_is_directory=True)
+        old = {'id': 7, 'tag_name': 'v4.0.0-zh.1.rc.4', 'assets': [
+            {'id': 70, 'name': 'old.exe', 'size': 10, 'digest': 'sha256:old', 'updated_at': 'old-time'}]}
+        old_tags = 'b' * 40 + ' refs/tags/v4.0.0-zh.1.rc.4\n'
+        (self.work / 'tags-before.txt').write_text(old_tags, encoding='utf-8')
+        (self.work / 'releases-before.json').write_text(json.dumps([old]), encoding='utf-8')
+        (self.work / 'latest-before.json').write_text(json.dumps({'id': None}), encoding='utf-8')
+        for version in ['4.1.0+zh.1', '4.1.0-zh.1.rc.1']:
+            stable = '+zh.' in version
+            tag = 'v' + version
+            new = {'id': 8, 'tag_name': tag, 'prerelease': not stable, 'draft': False, 'assets': [],
+                   'html_url': 'https://github.com/example/release/' + tag}
+            (self.work / 'tags-after.txt').write_text(old_tags + 'a' * 40 + ' refs/tags/' + tag + '\n', encoding='utf-8')
+            (self.work / 'releases-after.json').write_text(json.dumps([new, old]), encoding='utf-8')
+            expected_latest = 8 if stable else None
+            (self.work / 'latest-after.json').write_text(json.dumps({'id': expected_latest}), encoding='utf-8')
+            env = dict(os.environ, RELEASE_TAG=tag, SOURCE_SHA='a' * 40)
+            def run():
+                return subprocess.run([sys.executable, '-c', code], cwd=self.work, env=env,
+                                      capture_output=True, text=True)
+            result = run()
+            self.assertEqual(result.returncode, 0, result.stderr)
+            (self.work / 'latest-after.json').write_text(json.dumps({'id': 999}), encoding='utf-8')
+            self.assertNotEqual(run().returncode, 0)
+            (self.work / 'latest-after.json').write_text(json.dumps({'id': expected_latest}), encoding='utf-8')
+            changed = copy.deepcopy(old)
+            changed['assets'][0]['digest'] = 'sha256:changed'
+            (self.work / 'releases-after.json').write_text(json.dumps([new, changed]), encoding='utf-8')
+            self.assertNotEqual(run().returncode, 0)
+            (self.work / 'releases-after.json').write_text(json.dumps([new, old]), encoding='utf-8')
+            (self.work / 'tags-after.txt').write_text(old_tags.replace('b' * 40, 'c' * 40) +
+                                                       'a' * 40 + ' refs/tags/' + tag + '\n', encoding='utf-8')
+            self.assertNotEqual(run().returncode, 0)
 
     def test_workflow_does_not_bypass_or_reorder_the_draft_gate(self):
         workflow = (ROOT / '.github/workflows/zh-4x-publish.yml').read_text(encoding='utf-8')
