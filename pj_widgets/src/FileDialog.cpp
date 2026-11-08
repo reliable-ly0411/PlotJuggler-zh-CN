@@ -72,12 +72,21 @@ class FileDetailsDisplayProxy final : public QIdentityProxyModel {
     }
     if (index.column() == 2 && regular_file) {
       const QString mime = QMimeDatabase().mimeTypeForFile(info).name();
-      if (mime == u"application/octet-stream"_s) return QCoreApplication::translate("PJ::FileDialog", "Binary file");
-      if (mime == u"application/xml"_s || mime == u"text/xml"_s)
+      if (mime == u"application/octet-stream"_s) {
+        return QCoreApplication::translate("PJ::FileDialog", "Binary file");
+      }
+      if (mime == u"application/xml"_s || mime == u"text/xml"_s) {
         return QCoreApplication::translate("PJ::FileDialog", "XML document");
-      if (mime == u"text/plain"_s) return QCoreApplication::translate("PJ::FileDialog", "Plain text document");
-      if (mime == u"text/csv"_s) return QCoreApplication::translate("PJ::FileDialog", "CSV document");
-      if (mime == u"application/zip"_s) return QCoreApplication::translate("PJ::FileDialog", "ZIP archive");
+      }
+      if (mime == u"text/plain"_s) {
+        return QCoreApplication::translate("PJ::FileDialog", "Plain text document");
+      }
+      if (mime == u"text/csv"_s) {
+        return QCoreApplication::translate("PJ::FileDialog", "CSV document");
+      }
+      if (mime == u"application/zip"_s) {
+        return QCoreApplication::translate("PJ::FileDialog", "ZIP archive");
+      }
       // Unknown formats retain their machine-readable MIME identity, never an
       // untrusted file name or an OS-specific English prose description.
       return QCoreApplication::translate("PJ::FileDialog", "%1 file").arg(mime);

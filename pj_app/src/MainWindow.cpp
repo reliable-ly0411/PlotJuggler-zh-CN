@@ -15,6 +15,7 @@
 #include <QCloseEvent>
 #include <QColor>
 #include <QCoreApplication>
+
 #include "MainWindow.h"
 #include "pj_widgets/ExternalUrl.h"
 #if QT_CONFIG(process)
@@ -1949,7 +1950,7 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
         // retains the anti-flash delay below.
         ingest_show_timer_->start(kIngestStripShowDelayWasmMs);
 #else
-    ingest_show_timer_->start(kIngestStripShowDelayMs);
+        ingest_show_timer_->start(kIngestStripShowDelayMs);
 #endif
       });
   connect(file_loader_.get(), &FileLoader::ingestProgress, this, [this](int current, int maximum) {
@@ -4595,8 +4596,8 @@ void MainWindow::refreshStreamingCombo() {
   QList<QPair<QString, QString>> names;
   for (const auto* ds : session_->extensionCatalog().streamSources()) {
     const QString canonical = QString::fromStdString(ds->name);
-    names.push_back({canonical, bundledPluginText(QString::fromStdString(ds->id),
-                                                QString::fromStdString(ds->version), canonical)});
+    names.push_back(
+        {canonical, bundledPluginText(QString::fromStdString(ds->id), QString::fromStdString(ds->version), canonical)});
   }
   ui_->leftPanel->setStreamingSources(names);
 }

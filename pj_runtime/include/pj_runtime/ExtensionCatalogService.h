@@ -223,8 +223,7 @@ class ExtensionCatalogService : public QObject {
       std::string_view encoding, std::string_view type_name, Span<const uint8_t> schema) const;
 
   // Builds a QFileDialog-compatible filter string from all file-import sources.
-  QString buildFileFilter(
-      const std::function<std::string(const RuntimeDataSourcePlugin&)>& display_name = {}) const;
+  QString buildFileFilter(const std::function<std::string(const RuntimeDataSourcePlugin&)>& display_name = {}) const;
 
   // User-managed extra plugin folders, persisted in QSettings
   // (Preferences::plugin_folders). Authoritative scan tier below a --plugin-dir

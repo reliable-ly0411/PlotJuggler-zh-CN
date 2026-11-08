@@ -42,12 +42,17 @@
 - 3.x：`zh-CN` / `zh-CN-dev`；已有 `v3.18.0-zh.N` 与资产保持不变。
 - 4.x：`zh-CN-4.x` / `zh-CN-4.x-dev`；主题分支用 `zh-CN-4.x-{feat,fix,ci,docs}/主题`；`main-4.x` 只镜像上游。
 - 应用版本以 `versions.env` 的 `PJ_APP_VERSION` 为准；tag 是 `v` 加该版本。首个候选 `v4.0.0-zh.1.rc.1` 基于上游 4.0.0 之后的 `0345ec513bde7f05ad3148548ac30401f2b6f7a7`，设置 prerelease，不覆盖 Latest。
-- 保持上游 Windows IFW、Linux AppImage、Debian 三种格式；文件末尾增加 `-zh-CN`，只提供实际验收的 x64/x86_64/amd64。
+- 保持上游 Windows IFW、portable ZIP、Linux AppImage、Debian 四种格式；文件末尾增加 `-zh-CN`，只提供实际验收的 x64/x86_64/amd64。旧候选的三格式原包不改动。
 - `4.0.0-zh.1.rc.1` 为应用与下载名 SemVer。Debian 映射为 `4.0.0~zh.1~rc.1-1`，使候选排在正式版之前。IFW只允许数字组件，映射为 `4.0.0.1.0.1`（基础版、汉化修订1、候选阶段0、序号1）；这不是另一个应用版本。将来正式阶段使用1，不能倒退覆盖。
 - `zh-4x-ci.yml` 仍仅测试。`zh-4x-packages.yml` 只生成候选并验收，不写 Release。`zh-4x-publish.yml` 由人工确认最终截图后提升已验原包且验证源码SHA、流程SHA、所有验收任务与SHA256。
 - 上游4.0.0正文只有 Full Changelog 链接，发布时完整保留该原文，再解释快照、汉化、独立BIN插件和验证边界。
 
-`-zh.N` 本身在 SemVer 中仍属于预发布标识；将来去除 `.rc.N` 的命名与 GitHub 发布状态须再次按实际基线核定，不把汉化后缀解释为稳定 SemVer。
+`-zh.N` 本身在 SemVer 中仍属于预发布标识，即使没有 `.rc.N` 也不能当作正式版。
+正式 4.1.0 使用 `4.1.0+zh.1`，tag `v4.1.0+zh.1`，Debian `4.1.0+zh.1-1`，
+IFW `4.1.0.1.1.0`；`+zh.1` 是构建元数据，不影响 SemVer 优先级。
+后续正式修复须递增真实版本并准确记录上游基线，不靠 `+zh.2` 伪造升级。
+正式发行设置 `prerelease=false`，通过草稿原包验收后公开并设为 Latest；候选保持 `prerelease=true` 且不改变 Latest。
+所有草稿都不设 Latest。旧标签、资产和已发布字节仍不可变。
 
 当前默认分支为 `zh-CN-4.x`。`zh-source-sync.yml` 在默认分支提供独立的源码同步入口；
 它只更新两条开发线，不执行原生构建、稳定晋级、标签或发布。手动运行默认仅本地验证，
@@ -56,4 +61,19 @@
 4.x 发布可在全部候选验收和截图审阅通过、普通合并完成后，显式首次创建
 `zh-CN-4.x-ci/publish-accepted-v4-0-0-zh-1-rc-1-run-RUN-attempt-ATTEMPT` 指向精确已验源码；该专用分支会触发发布。
 创建该 ref 就是最终视觉审阅确认，未经确认不得创建。每版本使用新后缀；旧 ref 不复用、不重写，普通后续 push 不发布。工作流只接受 ref 指定的同 SHA 成功候选 run ID 和 attempt，不自动选择后续重跑，
-同时验证稳定分支树相同、标签尚不存在、下载原包校验通过，并在发布后复核旧版和Latest未变。
+同时验证稳定分支树相同、标签尚不存在、下载原包校验通过，并在发布后复核旧版未变。候选要求 Latest 未变，正式版要求 Latest 精确指向本次正式 Release。
+
+## 4.1.0 标签锁定发行
+
+应用基线必须为官方 `4.1.0` 的 `1b8fb491f56cc185ae395e2c7a0561443ad18d07`。
+正在前进的开发线不直接贴旧标签。独立发行主题分支保留公开祖先，显式排除 tag 后功能，
+保留已审阅汉化与发行补丁；发布晋级普通合并进入稳定线，不回退开发线，不改写镜像。
+固定范围记录见 `docs/localization/RELEASE-4.1.0-INTEGRATION.md`。
+
+本次候选通过首次创建 `zh-CN-4.x-ci/release-candidate-4-1-0-zh-1` 触发。
+最终验收须有两种 Windows 格式、两版 Ubuntu 各两种 Linux 格式的六份完整报告，
+每种三语言，合计18张实际截图；portable 使用独立干净runner，不借用IFW安装目录。
+审核截图后，首次创建 `zh-CN-4.x-ci/publish-accepted-v4-1-0-plus-zh-1-run-RUN-attempt-ATTEMPT`，
+只提升指定成功 run/attempt 的同一原包。`+` 保留于资产名，上传query编码 `%2B`，服务端名称必须精确相符。
+升级检查固定走本仓同主版本手动下载；稳定版拒绝候选，不启用上游APT/IFW/conda/Web发布。
+旧rc.4无法识别新的正式标签形状，发行说明提供手动下载安装迁移步骤。

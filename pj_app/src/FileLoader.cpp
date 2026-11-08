@@ -1011,8 +1011,10 @@ void FileLoader::openFromDialog(QWidget* dialog_parent) {
   return;
 #else
   const QString filter = extensions_.buildFileFilter([](const RuntimeDataSourcePlugin& source) {
-    return bundledPluginText(QString::fromStdString(source.id), QString::fromStdString(source.version),
-                             QString::fromStdString(source.name)).toStdString();
+    return bundledPluginText(
+               QString::fromStdString(source.id), QString::fromStdString(source.version),
+               QString::fromStdString(source.name))
+        .toStdString();
   });
   QSettings settings;
   const QString last_dir = settings.value(kLastDirKey, QString()).toString();
@@ -1048,8 +1050,10 @@ void FileLoader::replaceFromDialog(DatasetId dataset_id, QWidget* dialog_parent)
   loadFromBrowserPicker(dialog_parent, hints);
 #else
   const QString filter = extensions_.buildFileFilter([](const RuntimeDataSourcePlugin& source) {
-    return bundledPluginText(QString::fromStdString(source.id), QString::fromStdString(source.version),
-                             QString::fromStdString(source.name)).toStdString();
+    return bundledPluginText(
+               QString::fromStdString(source.id), QString::fromStdString(source.version),
+               QString::fromStdString(source.name))
+        .toStdString();
   });
   QSettings settings;
   const QString last_dir = settings.value(kLastDirKey, QString()).toString();
@@ -1082,7 +1086,8 @@ void FileLoader::loadFromBrowserPicker(QWidget* dialog_parent, LoadHints hints) 
           return;  // loader destroyed, or picker cancelled.
         }
         if (!staged.input.has_value()) {
-          const QString reason = staged.error.isEmpty() ? FileLoader::tr("Could not stage the selected file.") : staged.error;
+          const QString reason =
+              staged.error.isEmpty() ? FileLoader::tr("Could not stage the selected file.") : staged.error;
           self->logLoadFailure(staged.browser_name, reason);
           self->reportLoadWarning(guarded_parent.data(), reason);
           emit self->fileLoadFailed(staged.browser_name, reason);
@@ -1094,8 +1099,10 @@ void FileLoader::loadFromBrowserPicker(QWidget* dialog_parent, LoadHints hints) 
 
 void FileLoader::selectBrowserInput(QWidget* dialog_parent, BrowserSelectionCallback callback) {
   const QString filter = extensions_.buildFileFilter([](const RuntimeDataSourcePlugin& source) {
-    return bundledPluginText(QString::fromStdString(source.id), QString::fromStdString(source.version),
-                             QString::fromStdString(source.name)).toStdString();
+    return bundledPluginText(
+               QString::fromStdString(source.id), QString::fromStdString(source.version),
+               QString::fromStdString(source.name))
+        .toStdString();
   });
   qCInfo(lcFileLoader).noquote() << "Opening browser file picker with filter:" << filter;
   FileSelectionService::selectAndStageFile(
@@ -1392,8 +1399,8 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
 
   ServiceRegistryBuilder registry;
   if (auto status = ingest_session.registerServices(registry); !status) {
-    (void)fail(
-        tr("Plugin '%1': service registration failed: %2").arg(source_display_name, display_plugin_error(status.error())));
+    (void)fail(tr("Plugin '%1': service registration failed: %2")
+                   .arg(source_display_name, display_plugin_error(status.error())));
     co_return;
   }
 
@@ -1462,7 +1469,8 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
     if (!skip_dialog) {
       config = buildLoadConfig(saved_config, input.backing_path);
       if (auto status = handle.loadConfig(config); !status) {
-        (void)fail(tr("Plugin '%1': loadConfig failed: %2").arg(source_display_name, display_plugin_error(status.error())));
+        (void)fail(
+            tr("Plugin '%1': loadConfig failed: %2").arg(source_display_name, display_plugin_error(status.error())));
         co_return;
       }
     }
@@ -2367,7 +2375,9 @@ void FileLoader::onWorkerFinished(std::uint64_t generation) {
     emitLoadFinished(ticket, LoadOutcome::kFailed, path, 0);
     const QString reason =
         tr("Plugin '%1': start failed: %2")
-            .arg(source_display_name, bundledPluginError(ctx_->source_manifest_id, ctx_->source_version, ctx_->start_error));
+            .arg(
+                source_display_name,
+                bundledPluginError(ctx_->source_manifest_id, ctx_->source_version, ctx_->start_error));
     logLoadFailure(path, reason);
     if (!replacing) {
       // Real-delete the abandoned first-load shell (no tombstone), invalidating

@@ -1,16 +1,16 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
   "upstream_branch": "main-4.x",
-  "upstream_commit": "349c74e3b0ada0081b7d0006e729de66e8e3b6e5",
+  "upstream_commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
   "upstream_version_file": "versions.env",
-  "baseline_recorded_utc": "2026-11-07",
+  "baseline_recorded_utc": "2026-11-08",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
   "localization_source_branch": "zh-CN",
   "localization_source_commit": "766a88d8e689c7803f32acb315ac872a0a67a57b",
   "port_strategy": "Module-level port, preserving English source strings and independent plugin licensing; no merge of PJ3 history.",
   "stable_branch": "zh-CN-4.x",
   "development_branch": "zh-CN-4.x-dev",
-  "status": "development",
+  "status": "release",
   "ardupilot_plugin": {
     "upstream_repository": "https://github.com/ArduPilot/plotjuggler-apbin-plugins",
     "upstream_branch": "main",
@@ -27,10 +27,11 @@
     "release_tag": "v1.2.0-pj4.rc.1"
   },
   "upstream_release": {
-    "tag": "4.0.0",
-    "commit": "d278b1fe98f699d27b820867f454a697e50def2e",
-    "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.0.0",
-    "relationship": "The 4.1.0 development snapshot contains this historical 4.0.0 baseline and later upstream commits; it is not an unchanged upstream release."
+    "tag": "4.1.0",
+    "commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
+    "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.1.0",
+    "relationship": "Application baseline is locked to the official 4.1.0 tag, plus the documented localization and distribution patches; later upstream application features are excluded.",
+    "body_sha256_lf": "a14b3197a9064d986e4a1a0e511bb8af6d99915ecd20ccc6ecbed65a316b6bbb"
   },
   "csv_path_fix": {
     "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
@@ -53,7 +54,7 @@
   },
   "host_sdk_version": "0.39.0",
   "qt_version": "6.12.0",
-  "previous_upstream_commit": "0345ec513bde7f05ad3148548ac30401f2b6f7a7",
+  "previous_upstream_commit": "349c74e3b0ada0081b7d0006e729de66e8e3b6e5",
   "integration_parents": {
     "development": "5544b1cbfc87f73c2060af031544081bc29e7f3c",
     "stable": "1f42375cb861e529a2e04d56f11cdee14e4638b7"
@@ -64,14 +65,31 @@
     "host_sdk_version": "0.34.1",
     "note": "Historical released package scope; not an acceptance claim for the new development snapshot."
   },
-  "latest_sync": {
-    "previous_upstream_commit": "a3640d63d820f1ab1df2b01dbd9ac06142119545",
-    "development_parent": "88a6025ec330c743f6ce78e1f5a46a3cb55adbc6",
-    "upstream_commits": [
+  "upstream_tag": "4.1.0",
+  "upstream_tag_object": "da079f6670d3a1873ed1011dedc15556e6f838de",
+  "publication_status": "pending_final_package_acceptance",
+  "release_source": {
+    "development_parent": "82a787414217e32638f257e02fdb03d8d08d477a",
+    "development_upstream": "349c74e3b0ada0081b7d0006e729de66e8e3b6e5",
+    "strategy": "Preserve published ancestry while excluding the post-tag upstream delta on an isolated release branch. The ongoing development branch is unchanged.",
+    "distribution_backports": [
+      "Windows GUI subsystem and redirected CLI preserve the pre-existing fork distribution contract; the version resource and core-only console handling retain verified distribution fixes."
+    ],
+    "post_tag_commits_reviewed": [
+      "e2e22ce3ae0abe88523e716985c42afa61c20777",
+      "73f5e3d01facd11a6caa462c9f212abf8dbd811d",
+      "a8a8a70b7c8019debf5c75f59555067c407a225c",
+      "7daeb6ec67931b48193ceff2e053280a670bd0b8",
+      "f7950d205ac123c2269c886ab32aa3a591fa2cd5",
+      "4a56ada7f790ae61f0bf831cb42cc45fc19b0673",
+      "361cdf9064adb9fc0946da9c38c0b1902be3f4f1",
+      "b428b6d58972bff94d6ac48d05d6795b926ed7af",
+      "53983e3795d8c7650bc9ee0a2a0bede46aa46a5d",
+      "721516434404d6d7c659b00c23a5edce79b961da",
+      "a3640d63d820f1ab1df2b01dbd9ac06142119545",
       "fda4e555dfbb0278a85041107a81148f792fddb2",
       "4b7ec5f04199b818058982642c32c8c0eba39158",
       "349c74e3b0ada0081b7d0006e729de66e8e3b6e5"
-    ],
-    "macos_package_status": "Upstream source integrated; localization, native package acceptance and publication are not enabled."
+    ]
   }
 }

@@ -12,6 +12,7 @@
 // skip-dialog LoadHints standing in for the data-source dialog.
 
 #include <gtest/gtest.h>
+#include <qwt_plot_curve.h>
 
 #include <QAbstractButton>
 #include <QApplication>
@@ -42,7 +43,6 @@
 #include <thread>
 #include <utility>
 #include <vector>
-#include <qwt_plot_curve.h>
 
 #include "FileLoader.h"
 #include "LayoutReplayHints.h"
@@ -51,8 +51,8 @@
 #include "pj_datastore/engine.hpp"
 #include "pj_datastore/reader.hpp"
 #include "pj_marketplace/qt_diagnostic_bridge.hpp"
-#include "pj_plugins/sdk/object_ingest_policy.hpp"
 #include "pj_plotting/PlotWidget.h"
+#include "pj_plugins/sdk/object_ingest_policy.hpp"
 #include "pj_runtime/AppSession.h"
 #include "pj_runtime/CatalogModel.h"
 #include "pj_runtime/ExtensionCatalogService.h"
@@ -201,9 +201,8 @@ bool waitForFanoutProbeProgressStep(int step) {
 bool fanoutProbeHasCall(std::string_view slot) {
   FanoutProbeState& state = fanoutProbeState();
   const std::lock_guard lock(state.mutex);
-  return std::any_of(state.calls.begin(), state.calls.end(), [slot](const FanoutProbeCall& call) {
-    return call.slot == slot;
-  });
+  return std::any_of(
+      state.calls.begin(), state.calls.end(), [slot](const FanoutProbeCall& call) { return call.slot == slot; });
 }
 
 std::vector<std::string> fanoutProbeStartedSuffixes() {
@@ -2208,8 +2207,8 @@ TEST_F(FileLoaderTest, TerminalPublicationCanShutDownAndImmediatelyReuseLoader) 
       loader_->loadFileTicketed(
           PJ::LoadInput::fromNativePath(path), nullptr, fanoutProbeHints(uR"({"display_suffix":"terminal"})"_s)),
       0u);
-  ASSERT_TRUE(pj_app_test::pumpUntil(
-      [this, &recorder]() { return recorder.events.size() == 2u && !loader_->isBusy(); }));
+  ASSERT_TRUE(
+      pj_app_test::pumpUntil([this, &recorder]() { return recorder.events.size() == 2u && !loader_->isBusy(); }));
   pj_app_test::flushQueuedEvents();
   QObject::disconnect(connection);
   EXPECT_EQ(shutdowns, 1);

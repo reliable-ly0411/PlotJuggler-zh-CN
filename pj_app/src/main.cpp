@@ -5,6 +5,7 @@
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 #include <QDateTime>
+#include <QFile>
 #include <QFont>
 #include <QFontDatabase>
 #include <QGuiApplication>
@@ -41,9 +42,9 @@
 #ifndef PJ_TARGET_WASM
 #include "AppProfile.h"
 #endif
-#include "WindowsConsole.h"
 #include "BrowserPersistence.h"
 #include "DebugMode.h"
+#include "WindowsConsole.h"
 #ifndef PJ_TARGET_WASM
 #include "DiagnosticDump.h"
 #endif

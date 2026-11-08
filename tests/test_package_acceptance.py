@@ -33,15 +33,13 @@ class CleanAcceptanceTests(unittest.TestCase):
         self.assertLess(appimage, script.index('verify_package.py'))
         for kind in ('deb', 'appimage'):
             smoke = (root / 'packaging' / kind / 'smoke_test.sh').read_text(encoding='utf-8')
-            self.assertIn('wayland_check.sh', smoke)
+            self.assertIn('render_check.sh', smoke)
+            self.assertNotIn('wayland_check.sh', smoke)
 
-    def test_window_lifetime_ci_selects_real_platforms(self):
+    def test_tag_locked_ci_keeps_gpu_requirement(self):
         workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/zh-4x-ci.yml').read_text(encoding='utf-8')
-        step = workflow.split('- name: Verify native window lifetime on X11 and Wayland', 1)[1].split('- name:', 1)[0]
-        self.assertIn('MainWindowRhiWindowTest', step)
-        self.assertIn('QT_QPA_PLATFORM=xcb xvfb-run', step)
-        self.assertIn('env -u DISPLAY QT_QPA_PLATFORM=wayland ctest', step)
-        self.assertEqual(step.count('--no-tests=error'), 2)
+        self.assertIn('PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest', workflow)
+        self.assertNotIn('MainWindowRhiWindowTest', workflow)
 
     def test_acceptance_forces_qt_logs_to_stderr(self):
         for inherited in [{}, {'QT_FORCE_STDERR_LOGGING': '0', 'QT_LOGGING_RULES': '*.info=false'}]:

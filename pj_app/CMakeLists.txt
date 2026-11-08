@@ -299,8 +299,6 @@ if(WIN32)
     # The build tracks the .rc's #includes, not the icon file it embeds.
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/plotjuggler.rc PROPERTIES OBJECT_DEPENDS "${PJ_APP_ICON}")
 endif()
-target_include_directories(pj_app PRIVATE "${CMAKE_SOURCE_DIR}/resources/windows")
-endif()
 target_include_directories(pj_app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(pj_app PRIVATE
     pj_app_shell

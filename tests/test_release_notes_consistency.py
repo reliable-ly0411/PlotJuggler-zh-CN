@@ -17,6 +17,7 @@ class ReleaseNotesConsistencyTest(unittest.TestCase):
                              (ROOT / 'versions.env').read_text(encoding='utf-8').splitlines()
                              if line and not line.startswith('#'))
         baseline = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
+        self.baseline = baseline
         # Development snapshots have no release prose or accepted packages.
         # Check the explicit historical release without rewriting its claims.
         published = baseline.get('published_localization_release', {})
@@ -84,10 +85,11 @@ class ReleaseNotesConsistencyTest(unittest.TestCase):
         self.assertIn('Qt ' + self.notes_qt, self.notes)
         for sdk in {x['sdk'] for x in self.lock['plugins']}:
             self.assertIn(sdk, self.notes)
-        self.assertIn('上游 4.0.0 发布说明（全文）', self.notes)
+        upstream_tag = self.baseline['upstream_release']['tag'] if '+' in self.notes_version else '4.0.0'
+        self.assertIn('上游 ' + upstream_tag + ' 发布说明（全文）', self.notes)
         for placeholder in ['SOURCE_SHA', 'SOURCE_TREE', 'RUN_ID', 'RUN_URL', 'ASSET_TABLE']:
             self.assertIn('@' + placeholder + '@', self.notes)
-        self.assertIn('不设置为 Latest', self.notes)
+        self.assertIn('设为 Latest' if '+' in self.notes_version else '不设置为 Latest', self.notes)
         self.assertIn('旧标签及原包保持不变', self.notes)
 
 
