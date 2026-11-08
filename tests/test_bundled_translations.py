@@ -83,7 +83,8 @@ class BundledTranslationTest(unittest.TestCase):
         self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1',
                                         'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r2',
                                         'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r3',
-                                        'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r4'})
+                                        'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r4',
+                                        'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r5'})
         def runs(event, branch, created):
             trigger = event == 'workflow_dispatch' or (event == 'push' and branch in admitted)
             gate = event == 'workflow_dispatch' or (event == 'push' and created)
