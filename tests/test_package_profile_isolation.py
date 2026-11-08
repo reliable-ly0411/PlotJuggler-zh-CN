@@ -55,7 +55,73 @@ class PackageProfileIsolationTests(unittest.TestCase):
             self.assertIn("'profiles'", profile)
         text = SOURCE.read_text(encoding='utf-8')
         self.assertIn("with tempfile.TemporaryDirectory(prefix='pj4-package-') as temp:", text)
-        self.assertIn('work = Path(temp).resolve()', text)
+        self.assertIn('with acceptance_workspace(work_dir) as work:', text)
+
+
+class AcceptanceWorkspaceTests(unittest.TestCase):
+    def test_default_workspace_is_removed_on_success_and_failure(self):
+        for fail in (False, True):
+            try:
+                with module.acceptance_workspace() as work:
+                    self.assertTrue(work.is_absolute())
+                    (work / 'evidence').write_bytes(b'CI scratch')
+                    if fail:
+                        raise RuntimeError('synthetic acceptance failure')
+            except RuntimeError:
+                self.assertTrue(fail)
+            self.assertFalse(work.exists())
+
+    def test_explicit_workspace_is_retained_on_success_and_failure(self):
+        with tempfile.TemporaryDirectory() as temp:
+            for existing in (False, True):
+                for fail in (False, True):
+                    path = Path(temp).resolve() / f'case-{existing}-{fail}'
+                    if existing:
+                        path.mkdir()
+                    try:
+                        with module.acceptance_workspace(path) as work:
+                            self.assertEqual(work, path)
+                            (work / 'evidence').write_bytes(b'preserve inputs and profiles')
+                            if fail:
+                                raise RuntimeError('synthetic acceptance failure')
+                    except RuntimeError:
+                        self.assertTrue(fail)
+                    self.assertEqual((path / 'evidence').read_bytes(), b'preserve inputs and profiles')
+
+    def test_unsuitable_workspaces_fail_without_mutation(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            occupied = root / 'occupied'
+            occupied.mkdir()
+            evidence = occupied / 'evidence'
+            evidence.write_bytes(b'untouched')
+            file = root / 'file'
+            file.write_bytes(b'untouched file')
+            paths = [Path('relative'), Path(''), Path(root.anchor), occupied, file,
+                     root / 'absent-parent' / 'child', root / '..' / 'traversal']
+            for path in paths:
+                with self.subTest(path=path), self.assertRaises(ValueError):
+                    with module.acceptance_workspace(path):
+                        self.fail('Invalid workspace accepted')
+            self.assertEqual(evidence.read_bytes(), b'untouched')
+            self.assertEqual(file.read_bytes(), b'untouched file')
+            self.assertFalse((root / 'absent-parent').exists())
+
+    def test_symlink_workspace_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            target = root / 'target'
+            target.mkdir()
+            link = root / 'link'
+            try:
+                link.symlink_to(target, target_is_directory=True)
+            except OSError:
+                self.skipTest('Creating directory symlinks is not permitted on this runner')
+            for path in (link, link / 'child'):
+                with self.assertRaises(ValueError):
+                    with module.acceptance_workspace(path):
+                        self.fail('Symbolic-link workspace accepted')
+            self.assertEqual(list(target.iterdir()), [])
 
 
 if __name__ == '__main__':

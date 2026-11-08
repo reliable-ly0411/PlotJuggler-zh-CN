@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 """Verify an extracted/installed final package, using only its shipped runtime."""
 import argparse
+from contextlib import contextmanager
 import hashlib
 import json
 import math
@@ -33,6 +34,30 @@ def acceptance_environment(environment):
     # attached; subprocess.PIPE alone does not make the BIN import observable.
     env['QT_FORCE_STDERR_LOGGING'] = '1'
     return env
+
+
+@contextmanager
+def acceptance_workspace(work_dir=None):
+    """Clean up CI scratch space, but never delete caller-selected evidence."""
+    if work_dir is None:
+        with tempfile.TemporaryDirectory(prefix='pj4-package-') as temp:
+            yield Path(temp).resolve()
+        return
+    path = Path(work_dir)
+    if not path.is_absolute() or '..' in path.parts or path == Path(path.anchor):
+        raise ValueError('--work-dir must be an absolute non-root path without parent traversal')
+    if any(part.is_symlink() or (hasattr(part, 'is_junction') and part.is_junction())
+           for part in (path, *path.parents)):
+        raise ValueError('--work-dir must not use symbolic links or junctions')
+    if path.exists():
+        if not path.is_dir() or any(path.iterdir()):
+            raise ValueError('--work-dir must be an empty directory')
+    else:
+        if not path.parent.is_dir():
+            raise ValueError('--work-dir parent must already exist')
+        path.mkdir()
+    # Deliberately no cleanup, including when the acceptance body raises.
+    yield path.resolve()
 
 
 def application_command(executable, profile, args):
@@ -172,7 +197,7 @@ def validate_csv_plot_state(state, topic):
         assert view['x_min'] <= data['x_min'] < data['x_max'] <= view['x_max']
         assert view['y_min'] <= data['y_min'] < data['y_max'] <= view['y_max']
 
-def verify(prefix, executable, log, output, expected_source, expected_version, capture=False):
+def verify(prefix, executable, log, output, expected_source, expected_version, capture=False, work_dir=None):
     """Check provenance, plugins, Python and synthetic CSV/real BIN restoration."""
     from host_versions import read_host_versions
     host = read_host_versions(Path(__file__).resolve().parents[2])
@@ -273,8 +298,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
             assert process.returncode == 0, f'{name}: exit {process.returncode}'
         assert 'Failed to load bundled CJK fallback font' not in combined
         return combined
-    with tempfile.TemporaryDirectory(prefix='pj4-package-') as temp:
-        work = Path(temp).resolve()
+    with acceptance_workspace(work_dir) as work:
         env.update(HOME=str(work), XDG_CONFIG_HOME=str(work / 'config'),
                    XDG_DATA_HOME=str(work / 'data'), XDG_CACHE_HOME=str(work / 'cache'))
         version_text = run('version', ['--version'])
@@ -355,5 +379,7 @@ if __name__ == '__main__':
     p.add_argument('--expected-source', required=True)
     p.add_argument('--expected-version', required=True)
     p.add_argument('--capture', action='store_true')
+    p.add_argument('--work-dir', type=Path,
+                   help='Empty absolute directory to retain layouts, inputs and profiles, including on failure')
     a = p.parse_args()
-    verify(a.prefix, a.executable, a.real_bin, a.output, a.expected_source, a.expected_version, a.capture)
+    verify(a.prefix, a.executable, a.real_bin, a.output, a.expected_source, a.expected_version, a.capture, a.work_dir)

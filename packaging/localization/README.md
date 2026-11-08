@@ -34,10 +34,15 @@ removed, then uninstalls it. MSVC CRT DLLs are explicitly supplied app-local;
 the runner's existing VC installation is not used as proof that they shipped.
 
 `verify_package.py` passes an explicit absolute `--profile-dir` beneath its
-temporary work directory to every application process, including version, Python,
+work directory (temporary by default) to every application process, including version, Python,
 plugin, CSV, BIN and GUI capture launches. Each case has its own profile; Windows
 registry settings are not isolated by HOME/XDG variables alone. The executor
 controls the temporary-directory location through its normal TMP/TEMP settings.
+For local verification, `--work-dir` selects an empty absolute directory beneath
+an existing parent. It retains inputs, layouts and profiles on both success and
+failure; the verifier never deletes that directory. Relative, nonempty, file,
+root, parent-traversal, symbolic-link and junction paths are rejected. Omitting the option
+keeps the automatically cleaned CI temporary directory.
 Windows capture uses Pillow ImageGrab; it is not an application screenshot CLI.
 
 `verify_package.py` checks package provenance, CJK font bytes, legal texts, the
