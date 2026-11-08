@@ -20,3 +20,26 @@ packaging/installer/translations/ifw_zh_CN.ts text eol=lf whitespace=-blank-at-e
 resources/wasm-presets/** -text
 resources/wasm-presets/*/data.* -diff
 resources/wasm-presets/**/*.png -diff
+
+# Exact upstream 4.1.0 baseline hashes must survive Windows checkout.
+CLAUDE.md text eol=lf
+build.sh text eol=lf
+docs/BUILDING.md text eol=lf
+docs/QT_NOTES.md text eol=lf
+packaging/README.md text eol=lf
+packaging/appimage/Dockerfile.build text eol=lf
+packaging/appimage/smoke_test.sh text eol=lf
+packaging/conda/README.md text eol=lf
+packaging/deb/README.md text eol=lf
+packaging/deb/smoke_test.sh text eol=lf
+pj_app/src/FileLoader.h text eol=lf
+pj_app/src/ui/DiagnosticsDialog.cpp text eol=lf
+pj_app/src/ui/DiagnosticsDialog.ui text eol=lf
+pj_app/tests/rhi_mixed_dock_test.cpp text eol=lf
+pj_plotting/widget/include/pj_plotting/PlotWidgetBase.h text eol=lf
+pj_plotting/widget/src/PlotWidgetBase.cpp text eol=lf
+pj_scene2D/docs/TECHNICAL_NOTES.md text eol=lf
+pj_widgets/include/pj_widgets/ElidingLabel.h text eol=lf
+pj_widgets/include/pj_widgets/FileDialog.h text eol=lf
+pj_widgets/tests/eliding_label_test.cpp text eol=lf
+resources/feature_catalog.json text eol=lf

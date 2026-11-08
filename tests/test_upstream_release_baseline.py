@@ -23,6 +23,14 @@ class UpstreamReleaseBaselineTests(unittest.TestCase):
                 else:
                     self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), entry['sha256'])
 
+    def test_tag_baseline_checkout_preserves_original_bytes(self):
+        record = json.loads((ROOT / 'docs/localization/release-4.1.0-baseline-files.json').read_text(encoding='utf-8'))
+        attributes = (ROOT / '.gitattributes').read_text(encoding='utf-8').splitlines()
+        for entry in record['tag_matches']:
+            if entry['sha256'] is not None:
+                with self.subTest(path=entry['path']):
+                    self.assertIn(entry['path'] + ' text eol=lf', attributes)
+
     def test_localization_source_and_release_tag_are_distinct(self):
         record = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
         self.assertEqual(record['upstream_tag'], '4.1.0')
