@@ -40,18 +40,20 @@ Copy-only 拖入、事件返回后排队导入、MIME 生命周期与源文件�
 
 ## 测试与权限边界
 
-#1479 移除了自动选择真实显示平台的逻辑。本仓开发 CI 和候选包装 CI 的完整 native 调用
-因此显式选择 Linux `xcb`（私有 Xvfb）或 Windows `windows`；Linux 仍要求
-`PJ_REQUIRE_GPU_TESTS=1`，没有把 GPU 失败降级为跳过。独立 i18n、Qt-only 和指定 offscreen 的
-CTest 用例保留原环境，X11/Wayland 窗口生命周期专项仍分别执行。
-Windows 托管 runner 没有可呈现窗口时，上游显示探测可能跳过 GPU 用例，必须在结果中明确记录。
+#1479 移除了自动选择真实显示平台的逻辑。初版同步给完整 native 调用显式选择 Linux
+`xcb`（私有 Xvfb）或 Windows `windows`。Windows 覆盖所有普通 widget runner 的范围过大，
+首轮精确 CI 及修正见下文。当前 Windows 普通组清除外部 `QT_QPA_PLATFORM`，由共享 GUI main
+默认选择 offscreen，独立 main 或 CTest 自带环境保持各自行为；QRhi 与主窗口原生生命周期
+分别使用 `windows`、WARP 和 GPU 硬门禁。Linux 已验证的 `xcb` + `PJ_REQUIRE_GPU_TESTS=1`
+不变，没有把 GPU 失败降级为跳过。独立 i18n、Qt-only 和指定 offscreen 的 CTest 用例、
+X11/Wayland 专项保持原环境与触发边界。
 
 工作流权限、原生构建手动门禁、包验收和发布触发条件不变。普通 topic/dev push 和 PR
 只运行 source checks；完整双平台开发 CI 由 `zh-4x-ci.yml` 显式手动调度，或首次创建
 `zh-CN-4.x-ci/manual-build-<唯一标识>` 指向精确待验提交来触发。该工作流仅测试并保存报告，
 不创建标签、Release 或生产安装包；本轮不运行 `zh-4x-publish.yml`。
 
-## 本地验证
+## 同步初版本地验证
 
 - Qt 6.12.0 `lupdate`：简繁各 2,100/2,100，缺失、过时、未完成均为 0；占位符、复数、富文本及上下文通过。
 - Python source 回归：179 项，169 通过，10 项平台/可选环境测试跳过。
@@ -75,3 +77,54 @@ Windows 托管 runner 没有可呈现窗口时，上游显示探测可能跳过 
 运行或最终原包安装验收。WASM 须另外执行固定 Emscripten 工具链构建及
 `tests/wasm/ingress_file_selection.spec.js` 等浏览器检查，不能由 native 12/12 推断通过。
 稳定晋级仍须审阅后使用普通 merge，保留稳定线自身未进入开发线的提交；最终包/发行是独立门禁。
+
+
+## PR #42 首轮原生 CI 与 Windows 修正
+
+首轮固定源码为 `39bc927997918bfb399bef08ed12c20ea62bf01b`，tree
+`1864410f86c3f949721b8bb19c438024060424c9`，
+[CI run 42438013105](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/42438013105)。
+原始 JUnit 记录：
+
+- Linux 全量 native 5657 项：5555 通过、102 跳过、0 失败；X11/Wayland 窗口专项各2项通过。
+- Windows 全量 native 5372 项：5267 通过、103 跳过、2 失败。
+- 两平台的7项 FileDrop 与2项 MainWindowRhiWindow 均实际执行，不是跳过；Windows 没有GPU用例大面积跳过。
+
+两条 Windows 失败不能用删除断言或转为跳过处理：
+
+1. `WidgetBindingMarkdown.RendersGitHubMarkdownUnicodeAndBlocksEmbeddedResources` 假定请求字体为
+   字面 `monospace`。Qt 6.12 的 [Markdown importer](https://github.com/qt/qtbase/blob/v6.12.0/src/gui/text/qtextmarkdownimporter.cpp#L115)
+   实际取 `QFontDatabase::systemFont(FixedFont)`，并在[代码块应用该字体](https://github.com/qt/qtbase/blob/v6.12.0/src/gui/text/qtextmarkdownimporter.cpp#L645)。
+   修正为精确比较非空的系统 fixed-font families，而不是接受任意字体或检查环境解析后的 `QFontInfo`。
+2. `FileDialogStartFolderTest.PersistedQtMemoryDropsLastVisitedAndDeadShortcuts` 暴露真实初始化顺序问题。
+   Qt native helper 存在时，[setHistory](https://github.com/qt/qtbase/blob/v6.12.0/src/widgets/dialogs/qfiledialog.cpp#L1897)
+   和 [setSidebarUrls](https://github.com/qt/qtbase/blob/v6.12.0/src/widgets/dialogs/qfiledialog.cpp#L429) 不应用到 widget。
+   [DontUseNativeDialog](https://github.com/qt/qtbase/blob/v6.12.0/src/widgets/dialogs/qfiledialog.cpp#L796) 才创建 widget 树。
+   本仓提前设置该选项，再恢复已过滤的 history/sidebar；原来“保留可达项、删除死链接”的断言不变。
+
+Windows 开发与候选打包流程采用三个互斥且完整的主测试分组：
+
+- 普通组：`env -u QT_QPA_PLATFORM`、`-LE qrhi`，排除 `MainWindowRhiWindowTest`。
+- QRhi 组：`windows` + `QSG_RHI_PREFER_SOFTWARE_RENDERER=1` + `PJ_REQUIRE_GPU_TESTS=1`，`-L qrhi`。
+- 主窗口生命周期组：同样显式 native 环境，`-LE qrhi -R MainWindowRhiWindowTest`。
+
+原始完整发现清单与三份 JUnit 逐名称核对，无遗漏、重复或陌生用例；失败、错误、跳过、disabled
+及完整已捕获 testcase 子树保留，矛盾计数/status 和损坏清单失败关闭。CTest 非零退出不能被一份
+看似全过的 XML 掩盖。汇总仍使用 `native-tests.xml` 供原APBIN/FFT/三语反馈审计。
+
+另有独立 native portability 报告，精确包含上述两失败和全部7项拖入（同时涵盖
+`MainWindowFileDropTest` 与 `MainWindowFileDropLoadingTest`），必须9项实际执行、无失败/跳过，
+并保留GTest成功证据。它重复验证平台可移植性，不混入主报告的全量唯一用例数。
+涉及 `QtProject` registry 的 FileDialog fixture 只在一次性 CI / 隔离环境运行，不在用户常用Windows桌面执行。
+
+修正后的本地证据：
+
+- 完整 source suite 193项：188通过、5项真实平台限制跳过；包含真实CTest分组/报告与非零退出负控。
+- 分组汇总11项、显示边界5项、反馈/工作流24项全部通过；真实CTest fixture覆盖pass/fail/return77/disabled及合法空串命令参数。
+- 本轮非格式化hooks与实际C++改动行的clang-format检查通过；FileDialog.cpp既有显示映射范围仍有整文件格式债，未扩散格式化到无关代码。
+- Qt6.12 + GCC14 编译实际 `FileDialog.cpp` 与原9个FileDialog测试，Linux offscreen 9/9通过；
+  独立Qt Markdown fixed-font契约1/1通过。这不是Windows native修复已经通过的证明。
+
+以上修正必须在新的精确提交重新运行双平台全量 native 和Windows 9项专项。
+首轮Linux通过不能代替新头结果，Windows两个失败在新头实跑前仍视为待复验。
+不因本地source/专项通过而晋级稳定线或发布。
