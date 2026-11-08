@@ -3899,42 +3899,19 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
   }
 }
 
-// Copy must be offered: Qt falls back to Move if asked to select an unavailable Copy.
 void MainWindow::dragEnterEvent(QDragEnterEvent* event) {
-  if (!event->possibleActions().testFlag(Qt::CopyAction) || event->mimeData() == nullptr ||
-      FileLoader::droppedFilePaths(*event->mimeData()).isEmpty()) {
-    event->ignore();
-    return;
+  if (event->mimeData() != nullptr && !FileLoader::droppedFilePaths(*event->mimeData()).isEmpty()) {
+    event->acceptProposedAction();
   }
-  event->setDropAction(Qt::CopyAction);
-  event->accept();
-}
-
-void MainWindow::dragMoveEvent(QDragMoveEvent* event) {
-  if (!event->possibleActions().testFlag(Qt::CopyAction) || event->mimeData() == nullptr ||
-      FileLoader::droppedFilePaths(*event->mimeData()).isEmpty()) {
-    event->ignore();
-    return;
-  }
-  event->setDropAction(Qt::CopyAction);
-  event->accept();
 }
 
 void MainWindow::dropEvent(QDropEvent* event) {
-  if (!event->possibleActions().testFlag(Qt::CopyAction) || event->mimeData() == nullptr) {
-    event->ignore();
-    return;
-  }
   const QStringList paths = FileLoader::droppedFilePaths(*event->mimeData());
   if (paths.isEmpty()) {
-    event->ignore();
     return;
   }
-  event->setDropAction(Qt::CopyAction);
-  event->accept();
-  // Load after the drop returns: the file manager waits inside the OS drag
-  // loop until then, and a load can open dialogs.
-  QTimer::singleShot(0, this, [this, paths] { file_loader_->loadFiles(paths, this); });
+  event->acceptProposedAction();
+  file_loader_->loadFiles(paths, this);
 }
 
 void MainWindow::paintEvent(QPaintEvent* event) {
