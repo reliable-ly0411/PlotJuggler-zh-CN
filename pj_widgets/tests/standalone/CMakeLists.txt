@@ -10,14 +10,17 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_LIST_DIR}/../../src")
 include("${CMAKE_CURRENT_LIST_DIR}/../../../cmake/PjVersions.cmake")
 pj_read_versions("${CMAKE_CURRENT_LIST_DIR}/../../../versions.env")
 find_package(Qt6 ${PJ_QT_VERSION} REQUIRED COMPONENTS Core Gui Widgets Svg Test)
+# Reuse the production two-pass resource build instead of compiling the full
+# image pool into a single C++ byte array in this standalone test.
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../../resources" resources)
 add_executable(file_dialog_preflight
-  file_dialog_preflight.cpp ../../../resources/resources.qrc
+  file_dialog_preflight.cpp
   ../../src/FileDialog.cpp ../../src/Dialog.cpp ../../src/Dialog.ui
   ../../src/FrameworkTokens.cpp ../../src/SideDrawer.cpp ../../src/Scrollbar.cpp
   ../../include/pj_widgets/FileDialog.h ../../include/pj_widgets/Dialog.h
   ../../include/pj_widgets/Scrollbar.h)
 target_include_directories(file_dialog_preflight PRIVATE ../../include)
-target_link_libraries(file_dialog_preflight PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Svg Qt6::Test)
+target_link_libraries(file_dialog_preflight PRIVATE pj_resources Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Svg Qt6::Test)
 set_target_properties(file_dialog_preflight PROPERTIES WIN32_EXECUTABLE FALSE)
 if(MSVC)
   target_compile_options(file_dialog_preflight PRIVATE /utf-8)

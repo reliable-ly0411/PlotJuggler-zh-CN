@@ -23,6 +23,7 @@
 #include <QStyle>
 #include <QThread>
 #include <QTimer>
+#include <QUrl>
 #include <QVBoxLayout>
 #include <algorithm>
 #include <chrono>
@@ -1018,10 +1019,9 @@ void FileLoader::openFromDialog(QWidget* dialog_parent) {
   const QString last_dir = settings.value(kLastDirKey, QString()).toString();
 
   // PJ::FileDialog wraps a non-native QFileDialog in our frameless
-  // chrome — see pj_widgets/FileDialog.h. The native GTK dialog also
-  // crashes on this app's libpng ABI skew (see the --exclude-libs,ALL
-  // note in pj_app/CMakeLists.txt), so we avoid it both for look and
-  // for stability. The shell-injected picker threads MainWindow's chrome
+  // chrome, or opens the system dialog where the user opted in
+  // (FileDialog::setUseSystemDialog, Windows and macOS only) — see
+  // pj_widgets/FileDialog.h. The shell-injected picker threads MainWindow's chrome
   // metrics into the dialog (toolbar icon size, kept in step via
   // chromeMetricsChanged) — see setFilePicker().
   const QStringList paths = file_picker_ != nullptr
@@ -1032,13 +1032,24 @@ void FileLoader::openFromDialog(QWidget* dialog_parent) {
   }
   // Remember the directory of the last pick for next time.
   settings.setValue(kLastDirKey, QFileInfo(paths.last()).absolutePath());
-  // Load each selected file in order so several datasets populate in one go.
-  // Each loadFile may pop its own data-source config dialog and reports its own
-  // failures, so a single bad file doesn't abort the rest.
+  loadFiles(paths, dialog_parent);
+#endif
+}
+
+void FileLoader::loadFiles(const QStringList& paths, QWidget* dialog_parent) {
   for (const QString& path : paths) {
     loadFile(path, dialog_parent);
   }
-#endif
+}
+
+QStringList FileLoader::droppedFilePaths(const QMimeData& mime) {
+  QStringList paths;
+  for (const QUrl& url : mime.urls()) {
+    if (url.isLocalFile() && QFileInfo(url.toLocalFile()).isFile()) {
+      paths.append(url.toLocalFile());
+    }
+  }
+  return paths;
 }
 
 void FileLoader::replaceFromDialog(DatasetId dataset_id, QWidget* dialog_parent) {
