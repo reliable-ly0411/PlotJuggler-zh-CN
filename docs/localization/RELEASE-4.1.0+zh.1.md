@@ -255,7 +255,8 @@ PlotJuggler 4.1 is a large release. It covers 171 commits since 4.0.0. The main 
 从旧 rc.4 升级请直接下载本页的新包。旧二进制的更新检测不能识别新的 `+zh.1` 正式标签形状，旧附件不会被修改以补此行为。
 新版本的更新检查始终查询本仓、同主版本的汉化 Release，并提供手动下载，不跳向官方 APT 或 IFW 更新源；正式安装不会推荐候选版本。
 
-升级前保存布局和配置备份，先用新的 `--profile-dir` 验证。此选项不是插件沙箱，也不约束安装器。
+升级前保存布局和配置备份，先用新的 `--profile-dir` 验证。此选项不是插件沙箱，也不约束安装器；
+恢复标记与 Qt 文件选择器的共享状态例外见下文。
 未知用户替换插件和后装市场版本按既有来源策略保留；市场再次安装官方包可能覆盖汉化或 CSV 路径修复。
 回退应退出应用后正常卸载/选择保留旧包，并恢复备份，不假设不同版本的布局和设置完全兼容。
 
@@ -279,7 +280,20 @@ PlotJuggler 4.1 is a large release. It covers 171 commits since 4.0.0. The main 
 ## 兼容性与已知限制
 
 - 无本汉化发行的 macOS、ARM、WebAssembly、APT、conda 或 IFW 在线更新渠道，不将上游正文中的渠道误报为本分支交付。
-- Windows 未进行人工可见桌面目视验收。包未签名，最终自动化环境为 Windows Server 2022 x64；截图与断言不代表全部 Windows 10/11 桌面、Explorer 和安装页逐项人工验收。
+- Windows 包未签名，最终自动化环境为 Windows Server 2022 x64；截图与断言不代表全部 Windows 10/11 桌面、Explorer 和安装页逐项人工验收。
+- Windows 可见桌面补充观察仅对应旧候选 r2：源码 `c6cb43a32291c98e65b12035c3501d6b4842ac78`，
+  [构建 run 42448805739](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/42448805739)。
+  已通过不带 `--language` 的真实重启，观察到首选项保存后的简中→繁中→英文→简中切换；
+  简中打开 CSV，以及公开 BIN 的 `RCOU/C1` 全波形、缩放和复位均已观察到。
+  截图在可见会话中查看，未保存为持久截图文件；这些操作不代表全部界面和曲线操作均已验收。
+  同一旧候选的三语 CSV／BIN、19 个插件及 Python CLI 检查通过，不能替代 GUI 验收。
+  这些旧候选观察不转作本页最终源码与 run 的验收结果，最终原包证据仍须按上文的精确来源单独核验。
+- `--profile-dir` 仍有两项已知例外：自定义组件恢复标记使用默认 `AppLocalDataLocation`，
+  启动时可能读取并尝试删除已结束 PID 的标记；Qt 文件选择器会读写用户级共享 `QtProject` 设置。
+  默认应用及宿主插件设置的 INI 隔离仍有效，详见
+  [独立测试目录的隔离边界](../../blob/@SOURCE_SHA@/docs/localization/ISOLATED_PROFILE.zh-CN.md#已知隔离例外)。
+  旧候选的早期测试未保存共享状态基线，无法确认当时是否有标记或发生删除，也无法确认 `QtProject` 设置是否变化；
+  没有发现实际删除或数据损失的证据，不能据此认定共享状态未变。
 - Linux glibc 最低 2.35，原生包装使用 X11/xcb；Wayland 桌面需要 XWayland。本版不包含 tag 后新增的原生 Wayland 包装。
 - Qt5/PJ3 插件不兼容 Qt6/PJ4。Mosaico 1.3.0 明确保留官方原始二进制及部分混合英文，详见 [#20](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/20)。
 - 繁中非母语逐条人工审校、全部第三方插件、ROS 2 外部运行和所有图形驱动组合不在本次验收范围。原 37 张趣图中 4 张仍未进入中文池。

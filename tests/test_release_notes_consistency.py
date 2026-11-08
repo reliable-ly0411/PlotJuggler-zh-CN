@@ -81,7 +81,16 @@ class ReleaseNotesConsistencyTest(unittest.TestCase):
         self.assertIn(format(int(series.group(1)), ',') + ' 条数值序列', self.notes)
 
     def test_platform_and_source_boundaries_are_explicit(self):
-        self.assertIn('Windows 未进行人工可见桌面目视验收', self.notes)
+        for boundary in [
+                'Windows 可见桌面补充观察仅对应旧候选 r2',
+                'c6cb43a32291c98e65b12035c3501d6b4842ac78',
+                'https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/42448805739',
+                '不带 `--language` 的真实重启', '简中→繁中→英文→简中',
+                '公开 BIN 的 `RCOU/C1` 全波形、缩放和复位均已观察到',
+                '未保存为持久截图文件', '不能替代 GUI 验收',
+                '这些旧候选观察不转作本页最终源码与 run 的验收结果']:
+            self.assertIn(boundary, self.notes)
+        self.assertNotIn('Windows 未进行人工可见桌面目视验收', self.notes)
         self.assertIn('Qt ' + self.notes_qt, self.notes)
         for sdk in {x['sdk'] for x in self.lock['plugins']}:
             self.assertIn(sdk, self.notes)
