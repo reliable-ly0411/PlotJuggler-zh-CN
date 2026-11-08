@@ -1,0 +1,74 @@
+name: Fast-forward upstream mirrors
+
+on:
+  schedule:
+    - cron: '13 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Compare both mirrors without updating refs
+        type: boolean
+        default: true
+  push:
+    branches: [zh-CN-4.x]
+    paths:
+      - .github/workflows/upstream-mirrors.yml
+      - .github/sync/sync_mirrors.py
+      - .github/sync/test_sync_mirrors.py
+  pull_request:
+    branches: [zh-CN-4.x]
+    paths:
+      - .github/workflows/upstream-mirrors.yml
+      - .github/sync/sync_mirrors.py
+      - .github/sync/test_sync_mirrors.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upstream-mirrors
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Test fast-forward and history protections
+        run: python3 .github/sync/test_sync_mirrors.py
+
+  sync:
+    needs: verify
+    if: >-
+      github.repository == 'reliable-ly0411/PlotJuggler-zh-CN' &&
+      github.ref == 'refs/heads/zh-CN-4.x' &&
+      github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Sync only corresponding upstream mirror refs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUSH: ${{ github.event_name != 'workflow_dispatch' || !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          args=()
+          if [[ "$PUSH" == true ]]; then args+=(--push); fi
+          python3 .github/sync/sync_mirrors.py "${args[@]}" \
+            --report "$RUNNER_TEMP/upstream-mirrors.json"
+      - name: Preserve mirror sync report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-mirrors-report
+          path: ${{ runner.temp }}/upstream-mirrors.json
+          if-no-files-found: error
+          retention-days: 30
