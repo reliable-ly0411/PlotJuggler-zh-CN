@@ -243,3 +243,11 @@ resolved Conan host graph before collecting notices. Its Qt notice directory and
 source URL follow that Qt pin, while the unchanged checksum-locked generic
 license texts retain their own source provenance. Independent plugin source/SDK
 locks and historical BIN dependency notices do not become host-version claims.
+
+## CSV runtime repair candidate
+
+The explicit `zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r3` entry runs the same
+full candidate gates as r2, plus the real CSV ABI/runtime regressions and the
+post-staging FileLoader gate. It does not replace r2 evidence or create a release.
+A new candidate needs all original package checks and visual acceptance again.
+See [the fixed source patch contract](plugin-patches/README.md#csv-utf-8-paths-and-runtime-display).

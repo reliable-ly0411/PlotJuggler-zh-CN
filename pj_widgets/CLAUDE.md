@@ -107,3 +107,8 @@ Helpers:
 ## Localized presentation and external links
 
 FileDialog localizes detail columns without changing native file names, paths, roles or sorting. Colormap display names are translated independently of persisted tokens. Toast links use `openExternalUrl()` from `ExternalUrl.h`, restoring the pre-AppRun environment only for HTTP(S) opener children.
+
+`BundledPluginText.h` translates only allowlisted fixed plugin prose with exact
+manifest ID/version matching. CSV 1.0.7 diagnostics accept the exact SDK
+`plugin: ` wrapper while preserving it; unknown prefixes/messages stay raw.
+The standalone `app_language_test` covers all five errors and fallback boundaries.

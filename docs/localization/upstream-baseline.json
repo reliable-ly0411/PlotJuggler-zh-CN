@@ -40,8 +40,8 @@
     "module": "data_load_csv",
     "sdk_version": "0.34.1",
     "patch": "packaging/localization/plugin-patches/csv-loader.patch",
-    "patch_sha256": "00ecc1514fde0b6d8b97750a1cac1d2a251c0aa955c884e1dde7fa995f95c02c",
-    "scope": "UTF-8 filesystem paths in preview and import; synthetic ABI regressions; no parsing-locale or data-value changes"
+    "patch_sha256": "0f0b6ceaca36e914d8beb458156aeb6c07e87ebe5668d517b1f8d1e69597a442",
+    "scope": "UTF-8 preview/import paths and source-local three-language runtime display; canonical warnings, config, parser/data/ABI unchanged; synthetic real-plugin and FileLoader diagnostics/UI regressions"
   },
   "fft_display_mapping": {
     "repository": "https://github.com/PlotJuggler/pj-official-plugins",

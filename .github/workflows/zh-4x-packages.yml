@@ -3,7 +3,7 @@ name: Chinese 4.x candidate packages
 on:
   push:
     # Explicit candidate entries; only branch creation runs native jobs.
-    branches: ['zh-CN-4.x-ci/release-candidate-4-1-0-zh-1', 'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r2']
+    branches: ['zh-CN-4.x-ci/release-candidate-4-1-0-zh-1', 'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r2', 'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r3']
   workflow_dispatch:
 
 permissions:
@@ -306,6 +306,8 @@ jobs:
         id: localized-plugins
         shell: pwsh
         run: python packaging/localization/build_localized_plugins.py --work build/localized-plugins --prefix build/fork-prefix
+      - name: Validate rebuilt CSV through real FileLoader
+        run: python packaging/localization/run_csv_runtime_acceptance.py --build build --prefix build/fork-prefix
       - name: Retain completed localized plugin dependencies
         if: always() && steps.localized-plugins.outcome != 'skipped'
         uses: actions/cache/save@v5
@@ -318,6 +320,8 @@ jobs:
         with:
           name: localized-plugin-build-${{ runner.os }}
           path: |
+            build/csv-runtime.xml
+            build/csv-runtime-diagnostics/*.json
             build/localized-plugins/completed.json
             build/localized-plugins/*/build/conan-graph.json
             build/localized-plugins/*/build/conan.lock

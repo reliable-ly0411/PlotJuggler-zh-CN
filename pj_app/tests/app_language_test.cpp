@@ -7,6 +7,7 @@
 #include <QTemporaryDir>
 #include <QTest>
 
+#include "../../pj_widgets/include/pj_widgets/BundledPluginText.h"
 #include "AppLanguage.h"
 
 using namespace Qt::StringLiterals;
@@ -17,6 +18,36 @@ class AppLanguageTest : public QObject {
   Q_OBJECT
 
  private slots:
+  void fixedCsvDiagnosticsPreserveExactSdkDomainAndUnknownValues() {
+    const QStringList errors = {
+        u"invalid config JSON"_s, u"invalid config"_s, u"no filepath configured"_s, u"CSV parsing failed"_s,
+        u"Loading aborted by user"_s};
+    for (const QString& language : {u"zh_CN"_s, u"zh_TW"_s, u"en_US"_s}) {
+      const PJ::AppLanguage selected(*QCoreApplication::instance(), language);
+      for (const QString& error : errors) {
+        const QString translated = QCoreApplication::translate("PJ::BundledPluginDiagnostics", error.toUtf8());
+        QCOMPARE(PJ::bundledPluginError(u"csv-loader"_s, u"1.0.7"_s, error), translated);
+        QCOMPARE(
+            PJ::bundledPluginError(u"csv-loader"_s, u"1.0.7"_s, u"plugin: "_s + error), u"plugin: "_s + translated);
+        if (language != u"en_US"_s) {
+          QVERIFY(translated != error);
+        }
+        for (const QString& id : {u"unknown"_s, u"CSV Loader"_s}) {
+          QCOMPARE(PJ::bundledPluginError(id, u"1.0.7"_s, u"plugin: "_s + error), u"plugin: "_s + error);
+        }
+        QCOMPARE(PJ::bundledPluginError(u"csv-loader"_s, u"1.0.8"_s, u"plugin: "_s + error), u"plugin: "_s + error);
+        for (const QString& prefix : {u"other: "_s, u"plugin: plugin: "_s, u"plugin:"_s}) {
+          QCOMPARE(PJ::bundledPluginError(u"csv-loader"_s, u"1.0.7"_s, prefix + error), prefix + error);
+        }
+      }
+      const QString unknown = u"plugin: cannot open file: /資料/%1/'CSV parsing failed'.csv"_s;
+      QCOMPARE(PJ::bundledPluginError(u"csv-loader"_s, u"1.0.7"_s, unknown), unknown);
+      QCOMPARE(
+          PJ::bundledPluginError(u"csv-loader"_s, u"1.0.7"_s, u"plugin: CSV parsing failed\n"_s),
+          u"plugin: CSV parsing failed\n"_s);
+    }
+  }
+
   void normalizesSupportedLanguages_data() {
     QTest::addColumn<QString>("requested");
     QTest::addColumn<QString>("expected");
@@ -133,8 +164,8 @@ class AppLanguageTest : public QObject {
         QCOMPARE(QCoreApplication::translate("QPlatformTheme", "Save"), u"儲存"_s);
         QCOMPARE(QCoreApplication::translate("QPlatformTheme", "Cancel"), u"取消"_s);
         QCOMPARE(QCoreApplication::translate("QAbstractFileIconProvider", "File"), u"檔案"_s);
-        QCOMPARE(QCoreApplication::translate("QAbstractFileIconProvider", "Folder", "All other platforms"),
-                 u"資料夾"_s);
+        QCOMPARE(
+            QCoreApplication::translate("QAbstractFileIconProvider", "Folder", "All other platforms"), u"資料夾"_s);
         const QString path = u"/資料/%2/{raw}/測試.bin"_s;
         const QString source = u"Cannot read \"%1\""_s;
         const QString translated = QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Cannot read \"%1\"");

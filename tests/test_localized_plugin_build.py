@@ -83,6 +83,10 @@ class LocalizedPluginBuildTest(unittest.TestCase):
         self.assertEqual(csv['sdk'], '0.34.1')
         self.assertEqual(csv['platforms'], ['Linux', 'Windows'])
         self.assertEqual(csv['target'], 'csv_source_plugin')
+        provenance = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))['csv_path_fix']
+        self.assertEqual(provenance['patch_sha256'], csv['patch_sha256'])
+        self.assertEqual(provenance['commit'], csv['commit'])
+        self.assertEqual(provenance['sdk_version'], csv['sdk'])
         patch = (PATCHES / 'csv-loader.patch').read_text(encoding='utf-8')
         self.assertIn('std::filesystem::path(std::u8string', patch)
         self.assertIn('csv_file_paths_test', patch)
@@ -127,6 +131,7 @@ class LocalizedPluginBuildTest(unittest.TestCase):
         expected = {'csv_parser_test', 'csv_file_paths_test', 'LocalizedDisplay_zh_CN',
                     'LocalizedDisplay_zh_TW', 'LocalizedDisplay_en_US',
                     'LocalizedDisplay_unknown', 'LocalizedDisplay_empty'}
+        expected |= {'CsvRuntimeLanguage_' + name for name in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']}
 
         class TestsDispatched(Exception):
             pass
@@ -134,6 +139,7 @@ class LocalizedPluginBuildTest(unittest.TestCase):
         cases = [('complete', expected, TestsDispatched),
                  ('missing-traditional', expected - {'LocalizedDisplay_zh_TW'}, AssertionError),
                  ('missing-paths', expected - {'csv_file_paths_test'}, AssertionError),
+                 ('missing-runtime', expected - {'CsvRuntimeLanguage_zh_TW'}, AssertionError),
                  ('unexpected', expected | {'LocalizedDisplay_unexpected'}, AssertionError)]
         for name, selected, outcome in cases:
             with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
@@ -152,7 +158,7 @@ class LocalizedPluginBuildTest(unittest.TestCase):
                 def listing(args, **kwargs):
                     self.assertEqual(args[0], 'ctest')
                     self.assertIn('--show-only=json-v1', args)
-                    self.assertEqual(args[-2:], ['-R', '^(LocalizedDisplay_.*|csv_(parser|file_paths)_test)$'])
+                    self.assertEqual(args[-2:], ['-R', '^(LocalizedDisplay_.*|CsvRuntimeLanguage_.*|csv_(parser|file_paths)_test)$'])
                     generated = (source / 'CMakeLists.txt').read_text(encoding='utf-8')
                     for language in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']:
                         self.assertIn('add_test(NAME LocalizedDisplay_' + language + ' ', generated)
@@ -161,7 +167,7 @@ class LocalizedPluginBuildTest(unittest.TestCase):
                 def run(args, **kwargs):
                     if args[0] == 'ctest':
                         self.assertIn('--no-tests=error', args)
-                        self.assertEqual(args[-2:], ['-R', '^(LocalizedDisplay_.*|csv_(parser|file_paths)_test)$'])
+                        self.assertEqual(args[-2:], ['-R', '^(LocalizedDisplay_.*|CsvRuntimeLanguage_.*|csv_(parser|file_paths)_test)$'])
                         raise TestsDispatched()
 
                 with mock.patch.object(builder, 'checkout', side_effect=checkout), \
@@ -171,6 +177,18 @@ class LocalizedPluginBuildTest(unittest.TestCase):
                     with self.assertRaises(outcome):
                         builder.build_one(item, lock, root / 'work', root / 'prefix', 'Linux')
                 self.assertFalse((root / 'prefix').exists())
+
+    def test_real_csv_host_gate_follows_staging_and_requires_three_languages(self):
+        workflow = (ROOT / '.github/workflows/zh-4x-packages.yml').read_text(encoding='utf-8')
+        self.assertLess(workflow.index('Rebuild pinned display-localized official plugins'),
+                        workflow.index('Validate rebuilt CSV through real FileLoader'))
+        script = (ROOT / 'packaging/localization/run_csv_runtime_acceptance.py').read_text(encoding='utf-8')
+        self.assertIn("assert selected == EXPECTED", script)
+        self.assertIn("--no-tests=error", script)
+        self.assertIn("['zh_CN', 'zh_TW', 'en_US']", script)
+        self.assertIn("hashlib.sha256(binary.read_bytes()).hexdigest()", script)
+        self.assertIn("['version', 'commit', 'sdk', 'patch_sha256']", script)
+        self.assertIn('build/csv-runtime.xml', workflow)
 
     def test_native_build_offline_and_separate_sdk_graphs(self):
         script = (ROOT / 'packaging/localization/build_localized_plugins.py').read_text(encoding='utf-8')

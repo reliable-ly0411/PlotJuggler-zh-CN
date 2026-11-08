@@ -131,3 +131,11 @@ closure only for a QApplication, not a core-only self-test. `run.ps1` uses the
 explicit native-process wrapper to preserve waiting, arguments and exit status.
 `WindowsApplicationContract` checks the linked PE, full version strings and
 redirected CLI output; this is not an Explorer/shortcut visual acceptance.
+
+## Fixed-plugin runtime acceptance
+
+With `PJ_CSV_RUNTIME_PLUGIN` set to the verified rebuilt CSV DSO,
+`CsvRuntimeFileLoader_{zh_CN,zh_TW,en_US}` runs real FileLoader/DiagnosticDump
+empty-input diagnostics and short/scrolling warning Continue/Abort/Close paths.
+The packaging workflow enables and runs this strict gate after plugin staging.
+It is separate from the earlier native suite and final original-package checks.
