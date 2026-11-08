@@ -33,6 +33,13 @@ verifies IFW metadata, checks the installed application with development paths
 removed, then uninstalls it. MSVC CRT DLLs are explicitly supplied app-local;
 the runner's existing VC installation is not used as proof that they shipped.
 
+`verify_package.py` passes an explicit absolute `--profile-dir` beneath its
+temporary work directory to every application process, including version, Python,
+plugin, CSV, BIN and GUI capture launches. Each case has its own profile; Windows
+registry settings are not isolated by HOME/XDG variables alone. The executor
+controls the temporary-directory location through its normal TMP/TEMP settings.
+Windows capture uses Pillow ImageGrab; it is not an application screenshot CLI.
+
 `verify_package.py` checks package provenance, CJK font bytes, legal texts, the
 real app `--version`, Python, and every expected plugin/version. It restores
 entirely generated CSVs from ASCII and Chinese paths in English and Chinese

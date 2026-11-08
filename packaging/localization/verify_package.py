@@ -35,6 +35,13 @@ def acceptance_environment(environment):
     return env
 
 
+def application_command(executable, profile, args):
+    """Keep every application launch off the real user's settings and caches."""
+    assert not any(arg == '--profile-dir' or arg.startswith('--profile-dir=') for arg in args), \
+        'Acceptance owns the isolated profile argument'
+    return [str(executable), '--profile-dir', str(profile.resolve()), *args]
+
+
 def windows_system_root(environment):
     """Windows environment keys are case-insensitive before copying to dict."""
     roots = [value for key, value in environment.items() if key.upper() == 'SYSTEMROOT']
@@ -249,7 +256,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
                 os.killpg(process.pid, signal.SIGKILL)
             process.wait()
     def run(name, args, validate_plugins=False):
-        process = subprocess.Popen([str(executable), *args], env=env, stdout=subprocess.PIPE,
+        process = subprocess.Popen(application_command(executable, work / 'profiles' / name, args), env=env, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace',
                                    start_new_session=os.name != 'nt')
         try:
@@ -267,7 +274,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
         assert 'Failed to load bundled CJK fallback font' not in combined
         return combined
     with tempfile.TemporaryDirectory(prefix='pj4-package-') as temp:
-        work = Path(temp)
+        work = Path(temp).resolve()
         env.update(HOME=str(work), XDG_CONFIG_HOME=str(work / 'config'),
                    XDG_DATA_HOME=str(work / 'data'), XDG_CACHE_HOME=str(work / 'cache'))
         version_text = run('version', ['--version'])
@@ -313,8 +320,9 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
             assert not rejected, rejected
             if capture:
                 with (output / f'gui-{language}.log').open('w', encoding='utf-8') as stream:
-                    process = subprocess.Popen([str(executable), '--language', language, '--nosplash',
-                                                '--layout', str(layout)], env=env, stdout=stream, stderr=stream,
+                    process = subprocess.Popen(application_command(
+                        executable, work / 'profiles' / f'gui-{language}',
+                        ['--language', language, '--nosplash', '--layout', str(layout)]), env=env, stdout=stream, stderr=stream,
                                                 start_new_session=os.name != 'nt')
                     try:
                         time.sleep(12)
