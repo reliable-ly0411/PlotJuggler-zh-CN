@@ -941,6 +941,7 @@ bool PlotWidgetBase::eventFilter(QObject* obj, QEvent* event) {
       for (auto& info : curveList()) {
         if (clicked_item == info.curve) {
           info.curve->setVisible(!info.curve->isVisible());
+          resetZoom();
           replot();
           return true;
         }
