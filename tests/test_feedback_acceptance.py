@@ -366,8 +366,9 @@ class PackageLanguagesTests(unittest.TestCase):
             try:
                 os.chdir(root)
                 Path('versions.env').write_text('PJ_APP_VERSION=4.0.0-zh.1.rc.4\n', encoding='utf-8')
-                for i in range(5):
-                    directory = root/'reports'/str(i); directory.mkdir(parents=True)
+                for relative, (platform, kind) in manifest.REPORT_IDENTITIES.items():
+                    i = 0 if platform == 'windows-2022' else 1
+                    directory = (root/'reports'/relative).parent; directory.mkdir(parents=True)
                     report = {'status': 'automated_checks_passed', 'languages': languages,
                               'release': {'source_commit': 'a'*40, 'source_tree': 'b'*40, 'version': '4.0.0-zh.1.rc.4'},
                               'plugin_count': 19 if i==0 else 21, 'loaded_plugin_count': 19 if i==0 else 20,
@@ -376,11 +377,20 @@ class PackageLanguagesTests(unittest.TestCase):
                     (directory/'acceptance.json').write_text(json.dumps(report), encoding='utf-8')
                     for language in png_languages:
                         (directory/f'gui-{language}.png').write_bytes(b'synthetic-size-check-only'*500)
+                    if i == 0:
+                        suffix = 'portable-zh-CN.zip' if kind == 'portable' else 'zh-CN.exe'
+                        name = 'PlotJuggler-4.0.0-zh.1.rc.4-Windows-x64-' + suffix
+                        digest = manifest.hashlib.sha256(b'synthetic package').hexdigest()
+                        (directory/'package-integrity.json').write_text(json.dumps({
+                            'format': kind, 'name': name, 'before': digest, 'after': digest}), encoding='utf-8')
                 Path('candidate').mkdir()
                 for name in ['PlotJuggler-4.0.0-zh.1.rc.4-Windows-x64-zh-CN.exe',
+                             'PlotJuggler-4.0.0-zh.1.rc.4-Windows-x64-portable-zh-CN.zip',
                              'PlotJuggler-4.0.0-zh.1.rc.4-x86_64-zh-CN.AppImage',
                              'plotjuggler4_4.0.0~zh.1~rc.4-1_amd64-zh-CN.deb']:
                     (Path('candidate')/name).write_bytes(b'synthetic package')
+                (Path('candidate')/'SHA256SUMS-test.txt').write_text(''.join(
+                    f'{manifest.sha256(p)}  {p.name}\n' for p in sorted(Path('candidate').iterdir())), encoding='utf-8')
                 with mock.patch.dict(os.environ, {'GITHUB_SHA':'a'*40,'GITHUB_WORKFLOW_SHA':'c'*40,'GITHUB_RUN_ID':'1','GITHUB_RUN_ATTEMPT':'1'}), \
                      mock.patch.object(manifest.subprocess, 'check_output', return_value='b'*40):
                     manifest.main()
@@ -388,9 +398,9 @@ class PackageLanguagesTests(unittest.TestCase):
             finally:
                 os.chdir(old)
 
-    def test_five_reports_require_fifteen_language_screenshots(self):
+    def test_six_reports_require_eighteen_language_screenshots(self):
         result = self.run_manifest(['zh_CN','zh_TW','en_US'], ['zh_CN','zh_TW','en_US'])
-        self.assertEqual(len(result['screenshots']), 15)
+        self.assertEqual(len(result['screenshots']), 18)
 
     def test_old_two_language_reports_rejected(self):
         with self.assertRaisesRegex(AssertionError, 'Incomplete language'):

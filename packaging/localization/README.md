@@ -3,7 +3,7 @@
 Read the repository's `RELEASING.md` before changing versions or publishing.
 The build-only `zh-4x-packages.yml` uses the normal native CI dependency graph and
 regressions, then packages a fixed source commit with upstream-compatible formats:
-Windows IFW `.exe`, Linux `.AppImage` and `.deb`. It does not create a tag or Release.
+Windows IFW `.exe` and portable `.zip`, Linux `.AppImage` and `.deb`. It does not create a tag or Release.
 The upstream Depot workflows are not used by the Chinese fork.
 
 `prepare_payload.py` obtains the CMake-generated exact BIN plugin path rather than
@@ -151,3 +151,29 @@ downloading anything. The existing workflows' generated `build-i18n/` and
 remains a refusal. A local feedback tree must not masquerade as its HEAD.
 These changes require new native/package execution; historical reports do not
 become three-language package passes merely by rerunning the report generator.
+
+## 4.1.0 portable release acceptance
+
+The first creation of `zh-CN-4.x-ci/release-candidate-4-1-0-zh-1` requests the
+version-specific candidate. Ordinary pushes do not rebuild it. Windows packaging
+uses the upstream portable builder on the same staged payload as IFW, before
+hashing both original assets. The ZIP extracts directly to `bin/`, `lib/` and
+the packaged provenance/license directories.
+
+`windows-portable-clean` is a separate Windows 2022 runner, with no native build
+or IFW installation. `verify_windows.ps1 -Format portable` extracts the downloaded
+original ZIP into a fresh unique directory and runs its PE/embedded-version,
+19-plugin, Python, three-language CSV/BIN and captured GUI acceptance. Runtime
+search paths exclude build Qt/Conan and test fonts. Both Windows assets must have
+unique complete checksum entries matching their actual names and bytes before
+and after acceptance; the tested format's integrity record binds those hashes
+to its report. IFW installation/version/removal acceptance remains independent.
+
+The manifest requires the exact six format/OS report paths: Windows IFW and
+portable, plus AppImage and Debian on each of Ubuntu 22.04 and 24.04. Each report
+has an explicit `platform` and `format` identity; missing, duplicate or extra
+reports fail, even if their plugin counts happen to match. All 18 language
+screenshots and all four original assets with complete unique checksums are
+required. Automated acceptance does not replace visual review of screenshots.
+Run `python3 tests/test_release_manifest.py -v` for offline coverage of these
+gates; successful local tests are not a native package acceptance claim.

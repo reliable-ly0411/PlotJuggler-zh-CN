@@ -3,7 +3,7 @@ name: Chinese 4.x candidate packages
 on:
   push:
     # Explicit candidate entries; only branch creation runs native jobs.
-    branches: ['zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final8', 'zh-CN-4.x-ci/release-candidate-rc3-final1']
+    branches: ['zh-CN-4.x-ci/release-candidate-4-1-0-zh-1']
   workflow_dispatch:
 
 permissions:
@@ -336,8 +336,10 @@ jobs:
           ./packaging/installer/build_windows_installer.ps1 `
             -QtDir ".qt/$env:PJ_QT_VERSION/msvc2022_64" `
             -Version $env:PJ_VERSION -PackageVersion $packageVersion `
-            -ExtraPrefix build/fork-prefix -NameSuffix '-zh-CN' -CleanReleaseName -OutDir dist `
+            -ExtraPrefix build/fork-prefix -NameSuffix '-zh-CN' -CleanReleaseName -OutDir dist -StageDir build/windows-stage `
             -PluginRegistryUrl "packaging/localization/registry-lock.json"
+          ./packaging/installer/build_windows_portable.ps1 -StageDir build/windows-stage `
+            -OutFile "dist/PlotJuggler-$env:PJ_VERSION-Windows-x64-portable-zh-CN.zip"
       - name: Record original package hashes
         run: |
           python packaging/localization/hash_packages.py dist --output "SHA256SUMS-${RUNNER_OS}.txt"
@@ -426,8 +428,36 @@ jobs:
           path: reports/
           if-no-files-found: error
 
+  windows-portable-clean:
+    needs: native
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: zh4-candidate-Windows
+          path: pkg
+      - name: Install screenshot helper
+        run: python -m pip install 'Pillow>=11,<12'
+      - name: Extract and verify the original portable ZIP
+        shell: pwsh
+        run: ./packaging/localization/verify_windows.ps1 -Packages pkg -Output reports -Format portable
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zh4-final-Windows-portable
+          path: reports/
+          if-no-files-found: error
+
   release-manifest:
-    needs: [native, linux-clean, windows-clean]
+    needs: [native, linux-clean, windows-clean, windows-portable-clean]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:

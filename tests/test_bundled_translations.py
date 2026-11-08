@@ -72,22 +72,22 @@ class BundledTranslationTest(unittest.TestCase):
     def test_native_build_remains_explicit(self):
         workflow = (ROOT / '.github/workflows/zh-4x-packages.yml').read_text(encoding='utf-8')
         self.assertIn("github.event_name == 'push' && github.event.created", workflow)
-        self.assertIn("'zh-CN-4.x-ci/release-candidate-rc2-final8'", workflow)
+        self.assertIn("'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1'", workflow)
         release_doc = (ROOT / 'packaging/localization/README.md').read_text(encoding='utf-8')
-        self.assertIn('`zh-CN-4.x-ci/release-candidate-rc2-final8`', release_doc)
+        self.assertIn('`zh-CN-4.x-ci/release-candidate-4-1-0-zh-1`', release_doc)
         self.assertNotIn("branches: ['zh-CN-4.x-*", workflow)
         condition = "github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.created)"
         self.assertIn('    if: ' + condition, workflow)
         branches = re.search(r"branches: \[(.*?)\]", workflow).group(1)
         admitted = re.findall(r"'([^']+)'", branches)
-        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate',
-                                        'zh-CN-4.x-ci/release-candidate-rc2-final8',
-                                        'zh-CN-4.x-ci/release-candidate-rc3-final1'})
+        self.assertEqual(set(admitted), {'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1'})
         def runs(event, branch, created):
             trigger = event == 'workflow_dispatch' or (event == 'push' and branch in admitted)
             gate = event == 'workflow_dispatch' or (event == 'push' and created)
             return trigger and gate
-        for branch in ['main', 'zh-CN-4.x-dev', 'zh-CN-4.x', 'zh-CN-4.x-ci/other']:
+        for branch in ['main', 'zh-CN-4.x-dev', 'zh-CN-4.x', 'zh-CN-4.x-ci/other',
+                       'zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final8',
+                       'zh-CN-4.x-ci/release-candidate-rc3-final1']:
             self.assertFalse(runs('push', branch, True))
             self.assertFalse(runs('push', branch, False))
             self.assertFalse(runs('pull_request', branch, False))
