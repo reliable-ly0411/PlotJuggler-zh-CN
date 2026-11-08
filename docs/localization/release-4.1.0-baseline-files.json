@@ -203,7 +203,8 @@
     },
     {
       "path": "pj_widgets/src/FileDialog.cpp",
-      "sha256": "a741ba73e77fb936ef18274ec0c24e40d70944fbd78a2daf2f4d606af4517d6c"
+      "sha256": "a741ba73e77fb936ef18274ec0c24e40d70944fbd78a2daf2f4d606af4517d6c",
+      "note": "Initialize Qt widget dialog before restoring history/sidebar on native-capable platforms; tag defect release repair."
     },
     {
       "path": "resources/plotjuggler.ico",
@@ -213,5 +214,6 @@
       "path": "scripts/windows/run.ps1",
       "sha256": "197b1195e0c7b8aafd36821c5ebbe274637582d8beba91f6bda6cdae3842e1f9"
     }
-  ]
+  ],
+  "sha256_semantics": "Every sha256 records upstream_commit bytes, or null when absent there. fork_modified classifies intentional candidate differences; its sha256 is not a candidate digest."
 }

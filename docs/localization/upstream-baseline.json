@@ -90,6 +90,13 @@
       "fda4e555dfbb0278a85041107a81148f792fddb2",
       "4b7ec5f04199b818058982642c32c8c0eba39158",
       "349c74e3b0ada0081b7d0006e729de66e8e3b6e5"
+    ],
+    "release_repairs": [
+      {
+        "path": "pj_widgets/src/FileDialog.cpp",
+        "scope": "Set DontUseNativeDialog immediately after constructing the embedded picker, before restoring reachable history and sidebar entries. No system-dialog option or file-drop feature is added.",
+        "evidence": "Qt 6.12 native-capable initialization makes setHistory/setSidebarUrls ineffective until widgets exist; the existing four FileDialogStartFolderTest cases are required on Windows QPA in the candidate workflow."
+      }
     ]
   }
 }

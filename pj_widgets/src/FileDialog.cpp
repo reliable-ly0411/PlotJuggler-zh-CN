@@ -232,6 +232,9 @@ FileDialog::FileDialog(QWidget* parent) : Dialog(parent) {
   // tree, which is what our stylesheet targets. The explicit start folder also
   // keeps Qt from consulting its in-process last-visited folder.
   inner_ = new QFileDialog(contentWidget(), QString(), QDir::homePath());
+  // Native-capable platforms create the widget tree only after this option;
+  // history and sidebar setters are no-ops while Qt still uses its native helper.
+  inner_->setOption(QFileDialog::DontUseNativeDialog);
   if (qt_state.view_mode == u"Detail"_s) {
     inner_->setViewMode(QFileDialog::Detail);
   }
@@ -239,7 +242,6 @@ FileDialog::FileDialog(QWidget* parent) : Dialog(parent) {
   if (!qt_state.shortcuts.isEmpty()) {
     inner_->setSidebarUrls(answeringShortcuts(qt_state.shortcuts));
   }
-  inner_->setOption(QFileDialog::DontUseNativeDialog);
   inner_->setWindowFlags(Qt::Widget);
   inner_->setSizeGripEnabled(false);
   inner_->setProxyModel(new FileDetailsDisplayProxy(inner_));

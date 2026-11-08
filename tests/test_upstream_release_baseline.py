@@ -23,6 +23,15 @@ class UpstreamReleaseBaselineTests(unittest.TestCase):
                 else:
                     self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), entry['sha256'])
 
+    def test_modified_entry_digests_remain_upstream_baselines(self):
+        record = json.loads((ROOT / 'docs/localization/release-4.1.0-baseline-files.json').read_text(encoding='utf-8'))
+        self.assertIn('not a candidate digest', record['sha256_semantics'])
+        entries = {entry['path']: entry['sha256'] for entry in record['fork_modified']}
+        self.assertEqual(entries['pj_widgets/src/FileDialog.cpp'],
+                         'a741ba73e77fb936ef18274ec0c24e40d70944fbd78a2daf2f4d606af4517d6c')
+        self.assertEqual(entries['pj_widgets/CLAUDE.md'],
+                         '7a77f60075366b196aa28e8a8ec23d8094064759f12002155e4c3f7a2adb3aaf')
+
     def test_tag_baseline_checkout_preserves_original_bytes(self):
         record = json.loads((ROOT / 'docs/localization/release-4.1.0-baseline-files.json').read_text(encoding='utf-8'))
         attributes = (ROOT / '.gitattributes').read_text(encoding='utf-8').splitlines()

@@ -274,6 +274,15 @@ jobs:
             # Widget runners choose offscreen themselves; leave GL runners on
             # the native platform, matching upstream Windows CI.
             ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
+            # A native-capable platform is required to exercise Qt's picker
+            # initialization; the ordinary widget suite remains offscreen.
+            cp build/Testing/Temporary/LastTest.log build/native-tests.log
+            native_picker_base="$(python -c 'import os; print(os.path.abspath("build/native-file-dialog").replace(chr(92), "/"))')"
+            QT_QPA_PLATFORM=windows ctest --test-dir build --build-config RelWithDebInfo \
+              --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 \
+              -R '^pj_widgets_tests\.FileDialogStartFolderTest\.' \
+              --output-log "$native_picker_base.log" --output-junit "$native_picker_base.xml"
+            python -X utf8 packaging/localization/audit_file_dialog_results.py --junit build/native-file-dialog.xml
           else
             PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
           fi
@@ -363,6 +372,9 @@ jobs:
           path: |
             build/Testing/Temporary/
             build/native-tests.xml
+            build/native-tests.log
+            build/native-file-dialog.xml
+            build/native-file-dialog.log
             build/feedback-tests.json
             build/feedback-selection.json
             build/feedback-results.json

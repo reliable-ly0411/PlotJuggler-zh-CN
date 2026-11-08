@@ -34,7 +34,7 @@
 原生 Wayland 包装、macOS bundle/DMG、主窗口首次QRhi组合以及该区间其他通用行为改变。
 
 `release-4.1.0-baseline-files.json` 记录该区间触及的52个路径：29个路径逐字节等同tag或同样不存在，
-其余23个是有意保留的汉化/插件/构建与发行差异。测试对未修改路径执行固定SHA-256与缺失检查。
+其余23个是有意保留的汉化/插件/构建与发行差异。所有 `sha256` 字段均指向官方 tag 字节（非候选摘要），测试对未修改路径执行固定SHA-256与缺失检查。
 这不是“所有文件都等于上游”的声明：中文翻译、插件、版本和独立验收原本就是本分支差异。
 
 ## 保留的本分支能力
@@ -45,6 +45,18 @@ BIN独立共享插件、独立profile与来源保护均保留。数值解析与�
 
 宿主Qt6.12.0、SDK0.39.0取自tag依赖；插件历史SDK锁不混同宿主。包装许可及release.json动态读取宿主pin。
 正式版本4.1.0+zh.1使用本仓更新列表，不误入上游APT/IFW；SemVer元数据变化不充当升级。
+
+## tag 缺陷的最小发行修复
+
+`pj_widgets/src/FileDialog.cpp` 在构造内嵌 `QFileDialog` 后立即设置
+`DontUseNativeDialog`，再恢复有效历史和侧栏入口。Qt 6.12 在支持系统选择器的平台
+先建立 native helper；如果先调用 `setHistory` / `setSidebarUrls`，这些设置会被忽略。
+这是 tag 已有的初始化顺序缺陷修复，不引入后续系统文件对话框开关或文件拖放功能。
+来源可核对 [Qt 6.12 的 QFileDialog 实现](https://github.com/qt/qtbase/blob/v6.12.0/src/widgets/dialogs/qfiledialog.cpp)。
+
+候选 Windows runner 除原有全套测试，还必须通过真实 `windows` QPA 平台下既有的
+4 个 `FileDialogStartFolderTest`；报告拒绝缺项、跳过和截断。默认 offscreen 的通过
+不能替代这一定点检查。这些 fixture 写 Qt 自身共享设置，只在独立 CI runner 执行。
 
 ## 验收状态与发布门槛
 

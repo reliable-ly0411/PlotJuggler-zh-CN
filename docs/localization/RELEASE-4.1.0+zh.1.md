@@ -235,9 +235,10 @@ PlotJuggler 4.1 is a large release. It covers 171 commits since 4.0.0. The main 
 - ArduPilot DataFlash BIN 作为独立 LGPL-3.0-only 共享插件分发，版本 `@BIN_VERSION@`、提交 `@BIN_SHA@`。不静态嵌入 MPL 应用；来源及许可证随包保留。
 - 固定官方 registry 为 `2696403e106c6960541b8da19987ece35a24597e`。Windows 包含 18 个官方插件和 BIN；Linux 包含 20 个官方插件和 BIN。ROS 2 订阅插件需要用户另装并配置 ROS 2。
 - 本版汉化重建集合共 6 个，Windows 使用其中 5 个，Linux 使用全部 6 个：`mcap-loader`、`protobuf-parser`、`toolbox-transform-editor`、`webrtc-client`、`toolbox-assistant-agent`、`csv-loader`。Assistant 仅 Linux 提供，CSV 为路径补丁，其余保留显示补丁。各插件使用自己的固定源码、历史 SDK 和许可证，不用宿主 SDK 改写插件来源。
+- 修复 Qt 6.12 在 Windows 等支持系统选择器的平台忽略文件对话框历史/侧栏恢复的初始化顺序问题，不加入开发线的系统文件对话框切换或文件拖放功能。
 - 保留本分支原有 Windows GUI 子系统、应用图标和可重定向 CLI 发行契约，沿用版本资源及 core-only console 修复。这部分发行补丁与纯上游标签的差异明确记录，不宣称二进制与上游完全相同。
 
-本发布分支从已审阅的开发历史保留翻译和插件修复，对上游 tag 后的 14 个提交逐项审查，排除其应用功能增量，并仅保留上文明确说明的 Windows 发行契约。
+本发布分支从已审阅的开发历史保留翻译和插件修复，对上游 tag 后的 14 个提交逐项审查，排除其应用功能增量，并保留上文明确说明的 Windows 发行契约及最小 tag 缺陷修复。
 开发线中的文件拖放、系统文件对话框开关、Wayland 包装、macOS 中文包装以及较晚通用修复不因已进入开发线而自动进入本版。
 开发分支本身保持原有功能与 Git 历史，未被回退。详见
 [标签集成记录](../../blob/@SOURCE_SHA@/docs/localization/RELEASE-4.1.0-INTEGRATION.md)。
