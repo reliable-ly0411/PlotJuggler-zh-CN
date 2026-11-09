@@ -68,8 +68,6 @@ class NativeCiWorkflowTests(unittest.TestCase):
             self.assertIn('PJ_MEDIA_MANIFEST_SHA256: ${{ needs.windows-native-media.outputs.manifest_sha256 }}', block)
             self.assertIn('PJ_MEDIA_SOURCE_SHA:', block); self.assertIn('PJ_MEDIA_SOURCE_TREE:', block)
             self.assertIn('submodules: recursive', block); self.assertIn('persist-credentials: false', block)
-            self.assertIn('GIT_CONFIG_NOSYSTEM:', block); self.assertIn('GIT_CONFIG_GLOBAL: NUL', block)
-            self.assertIn('GIT_ATTR_NOSYSTEM:', block)
         mutation = SCRIPT.index("Source checkout was not restored cleanly after linked mutation.")
         media_import = SCRIPT.index("'--import-generated-media'")
         main_discovery = SCRIPT.index('$mainDiscovery =')
@@ -82,6 +80,47 @@ class NativeCiWorkflowTests(unittest.TestCase):
         self.assertIn('ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756', JOB)
         self.assertIn('submodules: recursive', JOB)
         self.assertIn('persist-credentials: false', JOB)
+
+    def test_both_checkouts_use_and_remove_isolated_writable_global_config(self):
+        for name, job in (('producer', JOB), ('clean', CLEAN_JOB)):
+            with self.subTest(job=name):
+                self.assertEqual(job.count('actions/checkout@'), 1)
+                steps = job.split('      - uses: actions/checkout@', 1)[1].split('\n      - ', 2)
+                checkout, cleanup = steps[:2]
+                env = checkout.split('        env:\n', 1)[1].split('        with:\n', 1)[0]
+                self.assertEqual(env, "          GIT_CONFIG_NOSYSTEM: '1'\n"
+                                      '          GIT_CONFIG_GLOBAL: ${{ runner.temp }}\\pj-checkout.gitconfig\n'
+                                      "          GIT_ATTR_NOSYSTEM: '1'\n")
+                self.assertIn('          submodules: recursive\n', checkout)
+                self.assertIn('          persist-credentials: false', checkout)
+                self.assertIn('name: Remove isolated checkout Git config\n', cleanup)
+                self.assertIn('        if: always()\n', cleanup)
+                self.assertIn("Join-Path $env:RUNNER_TEMP 'pj-checkout.gitconfig'", cleanup)
+                self.assertIn('Remove-Item -LiteralPath $path -Force', cleanup)
+
+    @unittest.skipUnless(shutil.which('git'), 'Git is unavailable')
+    def test_checkout_global_config_accepts_safe_directory_and_temporary_auth_include(self):
+        with tempfile.TemporaryDirectory(prefix='pj-checkout config ') as temp:
+            base = Path(temp)
+            home = base / 'home'; home.mkdir()
+            (home / '.gitconfig').write_text('[user]\n\tname = inherited\n', encoding='utf-8')
+            config = base / 'pj-checkout.gitconfig'
+            credentials = base / 'git-credentials-example.config'
+            credentials.write_text('[http "https://github.com/"]\n\textraheader = synthetic-test-header\n', encoding='utf-8')
+            env = {k: v for k, v in os.environ.items() if not k.upper().startswith('GIT_')}
+            env.update(HOME=str(home), GIT_CONFIG_GLOBAL=str(config), GIT_CONFIG_NOSYSTEM='1', GIT_ATTR_NOSYSTEM='1')
+            subprocess.run(['git', 'config', '--global', '--add', 'safe.directory', str(base)], env=env, check=True)
+            subprocess.run(['git', 'config', '--global', 'include.path', str(credentials)], env=env, check=True)
+            self.assertEqual(subprocess.check_output(['git', 'config', '--global', '--get', 'safe.directory'],
+                                                     env=env, text=True).strip(), str(base))
+            self.assertEqual(subprocess.check_output(['git', 'config', '--global', '--get', 'include.path'],
+                                                     env=env, text=True).strip(), str(credentials))
+            self.assertEqual(subprocess.check_output(['git', 'config', '--global', '--includes', '--get',
+                                                      'http.https://github.com/.extraheader'],
+                                                     env=env, text=True).strip(), 'synthetic-test-header')
+            inherited = subprocess.run(['git', 'config', '--global', '--get', 'user.name'], env=env, capture_output=True)
+            self.assertNotEqual(inherited.returncode, 0)
+            self.assertNotIn('synthetic-test-header', config.read_text(encoding='utf-8'))
 
     def test_all_later_git_children_inherit_isolated_settings(self):
         self.assertIn("$item.Name -match '^GIT_'", SCRIPT)

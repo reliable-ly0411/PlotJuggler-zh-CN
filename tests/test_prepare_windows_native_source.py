@@ -83,6 +83,21 @@ class NativeSourceCopyTests(unittest.TestCase):
         self.assertFalse((self.destination / '.git/hooks/post-checkout').exists())
         self.assertFalse((self.destination / '.git/objects/info/alternates').exists())
 
+    def test_checkout_auth_config_is_not_carried_to_clone_or_submodule(self):
+        credentials = self.root / 'git-credentials-synthetic.config'
+        credentials.write_text('[http "https://github.com/"]\n\textraheader = synthetic-secret\n', encoding='utf-8')
+        global_config = self.root / 'pj-checkout.gitconfig'
+        self.git('config', '--file', global_config, 'include.path', credentials, cwd=self.parent)
+        self.git('config', '--local', 'includeIf.gitdir:' + (self.parent / '.git').as_posix() + '.path',
+                 credentials, cwd=self.parent)
+        with mock.patch.dict(os.environ, {'GIT_CONFIG_GLOBAL': str(global_config)}):
+            source.clone(self.parent, self.destination, self.sha, 'https://github.com/example/project.git')
+        for config in (self.destination / '.git/config', self.destination / '.git/modules/deps/module/config'):
+            text = config.read_text(encoding='utf-8')
+            self.assertNotIn('synthetic-secret', text)
+            self.assertNotIn('git-credentials-synthetic.config', text)
+            self.assertNotIn('includeIf', text)
+
 
 if __name__ == '__main__':
     unittest.main()
