@@ -393,8 +393,24 @@ if(PJ_BUILD_TESTS)
         pj_runtime
         GTest::gtest
     )
+    if(NOT EMSCRIPTEN)
+        # Independent processes: the production profile is intentionally startup-only.
+        add_executable(pj_test_managed_profile_test "${PJ_TEST_MAINS_DIR}/pj_test_managed_profile_test.cpp")
+        target_link_libraries(pj_test_managed_profile_test PRIVATE pj_marketplace Qt6::Core)
+        if(WIN32)
+            target_link_libraries(pj_test_managed_profile_test PRIVATE advapi32)
+        endif()
+        foreach(profile_mode IN ITEMS ini native fail duplicate unverified wrong_owner)
+            add_test(NAME ManagedProfileContract_${profile_mode} COMMAND pj_test_managed_profile_test ${profile_mode})
+        endforeach()
+
+    endif()
+
     # Test name matches the target so build.sh's TSAN_TESTS ctest -R filter
     # (which lists target names) picks it up under ./build.sh --tsan.
+    if(WIN32)
+        target_link_libraries(extension_catalog_service_thread_safety_test PRIVATE advapi32)
+    endif()
     add_test(NAME extension_catalog_service_thread_safety_test COMMAND extension_catalog_service_thread_safety_test)
 
     # SDK example/test plugins the host tests dlopen. The SDK packages the
@@ -506,17 +522,16 @@ if(PJ_BUILD_TESTS)
     # parser plugin the DataSource ingest test uses. Shared path definitions
     # keep every consumer pointed at the same fixture image.
     # no WARNINGS: 4 of 35 merged tests never compiled with -Werror
-    pj_add_test_runner(pj_runtime_tests MAIN core
-        SOURCES ${PJ_RUNTIME_TEST_SOURCES}
-        LIBS
-            pj_runtime
-            pj_scripting
-            # mcap::mcap: recording_test_utils.h (the IsolatedQtSettings sandbox the
-            # settings tests use) includes mcap/reader.hpp, which pj_runtime keeps
-            # PRIVATE.
-            mcap::mcap
-            Qt6::Test
-        DEFINES
+    # These original settings/path contracts require no active AppProfile.
+    # Keep their full translation units and original public CTest prefix.
+    if(NOT EMSCRIPTEN)
+        set(PJ_RUNTIME_STORAGE_TEST_SOURCES
+            tests/source_cache_store_test.cpp
+            tests/recording_service_test.cpp
+            tests/recording_pipeline_test.cpp)
+        list(REMOVE_ITEM PJ_RUNTIME_TEST_SOURCES ${PJ_RUNTIME_STORAGE_TEST_SOURCES})
+    endif()
+    set(PJ_RUNTIME_TEST_DEFINES
             PJ_RUNTIME_HOST_OBJECT_PARSER_PATH="$<TARGET_FILE:runtime_host_object_parser_plugin>"
             PJ_STREAMING_CACHING_PARSER_PATH="$<TARGET_FILE:streaming_caching_parser_plugin>"
             PJ_MOCK_DATA_SOURCE_PLUGIN_PATH="$<TARGET_FILE:mock_data_source_plugin>"
@@ -531,20 +546,44 @@ if(PJ_BUILD_TESTS)
             PJ_RUNTIME_WIDGET_OTHER_QT_PLUGIN_PATH="$<TARGET_FILE:runtime_widget_other_qt_plugin>"
             PJ_RUNTIME_WIDGET_OTHER_COMPILER_PLUGIN_PATH="$<TARGET_FILE:runtime_widget_other_compiler_plugin>"
     )
-    # pj_bench_stats.h: the Qt-free thread clock and statistics of the engine
-    # freeze bench (pj_bench_probes would pull Qt Widgets into this core runner).
-    target_include_directories(pj_runtime_tests PRIVATE "${PJ_TEST_MAINS_DIR}")
-    if(TARGET pj_scripting_python_test_probe)
-      target_link_libraries(pj_runtime_tests PRIVATE pj_scripting_python_test_probe)
-      target_compile_definitions(pj_runtime_tests PRIVATE PJ_PYTHON_TEST_PROBE)
-    endif()
-    set_target_properties(pj_runtime_tests PROPERTIES AUTOMOC ON)
-    add_dependencies(pj_runtime_tests
-        runtime_host_object_parser_plugin streaming_caching_parser_plugin
-        mock_data_source_plugin mock_data_source_v2_plugin
-        mock_data_source_incompatible_plugin mock_data_source_incompatible_low_plugin
-        mock_data_source_malformed_floor_plugin mock_data_source_malformed_version_plugin
-        mock_data_source_newer_sdk_plugin mock_toolbox_plugin
-        runtime_widget_plugin runtime_widget_other_qt_plugin runtime_widget_other_compiler_plugin
+    pj_add_test_runner(pj_runtime_tests MANAGED_PROFILE MAIN core
+        SOURCES ${PJ_RUNTIME_TEST_SOURCES}
+        LIBS
+            pj_runtime
+            pj_scripting
+            # mcap::mcap: recording_test_utils.h (the IsolatedQtSettings sandbox the
+            # settings tests use) includes mcap/reader.hpp, which pj_runtime keeps
+            # PRIVATE.
+            mcap::mcap
+            Qt6::Test
+        DEFINES ${PJ_RUNTIME_TEST_DEFINES}
     )
+    set(PJ_RUNTIME_TEST_RUNNERS pj_runtime_tests)
+    if(NOT EMSCRIPTEN)
+        pj_add_test_runner(pj_runtime_storage_tests MAIN core PRIVATE_HKCU
+            PREFIX "pj_runtime_tests."
+            SOURCES ${PJ_RUNTIME_STORAGE_TEST_SOURCES}
+            LIBS pj_runtime pj_scripting mcap::mcap Qt6::Test
+            DEFINES ${PJ_RUNTIME_TEST_DEFINES}
+        )
+        list(APPEND PJ_RUNTIME_TEST_RUNNERS pj_runtime_storage_tests)
+    endif()
+    foreach(runtime_runner IN LISTS PJ_RUNTIME_TEST_RUNNERS)
+        # pj_bench_stats.h: the Qt-free thread clock and statistics of the engine
+        # freeze bench (pj_bench_probes would pull Qt Widgets into this core runner).
+        target_include_directories(${runtime_runner} PRIVATE "${PJ_TEST_MAINS_DIR}")
+        if(TARGET pj_scripting_python_test_probe)
+          target_link_libraries(${runtime_runner} PRIVATE pj_scripting_python_test_probe)
+          target_compile_definitions(${runtime_runner} PRIVATE PJ_PYTHON_TEST_PROBE)
+        endif()
+        set_target_properties(${runtime_runner} PROPERTIES AUTOMOC ON)
+        add_dependencies(${runtime_runner}
+            runtime_host_object_parser_plugin streaming_caching_parser_plugin
+            mock_data_source_plugin mock_data_source_v2_plugin
+            mock_data_source_incompatible_plugin mock_data_source_incompatible_low_plugin
+            mock_data_source_malformed_floor_plugin mock_data_source_malformed_version_plugin
+            mock_data_source_newer_sdk_plugin mock_toolbox_plugin
+            runtime_widget_plugin runtime_widget_other_qt_plugin runtime_widget_other_compiler_plugin
+        )
+    endforeach()
 endif()

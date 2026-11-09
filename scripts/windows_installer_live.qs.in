@@ -33,6 +33,9 @@ function record(kind, values) {
     values.kind = kind;
     values.language = installer.value("UILanguage");
     values.target = installer.value("TargetDir");
+    values.desktopDir = installer.value("DesktopDir");
+    values.startMenuDir = installer.value("StartMenuDir");
+    values.productUUID = installer.value("ProductUUID");
     values.TEMP = installer.environmentVariable("TEMP");
     values.TMP = installer.environmentVariable("TMP");
     // The observer gets this actual installer's PID and command line, not the
@@ -68,7 +71,10 @@ Controller.prototype.IntroductionPageCallback = function() {
         return;
     }
     var page = gui.pageById(QInstaller.Introduction);
+    var appComponent = installer.componentByName("io.plotjuggler.application");
     record("introduction", {
+        componentName: String(appComponent.value("DisplayName")),
+        componentDescription: String(appComponent.value("Description")),
         title: String(page.title),
         message: String(gui.findChild(page, "MessageLabel").text),
         // In IFW 4.10 this cache is populated from live QWizard::buttonText(),

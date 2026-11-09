@@ -229,7 +229,7 @@ PlotJuggler 4.1 is a large release. It covers 171 commits since 4.0.0. The main 
 ## 汉化与插件差异
 
 - 提供简体中文、繁體中文（台灣）和 English，默认简体中文。语言切换在下次启动生效，命令行 `--language` 只影响当前会话。数值和数据解析 locale 不变。
-- 简繁目录各覆盖 2,091 条 Qt 可提取消息，未完成 0。目录覆盖率不代表所有第三方插件、像素图片或平台界面均已翻译。
+- 简繁目录各覆盖 2,095 条 Qt 可提取消息，未完成 0。目录覆盖率不代表所有第三方插件、像素图片或平台界面均已翻译。
 - 保留中文文件对话框、固定市场目录显示映射、内置滤波器显示翻译、中文趣图、独立 profile 及安全外部链接处理。英文源字符串、数据标识和保存语义保留。
 - 新增已安装插件详情的作者、许可证、网站与源码信息，以及固定官方 FFT 1.0.1 的显示映射。保留 CSV Loader 1.0.7 的 UTF-8 路径预览/导入修复。
 - ArduPilot DataFlash BIN 作为独立 LGPL-3.0-only 共享插件分发，版本 `@BIN_VERSION@`、提交 `@BIN_SHA@`。不静态嵌入 MPL 应用；来源及许可证随包保留。
@@ -237,6 +237,9 @@ PlotJuggler 4.1 is a large release. It covers 171 commits since 4.0.0. The main 
 - 本版汉化重建集合共 6 个，Windows 使用其中 5 个，Linux 使用全部 6 个：`mcap-loader`、`protobuf-parser`、`toolbox-transform-editor`、`webrtc-client`、`toolbox-assistant-agent`、`csv-loader`。Assistant 仅 Linux 提供，CSV 为路径补丁，其余保留显示补丁。各插件使用自己的固定源码、历史 SDK 和许可证，不用宿主 SDK 改写插件来源。
 - 修复 Qt 6.12 在 Windows 等支持系统选择器的平台忽略文件对话框历史/侧栏恢复的初始化顺序问题，不加入开发线的系统文件对话框切换或文件拖放功能。
 - 保留本分支原有 Windows GUI 子系统、应用图标和可重定向 CLI 发行契约，沿用版本资源及 core-only console 修复。这部分发行补丁与纯上游标签的差异明确记录，不宣称二进制与上游完全相同。
+- 修复 `DataWriter::flush()` / `flushAll()` 在行未结束时混入未完成值与统计的问题：只输出已完成前缀，保留未完成行供后续继续写入。只对该路径中被未完成行写入的列重算前缀统计，null 不构成值段，极值包含无穷大、排除 NaN，无可比较值时极值为空；未触及列保留已有统计。普通写入和 flush 路径不变，不宣称所有旧路径的统计元数据一致。
+- 翻译 DataSource、MessageParser、Toolbox、Widget 四条动态加载成功提示，独立插入插件名和 UTF-8 路径，保留稳定 ID、级别和未知错误正文。Widget 加载直接使用原生文件系统路径，避免 Windows 本地窄字符转换；失败诊断以规范化 UTF-8 路径作前缀，保留底层错误正文。
+- 安装器组件名称与说明跟随向导所选简中/English，不改变组件 ID、安装目录或增加繁中向导。免安装包使用与 IFW 暂存元数据一致的根目录许可文本；上游安装器历史 LGPL 声明及著作权头逐字节保留在 `share/licenses/PlotJuggler-installer-history/`，附来源说明，不改变组件许可或旧包。
 
 本发布分支从已审阅的开发历史保留翻译和插件修复，对上游 tag 后的 14 个提交逐项审查，排除其应用功能增量，并保留上文明确说明的 Windows 发行契约及最小 tag 缺陷修复。
 开发线中的文件拖放、系统文件对话框开关、Wayland 包装、macOS 中文包装以及较晚通用修复不因已进入开发线而自动进入本版。
@@ -290,6 +293,8 @@ PlotJuggler 4.1 is a large release. It covers 171 commits since 4.0.0. The main 
   这些旧候选观察不转作本页最终源码与 run 的验收结果，最终原包证据仍须按上文的精确来源单独核验。
 - `--profile-dir` 仍有两项已知例外：自定义组件恢复标记使用默认 `AppLocalDataLocation`，
   启动时可能读取并尝试删除已结束 PID 的标记；Qt 文件选择器会读写用户级共享 `QtProject` 设置。
+  原生测试的私有恢复标记与 Windows 本进程 HKCU 重定向只用于测试夹具，不修复这两项生产限制，
+  也不隔离子进程、HKLM 或任意插件副作用。对应 Windows 生命周期与原生平台验收仍须单独完成。
   默认应用及宿主插件设置的 INI 隔离仍有效，详见
   [独立测试目录的隔离边界](../../blob/@SOURCE_SHA@/docs/localization/ISOLATED_PROFILE.zh-CN.md#已知隔离例外)。
   旧候选的早期测试未保存共享状态基线，无法确认当时是否有标记或发生删除，也无法确认 `QtProject` 设置是否变化；

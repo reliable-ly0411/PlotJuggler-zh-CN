@@ -39,7 +39,7 @@
 
 ## 保留的本分支能力
 
-简繁/英文界面、当前2,091条双目录、固定市场和插件显示映射、FFT反馈修复、CSV UTF-8路径补丁、
+简繁/英文界面、当前2,095条双目录、固定市场和插件显示映射、FFT反馈修复、CSV UTF-8路径补丁、
 BIN独立共享插件、独立profile与来源保护均保留。数值解析与稳定ID不因语言变化被改写。
 删除的两条翻译键来自tag后新增的系统文件对话框选项，并非丢弃本tag仍在使用的译文。
 
@@ -54,9 +54,34 @@ BIN独立共享插件、独立profile与来源保护均保留。数值解析与�
 这是 tag 已有的初始化顺序缺陷修复，不引入后续系统文件对话框开关或文件拖放功能。
 来源可核对 [Qt 6.12 的 QFileDialog 实现](https://github.com/qt/qtbase/blob/v6.12.0/src/widgets/dialogs/qfiledialog.cpp)。
 
+`DataWriter::flush()` / `flushAll()` 在行尚未结束时只封存已完成的前缀，保留未完成行的
+时间戳、已写值和未设置列，供后续 `finishRow()` 完成。只有这一中途 flush 路径重建前缀；
+未完成行已写入的列只按完成前缀重新计算统计：null 不构成值段，数值极值包含无穷大、
+排除 NaN，没有可比较数值时极值为空。未触及列保留已有统计，普通写入及 flush 路径不变。
+这是局部统计规则，不保证所有旧写入路径的元数据一致，也不改变宿主 SDK 或插件 ABI。
+
+插件目录将 DataSource、MessageParser、Toolbox、Widget 四条动态加载成功提示纳入翻译，
+插件名和路径作为独立参数插入；稳定 ID、级别和未知错误正文不变。
+Widget 加载器直接接收原生 `std::filesystem::path`，避免 Windows 路径先经本地窄字符转换；
+目录和诊断中的路径以 UTF-8 表示，Widget 加载失败使用规范化路径前缀并保留底层错误正文。
+
+安装器组件名称和说明跟随向导选择的简体中文或 English，而非仅由操作系统 locale 决定；
+不增加繁中向导，也不改变组件 ID、安装目录或重启参数。免安装包从实际暂存的 IFW 元数据
+复制根目录 MPL/LGPL 文本。打包前另将上游安装器历史 LGPL 声明及著作权头逐字节保留在
+`share/licenses/PlotJuggler-installer-history/`，附来源说明；不改变组件许可或已发布包。
+详见[安装器语言与许可来源](../../packaging/installer/README.zh-CN.md#component-metadata-and-windows-license-provenance)。
+
 候选 Windows runner 除原有全套测试，还必须通过真实 `windows` QPA 平台下既有的
 4 个 `FileDialogStartFolderTest`；报告拒绝缺项、跳过和截断。默认 offscreen 的通过
-不能替代这一定点检查。这些 fixture 写 Qt 自身共享设置，只在独立 CI runner 执行。
+不能替代这一定点检查。启用私有注册表保护的 Windows 测试入口在 `QApplication` 之前
+将本进程 HKCU 重定向到唯一测试键，仍使用 Qt 的原生注册表后端；正常退出只删除该次拥有的键，
+重定向保留至进程退出，异常退出可能遗留该测试键。FileDialog 测试还要求已检查的 HKLM
+回退设置不存在；存在或无法确认时失败，不当作通过或跳过。
+这些保护不覆盖子进程、HKLM、提前缓存的句柄或任意插件副作用。在已有安装的持久 Windows VM
+中执行时，仍须使用独立测试目录并逐组审查副作用；这不表示整个操作系统已被沙箱隔离。
+主窗口测试另注入私有恢复标记；这些都是测试夹具措施，生产 `--profile-dir` 的恢复标记和
+共享 `QtProject` 例外仍保留，见[隔离边界](ISOLATED_PROFILE.zh-CN.md#已知隔离例外)。
+实际 Windows 编译、清理生命周期和原生 QPA 执行仍须由对应候选结果确认。
 
 ## 验收状态与发布门槛
 

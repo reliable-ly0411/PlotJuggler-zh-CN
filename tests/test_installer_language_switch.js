@@ -70,11 +70,13 @@ for (const probe of [[], ['', 1], ['secret-private-output', 0], ['0', 0], ['null
   assert.ok(!denied.logs.join(' ').includes('secret-private-output'));
 }
 for (const [isInstaller, isCli] of [[false, false], [true, true], [false, true]]) {
-  const context = { installer: { isInstaller: () => isInstaller, isCommandLineInstance: () => isCli } };
+  const metadata = {};
+  const context = { component: {setValue: (k, v) => { metadata[k] = v; }}, qsTranslate: (_, s) => s, installer: { isInstaller: () => isInstaller, isCommandLineInstance: () => isCli } };
   vm.createContext(context);
   vm.runInContext(script, context);
-  // No component/gui API is supplied: touching one would fail this guard test.
+  // Display metadata also refreshes in maintenance/CLI; no GUI API is touched.
   context.Component.prototype.installerLoaded();
+  assert.deepEqual(Object.keys(metadata).sort(), ["Description", "DisplayName"]);
 }
 console.log('Installer language switch script checks passed');
 
@@ -128,13 +130,16 @@ if (!available.error && available.status === 0) {
 // Exercise detached/global and foreign native-like receivers, not only method
 // calls on Component.prototype (which hid the production failure).
 for (const receiver of ['detached', 'native-like', 'script-instance']) {
-  const values = {}, shown = {};
+  const values = {}, shown = {}, metadata = {};
   let language = 'zh_CN', existing = false, maintained = false;
   const translations = {
+    'PlotJuggler 4 zh-CN': 'PlotJuggler 4 简体中文版',
+    'Install PlotJuggler 4 zh-CN with its bundled Qt, FFmpeg and Python runtime.': '安装 PlotJuggler 4 简体中文版及随附的 Qt、FFmpeg 和 Python 运行库。',
     'Choose Installation Directory': '选择安装目录',
     'Please select where PlotJuggler 4 will be installed:': '请选择 PlotJuggler 4 的安装位置：',
   };
   const context = {
+    component: {setValue: (key, value) => { metadata[key] = value; }},
     installer: {
       fileExists: name => name.endsWith('/maintenancetool.exe') ? maintained : existing,
       setValue: (key, value) => { values[key] = value; },
@@ -146,6 +151,8 @@ for (const receiver of ['detached', 'native-like', 'script-instance']) {
   const hook = context.Component.prototype.retranslateUi;
   const invoke = () => receiver === 'detached' ? hook() : hook.call(receiver === 'native-like' ? Object.create(null) : Object.create(context.Component.prototype));
   invoke(); // The reserved hook is safe before a GUI page exists.
+  assert.equal(metadata.DisplayName, 'PlotJuggler 4 简体中文版');
+  assert.equal(metadata.Description, translations['Install PlotJuggler 4 zh-CN with its bundled Qt, FFmpeg and Python runtime.']);
   context.targetDirectoryPage = {
     targetDirectory: {text: 'C:/isolated 中文 target'},
     description: {setText: text => { shown.description = text; }},
@@ -167,7 +174,18 @@ for (const receiver of ['detached', 'native-like', 'script-instance']) {
   invoke();
   assert.equal(context.targetDirectoryPage.windowTitle, 'Choose Installation Directory');
   assert.equal(shown.description, 'Please select where PlotJuggler 4 will be installed:');
+  assert.equal(metadata.DisplayName, 'PlotJuggler 4 zh-CN');
+  assert.equal(metadata.Description, 'Install PlotJuggler 4 zh-CN with its bundled Qt, FFmpeg and Python runtime.');
+  assert.deepEqual(Object.keys(metadata).sort(), ['Description', 'DisplayName']);
   assert.ok(!shown.warning.startsWith('中文:'));
   assert.equal(values.TargetDir, 'C:/another isolated target');
 }
 console.log('Reserved IFW translation hook receiver regression checks passed');
+
+// Non-target identity/path overrides survive both restart directions verbatim.
+for (const language of ['en_US', 'zh_CN']) {
+  const retained = ["DesktopDir=C:/isolated 中文 desktop", "StartMenuDir=C:/isolated menu's", "ProductUUID={12345678-1234-1234-1234-123456789abc}"];
+  const args = quoting.restartArguments(['setup.exe', '--lang', 'en_US', ...retained, 'TargetDir=old'], language, 'new target');
+  for (const value of retained) assert.equal(args.filter(arg => arg === value).length, 1);
+  assert.equal(args.at(-1), 'TargetDir=new target');
+}

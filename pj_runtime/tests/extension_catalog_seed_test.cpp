@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 
+#include "../../cmake/test_mains/pj_test_owned_directory.h"
 #include "mock_data_source_vtable.h"
 #include "pj_base/plugin_data_api.h"
 #include "pj_marketplace/artifact_store.hpp"
@@ -50,6 +51,7 @@ class ExtensionCatalogSeedTest : public ::testing::Test {
   void SetUp() override {
     ASSERT_TRUE(bundled_.isValid());
     ASSERT_TRUE(marketplace_.isValid());
+    ASSERT_TRUE(marketplace_parent_.ownsTree());
     ASSERT_TRUE(override_.isValid());
   }
 
@@ -161,7 +163,9 @@ class ExtensionCatalogSeedTest : public ::testing::Test {
   }
 
   QTemporaryDir bundled_;
-  QTemporaryDir marketplace_;
+  // Store siblings must be inside this owned parent, not beside an owned leaf.
+  PjTestOwnedDirectory marketplace_parent_;
+  QTemporaryDir marketplace_{marketplace_parent_.path() + "/marketplace-XXXXXX"};
   QTemporaryDir override_;
 };
 

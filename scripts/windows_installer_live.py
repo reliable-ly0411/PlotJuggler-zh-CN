@@ -7,6 +7,7 @@ import ntpath
 from pathlib import Path
 import subprocess
 import time
+import uuid
 
 
 def windows_argv(command):
@@ -46,6 +47,14 @@ def metadata_cache_paths(diagnostic):
     return result
 
 
+def fixture_overrides(controller):
+    """Scope paths and product identity to this unique synthetic fixture."""
+    parent = Path(controller).parent
+    return dict(DesktopDir=str(parent / 'unused desktop'),
+                StartMenuDir=str(parent / 'unused start menu'),
+                ProductUUID='{' + str(uuid.uuid5(uuid.NAMESPACE_URL, str(controller))) + '}')
+
+
 def validate_records(records, fixture, controller, targets, parse_argv=windows_argv):
     expected = ['introduction', 'target-before-edit', 'target-edited', 'before-switch',
                 'introduction', 'target-before-edit', 'target-edited', 'before-switch',
@@ -59,6 +68,15 @@ def validate_records(records, fixture, controller, targets, parse_argv=windows_a
         language = ['zh_CN', 'en_US', 'zh_CN'][i]
         if row['language'] != language or normalized(row['target']) != normalized(targets[i]):
             raise AssertionError('Restart language/TargetDir not preserved')
+        expected_name = 'PlotJuggler 4 简体中文版' if language == 'zh_CN' else 'PlotJuggler 4 zh-CN'
+        expected_description = ('安装 PlotJuggler 4 简体中文版及随附的 Qt、FFmpeg 和 Python 运行库。'
+                                if language == 'zh_CN' else
+                                'Install PlotJuggler 4 zh-CN with its bundled Qt, FFmpeg and Python runtime.')
+        if row['componentName'] != expected_name or row['componentDescription'] != expected_description:
+            raise AssertionError('Live component metadata translation mismatch')
+        for key in ('desktopDir', 'startMenuDir', 'productUUID'):
+            if not row[key] or row[key] != intros[0][key]:
+                raise AssertionError('Restart identity/directory not preserved: ' + key)
         # Python's Windows temp root can be RUNNER~1 while CIM returns its
         # long form. Resolve existing files, without weakening path identity.
         if normalized(Path(row['executable']).resolve()) != normalized(Path(fixture).resolve()):
@@ -69,6 +87,10 @@ def validate_records(records, fixture, controller, targets, parse_argv=windows_a
         cache = Path(controller).parent / 'tmp' / 'ifw-cache'
         if argv.count('--cache-path') != 1 or normalized(argv[argv.index('--cache-path') + 1]) != normalized(cache):
             raise AssertionError('Explicit IFW cache path not preserved through restart')
+        for key, field in (('DesktopDir', 'desktopDir'), ('StartMenuDir', 'startMenuDir'), ('ProductUUID', 'productUUID')):
+            expected = fixture_overrides(controller)[key]
+            if argv.count(key + '=' + expected) != 1 or row[field] != expected:
+                raise AssertionError('Scoped fixture override not preserved: ' + key)
         if 'PJProbeMarker=中文 space user@example.test' not in argv:
             raise AssertionError('Unicode/space/@ startup marker not preserved')
         for variable in ('TEMP', 'TMP'):
@@ -105,7 +127,7 @@ def validate_records(records, fixture, controller, targets, parse_argv=windows_a
     # Print only scoped UI/state evidence. Do not dump host paths/command lines.
     for row in intros:
         print('LIVE STANDARD UI:', json.dumps({key: row[key] for key in
-              ('language', 'title', 'message', 'nextButton', 'cancelButton')}, ensure_ascii=True))
+              ('language', 'title', 'message', 'nextButton', 'cancelButton', 'componentName', 'componentDescription')}, ensure_ascii=True))
     print('PASS: real zh_CN -> en_US -> zh_CN restarts; three PIDs; --script, --root and edited TargetDir preserved.')
 
 
@@ -116,7 +138,8 @@ def fixture_arguments(fixture, controller, target):
     return [str(fixture), '--verbose', '--lang', 'zh_CN',
             '--cache-path', str(Path(controller).parent / 'tmp' / 'ifw-cache'),
             'PJProbeMarker=中文 space user@example.test', '--script', str(controller),
-            '--root', str(target), 'TargetDir=' + str(target)]
+            '--root', str(target), 'TargetDir=' + str(target)] + [
+                key + '=' + value for key, value in fixture_overrides(controller).items()]
 
 
 def probe_gui(fixture, temporary, powershell, template):

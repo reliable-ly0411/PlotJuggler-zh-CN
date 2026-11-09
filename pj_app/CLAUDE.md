@@ -139,3 +139,13 @@ With `PJ_CSV_RUNTIME_PLUGIN` set to the verified rebuilt CSV DSO,
 empty-input diagnostics and short/scrolling warning Continue/Abort/Close paths.
 The packaging workflow enables and runs this strict gate after plugin staging.
 It is separate from the earlier native suite and final original-package checks.
+
+## Native test marker ownership
+
+Tests construct `pj_app_test::IsolatedMainWindow` from
+`tests/support/isolated_main_window.h`. It prepares the marker in a fresh owned
+directory before the shell and installs it through the controller's existing
+accessor immediately after construction. The directory outlives MainWindow
+teardown. This isolates marker cleanup only; settings, extension stores and
+real application CLI processes need their own isolation. Never recursively
+remove a default KnownFolder location in a test teardown.

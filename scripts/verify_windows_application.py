@@ -4,9 +4,26 @@
 import argparse
 import ctypes
 from ctypes import wintypes
+import importlib.util
+import os
 from pathlib import Path
 import struct
 import subprocess
+import tempfile
+
+
+def launch_app(command, **kwargs):
+    """Use the optional per-launch VM guard without changing the default test."""
+    env = kwargs.get('env')
+    if env is None:
+        env = os.environ
+    if 'PJ_NATIVE_APP_GUARD_REQUIRED' not in env:
+        return subprocess.run(command, **kwargs)
+    guard_spec = importlib.util.spec_from_file_location(
+        'native_app_launch_guard', Path(__file__).parent / 'windows/native_app_launch_guard.py')
+    guard = importlib.util.module_from_spec(guard_spec)
+    guard_spec.loader.exec_module(guard)
+    return guard.run(command, guard_case='WindowsApplicationContract', **kwargs)
 
 
 def inspect_pe(path):
@@ -81,10 +98,16 @@ def verify(path, runtime=False, expected_version=None):
         for key in ('FileVersion', 'ProductVersion'):
             assert values[key] == expected_version, (key, values[key], expected_version)
     if runtime:
-        for option, expected in [('--version', b'PlotJuggler4 '), ('--help', b'--language')]:
-            result = subprocess.run([str(Path(path).resolve()), option], capture_output=True, timeout=60)
-            assert result.returncode == 0, (option, result.returncode, result.stderr)
-            assert expected in result.stdout, (option, result.stdout, result.stderr)
+        # CLI parsing happens after app initialization, so even --help and
+        # --version need isolated application settings on a real Windows host.
+        with tempfile.TemporaryDirectory(prefix='pj4-windows-contract-') as directory:
+            root = Path(directory)
+            for option, expected in [('--version', b'PlotJuggler4 '), ('--help', b'--language')]:
+                profile = root / option.removeprefix('--')
+                result = launch_app([str(Path(path).resolve()), '--profile-dir', str(profile), option],
+                                    capture_output=True, timeout=60)
+                assert result.returncode == 0, (option, result.returncode, result.stderr)
+                assert expected in result.stdout, (option, result.stdout, result.stderr)
     print('Windows executable bytes:', Path(path).stat().st_size)
     print('Windows PE: GUI subsystem, embedded icon groups and version; redirected CLI:', runtime)
 

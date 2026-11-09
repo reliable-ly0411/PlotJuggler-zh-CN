@@ -22,11 +22,14 @@ class LiveProbeTests(unittest.TestCase):
             argv = [str(fixture), '--script', str(controller), '--root', str(targets[stage])]
             argv += ['TargetDir=' + str(targets[stage]), '--cache-path', '/tmp/ifw-cache',
                      'PJProbeMarker=中文 space user@example.test']
+            overrides = probe.fixture_overrides(controller)
+            argv += [key + '=' + value for key, value in overrides.items()]
             base = dict(language=lang, pid=10 + stage, target=str(targets[stage]),
                         executable=str(fixture), commandLine=json.dumps(argv), liveFixturePids=[10 + stage],
-                        TEMP='/tmp', TMP='/tmp')
+                        TEMP='/tmp', TMP='/tmp', desktopDir=overrides['DesktopDir'], startMenuDir=overrides['StartMenuDir'], productUUID=overrides['ProductUUID'])
             chinese = lang == 'zh_CN'
-            rows.append(dict(base, kind='introduction', title='欢迎' if chinese else 'Welcome',
+            rows.append(dict(base, componentName='PlotJuggler 4 简体中文版' if chinese else 'PlotJuggler 4 zh-CN',
+                        componentDescription='安装 PlotJuggler 4 简体中文版及随附的 Qt、FFmpeg 和 Python 运行库。' if chinese else 'Install PlotJuggler 4 zh-CN with its bundled Qt, FFmpeg and Python runtime.', kind='introduction', title='欢迎' if chinese else 'Welcome',
                         message='欢迎使用 PlotJuggler 4 zh-CN 安装向导。' if chinese else 'Welcome to the PlotJuggler 4 zh-CN Setup.',
                         nextButton='下一步(&N) >' if chinese else '&Next >',
                         cancelButton='取消' if chinese else 'Cancel'))
@@ -102,11 +105,16 @@ class LiveProbeTests(unittest.TestCase):
         self.check(data)
 
     def test_negative_cases(self):
-        for mutation in ('same_pid', 'missing_script', 'stale_root', 'wrong_language', 'english_standard_page', 'english_buttons', 'unexpected_page', 'stale_field', 'wrong_executable', 'lingering_previous', 'untranslated_custom', 'wrong_cache', 'wrong_temp', 'missing_marker'):
+        for mutation in ('same_pid', 'missing_script', 'stale_root', 'wrong_language', 'english_standard_page', 'english_buttons', 'unexpected_page', 'stale_field', 'wrong_executable', 'lingering_previous', 'untranslated_custom', 'wrong_cache', 'wrong_temp', 'missing_marker', 'wrong_metadata', 'wrong_description', 'lost_desktop', 'lost_menu', 'lost_uuid'):
             with self.subTest(mutation=mutation):
                 data = self.records()
                 row = data[0][4]
-                if mutation == 'wrong_cache': row['commandLine'] = row['commandLine'].replace('/tmp/ifw-cache', '/outside-cache')
+                if mutation == 'wrong_metadata': row['componentName'] = '中文'
+                elif mutation == 'wrong_description': row['componentDescription'] = '中文'
+                elif mutation == 'lost_desktop': row['desktopDir'] = ''
+                elif mutation == 'lost_menu': row['startMenuDir'] = '/changed'
+                elif mutation == 'lost_uuid': row['productUUID'] = '{other}'
+                elif mutation == 'wrong_cache': row['commandLine'] = row['commandLine'].replace('/tmp/ifw-cache', '/outside-cache')
                 elif mutation == 'wrong_temp': row['TEMP'] = '/outside-temp'
                 elif mutation == 'missing_marker': row['commandLine'] = row['commandLine'].replace('user@example.test', 'lost')
                 elif mutation == 'lingering_previous': row['liveFixturePids'] = [10, 11]

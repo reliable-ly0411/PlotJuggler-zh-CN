@@ -305,6 +305,22 @@ if(PJ_BUILD_TESTS)
       SOURCES tests/python_sandbox_test.cpp tests/python_object_script_test.cpp
       LIBS pj_scripting pj_scripting_python_test_probe pybind11::embed cpython::embed)
     target_include_directories(pj_scripting_python_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    if(WIN32 AND PJ_NATIVE_BUNDLE_MODE)
+      # The driver and the embedded Conan interpreter can share a DLL basename.
+      # This test checks the actual module and stdlib in a real scripting runner.
+      if(NOT _pj_python_home_is_conan OR NOT EXISTS "${_pj_python_home_define}/python312.dll" OR
+         NOT EXISTS "${_pj_python_home_define}/DLLs/math.pyd")
+        message(FATAL_ERROR "Native test kit requires its locked Conan CPython runtime")
+      endif()
+      file(SHA256 "${_pj_python_home_define}/python312.dll" _pj_expected_python_sha256)
+      file(SHA256 "${_pj_python_home_define}/DLLs/math.pyd" _pj_expected_math_sha256)
+      target_sources(pj_scripting_python_tests PRIVATE tests/python_runtime_identity_win_test.cpp)
+      target_compile_definitions(pj_scripting_python_tests PRIVATE
+        PJ_NATIVE_EXPECTED_PYTHON_HOME="${_pj_python_home_define}"
+        PJ_NATIVE_EXPECTED_PYTHON_SHA256="${_pj_expected_python_sha256}"
+        PJ_NATIVE_EXPECTED_MATH_SHA256="${_pj_expected_math_sha256}")
+      target_link_libraries(pj_scripting_python_tests PRIVATE bcrypt)
+    endif()
 
     # Python probes (compiler runs, a held GIL) for tests outside this directory, which cannot see the CPython target.
     add_library(pj_scripting_python_test_probe STATIC tests/python_test_probe.cpp)

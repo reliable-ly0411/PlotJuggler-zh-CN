@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 
+#include "../../../cmake/test_mains/pj_test_managed_profile.h"
 #include "FileLoader.h"
 #include "pj_datastore/reader.hpp"
 
@@ -176,10 +177,15 @@ inline void flushQueuedEvents(int passes = 3) {
   int main(int argc, char** argv) {                                                      \
     qputenv("QT_QPA_PLATFORM", QByteArrayLiteral("offscreen"));                          \
     ::testing::InitGoogleTest(&argc, argv);                                              \
+    PJ_TEST_INITIALIZE_PRIVATE_HKCU                                                      \
+    PJ_TEST_INITIALIZE_MANAGED_PROFILE                                                   \
     QApplication app(argc, argv);                                                        \
     QCoreApplication::setOrganizationName(QStringLiteral("PJ4Tests"));                   \
     QCoreApplication::setApplicationName(QStringLiteral(app_name));                      \
     static QTemporaryDir settings_dir;                                                   \
+    if (!settings_dir.isValid()) {                                                       \
+      return EXIT_FAILURE;                                                               \
+    }                                                                                    \
     QSettings::setDefaultFormat(QSettings::IniFormat);                                   \
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings_dir.path()); \
     return RUN_ALL_TESTS();                                                              \

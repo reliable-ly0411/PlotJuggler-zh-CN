@@ -42,6 +42,7 @@
 #include "pj_runtime/CatalogModel.h"
 #include "pj_runtime/SessionManager.h"
 #include "pj_runtime/Time.h"
+#include "support/isolated_main_window.h"
 
 namespace PJ {
 
@@ -172,7 +173,7 @@ TEST(MainWindowViewportReframeTest, TimelineOffsetReframesPlotOnSyncAndDrainLegs
     ASSERT_TRUE(source_file.open(QIODevice::WriteOnly));
   }
 
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = PJ::MainWindowViewportReframeTestPeer::session(window);
   PJ::SessionManager& session = app.sessionManager();
   // "Use time offset" OFF: display == absolute, so a pre-apply viewport frames the

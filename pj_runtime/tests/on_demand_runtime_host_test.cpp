@@ -211,8 +211,17 @@ struct Fixture {
 
   test::FakeRun fake;  ///< outlives the session, whose pool joins the runs
   std::unique_ptr<test::ScopedRun> scoped_run;
+  // Validate before constructing AppSession: an empty override selects the
+  // default scan path instead of this fixture's deliberately empty directory.
+  QString checkedExtensionsPath() const {
+    if (!dir.isValid() || dir.path().isEmpty()) {
+      qFatal("Cannot create private AppSession test scan directory");
+    }
+    return dir.path();
+  }
+
   QTemporaryDir dir;
-  AppSession session{dir.path()};
+  AppSession session{checkedExtensionsPath()};
   SessionManager& manager = session.sessionManager();
   DatasetId ds = 0;
   int topics_changed = 0;

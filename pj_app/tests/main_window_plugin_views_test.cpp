@@ -44,6 +44,7 @@
 #include "pj_runtime/TopicDemandTracker.h"
 #include "pj_scene_common/scene_dock_widget.h"
 #include "pj_widgets/ToastNotification.h"
+#include "support/isolated_main_window.h"
 #ifdef PJ_WITH_SCENE3D
 #include "pj_scene3d_widgets/Scene3DDockWidget.h"
 #endif
@@ -1225,7 +1226,7 @@ class MainWindowPluginViewsTest : public ::testing::Test {
   static void SetUpTestSuite() {
     extensions_ = std::make_unique<QTemporaryDir>();
     ASSERT_TRUE(extensions_->isValid());
-    window_ = std::make_unique<PJ::MainWindow>(extensions_->path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_->path());
   }
   static void TearDownTestSuite() {
     window_.reset();

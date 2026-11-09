@@ -63,8 +63,9 @@ if(WIN32)
     # Run the real synthetic wizard before SDK bootstrapping too. This uses
     # pinned IFW tools and dedicated synthetic payloads, never user installations.
     find_program(PJ_TEST_PYTHON NAMES python python3 REQUIRED)
+    include("${pj_root}/cmake/PjIfwTestOptions.cmake")
     add_test(NAME WindowsInstallerResourceContract
         COMMAND "${PJ_TEST_PYTHON}" "${pj_root}/scripts/verify_windows_installer_resources.py"
-                --lrelease $<TARGET_FILE:Qt6::lrelease>)
+                --lrelease $<TARGET_FILE:Qt6::lrelease> ${PJ_IFW_TEST_ARGS})
     set_tests_properties(WindowsInstallerResourceContract PROPERTIES TIMEOUT 900)
 endif()

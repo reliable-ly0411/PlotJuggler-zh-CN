@@ -668,6 +668,13 @@ New-Item -ItemType Directory -Force -Path $ifwLicenseDir | Out-Null
 Copy-Item (Join-Path $installerRoot "translations/LICENSE.GPL3-EXCEPT") $ifwLicenseDir
 Copy-Item (Join-Path $installerRoot "translations/README.md") $ifwLicenseDir
 
+# Preserve the upstream historical installer notice byte-for-byte in both
+# payload formats, separately from the canonical Qt license shown by IFW.
+$historyDir = Join-Path $stageData "share/licenses/PlotJuggler-installer-history"
+New-Item -ItemType Directory -Force -Path $historyDir | Out-Null
+Copy-Item (Join-Path $pkgSrc "meta/license_lgpl.txt") (Join-Path $historyDir "license_lgpl.txt") -Force
+Copy-Item (Join-Path $installerRoot "LICENSE-PROVENANCE.txt") $historyDir -Force
+
 if ($ExtraPrefix) {
   Copy-Item (Join-Path $stageData "share/licenses/Qt-LGPL.txt") (Join-Path $stageMeta "license_lgpl.txt") -Force
 }

@@ -33,6 +33,7 @@
 #include "pj_runtime/AppSession.h"
 #include "pj_runtime/CatalogModel.h"
 #include "pj_runtime/PresetCatalog.h"
+#include "support/isolated_main_window.h"
 #include "support/loader_test_support.h"
 #include "support/preset_test_support.h"
 #include "support/route_server.h"
@@ -104,7 +105,7 @@ class RemotePresetReplayTest : public ::testing::Test {
     ASSERT_TRUE(data_dir_.isValid());
     const QString plugin = QString::fromUtf8(PJ_MOCK_FILE_SOURCE_PLUGIN_PATH);
     ASSERT_TRUE(QFile::copy(plugin, extensions_dir_.filePath(QFileInfo(plugin).fileName())));
-    window_ = std::make_unique<PJ::MainWindow>(extensions_dir_.path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_.path());
     QObject::connect(
         window_.get(), &PJ::MainWindow::layoutUrlLoadFinished, [this](const QUrl& url, bool ok, const QString& reason) {
           EXPECT_EQ(ok, reason.isEmpty()) << reason.toStdString();

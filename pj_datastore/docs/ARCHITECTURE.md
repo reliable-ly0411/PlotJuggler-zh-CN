@@ -75,7 +75,7 @@ Tracks per-column `ColumnStats` incrementally (min, max, null_count, is_constant
 - `ensureColumn()` — dynamic column addition for schemaless topics. Rejects if a row is in progress (for new columns only). Seals any pending builder before modifying column layout.
 - `expandArray()` — variable-length array expansion. Seals current builder, adds new `ColumnDescriptor`s, updates `TopicStorage`. Clamps to `array_expansion_limit`.
 - `appendColumns()` — bulk ingest with auto-chunking: splits batches that exceed `max_chunk_rows`, calling `appendTimestamps` / `appendColumn` / `finishBulkAppend` / `autoSeal` per sub-batch.
-- `flush()` / `flushAll()` — seals remaining builders and returns `vector<pair<TopicId, TopicChunk>>` for `commitChunks()`.
+- `flush()` / `flushAll()` — returns auto-sealed chunks and seals completed rows for `commitChunks()`. An in-progress row is retained with its timestamp, values and unset columns so it can still be finished. Only this mid-row flush path rebuilds the completed prefix to exclude unfinished values and column statistics; ordinary flushes seal directly. Untouched columns retain their statistics. For columns written in the active row, the completed prefix is rescanned: nulls do not form value runs, numeric extrema include infinities and exclude NaNs (no ordered values means absent extrema).
 - `autoSeal()` — called when builder is full (`rowCount >= max_chunk_rows`). Seals builder, moves chunk to `pending_chunks_`.
 
 ### Reader Layer

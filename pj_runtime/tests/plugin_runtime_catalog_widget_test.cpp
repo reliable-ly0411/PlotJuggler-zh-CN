@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "../../cmake/test_mains/pj_test_owned_directory.h"
 #include "hermetic_catalog.h"
 #include "mock_widget_vtable.h"
 #include "pj_plugins/widget_types.hpp"
@@ -62,15 +63,9 @@ const PJ_widget_vtable_t* staticWidgetSharingDsoIdVtable() {
 class WidgetCatalogTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    dir_ = std::filesystem::temp_directory_path() /
-           ("pj_widget_catalog_test_" +
-            std::to_string(static_cast<std::uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count())));
-    std::filesystem::create_directories(dir_);
-  }
-
-  void TearDown() override {
-    std::error_code ec;
-    std::filesystem::remove_all(dir_, ec);
+    ASSERT_TRUE(owner_.ownsTree());
+    dir_ = std::filesystem::path((owner_.path() + "/catalog").toStdU16String());
+    ASSERT_TRUE(std::filesystem::create_directory(dir_));
   }
 
   std::filesystem::path install(const char* fixture_path, const char* stem) const {
@@ -90,6 +85,7 @@ class WidgetCatalogTest : public ::testing::Test {
         diagnostics_, [&](const Diagnostic& d) { return d.message.find(needle) != std::string::npos; }));
   }
 
+  PjTestOwnedDirectory owner_;
   std::filesystem::path dir_;
   std::vector<Diagnostic> diagnostics_;
 };

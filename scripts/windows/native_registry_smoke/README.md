@@ -1,0 +1,11 @@
+# Native Windows fixture smoke (not executed)
+
+Use a disposable Windows CI runner with the same Qt 6.12.0/toolchain. Do not begin on the user's VM. No offscreen substitute: this small target verifies Win32/QtCore registry lifecycle, then the real GUI runner still needs its native Windows QPA cases.
+
+1. Configure with `cmake -S <this-dir> -B <owned-build> -DCMAKE_PREFIX_PATH=<Qt> -DPJ_TEST_MAINS_DIR=<patched-source>/cmake/test_mains`, build, put matching Qt bin on PATH.
+2. Run registry_fixture_smoke.exe normally; require exit 0 and the `Late QSettings write failed closed` line. It prints two exact newly-created identities, a private guard key and a separate disposable late-write sentinel. The latter reserves its own unique organization BEFORE HKCU override, so even a failed mapping cannot write a real user's QtProject data.
+3. After exit, query only those exact logged keys for absence. Do not enumerate/read/export real QtProject preferences. Normal success must remove both exact created roots. The late static destructor attempts a native QSettings write after the guard and QCoreApplication destructed; that must fail and the reserved real sentinel must remain unchanged before its own cleanup.
+4. Run again with process-local `PJ_FIXTURE_FAIL_CLEANUP=1`. A compile-time test wrapper injects ERROR_ACCESS_DENIED for the guard's RegDeleteTree, without changing ACLs or global settings. Require exit 1. This intentionally leaves the logged newly-created roots. Remove only these exact owned identities on the disposable CI runner after the child exits; never sweep a prefix or prior runs. The late probe does not execute after `_Exit`.
+5. Record compiler/link output, stdout/stderr, exit code, exact owned-key absence results, and source/patch hashes. This probe does not test every initialization failure or existing-key collision, nor does it prove whole-program isolation. Add fault-injection cases for create/override/probe before promotion if required.
+
+The native QApplication/QPA smoke, all nine FileDialog tests, HKLM existence precondition, shared GUI runner identities, and extension manager lock/backup cases remain separate required executions. TEMP/TMP alone may not control Qt's temp path under SYSTEM with GetTempPath2W; verify actual process token and canonical QDir::tempPath before CTest discovery, without changing machine-wide settings.

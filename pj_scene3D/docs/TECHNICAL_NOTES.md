@@ -779,3 +779,11 @@ shadows off and `PJ_S3D_BENCH_NO_SSAO=1` / `PJ_S3D_BENCH_NO_EDL=1` those stages.
 - Vulkan (opt-in on Linux) costs more wall time than OpenGL wherever a frame has
   GPU work (§9, "Reading the numbers").
 - Pixi CI runs no GUI tests: conda Qt stalls without a GPU.
+
+### Native model cache test ownership
+
+UrlFetcher and SceneEntitiesModel test environments share the same
+`tests/owned_model_cache.h` fixture. Registration order cannot select a second
+cache root. Temporary-root creation and ownership checks fail closed; cache
+cleanup accepts only the saved canonical child and rejects symlinks/junctions.
+The helper preserves a failed tree instead of deleting through changed paths.

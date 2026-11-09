@@ -482,8 +482,12 @@ std::vector<TopicChunk> DataWriter::flush(TopicId topic_id) {
   // Seal the current builder if it has rows
   auto builder_it = impl_->builders.find(topic_id);
   if (builder_it != impl_->builders.end() && builder_it->second.rowCount() > 0) {
-    result.push_back(builder_it.value().seal());
-    impl_->builders.erase(builder_it);
+    if (builder_it->second.isRowInProgress()) {
+      result.push_back(builder_it.value().sealCompletedRows());
+    } else {
+      result.push_back(builder_it.value().seal());
+      impl_->builders.erase(builder_it);
+    }
   }
 
   return result;
@@ -512,8 +516,12 @@ std::vector<std::pair<TopicId, TopicChunk>> DataWriter::flushAll() {
   for (TopicId topic_id : builder_ids) {
     auto it = impl_->builders.find(topic_id);
     if (it != impl_->builders.end()) {
-      result.emplace_back(topic_id, it.value().seal());
-      impl_->builders.erase(it);
+      if (it->second.isRowInProgress()) {
+        result.emplace_back(topic_id, it.value().sealCompletedRows());
+      } else {
+        result.emplace_back(topic_id, it.value().seal());
+        impl_->builders.erase(it);
+      }
     }
   }
 

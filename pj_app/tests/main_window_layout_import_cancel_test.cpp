@@ -1,3 +1,4 @@
+#include "support/isolated_main_window.h"
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
@@ -31,7 +32,7 @@ TEST(MainWindowLayoutImportCancelTest, CancelMidImportRollsBackToPriorWorkspace)
   ASSERT_TRUE(extensions_dir.isValid());
   ASSERT_TRUE(project_dir.isValid());
 
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = MainWindowLayoutImportTestPeer::session(window);
   ASSERT_TRUE(app.extensionCatalog().pluginCatalog().registerStaticToolbox(&fake::kFakeVtable));
 

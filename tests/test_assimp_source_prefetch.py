@@ -369,7 +369,7 @@ class AssimpIntegrationContractTests(unittest.TestCase):
     def test_wall_clock_timeout_is_limited_to_source_preparation(self):
         expected_timeouts = {
             'zh-4x-ci.yml': [
-                '    timeout-minutes: 10', '    timeout-minutes: 10',
+                '    timeout-minutes: 45', '    timeout-minutes: 360', '    timeout-minutes: 240', '    timeout-minutes: 10', '    timeout-minutes: 10',
                 '    timeout-minutes: 180', '        timeout-minutes: 12'],
             'zh-4x-packages.yml': [
                 '    timeout-minutes: 240', '        timeout-minutes: 12',

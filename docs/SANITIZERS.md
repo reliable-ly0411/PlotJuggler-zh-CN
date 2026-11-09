@@ -6,7 +6,8 @@ PJ4's four build lanes are `none`, `asan` (ASan + UBSan), `tsan`
 (ThreadSanitizer) and `msan` (MemorySanitizer).
 The build and test scripts accept `--sanitize none|asan|tsan|msan`, or
 `PJ_SANITIZE` as the environment equivalent; the command-line option wins.
-The default is `none`.
+The default is `none`. Windows wrappers support only `none`; the diagnostic
+lanes require the Linux toolchain described below.
 
 | Diagnostic lane | Selector | Build tree | Coverage |
 | --- | --- | --- | --- |
@@ -314,6 +315,12 @@ does not clear an inherited environment.
 | `LSAN_OPTIONS` | `suppressions=<absolute path to cmake/sanitizers/lsan.supp>` | Point LeakSanitizer, the only runtime that reads `leak:` entries, at the reviewed file. |
 | `UBSAN_OPTIONS` | `print_stacktrace=1` | Show where the unrecoverable undefined behavior occurred. |
 | `PYTHONMALLOC` | `malloc` | Bypass CPython's obmalloc pools so ASan can observe individual allocations instead of a whole pool as one block. |
+
+These defaults are also exported for `--sanitize msan`; they do not enable
+other sanitizers in an MSan binary. `test.sh --sanitize msan` selects the
+existing `build/msan` tree and preserves caller-supplied `MSAN_OPTIONS`. It
+does not build or verify instrumentation; use `build.sh --sanitize msan` for
+the instrumented build and its checks.
 
 The ASan/LSan/UBSan variables are also exported for `--sanitize tsan`, but
 they do not enable those sanitizers in a TSan binary. TSan uses its own

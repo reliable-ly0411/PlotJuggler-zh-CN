@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [zh-CN-4.x, zh-CN-4.x-dev]
   workflow_dispatch:
+    inputs:
+      windows_native_build:
+        description: 'Build and independently verify the Windows test kit'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -15,6 +21,397 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  windows-native-media:
+    # Synthetic inputs only; this isolated job does not change release assets.
+    if: github.event_name == 'workflow_dispatch' && inputs.windows_native_build == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    outputs:
+      manifest_sha256: ${{ steps.generate.outputs.manifest_sha256 }}
+      source_sha: ${{ steps.generate.outputs.source_sha }}
+      source_tree: ${{ steps.generate.outputs.source_tree }}
+    steps:
+      - name: Initialize retained media evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/pj-media-evidence"
+          printf '%s\n' 'Media generation was started; success is recorded only after semantic readback.' > "$RUNNER_TEMP/pj-media-evidence/status.txt"
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - name: Acquire and record signed Ubuntu FFmpeg
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj-media-evidence"
+          trap 'printf "provisioning failed at line %s, exit %s\n" "$LINENO" "$?" > "$evidence/failure.txt"' ERR
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -z "$(git status --porcelain=v1 --untracked-files=all --ignore-submodules=none)"
+          git submodule status --recursive > "$evidence/source-submodules.txt"
+          ! grep -E '^[-+U]' "$evidence/source-submodules.txt"
+          mkdir "$evidence/apt-signatures" "$evidence/downloads"
+          source_list="$RUNNER_TEMP/pj-ubuntu-official.list"
+          printf '%s\n' \
+            'deb [signed-by=/usr/share/keyrings/ubuntu-archive-keyring.gpg] http://archive.ubuntu.com/ubuntu noble main universe' \
+            'deb [signed-by=/usr/share/keyrings/ubuntu-archive-keyring.gpg] http://archive.ubuntu.com/ubuntu noble-updates main universe' \
+            'deb [signed-by=/usr/share/keyrings/ubuntu-archive-keyring.gpg] http://security.ubuntu.com/ubuntu noble-security main universe' > "$source_list"
+          cp "$source_list" "$evidence/ubuntu-official.list"
+          cp /usr/share/keyrings/ubuntu-archive-keyring.gpg "$evidence/apt-signatures/ubuntu-archive-keyring.gpg"
+          sha256sum "$evidence/apt-signatures/ubuntu-archive-keyring.gpg" > "$evidence/apt-signatures/keyring.sha256"
+          opts=(-o "Dir::Etc::sourcelist=$source_list" -o 'Dir::Etc::sourceparts=-' -o 'APT::Get::List-Cleanup=0')
+          sudo apt-get "${opts[@]}" update > "$evidence/apt-update.stdout" 2> "$evidence/apt-update.stderr"
+          for suite in noble noble-updates noble-security; do
+            host=archive.ubuntu.com
+            if [[ "$suite" == noble-security ]]; then host=security.ubuntu.com; fi
+            release="/var/lib/apt/lists/${host}_ubuntu_dists_${suite}_InRelease"
+            test -f "$release" && test ! -L "$release"
+            cp "$release" "$evidence/apt-signatures/${suite}.InRelease"
+            gpgv --keyring /usr/share/keyrings/ubuntu-archive-keyring.gpg "$release" > "$evidence/apt-signatures/${suite}.gpgv.stdout" 2> "$evidence/apt-signatures/${suite}.gpgv.stderr"
+          done
+          find /var/lib/apt/lists -maxdepth 1 -type f \( -name 'archive.ubuntu.com_ubuntu_dists_noble*_binary-amd64_Packages*' -o -name 'security.ubuntu.com_ubuntu_dists_noble-security*_binary-amd64_Packages*' \) -exec cp -t "$evidence/apt-signatures" -- {} +
+          test "$(find "$evidence/apt-signatures" -name '*Packages*' -type f | wc -l)" -gt 0
+          apt-cache "${opts[@]}" policy ffmpeg > "$evidence/apt-policy.txt"
+          version=$(sed -n 's/^[[:space:]]*Candidate:[[:space:]]*//p' "$evidence/apt-policy.txt")
+          [[ "$version" =~ ^[0-9][A-Za-z0-9.+:~_-]*$ ]]
+          apt-cache "${opts[@]}" show "ffmpeg=$version" > "$evidence/apt-show.txt"
+          sudo apt-get "${opts[@]}" install -y --no-install-recommends "ffmpeg=$version" > "$evidence/apt-install.stdout" 2> "$evidence/apt-install.stderr"
+          apt-get "${opts[@]}" --print-uris download "ffmpeg=$version" > "$evidence/apt-download-uri.txt" 2> "$evidence/apt-download-uri.stderr"
+          (cd "$evidence/downloads" && apt-get "${opts[@]}" download "ffmpeg=$version") > "$evidence/apt-download.stdout" 2> "$evidence/apt-download.stderr"
+          dpkg-query -W -f='${binary:Package}\t${Version}\n' > "$evidence/installed-packages.tsv"
+          ldd /usr/bin/ffmpeg /usr/bin/ffprobe > "$evidence/dynamic-libraries.txt" 2>&1
+          ! grep -F 'not found' "$evidence/dynamic-libraries.txt"
+          python3 - "$evidence" <<'PY'
+          import hashlib, json, pathlib, re, subprocess, sys
+          evidence = pathlib.Path(sys.argv[1])
+          text = (evidence / 'dynamic-libraries.txt').read_text(encoding='utf-8')
+          paths = sorted(set(re.findall(r'(?<![A-Za-z0-9_])(/[^\s()]+)', text)))
+          assert paths, 'ldd did not report any absolute dynamic library paths'
+          records = []
+          for value in paths:
+              path = pathlib.Path(value); actual = path.resolve(strict=True)
+              assert actual.is_file()
+              with actual.open('rb') as stream: digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+              package = subprocess.run(['dpkg-query', '-S', value], capture_output=True, text=True, check=False)
+              records.append({'path': value, 'resolved_path': str(actual), 'sha256': digest,
+                              'dpkg_query_exit': package.returncode, 'dpkg_query_stdout': package.stdout,
+                              'dpkg_query_stderr': package.stderr})
+          (evidence / 'dynamic-library-identities.json').write_text(json.dumps(records, indent=2) + '\n', encoding='utf-8')
+          PY
+          python3 - "$evidence" "$version" <<'PY'
+          import hashlib, json, pathlib, re, shlex, sys, urllib.parse
+          evidence, version = pathlib.Path(sys.argv[1]), sys.argv[2]
+          rows = [shlex.split(line) for line in (evidence / 'apt-download-uri.txt').read_text(encoding='utf-8').splitlines() if line.strip()]
+          assert len(rows) == 1 and len(rows[0]) == 4, 'expected one actual APT package URI'
+          url, filename, size, checksum = rows[0]
+          parsed = urllib.parse.urlsplit(url)
+          assert parsed.scheme in ('http', 'https') and parsed.hostname in ('archive.ubuntu.com', 'security.ubuntu.com')
+          assert not parsed.username and not parsed.password and not parsed.query and not parsed.fragment
+          assert re.fullmatch(r'SHA256:[0-9a-fA-F]{64}', checksum)
+          packages = list((evidence / 'downloads').glob('*.deb'))
+          assert len(packages) == 1 and packages[0].name == filename and packages[0].stat().st_size == int(size)
+          value = hashlib.file_digest(packages[0].open('rb'), 'sha256').hexdigest()
+          assert value == checksum.split(':', 1)[1].lower(), 'downloaded .deb differs from signed APT index'
+          stanzas = (evidence / 'apt-show.txt').read_text(encoding='utf-8').strip().split('\n\n')
+          matches = []
+          for stanza in stanzas:
+              fields = dict(line.split(': ', 1) for line in stanza.splitlines() if ': ' in line and not line.startswith(' '))
+              if fields.get('Package') == 'ffmpeg' and fields.get('Version') == version:
+                  matches.append(fields)
+          assert len(matches) == 1 and matches[0].get('SHA256', '').lower() == value
+          assert parsed.path.endswith('/' + matches[0]['Filename'])
+          provenance = {'package': 'ffmpeg', 'version': version, 'url': url, 'sha256': value,
+                        'apt_signature_evidence': 'pj-media-evidence/apt-signatures'}
+          (evidence / 'tool-provenance.json').write_text(json.dumps(provenance, indent=2) + '\n', encoding='utf-8')
+          (evidence / 'ffmpeg-deb-path.txt').write_text(str(packages[0]) + '\n', encoding='utf-8')
+          PY
+      - name: Acquire locked MCAP source and license
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj-media-evidence"
+          trap 'printf "MCAP acquisition failed at line %s, exit %s\n" "$LINENO" "$?" > "$evidence/failure.txt"' ERR
+          url=$(python3 -c 'import json; print(json.load(open("scripts/native-fixtures/mcap-source-lock.json", encoding="utf-8"))["archive_url"])')
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 180 --output "$evidence/mcap-source.tar.gz" "$url" > "$evidence/mcap-download.stdout" 2> "$evidence/mcap-download.stderr"
+          python3 - "$evidence/mcap-source.tar.gz" "$RUNNER_TEMP/pj-mcap-source" <<'PY'
+          import hashlib, json, pathlib, re, sys, tarfile
+          archive, output = map(pathlib.Path, sys.argv[1:])
+          lock = json.loads(pathlib.Path('scripts/native-fixtures/mcap-source-lock.json').read_text(encoding='utf-8'))
+          assert hashlib.file_digest(archive.open('rb'), 'sha256').hexdigest() == lock['archive_sha256']
+          assert not output.exists(); output.mkdir()
+          with tarfile.open(archive, 'r:gz') as source:
+              members = source.getmembers()
+              anchors = [x.name for x in members if x.isfile() and x.name.endswith('/cpp/mcap/include/mcap/mcap.hpp')]
+              assert len(anchors) == 1
+              prefix = anchors[0].removesuffix('/cpp/mcap/include/mcap/mcap.hpp')
+              assert all(re.fullmatch(r'mcap/[A-Za-z0-9_.+-]+', name) for name in lock['headers'])
+              requested = {'cpp/mcap/include/' + name: sha for name, sha in lock['headers'].items()}
+              requested['LICENSE'] = lock['license_sha256']
+              for name, expected in requested.items():
+                  matches = [x for x in members if x.name == prefix + '/' + name]
+                  assert len(matches) == 1 and matches[0].isfile() and matches[0].size <= 16 * 1024 * 1024
+                  src = source.extractfile(matches[0]); data = src.read(); assert len(data) == matches[0].size
+                  assert hashlib.sha256(data).hexdigest() == expected
+                  target = output / name; target.parent.mkdir(parents=True, exist_ok=True)
+                  with target.open('xb') as stream: stream.write(data)
+          PY
+          sha256sum "$evidence/mcap-source.tar.gz" > "$evidence/mcap-source.sha256"
+      - name: Generate and semantically read back media
+        id: generate
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj-media-evidence"
+          trap 'printf "media generation failed at line %s, exit %s\n" "$LINENO" "$?" > "$evidence/failure.txt"' ERR
+          python3 scripts/native-fixtures/test_generate_media_fixtures.py > "$evidence/generator-tests.stdout" 2> "$evidence/generator-tests.stderr"
+          package=$(cat "$evidence/ffmpeg-deb-path.txt")
+          python3 scripts/native-fixtures/generate_media_fixtures.py --output "$RUNNER_TEMP/pj-generated-media" \
+            --mcap-include "$RUNNER_TEMP/pj-mcap-source/cpp/mcap/include" --mcap-license "$RUNNER_TEMP/pj-mcap-source/LICENSE" \
+            --ffmpeg /usr/bin/ffmpeg --ffprobe /usr/bin/ffprobe --cxx /usr/bin/g++ \
+            --tool-package "$package" --tool-provenance "$evidence/tool-provenance.json" \
+            > "$evidence/generator.stdout" 2> "$evidence/generator.stderr"
+          sha=$(sha256sum "$RUNNER_TEMP/pj-generated-media/manifest.json" | cut -d' ' -f1)
+          [[ "$sha" =~ ^[0-9a-f]{64}$ ]]
+          python3 scripts/native-fixtures/verify_fixture_manifest.py --directory "$RUNNER_TEMP/pj-generated-media" \
+            --expected-manifest-sha256 "$sha" > "$evidence/verify.stdout" 2> "$evidence/verify.stderr"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -z "$(git status --porcelain=v1 --untracked-files=all --ignore-submodules=none)"
+          tree=$(git rev-parse 'HEAD^{tree}')
+          [[ "$tree" =~ ^[0-9a-f]{40}$ ]]
+          printf 'manifest_sha256=%s\nsource_sha=%s\nsource_tree=%s\n' "$sha" "$GITHUB_SHA" "$tree" >> "$GITHUB_OUTPUT"
+          printf '%s\n' 'Generation and semantic readback completed.' > "$evidence/status.txt"
+      - name: Upload generated media only after verification
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: windows-native-generated-media-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/pj-generated-media
+          if-no-files-found: error
+          retention-days: 7
+      - name: Preserve media generation evidence, including failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: windows-native-media-evidence-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/pj-media-evidence
+            ${{ runner.temp }}/pj-generated-media/evidence
+          if-no-files-found: error
+          retention-days: 7
+  windows-native-test-build:
+    # Opt-in and isolated from the existing native, packaging and release jobs.
+    needs: [windows-native-media]
+    env:
+      PJ_MEDIA_MANIFEST_SHA256: ${{ needs.windows-native-media.outputs.manifest_sha256 }}
+      PJ_MEDIA_SOURCE_SHA: ${{ needs.windows-native-media.outputs.source_sha }}
+      PJ_MEDIA_SOURCE_TREE: ${{ needs.windows-native-media.outputs.source_tree }}
+    if: github.event_name == 'workflow_dispatch' && inputs.windows_native_build == true
+    runs-on: windows-2022
+    timeout-minutes: 360
+    outputs:
+      archive_sha256: ${{ steps.build.outputs.archive_sha256 }}
+      manifest_sha256: ${{ steps.build.outputs.manifest_sha256 }}
+      archive_bytes: ${{ steps.build.outputs.archive_bytes }}
+      expanded_bytes: ${{ steps.build.outputs.expanded_bytes }}
+      source_sha: ${{ steps.build.outputs.source_sha }}
+      source_tree: ${{ steps.build.outputs.source_tree }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        env:
+          GIT_CONFIG_NOSYSTEM: '1'
+          GIT_CONFIG_GLOBAL: NUL
+          GIT_ATTR_NOSYSTEM: '1'
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12.10'
+      - name: Download exact generated CI media
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: windows-native-generated-media-${{ github.run_attempt }}
+          path: ${{ runner.temp }}\pj-native-media
+          digest-mismatch: error
+      - name: Run actual bootstrap ZIP, NTFS and fixed-root negative controls
+        id: bootstrap_tests
+        run: ./scripts/windows/prepare_native_ci.ps1 -Phase BootstrapSelfTest
+      - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: x64
+      - name: Compile and stage only after closure evidence
+        id: build
+        env:
+          BOOTSTRAP_SELFTEST_DIR: ${{ steps.bootstrap_tests.outputs.evidence_dir }}
+        run: ./scripts/windows/prepare_native_ci.ps1
+      - name: Bootstrap and run reviewed groups before upload
+        id: native_verify
+        env:
+          KIT_ARCHIVE: ${{ steps.build.outputs.archive_path }}
+          KIT_ARCHIVE_SHA: ${{ steps.build.outputs.archive_sha256 }}
+          KIT_MANIFEST_SHA: ${{ steps.build.outputs.manifest_sha256 }}
+          KIT_EXPANDED_BYTES: ${{ steps.build.outputs.expanded_bytes }}
+          KIT_SOURCE_SHA: ${{ steps.build.outputs.source_sha }}
+          KIT_SOURCE_TREE: ${{ steps.build.outputs.source_tree }}
+        run: |
+          ./scripts/windows/prepare_native_ci.ps1 -Phase Verify -RetainBuild -Archive $env:KIT_ARCHIVE `
+            -ArchiveSha256 $env:KIT_ARCHIVE_SHA -ManifestSha256 $env:KIT_MANIFEST_SHA `
+            -SourceSha $env:KIT_SOURCE_SHA -SourceTree $env:KIT_SOURCE_TREE -ExpandedBytes $env:KIT_EXPANDED_BYTES
+      - name: Preserve producer CI run evidence
+        id: native_evidence
+        if: always() && steps.build.outcome == 'success'
+        env:
+          KIT_ARCHIVE_SHA: ${{ steps.build.outputs.archive_sha256 }}
+          KIT_MANIFEST_SHA: ${{ steps.build.outputs.manifest_sha256 }}
+          KIT_SOURCE_SHA: ${{ steps.build.outputs.source_sha }}
+          KIT_SOURCE_TREE: ${{ steps.build.outputs.source_tree }}
+          VERIFY_OUTCOME: ${{ steps.native_verify.outcome }}
+        run: |
+          $root = 'C:\Users\Administrator\PlotJuggler-4.1.0-zh-test-558a\n\' + $env:KIT_SOURCE_SHA.Substring(0, 12)
+          $evidence = Join-Path $env:RUNNER_TEMP 'pj-native-ci-evidence-producer'
+          python -I -B ./scripts/windows/collect_native_ci_evidence.py --root $root --output $evidence `
+            --source-sha $env:KIT_SOURCE_SHA --source-tree $env:KIT_SOURCE_TREE `
+            --archive-sha256 $env:KIT_ARCHIVE_SHA --manifest-sha256 $env:KIT_MANIFEST_SHA `
+            --scope producer --outcome $env:VERIFY_OUTCOME
+          if ($LASTEXITCODE -ne 0) { throw 'Could not safely preserve producer CI evidence.' }
+      - name: Upload producer CI evidence, including incomplete runs
+        if: always() && steps.native_evidence.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: windows-native-producer-evidence-${{ github.run_attempt }}
+          path: ${{ runner.temp }}\pj-native-ci-evidence-producer
+          if-no-files-found: error
+          retention-days: 7
+      # This is a test-only raw ZIP, not a release asset. Until the dependent
+      # clean job passes, the artifact remains a CI candidate, not a verified kit.
+      - name: Upload the single raw candidate ZIP
+        id: upload
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          path: ${{ steps.build.outputs.archive_path }}
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
+      - name: Compare official upload digest to the original bytes
+        env:
+          EXPECTED_DIGEST: ${{ steps.build.outputs.archive_sha256 }}
+          UPLOAD_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          $actual = $env:UPLOAD_DIGEST -creplace '^sha256:', ''
+          if ($actual -cnotmatch '^[0-9a-f]{64}$' -or $actual -cne $env:EXPECTED_DIGEST) {
+            throw 'The official raw upload digest does not match the independently computed inner ZIP digest.'
+          }
+
+  windows-native-test-clean:
+    # A new hosted runner, checkout and system bootstrap authenticate the raw
+    # artifact before starting its Python or any other downloaded executable.
+    needs: [windows-native-test-build, windows-native-media]
+    env:
+      PJ_MEDIA_MANIFEST_SHA256: ${{ needs.windows-native-media.outputs.manifest_sha256 }}
+      PJ_MEDIA_SOURCE_SHA: ${{ needs.windows-native-media.outputs.source_sha }}
+      PJ_MEDIA_SOURCE_TREE: ${{ needs.windows-native-media.outputs.source_tree }}
+    if: github.event_name == 'workflow_dispatch' && inputs.windows_native_build == true
+    runs-on: windows-2022
+    timeout-minutes: 240
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        env:
+          GIT_CONFIG_NOSYSTEM: '1'
+          GIT_CONFIG_GLOBAL: NUL
+          GIT_ATTR_NOSYSTEM: '1'
+        with:
+          ref: ${{ needs.windows-native-test-build.outputs.source_sha }}
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12.10'
+      - name: Reserve space for raw transport, extraction and test growth
+        env:
+          ARCHIVE_BYTES: ${{ needs.windows-native-test-build.outputs.archive_bytes }}
+          EXPANDED_BYTES: ${{ needs.windows-native-test-build.outputs.expanded_bytes }}
+        run: |
+          if ($env:ARCHIVE_BYTES -notmatch '^[0-9]+$' -or $env:EXPANDED_BYTES -notmatch '^[0-9]+$') {
+            throw 'Missing or invalid measured ZIP and expanded sizes.'
+          }
+          $compressed = [Int64]$env:ARCHIVE_BYTES
+          $expanded = [Int64]$env:EXPANDED_BYTES
+          if ($compressed -le 0 -or $compressed -gt 16GB -or $expanded -le 0 -or $expanded -gt 32GB) {
+            throw 'Measured artifact sizes exceed bootstrap limits.'
+          }
+          $download = Join-Path $env:RUNNER_TEMP 'pj-native-raw-artifact'
+          $downloadDrive = [IO.Path]::GetPathRoot($download)
+          $rootDrive = [IO.Path]::GetPathRoot('C:\')
+          $rootNeed = $expanded + 1GB + 2GB
+          $transportNeed = 2 * $compressed + 2GB
+          $rootFree = ([IO.DriveInfo]::new($rootDrive)).AvailableFreeSpace
+          $transportFree = ([IO.DriveInfo]::new($downloadDrive)).AvailableFreeSpace
+          if ([string]::Equals($rootDrive, $downloadDrive, [StringComparison]::OrdinalIgnoreCase)) {
+            $rootNeed += 2 * $compressed
+          }
+          Write-Host "Measured compressed=$compressed expanded=$expanded; C required=$rootNeed free=$rootFree; transport $downloadDrive required=$transportNeed free=$transportFree"
+          if ($rootFree -lt $rootNeed -or $transportFree -lt $transportNeed) {
+            throw 'Insufficient disk space for transport, extraction, test growth and reserves.'
+          }
+          if (Test-Path -LiteralPath $download) { throw 'Refusing to reuse an artifact download directory.' }
+          New-Item -ItemType Directory -Path $download | Out-Null
+      - name: Download the raw artifact with official digest verification
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: windows-native-kit.zip
+          path: ${{ runner.temp }}\pj-native-raw-artifact
+          skip-decompress: true
+          digest-mismatch: error
+      - name: Bootstrap and rerun the reviewed CI groups
+        id: native_verify
+        env:
+          KIT_ARCHIVE_SHA: ${{ needs.windows-native-test-build.outputs.archive_sha256 }}
+          KIT_MANIFEST_SHA: ${{ needs.windows-native-test-build.outputs.manifest_sha256 }}
+          KIT_EXPANDED_BYTES: ${{ needs.windows-native-test-build.outputs.expanded_bytes }}
+          KIT_SOURCE_SHA: ${{ needs.windows-native-test-build.outputs.source_sha }}
+          KIT_SOURCE_TREE: ${{ needs.windows-native-test-build.outputs.source_tree }}
+        run: |
+          $download = Join-Path $env:RUNNER_TEMP 'pj-native-raw-artifact'
+          $items = @(Get-ChildItem -LiteralPath $download -Force)
+          if ($items.Count -ne 1 -or $items[0].Name -cne 'windows-native-kit.zip' -or $items[0].PSIsContainer -or
+              ($items[0].Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw 'Official download did not produce exactly the expected raw ZIP file.'
+          }
+          ./scripts/windows/prepare_native_ci.ps1 -Phase Verify -Archive $items[0].FullName `
+            -ArchiveSha256 $env:KIT_ARCHIVE_SHA -ManifestSha256 $env:KIT_MANIFEST_SHA `
+            -SourceSha $env:KIT_SOURCE_SHA -SourceTree $env:KIT_SOURCE_TREE -ExpandedBytes $env:KIT_EXPANDED_BYTES
+      - name: Preserve independent CI run evidence
+        id: native_evidence
+        if: always()
+        env:
+          KIT_ARCHIVE_SHA: ${{ needs.windows-native-test-build.outputs.archive_sha256 }}
+          KIT_MANIFEST_SHA: ${{ needs.windows-native-test-build.outputs.manifest_sha256 }}
+          KIT_SOURCE_SHA: ${{ needs.windows-native-test-build.outputs.source_sha }}
+          KIT_SOURCE_TREE: ${{ needs.windows-native-test-build.outputs.source_tree }}
+          VERIFY_OUTCOME: ${{ steps.native_verify.outcome }}
+        run: |
+          $root = 'C:\Users\Administrator\PlotJuggler-4.1.0-zh-test-558a\n\' + $env:KIT_SOURCE_SHA.Substring(0, 12)
+          $evidence = Join-Path $env:RUNNER_TEMP 'pj-native-ci-evidence-clean'
+          python -I -B ./scripts/windows/collect_native_ci_evidence.py --root $root --output $evidence `
+            --source-sha $env:KIT_SOURCE_SHA --source-tree $env:KIT_SOURCE_TREE `
+            --archive-sha256 $env:KIT_ARCHIVE_SHA --manifest-sha256 $env:KIT_MANIFEST_SHA `
+            --scope clean --outcome $env:VERIFY_OUTCOME
+          if ($LASTEXITCODE -ne 0) { throw 'Could not safely preserve independent CI evidence.' }
+      - name: Upload independent CI evidence, including incomplete runs
+        if: always() && steps.native_evidence.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: windows-native-clean-evidence-${{ github.run_attempt }}
+          path: ${{ runner.temp }}\pj-native-ci-evidence-clean
+          if-no-files-found: error
+          retention-days: 7
+
   source-checks:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -33,6 +430,7 @@ jobs:
           python3 scripts/check_branch_name.py "$SOURCE_BRANCH"
           python3 -m unittest discover -s .github/release_policy -p "test_*.py" -v
           python3 -m unittest discover -s tests -p "test_*.py" -v
+          python3 scripts/test_test_sh.py
           python3 tests/check_translations_4x.py --catalog-only
           python3 tests/check_localization_provenance.py
           git diff --check

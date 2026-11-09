@@ -30,6 +30,7 @@
 #include <thread>
 #include <vector>
 
+#include "../../cmake/test_mains/pj_test_managed_profile.h"
 #include "pj_runtime/ExtensionCatalogService.h"
 using namespace Qt::StringLiterals;
 
@@ -78,5 +79,10 @@ TEST(ExtensionCatalogServiceThreadSafety, ConcurrentReloadAndParserResolutionSta
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
+  PJ_TEST_INITIALIZE_PRIVATE_HKCU
+  PJ_TEST_INITIALIZE_MANAGED_PROFILE
+#ifndef __EMSCRIPTEN__
+  QCoreApplication app(argc, argv);
+#endif
   return RUN_ALL_TESTS();
 }

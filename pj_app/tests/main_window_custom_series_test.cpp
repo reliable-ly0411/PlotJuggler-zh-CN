@@ -22,6 +22,7 @@
 #include "pj_runtime/DataProcessorService.h"
 #include "pj_runtime/DerivedObjects.h"
 #include "pj_runtime/SessionManager.h"
+#include "support/isolated_main_window.h"
 #include "ui/CurveListPanel.h"
 
 using namespace Qt::StringLiterals;
@@ -104,7 +105,7 @@ QDomDocument layoutWithTransform(PJ::DatasetId dataset_id, const QString& source
 // One MainWindow with a dataset, a scalar topic, and the layout above restored.
 struct RestoredSession {
   QTemporaryDir extensions_dir;
-  PJ::MainWindow window{extensions_dir.path()};
+  pj_app_test::IsolatedMainWindow window{extensions_dir.path()};
   PJ::CurveListPanel* panel = window.findChild<PJ::CurveListPanel*>(u"curveListPanel"_s);
 
   [[nodiscard]] PJ::AppSession& app() {
@@ -174,7 +175,7 @@ TEST(MainWindowCustomSeriesTest, CatalogRemovalAlonePrunesTheRow) {
 TEST(MainWindowCustomSeriesTest, RestoreReplaysTransformChainInDependencyOrder) {
   QTemporaryDir extensions_dir;
   ASSERT_TRUE(extensions_dir.isValid());
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = PJ::MainWindowCustomSeriesTestPeer::session(window);
   PJ::DataProcessorService& service = app.sessionManager().dataProcessorService();
   const PJ::DatasetId dataset = pj_test::createDataset(app, "run.csv");

@@ -39,9 +39,11 @@ Consumed by the app through `pj_runtime`'s `ExtensionCatalogService`.
 `pj_marketplace_tests.<suite>.<case>` and runs it in its own process.
 `plugin_check_runner_test` stays separate because it checks admission-helper
 process exit results. `extension_manager_test` keeps its mock-target guard,
-custom settings identity, and entry point because it re-executes itself in
-lock-holder mode for the interprocess store lease test; `pj-plugin-check` is
-copied beside that executable for default helper lookup. The helper names the Widget family `"widget"`,
+private temporary profile, settings identity, and entry point because it re-executes
+itself in lock-holder mode for the interprocess store lease test. Each process initializes
+its own profile before that branch; the child still receives the parent's explicit
+store path, preserving the shared store lease. Backups never use a default user
+directory. For this runner, `pj-plugin-check` is copied beside the executable for default helper lookup. The helper names the Widget family `"widget"`,
 and `PluginCheckRunner` starts it with Qt's library directory first on `LD_LIBRARY_PATH` (Linux) / `PATH`
 (Windows), because it `dlopen`s every candidate and a Widget plugin links Qt: outside the AppImage nothing
 else lets the loader find `libQt6Widgets`, and a failed load there reads as a rejected plugin. In a configured test

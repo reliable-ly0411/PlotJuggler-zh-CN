@@ -11,6 +11,7 @@
 #include <QDir>
 #include <QDomDocument>
 #include <QFile>
+#include <QFileInfo>
 #include <QPushButton>
 #include <QSettings>
 #include <QStandardPaths>
@@ -30,6 +31,7 @@
 #include "pj_runtime/AppSession.h"
 #include "pj_runtime/ExtensionCatalogService.h"
 #include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
 #include "support/layout_import_gui_support.h"
 #include "support/loader_test_support.h"
 
@@ -73,11 +75,12 @@ class MainWindowCustomWidgetTest : public ::testing::Test {
   void SetUp() override {
     ASSERT_TRUE(extensions_dir_.isValid());
     ASSERT_TRUE(project_dir_.isValid());
-    window_ = std::make_unique<PJ::MainWindow>(extensions_dir_.path());
-    // Each case owns its record directory: the default one is shared by every test process.
-    marker_dir_ = project_dir_.filePath(u"records"_s);
+    // The fixture, not the window, owns this root so post-destruction assertions
+    // cannot pass merely because a wrapper recursively removed the directory.
+    marker_dir_ = marker_root_.path();
     auto marker = std::make_shared<PJ::ActiveWidgetsMarker>(marker_dir_);
     marker_path_ = marker->path();
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_.path());
     Peer::activeWidgetsMarker(*window_) = std::move(marker);
     QObject::connect(
         Peer::diagnosticBridge(*window_), &PJ::QtDiagnosticBridge::diagnosticReported, window_.get(),
@@ -145,6 +148,7 @@ class MainWindowCustomWidgetTest : public ::testing::Test {
 
   QTemporaryDir extensions_dir_;
   QTemporaryDir project_dir_;
+  PjTestOwnedDirectory marker_root_;
   QString marker_dir_;
   QString marker_path_;  ///< this process's record
   std::vector<std::pair<int, QString>> diagnostics_;
@@ -219,29 +223,48 @@ TEST_F(MainWindowCustomWidgetTest, TheRecordFollowsLivePanelsAndAWindowCloseClea
       PJ::ActiveWidgetsMarker::read(marker_path_).entries,
       (std::vector<PJ::ActiveWidgetsMarker::Entry>{{u"test_widgets"_s, u"gauge"_s}}));
   window_.reset();
+  ASSERT_TRUE(marker_root_.ownsTree()) << "the fixture root must outlive the window";
+  ASSERT_TRUE(QFileInfo(marker_dir_).isDir());
   EXPECT_FALSE(QFile::exists(marker_path_)) << "a clean exit leaves no record";
+}
+
+// No dock owns this on-disk residue, so only the shell's explicit clean-exit
+// clear removes it. Panel teardown cannot hide a broken clear implementation.
+TEST_F(MainWindowCustomWidgetTest, WindowCloseClearsAnOrphanRecordInsideTheSurvivingFixtureRoot) {
+  QFile record(marker_path_);
+  ASSERT_TRUE(record.open(QIODevice::WriteOnly | QIODevice::NewOnly));
+  ASSERT_EQ(record.write("{}"), 2);
+  record.close();
+  ASSERT_TRUE(QFile::exists(marker_path_));
+  window_.reset();
+  ASSERT_TRUE(marker_root_.ownsTree());
+  ASSERT_TRUE(QFileInfo(marker_dir_).isDir());
+  EXPECT_FALSE(QFile::exists(marker_path_)) << "clean-exit clear must remove an unowned record";
 }
 
 // The startup review writes the persisted disabled list through the ExtensionManager, which needs
 // the extension store's single-writer lease. Concurrent cases of this runner would compete for the
-// lease and the settings: each case gets an application name of its own, so both are private.
+// lease and the settings: each case gets private INI storage and an explicit extension store.
 class UncleanShutdownTest : public MainWindowCustomWidgetTest {
  protected:
   void SetUp() override {
-    QCoreApplication::setApplicationName(
-        u"%1-unclean-%2"_s.arg(QCoreApplication::applicationName()).arg(QCoreApplication::applicationPid()));
+    previous_settings_format_ = QSettings::defaultFormat();
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings_directory_.path());
+    QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, settings_directory_.path());
     MainWindowCustomWidgetTest::SetUp();
   }
 
   void TearDown() override {
     MainWindowCustomWidgetTest::TearDown();
-    QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)).removeRecursively();
-    QDir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)).removeRecursively();
-    QSettings settings;
-    settings.clear();
-    settings.sync();
-    QFile::remove(settings.fileName());
+    QSettings::setDefaultFormat(previous_settings_format_);
+    // Only settings_directory_ owns its cleanup. KnownFolder locations are not
+    // fixtures, even when their application identity happens to contain a PID.
   }
+
+ private:
+  PjTestOwnedDirectory settings_directory_;
+  QSettings::Format previous_settings_format_ = QSettings::NativeFormat;
 };
 
 TEST_F(UncleanShutdownTest, AnUnattendedStartWarnsAboutTheCrashedRunAndStillRestoresTheWidget) {

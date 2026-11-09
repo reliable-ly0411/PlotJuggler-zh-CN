@@ -11398,4 +11398,23 @@ Details: %1</source>
         <translation>不透明度：</translation>
     </message>
 </context>
+<context>
+    <name>PJ::PluginRuntimeCatalog</name>
+    <message>
+        <source>Loaded DataSource %1 from %2</source>
+        <translation>已從 %2 載入資料來源 %1</translation>
+    </message>
+    <message>
+        <source>Loaded MessageParser %1 from %2</source>
+        <translation>已從 %2 載入訊息解析器 %1</translation>
+    </message>
+    <message>
+        <source>Loaded Toolbox %1 from %2</source>
+        <translation>已從 %2 載入工具箱 %1</translation>
+    </message>
+    <message>
+        <source>Loaded Widget %1 from %2</source>
+        <translation>已從 %2 載入元件 %1</translation>
+    </message>
+</context>
 </TS>
