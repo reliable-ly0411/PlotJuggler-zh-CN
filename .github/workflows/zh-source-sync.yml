@@ -40,7 +40,7 @@ jobs:
           args=()
           if [[ "$PUSH" == true ]]; then args+=(--push); fi
           python3 scripts/sync_upstream.py --repo . --branch zh-CN-dev \
-            --upstream-ref main --validate "${args[@]}" \
+            --upstream-ref main-3.x --validate "${args[@]}" \
             --report "$RUNNER_TEMP/pj3-sync.json"
       - name: Preserve Qt5 sync report
         if: always()

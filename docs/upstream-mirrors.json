@@ -16,7 +16,7 @@
   "macos_ci",
   "macos_secrets",
   "main",
-  "main-4.x",
+  "main-3.x",
   "plugin/toolbox_csv",
   "plugin_manager",
   "pr-1323",

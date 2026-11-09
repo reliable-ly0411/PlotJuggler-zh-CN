@@ -19,7 +19,9 @@ OTHER = "3" * 40
 class FakeGitHub:
     def __init__(self):
         self.refs = {(repo, branch): (OLD if repo == sync.REPOSITORY else NEW)
-                     for repo in (sync.REPOSITORY, sync.UPSTREAM) for branch in sync.BRANCHES}
+                     for repo, branches in ((sync.REPOSITORY, sync.BRANCHES),
+                                            (sync.UPSTREAM, sync.BRANCHES.values()))
+                     for branch in branches}
         self.calls = []
         self.comparison = {"status": "ahead", "behind_by": 0, "ahead_by": 9,
                            "merge_base_commit": {"sha": OLD}}
@@ -31,7 +33,7 @@ class FakeGitHub:
         self.calls.append((method, path, body))
         if "/compare/" in path:
             if self.race:
-                self.refs[(sync.REPOSITORY, "main")] = self.race
+                self.refs[(sync.REPOSITORY, "main-3.x")] = self.race
             return self.comparison
         repository, branch = path[len("/repos/"):].split("/git/ref", 1)
         branch = branch.removeprefix("s").removeprefix("/heads/")
@@ -58,6 +60,28 @@ class MirrorSyncTests(unittest.TestCase):
         self.assertEqual([r["status"] for r in report["branches"]], ["would_fast_forward"] * 2)
         self.assertEqual(self.api.writes(), [])
 
+    def test_explicit_major_version_mapping(self):
+        self.assertEqual(sync.BRANCHES, {"main-3.x": "main-3.x", "main": "main"})
+        self.api.refs[(sync.UPSTREAM, "main")] = OTHER
+        report = sync.run(self.api, False)
+        self.assertEqual([(r["branch"], r["upstream_branch"], r["upstream"])
+                          for r in report["branches"]],
+                         [("main-3.x", "main-3.x", NEW), ("main", "main", OTHER)])
+        self.assertFalse(any("/git/ref/heads/main-4.x" in path and
+                             path.startswith(f"/repos/{sync.UPSTREAM}/")
+                             for _, path, _ in self.api.calls))
+        self.assertEqual(self.api.writes(), [])
+
+    def test_missing_new_source_never_falls_back_to_other_major(self):
+        for target, source in sync.BRANCHES.items():
+            with self.subTest(target=target):
+                api = FakeGitHub()
+                del api.refs[(sync.UPSTREAM, source)]
+                result = sync.sync_branch(api, target, True)
+                self.assertEqual(result["status"], "blocked")
+                self.assertEqual(api.writes(), [])
+                self.assertEqual(api.refs[(sync.REPOSITORY, target)], OLD)
+
     def test_live_updates_only_both_fixed_refs(self):
         report = sync.run(self.api, True)
         self.assertEqual([r["status"] for r in report["branches"]], ["fast_forwarded"] * 2)
@@ -75,48 +99,48 @@ class MirrorSyncTests(unittest.TestCase):
 
     def test_diverged_history_is_preserved(self):
         self.api.comparison.update(status="diverged", behind_by=1)
-        result = sync.sync_branch(self.api, "main", True)
+        result = sync.sync_branch(self.api, "main-3.x", True)
         self.assertEqual(result["status"], "blocked")
         self.assertEqual(self.api.writes(), [])
 
     def test_local_ahead_is_not_rewound(self):
         self.api.comparison.update(status="behind", behind_by=2, ahead_by=0)
-        self.assertEqual(sync.sync_branch(self.api, "main", True)["status"], "blocked")
+        self.assertEqual(sync.sync_branch(self.api, "main-3.x", True)["status"], "blocked")
         self.assertEqual(self.api.writes(), [])
 
     def test_wrong_merge_base_is_rejected(self):
         self.api.comparison["merge_base_commit"]["sha"] = OTHER
-        self.assertEqual(sync.sync_branch(self.api, "main", True)["status"], "blocked")
+        self.assertEqual(sync.sync_branch(self.api, "main-3.x", True)["status"], "blocked")
         self.assertEqual(self.api.writes(), [])
 
     def test_missing_comparison_evidence_is_rejected(self):
         self.api.comparison = {"status": "ahead"}
-        self.assertEqual(sync.sync_branch(self.api, "main", True)["status"], "blocked")
+        self.assertEqual(sync.sync_branch(self.api, "main-3.x", True)["status"], "blocked")
         self.assertEqual(self.api.writes(), [])
 
     def test_racing_destination_is_not_updated(self):
         self.api.race = OTHER
-        result = sync.sync_branch(self.api, "main", True)
+        result = sync.sync_branch(self.api, "main-3.x", True)
         self.assertEqual(result["status"], "blocked")
         self.assertIn("changed during comparison", result["error"])
         self.assertEqual(self.api.writes(), [])
 
     def test_protection_rejection_is_not_retried(self):
         self.api.write_error = "HTTP 422: protected ref"
-        result = sync.sync_branch(self.api, "main", True)
+        result = sync.sync_branch(self.api, "main-3.x", True)
         self.assertEqual(result["status"], "blocked")
         self.assertTrue(result["write_attempted"])
         self.assertEqual(len(self.api.writes()), 1)
-        self.assertEqual(self.api.refs[(sync.REPOSITORY, "main")], OLD)
+        self.assertEqual(self.api.refs[(sync.REPOSITORY, "main-3.x")], OLD)
 
     def test_uncertain_write_failure_is_not_retried(self):
         self.api.write_error = "request failed; no request retried"
-        self.assertEqual(sync.sync_branch(self.api, "main", True)["status"], "blocked")
+        self.assertEqual(sync.sync_branch(self.api, "main-3.x", True)["status"], "blocked")
         self.assertEqual(len(self.api.writes()), 1)
 
     def test_post_write_ref_must_be_verified(self):
         self.api.mutate_after_write = True
-        result = sync.sync_branch(self.api, "main", True)
+        result = sync.sync_branch(self.api, "main-3.x", True)
         self.assertEqual(result["status"], "blocked")
         self.assertEqual(result["after"], OTHER)
         self.assertEqual(len(self.api.writes()), 1)
@@ -127,13 +151,13 @@ class MirrorSyncTests(unittest.TestCase):
         self.assertEqual([r["status"] for r in result["branches"]], ["blocked", "fast_forwarded"])
 
     def test_missing_ref_does_not_create_a_branch(self):
-        del self.api.refs[(sync.REPOSITORY, "main")]
-        self.assertEqual(sync.sync_branch(self.api, "main", True)["status"], "blocked")
+        del self.api.refs[(sync.REPOSITORY, "main-3.x")]
+        self.assertEqual(sync.sync_branch(self.api, "main-3.x", True)["status"], "blocked")
         self.assertEqual(self.api.writes(), [])
 
     def test_invalid_sha_is_rejected(self):
-        self.api.refs[(sync.UPSTREAM, "main")] = "not-a-sha"
-        self.assertEqual(sync.sync_branch(self.api, "main", True)["status"], "blocked")
+        self.api.refs[(sync.UPSTREAM, "main-3.x")] = "not-a-sha"
+        self.assertEqual(sync.sync_branch(self.api, "main-3.x", True)["status"], "blocked")
         self.assertEqual(self.api.writes(), [])
 
     def test_malformed_ref_response_still_reports_each_branch(self):
@@ -145,11 +169,11 @@ class MirrorSyncTests(unittest.TestCase):
         for comparison in ([], None, {"merge_base_commit": []}):
             with self.subTest(comparison=comparison):
                 self.api.comparison = comparison
-                self.assertEqual(sync.sync_branch(self.api, "main", True)["status"], "blocked")
+                self.assertEqual(sync.sync_branch(self.api, "main-3.x", True)["status"], "blocked")
         self.assertEqual(self.api.writes(), [])
 
     def test_localization_and_topic_refs_are_not_targets(self):
-        for branch in ("zh-CN", "zh-CN-dev", "zh-CN-4.x", "zh-CN-4.x-dev", "feature/topic", "refs/tags/v4"):
+        for branch in ("main-4.x", "main4", "zh-CN", "zh-CN-dev", "zh-CN-4.x", "zh-CN-4.x-dev", "feature/topic", "refs/tags/v4"):
             with self.subTest(branch=branch), self.assertRaises(sync.SyncError):
                 sync.sync_branch(self.api, branch, True)
         self.assertEqual(self.api.calls, [])

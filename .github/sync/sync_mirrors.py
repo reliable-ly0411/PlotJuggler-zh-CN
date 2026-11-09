@@ -13,7 +13,7 @@ import urllib.request
 
 REPOSITORY = "reliable-ly0411/PlotJuggler-zh-CN"
 UPSTREAM = "PlotJuggler/PlotJuggler"
-BRANCHES = ("main", "main-4.x")
+BRANCHES = {"main-3.x": "main-3.x", "main": "main"}
 SHA = re.compile(r"[0-9a-f]{40}\Z")
 
 
@@ -69,11 +69,12 @@ def branch_sha(api, repository, branch):
 
 def sync_branch(api, branch, push):
     if branch not in BRANCHES:
-        raise SyncError("Only main and main-4.x are upstream mirrors")
-    result = {"branch": branch, "status": "checking"}
+        raise SyncError("Only main-3.x and main are upstream mirrors")
+    upstream_branch = BRANCHES[branch]
+    result = {"branch": branch, "upstream_branch": upstream_branch, "status": "checking"}
     try:
         before = branch_sha(api, REPOSITORY, branch)
-        upstream = branch_sha(api, UPSTREAM, branch)
+        upstream = branch_sha(api, UPSTREAM, upstream_branch)
         result.update(before=before, upstream=upstream)
         if before == upstream:
             result["status"] = "already_current"
