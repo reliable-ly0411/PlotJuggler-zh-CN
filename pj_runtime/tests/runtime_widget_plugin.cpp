@@ -21,7 +21,10 @@
 #error "PJ_TEST_WIDGET_COMPILER must be defined"
 #endif
 
-#ifndef PJ_TEST_WIDGET_NAME
+#ifdef PJ_TEST_WIDGET_LANGUAGE_FIXTURE
+// Fixed UTF-8 bytes avoid passing localized text through compiler command lines or source code pages.
+#define PJ_TEST_WIDGET_NAME "Unicode \xE5\x85\x83\xE4\xBB\xB6 from %2"
+#else
 #define PJ_TEST_WIDGET_NAME "Test Widgets"
 #endif
 

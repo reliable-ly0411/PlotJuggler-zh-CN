@@ -406,7 +406,7 @@ if(PJ_BUILD_TESTS)
         endif()
         target_compile_definitions(catalog_language_widget_plugin PRIVATE
             PJ_TEST_WIDGET_ID="test-language-widgets"
-            PJ_TEST_WIDGET_NAME="Unicode 元件 from %2"
+            PJ_TEST_WIDGET_LANGUAGE_FIXTURE
             PJ_TEST_WIDGET_QT_MAJOR=${Qt6_VERSION_MAJOR}
             PJ_TEST_WIDGET_QT_MINOR=${Qt6_VERSION_MINOR}
             PJ_TEST_WIDGET_COMPILER="${catalog_compiler_family}")

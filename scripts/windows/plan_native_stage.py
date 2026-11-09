@@ -1474,7 +1474,7 @@ class Candidate:
                               'revision': pin_map['python']['sha256'], 'license_files': ['t/python/LICENSE.txt']},
             'portable-cmake': {'root': 't/cmake', 'description': 'Pinned CMake CTest distribution',
                                'revision': pin_map['cmake']['sha256'],
-                               'license_files': ['t/cmake/doc/cmake-3.31/Copyright.txt']},
+                               'license_files': ['t/cmake/' + path for path in tools_helper.CMAKE_NOTICE_FILES]},
             'portable-7z': {'root': 't/7z', 'description': 'Pinned 7-Zip extra distribution',
                             'revision': pin_map['7z-extra']['sha256'], 'license_files': ['t/7z/License.txt']},
             'pinned-ifw': {'root': 't/ifw', 'description': 'Pinned Qt Installer Framework archive',
@@ -1509,8 +1509,8 @@ class Candidate:
             except FileNotFoundError as exc:
                 raise PlanError('pinned embedded Python runtime is missing: ' + name) from exc
         cmake_root = self.root / 't/cmake'
-        cmake_files = ['bin/cmake.exe', 'bin/ctest.exe', 'doc/cmake-3.31/Copyright.txt',
-                       'share/cmake-3.31/Modules/GoogleTestAddTests.cmake']
+        cmake_files = ['bin/cmake.exe', 'bin/ctest.exe',
+                       'share/cmake-3.31/Modules/GoogleTestAddTests.cmake', *tools_helper.CMAKE_NOTICE_FILES]
         cmake_files += [(Path('bin') / p.name).as_posix() for p in (cmake_root / 'bin').iterdir()
                         if p.is_file() and p.suffix.casefold() == '.dll']
         # Except for the deliberately extended ._pth file, the selected ZIP

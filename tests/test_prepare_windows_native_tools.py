@@ -4,9 +4,11 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import stat
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 import zipfile
@@ -98,6 +100,96 @@ class NativeToolTests(unittest.TestCase):
         with mock.patch.object(tools.sys, 'platform', 'linux'):
             with self.assertRaisesRegex(tools.ToolError, 'requires Windows'):
                 tools.prepare(self.root, ROOT / '.github/windows-native-kit/tool-pins.json')
+
+    def prepare_fixture(self, *, missing_notice=None):
+        """Exercise extraction and notice checks without executing Windows binaries."""
+        def zip_bytes(entries):
+            buffer = io.BytesIO()
+            with zipfile.ZipFile(buffer, 'w') as archive:
+                for name, data in entries.items():
+                    archive.writestr(name, data)
+            return buffer.getvalue()
+
+        prefix = 'cmake-3.31.10-windows-x86_64/'
+        notice_paths = ('doc/cmake/Copyright.txt', 'doc/cmake/cmcppdap/NOTICE', 'doc/cmake/cmcurl/COPYING',
+                        'doc/cmake/cmlibarchive/COPYING', 'doc/cmake/cmliblzma/COPYING',
+                        'doc/cmake/cmlibrhash/COPYING', 'doc/cmake/cmlibuv/LICENSE',
+                        'doc/cmake/cmnghttp2/COPYING', 'doc/cmake/cmsys/Copyright.txt',
+                        'doc/cmake/cmzlib/Copyright.txt', 'doc/cmake/cmzstd/LICENSE')
+        notices = {path: ('fixture ' + path + '\r\nlicense bytes\r\n').encode() for path in notice_paths}
+        cmake_entries = {prefix + 'bin/cmake.exe': b'cmake', prefix + 'bin/ctest.exe': b'ctest'}
+        cmake_entries.update({prefix + path: data for path, data in notices.items() if path != missing_notice})
+        if missing_notice == 'doc/cmake/Copyright.txt':
+            # A notice at the unrelated layout must not satisfy the required path.
+            cmake_entries[prefix + 'doc/cmake-3.31/Copyright.txt'] = b'unrelated notice'
+        payloads = {
+            'cmake.zip': zip_bytes(cmake_entries),
+            'python.zip': zip_bytes({'python.exe': b'python', 'LICENSE.txt': b'python license',
+                                     'python312._pth': b'python312.zip\n'}),
+            '7zr.exe': b'bootstrap', 'extra.7z': b'extra', 'ifw.7z': b'ifw',
+        }
+        artifacts = []
+        for name, filename in [('cmake', 'cmake.zip'), ('python', 'python.zip'),
+                               ('7zr-bootstrap', '7zr.exe'), ('7z-extra', 'extra.7z'), ('ifw', 'ifw.7z')]:
+            data = payloads[filename]
+            artifacts.append({'name': name, 'version': '1', 'file': filename,
+                              'url': 'https://example.invalid/' + filename,
+                              'source': 'https://example.invalid/checksums',
+                              'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data)})
+        pins = self.root / 'pins.json'
+        pins.write_text(json.dumps({'schema': 1, 'artifacts': artifacts}), encoding='utf-8')
+        ci_root = self.root / 'ci'; ci_root.mkdir()
+
+        def open_download(request, timeout):
+            return io.BytesIO(payloads[request.full_url.rsplit('/', 1)[-1]])
+
+        def run_fixture(args, **kwargs):
+            executable = Path(args[0]).name
+            if executable in ('7zr.exe', '7za.exe'):
+                output = Path(next(str(arg)[2:] for arg in args if str(arg).startswith('-o')))
+                if executable == '7zr.exe':
+                    for relative, data in [('x64/7za.exe', b'7za'), ('License.txt', b'7z license')]:
+                        target = output / relative; target.parent.mkdir(parents=True, exist_ok=True)
+                        target.write_bytes(data)
+                else:
+                    for relative in ('bin/binarycreator.exe', 'bin/installerbase.exe', 'bin/repogen.exe',
+                                     'licenses/LICENSE.txt'):
+                        target = output / relative; target.parent.mkdir(parents=True, exist_ok=True)
+                        target.write_bytes(b'ifw fixture')
+                return ''
+            if executable == 'installerbase.exe':
+                return 'IFW Version: 4.10.0, built with Qt fixture'
+            if executable == 'ctest.exe':
+                return 'ctest version 3.31.10'
+            if executable == 'python.exe':
+                return 'driver modules OK'
+            self.fail('unexpected executable: ' + executable)
+
+        with mock.patch.object(tools.sys, 'platform', 'win32'), \
+             mock.patch.object(tools.urllib.request, 'urlopen', side_effect=open_download), \
+             mock.patch.object(tools, 'run_checked', side_effect=run_fixture), \
+             mock.patch.object(tools.shutil, 'disk_usage', return_value=SimpleNamespace(free=4 * 1024**3)), \
+             mock.patch.dict(os.environ, {'SystemRoot': str(self.root / 'Windows')}):
+            if missing_notice is None:
+                record = tools.prepare(ci_root, pins)
+                for path, data in notices.items():
+                    self.assertEqual((ci_root / 't/cmake' / path).read_bytes(), data)
+                self.assertEqual(len(record['distributions']), 5)
+                self.assertTrue((ci_root / 't/tool-provenance.json').is_file())
+            else:
+                with self.assertRaisesRegex(tools.ToolError,
+                                            'missing required pinned tool file: ' + Path(missing_notice).name):
+                    tools.prepare(ci_root, pins)
+                self.assertFalse((ci_root / 't/tool-provenance.json').exists())
+
+    def test_preparation_preserves_windows_cmake_archive_notice(self):
+        self.prepare_fixture()
+
+    def test_preparation_rejects_missing_windows_cmake_archive_notice(self):
+        self.prepare_fixture(missing_notice='doc/cmake/Copyright.txt')
+
+    def test_preparation_rejects_missing_cmake_third_party_notice(self):
+        self.prepare_fixture(missing_notice='doc/cmake/cmcurl/COPYING')
 
 
 if __name__ == '__main__':

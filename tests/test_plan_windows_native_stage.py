@@ -24,6 +24,14 @@ audit_fixture_spec = importlib.util.spec_from_file_location('audit_stage_fixture
 audit_fixture = importlib.util.module_from_spec(audit_fixture_spec)
 audit_fixture_spec.loader.exec_module(audit_fixture)
 
+CMAKE_NOTICE_PATHS = (
+    'doc/cmake/Copyright.txt', 'doc/cmake/cmcppdap/NOTICE', 'doc/cmake/cmcurl/COPYING',
+    'doc/cmake/cmlibarchive/COPYING', 'doc/cmake/cmliblzma/COPYING',
+    'doc/cmake/cmlibrhash/COPYING', 'doc/cmake/cmlibuv/LICENSE',
+    'doc/cmake/cmnghttp2/COPYING', 'doc/cmake/cmsys/Copyright.txt',
+    'doc/cmake/cmzlib/Copyright.txt', 'doc/cmake/cmzstd/LICENSE',
+)
+
 
 class HostedPESearchPathTests(unittest.TestCase):
     """Do not treat non-PATH reviewed directories as reachable providers."""
@@ -597,7 +605,7 @@ class CandidateTests(unittest.TestCase):
         path = self.base / 'plan.json'; path.write_text(json.dumps(plan), encoding='utf-8')
         planner.audit.stage_allowlisted(path, self.base / 'stage', self.logical)
 
-    def seed_verified_tools(self):
+    def seed_verified_tools(self, *, omit_cmake_notice=None):
         downloads = self.root / 'd'; downloads.mkdir()
         python_files = {'python.exe': b'python', 'python3.dll': b'python3', 'python312.dll': b'python312',
                         'python312.zip': b'stdlib', 'python312._pth': b'original paths',
@@ -605,12 +613,14 @@ class CandidateTests(unittest.TestCase):
                         'libcrypto-3.dll': b'crypto', 'libssl-3.dll': b'ssl', 'libffi-8.dll': b'ffi',
                         'sqlite3.dll': b'sqlite', 'vcruntime140.dll': b'vc runtime'}
         cmake_files = {'bin/cmake.exe': b'cmake', 'bin/ctest.exe': b'ctest',
-                       'doc/cmake-3.31/Copyright.txt': b'cmake license',
                        'share/cmake-3.31/Modules/GoogleTestAddTests.cmake': b'ctest script'}
+        cmake_files.update({name: ('cmake notice ' + name + '\r\n').encode() for name in CMAKE_NOTICE_PATHS})
         for filename, prefix, values in [('python.zip', '', python_files),
                                          ('cmake.zip', 'cmake-3.31.10-windows-x86_64/', cmake_files)]:
             with zipfile.ZipFile(downloads / filename, 'w') as archive:
-                for name, data in values.items(): archive.writestr(prefix + name, data)
+                for name, data in values.items():
+                    if filename != 'cmake.zip' or name != omit_cmake_notice:
+                        archive.writestr(prefix + name, data)
         for name, content in [('bootstrap.exe', b'bootstrap'), ('extra.7z', b'extra'), ('ifw.7z', b'ifw')]:
             (downloads / name).write_bytes(content)
         pins = []
@@ -650,9 +660,41 @@ class CandidateTests(unittest.TestCase):
                          't/python/sqlite3.dll', 't/python/vcruntime140.dll', 't/cmake/bin/ctest.exe', 't/cmake/share/cmake-3.31/Modules/GoogleTestAddTests.cmake',
                          't/7z/7za.exe', 't/ifw/ifw.7z', 't/ifw/notices/LICENSE',
                          't/tool-provenance.json'} <= files)
+        notices = {'t/cmake/' + path for path in CMAKE_NOTICE_PATHS}
+        self.assertTrue(notices <= files)
+        self.assertEqual(set(plan['origins']['portable-cmake']['license_files']), notices)
         self.assertNotIn('d/python.zip', files)
         path = self.base / 'plan.json'; path.write_text(json.dumps(plan), encoding='utf-8')
         planner.audit.stage_allowlisted(path, self.base / 'stage', self.logical)
+        for notice in notices:
+            original = self.root / notice
+            staged = self.base / 'stage' / notice
+            self.assertEqual(staged.read_bytes(), original.read_bytes())
+            item = next(item for item in plan['files'] if item['destination'] == notice)
+            self.assertEqual(item['sha256'], hashlib.sha256(original.read_bytes()).hexdigest())
+
+    def test_missing_or_modified_extracted_cmake_notice_fails_closed(self):
+        self.seed_verified_tools()
+        for relative in ('doc/cmake/Copyright.txt', 'doc/cmake/cmcurl/COPYING'):
+            path = self.root / 't/cmake' / relative
+            original = path.read_bytes(); path.unlink()
+            with self.subTest(relative=relative, state='missing'), self.assertRaises(FileNotFoundError):
+                self.candidate()
+            path.write_bytes(original + b'altered')
+            with self.subTest(relative=relative, state='modified'), \
+                 self.assertRaisesRegex(planner.PlanError, 'extracted tool file differs from verified archive'):
+                self.candidate()
+            path.write_bytes(original)
+
+    def test_missing_third_party_notice_in_verified_cmake_archive_fails_closed(self):
+        self.seed_verified_tools(omit_cmake_notice='doc/cmake/cmcurl/COPYING')
+        with self.assertRaisesRegex(planner.PlanError, 'verified tool archive is missing .*cmcurl/COPYING'):
+            self.candidate()
+
+    def test_missing_main_notice_in_verified_cmake_archive_fails_closed(self):
+        self.seed_verified_tools(omit_cmake_notice='doc/cmake/Copyright.txt')
+        with self.assertRaisesRegex(planner.PlanError, 'verified tool archive is missing .*doc/cmake/Copyright.txt'):
+            self.candidate()
 
     def test_tampered_extracted_tool_or_distribution_fails_closed(self):
         self.seed_verified_tools()

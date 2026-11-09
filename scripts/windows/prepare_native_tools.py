@@ -31,6 +31,21 @@ audit_spec.loader.exec_module(bundle_audit)
 MAX_DOWNLOAD = 512 * 1024 * 1024
 MAX_EXPANDED = 1024 * 1024 * 1024
 CHUNK = 1024 * 1024
+# The pinned Windows CMake archive keeps its own and bundled third-party
+# notices under doc/cmake, not the versioned Unix documentation directory.
+CMAKE_NOTICE_FILES = (
+    'doc/cmake/Copyright.txt',
+    'doc/cmake/cmcppdap/NOTICE',
+    'doc/cmake/cmcurl/COPYING',
+    'doc/cmake/cmlibarchive/COPYING',
+    'doc/cmake/cmliblzma/COPYING',
+    'doc/cmake/cmlibrhash/COPYING',
+    'doc/cmake/cmlibuv/LICENSE',
+    'doc/cmake/cmnghttp2/COPYING',
+    'doc/cmake/cmsys/Copyright.txt',
+    'doc/cmake/cmzlib/Copyright.txt',
+    'doc/cmake/cmzstd/LICENSE',
+)
 
 
 class ToolError(Exception):
@@ -218,10 +233,11 @@ def prepare(root, pins_file):
             stream.write(str(root / relative) + '\n')
     cmake = tools / 'cmake/bin/cmake.exe'; ctest = tools / 'cmake/bin/ctest.exe'
     python = tools / 'python/python.exe'
-    for required in (cmake, ctest, python, tools / 'python/LICENSE.txt',
-                     tools / 'cmake/doc/cmake-3.31/Copyright.txt'):
+    required_files = (cmake, ctest, python, tools / 'python/LICENSE.txt')
+    required_files += tuple(tools / 'cmake' / relative for relative in CMAKE_NOTICE_FILES)
+    for required in required_files:
         if not required.is_file():
-            raise ToolError(f'missing required pinned tool file: {required.name}')
+            raise ToolError(f'missing required pinned tool file: {required.name} ({required.relative_to(tools).as_posix()})')
     system = os.environ.get('SystemRoot')
     if not system:
         raise ToolError('SystemRoot is required to validate the portable tools')
