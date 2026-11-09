@@ -3017,7 +3017,7 @@
       }
     }
   ],
-  "verifier_sha256": "55a7097bff0e7b2f0436a355ce3b928122ac331c9fdb4aebaa73a6e77005bcf5",
+  "verifier_sha256": "c20e0daf700ba30a97151baaab6fa5c3a3486d4f0eca82e017d751a991b1aefd",
   "reviewed_source_sha256": {
     "s/cmake/PjTests.cmake": "5dbc86dbd40aad8d5ce0fdf34c86293b4802419e129905452b451a4649a0b7dd",
     "s/cmake/test_mains/pj_gpu_test_gate.h": "5f76ca2d4ecf7f5543920d6970f624d3109b32482c2fee7fc2f390149231b5ef",

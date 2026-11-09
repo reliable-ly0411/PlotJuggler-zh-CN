@@ -22,7 +22,7 @@ class CsvPrebuiltTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.kit = Path(self.temp.name) / 'kit'
+        self.kit = Path(self.temp.name).resolve() / 'kit'
         self.root = self.kit / 's'; self.root.mkdir(parents=True)
         self.build = self.kit / 'b'; self.build.mkdir()
         self.prefix = self.build / 'fork-prefix'

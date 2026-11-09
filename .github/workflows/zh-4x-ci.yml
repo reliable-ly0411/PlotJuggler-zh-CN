@@ -80,25 +80,10 @@ jobs:
           apt-get "${opts[@]}" --print-uris download "ffmpeg=$version" > "$evidence/apt-download-uri.txt" 2> "$evidence/apt-download-uri.stderr"
           (cd "$evidence/downloads" && apt-get "${opts[@]}" download "ffmpeg=$version") > "$evidence/apt-download.stdout" 2> "$evidence/apt-download.stderr"
           dpkg-query -W -f='${binary:Package}\t${Version}\n' > "$evidence/installed-packages.tsv"
-          ldd /usr/bin/ffmpeg /usr/bin/ffprobe > "$evidence/dynamic-libraries.txt" 2>&1
+          LC_ALL=C ldd /usr/bin/ffmpeg /usr/bin/ffprobe > "$evidence/dynamic-libraries.txt" 2>&1
           ! grep -F 'not found' "$evidence/dynamic-libraries.txt"
-          python3 - "$evidence" <<'PY'
-          import hashlib, json, pathlib, re, subprocess, sys
-          evidence = pathlib.Path(sys.argv[1])
-          text = (evidence / 'dynamic-libraries.txt').read_text(encoding='utf-8')
-          paths = sorted(set(re.findall(r'(?<![A-Za-z0-9_])(/[^\s()]+)', text)))
-          assert paths, 'ldd did not report any absolute dynamic library paths'
-          records = []
-          for value in paths:
-              path = pathlib.Path(value); actual = path.resolve(strict=True)
-              assert actual.is_file()
-              with actual.open('rb') as stream: digest = hashlib.file_digest(stream, 'sha256').hexdigest()
-              package = subprocess.run(['dpkg-query', '-S', value], capture_output=True, text=True, check=False)
-              records.append({'path': value, 'resolved_path': str(actual), 'sha256': digest,
-                              'dpkg_query_exit': package.returncode, 'dpkg_query_stdout': package.stdout,
-                              'dpkg_query_stderr': package.stderr})
-          (evidence / 'dynamic-library-identities.json').write_text(json.dumps(records, indent=2) + '\n', encoding='utf-8')
-          PY
+          python3 scripts/native-fixtures/record_dynamic_libraries.py "$evidence"
+          test -s "$evidence/dynamic-library-identities.json"
           python3 - "$evidence" "$version" <<'PY'
           import hashlib, json, pathlib, re, shlex, sys, urllib.parse
           evidence, version = pathlib.Path(sys.argv[1]), sys.argv[2]

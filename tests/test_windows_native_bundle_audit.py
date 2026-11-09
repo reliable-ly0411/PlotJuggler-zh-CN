@@ -32,8 +32,9 @@ def provenance():
 class AuditTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        self.base = Path(self.tmp.name)
-        self.root = self.base / "payload"
+        self.base = Path(self.tmp.name).resolve()
+        self.root = self.base / "n" / SHA[:12]
+        self.logical = str(self.root) if os.name == "nt" else ROOT
         (self.root / "b/RelWithDebInfo").mkdir(parents=True)
         (self.root / "s/cm").mkdir(parents=True)
         (self.root / "b/RelWithDebInfo/a.exe").write_bytes(b"exe")
@@ -43,8 +44,8 @@ class AuditTest(unittest.TestCase):
         self.manifest = self.base / "manifest.json"
         self.disc = self.base / "ctest.json"
         self.doc = {"kind": "ctestInfo", "tests": [{"name": "case.one", "config": "RelWithDebInfo",
-                    "command": [ROOT + r"\b\RelWithDebInfo\a.exe", "--fixture=" + ROOT + r"\s\cm\test.py"],
-                    "properties": [{"name": "WORKING_DIRECTORY", "value": ROOT + r"\b"},
+                    "command": [self.logical + r"\b\RelWithDebInfo\a.exe", "--fixture=" + self.logical + r"\s\cm\test.py"],
+                    "properties": [{"name": "WORKING_DIRECTORY", "value": self.logical + r"\b"},
                                    {"name": "TIMEOUT", "value": 120.0}]}]}
         self.write_discovery()
 
@@ -55,23 +56,23 @@ class AuditTest(unittest.TestCase):
         self.disc.write_text(json.dumps(self.doc), encoding="utf-8")
 
     def capture(self):
-        return audit.create_manifest(self.root, audit.windows_root(ROOT), self.meta, self.manifest)
+        return audit.create_manifest(self.root, audit.windows_root(self.logical), self.meta, self.manifest)
 
     def test_capture_roundtrip_detects_tampering_and_extra_files(self):
         result = self.capture()
         self.assertEqual(result["files"], 2)
-        self.assertEqual(audit.verify_manifest(self.root, self.manifest, True, result["manifest_sha256"], ROOT, SHA, "a" * 40, "RelWithDebInfo")["files"], 2)
+        self.assertEqual(audit.verify_manifest(self.root, self.manifest, True, result["manifest_sha256"], self.logical, SHA, "a" * 40, "RelWithDebInfo")["files"], 2)
         (self.root / "s/cm/test.py").write_bytes(b"changed")
         with self.assertRaises(audit.AuditError):
-            audit.verify_manifest(self.root, self.manifest, False, result["manifest_sha256"], ROOT, SHA, "a" * 40, "RelWithDebInfo")
+            audit.verify_manifest(self.root, self.manifest, False, result["manifest_sha256"], self.logical, SHA, "a" * 40, "RelWithDebInfo")
         (self.root / "s/cm/test.py").write_bytes(b"fixture")
         (self.root / "unexpected_empty_directory").mkdir()
         with self.assertRaises(audit.AuditError):
-            audit.verify_manifest(self.root, self.manifest, False, result["manifest_sha256"], ROOT, SHA, "a" * 40, "RelWithDebInfo")
+            audit.verify_manifest(self.root, self.manifest, False, result["manifest_sha256"], self.logical, SHA, "a" * 40, "RelWithDebInfo")
         (self.root / "unexpected_empty_directory").rmdir()
         (self.root / "unexpected").write_bytes(b"x")
         with self.assertRaises(audit.AuditError):
-            audit.verify_manifest(self.root, self.manifest, False, result["manifest_sha256"], ROOT, SHA, "a" * 40, "RelWithDebInfo")
+            audit.verify_manifest(self.root, self.manifest, False, result["manifest_sha256"], self.logical, SHA, "a" * 40, "RelWithDebInfo")
 
     @unittest.skipIf(os.name == 'nt', 'POSIX mode-denial probe; Windows needs a separate owned ACL fixture')
     def test_unreadable_directory_fails_capture_and_verify(self):
@@ -83,9 +84,9 @@ class AuditTest(unittest.TestCase):
             if os.access(locked, os.R_OK | os.X_OK):
                 self.skipTest('effective identity can bypass the mode denial')
             with self.assertRaises(audit.AuditError):
-                audit.create_manifest(self.root, ROOT, self.meta, self.base / 'unreadable-manifest.json')
+                audit.create_manifest(self.root, self.logical, self.meta, self.base / 'unreadable-manifest.json')
             with self.assertRaises(audit.AuditError):
-                audit.verify_manifest(self.root, self.manifest, False, result['manifest_sha256'], ROOT, SHA, 'a' * 40, 'RelWithDebInfo')
+                audit.verify_manifest(self.root, self.manifest, False, result['manifest_sha256'], self.logical, SHA, 'a' * 40, 'RelWithDebInfo')
         finally:
             locked.chmod(0o700)
 
@@ -102,14 +103,14 @@ class AuditTest(unittest.TestCase):
                           {"origin": "repo", "source": "test.exe", "destination": "b/test.exe", "sha256": sha(source / "test.exe")}]}
         plan_path = self.base / "plan.json"; plan_path.write_text(json.dumps(plan), encoding="utf8")
         staging = self.base / "stage"
-        result = audit.stage_allowlisted(plan_path, staging, ROOT)
+        result = audit.stage_allowlisted(plan_path, staging, self.logical)
         self.assertEqual(result["files_copied"], 2)
         self.assertFalse((staging / "secret-not-listed").exists())
         self.assertTrue((staging / "b/empty_working_directory").is_dir())
         origins = json.loads((staging / "_bundle/origins.json").read_text(encoding="utf8"))
         self.assertNotIn(str(source), json.dumps(origins))
         self.assertEqual((staging / "b/test.exe").read_bytes(), b"test binary")
-        with self.assertRaises(audit.AuditError): audit.stage_allowlisted(plan_path, staging, ROOT)
+        with self.assertRaises(audit.AuditError): audit.stage_allowlisted(plan_path, staging, self.logical)
 
     def test_stage_fails_before_copy_on_hash_or_license_error(self):
         source = self.base / "origin"; source.mkdir(); (source / "a").write_bytes(b"a")
@@ -118,38 +119,38 @@ class AuditTest(unittest.TestCase):
                 "files": [{"origin": "repo", "source": "a", "destination": "s/a", "sha256": "0" * 64}]}
         plan_path = self.base / "plan.json"; plan_path.write_text(json.dumps(plan), encoding="utf8")
         staging = self.base / "stage"
-        with self.assertRaises(audit.AuditError): audit.stage_allowlisted(plan_path, staging, ROOT)
+        with self.assertRaises(audit.AuditError): audit.stage_allowlisted(plan_path, staging, self.logical)
         self.assertEqual(list(staging.iterdir()), [])
         plan["files"][0]["sha256"] = hashlib.sha256(b"a").hexdigest()
         plan_path.write_text(json.dumps(plan), encoding="utf8")
-        with self.assertRaises(audit.AuditError): audit.stage_allowlisted(plan_path, staging, ROOT)
+        with self.assertRaises(audit.AuditError): audit.stage_allowlisted(plan_path, staging, self.logical)
         self.assertEqual(list(staging.iterdir()), [])
 
     def test_internal_manifest_needs_independent_digest(self):
         output = self.root / "_bundle/manifest.json"
-        result = audit.create_manifest(self.root, ROOT, self.meta, output)
-        self.assertEqual(audit.verify_manifest(self.root, output, False, result["manifest_sha256"], ROOT, SHA, "a" * 40, "RelWithDebInfo")["files"], 2)
+        result = audit.create_manifest(self.root, self.logical, self.meta, output)
+        self.assertEqual(audit.verify_manifest(self.root, output, False, result["manifest_sha256"], self.logical, SHA, "a" * 40, "RelWithDebInfo")["files"], 2)
         with self.assertRaises(audit.AuditError):
-            audit.verify_manifest(self.root, output, False, "0" * 64, ROOT, SHA, "a" * 40, "RelWithDebInfo")
+            audit.verify_manifest(self.root, output, False, "0" * 64, self.logical, SHA, "a" * 40, "RelWithDebInfo")
         with self.assertRaises(audit.AuditError):
-            audit.verify_manifest(self.root, output, False, result["manifest_sha256"], ROOT.replace("Testing", "Other"), SHA, "a" * 40, "RelWithDebInfo")
+            audit.verify_manifest(self.root, output, False, result["manifest_sha256"], self.logical.replace("\\n\\", "\\other\\n\\"), SHA, "a" * 40, "RelWithDebInfo")
         with self.assertRaises(audit.AuditError):
-            audit.verify_manifest(self.root, output, False, result["manifest_sha256"], ROOT, "f" * 40, "a" * 40, "RelWithDebInfo")
+            audit.verify_manifest(self.root, output, False, result["manifest_sha256"], self.logical, "f" * 40, "a" * 40, "RelWithDebInfo")
         with self.assertRaises(audit.AuditError):
-            audit.create_manifest(self.root, ROOT, self.meta, output)
+            audit.create_manifest(self.root, self.logical, self.meta, output)
 
     def test_existing_owned_run_evidence_can_be_ignored_without_reading_or_deleting_it(self):
         (self.root / "r").mkdir()
         result = self.capture()
         old = self.root / "r/previous"; old.mkdir(); (old / "evidence.bin").write_bytes(b"keep")
         with self.assertRaises(audit.AuditError):
-            audit.verify_manifest(self.root, self.manifest, False, result["manifest_sha256"], ROOT, SHA, "a" * 40, "RelWithDebInfo")
-        audit.verify_manifest(self.root, self.manifest, False, result["manifest_sha256"], ROOT, SHA, "a" * 40,
+            audit.verify_manifest(self.root, self.manifest, False, result["manifest_sha256"], self.logical, SHA, "a" * 40, "RelWithDebInfo")
+        audit.verify_manifest(self.root, self.manifest, False, result["manifest_sha256"], self.logical, SHA, "a" * 40,
                               "RelWithDebInfo", allow_owned_runs=True)
         self.assertEqual((old / "evidence.bin").read_bytes(), b"keep")
         (self.root / "b/unexpected").write_bytes(b"x")
         with self.assertRaises(audit.AuditError):
-            audit.verify_manifest(self.root, self.manifest, False, result["manifest_sha256"], ROOT, SHA, "a" * 40,
+            audit.verify_manifest(self.root, self.manifest, False, result["manifest_sha256"], self.logical, SHA, "a" * 40,
                                   "RelWithDebInfo", allow_owned_runs=True)
 
     def test_rejects_unpinned_or_dirty_provenance_and_wrong_root(self):
@@ -167,23 +168,38 @@ class AuditTest(unittest.TestCase):
         with self.assertRaises(audit.AuditError): self.capture()
         self.meta.write_text(json.dumps(provenance()), encoding="utf8")
         with self.assertRaises(audit.AuditError):
-            audit.create_manifest(self.root, audit.windows_root(ROOT[:-12] + "a" * 12), self.meta, self.manifest)
-        for path in (r"C:\Testing\..\n\123456789abc", ROOT + r"\other", r"\\server\share\n\123456789abc"):
+            audit.create_manifest(self.root, audit.windows_root(self.logical[:-12] + "a" * 12), self.meta, self.manifest)
+        for path in (r"C:\Testing\..\n\123456789abc", self.logical + r"\other", r"\\server\share\n\123456789abc"):
             with self.assertRaises(audit.AuditError): audit.windows_root(path)
+
+    @unittest.skipUnless(os.name == 'nt', 'strict physical build-root comparison is Windows-only')
+    def test_exact_build_root_is_required(self):
+        audit.check_root(self.root, self.logical, require_exact=True)
+        other = self.base / 'other' / 'n' / SHA[:12]
+        other.mkdir(parents=True)
+        with self.assertRaisesRegex(audit.AuditError, 'exact build-time root'):
+            audit.check_root(self.root, str(other), require_exact=True)
 
     def test_rejects_nonredistributable_cache_git_and_windows_collisions(self):
         for rel in ("b/vcruntime140d.dll", "b/vcruntime140_1d.dll", "b/msvcp140_2d.dll", "b/mfc140ud.dll", "b/ucrtbased.dll", "b/x.obj", "b/x.pdb", "b/x.lib", "b/CMakeCache.txt", "b/credentials.json", "s/.git/config", "b/CON.txt", "b/COM¹.txt", "b/CONOUT$", "b/with space ", "b/NUL .txt", "b/CON .txt", "b/COM1 .foo", "t/pwsh.exe", "b/powershell.exe"):
             with self.subTest(rel=rel):
-                with self.assertRaises(audit.AuditError): audit.check_windows_relative(rel, ROOT)
+                with self.assertRaises(audit.AuditError): audit.check_windows_relative(rel, self.logical)
         with self.assertRaises(audit.AuditError): audit.windows_root(r"C:\NUL .txt\n\123456789abc")
         (self.root / "b/a.dll").write_bytes(b"1")
-        (self.root / "b/A.dll").write_bytes(b"2")
-        with self.assertRaises(audit.AuditError): self.capture()
+        walk = os.walk
+        def collision_walk(*args, **kwargs):
+            for parent, dirs, names in walk(*args, **kwargs):
+                if Path(parent) == self.root / "b":
+                    names.append("A.dll")
+                yield parent, dirs, names
+        with mock.patch.object(audit.os, "walk", side_effect=collision_walk):
+            with self.assertRaisesRegex(audit.AuditError, "case-insensitive destination collision"):
+                self.capture()
 
     def test_rejects_long_path(self):
-        with self.assertRaises(audit.AuditError): audit.check_windows_relative("s/" + "x" * 220, ROOT)
+        with self.assertRaises(audit.AuditError): audit.check_windows_relative("s/" + "x" * 220, self.logical)
         # Windows counts UTF-16 units: each supplementary character costs two.
-        with self.assertRaises(audit.AuditError): audit.check_windows_relative("s/" + "😀" * 110, ROOT)
+        with self.assertRaises(audit.AuditError): audit.check_windows_relative("s/" + "😀" * 110, self.logical)
 
     def test_windows_stream_api_fail_closed_on_named_streams_and_errors(self):
         def fake_kernel(names, ending=38, first_error=None):
@@ -242,7 +258,7 @@ class AuditTest(unittest.TestCase):
         with self.assertRaises(audit.AuditError): self.capture()
         (self.root / "b/link").unlink()
         alias = self.base / "linkroot"; alias.symlink_to(self.root, target_is_directory=True)
-        with self.assertRaises(audit.AuditError): audit.inventory(alias, ROOT)
+        with self.assertRaises(audit.AuditError): audit.inventory(alias, self.logical)
 
     def test_rejects_hardlinked_staged_files(self):
         if not hasattr(os, "link"):
@@ -251,46 +267,46 @@ class AuditTest(unittest.TestCase):
         with self.assertRaises(audit.AuditError): self.capture()
 
     def test_audits_command_paths_cwd_and_properties(self):
-        result = audit.audit_discovery(self.root, ROOT, self.disc, None, "RelWithDebInfo")
+        result = audit.audit_discovery(self.root, self.logical, self.disc, None, "RelWithDebInfo")
         self.assertEqual(result["test_count"], 1)
         self.assertEqual(result["path_reference_count"], 3)
         with self.assertRaises(audit.AuditError):
-            audit.audit_discovery(self.root, ROOT, self.disc, None, "Debug")
+            audit.audit_discovery(self.root, self.logical, self.disc, None, "Debug")
         self.doc["tests"][0]["properties"].append({"name": "ENVIRONMENT", "value": ["QT_QPA_FONTDIR=D:/external/fonts"]})
         self.write_discovery()
-        with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, ROOT, self.disc, None, "RelWithDebInfo")
+        with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, self.logical, self.disc, None, "RelWithDebInfo")
         self.doc["tests"][0]["properties"].pop(); self.doc["tests"][0]["command"][0] = "a.exe"; self.write_discovery()
-        with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, ROOT, self.disc, None, "RelWithDebInfo")
+        with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, self.logical, self.disc, None, "RelWithDebInfo")
 
     def test_unc_and_posix_paths_fail_even_when_embedded_in_arguments(self):
         for value in (r"--fixture=\\server\share\fixture", "--fixture=/tmp/out/file", "--input=/tmp",
                       r"--input=\Windows\System32\secret.txt", r"-IC:\outside\file", r"--input=C:..\outside"):
             with self.subTest(value=value):
-                self.doc["tests"][0]["command"] = [ROOT + r"\b\RelWithDebInfo\a.exe", value]
+                self.doc["tests"][0]["command"] = [self.logical + r"\b\RelWithDebInfo\a.exe", value]
                 self.write_discovery()
-                with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, ROOT, self.disc, None, "RelWithDebInfo")
-        self.doc["tests"][0]["command"] = [ROOT + r"\b\RelWithDebInfo\a.exe", "https://example.invalid/a/b"]
+                with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, self.logical, self.disc, None, "RelWithDebInfo")
+        self.doc["tests"][0]["command"] = [self.logical + r"\b\RelWithDebInfo\a.exe", "https://example.invalid/a/b"]
         self.write_discovery()
-        self.assertEqual(audit.audit_discovery(self.root, ROOT, self.disc, None, "RelWithDebInfo")["test_count"], 1)
+        self.assertEqual(audit.audit_discovery(self.root, self.logical, self.disc, None, "RelWithDebInfo")["test_count"], 1)
 
     def test_ctest_backtrace_source_paths_are_checked(self):
-        self.doc["backtraceGraph"] = {"files": [ROOT + r"\s\cm\test.py"]}
+        self.doc["backtraceGraph"] = {"files": [self.logical + r"\s\cm\test.py"]}
         self.write_discovery()
-        self.assertEqual(audit.audit_discovery(self.root, ROOT, self.disc, None, "RelWithDebInfo")["path_reference_count"], 4)
+        self.assertEqual(audit.audit_discovery(self.root, self.logical, self.disc, None, "RelWithDebInfo")["path_reference_count"], 4)
         self.doc["backtraceGraph"]["files"] = [r"D:\outside\CMakeLists.txt"]
         self.write_discovery()
-        with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, ROOT, self.disc, None, "RelWithDebInfo")
+        with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, self.logical, self.disc, None, "RelWithDebInfo")
 
     def test_missing_output_must_be_exact_and_for_the_same_case(self):
-        missing = ROOT + r"\b\result.txt"
+        missing = self.logical + r"\b\result.txt"
         self.doc["tests"][0]["command"].append("--out=" + missing); self.write_discovery()
-        with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, ROOT, self.disc, None, "RelWithDebInfo")
+        with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, self.logical, self.disc, None, "RelWithDebInfo")
         allow = self.base / "allow.json"; allow.write_text(json.dumps({"case.one": [missing]}), encoding="utf8")
-        self.assertEqual(audit.audit_discovery(self.root, ROOT, self.disc, allow, "RelWithDebInfo")["test_count"], 1)
+        self.assertEqual(audit.audit_discovery(self.root, self.logical, self.disc, allow, "RelWithDebInfo")["test_count"], 1)
         allow.write_text(json.dumps({"wrong": [missing]}), encoding="utf8")
-        with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, ROOT, self.disc, allow, "RelWithDebInfo")
-        allow.write_text(json.dumps({"case.one": [missing, ROOT + r"\b\unused.txt"]}), encoding="utf8")
-        with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, ROOT, self.disc, allow, "RelWithDebInfo")
+        with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, self.logical, self.disc, allow, "RelWithDebInfo")
+        allow.write_text(json.dumps({"case.one": [missing, self.logical + r"\b\unused.txt"]}), encoding="utf8")
+        with self.assertRaises(audit.AuditError): audit.audit_discovery(self.root, self.logical, self.disc, allow, "RelWithDebInfo")
 
     def test_junit_requires_exact_set_and_records_top_and_nested_skips(self):
         self.doc["tests"].append({"name": "case.two"}); self.write_discovery()

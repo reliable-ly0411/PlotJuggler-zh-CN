@@ -107,7 +107,43 @@ def corrupt_claimed_uncompressed_size(path, target):
 
 def make_cases(directory):
     cases = []
+    # A rejection must reach the intended verifier guard. Merely raising an
+    # arbitrary harness or reflection error is not a successful negative test.
+    rejection_reasons = {
+        'wrong_manifest_hash': 'manifest hash differs',
+        'trailing_bytes': 'ZIP must be single-disk and comment-free',
+        'lying_entry_count': 'ZIP central entry count differs',
+        'traversal': 'unsafe path component',
+        'absolute_path': 'unsafe relative path',
+        'ads': 'unsafe path character',
+        'device_name': 'reserved Windows name',
+        'long_path': 'Windows path is too long',
+        'duplicate_file': 'duplicate or colliding ZIP member',
+        'case_collision': 'case-colliding paths',
+        'extra_directory': 'ZIP has missing or extra entries',
+        'extra_file': 'ZIP has missing or extra entries',
+        'missing_zip_directory': 'ZIP has missing or extra entries',
+        'missing_zip_file': 'ZIP has missing or extra entries',
+        'symlink': 'nonregular ZIP entry',
+        'reparse_attribute': 'unsafe ZIP attributes',
+        'claimed_size': 'missing, mis-cased or wrong-size ZIP file',
+        'tampered_file': 'file hash differs',
+        'wrong_tree': 'source identity differs',
+        'wrong_root': 'logical root differs',
+        'wrong_config': 'configuration differs',
+        'missing_field': 'required JSON field is missing',
+        'duplicate_json_key': 'duplicate JSON member',
+        'case_duplicate_json_key': 'duplicate JSON member',
+        'nonintegral_mtime': 'mtime cannot be preserved exactly',
+        'oversized_claim': 'file size exceeds bound',
+        'missing_origin_license': 'origin license is not in verified payload',
+    }
     def add(name, mutate=None, extra=(), modes=None, raw=None, wrong_hash=False, corrupt=False, accept=False, omit_directory=None, reason=None):
+        reason = reason or rejection_reasons.get(name)
+        if not accept and not reason:
+            raise AssertionError(f'missing verifier rejection reason for {name}')
+        if accept and reason:
+            raise AssertionError(f'positive case has a rejection reason: {name}')
         files, manifest = sample()
         if mutate:
             mutate(files, manifest)
@@ -239,29 +275,31 @@ foreach ($case in $cases) {
   $accepted = $false; $z = $null; $reason = ''
   try {
     $inputStream = [IO.File]::OpenRead([string]$case.zip)
-    try { $a=New-Object object[] 1; $a[0]=$inputStream; [void]$bounds.Invoke($null,$a) } finally { $inputStream.Dispose() }
+    try { $a=[object[]]::new(1); $a[0]=$inputStream.psobject.BaseObject; [void]$bounds.Invoke($null,$a) } finally { $inputStream.Dispose() }
     $z = [IO.Compression.ZipFile]::OpenRead([string]$case.zip)
-    $a = New-Object object[] 2; $a[0]=$z; $a[1]=[string]$case.root
+    # MethodInfo.Invoke does not apply PowerShell's implicit unwrapping to
+    # object-array elements, notably strings emitted by Join-Path.
+    $a = [object[]]::new(2); $a[0]=$z.psobject.BaseObject; $a[1]=([string]$case.root).psobject.BaseObject
     $members = $membersMethod.Invoke($null,$a)
-    $a = New-Object object[] 1; $a[0]=$members['_bundle/manifest.json']
+    $a = [object[]]::new(1); $a[0]=($members['_bundle/manifest.json']).psobject.BaseObject
     [byte[]]$manifest = $small.Invoke($null,$a)
     $h=[Security.Cryptography.SHA256]::Create(); try { $actual=-join ($h.ComputeHash($manifest) | ForEach-Object { $_.ToString('x2') }) } finally { $h.Dispose() }
     if ($actual -cne $case.manifest_sha) { throw 'manifest hash differs' }
-    $a = New-Object object[] 5; $a[0]=$manifest; $a[1]=[string]$case.root; $a[2]=[string]$case.sha; $a[3]=[string]$case.tree; $a[4]='RelWithDebInfo'
+    $a = [object[]]::new(5); $a[0]=$manifest.psobject.BaseObject; $a[1]=([string]$case.root).psobject.BaseObject; $a[2]=([string]$case.sha).psobject.BaseObject; $a[3]=([string]$case.tree).psobject.BaseObject; $a[4]='RelWithDebInfo'
     $model = $modelMethod.Invoke($null,$a)
-    $a = New-Object object[] 2; $a[0]=$model; $a[1]=$members; [void]$match.Invoke($null,$a)
+    $a = [object[]]::new(2); $a[0]=$model.psobject.BaseObject; $a[1]=$members.psobject.BaseObject; [void]$match.Invoke($null,$a)
     $dir = Join-Path $OutputRoot ([string]$case.name); [void][IO.Directory]::CreateDirectory($dir)
     foreach ($record in $model.Files.Values) {
       $dest = Join-Path $dir ($record.Name.Replace('/','\'))
       [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($dest))
-      $a = New-Object object[] 3; $a[0]=$members[$record.Name]; $a[1]=$dest; $a[2]=[long]$record.Size
+      $a = [object[]]::new(3); $a[0]=($members[$record.Name]).psobject.BaseObject; $a[1]=$dest.psobject.BaseObject; $a[2]=[long]$record.Size
       $hash = [string]$extract.Invoke($null,$a)
       if ($hash -cne $record.Sha) { throw 'file hash differs' }
     }
     [byte[]]$pthBytes = [IO.File]::ReadAllBytes((Join-Path $dir 't\python\python312._pth'))
     if ($null -eq $pthBytes) { $pthBytes = [byte[]]::new(0) }
-    $a=New-Object object[] 3; $a[0]=$pthBytes; $a[1]=[string]$case.root; $a[2]=$model; [void]$pthCheck.Invoke($null,$a)
-    $a=New-Object object[] 2; $a[0]=$dir; $a[1]=$model; [void]$origins.Invoke($null,$a)
+    $a=[object[]]::new(3); $a[0]=$pthBytes.psobject.BaseObject; $a[1]=([string]$case.root).psobject.BaseObject; $a[2]=$model.psobject.BaseObject; [void]$pthCheck.Invoke($null,$a)
+    $a=[object[]]::new(2); $a[0]=$dir.psobject.BaseObject; $a[1]=$model.psobject.BaseObject; [void]$origins.Invoke($null,$a)
     $accepted = $true
   } catch { $accepted = $false; $reason = $_.Exception.GetBaseException().Message } finally { if ($z) { $z.Dispose() } }
   Write-Output ($case.name + '=' + $accepted.ToString().ToLowerInvariant())
@@ -270,14 +308,22 @@ foreach ($case in $cases) {
 # These use only synthetic paths under the test temporary directory.
 $streams = $t.GetMethod('Streams',$flags); $lockdir = $t.GetMethod('LockDirectory',$flags)
 $probe = Join-Path $OutputRoot 'stream-probe.txt'; [IO.File]::WriteAllText($probe,'synthetic')
-$a = New-Object object[] 2; $a[0]=$probe; $a[1]=$false; [void]$streams.Invoke($null,$a)
+$a = [object[]]::new(2); $a[0]=$probe.psobject.BaseObject; $a[1]=$false; [void]$streams.Invoke($null,$a)
 Set-Content -LiteralPath $probe -Stream 'untrusted' -Value 'synthetic named stream'
-$rejected=$false; try { [void]$streams.Invoke($null,$a) } catch { $rejected=$true }
+$rejected=$false; try { [void]$streams.Invoke($null,$a) } catch {
+  if ($_.Exception.GetBaseException().Message -cne 'named or unexpected data stream') { throw }
+  $rejected=$true
+}
 Write-Output ('named_stream_rejected=' + $rejected.ToString().ToLowerInvariant())
 $target = Join-Path $OutputRoot 'junction-target'; [void][IO.Directory]::CreateDirectory($target)
+$a = [object[]]::new(1); $a[0]=$target.psobject.BaseObject
+$handle=$lockdir.Invoke($null,$a); if ($handle) { $handle.Dispose() }
 $link = Join-Path $OutputRoot 'junction'; [void](New-Item -ItemType Junction -Path $link -Target $target)
-$a = New-Object object[] 1; $a[0]=$link
-$rejected=$false; try { $handle=$lockdir.Invoke($null,$a); if ($handle) { $handle.Dispose() } } catch { $rejected=$true }
+$a = [object[]]::new(1); $a[0]=$link.psobject.BaseObject
+$rejected=$false; try { $handle=$lockdir.Invoke($null,$a); if ($handle) { $handle.Dispose() } } catch {
+  if ($_.Exception.GetBaseException().Message -cne 'reparse point or symlink') { throw }
+  $rejected=$true
+}
 Write-Output ('junction_rejected=' + $rejected.ToString().ToLowerInvariant())
 '''
 
@@ -382,11 +428,27 @@ class StaticBootstrapTests(unittest.TestCase):
                     self.assertEqual((record['bytes'], record['sha256']), (len(contents), digest(contents)))
                     self.assertEqual(digest(z.read('_bundle/manifest.json')), case['manifest_sha'])
 
+    def test_negative_controls_require_verifier_reasons(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cases = make_cases(Path(tmp))
+            self.assertTrue(all(case['reason'] for case in cases if not case['accept']))
+            reasons = {case['name']: case['reason'] for case in cases}
+            self.assertEqual(reasons['duplicate_file'], 'duplicate or colliding ZIP member')
+            self.assertEqual(reasons['missing_origin_license'], 'origin license is not in verified payload')
+        # These arguments come from provider output, which can carry a PSObject
+        # wrapper even though the underlying value is a System.String.
+        for name in ('$dest', '$dir', '$probe', '$target', '$link'):
+            self.assertIn(name + '.psobject.BaseObject', HARNESS)
+        self.assertIn("-cne 'named or unexpected data stream'", HARNESS)
+        self.assertIn("-cne 'reparse point or symlink'", HARNESS)
+
 @unittest.skipUnless(os.name == 'nt', 'actual .NET ZIP and NTFS tests require Windows')
 class WindowsVerifierTests(unittest.TestCase):
     def test_actual_embedded_verifier_rejects_malformed_cases(self):
         with tempfile.TemporaryDirectory() as tmp:
-            directory = Path(tmp)
+            # Windows TEMP may use an 8.3 alias. The verifier deliberately
+            # rejects such aliases, so provide the actual long path here.
+            directory = Path(tmp).resolve()
             cases = make_cases(directory)
             (directory / 'cases.json').write_text(json.dumps(cases), encoding='utf-8')
             text = SCRIPT.read_text(encoding='utf-8')

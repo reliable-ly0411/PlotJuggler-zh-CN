@@ -111,7 +111,7 @@ class InstallerResourceSmokeTests(unittest.TestCase):
 
     def test_offline_extraction_checks_both_hashes_before_running_7z(self):
         with tempfile.TemporaryDirectory(prefix='ifw offline space ') as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             archive, extractor, destination = root / 'ifw.7z', root / '7z.exe', root / 'ifw tools'
             archive.write_bytes(b'fake official archive')
             extractor.write_bytes(b'fake verified extractor')

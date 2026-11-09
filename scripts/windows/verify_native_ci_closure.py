@@ -604,11 +604,16 @@ def parse_7z_listing(raw):
 def _qt_selected_files(qt):
     """Select runtime Qt bytes and original installed notices, never build files."""
     qt = Path(qt)
+    if not qt.is_dir():
+        raise ClosureError('Qt runtime files are absent or case-colliding')
+    wanted_dirs = {'bin', 'plugins', 'qml', 'translations', 'licenses', 'sbom'}
+    # Enumerate actual directory entries once. Looking up both "licenses" and
+    # "LICENSES" separately on Windows visits the same directory twice.
+    directories = [p for p in qt.iterdir() if p.name.casefold() in wanted_dirs and p.is_dir()]
+    if len({p.name.casefold() for p in directories}) != len(directories):
+        raise ClosureError('Qt runtime files are absent or case-colliding')
     paths = []
-    for directory in ('bin', 'plugins', 'qml', 'translations', 'licenses', 'LICENSES', 'sbom'):
-        base = qt / directory
-        if not base.is_dir():
-            continue
+    for base in directories:
         for path in base.rglob('*'):
             if not path.is_file():
                 continue
@@ -2595,6 +2600,11 @@ def candidate_provenance(root, policy, source_sha, source_tree, logical_root, ca
     return value
 
 
+def _candidate_build_root(source_sha):
+    """Return the one fixed build root used by the disposable producer."""
+    return 'C:\\Users\\Administrator\\PlotJuggler-4.1.0-zh-test-558a\\n\\' + str(source_sha)[:12]
+
+
 def prepare_candidate_receipt(root, candidate_path, report_path, policy_path, output):
     """Build only a pre-execution candidate after all real inputs close."""
     root, output = Path(root).absolute(), Path(output).absolute()
@@ -2611,7 +2621,7 @@ def prepare_candidate_receipt(root, candidate_path, report_path, policy_path, ou
             not isinstance(candidate.get('origins'), dict) or not isinstance(report, dict)):
         raise ClosureError('candidate, source-reviewed policy or verifier identity is invalid')
     sha, tree, logical = (report.get(x) for x in ('source_sha', 'source_tree', 'logical_root'))
-    required_root = 'C:\\Users\\Administrator\\PlotJuggler-4.1.0-zh-test-558a\\n\\' + str(sha)[:12]
+    required_root = _candidate_build_root(sha)
     if (not re.fullmatch(r'[0-9a-f]{40}', str(sha)) or not re.fullmatch(r'[0-9a-f]{40}', str(tree)) or
             os.environ.get('GITHUB_SHA') != sha or report.get('configuration') != 'RelWithDebInfo' or
             audit.windows_root(logical) != logical or logical != required_root):

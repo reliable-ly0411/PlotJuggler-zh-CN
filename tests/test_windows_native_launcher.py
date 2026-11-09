@@ -421,7 +421,7 @@ class LauncherTests(unittest.TestCase):
     def test_app_guard_requires_actual_dedicated_ci_build_and_ctest_evidence(self):
         for defect in ('none', 'unrelated_executable', 'missing_test_dir', 'spoofed_binary', 'missing_case', 'skip'):
             with self.subTest(defect=defect), tempfile.TemporaryDirectory() as directory:
-                root = Path(directory); config = 'RelWithDebInfo'
+                root = Path(directory).resolve(); config = 'RelWithDebInfo'
                 paths = {'app_guard_probe': 'b/app-marker-probe/RelWithDebInfo/native_app_marker_probe.exe',
                          'app_guard_validation': '_bundle/guard.json', 'application': 'b/app.exe',
                          'qt': 'q', 'ctest': 't/cmake/bin/ctest.exe'}

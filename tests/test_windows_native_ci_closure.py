@@ -6,6 +6,7 @@ import hashlib
 import io
 import json
 import importlib.util
+import os
 from pathlib import Path
 import tempfile
 import types
@@ -552,8 +553,9 @@ class CandidateReceiptTests(unittest.TestCase):
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
-        self.root = Path(self.tmp.name)
-        self.logical = 'C:\\Users\\Administrator\\PlotJuggler-4.1.0-zh-test-558a\\n\\' + SHA[:12]
+        self.root = Path(self.tmp.name).resolve() / 'n' / SHA[:12]
+        self.root.mkdir(parents=True)
+        self.logical = str(self.root) if os.name == 'nt' else 'C:\\Users\\Administrator\\PlotJuggler-4.1.0-zh-test-558a\\n\\' + SHA[:12]
         self.output = self.root / 'b/native-kit/closure-evidence'; self.output.mkdir(parents=True)
         self.policy_path = self.root / 's/.github/windows-native-kit/ci-closure-policy.json'
         self.candidate = self.root / 'b/native-kit/stage-candidate.json'
@@ -588,6 +590,8 @@ class CandidateReceiptTests(unittest.TestCase):
             return self.launcher if filename == 'run_native_test_bundle.py' else self.driver
         with contextlib.ExitStack() as stack:
             stack.enter_context(mock.patch.dict(closure.os.environ, {'GITHUB_SHA': SHA, 'SystemRoot': 'C:\\Windows'}))
+            # Keep the real strict root check while using only an owned temp tree.
+            stack.enter_context(mock.patch.object(closure, '_candidate_build_root', return_value=self.logical))
             for name, replacement in {'run': git}.items(): stack.enter_context(mock.patch.object(closure.subprocess, name, side_effect=replacement))
             stack.enter_context(mock.patch.object(closure, '_module', side_effect=module))
             for name, result in {'derive_partition': {'schema': 1}, 'derive_dynamic_inventory': {'basis': 'source-analysis'},
@@ -617,6 +621,26 @@ class CandidateReceiptTests(unittest.TestCase):
         for control in ('verify_conan_graph', 'verify_generated_media', 'source_paths_match'):
             with self.subTest(control=control), self.assertRaises(closure.ClosureError): self.execute(control)
             self.assertFalse((self.output / 'receipt.json').exists())
+
+    def test_fixed_producer_root_and_policy_verifier_pin(self):
+        self.assertEqual(closure._candidate_build_root(SHA),
+                         'C:\\Users\\Administrator\\PlotJuggler-4.1.0-zh-test-558a\\n\\' + SHA[:12])
+        policy = json.loads((ROOT / '.github/windows-native-kit/ci-closure-policy.json').read_text(encoding='utf-8'))
+        self.assertEqual(policy['verifier_sha256'], closure.digest(Path(closure.__file__)))
+        candidate_policy = json.loads(self.policy_path.read_text(encoding='utf-8'))
+        candidate_policy['verifier_sha256'] = '0' * 64
+        self.policy_path.write_text(json.dumps(candidate_policy), encoding='utf-8')
+        with self.assertRaisesRegex(closure.ClosureError, 'verifier identity is invalid'):
+            self.execute()
+        self.assertFalse((self.output / 'receipt.json').exists())
+
+    def test_wrong_producer_root_does_not_write_receipt(self):
+        report = json.loads(self.report.read_text(encoding='utf-8'))
+        report['logical_root'] = self.logical.replace('\\n\\', '\\other\\n\\')
+        self.report.write_text(json.dumps(report), encoding='utf-8')
+        with self.assertRaisesRegex(closure.ClosureError, 'actual CI source and fixed root'):
+            self.execute()
+        self.assertFalse((self.output / 'receipt.json').exists())
 
 
 class StagedReceiptTests(unittest.TestCase):
@@ -1378,6 +1402,34 @@ class QtExtractionTests(unittest.TestCase):
         origin = next(iter(result['origins'].values()))
         self.assertEqual(origin['revision'], self.policy['qt_archives'][0]['sha256'])
         self.assertIn('q/6.12.0/msvc2022_64/licenses/qtbase/LICENSE.txt', origin['license_files'])
+
+    def test_windows_case_alias_is_scanned_once(self):
+        # Simulate a case-insensitive lookup even on a case-sensitive host.
+        # Looking up both spellings must not enumerate the same directory twice.
+        real_is_dir, real_rglob = Path.is_dir, Path.rglob
+        alias = str(self.qt / 'LICENSES')
+        def is_dir(path):
+            return True if str(path) == alias else real_is_dir(path)
+        def rglob(path, pattern):
+            return real_rglob(self.qt / 'licenses', pattern) if str(path) == alias else real_rglob(path, pattern)
+        with mock.patch.object(Path, 'is_dir', is_dir), mock.patch.object(Path, 'rglob', rglob):
+            selected, notices = closure._qt_selected_files(self.qt)
+        self.assertEqual(set(selected), set(self.contents))
+        self.assertEqual(notices, ['licenses/qtbase/LICENSE.txt'])
+
+    def test_distinct_case_colliding_qt_directories_are_rejected(self):
+        # Simulate two distinct directory entries even on a Windows volume,
+        # where creating such a pair may be unavailable.
+        real_iterdir, real_is_dir = Path.iterdir, Path.is_dir
+        alias = self.qt / 'LICENSES'
+        def iterdir(path):
+            entries = list(real_iterdir(path))
+            return iter(entries + [alias]) if str(path) == str(self.qt) else iter(entries)
+        def is_dir(path):
+            return True if str(path) == str(alias) else real_is_dir(path)
+        with mock.patch.object(Path, 'iterdir', iterdir), mock.patch.object(Path, 'is_dir', is_dir):
+            with self.assertRaisesRegex(closure.ClosureError, 'case-colliding'):
+                closure._qt_selected_files(self.qt)
 
     def test_changed_extracted_member_and_missing_notice_fail(self):
         self.tamper = True

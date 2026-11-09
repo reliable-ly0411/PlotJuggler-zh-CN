@@ -59,7 +59,7 @@ def verify_manifest(directory, expected_sha):
 class GeneratedMediaImportTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='native-media-import-'); self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name); self.root = self.base / 'root'; self.source = self.root / 's'
+        self.base = Path(self.temp.name).resolve(); self.root = self.base / 'root'; self.source = self.root / 's'
         self.source.mkdir(parents=True); (self.root / 'b/native-kit').mkdir(parents=True); (self.root / 'i').mkdir()
         self.git('init', '-q'); self.write_source('LICENSE', b'project license')
         self.write_source('pj_scene2D/testdata/README.md', b'tracked readme')
@@ -86,7 +86,12 @@ class GeneratedMediaImportTests(unittest.TestCase):
 
     def refresh_identity(self):
         self.sha, self.tree = self.git('rev-parse', 'HEAD'), self.git('rev-parse', 'HEAD^{tree}')
-        self.logical = 'C:\\Test Root\\n\\' + self.sha[:12]
+        root = self.base / 'n' / self.sha[:12]
+        root.parent.mkdir(exist_ok=True)
+        if self.root != root:
+            self.root.rename(root)
+        self.root, self.source = root, root / 's'
+        self.logical = str(root) if os.name == 'nt' else 'C:\\Test Root\\n\\' + self.sha[:12]
 
     def write_source(self, relative, data):
         target = self.source / relative; target.parent.mkdir(parents=True, exist_ok=True); target.write_bytes(data)
@@ -157,7 +162,7 @@ class GeneratedMediaImportTests(unittest.TestCase):
                                                'commit', '-qm', 'tracked target'); self.refresh_identity()
         with self.env(), self.assertRaisesRegex(planner.PlanError, 'Git-tracked'):
             self.run_import()
-        self.assertEqual(path.read_bytes(), b'keep')
+        self.assertEqual((self.root / PATHS[0]).read_bytes(), b'keep')
 
 
 if __name__ == '__main__':

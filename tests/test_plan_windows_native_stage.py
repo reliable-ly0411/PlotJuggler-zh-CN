@@ -236,7 +236,7 @@ class CandidateTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='native plan ')
         self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.root = self.base / 'root'; self.root.mkdir()
         self.source = self.root / 's'; self.source.mkdir()
         self.git('init', '-q')
@@ -246,7 +246,7 @@ class CandidateTests(unittest.TestCase):
         self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'fixture')
         self.sha = self.git('rev-parse', 'HEAD')
         self.tree = self.git('rev-parse', 'HEAD^{tree}')
-        self.logical = 'C:\\Test Root\\n\\' + self.sha[:12]
+        self.place_identity_root()
         self.build = self.root / 'b'; self.build.mkdir()
         self.i18n = self.root / 'i'; self.i18n.mkdir()
         for directory in (self.build, self.i18n):
@@ -258,6 +258,18 @@ class CandidateTests(unittest.TestCase):
         (self.build / '_deps/sdk-build/CTestTestfile.cmake').write_text('# SDK tests', encoding='utf-8')
         (self.build / 'csv-plugin-work/unrelated').mkdir(parents=True)
         (self.build / 'csv-plugin-work/unrelated/CTestTestfile.cmake').write_text('# unrelated build', encoding='utf-8')
+
+    def place_identity_root(self):
+        # A real Windows run must exercise the strict build-root check. Move the
+        # disposable fixture whenever its synthetic commit changes.
+        root = self.base / 'n' / self.sha[:12]
+        root.parent.mkdir(exist_ok=True)
+        if self.root != root:
+            self.root.rename(root)
+        self.root, self.source = root, root / 's'
+        if hasattr(self, 'build'):
+            self.build, self.i18n = root / 'b', root / 'i'
+        self.logical = str(root) if os.name == 'nt' else 'C:\\Test Root\\n\\' + self.sha[:12]
 
     def git(self, *args):
         result = subprocess.run(['git', '-C', str(self.source), *map(str, args)], capture_output=True, text=True)
@@ -317,7 +329,7 @@ class CandidateTests(unittest.TestCase):
         self.git('add', '.')
         self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'synthetic review')
         self.sha, self.tree = self.git('rev-parse', 'HEAD'), self.git('rev-parse', 'HEAD^{tree}')
-        self.logical = 'C:\\Test Root\\n\\' + self.sha[:12]
+        self.place_identity_root()
         plan, report = self.candidate().finish({})
         plan_path = self.base / 'candidate.json'; plan_path.write_text(json.dumps(plan), encoding='utf-8')
         report_path = self.base / 'gaps.json'; report_path.write_text(json.dumps(report), encoding='utf-8')
@@ -351,7 +363,8 @@ class CandidateTests(unittest.TestCase):
         self.git('add', '.')
         self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'synthetic policy')
         self.sha, self.tree = self.git('rev-parse', 'HEAD'), self.git('rev-parse', 'HEAD^{tree}')
-        self.logical = 'C:\\Test Root\\n\\' + self.sha[:12]
+        self.place_identity_root()
+        marker_source = self.source / 'pj_runtime/src/ActiveWidgetsMarker.cpp'
         kit = self.build / 'native-kit'; kit.mkdir()
         graph = self.build / 'conan-install-graph.json'; graph.write_text('{}', encoding='utf-8')
         doc = self.listing(executable='t/python/python.exe')
@@ -588,7 +601,7 @@ class CandidateTests(unittest.TestCase):
         self.git('add', '.github/windows-native-kit/tool-pins.json')
         self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'tool pins')
         self.sha, self.tree = self.git('rev-parse', 'HEAD'), self.git('rev-parse', 'HEAD^{tree}')
-        self.logical = 'C:\\Test Root\\n\\' + self.sha[:12]
+        self.place_identity_root()
         for name, values in [('python', python_files), ('cmake', cmake_files)]:
             for path, data in values.items():
                 target = self.root / 't' / name / path; target.parent.mkdir(parents=True, exist_ok=True)
@@ -700,7 +713,7 @@ class CandidateTests(unittest.TestCase):
         self.git('add', 'conan.lock')
         self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'SDK lock')
         self.sha, self.tree = self.git('rev-parse', 'HEAD'), self.git('rev-parse', 'HEAD^{tree}')
-        self.logical = 'C:\\Test Root\\n\\' + self.sha[:12]
+        self.place_identity_root()
         self.seed_conan_cpython()
         package = self.root / 'c/p/sdk-test/p'
         data = {name: ('synthetic fixture ' + name).encode() for name in contract.SDK_FIXTURE_FILES}
@@ -777,7 +790,7 @@ class CandidateTests(unittest.TestCase):
         self.git('add', 'conan.lock')
         self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'synthetic Conan lock')
         self.sha, self.tree = self.git('rev-parse', 'HEAD'), self.git('rev-parse', 'HEAD^{tree}')
-        self.logical = 'C:\\Test Root\\n\\' + self.sha[:12]
+        self.place_identity_root()
         python_root = self.logical + r'\c\p\cpython-test\p'
         node1 = {'context': 'host', 'package_folder': python_root, 'ref': refs[0], 'rrev': 'c' * 32,
                  'package_id': 'a' * 40, 'prev': 'b' * 32}
@@ -847,7 +860,7 @@ class CandidateTests(unittest.TestCase):
         self.git('add', *source_files)
         self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'locked inputs')
         self.sha, self.tree = self.git('rev-parse', 'HEAD'), self.git('rev-parse', 'HEAD^{tree}')
-        self.logical = 'C:\\Test Root\\n\\' + self.sha[:12]
+        self.place_identity_root()
         for path, data in [('b/ci-fonts/NotoSansCJKsc-Regular.otf', font), ('b/ci-fonts/LICENSE', font_license),
                            ('b/csv-prefix/lib/plotjuggler/plugins/csv-loader/csv.dll', b'csv plugin'),
                            ('b/csv-prefix/share/licenses/localized-plugins/csv-loader/LICENSE', b'csv license'),
@@ -957,7 +970,7 @@ class CandidateTests(unittest.TestCase):
         self.git('add', *additions)
         self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'run plan sources')
         self.sha, self.tree = self.git('rev-parse', 'HEAD'), self.git('rev-parse', 'HEAD^{tree}')
-        self.logical = 'C:\\Test Root\\n\\' + self.sha[:12]
+        self.place_identity_root()
         self.seed_conan_cpython()
         (self.i18n / 'native-kit').mkdir()
         plugin_rel = 'b/csv-prefix/lib/plotjuggler/plugins/csv-loader/csv.dll'
@@ -1101,8 +1114,10 @@ class CMakeFileApiCandidateTests(unittest.TestCase):
     """Synthetic File API replies only; no Windows build or dynamic-load claim."""
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
-        self.root = Path(self.tmp.name); self.sha = '1' * 40; self.tree = '2' * 40
-        self.logical = 'C:\\Testing\\n\\' + self.sha[:12]
+        self.sha = '1' * 40; self.tree = '2' * 40
+        self.root = Path(self.tmp.name).resolve() / 'n' / self.sha[:12]
+        self.root.mkdir(parents=True)
+        self.logical = str(self.root) if os.name == 'nt' else 'C:\\Testing\\n\\' + self.sha[:12]
         (self.root / 's').mkdir()
         self.reply = self.root / 'b/.cmake/api/v1/reply'; self.reply.mkdir(parents=True)
         self.query = self.root / 'b/.cmake/api/v1/query/codemodel-v2'; self.query.parent.mkdir(parents=True)
@@ -1230,8 +1245,10 @@ class CMakeRuleSelectionTests(unittest.TestCase):
     """Exercise actual reviewed partition and fixture closure with synthetic discovery."""
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
-        self.root = Path(self.tmp.name); self.sha = '1' * 40; self.tree = '2' * 40
-        self.logical = 'C:\\Testing\\n\\' + self.sha[:12]
+        self.sha = '1' * 40; self.tree = '2' * 40
+        self.root = Path(self.tmp.name).resolve() / 'n' / self.sha[:12]
+        self.root.mkdir(parents=True)
+        self.logical = str(self.root) if os.name == 'nt' else 'C:\\Testing\\n\\' + self.sha[:12]
         self.contract = planner.load_module('test_real_partition_contract', 'verify_native_ci_closure.py')
         self.launcher = planner.load_module('test_real_selection_launcher', 'run_native_test_bundle.py')
         self.ci = planner.load_module('test_real_selection_ci', 'run_native_ci_verification.py')

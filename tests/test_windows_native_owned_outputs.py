@@ -44,7 +44,7 @@ class OwnedOutputSourceTests(unittest.TestCase):
         # Minimal imported Qt targets permit configure/discovery without claiming
         # a Qt build or executing any test executable.
         with tempfile.TemporaryDirectory() as temp:
-            base = Path(temp); fake = base / 'fake/lib/cmake/Qt6'; fake.mkdir(parents=True)
+            base = Path(temp).resolve(); fake = base / 'fake/lib/cmake/Qt6'; fake.mkdir(parents=True)
             (fake / 'Qt6ConfigVersion.cmake').write_text('set(PACKAGE_VERSION "6.12.0")\nset(PACKAGE_VERSION_COMPATIBLE TRUE)\nset(PACKAGE_VERSION_EXACT TRUE)\n', encoding='utf-8')
             (fake / 'Qt6Config.cmake').write_text('''set(Qt6_FOUND TRUE)
 set(Qt6_VERSION 6.12.0)
