@@ -95,8 +95,10 @@ class LddProvenanceTests(unittest.TestCase):
                   '/unexpected-tool-that-does-not-exist:\n\t/lib64/ld.so (0x1)\n')
         paths = LD.dependency_paths(output)
         self.assertIn('/unexpected-tool-that-does-not-exist:', paths)
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(OSError) as error:
             LD.record_paths(['/unexpected-tool-that-does-not-exist:'])
+        self.assertTrue(isinstance(error.exception, FileNotFoundError) or
+                        (os.name == 'nt' and getattr(error.exception, 'winerror', None) == 123))
 
     def test_optimized_python_is_rejected(self):
         result = subprocess.run([sys.executable, '-O', str(Path(LD.__file__))], capture_output=True, text=True)

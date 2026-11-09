@@ -1,4 +1,7 @@
 versions.env text eol=lf
+# This verifier is checked against the source-reviewed SHA-256, including in
+# source preflight checkouts that inherit the host's Git line-ending settings.
+scripts/windows/verify_native_ci_closure.py text eol=lf
 # Shell entry points must execute identically in Git Bash and POSIX shells.
 *.sh text eol=lf
 *.bat text eol=crlf

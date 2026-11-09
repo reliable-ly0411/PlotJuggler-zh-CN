@@ -240,6 +240,9 @@ class CandidateTests(unittest.TestCase):
         self.root = self.base / 'root'; self.root.mkdir()
         self.source = self.root / 's'; self.source.mkdir()
         self.git('init', '-q')
+        # Match the isolated verifier's Git configuration even when the host
+        # globally enables CRLF conversion for this synthetic repository.
+        self.git('config', '--local', 'core.autocrlf', 'false')
         (self.source / 'LICENSE').write_text('source license', encoding='utf-8')
         (self.source / 'fixture.txt').write_text('tracked test fixture', encoding='utf-8')
         self.git('add', 'LICENSE', 'fixture.txt')
@@ -278,6 +281,27 @@ class CandidateTests(unittest.TestCase):
 
     def candidate(self, declarations=None):
         return planner.Candidate(self.root, self.logical, self.sha, self.tree, declarations)
+
+    def test_fixture_autocrlf_does_not_mask_changed_source(self):
+        inherited = self.base / 'global.gitconfig'
+        inherited.write_text('[core]\n    autocrlf = true\n', encoding='utf-8')
+        content = b'print(1)\r\nprint(2)\r\n'
+        source = self.source / 'crlf-fixture.py'; source.write_bytes(content)
+        with mock.patch.dict(os.environ, {'GIT_CONFIG_GLOBAL': str(inherited), 'GIT_CONFIG_NOSYSTEM': '1'}):
+            self.git('add', 'crlf-fixture.py')
+            self.git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'CRLF fixture')
+            self.sha, self.tree = self.git('rev-parse', 'HEAD'), self.git('rev-parse', 'HEAD^{tree}')
+            self.place_identity_root()
+            source = self.source / 'crlf-fixture.py'
+            info = source.stat()
+            os.utime(source, ns=(info.st_atime_ns, info.st_mtime_ns + 2_000_000_000))
+            blob = subprocess.check_output(['git', '-C', str(self.source), 'show', 'HEAD:crlf-fixture.py'],
+                                           env=planner.git_environment())
+            self.assertEqual(blob, content)
+            self.candidate()
+            source.write_bytes(b'print(9)\r\nprint(2)\r\n')
+            with self.assertRaisesRegex(planner.PlanError, 'source checkout is not clean'):
+                self.candidate()
 
     def listing(self, name='Fixture.works', executable='b/RelWithDebInfo/runner.exe'):
         def winpath(relative):

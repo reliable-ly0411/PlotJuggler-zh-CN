@@ -93,11 +93,13 @@ jobs:
           parsed = urllib.parse.urlsplit(url)
           assert parsed.scheme in ('http', 'https') and parsed.hostname in ('archive.ubuntu.com', 'security.ubuntu.com')
           assert not parsed.username and not parsed.password and not parsed.query and not parsed.fragment
-          assert re.fullmatch(r'SHA256:[0-9a-fA-F]{64}', checksum)
+          assert re.fullmatch(r'(?:SHA256:[0-9a-fA-F]{64}|SHA512:[0-9a-fA-F]{128})', checksum)
           packages = list((evidence / 'downloads').glob('*.deb'))
           assert len(packages) == 1 and packages[0].name == filename and packages[0].stat().st_size == int(size)
           value = hashlib.file_digest(packages[0].open('rb'), 'sha256').hexdigest()
-          assert value == checksum.split(':', 1)[1].lower(), 'downloaded .deb differs from signed APT index'
+          algorithm, printed_hash = checksum.split(':', 1)
+          actual_hash = value if algorithm == 'SHA256' else hashlib.file_digest(packages[0].open('rb'), 'sha512').hexdigest()
+          assert actual_hash == printed_hash.lower(), 'downloaded .deb differs from APT URI checksum'
           stanzas = (evidence / 'apt-show.txt').read_text(encoding='utf-8').strip().split('\n\n')
           matches = []
           for stanza in stanzas:
@@ -105,6 +107,7 @@ jobs:
               if fields.get('Package') == 'ffmpeg' and fields.get('Version') == version:
                   matches.append(fields)
           assert len(matches) == 1 and matches[0].get('SHA256', '').lower() == value
+          assert matches[0].get(algorithm, '').lower() == actual_hash and matches[0].get('Size') == size
           assert parsed.path.endswith('/' + matches[0]['Filename'])
           provenance = {'package': 'ffmpeg', 'version': version, 'url': url, 'sha256': value,
                         'apt_signature_evidence': 'pj-media-evidence/apt-signatures'}

@@ -8,6 +8,8 @@ import json
 import importlib.util
 import os
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import types
 import unittest
@@ -641,6 +643,37 @@ class CandidateReceiptTests(unittest.TestCase):
         with self.assertRaisesRegex(closure.ClosureError, 'actual CI source and fixed root'):
             self.execute()
         self.assertFalse((self.output / 'receipt.json').exists())
+
+
+@unittest.skipUnless(shutil.which('git'), 'Git is required')
+class SourcePinCheckoutTests(unittest.TestCase):
+    def test_verifier_sha_is_preserved_when_checkout_enables_autocrlf(self):
+        policy = json.loads((ROOT / '.github/windows-native-kit/ci-closure-policy.json').read_text(encoding='utf-8'))
+        verifier = Path(closure.__file__).read_bytes()
+        expected = policy['verifier_sha256']
+        self.assertEqual(hashlib.sha256(verifier).hexdigest(), expected)
+        with tempfile.TemporaryDirectory(prefix='native-pin-checkout-') as temp:
+            repo = Path(temp).resolve()
+            protected = repo / 'scripts/windows/verify_native_ci_closure.py'
+            protected.parent.mkdir(parents=True)
+            protected.write_bytes(verifier)
+            control = repo / 'unprotected.py'; control.write_bytes(verifier)
+            (repo / '.gitattributes').write_bytes((ROOT / '.gitattributes').read_bytes())
+            env = {key: value for key, value in os.environ.items() if not key.upper().startswith('GIT_')}
+            env.update(GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull, GIT_ATTR_NOSYSTEM='1')
+            def git(*args):
+                return subprocess.run(['git', '-C', str(repo), '-c', 'core.autocrlf=true',
+                                       '-c', 'core.safecrlf=false', *args], env=env,
+                                      capture_output=True, check=True).stdout
+            git('init', '-q')
+            git('add', '.gitattributes', protected.relative_to(repo).as_posix(), 'unprotected.py')
+            git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'checkout fixture')
+            protected.unlink(); control.unlink()
+            git('checkout', '--', protected.relative_to(repo).as_posix(), 'unprotected.py')
+            self.assertEqual(hashlib.sha256(protected.read_bytes()).hexdigest(), expected)
+            self.assertEqual(protected.read_bytes(), verifier)
+            self.assertIn(b'\r\n', control.read_bytes())
+            self.assertNotEqual(hashlib.sha256(control.read_bytes()).hexdigest(), expected)
 
 
 class StagedReceiptTests(unittest.TestCase):
