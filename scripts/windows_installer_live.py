@@ -56,12 +56,13 @@ def fixture_overrides(controller):
 
 
 def validate_records(records, fixture, controller, targets, parse_argv=windows_argv):
-    expected = ['introduction', 'target-before-edit', 'target-edited', 'before-switch',
-                'introduction', 'target-before-edit', 'target-edited', 'before-switch',
-                'introduction', 'finished']
+    expected = ['introduction', 'component-metadata', 'target-before-edit', 'target-edited', 'before-switch',
+                'introduction', 'component-metadata', 'target-before-edit', 'target-edited', 'before-switch',
+                'introduction', 'component-metadata', 'finished']
     if [r['kind'] for r in records] != expected:
         raise AssertionError('Unexpected controller event sequence')
     intros = [r for r in records if r['kind'] == 'introduction']
+    metadata = [r for r in records if r['kind'] == 'component-metadata']
     if len({r['pid'] for r in intros}) != 3:
         raise AssertionError('Expected three distinct real installer processes')
     for i, row in enumerate(intros):
@@ -72,7 +73,11 @@ def validate_records(records, fixture, controller, targets, parse_argv=windows_a
         expected_description = ('安装 PlotJuggler 4 简体中文版及随附的 Qt、FFmpeg 和 Python 运行库。'
                                 if language == 'zh_CN' else
                                 'Install PlotJuggler 4 zh-CN with its bundled Qt, FFmpeg and Python runtime.')
-        if row['componentName'] != expected_name or row['componentDescription'] != expected_description:
+        component = metadata[i]
+        if (component['pid'] != row['pid'] or component['language'] != row['language'] or
+                normalized(component['target']) != normalized(row['target'])):
+            raise AssertionError('Component metadata observation does not match its installer process')
+        if component['componentName'] != expected_name or component['componentDescription'] != expected_description:
             raise AssertionError('Live component metadata translation mismatch')
         for key in ('desktopDir', 'startMenuDir', 'productUUID'):
             if not row[key] or row[key] != intros[0][key]:
@@ -125,9 +130,10 @@ def validate_records(records, fixture, controller, targets, parse_argv=windows_a
         if normalized(row['field']) != normalized(targets[i + 1]) or normalized(row['target']) != normalized(targets[i + 1]):
             raise AssertionError('Real target field signal did not update TargetDir')
     # Print only scoped UI/state evidence. Do not dump host paths/command lines.
-    for row in intros:
-        print('LIVE STANDARD UI:', json.dumps({key: row[key] for key in
-              ('language', 'title', 'message', 'nextButton', 'cancelButton', 'componentName', 'componentDescription')}, ensure_ascii=True))
+    for row, component in zip(intros, metadata):
+        observed = {key: row[key] for key in ('language', 'title', 'message', 'nextButton', 'cancelButton')}
+        observed.update({key: component[key] for key in ('componentName', 'componentDescription')})
+        print('LIVE STANDARD UI:', json.dumps(observed, ensure_ascii=True))
     print('PASS: real zh_CN -> en_US -> zh_CN restarts; three PIDs; --script, --root and edited TargetDir preserved.')
 
 
@@ -140,6 +146,16 @@ def fixture_arguments(fixture, controller, target):
             'PJProbeMarker=中文 space user@example.test', '--script', str(controller),
             '--root', str(target), 'TargetDir=' + str(target)] + [
                 key + '=' + value for key, value in fixture_overrides(controller).items()]
+
+
+def require_unchanged_final_records(log, snapshot):
+    """Reject any events written after the completed snapshot was validated."""
+    try:
+        final = [json.loads(line) for line in log.read_text(encoding='utf-8-sig').splitlines() if line]
+    except (ValueError, OSError) as error:
+        raise AssertionError('Could not read the final controller event log') from error
+    if final != snapshot:
+        raise AssertionError('Controller event log changed after completion')
 
 
 def probe_gui(fixture, temporary, powershell, template):
@@ -191,6 +207,7 @@ def probe_gui(fixture, temporary, powershell, template):
                         wait_exit = "$end=(Get-Date).AddSeconds(5); do { $live=" + query + "; if (!$live.Count) { exit 0 }; Start-Sleep -Milliseconds 200 } while ((Get-Date) -lt $end); throw 'Final fixture did not quit naturally'"
                         subprocess.run([str(powershell), '-NoProfile', '-NonInteractive', '-Command', wait_exit],
                                        check=True, capture_output=True, timeout=15)
+                        require_unchanged_final_records(log, records)
                         diagnostic = output.read_text(encoding='utf-8', errors='replace')
                         cache_lines = metadata_cache_paths(diagnostic)
                         if not cache_lines or any(normalized(Path(path).resolve()) != normalized(cache.resolve())
