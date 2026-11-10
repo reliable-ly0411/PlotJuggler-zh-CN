@@ -1,6 +1,6 @@
 # PlotJuggler 4 简体中文开发说明
 
-本开发线在官方 `main-4.x` 的真实 Git 历史上实现中文界面及 ArduPilot
+本开发线在官方 PJ4 `main`（原 `main-4.x`）的真实 Git 历史上实现中文界面及 ArduPilot
 DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.rc.4`**，为第四个开发发布候选，GitHub 状态仍为预发布。
 `zh-CN-4.x` 为稳定线，`zh-CN-4.x-dev` 为开发集成线；主题变更通过保留提交的
 合并进入开发线，验证及发布准备完成后再晋级稳定线。初始化为空白上游基线的稳定分支
@@ -10,7 +10,7 @@ DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.rc.4`**，为第四个�
 
 | 项目 | 基准 |
 |---|---|
-| PlotJuggler 官方上游 | `PlotJuggler/PlotJuggler`，`main-4.x` |
+| PlotJuggler 官方上游 | `PlotJuggler/PlotJuggler`，`main`（PJ4） |
 | 精确上游提交 | `0345ec513bde7f05ad3148548ac30401f2b6f7a7` |
 | 3.x 翻译参考 | 本仓库 `zh-CN` 的 `766a88d8e689c7803f32acb315ac872a0a67a57b` |
 | Qt | `6.11.1`，以 `versions.env` 为准 |
