@@ -188,6 +188,7 @@ jobs:
         if: runner.os == 'Linux'
         id: conan-linux
         run: |
+          python scripts/bootstrap_host_sdk.py
           conan install . --output-folder=build --build=missing \
             -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial \
             -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 \
@@ -204,6 +205,7 @@ jobs:
           # MSYS pkg-config search path. Let the locked dependency graph own it.
           # https://github.com/conan-io/setup-conan#using-setup-python-action-alongside-setup-conan
           Remove-Item Env:PKG_CONFIG_PATH -ErrorAction SilentlyContinue
+          python scripts/bootstrap_host_sdk.py
           conan install . --output-folder=build --build=missing `
             -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial `
             -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 `

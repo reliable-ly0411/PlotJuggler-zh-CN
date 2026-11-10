@@ -8,18 +8,6 @@
       "sha256": null
     },
     {
-      "path": "CLAUDE.md",
-      "sha256": "5055eb1040a026d07b5003f13d0f330737723ae94cea5225f6c8355a0c84608a"
-    },
-    {
-      "path": "build.sh",
-      "sha256": "2875732b7beab010fc406e5d9822c4c9bf4361eca1ee5c49f0df329c053a67d2"
-    },
-    {
-      "path": "docs/BUILDING.md",
-      "sha256": "c9eb99e4f0f69a55844f270d554efec42dd02c4e9e90d4d72bf5bd65584a95e2"
-    },
-    {
       "path": "docs/QT_NOTES.md",
       "sha256": "9b28552e432c6447125de86b3f4236ac501674161a760ba40d610036532e0c94"
     },
@@ -130,8 +118,20 @@
       "sha256": "525ed689eedc10cc5cbecfc217b1a6baeecfb20f08120da5309adb518f598b5f"
     },
     {
+      "path": "CLAUDE.md",
+      "sha256": "5055eb1040a026d07b5003f13d0f330737723ae94cea5225f6c8355a0c84608a"
+    },
+    {
       "path": "CMakeLists.txt",
       "sha256": "9a7e5a75a8b07151543bc0e86bf74a878b63cbaee384ab3f2fd42ccd4bdc3193"
+    },
+    {
+      "path": "build.sh",
+      "sha256": "2875732b7beab010fc406e5d9822c4c9bf4361eca1ee5c49f0df329c053a67d2"
+    },
+    {
+      "path": "docs/BUILDING.md",
+      "sha256": "c9eb99e4f0f69a55844f270d554efec42dd02c4e9e90d4d72bf5bd65584a95e2"
     },
     {
       "path": "packaging/appimage/README.md",

@@ -354,6 +354,7 @@ if (-not $SkipConanInstall) {
     Invoke-Native conan.exe @('profile', 'detect')
   }
   Initialize-PjConanSourceCache $conanHome
+  Invoke-Native python.exe @((Join-Path $PjRepoRoot 'scripts/bootstrap_host_sdk.py'))
   Invoke-Native conan.exe $conanArgs
 } elseif (-not (Test-Path -LiteralPath $Toolchain)) {
   Write-Err "Missing $Toolchain; run Conan install first (build.bat without --skip-conan-install)."

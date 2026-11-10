@@ -46,7 +46,7 @@ The widget families (`pj_plotting`, `pj_custom_widgets`, `pj_scene2D/widgets` vi
 
 When adding files, use the owning module rather than creating new top-level folders. If the requested location does not match these boundaries, ask before proceeding and suggest the closest fit.
 
-- `plotjuggler_sdk` (external): the plugin SDK (`pj_base`, `pj_plugins`; canonical object schemas and codecs under `pj_base/builtin/`), linked as `plotjuggler_sdk::base` / `::plugin_sdk` / `::plugin_host`. Change it in the [SDK repo](https://github.com/PlotJuggler/plotjuggler_sdk), then release + bump the pin here.
+- `plotjuggler_sdk` (external): the plugin SDK (`pj_base`, `pj_plugins`; canonical object schemas and codecs under `pj_base/builtin/`), linked as `plotjuggler_sdk::base` / `::plugin_sdk` / `::plugin_host`. Change it in the [SDK repo](https://github.com/PlotJuggler/plotjuggler_sdk), then release + bump the pin here. This localization release uses the explicitly pinned fork snapshot documented in `cmake/host-sdk-source.json` and `docs/BUILDING.md` while upstream PR #226 is pending.
 - `pj_datastore/`: columnar `DataEngine`, `ObjectStore`, `IncrementalEngine`, host-side C-ABI write bridges, and the `PJ::proc::DataProcessor` substrate, whose base stays Qt-free and Luau-free (`pj_scripting` layers the engines on top). Pure C++20, depends only on `pj_base`; app-internal (plugins reach it through the C ABI).
 - `pj_tf/`: TF frame tree, a static Qt-free leaf (only `glm`, `plotjuggler_sdk::base`, `nlohmann_json`). Ownership, ingest and signals stay in `pj_runtime`; rendering in `pj_scene3D`.
 - `pj_runtime/`: runtime services and contracts (session, catalog, playback, extensions, TF, derived engines). No concrete widgets, no `Qt6::Widgets` link.

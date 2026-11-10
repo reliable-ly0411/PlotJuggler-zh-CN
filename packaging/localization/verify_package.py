@@ -208,6 +208,9 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
     assert record['version'] == expected_version, 'package version differs from source version'
     assert record['qt_version'] == host['qt_version'], 'package Qt differs from source pin'
     assert record['sdk_version'] == host['sdk_version'], 'package host SDK differs from source pin'
+    sdk_source = json.loads((Path(__file__).resolve().parents[2] / 'cmake/host-sdk-source.json').read_text(encoding='utf-8'))
+    assert record.get('host_sdk_source') == sdk_source, 'package SDK snapshot provenance differs'
+    assert json.loads((prefix / 'share/licenses/host-sdk-source.json').read_text(encoding='utf-8')) == sdk_source, 'SDK license provenance differs'
     font = prefix / 'bin/fonts/NotoSansCJKsc-Regular.otf'
     assert hashlib.sha256(font.read_bytes()).hexdigest() == FONT_SHA
     for name in ['ardupilot-dataflash/LICENSE', 'ardupilot-dataflash/COPYING.GPL3',

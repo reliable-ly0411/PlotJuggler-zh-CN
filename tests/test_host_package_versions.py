@@ -16,6 +16,8 @@ from collect_licenses import collect
 class HostPackageVersionsTests(unittest.TestCase):
     def fixture(self, root):
         """Use future pins so hardcoded present-day values cannot pass."""
+        (root / 'cmake').mkdir(exist_ok=True)
+        (root / 'cmake/host-sdk-source.json').write_text(json.dumps({'version': '0.40.2', 'recipe_revision': 'revision'}), encoding='utf-8')
         (root / 'versions.env').write_text('PJ_APP_VERSION=4.2.0+zh.2\nPJ_QT_VERSION=6.13.2\n', encoding='utf-8')
         (root / 'conanfile.txt').write_text('[requires]\nplotjuggler_sdk/0.40.2 # host\n[options]\nfoo/*:shared=True\nfoo/*:other=False\n', encoding='utf-8')
 
@@ -57,6 +59,11 @@ class HostPackageVersionsTests(unittest.TestCase):
             collect(root, build, qt, licenses, lambda url, path, digest: path.write_text('license', encoding='utf-8'))
             self.assertIn('/qt/6.13/6.13.2/single/', (licenses/'Qt-6.13.2/SOURCE.txt').read_text(encoding='utf-8'))
             self.assertFalse((licenses/'Qt-6.11.1').exists())
+            self.assertEqual(json.loads((licenses/'host-sdk-source.json').read_text(encoding='utf-8'))['recipe_revision'], 'revision')
+            graph['graph']['nodes']['1']['ref'] = 'plotjuggler_sdk/0.40.2#wrong'
+            (build/'conan-graph.json').write_text(json.dumps(graph), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'Resolved host SDK recipe'):
+                collect(root, build, qt, licenses, None)
             graph['graph']['nodes']['1']['ref'] = 'plotjuggler_sdk/0.34.1#old'
             (build/'conan-graph.json').write_text(json.dumps(graph), encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'Resolved host SDK'):

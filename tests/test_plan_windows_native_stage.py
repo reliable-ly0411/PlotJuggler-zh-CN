@@ -773,7 +773,7 @@ class CandidateTests(unittest.TestCase):
     def test_locked_sdk_stages_only_reviewed_helper_sources_with_package_manifest(self):
         import types
         contract = planner.load_module('test_sdk_fixture_contract', 'verify_native_ci_closure.py')
-        refs = ['cpython/3.12.7#' + 'c' * 32, 'plotjuggler_sdk/0.39.0#' + 'd' * 32]
+        refs = ['cpython/3.12.7#' + 'c' * 32, 'plotjuggler_sdk/0.40.0#' + 'd' * 32]
         lock = self.source / 'conan.lock'
         lock.write_text(json.dumps({'requires': refs}), encoding='utf-8')
         self.git('add', 'conan.lock')
@@ -1027,7 +1027,7 @@ class CandidateTests(unittest.TestCase):
         self.seed_test_inputs()
         additions = {
             'versions.env': b'PJ_APP_VERSION=4.1.0+zh.1\nPJ_QT_VERSION=6.12.0\n',
-            'conanfile.txt': b'[requires]\nplotjuggler_sdk/0.39.0\n',
+            'conanfile.txt': b'[requires]\nplotjuggler_sdk/0.40.0\n',
             'packaging/localization/host_versions.py': (ROOT / 'packaging/localization/host_versions.py').read_bytes(),
             'packaging/localization/audit_file_dialog_results.py': (ROOT / 'packaging/localization/audit_file_dialog_results.py').read_bytes(),
         }
@@ -1053,7 +1053,7 @@ class CandidateTests(unittest.TestCase):
             path = self.root / relative; path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(data)
         windows = lambda relative: self.logical + '\\' + relative.replace('/', '\\')
         identity = {'schema': 1, 'source_sha': self.sha, 'source_tree': self.tree, 'configuration': 'RelWithDebInfo',
-                    'qt_version': '6.12.0', 'host_sdk': '0.39.0', 'plugin_sdk': '0.34.1'}
+                    'qt_version': '6.12.0', 'host_sdk': '0.40.0', 'plugin_sdk': '0.34.1'}
         for key, relative in [('runner', runner_rel), ('plugin', plugin_rel),
                               ('qt_core', 'q/6.12.0/msvc2022_64/bin/Qt6Core.dll'), ('ctest', 't/cmake/bin/ctest.exe')]:
             identity[key] = windows(relative)

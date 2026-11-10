@@ -205,13 +205,19 @@ resolve `libva` / `libva-drm` through `pkg-config`. End users only need the `lib
 runtime, which packaging pulls in; CI installs the `-dev` packages in
 [`linux-ci.yml`](../.github/workflows/linux-ci.yml).
 
-**The SDK.** `plotjuggler_sdk` recipes and prebuilt binaries live on PlotJuggler's JFrog
-Conan remote (anonymous read). Build paths without Conan (WebAssembly, pixi) fetch the
-pinned release tag from GitHub and build the SDK in-tree (see the root
-`CMakeLists.txt`). `pj_datastore` is added right after the SDK is resolved, so the
-`plotjuggler_sdk::base` and `pj_internal_fmt` targets it links already exist; its Conan
-dependencies (`nanoarrow`, `tsl-robin-map`, `benchmark`) are in the root
-`conanfile.txt`.
+**The host SDK.** This localization release uses the fixed fork snapshot in
+`cmake/host-sdk-source.json`, based on official SDK 0.40.0 with the Unicode-path
+fix proposed in upstream PR #226. It is not an official fixed SDK release.
+Run `python scripts/bootstrap_host_sdk.py` before a direct `conan install`:
+the helper verifies archive SHA256 and exports the exact recipe revision locked
+in `conan.lock`. The build wrappers and localization CI do this automatically.
+`--archive FILE` accepts an offline copy, with the same mandatory hash check.
+Conan builds the fork package locally when no matching binary is cached; an
+unpatched official recipe must not substitute for the locked revision.
+Non-Conan source builds use the same archive and SHA256 in `CMakeLists.txt`.
+The SDK's Apache-2.0 notices and snapshot identity are retained in the payload.
+The independent plugin SDK pins are unchanged. `pj_datastore` remains owned by
+the application, with its dependencies in `conanfile.txt`.
 
 **Local-SDK mode.** `./build.sh --sdk-local[=PATH]` builds `plotjuggler_sdk` from a
 local working tree (default: the `../plotjuggler_sdk` sibling checkout) instead of the

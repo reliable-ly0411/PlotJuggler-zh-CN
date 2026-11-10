@@ -90,6 +90,7 @@ def stage(build, prefix, config, linux_tools):
               'registry_commit': REGISTRY_REV, 'cjk_font_sha256': FONT_SHA,
               'ifw_package_version': versions(host['version'])['ifw'],
               'debian_version': versions(host['version'])['deb']}
+    record['host_sdk_source'] = json.loads((ROOT / 'cmake/host-sdk-source.json').read_text(encoding='utf-8'))
     locked = json.loads((ROOT / 'packaging/localization/registry-lock.json').read_text(encoding='utf-8'))
     ids = CORE_PLUGINS + (['toolbox-assistant-agent', 'ros2-topic-subscriber'] if linux_tools else [])
     record['expected_plugins'] = [f"{x['id']}={x['version']}" for x in locked['extensions'] if x['id'] in ids]
