@@ -281,7 +281,10 @@ TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReacha
       QCoreApplication::processEvents();
       EXPECT_TRUE(control->isVisible());
       const QRect visible_rect(control->mapTo(scroll->viewport(), QPoint(0, 0)), control->size());
-      EXPECT_TRUE(scroll->viewport()->rect().contains(visible_rect)) << control->objectName().toStdString();
+      EXPECT_TRUE(scroll->viewport()->rect().contains(visible_rect))
+          << control->objectName().toStdString() << " rect=" << visible_rect.x() << "," << visible_rect.y()
+          << "," << visible_rect.width() << "x" << visible_rect.height() << " viewport="
+          << scroll->viewport()->width() << "x" << scroll->viewport()->height();
     }
     dialog.reject();
   }

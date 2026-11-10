@@ -324,8 +324,7 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
     ui_->labelOpenGL->hide();
     ui_->openglToggle->hide();
     // A page cannot listen on a socket.
-    ui_->labelMcpServer->hide();
-    ui_->mcpServerToggle->hide();
+    ui_->mcpServerRow->hide();
 #endif
   }
 
