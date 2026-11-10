@@ -206,8 +206,8 @@ runtime, which packaging pulls in; CI installs the `-dev` packages in
 [`linux-ci.yml`](../.github/workflows/linux-ci.yml).
 
 **The host SDK.** This localization release uses the fixed fork snapshot in
-`cmake/host-sdk-source.json`, based on official SDK 0.40.0 with the Unicode-path
-fix proposed in upstream PR #226. It is not an official fixed SDK release.
+`cmake/host-sdk-source.json`, based on official SDK 0.39.0 with the Unicode-path
+fix from upstream PR #226 backported without the SDK 0.40.0 host-contract additions. It is not an official fixed SDK release.
 Run `python scripts/bootstrap_host_sdk.py` before a direct `conan install`:
 the helper verifies archive SHA256 and exports the exact recipe revision locked
 in `conan.lock`. The build wrappers and localization CI do this automatically.

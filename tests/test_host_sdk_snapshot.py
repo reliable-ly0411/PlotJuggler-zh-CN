@@ -25,6 +25,9 @@ class HostSdkSnapshotTests(unittest.TestCase):
         self.assertIn('SHA256=' + pin['archive_sha256'], cmake)
         self.assertIn(pin['commit'], pin['archive_url'])
         self.assertEqual(pin['license'], 'Apache-2.0')
+        self.assertEqual(pin['version'], '0.39.0')
+        self.assertEqual(pin['host_contract_version'], '0.39.0')
+        self.assertEqual(pin['upstream_base'], 'cc83815a1a8124d5947ed567790c3393a6cf0a5c')
 
     def test_corrupt_archive_is_rejected_before_export(self):
         with tempfile.TemporaryDirectory() as temporary:

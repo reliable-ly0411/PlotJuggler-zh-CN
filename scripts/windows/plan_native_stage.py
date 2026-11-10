@@ -1625,12 +1625,12 @@ class Candidate:
             self.issue('missing-or-ambiguous-embedded-cpython', 'Conan graph must resolve exactly one host cpython')
         else:
             by_package.setdefault(cpython[0][0], set())
-        sdk = [item for item in packages if str(item[1].get('ref', '')).startswith('plotjuggler_sdk/0.40.0#')]
+        sdk = [item for item in packages if str(item[1].get('ref', '')).startswith('plotjuggler_sdk/0.39.0#')]
         sdk_module = load_module('native_stage_sdk_contract', 'verify_native_ci_closure.py')
         sdk_contract = sdk_module.SDK_FIXTURE_FILES
         rule_cases = {'runtime-catalog-language': 'RuntimeCatalogLanguageTest', 'extension-manager': 'extension_manager_test'}
         if len(sdk) != 1:
-            self.issue('missing-or-ambiguous-locked-sdk', 'Conan graph must resolve exactly one host plotjuggler_sdk/0.40.0')
+            self.issue('missing-or-ambiguous-locked-sdk', 'Conan graph must resolve exactly one host plotjuggler_sdk/0.39.0')
             for case in rule_cases.values():
                 self.condition_patterns.append(('main', case, 'The locked SDK package source and fixture identity is missing or ambiguous.'))
         origins, entries, identities, seen_packages = {}, [], [], set()

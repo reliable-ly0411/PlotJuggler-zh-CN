@@ -171,14 +171,14 @@ find_package(fmt REQUIRED)
 
 file(STRINGS conanfile.txt _pj_sdk_require REGEX "^plotjuggler_sdk/")
 string(REGEX REPLACE "^plotjuggler_sdk/([0-9][0-9A-Za-z.-]*).*" "\\1" PJ_SDK_VERSION "${_pj_sdk_require}")
-set(_pj_sdk_url https://api.github.com/repos/reliable-ly0411/plotjuggler_sdk/tarball/52cdf329adf6af3513e190fe0f8b86f19f17b051)
+set(_pj_sdk_url https://api.github.com/repos/reliable-ly0411/plotjuggler_sdk/tarball/5f7f1c216cfe10ec50b95ab79c5426d298dc1d21)
 # Pin the source build to bytes, not to a tag name: a tag can be moved, and the
 # sanitizer lanes compile this tarball instead of the Conan package, so an
 # unpinned fetch would make an instrumented build unreproducible. Update this
 # hash in the same commit as any PJ_SDK_VERSION bump in conanfile.txt — a stale
 # hash aborts the download loudly, which is the intended failure mode.
 set(_pj_sdk_url_hash
-    SHA256=4576bdb2ea15c4cee9cbdfbbb52121861a459dd4b8d82af097e8f894f4dd7180)  # cmake/host-sdk-source.json
+    SHA256=01a029f81d0d1bf5c9d516b9375c438de317fd7b910c63c3714435256e3fdc41)  # cmake/host-sdk-source.json
 include(FetchContent)
 # Timestamps on extracted archives. DOWNLOAD_EXTRACT_TIMESTAMP is a CMake 3.24
 # keyword and the sanctioned builder image ships 3.22, where an unrecognised

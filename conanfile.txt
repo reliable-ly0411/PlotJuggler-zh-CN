@@ -6,7 +6,7 @@ fmt/12.2.0
 # Host SDK fork snapshot: scripts/bootstrap_host_sdk.py exports the exact
 # reviewed recipe revision from cmake/host-sdk-source.json before resolution.
 # CMakeLists.txt reads this exact pin for the non-Conan (wasm / pixi) source fallback.
-plotjuggler_sdk/0.40.0
+plotjuggler_sdk/0.39.0
 tsl-robin-map/1.4.0
 gtest/1.18.0
 glm/1.0.3

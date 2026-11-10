@@ -43,7 +43,7 @@
 BIN独立共享插件、独立profile与来源保护均保留。数值解析与稳定ID不因语言变化被改写。
 删除的两条翻译键来自tag后新增的系统文件对话框选项，并非丢弃本tag仍在使用的译文。
 
-宿主Qt6.12.0保留tag依赖；宿主SDK采用0.40.0加固定fork修复52cdf329，来源及recipe revision见 `cmake/host-sdk-source.json`。这不是官方修复发行；插件历史SDK锁不混同宿主。包装许可及release.json记录宿主pin和快照来源。
+宿主Qt6.12.0保留tag依赖；宿主SDK采用0.39.0加固定fork修复5f7f1c21，来源及recipe revision见 `cmake/host-sdk-source.json`。这不是官方修复发行；插件历史SDK锁不混同宿主。包装许可及release.json记录宿主pin和快照来源。
 `CLAUDE.md`、`build.sh` 与 `docs/BUILDING.md` 因此从tag字节匹配项归类为明确的SDK构建差异；基线摘要仍保存上游tag原始值，不用候选摘要改写历史。
 正式版本4.1.0+zh.1使用本仓更新列表，不误入上游APT/IFW；SemVer元数据变化不充当升级。
 
