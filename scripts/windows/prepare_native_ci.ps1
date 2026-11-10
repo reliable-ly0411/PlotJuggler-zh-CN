@@ -426,6 +426,9 @@ foreach ($item in @(Get-ChildItem Env:)) {
   if ($item.Name -match '^CONAN_') { Remove-Item -LiteralPath ('Env:' + $item.Name) -ErrorAction Stop }
 }
 $env:CONAN_HOME = Join-Path $root 'c'
+if (Test-Path -LiteralPath $env:CONAN_HOME) { throw 'Refusing to reuse an existing Conan home.' }
+New-Item -ItemType Directory -Path $env:CONAN_HOME | Out-Null
+Assert-RealDirectory $env:CONAN_HOME
 $env:CONAN_NON_INTERACTIVE = '1'
 foreach ($name in 'PYTHONHOME', 'PYTHONPATH', 'PYTHONSTARTUP', 'PKG_CONFIG_PATH', 'PJ_VERSION', 'QT_PLUGIN_PATH') {
   Remove-Item -LiteralPath ("Env:" + $name) -ErrorAction SilentlyContinue
@@ -499,7 +502,7 @@ Get-ChildItem -LiteralPath $qtArchives -File | Get-FileHash -Algorithm SHA256 |
 
 # Match the native Windows Conan graph and source-backup policy. CONAN_HOME is
 # set before profile detection and before any CMake configure.
-New-Item -ItemType Directory -Path $env:CONAN_HOME | Out-Null
+Assert-RealTree $env:CONAN_HOME
 Invoke-Checked $conan @('profile', 'detect', '--force')
 Invoke-Checked $conan @('remote', 'add', 'plotjuggler-conan', 'https://plotjuggler.jfrog.io/artifactory/api/conan/plotjuggler-conan')
 Invoke-Checked $conan @('remote', 'enable', 'plotjuggler-conan')

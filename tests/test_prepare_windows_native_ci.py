@@ -209,6 +209,54 @@ if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath (Join-Path $env:NEW_REPO '.g
         self.assertIn('--show-only=json-v1', SCRIPT)
         self.assertLess(SCRIPT.index("@('--build', $build"), SCRIPT.index('$mainDiscovery ='))
 
+    def test_conan_home_is_created_once_before_any_conan_command(self):
+        assign = SCRIPT.index("$env:CONAN_HOME = Join-Path $root 'c'")
+        reject = SCRIPT.index('if (Test-Path -LiteralPath $env:CONAN_HOME)', assign)
+        create = 'New-Item -ItemType Directory -Path $env:CONAN_HOME | Out-Null'
+        self.assertEqual(SCRIPT.count(create), 1)
+        created = SCRIPT.index(create, reject)
+        checked = SCRIPT.index('Assert-RealDirectory $env:CONAN_HOME', created)
+        version = SCRIPT.index("Invoke-Checked $conan @('--version')")
+        tree = SCRIPT.index('Assert-RealTree $env:CONAN_HOME', version)
+        profile = SCRIPT.index("Invoke-Checked $conan @('profile', 'detect', '--force')")
+        self.assertLess(SCRIPT.index('Refusing to reuse an existing build root'), assign)
+        self.assertLess(assign, reject)
+        self.assertLess(reject, created)
+        self.assertLess(created, checked)
+        self.assertLess(checked, version)
+        self.assertLess(version, tree)
+        self.assertLess(tree, profile)
+        self.assertNotIn('-Force', SCRIPT[reject:checked])
+        self.assertNotIn('Remove-Item', SCRIPT[reject:checked])
+
+    @unittest.skipUnless(os.name == 'nt', 'Real PowerShell Conan-home check requires Windows')
+    def test_conan_home_rejects_existing_files_and_directories(self):
+        shell = shutil.which('powershell.exe') or shutil.which('pwsh.exe')
+        self.assertIsNotNone(shell)
+        directory = 'function Assert-RealDirectory' + SCRIPT.split('function Assert-RealDirectory', 1)[1].split('\nfunction Assert-RealTree', 1)[0]
+        tree = 'function Assert-RealTree' + SCRIPT.split('function Assert-RealTree', 1)[1].split('\nfunction Initialize-IsolatedGitEnvironment', 1)[0]
+        init = SCRIPT.split("$env:CONAN_HOME = Join-Path $root 'c'", 1)[1].split("$env:CONAN_NON_INTERACTIVE = '1'", 1)[0]
+        body = ("$ErrorActionPreference = 'Stop'\n" + directory + '\n' + tree +
+                "\n$root = $env:PJ_TEST_ROOT\n$env:CONAN_HOME = Join-Path $root 'c'\n" + init +
+                "\n[IO.File]::WriteAllText((Join-Path $env:CONAN_HOME 'owned.txt'), 'owned')\n" +
+                "Assert-RealTree $env:CONAN_HOME\n")
+        with tempfile.TemporaryDirectory(prefix='pj-conan-home-') as temp:
+            base = Path(temp)
+            def run(root):
+                return subprocess.run([shell, '-NoProfile', '-NonInteractive', '-Command', body],
+                                      env=dict(os.environ, PJ_TEST_ROOT=str(root)), capture_output=True)
+            fresh = base / 'fresh'; fresh.mkdir()
+            result = run(fresh)
+            self.assertEqual(result.returncode, 0, repr(result.stderr))
+            sentinel = fresh / 'c' / 'owned.txt'
+            self.assertEqual(sentinel.read_text(encoding='utf-8'), 'owned')
+            self.assertNotEqual(run(fresh).returncode, 0)
+            self.assertEqual(sentinel.read_text(encoding='utf-8'), 'owned')
+            occupied = base / 'occupied'; occupied.mkdir()
+            existing_file = occupied / 'c'; existing_file.write_text('keep', encoding='utf-8')
+            self.assertNotEqual(run(occupied).returncode, 0)
+            self.assertEqual(existing_file.read_text(encoding='utf-8'), 'keep')
+
     def test_bootstrap_is_trusted_system_code_before_any_downloaded_python(self):
         self.assertIn('System32/WindowsPowerShell/v1.0/powershell.exe', SCRIPT)
         self.assertIn('PjCiDirectoryIdentity]::Exact($Path)', SCRIPT)
