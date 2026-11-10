@@ -253,6 +253,30 @@ jobs:
           ./scripts/windows/prepare_native_ci.ps1 -Phase Verify -RetainBuild -Archive $env:KIT_ARCHIVE `
             -ArchiveSha256 $env:KIT_ARCHIVE_SHA -ManifestSha256 $env:KIT_MANIFEST_SHA `
             -SourceSha $env:KIT_SOURCE_SHA -SourceTree $env:KIT_SOURCE_TREE -ExpandedBytes $env:KIT_EXPANDED_BYTES
+      - name: Preserve content-free failed configure diagnostics
+        id: failed_config_diagnostics
+        if: always() && steps.build.outcome == 'failure'
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          $sha = $env:EXPECTED_SOURCE_SHA
+          if ($sha -cnotmatch '^[0-9a-f]{40}$') { throw 'Invalid source identity.' }
+          $head = (& git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $head -cne $sha) { throw 'Checkout identity mismatch.' }
+          $tree = (& git rev-parse 'HEAD^{tree}').Trim()
+          if ($LASTEXITCODE -ne 0 -or $tree -cnotmatch '^[0-9a-f]{40}$') { throw 'Invalid source tree.' }
+          $root = 'C:\Users\Administrator\PlotJuggler-4.1.0-zh-test-558a\n\' + $sha.Substring(0, 12)
+          python -I -B ./scripts/windows/collect_failed_config_diagnostics.py --root $root `
+            --output (Join-Path $env:RUNNER_TEMP 'pj-failed-config-diagnostics') --source-sha $sha --source-tree $tree
+          if ($LASTEXITCODE -ne 0) { throw 'Safe failure diagnostics unavailable.' }
+      - name: Upload content-free failure diagnostics
+        if: always() && steps.failed_config_diagnostics.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: windows-failed-config-diagnostics-${{ github.run_attempt }}
+          path: ${{ runner.temp }}\pj-failed-config-diagnostics
+          if-no-files-found: error
+          retention-days: 7
       - name: Preserve producer CI run evidence
         id: native_evidence
         if: always() && steps.build.outcome == 'success'

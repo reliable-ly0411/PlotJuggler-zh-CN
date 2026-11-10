@@ -43,7 +43,7 @@ class ChildCleanupContract(unittest.TestCase):
     def setUpClass(cls):
         cls.build = tempfile.TemporaryDirectory(prefix='pj-child-contract-build-')
         source = Path(cls.build.name)/'probe.cpp'
-        source.write_text(SOURCE)
+        source.write_text(SOURCE, encoding="utf-8")
         cls.exe = Path(cls.build.name)/'probe'
         env = dict(os.environ, PKG_CONFIG_PATH=str(Path(os.environ['PJ_QT_PREFIX'])/'lib/pkgconfig'))
         flags = subprocess.check_output(['pkg-config', '--cflags', '--libs', 'Qt6Core'], env=env, text=True).split()
@@ -113,11 +113,11 @@ class ChildCleanupContract(unittest.TestCase):
     def test_symlink_refuses_cleanup_without_touching_outside(self):
         with tempfile.TemporaryDirectory(prefix='pj-child-outside-') as outside:
             sentinel = Path(outside)/'sentinel'
-            sentinel.write_text('keep')
+            sentinel.write_text('keep', encoding='utf-8')
             result, path = self.run_mode('link', {'OUTSIDE': str(sentinel)})
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('Refusing unsafe', result.stderr)
-            self.assertEqual(sentinel.read_text(), 'keep')
+            self.assertEqual(sentinel.read_text(encoding='utf-8'), 'keep')
             self.assertTrue(list(path.iterdir()))
 
 if __name__ == '__main__':
