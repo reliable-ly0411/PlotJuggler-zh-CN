@@ -8,11 +8,20 @@
 
 #include <QCoreApplication>
 
+#if defined(Q_OS_WIN) && defined(PJ_TEST_PINNED_WIDGET_FIXTURES)
+#include "pj_test_child_cleanup.h"
+#endif
+
 #if defined(Q_OS_WIN) && (defined(PJ_TEST_MANAGED_PROFILE) || defined(PJ_TEST_PRIVATE_HKCU))
 #include "pj_test_windows_registry.h"
 #endif
 
 int main(int argc, char** argv) {
+#if defined(Q_OS_WIN) && defined(PJ_TEST_PINNED_WIDGET_FIXTURES)
+  if (auto result = pjRunWithChildCleanup(argc, argv)) {
+    return *result;
+  }
+#endif
   ::testing::InitGoogleTest(&argc, argv);
 #if defined(Q_OS_WIN) && (defined(PJ_TEST_MANAGED_PROFILE) || defined(PJ_TEST_PRIVATE_HKCU))
   PjTestWindowsRegistry registry;

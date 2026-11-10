@@ -101,3 +101,16 @@ retains the original source registration conditions.
 new marketplace child and an absent bundled child. Marketplace-derived sibling
 paths therefore remain inside the owned parent. Source-cache test cleanup also
 uses an owned parent rather than deleting a merely random shared-temp name.
+
+## Process-lifetime widget test fixtures
+
+Windows keeps loaded widget DLL images mapped for the process lifetime. The
+WidgetCatalogTest runner therefore uses a parent-owned temporary tree: the child
+validates the root/ownership-token lease before allocating fixture subdirectories,
+and validates its own marker and link-free tree before handing cleanup back.
+Only after the child exits (or is killed and waited for on timeout) does the
+parent apply its ordinary strict recursive cleanup. Static registration and
+real DLL assertions remain in the child. Ordinary fixtures retain immediate
+cleanup; invalid leases, changed markers, links, child failures, and cleanup
+failures remain failures. `tests/test_widget_child_cleanup.py` exercises the
+actual Qt helper with `PJ_QT_PREFIX` pointing at a Qt installation.

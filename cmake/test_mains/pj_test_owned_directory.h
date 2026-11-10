@@ -6,13 +6,18 @@
 #include <QFileInfo>
 #include <QTemporaryDir>
 #include <QUuid>
+#include <cstdio>
 #include <cstdlib>
 
 // A fresh test-owned tree. Never delete through a changed root or a link/junction;
 // refusal intentionally leaves this run's evidence instead of risking other data.
 class PjTestOwnedDirectory {
  public:
-  PjTestOwnedDirectory() : directory_(temporaryParent() + QStringLiteral("/pj-native-fixture-XXXXXX")) {
+  enum class Cleanup { Immediate, AfterChildExit };
+
+  // AfterChildExit is reserved for fixtures whose DLLs stay mapped until exit.
+  explicit PjTestOwnedDirectory(Cleanup cleanup = Cleanup::Immediate)
+      : cleanup_(cleanup), directory_(allocationParent(cleanup) + QStringLiteral("/pj-native-fixture-XXXXXX")) {
     directory_.setAutoRemove(false);
     if (!directory_.isValid()) {
       qFatal("Cannot create private test directory");
@@ -31,6 +36,24 @@ class PjTestOwnedDirectory {
 
   const QString& path() const {
     return root_;
+  }
+
+  const QByteArray& ownershipToken() const {
+    return token_;
+  }
+
+  static bool validParentLease() {
+    const QString root = QString::fromUtf8(qgetenv("PJ_TEST_PARENT_TREE"));
+    const QByteArray token = qgetenv("PJ_TEST_PARENT_TOKEN");
+    if (root.isEmpty() || token.isEmpty() || !plainDirectory(root)) {
+      return false;
+    }
+    const QFileInfo info(root + QStringLiteral("/.pj-test-owner"));
+    if (!info.isFile() || info.isSymbolicLink() || info.isJunction()) {
+      return false;
+    }
+    QFile marker(info.filePath());
+    return marker.open(QIODevice::ReadOnly) && marker.readAll() == token;
   }
 
   // Check the owned root and every entry before recursive cleanup. The tests are
@@ -56,13 +79,25 @@ class PjTestOwnedDirectory {
   }
 
   ~PjTestOwnedDirectory() {
-    if (!ownsTree() || !QDir(root_).removeRecursively()) {
-      qCritical("Refusing unsafe or failed private test directory cleanup");
+    const bool deferred = cleanup_ == Cleanup::AfterChildExit;
+    if (!ownsTree() || (deferred && !validParentLease()) || (!deferred && !QDir(root_).removeRecursively())) {
+      std::fprintf(stderr, "Refusing unsafe or failed private test directory cleanup: %s\n", qPrintable(root_));
+      std::fflush(stderr);
       std::_Exit(EXIT_FAILURE);
     }
   }
 
  private:
+  static QString allocationParent(Cleanup cleanup) {
+    if (cleanup == Cleanup::Immediate) {
+      return temporaryParent();
+    }
+    if (!validParentLease()) {
+      qFatal("No verified parent for process-lifetime test fixture");
+    }
+    return QString::fromUtf8(qgetenv("PJ_TEST_PARENT_TREE"));
+  }
+
   bool hasOwnershipMarker() const {
     const QFileInfo info(root_ + QStringLiteral("/.pj-test-owner"));
     if (info.isSymbolicLink() || info.isJunction()) {
@@ -109,6 +144,7 @@ class PjTestOwnedDirectory {
     return true;
   }
 
+  Cleanup cleanup_;
   QTemporaryDir directory_;
   QString root_;
   QByteArray token_;

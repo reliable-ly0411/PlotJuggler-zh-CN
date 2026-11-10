@@ -3021,10 +3021,10 @@
   "reviewed_source_sha256": {
     "s/cmake/PjTests.cmake": "5dbc86dbd40aad8d5ce0fdf34c86293b4802419e129905452b451a4649a0b7dd",
     "s/cmake/test_mains/pj_gpu_test_gate.h": "5f76ca2d4ecf7f5543920d6970f624d3109b32482c2fee7fc2f390149231b5ef",
-    "s/cmake/test_mains/pj_test_main_core.cpp": "e78bf05d332f6b54700acb72b74b47c287329cc85527ccfd6c079a85afb12947",
+    "s/cmake/test_mains/pj_test_main_core.cpp": "bc945de7288f94032f14f13e5c8f872f10c5c8000186c1cf7f76a44333251a01",
     "s/cmake/test_mains/pj_test_main_gui.cpp": "bfe1ab29c684c58a6a85cd38ac81320b35ea3358014ecfa55bfe5eac37d5ae26",
     "s/cmake/test_mains/pj_test_main_plain.cpp": "42f39e1d188f9f2e52185f5e02bb0dfbe03f1f02f7431d3605f161206be40852",
-    "s/cmake/test_mains/pj_test_owned_directory.h": "dd67a421854d1035b8feff4cca0d1ac5f8ba7deefaf4974f730a6d63db91b4b6",
+    "s/cmake/test_mains/pj_test_owned_directory.h": "0d01b33cf943e34c2c3dbc7027cfb23908bbb1b6e48a95b0e1a6c9eb3231d46a",
     "s/cmake/test_mains/pj_test_windows_registry.h": "40bcd9d16b0350b4fb463b381eb7026b2f8055aa2cb44731d081dbfe48ae1a58",
     "s/packaging/installer/packages/io.plotjuggler.application/meta/installscript.qs": "32b5801c9bc04373fddc2f560c3fc8bf185b7b49ee0b64711c333ccbbc029ca4",
     "s/packaging/localization/audit_file_dialog_results.py": "5a4e129b23021c6f2c81062c94675b75eb7408d3a03916571dad140f0a589e18",
@@ -3278,7 +3278,7 @@
     "s/pj_plotting/widget/src/WidgetClipboard.cpp": "5fc5887a43279664029d0186030a52d2399943c7a5aad5d64d3df00aa381fa68",
     "s/pj_plotting/widget/src/WidgetClipboard.h": "d188ff58eca85c3e8581c801b96f785403059e655d742c89aa696ba98ea107ba",
     "s/pj_plotting/widget/src/XYCurveDialog.cpp": "551fba284c9e7929b81ef4c8e124ed31f23994ecce4e53648195901afd8a8e9f",
-    "s/pj_runtime/CMakeLists.txt": "4b2a791d3be582103f46534638b6b91591e31faad741a908de3a8f561feaeceb",
+    "s/pj_runtime/CMakeLists.txt": "f96c2ae97a6938f375efbc99c88028d4e3254c9f594d57782522ccd19351e196",
     "s/pj_runtime/include/pj_runtime/LocalizedPluginSeed.h": "3179dfde1df78b1346a3a119cfbd1a492f6639cff15f2bc9dc28b42c9ffa4fe8",
     "s/pj_runtime/include/pj_runtime/PluginRuntimeCatalog.h": "994e05d56bd43e4a66b18c2ba26aa05f27022a99ac7d04e302ed76ee3e613e7d",
     "s/pj_runtime/include/pj_runtime/Recorder.h": "17b44cdb26e6bd620f406af94d59cb73e087e2fe1228934f82454fdf4e576d1f",
@@ -3607,7 +3607,9 @@
     "s/pj_widgets/tests/visualization_placeholder_test.cpp": "7c696689b3e5f7f00c772038fe074c2e08db8cb2aac238277c9ddd66d5f769cf",
     "s/resources/CMakeLists.txt": "484ba7d4565f4e11e53a2d7aab28bf0fcaff04caf6778fb8d83c3e0ee5a9d545",
     "s/resources/resources.qrc": "6b374e65897bfff2ca0f365cb33c7d1104683060dd21d24fa185bef5945a1fa0",
-    "s/scripts/windows/native_driver_python_probe.py": "c1b4ce26e2fa79d37e1d5d21f23ecd881eca87019d1f022b3b279c1ddb3c7514"
+    "s/scripts/windows/native_driver_python_probe.py": "c1b4ce26e2fa79d37e1d5d21f23ecd881eca87019d1f022b3b279c1ddb3c7514",
+    "s/cmake/test_mains/pj_test_child_cleanup.h": "1783702a962d4633d3e0ee0a25479da7c82d488f3ab11f397ad5fa735a57d346",
+    "s/pj_runtime/tests/plugin_runtime_catalog_widget_test.cpp": "dd646af075e545b70e280e857a818baf69395a86462beab1565c4513f667fda6"
   },
   "system_dlls": [
     "advapi32.dll",

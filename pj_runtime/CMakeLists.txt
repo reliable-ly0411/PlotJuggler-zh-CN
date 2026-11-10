@@ -558,6 +558,9 @@ if(PJ_BUILD_TESTS)
             Qt6::Test
         DEFINES ${PJ_RUNTIME_TEST_DEFINES}
     )
+    if(WIN32)
+        target_compile_definitions(pj_runtime_tests PRIVATE PJ_TEST_PINNED_WIDGET_FIXTURES)
+    endif()
     set(PJ_RUNTIME_TEST_RUNNERS pj_runtime_tests)
     if(NOT EMSCRIPTEN)
         pj_add_test_runner(pj_runtime_storage_tests MAIN core PRIVATE_HKCU

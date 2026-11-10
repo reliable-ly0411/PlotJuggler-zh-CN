@@ -85,7 +85,11 @@ class WidgetCatalogTest : public ::testing::Test {
         diagnostics_, [&](const Diagnostic& d) { return d.message.find(needle) != std::string::npos; }));
   }
 
+#ifdef Q_OS_WIN
+  PjTestOwnedDirectory owner_{PjTestOwnedDirectory::Cleanup::AfterChildExit};
+#else
   PjTestOwnedDirectory owner_;
+#endif
   std::filesystem::path dir_;
   std::vector<Diagnostic> diagnostics_;
 };
