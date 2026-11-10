@@ -1,5 +1,5 @@
 {
   "upstream_repository": "PlotJuggler/PlotJuggler",
-  "upstream_branch": "main-4.x",
+  "upstream_branch": "main",
   "sync_branch": "zh-CN-4.x-dev"
 }

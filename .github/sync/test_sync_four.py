@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('sync_four', Path(__file__).with_name('sync_four.py'))
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
-CONFIG = {'upstream_repository': 'PlotJuggler/PlotJuggler', 'upstream_branch': 'main-4.x',
+CONFIG = {'upstream_repository': 'PlotJuggler/PlotJuggler', 'upstream_branch': 'main',
           'sync_branch': 'zh-CN-4.x-dev'}
 
 class SyncTests(unittest.TestCase):
@@ -108,8 +108,8 @@ class SyncTests(unittest.TestCase):
             module.sync(CONFIG)
 
     def test_only_development_mapping_allowed(self):
-        for key, value in [('sync_branch', 'zh-CN-4.x'), ('sync_branch', 'main-4.x'),
-                           ('upstream_branch', 'main'), ('upstream_repository', 'other/repo')]:
+        for key, value in [('sync_branch', 'zh-CN-4.x'), ('sync_branch', 'main'),
+                           ('upstream_branch', 'main-4.x'), ('upstream_branch', 'main-3.x'), ('upstream_repository', 'other/repo')]:
             with self.subTest(key=key, value=value), self.assertRaises(ValueError):
                 module.sync(dict(CONFIG, **{key: value}), push=True)
 

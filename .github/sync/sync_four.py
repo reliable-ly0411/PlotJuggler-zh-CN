@@ -17,7 +17,7 @@ def sync(config, push=False):
     repo = config['upstream_repository']
     branch = config['upstream_branch']
     target = config['sync_branch']
-    if (repo, branch, target) != ('PlotJuggler/PlotJuggler', 'main-4.x', 'zh-CN-4.x-dev'):
+    if (repo, branch, target) != ('PlotJuggler/PlotJuggler', 'main', 'zh-CN-4.x-dev'):
         raise ValueError('Only the independent PJ4 development mapping is allowed')
     for value in (branch, target):
         if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._/-]*', value) or '..' in value or '@{' in value:
