@@ -15,12 +15,12 @@ class BranchPolicyTest(unittest.TestCase):
                        "zh-CN-ci/branch-policy", "zh-CN-docs/readme", "zh-CN-release/v3.18.0-zh.5",
                        "zh-CN-4.x", "zh-CN-4.x-dev", "zh-CN-4.x-feat/localization-foundation",
                        "zh-CN-4.x-fix/7-bin-reader", "zh-CN-4.x-ci/windows", "zh-CN-4.x-docs/building",
-                       "zh-CN-4.x-release/v4.0.0-zh.1", "main", "main-4.x"]:
+                       "zh-CN-4.x-release/v4.0.0-zh.1", "main", "main-3.x"]:
             with self.subTest(branch=branch):
                 self.assertTrue(policy.valid(branch))
 
     def test_rejected(self):
-        for branch in ["zh-CN/feature", "zh-CN-4.x/feature", "feature/new", "zh-CN-5.x",
+        for branch in ["main-4.x", "main4", "zh-CN/feature", "zh-CN-4.x/feature", "feature/new", "zh-CN-5.x",
                        "zh-CN-4.x-fix/0-test", "zh-CN-4.x-fix/3", "zh-CN-4.x-ci/Uppercase",
                        "zh-CN-4.x-feat/a/b", "zh-CN-4.x-ci/a\n", "zh-CN-4.x-dev-malformed",
                        "zh-CN-4.x-release/latest", "zh-CN-4.x-feat/-a", "zh-CN-4.x-feat/a--b"]:

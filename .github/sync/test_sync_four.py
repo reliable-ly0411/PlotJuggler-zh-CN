@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('sync_four', Path(__file__).with_name('sync_four.py'))
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
-CONFIG = {'upstream_repository': 'PlotJuggler/PlotJuggler', 'upstream_branch': 'main-4.x',
+CONFIG = {'upstream_repository': 'PlotJuggler/PlotJuggler', 'upstream_branch': 'main',
           'sync_branch': 'zh-CN-4.x-dev'}
 
 class SyncTests(unittest.TestCase):
@@ -67,6 +67,9 @@ class SyncTests(unittest.TestCase):
     def test_noop(self):
         self.upstream = self.base
         self.assertFalse(module.sync(CONFIG)['changed'])
+        self.assertIn(('fetch', '--no-recurse-submodules', '--no-tags',
+                       'https://github.com/PlotJuggler/PlotJuggler.git', 'refs/heads/main'),
+                      self.commands)
         self.assertFalse(any(c[0] == 'push' for c in self.commands))
 
     def test_dry_run_preserves_policy_and_ancestry(self):
@@ -109,7 +112,7 @@ class SyncTests(unittest.TestCase):
 
     def test_only_development_mapping_allowed(self):
         for key, value in [('sync_branch', 'zh-CN-4.x'), ('sync_branch', 'main-4.x'),
-                           ('upstream_branch', 'main'), ('upstream_repository', 'other/repo')]:
+                           ('upstream_branch', 'main-4.x'), ('upstream_branch', 'main-3.x'), ('upstream_repository', 'other/repo')]:
             with self.subTest(key=key, value=value), self.assertRaises(ValueError):
                 module.sync(dict(CONFIG, **{key: value}), push=True)
 
@@ -125,7 +128,9 @@ class WorkflowTests(unittest.TestCase):
             self.assertNotIn(forbidden, text)
         self.assertIn('group: zh-upstream-sync', text)
         self.assertIn('cancel-in-progress: false', text)
-        self.assertIn('--validate', text)
+        self.assertIn('--upstream-ref main-3.x --validate', text)
+        config = json.loads((ROOT / '.github/sync/pj4-sync.json').read_text())
+        self.assertEqual(config, CONFIG)
 
 if __name__ == '__main__':
     unittest.main()

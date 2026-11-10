@@ -16,7 +16,7 @@
 不改变历史 rc.4 包。下载、资产校验及最终验收范围以对应 Release 为准。
 
 主题变更通过保留提交的合并进入开发线，验证及发布准备完成后再晋级稳定线。
-`main-4.x` 仅作为上游镜像；3.x 两条线独立维护。参见[分支规范](../BRANCHING.zh-CN.md)。
+`main` 仅镜像上游 PJ4 `main`，`main-3.x` 仅镜像上游 PJ3 `main-3.x`；3.x 两条汉化线独立维护。参见[分支规范](../BRANCHING.zh-CN.md)。
 草稿或尚未合并的 PR 不属于当前交付；请查看
 [本分支 PR 列表](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pulls)确认最新进度。
 
@@ -24,7 +24,7 @@
 
 | 项目 | 基准 |
 |---|---|
-| PlotJuggler 官方上游 | `PlotJuggler/PlotJuggler`，`main-4.x` |
+| PlotJuggler 官方上游 | `PlotJuggler/PlotJuggler`，`main`（PJ4） |
 | 精确上游提交 | `1b8fb491f56cc185ae395e2c7a0561443ad18d07` |
 | 3.x 翻译参考 | 本仓库 `zh-CN` 的 `766a88d8e689c7803f32acb315ac872a0a67a57b` |
 | Qt | `6.12.0`，以 `versions.env` 为准 |

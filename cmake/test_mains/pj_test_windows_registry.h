@@ -3,6 +3,11 @@
 
 #include <qt_windows.h>
 
+// Win32's generic API macro must not rewrite the PJ::MessageBox widget type.
+#ifdef MessageBox
+#undef MessageBox
+#endif
+
 #include <QSettings>
 #include <QUuid>
 #include <cstdio>

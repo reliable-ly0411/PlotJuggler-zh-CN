@@ -40,7 +40,7 @@
 ## 本仓映射
 
 - 3.x：`zh-CN` / `zh-CN-dev`；已有 `v3.18.0-zh.N` 与资产保持不变。
-- 4.x：`zh-CN-4.x` / `zh-CN-4.x-dev`；主题分支用 `zh-CN-4.x-{feat,fix,ci,docs}/主题`；`main-4.x` 只镜像上游。
+- 4.x：`zh-CN-4.x` / `zh-CN-4.x-dev`；主题分支用 `zh-CN-4.x-{feat,fix,ci,docs}/主题`；`main` 只镜像官方 PJ4 `main`，`main-3.x` 只镜像官方 PJ3 `main-3.x`。
 - 应用版本以 `versions.env` 的 `PJ_APP_VERSION` 为准；tag 是 `v` 加该版本。首个候选 `v4.0.0-zh.1.rc.1` 基于上游 4.0.0 之后的 `0345ec513bde7f05ad3148548ac30401f2b6f7a7`，设置 prerelease，不覆盖 Latest。
 - 保持上游 Windows IFW、portable ZIP、Linux AppImage、Debian 四种格式；文件末尾增加 `-zh-CN`，只提供实际验收的 x64/x86_64/amd64。旧候选的三格式原包不改动。
 - `4.0.0-zh.1.rc.1` 为应用与下载名 SemVer。Debian 映射为 `4.0.0~zh.1~rc.1-1`，使候选排在正式版之前。IFW只允许数字组件，映射为 `4.0.0.1.0.1`（基础版、汉化修订1、候选阶段0、序号1）；这不是另一个应用版本。将来正式阶段使用1，不能倒退覆盖。
@@ -84,3 +84,12 @@ CSV 运行提示与诊断修复使用新的
 `zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r3` 候选入口。必须重新通过全部原生、
 原包与视觉门禁，以及暂存后真实 CSV/FileLoader 三语回归；不复用 r2 的 run、
 测试结论或产物，r2 原始证据保留。该入口只构建验收，不创建 tag 或 Release。
+
+## 上游源码映射
+
+官方及本仓的 PJ3 维护线均为 `main-3.x`，PJ4 维护线均为 `main`。
+纯镜像仅从对应上游分支快进，不混入汉化或维护提交；缺失源 ref、分叉或目标并发变化时停止更新，不强推。
+源码同步分别将官方 `main-3.x` 合入 `zh-CN-dev`、官方 `main` 合入 `zh-CN-4.x-dev`，
+保留本地自动化与汉化历史。源码冲突必须另行审阅，不通过改映射覆盖解决。
+默认分支继续为 `zh-CN-4.x`。镜像改名不改变汉化稳定/开发线、版本、标签或候选包；
+既有待验候选继续固定原源码与流程 SHA，维护变更须与发行 PR 分别审阅。

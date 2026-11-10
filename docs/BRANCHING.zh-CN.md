@@ -1,10 +1,11 @@
 # 4.x 汉化分支与历史规则
 
-本分支基于官方 `main-4.x`，与 Qt5 的 `zh-CN` / `zh-CN-dev` 独立。
+本分支基于官方 PJ4 `main`（原 `main-4.x`），与 Qt5 的 `zh-CN` / `zh-CN-dev` 独立。
 
 | 分支 | 用途 |
 | --- | --- |
-| `main-4.x` | 官方同名分支的精确镜像，仅安全快进 |
+| `main` | 官方 PJ4 `main` 的精确镜像，仅安全快进 |
+| `main-3.x` | 官方 PJ3 `main-3.x` 的精确镜像，仅安全快进 |
 | `zh-CN-4.x` | 稳定汉化线，只接收充分验证后的开发线合并 |
 | `zh-CN-4.x-dev` | 4.x 开发集成线 |
 | `zh-CN-4.x-feat/<topic>` | 独立功能 |
@@ -30,8 +31,9 @@
 
 ## 纯上游镜像自动同步
 
-`main` 对应官方 `PlotJuggler/PlotJuggler:main`（3.x），`main-4.x` 对应官方
-同名 4.x 分支。两个镜像保持精确的上游提交，不加入汉化、策略文件或同步脚本。
+`main-3.x` 对应官方 `PlotJuggler/PlotJuggler:main-3.x`（3.x），`main` 对应官方
+`PlotJuggler/PlotJuggler:main`（4.x）。两个镜像保持精确的上游提交，不加入汉化、策略文件或同步脚本。
+默认分支仍为 `zh-CN-4.x`，汉化长期线、发行 PR 和固定候选不随镜像改名。
 
 默认分支的 `.github/workflows/upstream-mirrors.yml` 每 6 小时（UTC 00:13、
 06:13、12:13、18:13）检查一次；修改该工作流或其控制器时也会运行。
