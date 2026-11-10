@@ -1,7 +1,7 @@
 name: SDK Unicode A-B experiment (not release acceptance)
 'on':
   push:
-    branches: ['zh-CN-4.x-ci/sdk-unicode-ab-696c']
+    branches: ['zh-CN-4.x-ci/sdk-unicode-ab-696c-r2']
 permissions:
   contents: read
 concurrency:
@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   experiment:
-    if: github.event.created && github.ref_name == 'zh-CN-4.x-ci/sdk-unicode-ab-696c'
+    if: github.event.created && github.ref_name == 'zh-CN-4.x-ci/sdk-unicode-ab-696c-r2'
     runs-on: windows-2022
     timeout-minutes: 20
     steps:

@@ -58,9 +58,9 @@ def main():
     for variant, source in [('original', original), ('fixed', fixed)]:
         build = root / ('sdk-ab-build-' + variant)
         command(['cmake', '-S', str(HERE), '-B', str(build), '-G', 'Ninja',
-                 '-DCMAKE_BUILD_TYPE=Release', '-DSDK_SOURCE=' + str(source),
-                 '-DFMT_INCLUDE=' + str(root / 'fmt/include'),
-                 '-DJSON_INCLUDE=' + str(root / 'json/include')])
+                 '-DCMAKE_BUILD_TYPE=Release', '-DSDK_SOURCE=' + source.as_posix(),
+                 '-DFMT_INCLUDE=' + (root / 'fmt/include').as_posix(),
+                 '-DJSON_INCLUDE=' + (root / 'json/include').as_posix()])
         command(['cmake', '--build', str(build), '--parallel', '2'])
         exe = build / 'sdk_unicode_probe.exe'
         run = subprocess.run([str(exe), str(root / ('sdk-ab-owned-' + variant))],
