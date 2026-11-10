@@ -3074,7 +3074,7 @@
     "s/pj_app/tests/resource_link_smoke.cpp": "45e98b7fce19d5729da5950563e7a3727a849e2f565ff40fb36f7e87558f6fa7",
     "s/pj_app/tests/rhi_dock_lifecycle_test.cpp": "8a10360be2e40ac72f53ce4b42b8dc1d5dfc353d9a2be72cd9fb4ade235092e5",
     "s/pj_app/tests/rhi_mixed_dock_test.cpp": "5907b2537c837e4d352b71efb2f2a95750a38966be1bbe6121162123bd98e82f",
-    "s/pj_app/tests/runtime_catalog_language_test.cpp": "2e6054a502f36d39b4e411eaedd465dbe0d46359067145df0247f022186e645e",
+    "s/pj_app/tests/runtime_catalog_language_test.cpp": "baac72db3dfb93df26e60f67bc0cbe8880aa435c915386e8534ec1bcf322318f",
     "s/pj_app/tests/support/loader_test_support.h": "b9b042db5e6cb0aee43625cddd24456ebc68643987345bddf6c4db87045e8f5a",
     "s/pj_app/tests/support/rhi_dock_test_support.h": "765065523b6c6d84b7552117811c30e1e2ecb46ad0892e9bbb5ceea66850ca60",
     "s/pj_custom_widgets/tests/CMakeLists.txt": "ec568b059e41a18e39c3b6df7255b1d9b418b7699a51f41acaf52fb11957675a",
