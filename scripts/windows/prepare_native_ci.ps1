@@ -558,7 +558,8 @@ foreach ($entry in $actualRemotes) {
   }
   $seenRemotes[$entry.name] = $true
 }
-Invoke-Checked (Get-Command python.exe -CommandType Application).Source @((Join-Path $source 'scripts/bootstrap_host_sdk.py'))
+# Use the provisioned interpreter, not every python.exe now present on PATH.
+Invoke-Checked $builderPython @((Join-Path $source 'scripts/bootstrap_host_sdk.py'))
 $conanGraph = Join-Path $build 'conan-install-graph.json'
 Invoke-RecordedBuildProcess 'install' $conan @('install', $source, "--output-folder=$build", '--build=missing',
   '-r=plotjuggler-conan', '-r=conancenter', "--lockfile=$(Join-Path $source 'conan.lock')", '--lockfile-partial',

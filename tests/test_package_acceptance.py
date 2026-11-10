@@ -68,6 +68,18 @@ class CleanAcceptanceTests(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 module.windows_system_root(env)
 
+    def test_plugin_diagnostics_force_english_without_weakening_whitelist(self):
+        prefix = Path('/package')
+        args = module.plugin_validation_arguments(prefix, EXPECTED)
+        self.assertEqual(args, ['--language', 'en_US', '--validate-plugins',
+                               str(prefix / 'lib/plotjuggler/plugins'),
+                               *[arg for spec in EXPECTED for arg in ('--expect-plugin', spec)]])
+        self.assertEqual(module.ACCEPTANCE_LANGUAGES, ('zh_CN', 'zh_TW', 'en_US'))
+
+    def test_unexpected_localized_diagnostics_still_fail_closed(self):
+        with self.assertRaises(AssertionError):
+            module.validate_plugin_result(1, MISSING_ROS.replace('Loaded ', '已加载 '), EXPECTED, True)
+
     def test_complete_success(self):
         self.assertEqual(module.validate_plugin_result(0, '[plugin-validation] OK: loaded all 3 whitelisted plugin(s)', EXPECTED, False), [])
 

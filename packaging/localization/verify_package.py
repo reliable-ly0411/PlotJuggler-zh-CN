@@ -74,6 +74,14 @@ def windows_system_root(environment):
     return Path(roots[0])
 
 
+def plugin_validation_arguments(prefix, expected):
+    """Use a stable diagnostic language without changing per-language GUI tests."""
+    args = ['--language', 'en_US', '--validate-plugins', str(prefix / 'lib/plotjuggler/plugins')]
+    for spec in expected:
+        args.extend(['--expect-plugin', spec])
+    return args
+
+
 def optional_ros_error(message):
     """Only the two known no-instance diagnostics belong to the ROS prerequisite."""
     return bool(re.fullmatch(
@@ -307,9 +315,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
         version_text = run('version', ['--version'])
         assert any(line.strip() == 'PlotJuggler4 ' + expected_version for line in version_text.splitlines()), version_text
         assert '[selftest-python] OK' in run('python', ['--selftest-python'])
-        args = ['--validate-plugins', str(prefix / 'lib/plotjuggler/plugins')]
-        for spec in expected:
-            args.extend(['--expect-plugin', spec])
+        args = plugin_validation_arguments(prefix, expected)
         unavailable = []
         run('plugins', args, validate_plugins=True)
         csv_cases = [(name, *write_csv_layout(work, unicode_path))

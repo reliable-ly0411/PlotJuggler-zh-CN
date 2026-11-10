@@ -186,6 +186,13 @@ if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath (Join-Path $env:NEW_REPO '.g
             result = subprocess.run([shell, '-NoProfile', '-NonInteractive', '-File', str(script)], env=env, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_sdk_bootstrap_uses_exact_builder_interpreter(self):
+        call = "Invoke-Checked $builderPython @((Join-Path $source 'scripts/bootstrap_host_sdk.py'))"
+        self.assertIn(call, SCRIPT)
+        self.assertLess(SCRIPT.index("$builderPython = Join-Path $builder 'Scripts/python.exe'"),
+                        SCRIPT.index(call))
+        self.assertNotIn("Invoke-Checked (Get-Command python.exe", SCRIPT)
+
     def test_same_root_and_fail_closed_sequence(self):
         self.assertIn("$base = 'C:\\Users\\Administrator\\PlotJuggler-4.1.0-zh-test-558a\\n'", SCRIPT)
         self.assertIn('$sourcePrefix = $sha.Substring(0, 12)', SCRIPT)
