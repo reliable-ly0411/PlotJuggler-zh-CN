@@ -497,6 +497,9 @@
            <property name="text">
             <string>Let AI agents control PlotJuggler (MCP server):</string>
            </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item row="11" column="1">
