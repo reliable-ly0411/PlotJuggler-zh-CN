@@ -14,7 +14,7 @@ SUFFIXES = ("Windows-x64.zip", "Windows-x64.exe", "x86_64.AppImage", "aarch64.Ap
 def expected_files(source):
     if not re.fullmatch(r"[0-9a-f]{40}", source):
         raise ValueError("A full source commit is required")
-    version = "3.18.1-rc.3+upstream.3.17.2.apbin.1.g" + source[:12]
+    version = "3.18.1-rc.4+upstream.3.17.2.apbin.1.g" + source[:12]
     return version, {"PlotJuggler-" + version + "-" + suffix for suffix in SUFFIXES}
 
 
@@ -80,11 +80,11 @@ def collect(software, metadata, source, output, report):
     for name, path in files.items():
         shutil.copyfile(path, output / name)
     report.mkdir(parents=True, exist_ok=True)
-    result = {"tag": "v3.18.1-rc.3", "version": version, "source_commit": source,
+    result = {"tag": "v3.18.1-rc.4", "version": version, "source_commit": source,
               "software_assets": sorted(identities, key=lambda item: item["name"]),
               "asset_count": 7, "process_attachments": 0, "published": False}
     (report / "seven-packages.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
-    notes = f"""PlotJuggler 三语言 v3.18.1-rc.3 (Pre-release)
+    notes = f"""PlotJuggler 三语言 v3.18.1-rc.4 (Pre-release)
 
 Source: `{source}`; upstream `main-3.x`: `df5cbaad9bb087413470e818fa5cdb88d6357ce5` (declares 3.17.2).
 3.18.1 is a downstream version, not an upstream release.
