@@ -18,7 +18,7 @@ import sys
 from package_privacy import check_metadata, load_public_records
 from pe_content_fingerprint import fingerprint, METHOD
 from windows_public_binary_review_helpers import (
-    NAMES, QRC_EXPECTED, candidate_privacy, derive_qrc_offsets, observed_public_literals, unknown_marker_count, unknown_public_path_hashes, sha,
+    NAMES, QRC_EXPECTED, candidate_privacy, derive_qrc_offsets, observed_public_literals, unknown_marker_count, path_diagnostics, rc5_shadow, sha,
 )
 
 COLLECTION_PHASE = "argument validation"
@@ -109,7 +109,8 @@ def main():
                    records["public_ci_source_records"][name]["nul_terminated_literals"])
             literals = observed_public_literals(data, old)
             entry["unknown_marker_count"] = unknown_marker_count(data, literals)
-            entry["unknown_public_path_sha256"] = unknown_public_path_hashes(data, old, literals)
+            entry["path_diagnostics"] = path_diagnostics(data, old)
+            entry["rc5_end_only_shadow"] = rc5_shadow(data, name, records, old, check_metadata)
             entry["rule"] = "Package privacy scanner rejected file"
             try:
                 literals, markers, scan_policy = candidate_privacy(data, name, records, check_metadata)

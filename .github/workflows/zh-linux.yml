@@ -191,14 +191,31 @@ jobs:
         audit_exit=0
         python3 scripts/package_size_audit.py --payload AppDir --package "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --out acceptance/package-size.json || audit_exit=$?
         python3 -c 'import json,sys; from pathlib import Path; r=dict(zip(("qtcore_identity_exit","packaged_gui_exit","package_audit_exit"),map(int,sys.argv[1:]))); Path("acceptance/packaged-step-results.json").write_text(json.dumps(r,indent=2)); sys.exit(int(any(r.values())))' "$core_exit" "$gui_exit" "$audit_exit"
+    - name: Validate packaged AppImage launcher Qt interaction
+      if: always() && steps.appimage-package.outcome == 'success' && matrix.target == 'appimage'
+      env:
+        APPIMAGE_EXTRACT_AND_RUN: '1'
+        QT_QPA_PLATFORM: xcb
+      run: |
+        mkdir -p acceptance/launcher-packaged
+        env -u LD_LIBRARY_PATH xvfb-run -a python3 scripts/launcher_acceptance.py --launcher "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --out-base acceptance/launcher-packaged --expected-version "$PJ_SEMVER" --expected-platform xcb
     - name: Build and validate native Debian or Ubuntu package
+      id: native-package
       if: always() && steps.native-build.outcome == 'success' && matrix.target != 'appimage'
       run: |
         bash scripts/build_native_deb.sh
         sudo apt-get install -y "$PWD"/output/*.deb
+        echo "launcher-ready=true" >> "$GITHUB_OUTPUT"
         xvfb-run -a python3 scripts/zh_acceptance.py --app /usr/bin/plotjuggler --plugin /usr/lib/plotjuggler/libDataAPBin.so --out acceptance/packaged
       env:
         PJ_DEB_DISTRO: ${{ matrix.target }}
+    - name: Validate installed native launcher Qt interaction
+      if: always() && steps.native-package.outputs.launcher-ready == 'true' && matrix.target != 'appimage'
+      env:
+        QT_QPA_PLATFORM: xcb
+      run: |
+        mkdir -p acceptance/launcher-packaged
+        xvfb-run -a python3 scripts/launcher_acceptance.py --launcher /usr/bin/plotjuggler-launcher --out-base acceptance/launcher-packaged --expected-version "$PJ_SEMVER" --expected-platform xcb
     - name: Test build without localized images
       if: always() && steps.native-build.outcome == 'success'
       run: |

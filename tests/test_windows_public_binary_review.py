@@ -14,7 +14,7 @@ sys.path.insert(0, str(REPO / "scripts"))
 from package_privacy import check_metadata as check
 from pe_content_fingerprint import fingerprint, METHOD
 from windows_public_binary_review_helpers import (
-    candidate_privacy, derive_qrc_offsets, observed_public_literals, unknown_public_path_hashes, qrc_struct, sha,
+    candidate_privacy, derive_qrc_offsets, observed_public_literals, unknown_public_path_hashes, path_diagnostics, rc5_shadow, qrc_struct, sha,
 )
 
 PUBLIC_SOURCE = r"C:\Users\runneradmin\.conan2\p\b\arrow5bfe34ade08ff\b\src\cpp\src\arrow\array\array_base.cc"
@@ -110,6 +110,46 @@ class ReviewScope(unittest.TestCase):
         self.assertEqual(unknown_public_path_hashes(value.encode(), [self.old], []), [])
         self.assertEqual(unknown_public_path_hashes(("X" + value + "\0").encode(), [self.old], []), [])
         self.assertEqual(unknown_public_path_hashes((value + "\0").encode(), [self.old], [value]), [])
+
+    def test_diagnostic_hash_accepts_end_only_without_export_approval(self):
+        data = ("X" + self.new + "\0").encode()
+        diag = path_diagnostics(data, [self.old])
+        self.assertEqual(diag["boundary_counts"]["no_nul_start"], 1)
+        self.assertEqual(diag["reason_counts"]["known_exact_literal"], 1)
+        expected = self.old.lower().replace("\\", "/").replace("5bfe34ade08ff", "{cache}")
+        self.assertEqual(diag["path_sha256"], [sha(expected.encode("ascii"))])
+        shadow = rc5_shadow(data, "DataLoadParquet.dll", self.policy(), [self.old], check)
+        self.assertEqual(shadow["matched_occurrences"], 1)
+        self.assertTrue(shadow["passed"])
+        literals, _, policy = candidate_privacy(data, "DataLoadParquet.dll", self.policy(), check)
+        self.assertEqual(literals, [self.new])
+        self.assertEqual(policy["public_ci_source_records"]["DataLoadParquet.dll"]["observed_plugin_sha256"], sha(data))
+        with self.assertRaises(ValueError):
+            check(data, "DataLoadParquet.dll", self.policy())
+
+    def test_diagnostic_allowlist_layout_and_secret_boundaries(self):
+        candidate = self.new.replace("array_base.cc", "new_file.cc")
+        for layout in (candidate, candidate.replace("\\p\\b\\", "\\p\\")):
+            for encoding in ("ascii", "utf-16le"):
+                self.assertEqual(len(path_diagnostics((layout + "\0").encode(encoding), [self.old])["path_sha256"]), 1)
+        for bad in (candidate.replace("runneradmin", "someone"),
+                    candidate.replace("arrow0123456789abc", "other0123456789abc"),
+                    candidate.replace("\\p\\b\\", "\\p\\other\\"),
+                    candidate.replace("0123456789abc", "0123456789abcd"),
+                    candidate.replace("new_file.cc", "..\\new_file.cc"),
+                    candidate.replace("new_file.cc", "new_ﬁle.cc")):
+            self.assertEqual(path_diagnostics((bad + "\0").encode("utf-16le"), [self.old])["path_sha256"], [])
+        for extra in ("gh" + "p_" + "x" * 36, "person" + "@qq.com",
+                      "-----BEGIN PRIVATE KEY-----\n" + "A" * 128 + "\n-----END PRIVATE KEY-----"):
+            diag = path_diagnostics((candidate + "\0" + extra + "\0").encode(), [self.old])
+            self.assertTrue(diag["hashes_suppressed_for_secret"])
+            self.assertEqual(diag["path_sha256"], [])
+
+    def test_malformed_utf16_cannot_hide_private_marker_from_residual(self):
+        literal = self.new
+        data = ("person@qq.com" + literal[:4]).encode("utf-16le") + b"\x00\xd8" + (literal[4:] + "\0").encode("utf-16le")
+        with self.assertRaises(ValueError):
+            candidate_privacy(data, "DataLoadParquet.dll", self.policy(), check)
 
     def test_old_production_gate_still_rejects_unreviewed_candidate(self):
         data = (self.new + "\0").encode()
@@ -357,11 +397,62 @@ class CollectorIntegration(unittest.TestCase):
             self.assertTrue((root / "review/DataLoadParquet.dll").exists())
             self.assertGreater(json.loads(manifest)["selected"]["ToolboxMosaico.dll"]["unknown_marker_count"], 0)
 
-    def test_ambiguous_embedded_public_suffix_rejected(self):
+    def test_adjacent_known_literal_scans_residual_prefix(self):
+        old = ReviewScope.old
         literal = ReviewScope.new
+        policy = ReviewScope().policy()
+        sensitive = (r"C:\Users\OtherUser\private.bin", "gh" + "p_" + "x" * 36,
+                     "-----BEGIN PRIVATE KEY-----\n" + "A" * 128 + "\n-----END PRIVATE KEY-----",
+                     "person" + "@qq.com")
+        for encoding, offset in (("ascii", b""), ("utf-16le", b""), ("utf-16le", b"x")):
+            for prefix in sensitive:
+                with self.subTest(encoding=encoding, offset=len(offset), kind=sha(prefix.encode())):
+                    data = offset + (prefix + literal + "\0").encode(encoding)
+                    with self.assertRaises(ValueError):
+                        candidate_privacy(data, "DataLoadParquet.dll", policy, check)
+                    if "@qq.com" in prefix:
+                        self.assertTrue(path_diagnostics(data, [old])["hashes_suppressed_for_secret"])
+                        self.assertEqual(path_diagnostics(data, [old])["path_sha256"], [])
         data = (literal + "\0X" + literal + "\0").encode()
-        with self.assertRaises(ValueError):
-            candidate_privacy(data, "DataLoadParquet.dll", ReviewScope().policy(), check)
+        found, _, _ = candidate_privacy(data, "DataLoadParquet.dll", policy, check)
+        self.assertEqual(found, [literal])
+
+    def test_end_only_shadow_is_not_production_approval(self):
+        with tempfile.TemporaryDirectory(prefix="pj-review-fixture-") as temp:
+            root = Path(temp)
+            payload, command = self.setup_fixture(root)
+            path = payload / "DataLoadParquet.dll"
+            data = bytearray(path.read_bytes())
+            offset = data.find(PUBLIC_SOURCE.encode())
+            self.assertGreater(offset, 0)
+            data[offset - 1] = ord("X")
+            path.write_bytes(data)
+            result = subprocess.run(command, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((root / "review/DataLoadParquet.dll").read_bytes(), data)
+            entry = json.loads((root / "review/review-manifest.json").read_text())["selected"]["DataLoadParquet.dll"]
+            self.assertTrue(entry["rc5_end_only_shadow"]["passed"])
+            self.assertEqual(entry["path_diagnostics"]["boundary_counts"]["no_nul_start"], 1)
+            self.assertEqual(len(entry["path_diagnostics"]["path_sha256"]), 1)
+            self.assertFalse(entry["existing_production_gate"]["passed"])
+            self.assertFalse(entry["approved_for_release"])
+
+    def test_secret_in_selected_dll_suppresses_all_path_hashes(self):
+        with tempfile.TemporaryDirectory(prefix="pj-review-fixture-") as temp:
+            root = Path(temp)
+            payload, command = self.setup_fixture(root)
+            path = payload / "DataLoadParquet.dll"
+            token = "gh" + "p_" + "x" * 36
+            with path.open("ab") as stream:
+                stream.write(("\0" + token + "\0").encode())
+            result = subprocess.run(command, text=True, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            manifest = (root / "review/review-manifest.json").read_text()
+            self.assertNotIn(token, manifest + result.stdout + result.stderr)
+            entry = json.loads(manifest)["selected"]["DataLoadParquet.dll"]
+            self.assertTrue(entry["path_diagnostics"]["hashes_suppressed_for_secret"])
+            self.assertEqual(entry["path_diagnostics"]["path_sha256"], [])
+            self.assertFalse((root / "review/DataLoadParquet.dll").exists())
 
     def test_stale_review_directory_never_signals_or_overwrites(self):
         with tempfile.TemporaryDirectory(prefix="pj-review-fixture-") as temp:

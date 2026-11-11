@@ -2,7 +2,7 @@
 
 本 fork 基于官方 Qt5 / C++17 3.x 维护线，提供 English、简体中文、繁體中文、
 独立启动器和随包的 ArduPilot DataFlash BIN 加载器。本轮下游候选为
-`3.18.1-rc.6+upstream.3.17.2.apbin.1.g<commit>`；
+`3.18.1-rc.7+upstream.3.17.2.apbin.1.g<commit>`；
 精确提交的验证及发布状态见 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44)。
 上游 `main-3.x` 固定为 `df5cbaad9bb087413470e818fa5cdb88d6357ce5`，其声明版本为 3.17.2；
 3.18.1 是下游发行目标。Qt6 / 4.x 的功能、插件 ABI 和验收记录不适用于这里。

@@ -224,7 +224,7 @@ endif()
 
 target_link_libraries(plotjuggler PRIVATE pj_application_language)
 qt5_add_resources(PJ_LAUNCHER_RESOURCES launcher.qrc)
-add_executable(plotjuggler-launcher launcher.cpp ${PJ_LAUNCHER_RESOURCES})
+add_executable(plotjuggler-launcher launcher.cpp launcher_acceptance.cpp ${PJ_LAUNCHER_RESOURCES})
 target_link_libraries(plotjuggler-launcher PRIVATE pj_application_language)
 target_compile_definitions(plotjuggler-launcher PRIVATE PJ_FORK_SEMVER="${PJ_FORK_SEMVER}")
 if(WIN32)

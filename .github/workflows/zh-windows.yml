@@ -212,6 +212,15 @@ jobs:
         python scripts/zh_acceptance.py --app installer/io.plotjuggler.application/data/plotjuggler.exe --plugin installer/io.plotjuggler.application/data/DataAPBin.dll --out acceptance
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         Compress-Archive -Path installer/io.plotjuggler.application/data/* -DestinationPath PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip
+    - name: Validate packaged launcher Qt interaction and persistence
+      id: launcher-gui
+      if: always() && steps.stage-python.outcome == 'success' && steps.stage-runtime.outcome == 'success'
+      shell: pwsh
+      run: |
+        $env:QT_QPA_PLATFORM = "windows"
+        New-Item -ItemType Directory -Force -Path acceptance/launcher-packaged | Out-Null
+        python scripts/launcher_acceptance.py --launcher installer/io.plotjuggler.application/data/plotjuggler-launcher.exe --out-base acceptance/launcher-packaged --expected-version "$env:PJ_SEMVER" --expected-platform windows
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Create installer using QT Installation Framework
       id: installer-package
       if: always() && steps.stage-python.outcome == 'success' && steps.stage-runtime.outcome == 'success'

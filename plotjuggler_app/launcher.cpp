@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 #include "app_language.h"
 #include "app_settings.h"
+#include "launcher_acceptance.h"
 #include <QApplication>
 #include <QComboBox>
 #include <QDialog>
@@ -11,6 +12,10 @@
 #include <QIcon>
 #include <QLabel>
 #include <QMessageBox>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QSaveFile>
 #include <QProcess>
 #include <QPushButton>
 #include <QSettings>
@@ -51,7 +56,23 @@ public:
     layout->addRow(buttons);
     connect(buttons, &QDialogButtonBox::accepted, this, &Launcher::start);
     connect(buttons, &QDialogButtonBox::rejected, this, &Launcher::reject);
-    connect(&process_, &QProcess::started, this, &QWidget::hide);
+    connect(&process_, &QProcess::started, this, [this] {
+      const QString output = qApp->property("launcherAcceptanceOutput").toString();
+      if (!output.isEmpty())
+      {
+        QSaveFile file(QDir(output).filePath("child-started.json"));
+        const auto data = QJsonDocument(QJsonObject{
+          {"program", process_.program()}, {"arguments", QJsonArray::fromStringList(process_.arguments())},
+          {"cwd", process_.workingDirectory()}}).toJson();
+        if (!file.open(QIODevice::WriteOnly) || file.write(data) != data.size() || !file.commit())
+        {
+          process_.kill();
+          qApp->exit(3);
+          return;
+        }
+      }
+      hide();
+    });
     connect(&process_, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
       if (error == QProcess::FailedToStart)
       {
@@ -161,12 +182,18 @@ int main(int argc, char** argv)
   QApplication app(argc, argv);
   app.setQuitOnLastWindowClosed(false);
   QApplication::setStyle("Fusion");
+  LauncherAcceptance acceptance;
+  QStringList arguments;
+  if (!parseLauncherAcceptance(app.arguments().mid(1), acceptance, arguments))
+  {
+    QTextStream(stderr) << "Invalid launcher acceptance arguments or isolation paths\n";
+    return 2;
+  }
   if (!configureApplicationSettings(app))
   {
     return 2;
   }
   installApplicationLanguage(app);
-  QStringList arguments = app.arguments().mid(1);
   bool immediate = false;
   for (int i = 0; i < arguments.size() && arguments[i] != "--";)
   {
@@ -188,10 +215,12 @@ int main(int argc, char** argv)
       ++i;
     }
   }
+  if (acceptance.enabled) app.setProperty("launcherAcceptanceOutput", acceptance.output);
   Launcher launcher(arguments, immediate);
   if (!immediate)
   {
     launcher.show();
+    if (acceptance.enabled) driveLauncherAcceptance(&launcher, acceptance);
   }
   return app.exec();
 }
