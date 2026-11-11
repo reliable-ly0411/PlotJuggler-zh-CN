@@ -211,18 +211,18 @@ void PlotWidget::buildActions()
   _action_paste = new QAction(QObject::tr("&Paste"), this);
   connect(_action_paste, &QAction::triggered, this, &PlotWidget::on_pasteAction_triggered);
 
-  _action_image_to_clipboard = new QAction(QObject::tr("&Copy image to clipboard"), this);
+  _action_image_to_clipboard = new QAction(QObject::tr("Copy &image to clipboard"), this);
   connect(_action_image_to_clipboard, &QAction::triggered, this, &PlotWidget::on_copyToClipboard);
 
-  _flip_x = new QAction(QObject::tr("&Flip Horizontal Axis"), this);
+  _flip_x = new QAction(QObject::tr("F&lip Horizontal Axis"), this);
   _flip_x->setCheckable(true);
   connect(_flip_x, &QAction::changed, this, &PlotWidget::onFlipAxis);
 
-  _flip_y = new QAction(QObject::tr("&Flip Vertical Axis"), this);
+  _flip_y = new QAction(QObject::tr("Flip Ver&tical Axis"), this);
   _flip_y->setCheckable(true);
   connect(_flip_y, &QAction::changed, this, &PlotWidget::onFlipAxis);
 
-  _action_data_statistics = new QAction(QObject::tr("&Show data statistics"), this);
+  _action_data_statistics = new QAction(QObject::tr("Show &data statistics"), this);
   connect(_action_data_statistics, &QAction::triggered, this, &PlotWidget::onShowDataStatistics);
 }
 

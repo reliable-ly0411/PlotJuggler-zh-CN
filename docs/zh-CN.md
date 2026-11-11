@@ -3,7 +3,7 @@
 ## 3.18.1 候选使用方式
 
 本轮是 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44) 的下游维护候选
-`3.18.1-rc.1`，不是上游 3.18.1。使用上游 Qt5 / C++17 `main-3.x`
+`3.18.1-rc.2`，不是上游 3.18.1。使用上游 Qt5 / C++17 `main-3.x`
 `df5cbaad9bb087413470e818fa5cdb88d6357ce5`（仍声明 3.17.2），开发起点为
 `cbc7b7287884208b5a9042de45bcab4b5dcd79c0`。
 当前状态、候选 SHA 和已运行/失败/未运行检查见 [验收记录](localization/3.18.1-validation.md)。
@@ -112,7 +112,8 @@ Qt `.ts` 为唯一翻译来源，构建时通过 Linguist 编译并嵌入 `.qm`�
 
 第三方运行时异常文本、用户消息内容、ArduPilot XML 字段说明、插件返回的
 动态名称以及诊断标准输出可能仍为英文。这些内容不会被盲目替换。
-Qt 标准对话框优先使用随包或系统 Qt 的 `qtbase_zh_CN` 翻译。
+Qt 标准对话框译文内嵌在程序和启动器中，使用匹配 Qt5 的简体、繁体目录；
+Qt 5.15.2 的简体原始文件名为 `qt_zh_CN.qm`，后续 Qt5 为 `qtbase_zh_CN.qm`。
 
 ```text
 lupdate plotjuggler_app plotjuggler_base plotjuggler_plugins -no-obsolete -ts plotjuggler_app/translations/plotjuggler_zh_CN.ts

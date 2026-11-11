@@ -17,6 +17,7 @@
 #include <QSignalMapper>
 #include <QShortcut>
 #include <QMovie>
+#include <QJsonObject>
 
 #include "plotwidget.h"
 #include "plot_docker.h"
@@ -58,6 +59,8 @@ public:
   void setStatusBarMessage(QString message);
 
   const PlotDataMapRef& dataMap() const { return _mapped_plot_data; }
+  // Used only by --self-test-ui with an isolated settings directory.
+  QJsonObject checkAcceptanceRoundTrip(const QString& output);
 
   /// Show a toast notification in the bottom-right corner
   /// @param message The text/HTML to display (supports rich text with clickable links)

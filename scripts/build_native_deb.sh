@@ -27,7 +27,8 @@ for elf in "$stage"/usr/lib/plotjuggler/plotjuggler "$stage"/usr/lib/plotjuggler
 done
 deps="$(cd package-metadata && dpkg-shlibdeps -O -l"$stage/usr/lib/plotjuggler" "${args[@]}" | sed -n 's/^shlibs:Depends=//p')"
 test -n "$deps"
-deb_version="${version/-/~}"
+deb_version="${version/-/\~}"
+dpkg --validate-version "$deb_version"
 printf 'Package: plotjuggler\nVersion: %s\nArchitecture: amd64\nSection: science\nPriority: optional\nMaintainer: PlotJuggler zh-CN <125791929+reliable-ly0411@users.noreply.github.com>\nDepends: %s, ca-certificates, fonts-noto-cjk\nHomepage: https://github.com/reliable-ly0411/PlotJuggler-zh-CN\nDescription: PlotJuggler zh-CN with ArduPilot DataFlash BIN support\n' "$deb_version" "$deps" > "$stage/DEBIAN/control"
 dpkg-deb --root-owner-group --build "$stage" "output/PlotJuggler-${version}-${distribution}-amd64.deb"
 test "$(dpkg-deb -f output/*.deb Version)" = "$deb_version"

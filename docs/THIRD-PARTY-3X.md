@@ -22,6 +22,9 @@ Qt 5.15.2 的 translations 来源为 [Qt 官方源码](https://github.com/qt/qtt
 Ubuntu 本机 Qt translations 包为 5.15.13-1，来源为
 [Ubuntu 源包](https://launchpad.net/ubuntu/+source/qttranslations-opensource-src/5.15.13-1)。
 标准译文未修改；应用自有的按钮译文由应用目录覆盖。构建必须找到匹配 Qt5 的两份标准目录，否则配置失败。
+Qt 5.15.2 官方 Windows 包的简体译文仍合并在 `qt_zh_CN.qm`，构建兼容该原始文件；
+繁体使用 `qtbase_zh_TW.qm`。实际选用的文件名与 SHA256 均写入包内清单，
+标准按钮和文件对话框的翻译仍须通过测试。
 
 每份包包含 `BUILD-INFO.json`（完整源码提交、上游 SHA、版本、解析器来源），
 以及 `Licenses` 下的应用、解析器、Qt 和上述随源码保留的许可文本。

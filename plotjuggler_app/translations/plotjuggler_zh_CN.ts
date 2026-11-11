@@ -2238,27 +2238,27 @@ p, li { white-space: pre-wrap; }
     <context>
         <name>Launcher</name>
         <message>
-            <location filename="../launcher.cpp" line="28" />
+            <location filename="../launcher.cpp" line="29" />
             <source>PlotJuggler 3 launcher</source>
             <translation>PlotJuggler 3 启动器</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="40" />
+            <location filename="../launcher.cpp" line="41" />
             <source>Interface language:</source>
             <translation>界面语言：</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="41" />
+            <location filename="../launcher.cpp" line="42" />
             <source>The selected language is saved when you click Start. Files and command-line options are passed to PlotJuggler.</source>
             <translation>点击“启动”时保存所选语言。文件和命令行选项会传递给 PlotJuggler。</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="46" />
+            <location filename="../launcher.cpp" line="47" />
             <source>Start</source>
             <translation>启动</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="55" />
+            <location filename="../launcher.cpp" line="56" />
             <source>Unable to start PlotJuggler:
 %1
 %2</source>
@@ -2267,29 +2267,29 @@ p, li { white-space: pre-wrap; }
 %2</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="60" />
+            <location filename="../launcher.cpp" line="61" />
             <source>PlotJuggler stopped unexpectedly.</source>
             <translation>PlotJuggler 意外停止。</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="62" />
+            <location filename="../launcher.cpp" line="63" />
             <source>PlotJuggler exited with code %1.</source>
             <translation>PlotJuggler 已退出，退出码为 %1。</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="93" />
+            <location filename="../launcher.cpp" line="95" />
             <source>Language</source>
             <translation>语言</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="94" />
+            <location filename="../launcher.cpp" line="96" />
             <source>Unable to save the language preference:
 %1</source>
             <translation>无法保存语言设置：
 %1</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="112" />
+            <location filename="../launcher.cpp" line="114" />
             <source>Launch failed</source>
             <translation>启动失败</translation>
         </message>
@@ -3242,7 +3242,7 @@ This message will be shown only once.</source>
         <message>
             <location filename="../transforms/moving_average_filter.ui" line="26" />
             <source>Select the size of the window</source>
-            <translation>选择窗口大小</translation>
+            <translation>选择采样窗大小</translation>
         </message>
         <message>
             <location filename="../transforms/moving_average_filter.ui" line="54" />
@@ -3270,7 +3270,7 @@ This message will be shown only once.</source>
         <message>
             <location filename="../transforms/moving_rms.ui" line="26" />
             <source>Select the size of the window</source>
-            <translation>选择窗口大小</translation>
+            <translation>选择采样窗大小</translation>
         </message>
         <message>
             <location filename="../transforms/moving_rms.ui" line="54" />
@@ -3288,12 +3288,12 @@ This message will be shown only once.</source>
         <message>
             <location filename="../transforms/moving_variance.ui" line="25" />
             <source>Select the size of the window</source>
-            <translation>选择窗口大小</translation>
+            <translation>选择采样窗大小</translation>
         </message>
         <message>
             <location filename="../transforms/moving_variance.ui" line="53" />
             <source>Window size:</source>
-            <translation>窗口大小：</translation>
+            <translation>采样窗大小：</translation>
         </message>
         <message>
             <location filename="../transforms/moving_variance.ui" line="62" />
@@ -3843,17 +3843,17 @@ ColorMap [%1] not found.</source>
             <translation>使用独立的配置目录</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="501" />
+            <location filename="../main.cpp" line="504" />
             <source>Python disabled</source>
             <translation>Python 已禁用</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="502" />
+            <location filename="../main.cpp" line="505" />
             <source>PlotJuggler could not initialize the embedded Python interpreter.</source>
             <translation>PlotJuggler 无法初始化嵌入式 Python 解释器。</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="505" />
+            <location filename="../main.cpp" line="508" />
             <source>Python custom functions are disabled for this session. Lua custom functions remain available.
 
 This usually means the Python standard library expected by this build is not present on the host system (common when running an AppImage on a distro with a different Python version).</source>
@@ -3862,12 +3862,12 @@ This usually means the Python standard library expected by this build is not pre
 通常是主机缺少此构建所需的 Python 标准库，例如在 Python 版本不同的发行版上运行 AppImage。</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="510" />
+            <location filename="../main.cpp" line="513" />
             <source>Don't show this again</source>
             <translation>不再显示</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="549" />
+            <location filename="../main.cpp" line="552" />
             <source>New release available: &lt;b&gt;%1&lt;/b&gt;&lt;br&gt;&lt;a href="%2"&gt;View on GitHub&lt;/a&gt;</source>
             <translation>发现新版本：&lt;b&gt;%1&lt;/b&gt;&lt;br&gt;&lt;a href="%2"&gt;在 GitHub 上查看&lt;/a&gt;</translation>
         </message>
@@ -4250,23 +4250,23 @@ i.e. the Datafile used or the Streaming Plugin loaded ?</source>
         </message>
         <message>
             <location filename="../plotwidget.cpp" line="214" />
-            <source>&amp;Copy image to clipboard</source>
+            <source>Copy &amp;image to clipboard</source>
             <translation>复制图像到剪贴板(&amp;I)</translation>
         </message>
         <message>
             <location filename="../plotwidget.cpp" line="217" />
-            <source>&amp;Flip Horizontal Axis</source>
-            <translation>翻转水平坐标轴(&amp;H)</translation>
+            <source>F&amp;lip Horizontal Axis</source>
+            <translation>翻转水平坐标轴(&amp;L)</translation>
         </message>
         <message>
             <location filename="../plotwidget.cpp" line="221" />
-            <source>&amp;Flip Vertical Axis</source>
-            <translation>翻转垂直坐标轴(&amp;V)</translation>
+            <source>Flip Ver&amp;tical Axis</source>
+            <translation>翻转垂直坐标轴(&amp;T)</translation>
         </message>
         <message>
             <location filename="../plotwidget.cpp" line="225" />
-            <source>&amp;Show data statistics</source>
-            <translation>显示数据统计(&amp;S)</translation>
+            <source>Show &amp;data statistics</source>
+            <translation>显示数据统计(&amp;D)</translation>
         </message>
         <message>
             <location filename="../plotwidget.cpp" line="1842" />

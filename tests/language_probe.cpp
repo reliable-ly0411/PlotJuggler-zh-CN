@@ -17,7 +17,10 @@
 int main(int argc, char** argv)
 {
   QApplication app(argc, argv);
-  if (!configureApplicationSettings(app)) return 2;
+  if (!configureApplicationSettings(app))
+  {
+    return 2;
+  }
   const auto arguments = app.arguments();
   const auto value = [&](const QString& option) {
     const int index = arguments.indexOf(option);
@@ -35,20 +38,28 @@ int main(int argc, char** argv)
   installApplicationLanguage(app);
   QDialogButtonBox buttons(QDialogButtonBox::Close | QDialogButtonBox::Cancel);
   const QJsonObject report{
-    {"arguments", QJsonArray::fromStringList(arguments.mid(1))},
-    {"directory", QDir::currentPath()}, {"language", app.property("interfaceLanguage").toString()},
-    {"menu", QCoreApplication::translate("MainWindow", "App")},
-    {"close", buttons.button(QDialogButtonBox::Close)->text()},
-    {"qt_file_name", QCoreApplication::translate("QFileDialog", "File &name:")},
-    {"fallback", QCoreApplication::translate("UnknownThirdPartyPlugin", "Untranslated sample")},
-    {"numeric_locale_preserved", QLocale() == before && QLocale().toString(1.25) == "1,25"},
-    {"settings_file", QSettings().fileName()}};
+    { "arguments", QJsonArray::fromStringList(arguments.mid(1)) },
+    { "directory", QDir::currentPath() },
+    { "language", app.property("interfaceLanguage").toString() },
+    { "menu", QCoreApplication::translate("MainWindow", "App") },
+    { "close", buttons.button(QDialogButtonBox::Close)->text() },
+    { "qt_file_name", QCoreApplication::translate("QFileDialog", "File &name:") },
+    { "fallback", QCoreApplication::translate("UnknownThirdPartyPlugin", "Untranslated sample") },
+    { "numeric_locale_preserved", QLocale() == before && QLocale().toString(1.25) == "1,25" },
+    { "settings_file", QSettings().fileName() }
+  };
   const auto bytes = QJsonDocument(report).toJson();
   if (!value("--probe-output").isEmpty())
   {
     QFile file(value("--probe-output"));
-    if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size()) return 3;
+    if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size())
+    {
+      return 3;
+    }
   }
-  else std::cout << bytes.constData();
+  else
+  {
+    std::cout << bytes.constData();
+  }
   return value("--exit-code").toInt();
 }

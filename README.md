@@ -2,7 +2,7 @@
 
 本 fork 基于官方 Qt5 / C++17 3.x 维护线，提供 English、简体中文、繁體中文、
 独立启动器和随包的 ArduPilot DataFlash BIN 加载器。当前准备下游
-`3.18.1-rc.1+upstream.3.17.2.apbin.1.g<commit>`；仍在验证，尚未发布。
+`3.18.1-rc.2+upstream.3.17.2.apbin.1.g<commit>`；仍在验证，尚未发布。
 上游 `main-3.x` 固定为 `df5cbaad9bb087413470e818fa5cdb88d6357ce5`，其声明版本为 3.17.2；
 3.18.1 是下游发行目标。Qt6 / 4.x 的功能、插件 ABI 和验收记录不适用于这里。
 简体模式保留既有离线图库；繁体模式使用英文原图。

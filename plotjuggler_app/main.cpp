@@ -39,6 +39,7 @@
 #include <QMenu>
 #include <QJsonArray>
 #include <QFile>
+#include <QScreen>
 
 #include "PlotJuggler/transform_function.h"
 #include "transforms/binary_filter.h"
@@ -255,6 +256,8 @@ int main(int argc, char* argv[])
   parser.addHelpOption();
   const QCommandLineOption ui_test_option("self-test-ui", "Write UI acceptance evidence, then exit", "directory");
   parser.addOption(ui_test_option);
+  const QCommandLineOption ui_size_option("self-test-size", "Window size for UI acceptance (WIDTHxHEIGHT)", "size");
+  parser.addOption(ui_size_option);
   const QCommandLineOption meme_export_option("export-memes", "Export all startup images in the selected language", "directory");
   parser.addOption(meme_export_option);
 
@@ -427,6 +430,11 @@ int main(int argc, char* argv[])
 
     splash.show();
     app.processEvents();
+    if (parser.isSet(ui_test_option))
+    {
+      QDir().mkpath(parser.value(ui_test_option));
+      if (!splash.grab().save(parser.value(ui_test_option) + "/splash.png")) return 23;
+    }
 
     auto deadline = QDateTime::currentDateTime().addMSecs(500);
     while (QDateTime::currentDateTime() < deadline)
@@ -448,6 +456,19 @@ int main(int argc, char* argv[])
     window = new MainWindow(parser);
   }
 
+  if (parser.isSet(ui_test_option) && parser.isSet(ui_size_option))
+  {
+    const QStringList dimensions = parser.value(ui_size_option).split('x');
+    bool width_ok = false, height_ok = false;
+    const int width = dimensions.value(0).toInt(&width_ok);
+    const int height = dimensions.value(1).toInt(&height_ok);
+    if (dimensions.size() != 2 || !width_ok || !height_ok || width < 1 || height < 1)
+    {
+      delete window;
+      return 2;
+    }
+    window->resize(width, height);
+  }
   window->show();
   if (parser.isSet(ui_test_option))
   {
@@ -462,6 +483,8 @@ int main(int argc, char* argv[])
       const QString expected_title = language == "zh_CN" ? QString::fromUtf8("应用") :
                                      language == "zh_TW" ? QString::fromUtf8("應用") : QString("App");
       const bool language_ok = expected == expected_title;
+      const QJsonObject regression = window->checkAcceptanceRoundTrip(output);
+      const bool regression_ok = regression.value("ok").toBool();
       const bool image_ok = window->grab().save(output + "/main-window.png");
       const auto details = checkLocalizedUi(window, output, chinese);
       const bool details_ok = details.value("ok").toBool();
@@ -470,19 +493,27 @@ int main(int argc, char* argv[])
       QJsonObject result;
       result["menu_title"] = menu ? menu->title() : QString();
       result["language_ok"] = language_ok;
+      result["language"] = language;
       result["menu_ok"] = menu_ok;
       result["screenshot_ok"] = image_ok;
       result["data_ok"] = data_ok;
       result["numeric_series"] = static_cast<int>(numeric_series);
       result["version"] = app.applicationVersion();
+      result["qt_version"] = qVersion();
+      result["platform"] = QGuiApplication::platformName();
+      result["window_width"] = window->width();
+      result["window_height"] = window->height();
+      result["device_pixel_ratio"] = window->devicePixelRatioF();
+      result["logical_dpi"] = window->screen()->logicalDotsPerInch();
       result["localization"] = details;
+      result["regression"] = regression;
       QFile report(output + "/ui.json");
       const bool report_ok = report.open(QIODevice::WriteOnly);
       if (report_ok) report.write(QJsonDocument(result).toJson());
       // Follow the same closeEvent path as a user closing the app, including
       // stopping timers and releasing plugins while QApplication is alive.
       window->close();
-      app.exit(menu_ok && language_ok && image_ok && data_ok && details_ok && report_ok ? 0 : 20);
+      app.exit(menu_ok && language_ok && image_ok && data_ok && details_ok && regression_ok && report_ok ? 0 : 20);
     });
   }
 

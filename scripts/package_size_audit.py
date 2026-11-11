@@ -27,7 +27,7 @@ for path in sorted(root.rglob("*")):
     if not path.is_file() or path.is_symlink():
         continue
     name = path.relative_to(root).as_posix()
-    assert not re.search(r"(^|/)(pj_.*_test|pj_language_probe|test_[^/]+|.*_test\.exe)(\.|$)", name), name
+    assert not re.search(r"(^|/)(pj_.*_tests?|pj_language_probe|test_[^/]+|[^/]*_tests?)(\.|$)", name), name
     data = path.read_bytes()
     try:
         upstream_markers.extend(check_metadata(data, name, public_records))

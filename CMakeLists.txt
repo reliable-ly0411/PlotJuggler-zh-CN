@@ -342,6 +342,12 @@ add_subdirectory(plotjuggler_app)
 add_subdirectory(plotjuggler_plugins)
 
 if(PJ_BUILD_FORK_TESTS)
+  foreach(_pj_test_target mosaico_unit_tests ToolboxMosaico_tests test_ros_field test_cdr_alignment)
+    if(TARGET ${_pj_test_target})
+      set_target_properties(${_pj_test_target} PROPERTIES
+        WIN32_EXECUTABLE FALSE RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests_bin")
+    endif()
+  endforeach()
   add_executable(pj_localized_meme_test tests/localized_meme_test.cpp
     plotjuggler_app/localized_meme.cpp ${PJ_APP_RESOURCES})
   target_include_directories(pj_localized_meme_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

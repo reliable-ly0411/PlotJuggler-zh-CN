@@ -15,7 +15,10 @@ bool configureApplicationSettings(const QApplication& app)
   bool explicit_directory = false;
   for (int i = 1; i < arguments.size(); ++i)
   {
-    if (arguments[i] == "--") break;
+    if (arguments[i] == "--")
+    {
+      break;
+    }
     if (arguments[i].startsWith("--config-dir="))
     {
       explicit_directory = true;
@@ -40,10 +43,14 @@ bool configureApplicationSettings(const QApplication& app)
   if (directory.isEmpty())
   {
     const int test = arguments.indexOf("--self-test-ui");
-    if (test >= 0 && test + 1 < arguments.size()) directory = arguments[test + 1] + "/settings";
+    if (test >= 0 && test + 1 < arguments.size())
+    {
+      directory = arguments[test + 1] + "/settings";
+    }
   }
   if (!directory.isEmpty())
-    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope,
-                       QDir(directory).absolutePath());
+  {
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QDir(directory).absolutePath());
+  }
   return true;
 }

@@ -76,7 +76,7 @@ class ApplicationLanguage(unittest.TestCase):
         output = self.root / "報告 空格.json"
         arguments = ["--config-dir", str(self.config), "--language", "zh_TW", "--probe-output",
                      str(output), "-d", "相對資料 sample.csv", "--layout=版面 layout.xml",
-                     "--", "--launch"]
+                     "--", "--launch", "--help-launcher"]
         subprocess.check_call([str(launcher), "--launch", *arguments], cwd=self.root)
         result = json.loads(output.read_text(encoding="utf-8"))
         self.assertEqual(result["arguments"], arguments)

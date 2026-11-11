@@ -271,5 +271,15 @@
     "Duplicate tab added in PJ4 #1495",
     "Qt6 CurveTreeView extraction workaround",
     "PJ4 plugin SDK and marketplace"
-  ]
+  ],
+  "qt5_context_menu_followup": {
+    "finding": "Actual PJ3 menus also include flip/copy/statistics actions with colliding accelerators; PJ4 source fixes alone are insufficient.",
+    "keys": [
+      "Copy &image to clipboard",
+      "F&lip Horizontal Axis",
+      "Flip Ver&tical Axis",
+      "Show &data statistics"
+    ],
+    "test": "Native timeseries and XY popup actions checked for duplicates in --self-test-ui."
+  }
 }

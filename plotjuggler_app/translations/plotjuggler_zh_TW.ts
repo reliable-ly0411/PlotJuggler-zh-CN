@@ -143,12 +143,12 @@ p, li { white-space: pre-wrap; }
         <message>
             <location filename="../cheatsheet/cheatsheet_dialog.ui" line="84" />
             <source>Filters/Transforms</source>
-            <translation>濾波與變換</translation>
+            <translation>濾波與轉換</translation>
         </message>
         <message>
             <location filename="../cheatsheet/cheatsheet_dialog.ui" line="89" />
             <source>Advanced Transforms</source>
-            <translation>高階變換</translation>
+            <translation>高階轉換</translation>
         </message>
         <message>
             <location filename="../cheatsheet/cheatsheet_dialog.ui" line="94" />
@@ -354,15 +354,15 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;style type="text/css"&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;"&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;應用濾波器和簡單時間序列變換&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;應用濾波器和簡單時間序列轉換&lt;/span&gt;&lt;/p&gt;
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;PlotJuggler 提供直觀的圖形介面，可對資料應用以下變換：&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;PlotJuggler 提供直觀的圖形介面，可對資料應用以下轉換：&lt;/p&gt;
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;    －滑動平均濾波。&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;    －一階導數。&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;    －積分。&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;    －異常值剔除。&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;    －透過外掛程式新增自訂變換。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;    －透過外掛程式新增自訂轉換。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
         </message>
         <message>
             <location filename="../cheatsheet/cheatsheet_dialog.ui" line="589" />
@@ -384,7 +384,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;style type="text/css"&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;"&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;高階變換：建立自訂時間序列&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;高階轉換：建立自訂時間序列&lt;/span&gt;&lt;/p&gt;
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;"&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;您可以使用現有時間序列建立&lt;span style=" font-weight:600;"&gt;多輸入、單輸出&lt;/span&gt;函式。&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;指令碼使用 Lua 語言，幾分鐘即可瞭解基本用法。&lt;/p&gt;
@@ -412,7 +412,7 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;"&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;儲存或載入版面配置&lt;/span&gt;&lt;/p&gt;
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;設定好曲線、變換、繪圖區和分頁後，可將整個版面配置儲存到檔案，以便稍後重新載入。&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;設定好曲線、轉換、繪圖區和分頁後，可將整個版面配置儲存到檔案，以便稍後重新載入。&lt;/p&gt;
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;此外，還可以使用 &lt;span style=" font-weight:600;"&gt;CTRL+Z &lt;/span&gt;（撤銷）和 &lt;span style=" font-weight:600;"&gt;CTRL+SHIFT+Z &lt;/span&gt;（重做）。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
         </message>
@@ -2036,7 +2036,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;"&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:12pt; font-weight:600;"&gt;有狀態函式：&lt;/span&gt;&lt;/p&gt;
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;部分變換需要“記憶”，例如保留上一個值。您可在“全域變數”文字框中實現。&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;部分轉換需要“記憶”，例如保留上一個值。您可在“全域變數”文字框中實現。&lt;/p&gt;
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;例如，要計算相鄰兩個值的有限差分，可在&lt;span style=" font-weight:600;"&gt;全域變數&lt;/span&gt;文字框中新增：&lt;/p&gt;
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
@@ -2238,27 +2238,27 @@ p, li { white-space: pre-wrap; }
     <context>
         <name>Launcher</name>
         <message>
-            <location filename="../launcher.cpp" line="28" />
+            <location filename="../launcher.cpp" line="29" />
             <source>PlotJuggler 3 launcher</source>
             <translation>PlotJuggler 3 啟動器</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="40" />
+            <location filename="../launcher.cpp" line="41" />
             <source>Interface language:</source>
             <translation>介面語言：</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="41" />
+            <location filename="../launcher.cpp" line="42" />
             <source>The selected language is saved when you click Start. Files and command-line options are passed to PlotJuggler.</source>
             <translation>點選“啟動”時儲存所選語言。檔案和命令列選項會傳遞給 PlotJuggler。</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="46" />
+            <location filename="../launcher.cpp" line="47" />
             <source>Start</source>
             <translation>啟動</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="55" />
+            <location filename="../launcher.cpp" line="56" />
             <source>Unable to start PlotJuggler:
 %1
 %2</source>
@@ -2267,29 +2267,29 @@ p, li { white-space: pre-wrap; }
 %2</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="60" />
+            <location filename="../launcher.cpp" line="61" />
             <source>PlotJuggler stopped unexpectedly.</source>
             <translation>PlotJuggler 意外停止。</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="62" />
+            <location filename="../launcher.cpp" line="63" />
             <source>PlotJuggler exited with code %1.</source>
             <translation>PlotJuggler 已結束，結束代碼為 %1。</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="93" />
+            <location filename="../launcher.cpp" line="95" />
             <source>Language</source>
             <translation>語言</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="94" />
+            <location filename="../launcher.cpp" line="96" />
             <source>Unable to save the language preference:
 %1</source>
             <translation>無法儲存語言設定：
 %1</translation>
         </message>
         <message>
-            <location filename="../launcher.cpp" line="112" />
+            <location filename="../launcher.cpp" line="114" />
             <source>Launch failed</source>
             <translation>啟動失敗</translation>
         </message>
@@ -3172,7 +3172,7 @@ This message will be shown only once.</source>
         <message>
             <location filename="../mainwindow.cpp" line="3167" />
             <source>&lt;html&gt;&lt;body&gt;&lt;p&gt;&lt;b&gt;PlotJuggler&lt;/b&gt;&lt;br/&gt;Built with love by &lt;b&gt;Davide Faconti&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;a href="https://www.plotjuggler.io"&gt;Official website&lt;/a&gt; · &lt;a href="https://github.com/PlotJuggler/PlotJuggler"&gt;Official upstream&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Chinese localization and ArduPilot integration:&lt;br/&gt;&lt;a href="https://github.com/reliable-ly0411/PlotJuggler-zh-CN"&gt;reliable-ly0411/PlotJuggler-zh-CN&lt;/a&gt;&lt;br/&gt;&lt;a href="https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/new?template=translation.yml"&gt;Report a translation issue&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Original copyright and MPL-2.0 license retained.&lt;br/&gt;ArduPilot DataFlash plugin: LGPL-3.0.&lt;/p&gt;&lt;p&gt;For commercial support and custom development, contact the original author:&lt;br/&gt;&lt;a href="mailto:davide.faconti@gmail.com"&gt;davide.faconti@gmail.com&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-            <translation>&lt;html&gt;&lt;body&gt;&lt;p&gt;&lt;b&gt;PlotJuggler&lt;/b&gt;&lt;br/&gt;Built with love by &lt;b&gt;Davide Faconti&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;a href="https://www.plotjuggler.io"&gt;官方網站&lt;/a&gt; · &lt;a href="https://github.com/PlotJuggler/PlotJuggler"&gt;上游專案&lt;/a&gt;&lt;/p&gt;&lt;p&gt;中文介面與 ArduPilot 整合：&lt;br/&gt;&lt;a href="https://github.com/reliable-ly0411/PlotJuggler-zh-CN"&gt;reliable-ly0411/PlotJuggler-zh-CN&lt;/a&gt;&lt;br/&gt;&lt;a href="https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/new?template=translation.yml"&gt;向漢化專案報告問題&lt;/a&gt;&lt;/p&gt;&lt;p&gt;保留原專案版權與 MPL-2.0 許可證。&lt;br/&gt;ArduPilot DataFlash 外掛程式：LGPL-3.0。&lt;/p&gt;&lt;p&gt;商業支援與定製開發請聯絡原作者：&lt;br/&gt;&lt;a href="mailto:davide.faconti@gmail.com"&gt;davide.faconti@gmail.com&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+            <translation>&lt;html&gt;&lt;body&gt;&lt;p&gt;&lt;b&gt;PlotJuggler&lt;/b&gt;&lt;br/&gt;Built with love by &lt;b&gt;Davide Faconti&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;a href="https://www.plotjuggler.io"&gt;官方網站&lt;/a&gt; · &lt;a href="https://github.com/PlotJuggler/PlotJuggler"&gt;上游專案&lt;/a&gt;&lt;/p&gt;&lt;p&gt;中文介面與 ArduPilot 整合：&lt;br/&gt;&lt;a href="https://github.com/reliable-ly0411/PlotJuggler-zh-CN"&gt;reliable-ly0411/PlotJuggler-zh-CN&lt;/a&gt;&lt;br/&gt;&lt;a href="https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/new?template=translation.yml"&gt;向漢化專案報告問題&lt;/a&gt;&lt;/p&gt;&lt;p&gt;保留原專案版權與 MPL-2.0 授權條款。&lt;br/&gt;ArduPilot DataFlash 外掛程式：LGPL-3.0。&lt;/p&gt;&lt;p&gt;商業支援與定製開發請聯絡原作者：&lt;br/&gt;&lt;a href="mailto:davide.faconti@gmail.com"&gt;davide.faconti@gmail.com&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
         </message>
         <message>
             <location filename="../mainwindow.cpp" line="3292" />
@@ -3242,7 +3242,7 @@ This message will be shown only once.</source>
         <message>
             <location filename="../transforms/moving_average_filter.ui" line="26" />
             <source>Select the size of the window</source>
-            <translation>選擇視窗大小</translation>
+            <translation>選擇取樣窗大小</translation>
         </message>
         <message>
             <location filename="../transforms/moving_average_filter.ui" line="54" />
@@ -3270,7 +3270,7 @@ This message will be shown only once.</source>
         <message>
             <location filename="../transforms/moving_rms.ui" line="26" />
             <source>Select the size of the window</source>
-            <translation>選擇視窗大小</translation>
+            <translation>選擇取樣窗大小</translation>
         </message>
         <message>
             <location filename="../transforms/moving_rms.ui" line="54" />
@@ -3288,12 +3288,12 @@ This message will be shown only once.</source>
         <message>
             <location filename="../transforms/moving_variance.ui" line="25" />
             <source>Select the size of the window</source>
-            <translation>選擇視窗大小</translation>
+            <translation>選擇取樣窗大小</translation>
         </message>
         <message>
             <location filename="../transforms/moving_variance.ui" line="53" />
             <source>Window size:</source>
-            <translation>視窗大小：</translation>
+            <translation>取樣窗大小：</translation>
         </message>
         <message>
             <location filename="../transforms/moving_variance.ui" line="62" />
@@ -3389,8 +3389,8 @@ To convert this widget into a [XY plot], you must first remove all its curves.</
             <source>Can't restore the transform for curve [%1].
 Transform [%2] not found.
 Are you using an old configuration file?</source>
-            <translation>無法恢復曲線 [%1] 的變換。
-未找到變換 [%2]。
+            <translation>無法恢復曲線 [%1] 的轉換。
+未找到轉換 [%2]。
 是否使用了舊版設定檔案？</translation>
         </message>
         <message>
@@ -3843,17 +3843,17 @@ ColorMap [%1] not found.</source>
             <translation>使用獨立的設定目錄</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="501" />
+            <location filename="../main.cpp" line="504" />
             <source>Python disabled</source>
             <translation>Python 已禁用</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="502" />
+            <location filename="../main.cpp" line="505" />
             <source>PlotJuggler could not initialize the embedded Python interpreter.</source>
             <translation>PlotJuggler 無法初始化嵌入式 Python 直譯器。</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="505" />
+            <location filename="../main.cpp" line="508" />
             <source>Python custom functions are disabled for this session. Lua custom functions remain available.
 
 This usually means the Python standard library expected by this build is not present on the host system (common when running an AppImage on a distro with a different Python version).</source>
@@ -3862,12 +3862,12 @@ This usually means the Python standard library expected by this build is not pre
 通常是主機缺少此版本所需的 Python 標準庫，例如在 Python 版本不同的發行版上執行 AppImage。</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="510" />
+            <location filename="../main.cpp" line="513" />
             <source>Don't show this again</source>
             <translation>不再顯示</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="549" />
+            <location filename="../main.cpp" line="552" />
             <source>New release available: &lt;b&gt;%1&lt;/b&gt;&lt;br&gt;&lt;a href="%2"&gt;View on GitHub&lt;/a&gt;</source>
             <translation>發現新版本：&lt;b&gt;%1&lt;/b&gt;&lt;br&gt;&lt;a href="%2"&gt;在 GitHub 上檢視&lt;/a&gt;</translation>
         </message>
@@ -4117,14 +4117,14 @@ sudo apt install ros-${ROS_DISTRO}-plotjuggler-ros</translation>
         <message>
             <location filename="../mainwindow.cpp" line="2492" />
             <source>Overwrite custom transforms?</source>
-            <translation>覆蓋自訂變換？</translation>
+            <translation>覆蓋自訂轉換？</translation>
         </message>
         <message>
             <location filename="../mainwindow.cpp" line="2493" />
             <source>Your layout file contains a set of custom transforms different from the last one you used.
 Want to load these transformations?</source>
-            <translation>版面配置檔案中的自訂變換與上次使用的不同。
-是否載入這些變換？</translation>
+            <translation>版面配置檔案中的自訂轉換與上次使用的不同。
+是否載入這些轉換？</translation>
         </message>
         <message>
             <location filename="../mainwindow.cpp" line="2915" />
@@ -4166,7 +4166,7 @@ i.e. the Datafile used or the Streaming Plugin loaded ?</source>
         <message>
             <location filename="../mainwindow.cpp" line="3394" />
             <source>Save Scripts (transforms and colormaps)</source>
-            <translation>儲存指令碼（變換和顏色對映）</translation>
+            <translation>儲存指令碼（轉換和顏色對映）</translation>
         </message>
         <message>
             <location filename="../mainwindow.cpp" line="3395" />
@@ -4250,23 +4250,23 @@ i.e. the Datafile used or the Streaming Plugin loaded ?</source>
         </message>
         <message>
             <location filename="../plotwidget.cpp" line="214" />
-            <source>&amp;Copy image to clipboard</source>
+            <source>Copy &amp;image to clipboard</source>
             <translation>複製影像到剪貼簿(&amp;I)</translation>
         </message>
         <message>
             <location filename="../plotwidget.cpp" line="217" />
-            <source>&amp;Flip Horizontal Axis</source>
-            <translation>翻轉水平座標軸(&amp;H)</translation>
+            <source>F&amp;lip Horizontal Axis</source>
+            <translation>翻轉水平座標軸(&amp;L)</translation>
         </message>
         <message>
             <location filename="../plotwidget.cpp" line="221" />
-            <source>&amp;Flip Vertical Axis</source>
-            <translation>翻轉垂直座標軸(&amp;V)</translation>
+            <source>Flip Ver&amp;tical Axis</source>
+            <translation>翻轉垂直座標軸(&amp;T)</translation>
         </message>
         <message>
             <location filename="../plotwidget.cpp" line="225" />
-            <source>&amp;Show data statistics</source>
-            <translation>顯示資料統計(&amp;S)</translation>
+            <source>Show &amp;data statistics</source>
+            <translation>顯示資料統計(&amp;D)</translation>
         </message>
         <message>
             <location filename="../plotwidget.cpp" line="1842" />
@@ -5568,7 +5568,7 @@ p, li { white-space: pre-wrap; }
         <message>
             <location filename="../mainwindow.cpp" line="837" />
             <source>Fast Fourier Transform</source>
-            <translation>快速傅立葉變換（Fast Fourier Transform）</translation>
+            <translation>快速傅立葉轉換（Fast Fourier Transform）</translation>
         </message>
         <message>
             <location filename="../mainwindow.cpp" line="838" />
@@ -6170,7 +6170,7 @@ Only affects OMGIDL-encoded channels in this file.</source>
         <message>
             <location filename="../plotwidget_transforms.ui" line="14" />
             <source>Transform Editor</source>
-            <translation>變換編輯器</translation>
+            <translation>轉換編輯器</translation>
         </message>
         <message>
             <location filename="../plotwidget_transforms.ui" line="91" />
@@ -6185,7 +6185,7 @@ Only affects OMGIDL-encoded channels in this file.</source>
         <message>
             <location filename="../plotwidget_transforms.ui" line="180" />
             <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Zoom Out when a parameter in the transform box is changed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-            <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;更改變換引數時自動縮小以顯示全部。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+            <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;更改轉換引數時自動縮小以顯示全部。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
         </message>
         <message>
             <location filename="../plotwidget_transforms.ui" line="183" />
@@ -6195,7 +6195,7 @@ Only affects OMGIDL-encoded channels in this file.</source>
         <message>
             <location filename="../plotwidget_transforms.ui" line="244" />
             <source>-- NO Transform --</source>
-            <translation>-- 不應用變換 --</translation>
+            <translation>-- 不應用轉換 --</translation>
         </message>
         <message>
             <location filename="../plotwidget_transforms.ui" line="296" />
@@ -6389,7 +6389,7 @@ Only affects OMGIDL-encoded channels in this file.</source>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxCSV/toolbox_csv.ui" line="168" />
             <source>Remove selected rows</source>
-            <translation>移除所選行</translation>
+            <translation>移除所選列</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxCSV/toolbox_csv.ui" line="171" />
@@ -6554,7 +6554,7 @@ Suffix will be the group name.</source>
         <message>
             <location filename="../transforms/transform_selector.ui" line="117" />
             <source>Note: invalid transforms will not be displayed</source>
-            <translation>注意：無效變換不會顯示</translation>
+            <translation>注意：無效轉換不會顯示</translation>
         </message>
     </context>
 </TS>

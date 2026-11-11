@@ -11,5 +11,7 @@ add_test(NAME ApplicationLanguages COMMAND "${Python3_EXECUTABLE}"
 set_tests_properties(ApplicationLanguages PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 60)
 add_test(NAME TranslationCatalogs COMMAND "${Python3_EXECUTABLE}"
   "${_pj_root}/tests/check_translations.py" --fresh)
+set_tests_properties(TranslationCatalogs PROPERTIES
+  ENVIRONMENT "LUPDATE=$<TARGET_FILE:Qt5::lupdate>")
 add_test(NAME TranslationValidatorUnit COMMAND "${Python3_EXECUTABLE}"
   "${_pj_root}/tests/test_translation_validation.py")

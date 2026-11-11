@@ -10,6 +10,7 @@ p = argparse.ArgumentParser()
 p.add_argument("--app", required=True)
 p.add_argument("--plugin", required=True)
 p.add_argument("--out", required=True)
+p.add_argument("--window-size", default="1100x700")
 p.add_argument("--original-images", action="store_true", help="Expect a build with localized image resources disabled")
 a = p.parse_args()
 app = Path(a.app).resolve()
@@ -21,14 +22,14 @@ catalog = json.loads((root / "plotjuggler_app/resources/memes/zh_CN.json").read_
 localized_count = sum(bool(m.get("variant")) for m in catalog["images"])
 if a.original_images:
     localized_count = 0
-fixture = root / "plotjuggler_plugins/DataLoadAPBin/tests/synthetic.BIN"
+fixture = root / "plotjuggler_plugins/DataLoadAPBin/tests/curves.BIN"
 expected_version = json.loads((root / "build/FORK-VERSION.json").read_text(encoding="utf-8"))["version"]
 reports = []
 for language in ("zh_CN", "zh_TW", "en_US"):
     out = Path(a.out).resolve() / language
     out.mkdir(parents=True, exist_ok=True)
     command = [str(app), "-n", "--disable_opengl",
-               "--self-test-ui", str(out), "-d", str(fixture)]
+               "--self-test-ui", str(out), "--self-test-size", a.window_size, "-d", str(fixture)]
     if language != "zh_CN": command += ["--language", language]
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60)
     (out / "process.log").write_bytes(result.stdout)
@@ -36,9 +37,20 @@ for language in ("zh_CN", "zh_TW", "en_US"):
         raise SystemExit(f"{language} UI acceptance failed: {result.returncode}\n{result.stdout.decode('utf-8', errors='replace')}")
     report = json.loads((out / "ui.json").read_text(encoding="utf-8"))
     assert report["version"] == expected_version, report
+    assert report["language"] == language, report
     assert report["language_ok"] and report["menu_ok"] and report["screenshot_ok"], report
     assert report["data_ok"] and report["numeric_series"] >= 4, report
     assert report["localization"]["ok"], report
+    assert report["regression"]["ok"], report
+    restarted = out / "restarted"
+    restart_command = [str(app), "-n", "--disable_opengl", "--config-dir", str(out / "settings"),
+                       "--self-test-ui", str(restarted), "--self-test-size", a.window_size, "-d", str(fixture)]
+    restart_result = subprocess.run(restart_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60)
+    (out / "restart.log").write_bytes(restart_result.stdout)
+    assert restart_result.returncode == 0, restart_result.stdout.decode("utf-8", errors="replace")
+    restart_report = json.loads((restarted / "ui.json").read_text(encoding="utf-8"))
+    assert restart_report["language"] == language and restart_report["language_ok"], restart_report
+    assert restart_report["regression"]["ok"] and restart_report["localization"]["ok"], restart_report
     meme_out = out / "memes"
     exported = subprocess.run([str(app), "--language", language, "--export-memes", str(meme_out)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60)
     (out / "memes.log").write_bytes(exported.stdout)
