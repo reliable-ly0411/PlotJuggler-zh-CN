@@ -122,7 +122,7 @@ if [[ -n "${PJ_QT5_CORE_BACKPORT:-}" ]]; then
 fi
 
 echo "==> Packaging AppImage"
-"$LDPLOY" --appimage-extract-and-run \
+LDAI_OUTPUT="$REPO_ROOT/PlotJuggler-${ARCH}.AppImage" "$LDPLOY" --appimage-extract-and-run \
     --appdir "$APPDIR" \
     --output appimage
 

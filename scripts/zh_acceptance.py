@@ -15,6 +15,7 @@ p.add_argument("--original-images", action="store_true", help="Expect a build wi
 a = p.parse_args()
 app = Path(a.app).resolve()
 plugin = Path(a.plugin).resolve()
+launcher_options = ["--launch"] if app.suffix == ".AppImage" else []
 assert app.is_file(), app
 assert plugin.is_file(), plugin
 root = Path(__file__).resolve().parents[1]
@@ -28,7 +29,7 @@ reports = []
 for language in ("zh_CN", "zh_TW", "en_US"):
     out = Path(a.out).resolve() / language
     out.mkdir(parents=True, exist_ok=True)
-    command = [str(app), "-n", "--disable_opengl",
+    command = [str(app), *launcher_options, "-n", "--disable_opengl",
                "--self-test-ui", str(out), "--self-test-size", a.window_size, "-d", str(fixture)]
     if language != "zh_CN": command += ["--language", language]
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60)
@@ -43,7 +44,7 @@ for language in ("zh_CN", "zh_TW", "en_US"):
     assert report["localization"]["ok"], report
     assert report["regression"]["ok"], report
     restarted = out / "restarted"
-    restart_command = [str(app), "-n", "--disable_opengl", "--config-dir", str(out / "settings"),
+    restart_command = [str(app), *launcher_options, "-n", "--disable_opengl", "--config-dir", str(out / "settings"),
                        "--self-test-ui", str(restarted), "--self-test-size", a.window_size, "-d", str(fixture)]
     restart_result = subprocess.run(restart_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60)
     (out / "restart.log").write_bytes(restart_result.stdout)
@@ -52,7 +53,7 @@ for language in ("zh_CN", "zh_TW", "en_US"):
     assert restart_report["language"] == language and restart_report["language_ok"], restart_report
     assert restart_report["regression"]["ok"] and restart_report["localization"]["ok"], restart_report
     meme_out = out / "memes"
-    exported = subprocess.run([str(app), "--language", language, "--export-memes", str(meme_out)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60)
+    exported = subprocess.run([str(app), *launcher_options, "--language", language, "--export-memes", str(meme_out)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60)
     (out / "memes.log").write_bytes(exported.stdout)
     assert exported.returncode == 0, exported.stdout.decode("utf-8", errors="replace")
     memes = json.loads((meme_out / "memes.json").read_text(encoding="utf-8"))

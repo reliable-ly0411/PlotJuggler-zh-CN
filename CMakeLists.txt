@@ -342,7 +342,8 @@ add_subdirectory(plotjuggler_app)
 add_subdirectory(plotjuggler_plugins)
 
 if(PJ_BUILD_FORK_TESTS)
-  foreach(_pj_test_target mosaico_unit_tests ToolboxMosaico_tests test_ros_field test_cdr_alignment)
+  foreach(_pj_test_target test_csv_parser test_nlohmann_layout mosaico_unit_tests
+      ToolboxMosaico_tests test_ros_field test_cdr_alignment)
     if(TARGET ${_pj_test_target})
       set_target_properties(${_pj_test_target} PROPERTIES
         WIN32_EXECUTABLE FALSE RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests_bin")

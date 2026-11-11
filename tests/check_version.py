@@ -17,7 +17,7 @@ pattern = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0
 match = pattern.fullmatch(version["version"])
 assert match, version
 assert ".".join(match.groups()[:3]) == core, version
-assert match[4] == "rc.2", version
+assert match[4] == "rc.3", version
 assert match[5] == f"upstream.{version['upstream_version']}.apbin.{version['ardupilot_revision']}.g{version['source_revision']}", version
 for identifier in match[4].split("."):
     assert not (identifier.isdigit() and len(identifier) > 1 and identifier.startswith("0"))

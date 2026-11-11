@@ -30,3 +30,8 @@ Qt 5.15.2 官方 Windows 包的简体译文仍合并在 `qt_zh_CN.qm`，构建�
 以及 `Licenses` 下的应用、解析器、Qt 和上述随源码保留的许可文本。
 应用和本轮修改的完整源码位于该 `commit` 对应的 GitHub 树；原文件头和独立许可证保留在源码中。
 发行版动态系统依赖与 Windows/AppImage 所捆绑的运行库范围不同，验收时应按实际包清单复核。
+
+Windows 的 `Licenses/Conan` 保存本次解析的 host 依赖原始许可证、包引用及文本摘要，
+包括部分测试依赖，不能据此推断全部依赖都随产品分发。Linux 的 `Licenses/Distro`
+记录当前 ELF 依赖树可由 dpkg 识别的版权文件、版本与通用许可证；DEB 依赖系统提供这些库。
+`Licenses/Downloaded` 保留构建下载的 data_tamer、Wasmer 原始许可。

@@ -27,11 +27,14 @@ if errorlevel 1 exit /b 1
 "%WINDEPLOYQT%" --release "%DATA_DIR%\plotjuggler-launcher.exe"
 if errorlevel 1 exit /b 1
 
-REM Deploy for all plugin DLLs
-for %%f in ("%DATA_DIR%\*.dll") do (
-    echo Processing: %%~nxf
-    "%WINDEPLOYQT%" --release "%%f"
-    if errorlevel 1 exit /b 1
+REM Deploy the Qt5 plugin target families in this 3.x tree. Runtime DLLs just
+REM copied by windeployqt (D3Dcompiler, MSVC, wasmer, etc.) are not Qt modules.
+for %%f in ("%DATA_DIR%\Data*.dll" "%DATA_DIR%\Parser*.dll" "%DATA_DIR%\ProtobufParser.dll" "%DATA_DIR%\Toolbox*.dll" "%DATA_DIR%\Publisher*.dll") do (
+    if exist "%%f" (
+        echo Processing: %%~nxf
+        "%WINDEPLOYQT%" --release "%%f"
+        if errorlevel 1 exit /b 1
+    )
 )
 
 echo Done.

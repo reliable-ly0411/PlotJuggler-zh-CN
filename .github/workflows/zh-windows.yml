@@ -73,7 +73,7 @@ jobs:
     - name: Conan install
       shell: pwsh
       run: |
-        conan install . -of build --build=missing -pr:b=default -s build_type=Release -s compiler.cppstd=17
+        conan install . -of build --build=missing -pr:b=default -s build_type=Release -s compiler.cppstd=17 --deployer=./scripts/conan_license_deployer.py --deployer-folder=build/dependency-notices
     - name: Export complete Conan packages
       if: github.event_name != 'pull_request'
       shell: pwsh
