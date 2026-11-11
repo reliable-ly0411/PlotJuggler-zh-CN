@@ -1291,6 +1291,8 @@ class CMakeProcessTests(unittest.TestCase):
         win=lambda x: LOGICAL+'\\'+x.replace('/','\\')
         plugin=win('b/csv-prefix/plugin.dll')
         self.put('b/native-kit/csv-prebuilt.json',json.dumps({'plugin':plugin}).encode())
+        self.put_json('b/native-kit/build_identity.json', {'source_sha': SHA, 'source_tree': TREE,
+                      'role': 'main', 'compiler': {'path': r'C:\VS\bin\cl.exe', 'sha256': 'c' * 64}})
         qt=win('q/6.12.0/msvc2022_64'); ninja=win('t/builder/Scripts/ninja.exe')
         commands={'configure':[win('t/cmake/bin/cmake.exe'),'-S',win('s'),'-B',win('b'),
                    '-DCMAKE_TOOLCHAIN_FILE='+win('b/conan_toolchain.cmake'),'-DPJ_BUILD_TESTS=ON','-DPJ_BUILD_DEMOS=OFF',
@@ -1299,7 +1301,8 @@ class CMakeProcessTests(unittest.TestCase):
                    '-DPJ_TEST_PYTHON='+win('t/python/python.exe'),'-DPJ_IFW_TEST_ARCHIVE='+win('t/ifw/ifw.7z'),
                    '-DPJ_IFW_TEST_EXTRACTOR='+win('t/7z/7za.exe'),'-DPJ_IFW_TEST_EXTRACTOR_SHA256='+self.files['t/7z/7za.exe'],
                    '-DPJ_NATIVE_BUNDLE_MODE=ON','-DCMAKE_BUILD_TYPE=RelWithDebInfo','-DCMAKE_POLICY_DEFAULT_CMP0141=NEW',
-                   '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded'],
+                   '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded',
+                   r'-DCMAKE_C_COMPILER:FILEPATH=C:\VS\bin\cl.exe', r'-DCMAKE_CXX_COMPILER:FILEPATH=C:\VS\bin\cl.exe'],
                   'build':[win('t/cmake/bin/cmake.exe'),'--build',win('b'),'--config','RelWithDebInfo','--parallel','2']}
         for phase in ('configure','build'):
             self.put(self.base+phase+'.stdout.bin', b'runtime_catalog_language_test.cpp.obj runtime_catalog_language_test.exe' if phase=='build' else b'')
@@ -1320,6 +1323,15 @@ class CMakeProcessTests(unittest.TestCase):
                     SHA,TREE,LOGICAL,'6.12.0',{('main','RuntimeCatalogLanguageTest')})
     def test_exact_query_commands_and_selected_build_log(self):
         self.assertIn('raw producer',self.verify()['scope'])
+    def test_changed_missing_or_relative_compiler_pin_fails(self):
+        for value in (None, '-DCMAKE_CXX_COMPILER:FILEPATH=cl.exe', r'-DCMAKE_CXX_COMPILER:FILEPATH=C:\Other\cl.exe'):
+            with self.subTest(value=value):
+                self.setUp(); path = self.base + 'configure.process.json'; record = copy.deepcopy(self.docs[path])
+                if value is None: record['argv'].pop()
+                else: record['argv'][-1] = value
+                self.put_json(path, record)
+                with self.assertRaises(closure.ClosureError): self.verify()
+
     def test_wrong_command_query_or_missing_real_link_marker_fails(self):
         for defect in ('query','args','exit','log'):
             with self.subTest(defect=defect):

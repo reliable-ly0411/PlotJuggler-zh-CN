@@ -47,6 +47,23 @@ tools to verified official sources and hashes. Keep tool licenses and applicable
 third-party notices. Official redistributable release MSVC runtime files may be
 needed; MSVC debug runtimes must not be redistributed.
 
+For each main and standalone i18n configure, resolve the activated environment's
+real `cl.exe` within the active MSVC toolset, rejecting PATH/CWD shadowing.
+Freeze its canonical path and SHA-256 before CMake runs; both roles must match
+the same independently established producer compiler identity. Initialize both compiler cache entries with absolute `FILEPATH` options. A
+non-cache compiler assignment in a Conan toolchain is not itself a cache entry,
+and a toolchain can override the requested compiler. Immediately after configure
+and before either build, require the strict existing cache contract and exactly
+one MSVC CXX compiler in a fresh nonce-bound File API `toolchains-v1` response.
+Both must match the independently recorded compiler, including its current bytes.
+Retain only the relevant query, index and toolchains bytes and hashes, bound to
+the source commit, tree and build role. Revalidate this preflight evidence and
+capture the final configure evidence for identity and staging checks; do not
+execute generated compiler `.cmake` files or package raw CMake caches. The nonce
+query prevents a prior configure's response from satisfying a fresh role.
+Linux tiny-project tests exercise CMake cache/File API behavior, not MSVC or
+Windows runner acceptance.
+
 The exact CTest command is also a dependency. In this project `PRE_TEST`
 discovery can launch test runners for `ctest --show-only=json-v1`. Generate the
 complete JSON under the configured runtime environment in CI and retain names,

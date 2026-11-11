@@ -2090,6 +2090,16 @@ def verify_cmake_build_records(root, manifest_files, source_sha, source_tree, lo
     plugin = csv.get('plugin') if isinstance(csv, dict) else None
     if not isinstance(plugin, str):
         raise ClosureError('CMake build input lacks the exact prebuilt CSV plugin path')
+    identity = _strict_json_file(bound('b/native-kit/build_identity.json'))
+    if (not isinstance(identity, dict) or identity.get('source_sha') != source_sha or
+            identity.get('source_tree') != source_tree or identity.get('role') != 'main' or
+            not isinstance(identity.get('compiler'), dict)):
+        raise ClosureError('CMake producer lacks a source-bound compiler identity')
+    compiler = identity['compiler']
+    if (not isinstance(compiler.get('path'), str) or not re.match(r'^[A-Za-z]:[\\/]', compiler['path']) or
+            ntpath.basename(compiler['path']).casefold() != 'cl.exe' or
+            not re.fullmatch(r'[0-9a-f]{64}', str(compiler.get('sha256')))):
+        raise ClosureError('CMake producer compiler identity is malformed')
     expected = {
         'configure': [win('t/cmake/bin/cmake.exe'), '-S', win('s'), '-B', win('b'),
             '-DCMAKE_TOOLCHAIN_FILE=' + win('b/conan_toolchain.cmake'), '-DPJ_BUILD_TESTS=ON', '-DPJ_BUILD_DEMOS=OFF',
@@ -2098,7 +2108,8 @@ def verify_cmake_build_records(root, manifest_files, source_sha, source_tree, lo
             '-DPython3_EXECUTABLE=' + win('t/python/python.exe'), '-DPJ_TEST_PYTHON=' + win('t/python/python.exe'),
             '-DPJ_IFW_TEST_ARCHIVE=' + win('t/ifw/ifw.7z'), '-DPJ_IFW_TEST_EXTRACTOR=' + win('t/7z/7za.exe'),
             '-DPJ_IFW_TEST_EXTRACTOR_SHA256=' + extractor, '-DPJ_NATIVE_BUNDLE_MODE=ON', '-DCMAKE_BUILD_TYPE=RelWithDebInfo',
-            '-DCMAKE_POLICY_DEFAULT_CMP0141=NEW', '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded'],
+            '-DCMAKE_POLICY_DEFAULT_CMP0141=NEW', '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded',
+            '-DCMAKE_C_COMPILER:FILEPATH=' + compiler['path'], '-DCMAKE_CXX_COMPILER:FILEPATH=' + compiler['path']],
         'build': [win('t/cmake/bin/cmake.exe'), '--build', win('b'), '--config', 'RelWithDebInfo', '--parallel', '2'],
     }
     base = 'b/native-kit/codemodel/process/'
