@@ -11,6 +11,6 @@ include(../../cmake/ApplicationLanguage.cmake)
 qt5_add_resources(launcher_resources ../../plotjuggler_app/launcher.qrc)
 add_executable(plotjuggler-launcher ../../plotjuggler_app/launcher.cpp
   ../../plotjuggler_app/launcher_acceptance.cpp ${launcher_resources})
-target_compile_definitions(plotjuggler-launcher PRIVATE PJ_FORK_SEMVER="3.18.1-rc.8")
+target_compile_definitions(plotjuggler-launcher PRIVATE PJ_FORK_SEMVER="3.18.1-rc.9")
 target_link_libraries(plotjuggler-launcher PRIVATE pj_application_language)
 include(../../cmake/ApplicationLanguageTests.cmake)

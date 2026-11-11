@@ -1,0 +1,3 @@
+# Keep byte-pinned review data identical on Windows and Unix checkouts.
+/tests/data/windows-quarantine-protobuf-catalog.json text eol=lf
+/tests/data/public-build-records.json text eol=lf

@@ -103,7 +103,9 @@ def main():
                 continue
             data = path.read_bytes()
             entry["sha256"] = sha(data)
+            entry["rule"] = "Quarantine source catalog validation rejected file"
             old = review_literals(name, records)
+            entry["rule"] = "Public source-path analysis rejected file"
             literals = observed_public_literals(data, old)
             entry["unknown_marker_count"] = unknown_marker_count(data, literals)
             entry["path_diagnostics"] = path_diagnostics(data, old)
