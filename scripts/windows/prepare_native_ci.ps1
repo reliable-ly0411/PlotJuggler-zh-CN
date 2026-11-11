@@ -833,10 +833,10 @@ if ($mutationReceipt.schema -ne 1 -or $mutationReceipt.complete -ne $true -or
     $mutationReceipt.mutant_runner_sha256 -ceq $mutationReceipt.restored_runner_sha256) {
   throw 'Linked marker mutation receipt does not bind the actual restored source, runner and Qt preflight.'
 }
-foreach ($phase in @('mutant-build', 'mutant-test', 'original-build', 'original-test')) {
+foreach ($mutationPhase in @('mutant-build', 'mutant-test', 'original-build', 'original-test')) {
   foreach ($extension in @('.stdout.bin', '.stderr.bin', '.process.json')) {
-    if (-not (Test-Path -LiteralPath (Join-Path $mutationEvidence ($phase + $extension)) -PathType Leaf)) {
-      throw "Missing raw linked marker mutation evidence: $phase$extension"
+    if (-not (Test-Path -LiteralPath (Join-Path $mutationEvidence ($mutationPhase + $extension)) -PathType Leaf)) {
+      throw "Missing raw linked marker mutation evidence: $mutationPhase$extension"
     }
   }
 }

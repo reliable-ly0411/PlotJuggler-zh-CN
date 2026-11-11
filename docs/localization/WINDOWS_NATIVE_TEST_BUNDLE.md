@@ -55,6 +55,20 @@ identity. It is not safe to execute discovery on the target until the fixture
 and session-safety gates are closed. Do not assume a previous source tree's
 case count still applies.
 
+For a failed producer step, `collect_failed_config_diagnostics.py` retains only
+fixed configure categories, counts and file digests. Its existing `phase`,
+`binding` and `exit_code` describe configure evidence only. The separate
+`build_binding` and optional `build_exit_code` describe a completed build
+receipt independently matched to the expected source commit and tree.
+`phase_boundary` distinguishes an observed configure failure, successful
+configure with no observed build, build failure, and failure after successful
+configure/build exits. The boundary requires completed schema-1 receipts;
+missing configure or contradictory receipts leave it `not-established`.
+Missing or oversized build receipts remain unverified. A successful build exit
+does not identify the later failing operation, prove kit completion, or
+establish test or package acceptance.
+Raw output, arguments, environment and paths are not copied into this report.
+
 ## Explicit inputs and offline IFW test
 
 The new test-only CMake options are `PJ_IFW_TEST_ARCHIVE`,

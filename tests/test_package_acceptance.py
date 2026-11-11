@@ -386,7 +386,7 @@ class LinuxCaptureIdentityTests(unittest.TestCase):
         import os
         entry = self.proc / str(pid); entry.mkdir()
         (entry / 'cmdline').write_bytes(b'plotjuggler4\0--profile-dir\0' +
-                                        os.fsencode(str(profile or self.profile)) + b'\0--language\0en_US\0')
+                                        os.fsencode(str((profile or self.profile).resolve())) + b'\0--language\0en_US\0')
         fields = ['0'] * 20; fields[19] = str(start)
         (entry / 'stat').write_text(str(pid)+' (name with spaces) '+' '.join(fields), encoding='utf-8')
         (entry / 'exe').write_bytes(binary or self.binary.read_bytes())
@@ -398,6 +398,29 @@ class LinuxCaptureIdentityTests(unittest.TestCase):
                                                getsid=lambda pid: 100 if pid in (100, 200, 300) else 400)
         self.assertEqual(set(result), {200})
         self.assertEqual(result[200]['start_ticks'], 123)
+
+    def test_fixture_profile_matches_canonical_application_argument(self):
+        alias_parent = self.root / 'profile alias'; alias_parent.mkdir()
+        self.profile = alias_parent / '..' / 'isolated profile'
+        self.assertNotEqual(str(self.profile), str(self.profile.resolve()))
+        self.process(200)
+        arguments = (self.proc / '200/cmdline').read_bytes().split(b'\0')
+        launched = module.application_command(self.binary, self.profile, ['--language', 'en_US'])
+        self.assertEqual(arguments[2], os.fsencode(launched[2]))
+        result = module.linux_capture_processes(100, self.profile, self.binary, self.proc,
+                                               getsid=lambda pid: 100)
+        self.assertEqual(set(result), {200})
+
+    def test_noncanonical_profile_bytes_still_fail_identity(self):
+        alias_parent = self.root / 'profile alias'; alias_parent.mkdir()
+        self.profile = alias_parent / '..' / 'isolated profile'
+        self.process(200)
+        cmdline = self.proc / '200/cmdline'
+        canonical = os.fsencode(str(self.profile.resolve()))
+        cmdline.write_bytes(cmdline.read_bytes().replace(canonical, os.fsencode(str(self.profile))))
+        with self.assertRaisesRegex(ValueError, 'no exact'):
+            module.linux_capture_processes(100, self.profile, self.binary, self.proc,
+                                           getsid=lambda pid: 100)
 
     def test_wrong_binary_or_no_owned_process_fails(self):
         self.process(200, binary=b'different executable')
