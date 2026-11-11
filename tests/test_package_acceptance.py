@@ -563,6 +563,8 @@ class X11CaptureTests(unittest.TestCase):
 
 
 class WindowsCaptureIdentityTests(unittest.TestCase):
+    MAIN_STYLES = (0x00CF0000, 0x96CF0000, 0x96CF0000 - (1 << 32))
+
     def window(self, **changes):
         return dict({'window_id': 123, 'pid': 456, 'owner': None, 'style': 0x00CF0000,
                      'extended_style': 0, 'visible': True, 'enabled': True}, **changes)
@@ -572,24 +574,48 @@ class WindowsCaptureIdentityTests(unittest.TestCase):
                    self.window(window_id=333, style=0x80C80000)]
         self.assertEqual(module.windows_capture_main_window(windows, 456), 123)
 
+    def test_actual_qt_native_chrome_popup_and_signed_long_are_accepted(self):
+        # Qt 6.12's packaged main window exposes WS_POPUP and WS_EX_WINDOWEDGE;
+        # GetWindowLongW returns its style as a signed 32-bit LONG.
+        for style in self.MAIN_STYLES:
+            with self.subTest(style=style):
+                windows = [self.window(style=style, extended_style=0x100),
+                           self.window(window_id=333, style=0x80C80000)]
+                self.assertEqual(module.windows_capture_main_window(windows, 456), 123)
+
     def test_hidden_main_cannot_be_replaced_by_visible_dialog(self):
-        windows = [self.window(visible=False), self.window(window_id=333, style=0x80C80000)]
-        with self.assertRaisesRegex(ValueError, 'hidden'):
-            module.windows_capture_main_window(windows, 456)
-        with self.assertRaisesRegex(ValueError, 'standard main'):
-            module.windows_capture_main_window(windows[1:], 456)
+        for style in self.MAIN_STYLES:
+            windows = [self.window(style=style, visible=False), self.window(window_id=333, style=0x80C80000)]
+            with self.subTest(style=style), self.assertRaisesRegex(ValueError, 'hidden'):
+                module.windows_capture_main_window(windows, 456)
+            with self.assertRaisesRegex(ValueError, 'standard main'):
+                module.windows_capture_main_window(windows[1:], 456)
 
     def test_multiple_main_windows_including_hidden_ones_fail(self):
-        for visible in (True, False):
-            with self.subTest(visible=visible), self.assertRaisesRegex(ValueError, 'one standard'):
-                module.windows_capture_main_window([self.window(), self.window(window_id=999, visible=visible)], 456)
+        for style in self.MAIN_STYLES:
+            for visible in (True, False):
+                with self.subTest(style=style, visible=visible), self.assertRaisesRegex(ValueError, 'one standard'):
+                    module.windows_capture_main_window(
+                        [self.window(), self.window(window_id=999, style=style, visible=visible)], 456)
 
-    def test_owned_popup_child_tool_modal_disabled_and_wrong_pid_fail(self):
-        for change in ({'owner': 99}, {'style': 0x00CF0000 | 0x80000000}, {'style': 0x00CF0000 | 0x40000000},
-                       {'style': 0x00CF0000 & ~0x00040000}, {'extended_style': 0x80}, {'extended_style': 0x1},
-                       {'enabled': False}, {'pid': 999}):
-            with self.subTest(change=change), self.assertRaises(ValueError):
-                module.windows_capture_main_window([self.window(**change)], 456)
+    def test_owned_child_tool_modal_disabled_and_wrong_pid_fail(self):
+        for style in self.MAIN_STYLES:
+            for change in ({'owner': 99}, {'style': style | 0x40000000},
+                           {'extended_style': 0x80}, {'extended_style': 0x1},
+                           {'enabled': False}, {'pid': 999}):
+                candidate = self.window(style=style)
+                candidate.update(change)
+                with self.subTest(style=style, change=change), self.assertRaises(ValueError):
+                    module.windows_capture_main_window([candidate], 456)
+
+    def test_popup_without_every_required_chrome_bit_fails(self):
+        for style in self.MAIN_STYLES:
+            for flag in (0x00800000, 0x00400000, 0x00080000, 0x00040000, 0x00020000, 0x00010000):
+                with self.subTest(style=style, missing=flag), self.assertRaisesRegex(ValueError, 'standard main'):
+                    module.windows_capture_main_window([self.window(style=style & ~flag)], 456)
+        for style in (0x80000000, 0x80C80000):
+            with self.subTest(style=style), self.assertRaisesRegex(ValueError, 'standard main'):
+                module.windows_capture_main_window([self.window(style=style)], 456)
 
 
 class CapturePlatformContractTests(unittest.TestCase):

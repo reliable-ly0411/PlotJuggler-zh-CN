@@ -902,10 +902,10 @@ if (Test-Path -LiteralPath (Join-Path $markerSource 'CMakeLists.txt') -PathType 
     $cacheValid = Test-Path -LiteralPath $cache -PathType Leaf
     if ($cacheValid) {
       $lines = [IO.File]::ReadAllLines($cache)
-      $home = @($lines | Where-Object { $_ -like 'CMAKE_HOME_DIRECTORY:INTERNAL=*' })
+      $markerHomeEntries = @($lines | Where-Object { $_ -like 'CMAKE_HOME_DIRECTORY:INTERNAL=*' })
       $generator = @($lines | Where-Object { $_ -ceq 'CMAKE_GENERATOR:INTERNAL=Ninja Multi-Config' })
-      $cacheValid = $home.Count -eq 1 -and $generator.Count -eq 1 -and
-        [string]::Equals([IO.Path]::GetFullPath($home[0].Substring('CMAKE_HOME_DIRECTORY:INTERNAL='.Length)),
+      $cacheValid = $markerHomeEntries.Count -eq 1 -and $generator.Count -eq 1 -and
+        [string]::Equals([IO.Path]::GetFullPath($markerHomeEntries[0].Substring('CMAKE_HOME_DIRECTORY:INTERNAL='.Length)),
                          [IO.Path]::GetFullPath($markerSource), [StringComparison]::OrdinalIgnoreCase)
     }
     if ($cacheValid) {

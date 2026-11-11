@@ -284,10 +284,11 @@ def windows_capture_main_window(windows, pid):
     be replaced by a visible dialog merely because both share the same PID.
     """
     selected = [window for window in windows if window['pid'] == pid and not window['owner'] and
-                window['style'] & 0x00CF0000 == 0x00CF0000 and not window['style'] & 0xC0000000 and
+                window['style'] & 0x00CF0000 == 0x00CF0000 and not window['style'] & 0x40000000 and
                 not window['extended_style'] & 0x81]
-    # WS_OVERLAPPEDWINDOW requires caption/system menu/resize/min/max; reject
-    # CHILD, POPUP, TOOLWINDOW and DLGMODALFRAME rather than matching a title.
+    # Qt's native-chrome main window also carries WS_POPUP. Require the complete
+    # WS_OVERLAPPEDWINDOW chrome and reject CHILD, TOOLWINDOW and DLGMODALFRAME
+    # rather than matching a title or accepting arbitrary popup windows.
     if len(selected) != 1:
         raise ValueError('expected one standard main window owned by the launched process')
     window = selected[0]
