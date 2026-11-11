@@ -9,6 +9,7 @@
 
 #include "nlohmann/json.hpp"
 #include "PlotJuggler/messageparser_base.h"
+#include <QCoreApplication>
 #include <QDebug>
 #include <QSettings>
 
@@ -107,9 +108,11 @@ public:
     frame->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
     frame->setVisible(false);
 
-    auto* label = new QLabel("Timestamp field name:", frame);
+    auto* label =
+        new QLabel(QCoreApplication::translate("QObject", "Timestamp field name:"), frame);
     lineedit = new LineEdit(frame);
-    lineedit->setPlaceholderText("e.g. timestamp, time, ts");
+    lineedit->setPlaceholderText(
+        QCoreApplication::translate("QObject", "e.g. timestamp, time, ts"));
 
     auto* frameLayout = new QVBoxLayout(frame);
     frameLayout->setContentsMargins(8, 8, 8, 8);

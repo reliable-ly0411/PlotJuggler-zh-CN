@@ -382,6 +382,16 @@ if(PJ_BUILD_FORK_TESTS)
   if(Python3_Interpreter_FOUND)
     add_test(NAME PackagePrivacy COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_package_privacy.py)
+    add_test(NAME VisibleStrings COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_raw_ui.py)
+    add_test(NAME VisibleStringsUnit COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_raw_ui.py --self-test)
+    add_test(NAME WindowsPublicBinaryReview COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_public_binary_review.py)
+    add_test(NAME AcceptanceStageCollection COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_zh_acceptance.py)
+    add_test(NAME PackageAuditInventory COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_package_audit_inventory.py)
   endif()
 
   # Keep regression executables outside bin: packaging stages that entire directory.

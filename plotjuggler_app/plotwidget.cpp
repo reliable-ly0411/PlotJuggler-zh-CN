@@ -316,9 +316,9 @@ PlotWidget::CurveInfo* PlotWidget::addCurveXY(std::string name_x, std::string na
     if (name.empty() || curve_it)
     {
       int ret =
-          QMessageBox::warning(qwtPlot(), "Missing name",
-                               "The name of the curve is missing or exist already. "
-                               "Try again or abort.",
+          QMessageBox::warning(qwtPlot(), tr("Missing name"),
+                               tr("The name of the curve is missing or exist already. "
+                                  "Try again or abort."),
                                QMessageBox::Abort | QMessageBox::Retry, QMessageBox::NoButton);
       if (ret == QMessageBox::Abort || ret == QMessageBox::NoButton)
       {
@@ -361,7 +361,7 @@ PlotWidget::CurveInfo* PlotWidget::addCurveXY(std::string name_x, std::string na
   }
   catch (std::exception& ex)
   {
-    QMessageBox::warning(qwtPlot(), "Exception!", ex.what());
+    QMessageBox::warning(qwtPlot(), tr("Exception!"), ex.what());
     return nullptr;
   }
 
@@ -549,9 +549,9 @@ void PlotWidget::onDropEvent(QDropEvent*)
     {
       _dragging.mode = DragInfo::NONE;
       _dragging.curves.clear();
-      QMessageBox::warning(qwtPlot(), "Warning",
-                           "You can not drag XY (scatter) data and timeseries into the "
-                           "same plot");
+      QMessageBox::warning(qwtPlot(), tr("Warning"),
+                           tr("You can not drag XY (scatter) data and timeseries into the "
+                              "same plot"));
       return;
     }
 
@@ -563,14 +563,14 @@ void PlotWidget::onDropEvent(QDropEvent*)
 
     if (isXYPlot() && !scatter_curves)
     {
-      QMessageBox::warning(qwtPlot(), "Warning",
+      QMessageBox::warning(qwtPlot(), tr("Warning"),
                            tr("This is a [XY plot], you can not drop a timeseries here.\n"
                               "To convert this widget into a [timeseries plot], "
                               "you must first remove all its curves."));
     }
     if (!isXYPlot() && scatter_curves)
     {
-      QMessageBox::warning(qwtPlot(), "Warning",
+      QMessageBox::warning(qwtPlot(), tr("Warning"),
                            tr("This is a [timeseries plot], you can not "
                               "drop XY scatter data here.\n"
                               "To convert this widget into a [XY plot], "
@@ -596,7 +596,7 @@ void PlotWidget::onDropEvent(QDropEvent*)
     {
       _dragging.mode = DragInfo::NONE;
       _dragging.curves.clear();
-      QMessageBox::warning(qwtPlot(), "Warning",
+      QMessageBox::warning(qwtPlot(), tr("Warning"),
                            tr("This is a [timeseries plot], you can not "
                               "drop XY scatter data here.\n"
                               "To convert this widget into a [XY plot], "
@@ -839,7 +839,7 @@ bool PlotWidget::xmlLoadState(QDomElement& plot_widget, bool autozoom)
           if (!ts->setTransform(transform_el.attribute("name")) || !ts->transform())
           {
             QMessageBox::warning(
-                qwtPlot(), "Warning",
+                qwtPlot(), tr("Warning"),
                 tr("Can't restore the transform for curve [%1].\n"
                    "Transform [%2] not found.\nAre you using an old configuration file?")
                     .arg(curve_name, transform_el.attribute("name")));
@@ -880,7 +880,7 @@ bool PlotWidget::xmlLoadState(QDomElement& plot_widget, bool autozoom)
 
   if (missing_curves.size() > 0 && !warning_message_shown)
   {
-    QMessageBox::warning(qwtPlot(), "Warning",
+    QMessageBox::warning(qwtPlot(), tr("Warning"),
                          tr("Can't find one or more curves.\n"
                             "This message will be shown only once.\n%1")
                              .arg(missing_curves.join(",\n")));
@@ -945,7 +945,7 @@ bool PlotWidget::xmlLoadState(QDomElement& plot_widget, bool autozoom)
     auto plot_it = datamap().numeric.find(bg_data.toStdString());
     if (plot_it == datamap().numeric.end())
     {
-      QMessageBox::warning(qwtPlot(), "Warning",
+      QMessageBox::warning(qwtPlot(), tr("Warning"),
                            tr("Can't restore the background color.\n"
                               "Series [%1] not found.")
                                .arg(bg_data));
@@ -955,7 +955,7 @@ bool PlotWidget::xmlLoadState(QDomElement& plot_widget, bool autozoom)
       auto color_it = ColorMapLibrary().find(bg_colormap);
       if (color_it == ColorMapLibrary().end())
       {
-        QMessageBox::warning(qwtPlot(), "Warning",
+        QMessageBox::warning(qwtPlot(), tr("Warning"),
                              tr("Can't restore the background color.\n"
                                 "ColorMap [%1] not found.")
                                  .arg(bg_colormap));
@@ -1618,7 +1618,7 @@ void PlotWidget::showPointValues(QPoint point)
         _show_point_marker->setValue(maybe_point.value());
         marker_point = maybe_point.value();
 
-        text = QString("<font color=%1>name: %2<br>time:%3<br>value: %4</font>")
+        text = tr("<font color=%1>name: %2<br>time:%3<br>value: %4</font>")
                    .arg(curve->pen().color().name())
                    .arg(curve->title().text())
                    .arg(QString::number(maybe_point->x(), 'f', prec))
@@ -1843,7 +1843,7 @@ QwtSeriesWrapper* PlotWidget::createCurveXY(const PlotData* data_x, const PlotDa
       msgBox.setText(tr("The creation of the XY plot failed with the following "
                         "message:\n %1")
                          .arg(ex.what()));
-      msgBox.addButton("Continue", QMessageBox::AcceptRole);
+      msgBox.addButton(tr("Continue"), QMessageBox::AcceptRole);
       msgBox.exec();
     }
     throw std::runtime_error("Creation of XY plot failed");

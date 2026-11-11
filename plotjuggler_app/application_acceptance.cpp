@@ -8,6 +8,9 @@
 #include <QJsonObject>
 #include <QKeySequence>
 #include <QMenu>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QRegularExpression>
 #include <QSaveFile>
 #include <QSet>
 #include <QTimer>
@@ -56,6 +59,61 @@ QJsonObject checkPlotMenu(PlotWidget* plot, const QString& output)
   const bool invoked = QMetaObject::invokeMethod(
       plot, "canvasContextMenuTriggered", Qt::DirectConnection, Q_ARG(QPoint, QPoint(40, 40)));
   result["invoked"] = invoked;
+  return result;
+}
+
+QJsonObject checkMissingCurveWarning(PlotWidget* plot, const QString& output)
+{
+  // Exercise the actual layout warning, including its native dialog title.
+  // Expected text is independent of tr(), so an English fallback cannot pass
+  // by comparing a missing translation with the same missing translation.
+  QJsonObject result;
+  const QString language = qApp->property("interfaceLanguage").toString();
+  const QString missing = "__plotjuggler_acceptance_missing_curve__";
+  const QString expected_title =
+      language == "zh_CN" || language == "zh_TW" ? QString::fromUtf8("警告") : QString("Warning");
+  const QString expected_body =
+      language == "zh_CN" ?
+          QString::fromUtf8("找不到部分曲线。\n此提示仅显示一次。\n") + missing :
+      language == "zh_TW" ?
+          QString::fromUtf8("找不到部分曲線。\n此提示僅顯示一次。\n") + missing :
+          QString("Can't find one or more curves.\nThis message will be shown only once.\n") +
+              missing;
+  const QString expected_button = language == "zh_CN" ? QString::fromUtf8("确定") :
+                                  language == "zh_TW" ? QString::fromUtf8("確定") :
+                                                        QString("OK");
+  QDomDocument doc;
+  auto broken = plot->xmlSaveState(doc);
+  auto curve = broken.firstChildElement("curve");
+  if (curve.isNull())
+  {
+    return QJsonObject{ { "ok", false }, { "reason", "No curve to replace in layout" } };
+  }
+  curve.setAttribute("name", missing);
+  QTimer timer;
+  timer.setSingleShot(true);
+  QObject::connect(&timer, &QTimer::timeout, plot, [&]() {
+    auto* box = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+    if (!box)
+    {
+      return;
+    }
+    auto* button = box->button(QMessageBox::Ok);
+    QString label = button ? button->text() : QString();
+    label.remove('&');
+    label.remove(QRegularExpression("\\([A-Za-z]\\)"));
+    label = label.trimmed();
+    result["title"] = box->windowTitle();
+    result["body"] = box->text();
+    result["button"] = label;
+    result["screenshot"] = box->grab().save(output + "/missing-curve-warning.png");
+    result["ok"] = box->windowTitle() == expected_title && box->text() == expected_body &&
+                   label == expected_button && result["screenshot"].toBool();
+    box->accept();
+  });
+  timer.start(150);
+  result["layout_read"] = plot->xmlLoadState(broken, false);
+  result["ok"] = result.value("ok").toBool() && result["layout_read"].toBool();
   return result;
 }
 }  // namespace
@@ -137,8 +195,13 @@ QJsonObject MainWindow::checkAcceptanceRoundTrip(const QString& output)
   const bool final_restored = final_loaded && plot && !plot->isXYPlot() &&
                               plot->curveList().size() == 1 &&
                               plot->curveList().front().src_name == name;
+  result["missing_curve_warning"] =
+      final_restored ? checkMissingCurveWarning(plot, output) : QJsonObject{ { "ok", false } };
+  const bool warning_layout_restored = final_restored && loadLayoutFromFile(filename, false);
   QApplication::processEvents();
   result["ok"] = curve_added && saved && cleared && restored && xy_added && final_restored &&
+                 warning_layout_restored &&
+                 result["missing_curve_warning"].toObject().value("ok").toBool() &&
                  result["timeseries_menu"].toObject().value("ok").toBool() &&
                  result["xy_menu"].toObject().value("ok").toBool();
   return result;

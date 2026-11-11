@@ -128,8 +128,8 @@ void CertDialog::closeEvent(QCloseEvent* event)
 
 void CertDialog::onBrowse()
 {
-  QString path =
-      QFileDialog::getOpenFileName(this, QObject::tr("Select CA Certificate"), QString(), "PEM files (*.pem)");
+  QString path = QFileDialog::getOpenFileName(this, QObject::tr("Select CA Certificate"), QString(),
+                                              QObject::tr("PEM files (*.pem)"));
   if (!path.isEmpty())
   {
     cert_edit_->setText(path);
@@ -179,5 +179,5 @@ void CertDialog::validateKey()
 void CertDialog::onShowToggled(bool checked)
 {
   key_edit_->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
-  show_btn_->setText(checked ? "Hide" : "Show");
+  show_btn_->setText(checked ? QObject::tr("Hide") : QObject::tr("Show"));
 }

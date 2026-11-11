@@ -144,7 +144,7 @@ void FoxgloveBridgeClient::onPauseTriggered()
     return;
   }
   _paused = !_paused;
-  _action_pause->setText(_paused ? "Resume" : "Pause");
+  _action_pause->setText(_paused ? QObject::tr("Resume") : QObject::tr("Pause"));
 }
 
 bool FoxgloveBridgeClient::openDialogConnection()
@@ -158,7 +158,8 @@ bool FoxgloveBridgeClient::openDialogConnection()
   const QUrl url(url_str);
   if (!url.isValid())
   {
-    QMessageBox::warning(_dialog, "Foxglove Bridge", "Invalid URL", QMessageBox::Ok);
+    QMessageBox::warning(_dialog, QObject::tr("Foxglove Bridge"), QObject::tr("Invalid URL"),
+                         QMessageBox::Ok);
     _dialog->setConnected(false);
     return false;
   }
@@ -352,7 +353,7 @@ bool FoxgloveBridgeClient::subscribeSelectedChannels(
           channel.topic.toStdString(), channel.schema_name.toStdString(), schema_data, dataMap());
       if (!parser)
       {
-        failures.push_back(QString("%1: parser creation returned null").arg(channel.topic));
+        failures.push_back(QObject::tr("%1: parser creation returned null").arg(channel.topic));
         continue;
       }
       parser->setLargeArraysPolicy(_config.clamp_large_arrays, _config.max_array_size);
@@ -378,8 +379,9 @@ bool FoxgloveBridgeClient::subscribeSelectedChannels(
 
   if (subscriptions_json.isEmpty())
   {
-    const QString msg =
-        failures.isEmpty() ? "No compatible ROS 2 channels were selected" : failures.join('\n');
+    const QString msg = failures.isEmpty() ?
+                            QObject::tr("No compatible ROS 2 channels were selected") :
+                            failures.join('\n');
     QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"), msg, QMessageBox::Ok);
     return false;
   }
@@ -613,7 +615,7 @@ void FoxgloveBridgeClient::onTextMessageReceived(const QString& message)
       {
         const quint32 subscription_id = sub_it.value();
         removed_subscribed_topics.push_back(
-            channel_topic.isEmpty() ? QString("channel %1").arg(channel_id) : channel_topic);
+            channel_topic.isEmpty() ? QObject::tr("channel %1").arg(channel_id) : channel_topic);
         _subscription_by_channel.erase(sub_it);
         _subscriptions.remove(subscription_id);
 #ifdef PJ_BUILD
@@ -632,7 +634,7 @@ void FoxgloveBridgeClient::onTextMessageReceived(const QString& message)
       if (_subscriptions.isEmpty())
       {
         QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"),
-                             QString("All subscribed channels were removed by the server:\n%1")
+                             QObject::tr("All subscribed channels were removed by the server:\n%1")
                                  .arg(removed_subscribed_topics.join('\n')),
                              QMessageBox::Ok);
         shutdown();
@@ -641,7 +643,7 @@ void FoxgloveBridgeClient::onTextMessageReceived(const QString& message)
       }
 
       QMessageBox::warning(nullptr, QObject::tr("Foxglove Bridge"),
-                           QString("The server removed subscribed channel(s):\n%1")
+                           QObject::tr("The server removed subscribed channel(s):\n%1")
                                .arg(removed_subscribed_topics.join('\n')),
                            QMessageBox::Ok);
     }

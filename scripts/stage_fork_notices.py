@@ -27,7 +27,7 @@ if os.name == "nt":
     if not (conan_notices / "manifest.json").is_file():
         raise SystemExit("Conan dependency license inventory is missing")
     shutil.copytree(conan_notices, destination / "Licenses/Conan", dirs_exist_ok=True)
-for dependency in ("data_tamer", "wasmer"):
+for dependency in ("data_tamer", "wasmer", "lz4", "zstd"):
     source = root / f"build/_deps/{dependency}-src/LICENSE"
     if source.is_file():
         target = destination / "Licenses/Downloaded" / dependency / "LICENSE"

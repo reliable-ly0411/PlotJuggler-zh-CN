@@ -1,4 +1,5 @@
 #include "error_collectors.h"
+#include <QCoreApplication>
 #include <QMessageBox>
 #include <QDebug>
 
@@ -27,10 +28,11 @@ void FileErrorCollector::AddError(const std::string& filename, int line, int,
                                   const std::string& message)
 #endif
 {
-  auto msg = QString("File: [%1] Line: [%2] Message: %3\n\n")
-                 .arg(protobufStringToQString(filename))
-                 .arg(line)
-                 .arg(protobufStringToQString(message));
+  auto msg =
+      QCoreApplication::translate("FileErrorCollector", "File: [%1] Line: [%2] Message: %3\n\n")
+          .arg(protobufStringToQString(filename))
+          .arg(line)
+          .arg(protobufStringToQString(message));
 
   _errors.push_back(msg);
 }

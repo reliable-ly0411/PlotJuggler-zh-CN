@@ -1123,5 +1123,805 @@
     "rows": "列",
     "sampling_window": "取樣窗",
     "menu_mnemonics": "Unique E/A/H/V/Z/R/L/T/C/P/I/S/D across actual PJ3 timeseries and XY menus; source-key changes listed in 3.18.1-backport.json."
+  },
+  "rc5_dialog_followup": {
+    "baseline_commit": "686a335ff9b795e4147b36adec08180bab9067ad",
+    "source_of_initial_draft": "Independent app/base and plugin proposals, reviewed against real Qt5 extraction; no mechanical conversion used for these entries.",
+    "reviewed_context_source_keys": 87,
+    "entries": [
+      {
+        "context": "QObject",
+        "source": "Timestamp field name:",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "時間戳欄位名稱：",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "e.g. timestamp, time, ts",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "例如 timestamp、time、ts",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "PlotWidget",
+        "source": "Missing name",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "缺少名稱",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "PlotWidget",
+        "source": "The name of the curve is missing or exist already. Try again or abort.",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "曲線名稱為空或已存在。請重試或中止。",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "PlotWidget",
+        "source": "Exception!",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "例外！",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "PlotWidget",
+        "source": "Warning",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "警告",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "PlotWidget",
+        "source": "You can not drag XY (scatter) data and timeseries into the same plot",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "不能將 XY（散點）資料與時間序列拖入同一曲線圖。",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "PlotWidget",
+        "source": "Continue",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "繼續",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "StatisticsDialog",
+        "source": "Statistics | %1",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "統計 | %1",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "CurveListPanel",
+        "source": "Edit the selected custom timeserie",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "編輯選取的自訂時間序列",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "CurveListPanel",
+        "source": "Select a single custom Timeserie to Edit it",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "選取單一自訂時間序列以進行編輯",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "CurveListPanel",
+        "source": "Delete the selected custom timeseries",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "刪除選取的自訂時間序列",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "CurveListPanel",
+        "source": "Select one or more custom timeseries to delete them",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "選取一或多個自訂時間序列以進行刪除",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "New in version 2.3+",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "2.3+ 版本新增功能",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "To create a new XY curve, you must select two timeseries and drag and drop them using the RIGHT mouse button.",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "若要建立 XY 曲線，請選取兩個時間序列，再使用滑鼠右鍵拖放。",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FunctionEditorWidget",
+        "source": "Name",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "名稱",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FunctionEditorWidget",
+        "source": "Failed to open the file [%1]",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "無法開啟檔案 [%1]",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "Failed to parse snippets (xml), error %1 at line %2",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "無法剖析程式碼片段（XML），第 %2 行：%1",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "Save plot",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "儲存繪圖",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "%1\n\nThe script has been disabled to prevent dialog spam. Re-save it from the Script Editor to resume execution.",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "%1\n\n為避免錯誤對話方塊反覆彈出，指令碼已停用。請在指令碼編輯器中重新儲存以恢復執行。",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "Exception!",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "例外！",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "MainWindow",
+        "source": "Outstanding notifications from %1: %n",
+        "comment": "",
+        "numerus": "yes",
+        "before": null,
+        "after": "來自 %1 的待處理通知：%n",
+        "review_basis": "Qt numerus replaces English suffix concatenation. Chinese uses one plural form, preserving %n and plugin name %1."
+      },
+      {
+        "context": "MainWindow",
+        "source": "All Supported Files (%1)",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "所有支援的檔案 (%1)",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "MainWindow",
+        "source": "All Files (*)",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "所有檔案 (*)",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "PlotWidget",
+        "source": "<font color=%1>name: %2<br>time:%3<br>value: %4</font>",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "<font color=%1>名稱：%2<br>時間：%3<br>數值：%4</font>",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FunctionEditorWidget",
+        "source": "- The name of the new timeseries is the same of one of its dependencies.\n",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "- 新時間序列的名稱與其中一個相依項目相同。\n",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FunctionEditorWidget",
+        "source": "- Missing name of the new time series.\n",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "- 未指定新時間序列的名稱。\n",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FunctionEditorWidget",
+        "source": "- Plot name already exists and can't be modified.\n",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "- 名稱已存在，無法修改。\n",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FunctionEditorWidget",
+        "source": "- Missing source time series.\n",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "- 未指定來源時間序列。\n",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FunctionEditorWidget",
+        "source": "- Error in %1 script: %2",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "- %1 指令碼錯誤：%2",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FunctionEditorWidget",
+        "source": "- Missing prefix/suffix.\n",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "- 未指定前綴/後綴。\n",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FunctionEditorWidget",
+        "source": "- No input series.\n",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "- 沒有輸入序列。\n",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "%1: line %2: only 'import math' is allowed",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "%1：第 %2 行：只允許 'import math'",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "%1: line %2: 'from ... import ...' is not allowed",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "%1：第 %2 行：不允許 'from ... import ...'",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "ToolboxCSV",
+        "source": "Arrow/Parquet",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "Arrow/Parquet",
+        "review_basis": "Brand/protocol name deliberately retained in both locales; no plugin or ABI identifier changed."
+      },
+      {
+        "context": "ToolboxCSV",
+        "source": "Can't load Arrow/Parquet",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "無法載入 Arrow/Parquet",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "ToolboxCSV",
+        "source": "Export",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "匯出",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "ToolboxCSV",
+        "source": "No topics selected.",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "未選取話題。",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "ToolboxCSV",
+        "source": "No samples found in the selected time range.",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "所選時間範圍內沒有樣本。",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "ToolboxCSV",
+        "source": "Failed to write the output file.",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "無法寫入輸出檔案。",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "ToolboxCSV",
+        "source": "<b>File saved in folder:</b><br>%1<br><br><b>File name:</b><br>%2",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "<b>檔案已儲存至資料夾：</b><br>%1<br><br><b>檔名：</b><br>%2",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "ToolboxCSV",
+        "source": "Failed to write file: %1",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "無法寫入檔案：%1",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "ToolboxCSV",
+        "source": "File name:",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "檔名：",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "ToolboxCSV",
+        "source": "File names:",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "檔名：",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "ToolboxCSV",
+        "source": "<b>Files saved in folder:</b><br>%1<br><br><b>%2</b><br>%3",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "<b>檔案已儲存至資料夾：</b><br>%1<br><br><b>%2</b><br>%3",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "DataLoadMCAP",
+        "source": "No parser available for encoding [%0] nor [%1]",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "沒有可處理編碼 [%0] 或 [%1] 的剖析器",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "DataLoadMCAP",
+        "source": "Schema: %1\n",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "結構定義：%1\n",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "DataLoadMCAP",
+        "source": "Error: %1\n",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "錯誤：%1\n",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "DataLoadMCAP",
+        "source": "Topics affected: \n",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "受影響的話題：\n",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "DataLoadULog",
+        "source": "ULog file %1",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "ULog 檔案 %1",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "WebSocketDialog",
+        "source": "Connected",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "已連線",
+        "review_basis": "Use generated UI context: WebsocketDialog has no Q_OBJECT; inherited tr would use QDialog."
+      },
+      {
+        "context": "WebSocketDialog",
+        "source": "Connect",
+        "comment": "",
+        "numerus": "no",
+        "before": "連線",
+        "after": "連線",
+        "review_basis": "Existing generated UI context and translation retained."
+      },
+      {
+        "context": "QObject",
+        "source": "WebSocket Client",
+        "comment": "",
+        "numerus": "no",
+        "before": "WebSocket 用戶端",
+        "after": "WebSocket 用戶端",
+        "review_basis": "Existing generic client title retained; protocol token unchanged."
+      },
+      {
+        "context": "QObject",
+        "source": "Invalid URL",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "URL 無效",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "No parser available for encoding [%0]",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "沒有可處理編碼 [%0] 的剖析器",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "Resume",
+        "comment": "",
+        "numerus": "no",
+        "before": "繼續",
+        "after": "繼續",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "Pause",
+        "comment": "",
+        "numerus": "no",
+        "before": "暫停",
+        "after": "暫停",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "Foxglove Bridge",
+        "comment": "",
+        "numerus": "no",
+        "before": "Foxglove Bridge",
+        "after": "Foxglove Bridge",
+        "review_basis": "Brand/protocol name deliberately retained in both locales; no plugin or ABI identifier changed."
+      },
+      {
+        "context": "QObject",
+        "source": "%1: parser creation returned null",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "%1：建立剖析器時傳回空值",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "No compatible ROS 2 channels were selected",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "未選取相容的 ROS 2 通道",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "channel %1",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "通道 %1",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "All subscribed channels were removed by the server:\n%1",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "伺服器已移除所有已訂閱通道：\n%1",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "The server removed subscribed channel(s):\n%1",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "伺服器移除了以下已訂閱通道：\n%1",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FoxgloveDialog",
+        "source": "Channel ID: %1\nEncoding: %2\nSchema Encoding: %3",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "通道 ID：%1\n編碼：%2\n結構定義編碼：%3",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FoxgloveDialog",
+        "source": "Disconnect",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "中斷連線",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FoxgloveDialog",
+        "source": "Connect",
+        "comment": "",
+        "numerus": "no",
+        "before": "連線",
+        "after": "連線",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "MQTTClient",
+        "source": "Connection error: %1",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "連線錯誤：%1",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "MQTTClient",
+        "source": "MQTT initialization failed.",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "MQTT 初始化失敗。",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "MQTTClient",
+        "source": "MQTT initialization failed. Double check username and password.",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "MQTT 初始化失敗。請檢查使用者名稱和密碼。",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "MQTTClient",
+        "source": "MQTT initialization failed. Double check certificates.",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "MQTT 初始化失敗。請檢查憑證。",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "MQTTClient",
+        "source": "Error: %1",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "錯誤：%1",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "MQTTClient",
+        "source": "Unable to connect (%1)",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "無法連線（%1）",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "MQTTClient",
+        "source": "Failed to start MQTT client",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "無法啟動 MQTT 用戶端",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "DataStreamMQTT",
+        "source": "Failed to parse %1 messages",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "無法剖析 %1 則訊息",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "DatastreamSerialPort",
+        "source": "Failed to parse %1 messages",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "無法剖析 %1 則訊息",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "DataStreamSample",
+        "source": "%1 notifications",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "%1 則通知",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "FileErrorCollector",
+        "source": "File: [%1] Line: [%2] Message: %3\n\n",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "檔案：[%1] 行：[%2] 訊息：%3\n\n",
+        "review_basis": "Non-QObject class; translate only first-party wrapper, keep imported filename and external parser message."
+      },
+      {
+        "context": "QObject",
+        "source": "Not connected",
+        "comment": "",
+        "numerus": "no",
+        "before": "未連線",
+        "after": "未連線",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "listSequences failed: unknown error",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "listSequences 失敗：未知錯誤",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "listTopics failed: unknown error",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "listTopics 失敗：未知錯誤",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "Topics (%1)",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "話題（%1）",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "Topics (loading…)",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "話題（載入中…）",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "Topics",
+        "comment": "",
+        "numerus": "no",
+        "before": "話題",
+        "after": "話題",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "PEM files (*.pem)",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "PEM 檔案 (*.pem)",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "Hide",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "隱藏",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "QObject",
+        "source": "Show",
+        "comment": "",
+        "numerus": "no",
+        "before": "顯示",
+        "after": "顯示",
+        "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+      },
+      {
+        "context": "VideoDialog",
+        "source": "QtAV error",
+        "comment": "",
+        "numerus": "no",
+        "before": null,
+        "after": "QtAV 錯誤",
+        "review_basis": "QtAV optional build/runtime still needs native validation; brand unchanged."
+      }
+    ],
+    "additional_semantic_corrections": [
+      {
+        "context": "CheatsheetDialog",
+        "source": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Select/Find a curve</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Hundreds or thousands of timeseries? The search filter on the left side can help you find easily one or more curve.</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Use one or more chunks of text that the name of the curve must contain.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">For instance, the search filter <span style=\" font-weight:600;\">&quot;pos x</span>&quot; will select:</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">-  /turtle1/<span style=\" font-weight:600;\">pos</span>e/<span style=\" font-weight:600;\">x</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">-  /turtle2/<span style=\" font-weight:600;\">pos</span>e/<span style=\" font-weight:600;\">x</span></p></body></html>",
+        "locale": "zh_TW",
+        "before_fragment": "左側篩選框可以說明您快速查詢曲線。",
+        "after_fragment": "左側篩選框可協助您快速尋找曲線。",
+        "reason": "The verb help means 協助 here; 說明您 is an incorrect mechanical conversion. All original HTML markup and non-text attributes are retained."
+      }
+    ]
   }
 }

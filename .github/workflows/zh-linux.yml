@@ -98,6 +98,7 @@ jobs:
         key: pj3-ccache-${{ matrix.id }}-v1-${{ github.run_id }}-${{ github.run_attempt }}
         restore-keys: pj3-ccache-${{ matrix.id }}-v1-
     - name: Build Plotjuggler
+      id: native-build
       shell: bash
       working-directory: ${{ github.workspace }}
       env:
@@ -119,16 +120,26 @@ jobs:
         key: pj3-ccache-${{ matrix.id }}-v1-${{ github.run_id }}-${{ github.run_attempt }}
     - name: Test DataFlash and translations
       run: |
-        git fetch --no-tags --depth=1 https://github.com/reliable-ly0411/PlotJuggler-zh-CN.git 3117288ce8d710bde4f7a86ca5ed5240ebb1c301
+        mkdir -p acceptance
+        checks=()
+        collect_check() {
+          local check_name="$1" check_exit=0
+          shift
+          "$@" || check_exit=$?
+          checks+=("$check_name:$check_exit")
+        }
+        collect_check reference git fetch --no-tags --depth=1 https://github.com/reliable-ly0411/PlotJuggler-zh-CN.git 3117288ce8d710bde4f7a86ca5ed5240ebb1c301
         export PJ_MEME_REFERENCE_DIR="$PWD/reference-memes"
         export PJ_MEME_AUDIT_DIR="$PWD/acceptance/image-variants"
-        python3 tests/check_translations.py --fresh
-        python3 tests/check_memes.py --reference-rev 3117288ce8d710bde4f7a86ca5ed5240ebb1c301 --export-reference reference-memes --pixel-report acceptance/image-pixels.json
-        python3 tests/check_version.py
-        ctest --test-dir build --output-on-failure --no-tests=error
-        xvfb-run -a python3 scripts/zh_acceptance.py --app build/bin/plotjuggler --plugin build/bin/libDataAPBin.so --out acceptance
+        collect_check translations python3 tests/check_translations.py --fresh
+        collect_check memes python3 tests/check_memes.py --reference-rev 3117288ce8d710bde4f7a86ca5ed5240ebb1c301 --export-reference reference-memes --pixel-report acceptance/image-pixels.json
+        collect_check version python3 tests/check_version.py
+        collect_check ctest ctest --test-dir build --output-on-failure --no-tests=error
+        collect_check gui xvfb-run -a python3 scripts/zh_acceptance.py --app build/bin/plotjuggler --plugin build/bin/libDataAPBin.so --out acceptance
+        python3 -c 'import json,sys; from pathlib import Path; r={k:int(v) for k,v in (x.split(":",1) for x in sys.argv[1:])}; Path("acceptance/native-step-results.json").write_text(json.dumps(r,indent=2)); sys.exit(int(any(r.values())))' "${checks[@]}"
     - name: Build AppImage
-      if: matrix.target == 'appimage'
+      id: appimage-package
+      if: always() && steps.native-build.outcome == 'success' && matrix.target == 'appimage'
       working-directory: ${{ github.workspace }}
       env:
         ARCH: ${{ matrix.arch }}
@@ -144,7 +155,7 @@ jobs:
         mv PlotJuggler-${{ matrix.arch }}.AppImage "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage"
         echo "SAFE_REF=$SAFE_REF" >> "$GITHUB_ENV"
     - name: Validate packaged AppImage
-      if: matrix.target == 'appimage'
+      if: always() && steps.appimage-package.outcome == 'success' && matrix.target == 'appimage'
       env:
         APPIMAGE_EXTRACT_AND_RUN: '1'
       run: |
@@ -152,11 +163,15 @@ jobs:
         extracted="$(mktemp -d)"
         appimage="$PWD/PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage"
         (cd "$extracted"; env -u LD_LIBRARY_PATH "$appimage" --appimage-extract >/dev/null)
-        python3 scripts/check_qt5_core_backport.py "$PJ_QT5_CORE_BACKPORT/lib/libQt5Core.so.5" "$extracted/squashfs-root/usr/lib/libQt5Core.so.5"
-        env -u LD_LIBRARY_PATH xvfb-run -a python3 scripts/zh_acceptance.py --app "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --plugin AppDir/usr/bin/libDataAPBin.so --out acceptance/packaged
-        python3 scripts/package_size_audit.py --payload AppDir --package "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --out acceptance/package-size.json
+        core_exit=0
+        python3 scripts/check_qt5_core_backport.py "$PJ_QT5_CORE_BACKPORT/lib/libQt5Core.so.5" "$extracted/squashfs-root/usr/lib/libQt5Core.so.5" || core_exit=$?
+        gui_exit=0
+        env -u LD_LIBRARY_PATH xvfb-run -a python3 scripts/zh_acceptance.py --app "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --plugin AppDir/usr/bin/libDataAPBin.so --out acceptance/packaged || gui_exit=$?
+        audit_exit=0
+        python3 scripts/package_size_audit.py --payload AppDir --package "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --out acceptance/package-size.json || audit_exit=$?
+        python3 -c 'import json,sys; from pathlib import Path; r=dict(zip(("qtcore_identity_exit","packaged_gui_exit","package_audit_exit"),map(int,sys.argv[1:]))); Path("acceptance/packaged-step-results.json").write_text(json.dumps(r,indent=2)); sys.exit(int(any(r.values())))' "$core_exit" "$gui_exit" "$audit_exit"
     - name: Build and validate native Debian or Ubuntu package
-      if: matrix.target != 'appimage'
+      if: always() && steps.native-build.outcome == 'success' && matrix.target != 'appimage'
       run: |
         bash scripts/build_native_deb.sh
         sudo apt-get install -y "$PWD"/output/*.deb
@@ -164,11 +179,16 @@ jobs:
       env:
         PJ_DEB_DISTRO: ${{ matrix.target }}
     - name: Test build without localized images
+      if: always() && steps.native-build.outcome == 'success'
       run: |
         cmake -S . -B build -DPJ_ENABLE_LOCALIZED_IMAGES=OFF
         cmake --build build --parallel 2 --target pj_localized_meme_test pj_resource_image_test plotjuggler
-        ctest --test-dir build -R 'LocalizedMemes|ResourceImageVariants' --output-on-failure --no-tests=error
-        xvfb-run -a python3 scripts/zh_acceptance.py --original-images --app build/bin/plotjuggler --plugin build/bin/libDataAPBin.so --out acceptance/images-disabled
+        mkdir -p acceptance
+        native_exit=0
+        ctest --test-dir build --output-on-failure --no-tests=error || native_exit=$?
+        gui_exit=0
+        xvfb-run -a python3 scripts/zh_acceptance.py --original-images --app build/bin/plotjuggler --plugin build/bin/libDataAPBin.so --out acceptance/images-disabled || gui_exit=$?
+        python3 -c 'import json,sys; from pathlib import Path; r=dict(zip(("native_ctest_exit","original_image_gui_exit"),map(int,sys.argv[1:]))); Path("acceptance/images-disabled-step-results.json").write_text(json.dumps(r,indent=2)); sys.exit(int(any(r.values())))' "$native_exit" "$gui_exit"
     - name: Upload AppImage
       if: matrix.target == 'appimage'
       uses: actions/upload-artifact@v4

@@ -1,0 +1,2246 @@
+{
+  "candidate": "3.18.1-rc.5",
+  "baseline_commit": "686a335ff9b795e4147b36adec08180bab9067ad",
+  "method": "Qt5 full extraction after app/base and plugin owners finished; independent semantic CN/TW review. No Qt6 or 4.x catalogs imported.",
+  "baseline_static_display_sites": 89,
+  "baseline_app_base_sites": 41,
+  "baseline_plugin_sites": 48,
+  "static_sites_are_not_gui_test_counts": true,
+  "baseline_sites": [
+    {
+      "audit_id": "UI-001",
+      "file": "plotjuggler_app/nlohmann_parsers.h",
+      "line": 110,
+      "raw_fragments": [
+        "Timestamp field name:"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-002",
+      "file": "plotjuggler_app/nlohmann_parsers.h",
+      "line": 112,
+      "raw_fragments": [
+        "e.g. timestamp, time, ts"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-003",
+      "file": "plotjuggler_app/plotwidget.cpp",
+      "line": 319,
+      "raw_fragments": [
+        "Missing name",
+        "The name of the curve is missing or exist already. ",
+        "Try again or abort."
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-004",
+      "file": "plotjuggler_app/plotwidget.cpp",
+      "line": 364,
+      "raw_fragments": [
+        "Exception!"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-005",
+      "file": "plotjuggler_app/plotwidget.cpp",
+      "line": 552,
+      "raw_fragments": [
+        "Warning",
+        "You can not drag XY (scatter) data and timeseries into the ",
+        "same plot"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-006",
+      "file": "plotjuggler_app/plotwidget.cpp",
+      "line": 566,
+      "raw_fragments": [
+        "Warning"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-007",
+      "file": "plotjuggler_app/plotwidget.cpp",
+      "line": 573,
+      "raw_fragments": [
+        "Warning"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-008",
+      "file": "plotjuggler_app/plotwidget.cpp",
+      "line": 599,
+      "raw_fragments": [
+        "Warning"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-009",
+      "file": "plotjuggler_app/plotwidget.cpp",
+      "line": 841,
+      "raw_fragments": [
+        "Warning"
+      ],
+      "note": "attribute(\"name\") 是 XML 标识，不能翻译；只有标题 Warning 漏译。"
+    },
+    {
+      "audit_id": "UI-010",
+      "file": "plotjuggler_app/plotwidget.cpp",
+      "line": 883,
+      "raw_fragments": [
+        "Warning"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-011",
+      "file": "plotjuggler_app/plotwidget.cpp",
+      "line": 948,
+      "raw_fragments": [
+        "Warning"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-012",
+      "file": "plotjuggler_app/plotwidget.cpp",
+      "line": 958,
+      "raw_fragments": [
+        "Warning"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-013",
+      "file": "plotjuggler_app/plotwidget.cpp",
+      "line": 1846,
+      "raw_fragments": [
+        "Continue"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-014",
+      "file": "plotjuggler_app/statistics_dialog.cpp",
+      "line": 18,
+      "raw_fragments": [
+        "Statistics | %1"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-015",
+      "file": "plotjuggler_app/statistics_dialog.cpp",
+      "line": 149,
+      "raw_fragments": [
+        "Statistics | %1"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-016",
+      "file": "plotjuggler_app/curvelist_panel.cpp",
+      "line": 519,
+      "raw_fragments": [
+        "Edit the selected custom timeserie",
+        "Select a single custom Timeserie to Edit ",
+        "it"
+      ],
+      "note": "状态/选择改变会把初始翻译覆盖为 raw English；必须覆盖各分支，不能仅测试默认状态。"
+    },
+    {
+      "audit_id": "UI-017",
+      "file": "plotjuggler_app/curvelist_panel.cpp",
+      "line": 525,
+      "raw_fragments": [
+        "Delete the selected custom timeseries",
+        "Select one or more custom timeseries to",
+        " delete them"
+      ],
+      "note": "状态/选择改变会把初始翻译覆盖为 raw English；必须覆盖各分支，不能仅测试默认状态。"
+    },
+    {
+      "audit_id": "UI-018",
+      "file": "plotjuggler_app/curvelist_view.cpp",
+      "line": 281,
+      "raw_fragments": [
+        "New in version 2.3+",
+        "To create a new XY curve, you must select two ",
+        "timeseries and ",
+        "drag&drop them using the RIGHT mouse button."
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-019",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 559,
+      "raw_fragments": [
+        "Name"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-020",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 988,
+      "raw_fragments": [
+        "Failed to open the file [%1]"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-021",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 1019,
+      "raw_fragments": [
+        "Failed to open the file [%1]"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-022",
+      "file": "plotjuggler_app/transforms/custom_function.cpp",
+      "line": 171,
+      "raw_fragments": [
+        "Failed to parse snippets (xml), error %1 at line %2"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-023",
+      "file": "plotjuggler_base/src/save_plot.cpp",
+      "line": 38,
+      "raw_fragments": [
+        "Save plot"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-024",
+      "file": "plotjuggler_base/src/reactive_function.cpp",
+      "line": 93,
+      "raw_fragments": [
+        "%1\n\nThe script has been disabled to prevent dialog spam. ",
+        "Re-save it from the Script Editor to resume execution."
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-025",
+      "file": "plotjuggler_base/src/plotwidget_base.cpp",
+      "line": 412,
+      "raw_fragments": [
+        "Exception!"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-026",
+      "file": "plotjuggler_plugins/ToolboxCSV/toolbox_csv.cpp",
+      "line": 126,
+      "raw_fragments": [
+        "Arrow/Parquet",
+        "Can't load Arrow/Parquet"
+      ],
+      "note": "Arrow/Parquet、WebSocket、Foxglove 等品牌/协议名保留；普通错误正文需翻译，显示标题按既有术语复核，勿修改插件 ID。"
+    },
+    {
+      "audit_id": "UI-027",
+      "file": "plotjuggler_plugins/ToolboxCSV/toolbox_csv.cpp",
+      "line": 138,
+      "raw_fragments": [
+        "Export",
+        "No topics selected."
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-028",
+      "file": "plotjuggler_plugins/ToolboxCSV/toolbox_csv.cpp",
+      "line": 145,
+      "raw_fragments": [
+        "Export",
+        "No samples found in the selected time range."
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-029",
+      "file": "plotjuggler_plugins/ToolboxCSV/toolbox_csv.cpp",
+      "line": 151,
+      "raw_fragments": [
+        "Export",
+        "Failed to write the output file."
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-030",
+      "file": "plotjuggler_plugins/ToolboxCSV/toolbox_csv.cpp",
+      "line": 157,
+      "raw_fragments": [
+        "Export",
+        "<b>File saved in folder:</b><br>%1<br><br><b>File name:</b><br>%2"
+      ],
+      "note": "成功提示富文本中的普通标签漏译；保留 HTML 结构、占位符与 toHtmlEscaped 路径/文件名。"
+    },
+    {
+      "audit_id": "UI-031",
+      "file": "plotjuggler_plugins/ToolboxCSV/toolbox_csv.cpp",
+      "line": 171,
+      "raw_fragments": [
+        "Export",
+        "No topics selected."
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-032",
+      "file": "plotjuggler_plugins/ToolboxCSV/toolbox_csv.cpp",
+      "line": 249,
+      "raw_fragments": [
+        "Export",
+        "Failed to write file: %1"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-033",
+      "file": "plotjuggler_plugins/ToolboxCSV/toolbox_csv.cpp",
+      "line": 259,
+      "raw_fragments": [
+        "Export",
+        "No samples found in the selected time range."
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-034",
+      "file": "plotjuggler_plugins/ToolboxCSV/toolbox_csv.cpp",
+      "line": 269,
+      "raw_fragments": [
+        "Export",
+        "<b>Files saved in folder:</b><br>%1<br><br><b>%2</b><br>%3"
+      ],
+      "note": "成功提示富文本中的普通标签漏译；保留 HTML 结构、占位符与 toHtmlEscaped 路径/文件名。"
+    },
+    {
+      "audit_id": "UI-035",
+      "file": "plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_dialog.cpp",
+      "line": 234,
+      "raw_fragments": [
+        "Connected",
+        "Connect"
+      ],
+      "note": "状态/选择改变会把初始翻译覆盖为 raw English；必须覆盖各分支，不能仅测试默认状态。"
+    },
+    {
+      "audit_id": "UI-036",
+      "file": "plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_client.cpp",
+      "line": 153,
+      "raw_fragments": [
+        "WebSocket Client",
+        "Invalid URL"
+      ],
+      "note": "Arrow/Parquet、WebSocket、Foxglove 等品牌/协议名保留；普通错误正文需翻译，显示标题按既有术语复核，勿修改插件 ID。"
+    },
+    {
+      "audit_id": "UI-037",
+      "file": "plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_client.cpp",
+      "line": 762,
+      "raw_fragments": [
+        "No parser available for encoding [%0]"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-038",
+      "file": "plotjuggler_plugins/DataLoadULog/dataload_ulog.cpp",
+      "line": 89,
+      "raw_fragments": [
+        "ULog file %1"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-039",
+      "file": "plotjuggler_plugins/DataStreamMQTT/mqtt_client.cpp",
+      "line": 32,
+      "raw_fragments": [
+        "Connection error: %1"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-040",
+      "file": "plotjuggler_plugins/DataStreamMQTT/mqtt_client.cpp",
+      "line": 137,
+      "raw_fragments": [
+        "MQTT initialization failed."
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-041",
+      "file": "plotjuggler_plugins/DataStreamMQTT/mqtt_client.cpp",
+      "line": 148,
+      "raw_fragments": [
+        "MQTT initialization failed. Double check username ",
+        "and password."
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-042",
+      "file": "plotjuggler_plugins/DataStreamMQTT/mqtt_client.cpp",
+      "line": 165,
+      "raw_fragments": [
+        "MQTT initialization failed. Double check ",
+        "certificates."
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-043",
+      "file": "plotjuggler_plugins/DataStreamMQTT/mqtt_client.cpp",
+      "line": 177,
+      "raw_fragments": [
+        "MQTT initialization failed."
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-044",
+      "file": "plotjuggler_plugins/DataStreamMQTT/mqtt_client.cpp",
+      "line": 198,
+      "raw_fragments": [
+        "Error: %1"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-045",
+      "file": "plotjuggler_plugins/DataStreamMQTT/mqtt_client.cpp",
+      "line": 202,
+      "raw_fragments": [
+        "Unable to connect (%1)"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-046",
+      "file": "plotjuggler_plugins/DataStreamMQTT/mqtt_client.cpp",
+      "line": 225,
+      "raw_fragments": [
+        "Failed to start MQTT client"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-047",
+      "file": "plotjuggler_plugins/DataStreamMQTT/datastream_mqtt.cpp",
+      "line": 18,
+      "raw_fragments": [
+        "Failed to parse %1 messages"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-048",
+      "file": "plotjuggler_plugins/DataStreamSerialPort/datastream_serialport.cpp",
+      "line": 344,
+      "raw_fragments": [
+        "Failed to parse %1 messages"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-049",
+      "file": "plotjuggler_plugins/DataStreamSample/datastream_sample.cpp",
+      "line": 19,
+      "raw_fragments": [
+        "%1 notifications"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-050",
+      "file": "plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_client.cpp",
+      "line": 147,
+      "raw_fragments": [
+        "Resume",
+        "Pause"
+      ],
+      "note": "状态/选择改变会把初始翻译覆盖为 raw English；必须覆盖各分支，不能仅测试默认状态。"
+    },
+    {
+      "audit_id": "UI-051",
+      "file": "plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_client.cpp",
+      "line": 161,
+      "raw_fragments": [
+        "Foxglove Bridge",
+        "Invalid URL"
+      ],
+      "note": "Arrow/Parquet、WebSocket、Foxglove 等品牌/协议名保留；普通错误正文需翻译，显示标题按既有术语复核，勿修改插件 ID。"
+    },
+    {
+      "audit_id": "UI-052",
+      "file": "plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_client.cpp",
+      "line": 634,
+      "raw_fragments": [
+        "All subscribed channels were removed by the server:\n%1"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-053",
+      "file": "plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_client.cpp",
+      "line": 643,
+      "raw_fragments": [
+        "The server removed subscribed channel(s):\n%1"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-054",
+      "file": "plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_dialog.cpp",
+      "line": 98,
+      "raw_fragments": [
+        "Channel ID: %1\nEncoding: %2\nSchema Encoding: %3"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-055",
+      "file": "plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_dialog.cpp",
+      "line": 215,
+      "raw_fragments": [
+        "Disconnect",
+        "Connect"
+      ],
+      "note": "状态/选择改变会把初始翻译覆盖为 raw English；必须覆盖各分支，不能仅测试默认状态。"
+    },
+    {
+      "audit_id": "UI-056",
+      "file": "plotjuggler_plugins/VideoViewer/video_dialog.cpp",
+      "line": 69,
+      "raw_fragments": [
+        "QtAV error"
+      ],
+      "note": "本项目创建的 QtAV error 标题，不是第三方自动弹窗；保留 QtAV 品牌，普通 error 一词需翻译。QtAV 本机未构建，未做运行验证。"
+    },
+    {
+      "audit_id": "UI-057",
+      "file": "plotjuggler_plugins/ToolboxMosaico/src/ui/fetch_worker.cpp",
+      "line": 61,
+      "raw_fragments": [
+        "Not connected"
+      ],
+      "note": "worker错误信号连接到主窗口错误显示；只翻译本项目前缀/说明，保留 API listSequences/listTopics 与外部异常原文。"
+    },
+    {
+      "audit_id": "UI-058",
+      "file": "plotjuggler_plugins/ToolboxMosaico/src/ui/fetch_worker.cpp",
+      "line": 88,
+      "raw_fragments": [
+        "listSequences failed: unknown error"
+      ],
+      "note": "worker错误信号连接到主窗口错误显示；只翻译本项目前缀/说明，保留 API listSequences/listTopics 与外部异常原文。"
+    },
+    {
+      "audit_id": "UI-059",
+      "file": "plotjuggler_plugins/ToolboxMosaico/src/ui/fetch_worker.cpp",
+      "line": 98,
+      "raw_fragments": [
+        "Not connected"
+      ],
+      "note": "worker错误信号连接到主窗口错误显示；只翻译本项目前缀/说明，保留 API listSequences/listTopics 与外部异常原文。"
+    },
+    {
+      "audit_id": "UI-060",
+      "file": "plotjuggler_plugins/ToolboxMosaico/src/ui/fetch_worker.cpp",
+      "line": 132,
+      "raw_fragments": [
+        "listTopics failed: unknown error"
+      ],
+      "note": "worker错误信号连接到主窗口错误显示；只翻译本项目前缀/说明，保留 API listSequences/listTopics 与外部异常原文。"
+    },
+    {
+      "audit_id": "UI-061",
+      "file": "plotjuggler_plugins/ToolboxMosaico/src/ui/topic/topic_panel.cpp",
+      "line": 133,
+      "raw_fragments": [
+        "Topics (%1)"
+      ],
+      "note": "将普通可见文案纳入合适 Qt 翻译 context；保留占位符、数据值和标识。"
+    },
+    {
+      "audit_id": "UI-062",
+      "file": "plotjuggler_plugins/ToolboxMosaico/src/ui/topic/topic_panel.cpp",
+      "line": 140,
+      "raw_fragments": [
+        "Topics (loading…)",
+        "Topics"
+      ],
+      "note": "状态/选择改变会把初始翻译覆盖为 raw English；必须覆盖各分支，不能仅测试默认状态。"
+    },
+    {
+      "audit_id": "UI-063",
+      "file": "plotjuggler_plugins/ToolboxMosaico/src/ui/security/cert_dialog.cpp",
+      "line": 132,
+      "raw_fragments": [
+        "PEM files (*.pem)"
+      ],
+      "note": "文件过滤器描述 PEM files 需翻译；PEM 标识与 (*.pem) 模式必须保持。"
+    },
+    {
+      "audit_id": "UI-064",
+      "file": "plotjuggler_plugins/ToolboxMosaico/src/ui/security/cert_dialog.cpp",
+      "line": 182,
+      "raw_fragments": [
+        "Hide",
+        "Show"
+      ],
+      "note": "状态/选择改变会把初始翻译覆盖为 raw English；必须覆盖各分支，不能仅测试默认状态。"
+    },
+    {
+      "audit_id": "UI-065",
+      "file": "plotjuggler_app/mainwindow.cpp",
+      "line": 2906,
+      "raw_fragments": [
+        "%1 has %2 outstanding notification%3"
+      ],
+      "note": "普通通知说明通过QString变量传给setToolTip；现有s后缀拼接不适于中文，建议用Qt numerus，插件名仍为数据。"
+    },
+    {
+      "audit_id": "UI-066",
+      "file": "plotjuggler_app/mainwindow.cpp",
+      "line": 3310,
+      "raw_fragments": [
+        "All Supported Files (%1)"
+      ],
+      "note": "翻译描述，保留%1及通配符扩展列表。"
+    },
+    {
+      "audit_id": "UI-067",
+      "file": "plotjuggler_app/mainwindow.cpp",
+      "line": 3311,
+      "raw_fragments": [
+        "All Files (*)"
+      ],
+      "note": "翻译描述，保留(*)。"
+    },
+    {
+      "audit_id": "UI-068",
+      "file": "plotjuggler_app/plotwidget.cpp",
+      "line": 1621,
+      "raw_fragments": [
+        "<font color=%1>name: %2<br>time:%3<br>value: %4</font>"
+      ],
+      "note": "曲线点悬停标签；保留颜色/值占位符及HTML结构。"
+    },
+    {
+      "audit_id": "UI-069",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 1284,
+      "raw_fragments": [
+        "- The name of the new timeseries is the same of one of its dependencies.\n"
+      ],
+      "note": "赋值errors，随后terminalPlainText->setPlainText显示。"
+    },
+    {
+      "audit_id": "UI-070",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 1291,
+      "raw_fragments": [
+        "- Missing name of the new time series.\n"
+      ],
+      "note": "同上。"
+    },
+    {
+      "audit_id": "UI-071",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 1299,
+      "raw_fragments": [
+        "- Plot name already exists and can't be modified.\n"
+      ],
+      "note": "同上。"
+    },
+    {
+      "audit_id": "UI-072",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 1305,
+      "raw_fragments": [
+        "- Missing source time series.\n"
+      ],
+      "note": "同上。"
+    },
+    {
+      "audit_id": "UI-073",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 1328,
+      "raw_fragments": [
+        "- Error in %1 script: %2"
+      ],
+      "note": "%1为Python/Lua标识，%2为外部异常；翻译本项目前缀，保留异常原文。"
+    },
+    {
+      "audit_id": "UI-074",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 1351,
+      "raw_fragments": [
+        "- Error in %1 script: %2"
+      ],
+      "note": "与1328同一文案，在运行计算失败分支重复。"
+    },
+    {
+      "audit_id": "UI-075",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 1393,
+      "raw_fragments": [
+        "- Missing prefix/suffix.\n"
+      ],
+      "note": "赋值errors后terminalBatchPlainText->setPlainText显示。"
+    },
+    {
+      "audit_id": "UI-076",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 1398,
+      "raw_fragments": [
+        "- No input series.\n"
+      ],
+      "note": "同上。"
+    },
+    {
+      "audit_id": "UI-077",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 1419,
+      "raw_fragments": [
+        "- Error in %1 script: %2"
+      ],
+      "note": "批量脚本创建失败分支；与1328同一文案。"
+    },
+    {
+      "audit_id": "UI-078",
+      "file": "plotjuggler_app/transforms/function_editor.cpp",
+      "line": 1437,
+      "raw_fragments": [
+        "- Error in %1 script: %2"
+      ],
+      "note": "批量脚本计算失败分支；与1328同一文案。"
+    },
+    {
+      "audit_id": "UI-079",
+      "file": "plotjuggler_app/transforms/python_custom_function.cpp",
+      "line": 285,
+      "raw_fragments": [
+        "%1: line %2: only 'import math' is allowed"
+      ],
+      "note": "本项目校验文字，经runtime_error传给FunctionEditor UI；保留import math代码及tag/行号。"
+    },
+    {
+      "audit_id": "UI-080",
+      "file": "plotjuggler_app/transforms/python_custom_function.cpp",
+      "line": 294,
+      "raw_fragments": [
+        "%1: line %2: 'from ... import ...' is not allowed"
+      ],
+      "note": "同上；不能翻译或改写Python语法标识。"
+    },
+    {
+      "audit_id": "UI-081",
+      "file": "plotjuggler_plugins/ToolboxCSV/toolbox_csv.cpp",
+      "line": 268,
+      "raw_fragments": [
+        "File name:",
+        "File names:"
+      ],
+      "note": "单/多文件成功提示的names_label也必须翻译，不能只包外层HTML字符串。"
+    },
+    {
+      "audit_id": "UI-082",
+      "file": "plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp",
+      "line": 555,
+      "raw_fragments": [
+        "No parser available for encoding [%0] nor [%1]"
+      ],
+      "note": "msg变量进入QMessageBox；保留编码值与现有占位符。"
+    },
+    {
+      "audit_id": "UI-083",
+      "file": "plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp",
+      "line": 594,
+      "raw_fragments": [
+        "Schema: %1\n"
+      ],
+      "note": "error_message拼接后进入Parser Error消息框；schema名称保持原值。"
+    },
+    {
+      "audit_id": "UI-084",
+      "file": "plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp",
+      "line": 596,
+      "raw_fragments": [
+        "Error: %1\n"
+      ],
+      "note": "本项目标签翻译，%1异常原文保留。"
+    },
+    {
+      "audit_id": "UI-085",
+      "file": "plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp",
+      "line": 597,
+      "raw_fragments": [
+        "Topics affected: \n"
+      ],
+      "note": "本项目标签翻译，实际topic标识保持。"
+    },
+    {
+      "audit_id": "UI-086",
+      "file": "plotjuggler_plugins/ParserProtobuf/error_collectors.cpp",
+      "line": 30,
+      "raw_fragments": [
+        "File: [%1] Line: [%2] Message: %3\n\n"
+      ],
+      "note": "RecordError/AddError结果经rebuildImporter(last_error)->importFile消息框显示；保留文件名/行号/第三方消息。"
+    },
+    {
+      "audit_id": "UI-088",
+      "file": "plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_client.cpp",
+      "line": 355,
+      "raw_fragments": [
+        "%1: parser creation returned null"
+      ],
+      "note": "failures列表随后进入warning；topic值不变。"
+    },
+    {
+      "audit_id": "UI-089",
+      "file": "plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_client.cpp",
+      "line": 382,
+      "raw_fragments": [
+        "No compatible ROS 2 channels were selected"
+      ],
+      "note": "msg变量在383进入warning；保留ROS 2标识。"
+    },
+    {
+      "audit_id": "UI-090",
+      "file": "plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_client.cpp",
+      "line": 616,
+      "raw_fragments": [
+        "channel %1"
+      ],
+      "note": "没有topic名时的默认显示文字进入634/643警告；只翻译channel，数字ID保持。"
+    }
+  ],
+  "reviewed_context_source_keys": 87,
+  "new_context_source_keys": 78,
+  "existing_context_source_keys_reviewed": 9,
+  "entries": [
+    {
+      "context": "QObject",
+      "source": "Timestamp field name:",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "时间戳字段名：",
+        "zh_TW": "時間戳欄位名稱："
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "e.g. timestamp, time, ts",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "例如 timestamp、time、ts",
+        "zh_TW": "例如 timestamp、time、ts"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "PlotWidget",
+      "source": "Missing name",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "缺少名称",
+        "zh_TW": "缺少名稱"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "PlotWidget",
+      "source": "The name of the curve is missing or exist already. Try again or abort.",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "曲线名称为空或已存在。请重试或中止。",
+        "zh_TW": "曲線名稱為空或已存在。請重試或中止。"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "PlotWidget",
+      "source": "Exception!",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "异常！",
+        "zh_TW": "例外！"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "PlotWidget",
+      "source": "Warning",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "警告",
+        "zh_TW": "警告"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "PlotWidget",
+      "source": "You can not drag XY (scatter) data and timeseries into the same plot",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "不能将 XY（散点）数据和时间序列拖入同一曲线图。",
+        "zh_TW": "不能將 XY（散點）資料與時間序列拖入同一曲線圖。"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "PlotWidget",
+      "source": "Continue",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "继续",
+        "zh_TW": "繼續"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "StatisticsDialog",
+      "source": "Statistics | %1",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "统计 | %1",
+        "zh_TW": "統計 | %1"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "CurveListPanel",
+      "source": "Edit the selected custom timeserie",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "编辑所选自定义时间序列",
+        "zh_TW": "編輯選取的自訂時間序列"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "CurveListPanel",
+      "source": "Select a single custom Timeserie to Edit it",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "选择一个自定义时间序列以进行编辑",
+        "zh_TW": "選取單一自訂時間序列以進行編輯"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "CurveListPanel",
+      "source": "Delete the selected custom timeseries",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "删除所选自定义时间序列",
+        "zh_TW": "刪除選取的自訂時間序列"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "CurveListPanel",
+      "source": "Select one or more custom timeseries to delete them",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "选择一个或多个自定义时间序列以进行删除",
+        "zh_TW": "選取一或多個自訂時間序列以進行刪除"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "New in version 2.3+",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "2.3+ 版本新增功能",
+        "zh_TW": "2.3+ 版本新增功能"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "To create a new XY curve, you must select two timeseries and drag and drop them using the RIGHT mouse button.",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "要新建 XY 曲线，请选择两个时间序列，再使用鼠标右键拖放。",
+        "zh_TW": "若要建立 XY 曲線，請選取兩個時間序列，再使用滑鼠右鍵拖放。"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "Name",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "名称",
+        "zh_TW": "名稱"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "Failed to open the file [%1]",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "无法打开文件 [%1]",
+        "zh_TW": "無法開啟檔案 [%1]"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "Failed to parse snippets (xml), error %1 at line %2",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "无法解析代码片段（XML），第 %2 行：%1",
+        "zh_TW": "無法剖析程式碼片段（XML），第 %2 行：%1"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "Save plot",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "保存绘图",
+        "zh_TW": "儲存繪圖"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "%1\n\nThe script has been disabled to prevent dialog spam. Re-save it from the Script Editor to resume execution.",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "%1\n\n为避免错误对话框反复弹出，脚本已停用。请在脚本编辑器中重新保存以恢复执行。",
+        "zh_TW": "%1\n\n為避免錯誤對話方塊反覆彈出，指令碼已停用。請在指令碼編輯器中重新儲存以恢復執行。"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "Exception!",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "异常！",
+        "zh_TW": "例外！"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "MainWindow",
+      "source": "Outstanding notifications from %1: %n",
+      "comment": "",
+      "numerus": "yes",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "来自 %1 的待处理通知：%n",
+        "zh_TW": "來自 %1 的待處理通知：%n"
+      },
+      "review_basis": "Qt numerus replaces English suffix concatenation. Chinese uses one plural form, preserving %n and plugin name %1."
+    },
+    {
+      "context": "MainWindow",
+      "source": "All Supported Files (%1)",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "所有支持的文件 (%1)",
+        "zh_TW": "所有支援的檔案 (%1)"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "MainWindow",
+      "source": "All Files (*)",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "所有文件 (*)",
+        "zh_TW": "所有檔案 (*)"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "PlotWidget",
+      "source": "<font color=%1>name: %2<br>time:%3<br>value: %4</font>",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "<font color=%1>名称：%2<br>时间：%3<br>数值：%4</font>",
+        "zh_TW": "<font color=%1>名稱：%2<br>時間：%3<br>數值：%4</font>"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "- The name of the new timeseries is the same of one of its dependencies.\n",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "- 新建时间序列的名称与其依赖项之一相同。\n",
+        "zh_TW": "- 新時間序列的名稱與其中一個相依項目相同。\n"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "- Missing name of the new time series.\n",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "- 缺少新时间序列的名称。\n",
+        "zh_TW": "- 未指定新時間序列的名稱。\n"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "- Plot name already exists and can't be modified.\n",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "- 名称已存在，无法修改。\n",
+        "zh_TW": "- 名稱已存在，無法修改。\n"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "- Missing source time series.\n",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "- 缺少源时间序列。\n",
+        "zh_TW": "- 未指定來源時間序列。\n"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "- Error in %1 script: %2",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "- %1 脚本错误：%2",
+        "zh_TW": "- %1 指令碼錯誤：%2"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "- Missing prefix/suffix.\n",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "- 缺少前缀/后缀。\n",
+        "zh_TW": "- 未指定前綴/後綴。\n"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "- No input series.\n",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "- 没有输入序列。\n",
+        "zh_TW": "- 沒有輸入序列。\n"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "%1: line %2: only 'import math' is allowed",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "%1：第 %2 行：只允许 'import math'",
+        "zh_TW": "%1：第 %2 行：只允許 'import math'"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "%1: line %2: 'from ... import ...' is not allowed",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "%1：第 %2 行：不允许 'from ... import ...'",
+        "zh_TW": "%1：第 %2 行：不允許 'from ... import ...'"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "ToolboxCSV",
+      "source": "Arrow/Parquet",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "Arrow/Parquet",
+        "zh_TW": "Arrow/Parquet"
+      },
+      "review_basis": "Brand/protocol name deliberately retained in both locales; no plugin or ABI identifier changed."
+    },
+    {
+      "context": "ToolboxCSV",
+      "source": "Can't load Arrow/Parquet",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "无法加载 Arrow/Parquet",
+        "zh_TW": "無法載入 Arrow/Parquet"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "ToolboxCSV",
+      "source": "Export",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "导出",
+        "zh_TW": "匯出"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "ToolboxCSV",
+      "source": "No topics selected.",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "未选择话题。",
+        "zh_TW": "未選取話題。"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "ToolboxCSV",
+      "source": "No samples found in the selected time range.",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "所选时间范围内没有样本。",
+        "zh_TW": "所選時間範圍內沒有樣本。"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "ToolboxCSV",
+      "source": "Failed to write the output file.",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "无法写入输出文件。",
+        "zh_TW": "無法寫入輸出檔案。"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "ToolboxCSV",
+      "source": "<b>File saved in folder:</b><br>%1<br><br><b>File name:</b><br>%2",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "<b>文件已保存到文件夹：</b><br>%1<br><br><b>文件名：</b><br>%2",
+        "zh_TW": "<b>檔案已儲存至資料夾：</b><br>%1<br><br><b>檔名：</b><br>%2"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "ToolboxCSV",
+      "source": "Failed to write file: %1",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "无法写入文件：%1",
+        "zh_TW": "無法寫入檔案：%1"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "ToolboxCSV",
+      "source": "File name:",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "文件名：",
+        "zh_TW": "檔名："
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "ToolboxCSV",
+      "source": "File names:",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "文件名：",
+        "zh_TW": "檔名："
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "ToolboxCSV",
+      "source": "<b>Files saved in folder:</b><br>%1<br><br><b>%2</b><br>%3",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "<b>文件已保存到文件夹：</b><br>%1<br><br><b>%2</b><br>%3",
+        "zh_TW": "<b>檔案已儲存至資料夾：</b><br>%1<br><br><b>%2</b><br>%3"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "DataLoadMCAP",
+      "source": "No parser available for encoding [%0] nor [%1]",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "没有可处理编码 [%0] 或 [%1] 的解析器",
+        "zh_TW": "沒有可處理編碼 [%0] 或 [%1] 的剖析器"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "DataLoadMCAP",
+      "source": "Schema: %1\n",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "结构定义：%1\n",
+        "zh_TW": "結構定義：%1\n"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "DataLoadMCAP",
+      "source": "Error: %1\n",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "错误：%1\n",
+        "zh_TW": "錯誤：%1\n"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "DataLoadMCAP",
+      "source": "Topics affected: \n",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "受影响的话题：\n",
+        "zh_TW": "受影響的話題：\n"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "DataLoadULog",
+      "source": "ULog file %1",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "ULog 文件 %1",
+        "zh_TW": "ULog 檔案 %1"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "WebSocketDialog",
+      "source": "Connected",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "已连接",
+        "zh_TW": "已連線"
+      },
+      "review_basis": "Use generated UI context: WebsocketDialog has no Q_OBJECT; inherited tr would use QDialog."
+    },
+    {
+      "context": "WebSocketDialog",
+      "source": "Connect",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": "连接",
+        "zh_TW": "連線"
+      },
+      "translations": {
+        "zh_CN": "连接",
+        "zh_TW": "連線"
+      },
+      "review_basis": "Existing generated UI context and translation retained."
+    },
+    {
+      "context": "QObject",
+      "source": "WebSocket Client",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": "WebSocket 客户端",
+        "zh_TW": "WebSocket 用戶端"
+      },
+      "translations": {
+        "zh_CN": "WebSocket 客户端",
+        "zh_TW": "WebSocket 用戶端"
+      },
+      "review_basis": "Existing generic client title retained; protocol token unchanged."
+    },
+    {
+      "context": "QObject",
+      "source": "Invalid URL",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "URL 无效",
+        "zh_TW": "URL 無效"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "No parser available for encoding [%0]",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "没有可处理编码 [%0] 的解析器",
+        "zh_TW": "沒有可處理編碼 [%0] 的剖析器"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "Resume",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": "继续",
+        "zh_TW": "繼續"
+      },
+      "translations": {
+        "zh_CN": "继续",
+        "zh_TW": "繼續"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "Pause",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": "暂停",
+        "zh_TW": "暫停"
+      },
+      "translations": {
+        "zh_CN": "暂停",
+        "zh_TW": "暫停"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "Foxglove Bridge",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": "Foxglove Bridge",
+        "zh_TW": "Foxglove Bridge"
+      },
+      "translations": {
+        "zh_CN": "Foxglove Bridge",
+        "zh_TW": "Foxglove Bridge"
+      },
+      "review_basis": "Brand/protocol name deliberately retained in both locales; no plugin or ABI identifier changed."
+    },
+    {
+      "context": "QObject",
+      "source": "%1: parser creation returned null",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "%1：创建解析器时返回了空值",
+        "zh_TW": "%1：建立剖析器時傳回空值"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "No compatible ROS 2 channels were selected",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "未选择兼容的 ROS 2 通道",
+        "zh_TW": "未選取相容的 ROS 2 通道"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "channel %1",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "通道 %1",
+        "zh_TW": "通道 %1"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "All subscribed channels were removed by the server:\n%1",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "服务器已移除全部已订阅通道：\n%1",
+        "zh_TW": "伺服器已移除所有已訂閱通道：\n%1"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "The server removed subscribed channel(s):\n%1",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "服务器移除了以下已订阅通道：\n%1",
+        "zh_TW": "伺服器移除了以下已訂閱通道：\n%1"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FoxgloveDialog",
+      "source": "Channel ID: %1\nEncoding: %2\nSchema Encoding: %3",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "通道 ID：%1\n编码：%2\n结构定义编码：%3",
+        "zh_TW": "通道 ID：%1\n編碼：%2\n結構定義編碼：%3"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FoxgloveDialog",
+      "source": "Disconnect",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "断开连接",
+        "zh_TW": "中斷連線"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FoxgloveDialog",
+      "source": "Connect",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": "连接",
+        "zh_TW": "連線"
+      },
+      "translations": {
+        "zh_CN": "连接",
+        "zh_TW": "連線"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "MQTTClient",
+      "source": "Connection error: %1",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "连接错误：%1",
+        "zh_TW": "連線錯誤：%1"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "MQTTClient",
+      "source": "MQTT initialization failed.",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "MQTT 初始化失败。",
+        "zh_TW": "MQTT 初始化失敗。"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "MQTTClient",
+      "source": "MQTT initialization failed. Double check username and password.",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "MQTT 初始化失败。请检查用户名和密码。",
+        "zh_TW": "MQTT 初始化失敗。請檢查使用者名稱和密碼。"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "MQTTClient",
+      "source": "MQTT initialization failed. Double check certificates.",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "MQTT 初始化失败。请检查证书。",
+        "zh_TW": "MQTT 初始化失敗。請檢查憑證。"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "MQTTClient",
+      "source": "Error: %1",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "错误：%1",
+        "zh_TW": "錯誤：%1"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "MQTTClient",
+      "source": "Unable to connect (%1)",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "无法连接（%1）",
+        "zh_TW": "無法連線（%1）"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "MQTTClient",
+      "source": "Failed to start MQTT client",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "无法启动 MQTT 客户端",
+        "zh_TW": "無法啟動 MQTT 用戶端"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "DataStreamMQTT",
+      "source": "Failed to parse %1 messages",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "无法解析 %1 条消息",
+        "zh_TW": "無法剖析 %1 則訊息"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "DatastreamSerialPort",
+      "source": "Failed to parse %1 messages",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "无法解析 %1 条消息",
+        "zh_TW": "無法剖析 %1 則訊息"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "DataStreamSample",
+      "source": "%1 notifications",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "%1 条通知",
+        "zh_TW": "%1 則通知"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "FileErrorCollector",
+      "source": "File: [%1] Line: [%2] Message: %3\n\n",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "文件：[%1] 行：[%2] 消息：%3\n\n",
+        "zh_TW": "檔案：[%1] 行：[%2] 訊息：%3\n\n"
+      },
+      "review_basis": "Non-QObject class; translate only first-party wrapper, keep imported filename and external parser message."
+    },
+    {
+      "context": "QObject",
+      "source": "Not connected",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": "未连接",
+        "zh_TW": "未連線"
+      },
+      "translations": {
+        "zh_CN": "未连接",
+        "zh_TW": "未連線"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "listSequences failed: unknown error",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "listSequences 失败：未知错误",
+        "zh_TW": "listSequences 失敗：未知錯誤"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "listTopics failed: unknown error",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "listTopics 失败：未知错误",
+        "zh_TW": "listTopics 失敗：未知錯誤"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "Topics (%1)",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "话题（%1）",
+        "zh_TW": "話題（%1）"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "Topics (loading…)",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "话题（正在加载…）",
+        "zh_TW": "話題（載入中…）"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "Topics",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": "话题",
+        "zh_TW": "話題"
+      },
+      "translations": {
+        "zh_CN": "话题",
+        "zh_TW": "話題"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "PEM files (*.pem)",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "PEM 文件 (*.pem)",
+        "zh_TW": "PEM 檔案 (*.pem)"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "Hide",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "隐藏",
+        "zh_TW": "隱藏"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "QObject",
+      "source": "Show",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": "显示",
+        "zh_TW": "顯示"
+      },
+      "translations": {
+        "zh_CN": "显示",
+        "zh_TW": "顯示"
+      },
+      "review_basis": "First-party display text; placeholder values and original protocol/data identifiers retained. CN/TW terminology reviewed separately."
+    },
+    {
+      "context": "VideoDialog",
+      "source": "QtAV error",
+      "comment": "",
+      "numerus": "no",
+      "previous": {
+        "zh_CN": null,
+        "zh_TW": null
+      },
+      "translations": {
+        "zh_CN": "QtAV 错误",
+        "zh_TW": "QtAV 錯誤"
+      },
+      "review_basis": "QtAV optional build/runtime still needs native validation; brand unchanged."
+    }
+  ],
+  "additional_semantic_corrections": [
+    {
+      "context": "CheatsheetDialog",
+      "source": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Select/Find a curve</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Hundreds or thousands of timeseries? The search filter on the left side can help you find easily one or more curve.</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Use one or more chunks of text that the name of the curve must contain.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">For instance, the search filter <span style=\" font-weight:600;\">&quot;pos x</span>&quot; will select:</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">-  /turtle1/<span style=\" font-weight:600;\">pos</span>e/<span style=\" font-weight:600;\">x</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">-  /turtle2/<span style=\" font-weight:600;\">pos</span>e/<span style=\" font-weight:600;\">x</span></p></body></html>",
+      "locale": "zh_TW",
+      "before_fragment": "左側篩選框可以說明您快速查詢曲線。",
+      "after_fragment": "左側篩選框可協助您快速尋找曲線。",
+      "reason": "The verb help means 協助 here; 說明您 is an incorrect mechanical conversion. All original HTML markup and non-text attributes are retained."
+    }
+  ],
+  "exclusions_and_limits": [
+    {
+      "kind": "nontranslatable runtime data",
+      "examples": [
+        "window_title CLI value",
+        "timestampFieldName / XML settings attribute keys",
+        "date/time format patterns",
+        "v1/v2 script argument identifiers",
+        "CSV/Parquet extensions and default file paths",
+        "PlotJuggler brand plus version",
+        "language self names / locale IDs",
+        "SI units B/KB/MB/GB, /s",
+        "numeric =inf and punctuation"
+      ],
+      "reason": "保留公开CLI/配置/文件/协议契约，不能为汉化改数据值。"
+    },
+    {
+      "kind": "already translated status tokens",
+      "files": [
+        "ToolboxMosaico/src/ui/download_stats_dialog.cpp:107,157,181,237",
+        "ToolboxMosaico/src/ui/main_window.cpp:674,700"
+      ],
+      "reason": "Waiting/Downloading/Cancelling/Complete/Done/Failed/Cancelled是内部状态ID；setRowStatus及summary用QCoreApplication::translate(\"MosaicoStatus\",...)显示，既有TS有条目。"
+    },
+    {
+      "kind": "hidden metadata / not established visible",
+      "file": "plotjuggler_app/curvelist_view.cpp",
+      "lines": [
+        37,
+        38
+      ],
+      "texts": [
+        "Time series",
+        "Current value"
+      ],
+      "reason": "31行horizontalHeader()->setVisible(false)，未发现后续show；不算已确认可见漏译。"
+    },
+    {
+      "kind": "canonical severity labels / semantic review",
+      "file": "plotjuggler_plugins/DataLoadULog/ulog_parameters_dialog.cpp",
+      "lines": [
+        49,
+        52,
+        55,
+        58,
+        61,
+        64,
+        67,
+        70
+      ],
+      "texts": [
+        "EMERGENCY",
+        "ALERT",
+        "CRITICAL",
+        "ERROR",
+        "WARNING",
+        "NOTICE",
+        "INFO",
+        "DEBUG"
+      ],
+      "reason": "ULog数值日志级别的标准名称；可增加中文显示，但需保留规范级别语义，不能机械当普通英文或修改日志数据。"
+    },
+    {
+      "kind": ".ui notr strings",
+      "reason": "XML检查发现notr=true的英文条目仅CSS样式及buttonGroup引用，未发现普通文案刻意notr。"
+    },
+    {
+      "kind": "debug logs",
+      "examples": [
+        "ParserProtobuf warning collector qDebug wrappers",
+        "Mosaico fetch performance messages"
+      ],
+      "reason": "调试日志不作为普通GUI漏译结论。"
+    },
+    {
+      "kind": "unused collector implementation / no proven UI path",
+      "file": "plotjuggler_plugins/ParserProtobuf/error_collectors.cpp",
+      "line": 62,
+      "text": "Line: [%1] Message: %2",
+      "reason": "IoErrorCollector未在当前tree发现任何实例化，不能算确定可见。FileErrorCollector的File/Line/Message包装有完整GUI调用链，仍保留。"
+    }
+  ],
+  "runtime_validation": "Not run by the catalog integrator. Frozen-source build and real GUI acceptance remain separate gates."
+}

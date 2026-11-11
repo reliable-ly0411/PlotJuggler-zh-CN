@@ -61,6 +61,9 @@ else
         --exclude='__pycache__' \
         --exclude='test' \
         --exclude='tests' \
+        --exclude='_ctypes_test*' \
+        --exclude='_test*' \
+        --exclude='_xxtestfuzz*' \
         --exclude='idlelib' \
         --exclude='turtledemo' \
         --exclude='tkinter' \

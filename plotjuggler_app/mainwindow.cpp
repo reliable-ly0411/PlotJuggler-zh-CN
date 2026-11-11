@@ -2903,10 +2903,8 @@ void MainWindow::on_streamingNotificationsChanged(int active_count)
   {
     enableStreamingNotificationsButton(true);
 
-    QString tooltipText = QString("%1 has %2 outstanding notification%3")
-                              .arg(_active_streamer_plugin->name())
-                              .arg(active_count)
-                              .arg(active_count > 1 ? "s" : "");
+    const QString tooltipText = tr("Outstanding notifications from %1: %n", nullptr, active_count)
+                                    .arg(_active_streamer_plugin->name());
     ui->buttonStreamingNotifications->setToolTip(tooltipText);
   }
   else
@@ -3307,8 +3305,8 @@ void MainWindow::on_buttonLoadDatafile_clicked()
     }
     extensions.push_back(filter_by_loader.trimmed() + ")");
   }
-  extensions.push_front(QString("All Supported Files (%1)").arg(single_line_extensions.trimmed()));
-  extensions.push_back(QString("All Files (*)"));
+  extensions.push_front(tr("All Supported Files (%1)").arg(single_line_extensions.trimmed()));
+  extensions.push_back(tr("All Files (*)"));
 
   QString directory_path =
       settings.value("MainWindow.lastDatafileDirectory", QDir::currentPath()).toString();

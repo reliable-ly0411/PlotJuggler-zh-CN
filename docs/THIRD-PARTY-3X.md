@@ -34,4 +34,10 @@ Qt 5.15.2 官方 Windows 包的简体译文仍合并在 `qt_zh_CN.qm`，构建�
 Windows 的 `Licenses/Conan` 保存本次解析的 host 依赖原始许可证、包引用及文本摘要，
 包括部分测试依赖，不能据此推断全部依赖都随产品分发。Linux 的 `Licenses/Distro`
 记录当前 ELF 依赖树可由 dpkg 识别的版权文件、版本与通用许可证；DEB 依赖系统提供这些库。
-`Licenses/Downloaded` 保留构建下载的 data_tamer、Wasmer 原始许可。
+`Licenses/Downloaded` 保留构建下载的 data_tamer、Wasmer 原始许可；
+使用源码下载回退构建 LZ4/ZSTD 时，也保存对应原始 `LICENSE`。
+
+本轮应用目录覆盖本项目菜单、提示、错误说明及已登记内置插件的界面文字，
+Qt 标准对话框使用匹配版本的官方目录。第三方组件自有文字、外部服务器/编译器/
+解析器的原始诊断不保证完整中文覆盖，缺失项回退英文；协议名、字段名、路径和
+插件标识保留原值。第三方组件的构建成功不等于其所有动态界面已验收。

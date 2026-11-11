@@ -95,7 +95,7 @@ void FoxgloveDialog::setChannels(const QMap<quint64, FoxgloveChannelInfo>& chann
     item->setText(0, channel.topic);
     item->setText(1, channel.schema_name);
     item->setData(0, Qt::UserRole, QVariant::fromValue<qulonglong>(channel.id));
-    item->setToolTip(0, QString("Channel ID: %1\nEncoding: %2\nSchema Encoding: %3")
+    item->setToolTip(0, tr("Channel ID: %1\nEncoding: %2\nSchema Encoding: %3")
                             .arg(channel.id)
                             .arg(channel.encoding, channel.schema_encoding));
     if (wanted.contains(channel.topic))
@@ -212,7 +212,7 @@ void FoxgloveDialog::setConnected(bool connected)
 {
   ui->buttonConnect->blockSignals(true);
   ui->buttonConnect->setChecked(connected);
-  ui->buttonConnect->setText(connected ? "Disconnect" : "Connect");
+  ui->buttonConnect->setText(connected ? tr("Disconnect") : tr("Connect"));
   ui->buttonConnect->blockSignals(false);
 
   ui->lineEditURL->setEnabled(!connected);
