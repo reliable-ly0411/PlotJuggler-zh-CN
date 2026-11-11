@@ -1111,9 +1111,12 @@ class CandidateTests(unittest.TestCase):
         for name in ('file-dialog-discovery.json', 'csv-discovery.json', 'run-plan.json', 'allowed-outputs.json'):
             (self.build / 'native-kit' / name).unlink()
         (self.i18n / 'native-kit/allowed-outputs.json').unlink()
-        for path in (runner, self.build / 'CMakeCache.txt'):
+        for path, reason in ((runner, 'CSV identity file differs from the actual runner bytes'),
+                             (self.build / 'CMakeCache.txt', 'build identity differs from the actual main CMake cache')):
             original = path.read_bytes(); path.write_bytes(original + b'tampered')
-            with self.subTest(path=path), self.assertRaises(planner.PlanError):
+            with self.subTest(path=path), \
+                    mock.patch.object(planner, 'actual_compiler_identity', return_value=compiler['compiler']), \
+                    self.assertRaisesRegex(planner.PlanError, reason):
                 candidate.add_run_plan_candidate()
             self.assertFalse((self.build / 'native-kit/run-plan.json').exists())
             path.write_bytes(original)
@@ -1563,8 +1566,12 @@ class CompilerEvidenceTests(BuildIdentityCacheTests):
     def setUp(self):
         super().setUp()
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
         self.sha = '123456789abc' + 'a' * 28; self.tree = 'b' * 40
+        self.root = Path(self.temp.name).resolve() / 'n' / self.sha[:12]
+        self.root.mkdir(parents=True)
+        # Exercise the real native-root check on Windows instead of bypassing it.
+        if os.name == 'nt':
+            self.logical = str(self.root)
         self.expected, self.hashes = seed_compiler_fixture(self.root, self.logical, self.sha, self.tree,
                                                          'main', self.cache('main'))
         self.base = self.root / 'b/native-kit/compiler'
@@ -1577,6 +1584,21 @@ class CompilerEvidenceTests(BuildIdentityCacheTests):
     def inspect(self):
         return planner.inspect_compiler_reply(self.root, self.logical, self.expected,
                                               'b/.cmake/api/v1/reply', self.expected['query']['path'])
+
+    def test_fixture_uses_source_bound_physical_root(self):
+        self.assertEqual(self.root.name, self.sha[:12])
+        self.assertEqual(self.root.parent.name, 'n')
+        if os.name == 'nt':
+            self.assertEqual(str(self.root), self.logical)
+        with mock.patch.object(planner.audit, 'check_root', wraps=planner.audit.check_root) as checked:
+            planner.compiler_context(self.root, self.logical, self.sha, self.tree, 'main')
+        checked.assert_called_once_with(self.root, self.logical, require_exact=True)
+
+    def test_native_root_mismatch_remains_rejected(self):
+        wrong = self.logical.replace('123456789abc', '000000000000')
+        with mock.patch.object(planner.audit, 'os', types.SimpleNamespace(name='nt')), \
+                self.assertRaisesRegex(planner.audit.AuditError, 'exact build-time root'):
+            planner.audit.check_root(self.root, wrong, require_exact=True)
 
     def test_both_roles_retain_minimal_nonce_bound_bytes(self):
         self.assertEqual(len(self.verify()[1]), 5)
