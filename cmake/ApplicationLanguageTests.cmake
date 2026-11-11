@@ -32,4 +32,6 @@ if(TARGET plotjuggler)
     --expected-version "${PJ_FORK_SEMVER}" --expected-platform offscreen)
   set_tests_properties(LauncherGuiAcceptance PROPERTIES
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 240)
+  set_property(TEST LauncherGuiAcceptance APPEND PROPERTY ENVIRONMENT
+    "PYTHONIOENCODING=cp1252")
 endif()

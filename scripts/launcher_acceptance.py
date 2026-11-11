@@ -178,7 +178,8 @@ def main():
     temp = root / 'summary.tmp'
     temp.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding='utf-8')
     temp.replace(root / 'summary.json')
-    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    # Console encoding varies by platform; JSON escapes keep output ASCII-safe.
+    print(json.dumps(summary, ensure_ascii=True, indent=2))
     return 0 if summary['passed'] else 1
 
 if __name__ == '__main__':

@@ -8,6 +8,7 @@ It is not an accepted production identity and cannot make release gates pass.
 """
 import copy
 import hashlib
+import json
 from pathlib import Path
 import re
 import struct
@@ -20,6 +21,80 @@ EPOCH_MIN, EPOCH_MAX = 1577836800000, 2524608000000
 
 def sha(data):
     return hashlib.sha256(data).hexdigest()
+
+
+CATALOG_SHA256 = "0409f5000a477cf88d414f7a0b9762d99ff0077a6a1eb3bb23aaa38498dd1daa"
+CATALOG_PATH = Path(__file__).resolve().parents[1] / "tests/data/windows-quarantine-protobuf-catalog.json"
+CATALOG_PREFIX = "c:/users/runneradmin/.conan2/p/b/proto{cache}/"
+CATALOG_NAMES = ("ToolboxMosaico.dll", "ProtobufParser.dll")
+
+
+def validate_quarantine_catalog(catalog):
+    """Validate only a finite, review-only catalog; never a production policy."""
+    if (catalog.get("schema") != "windows-quarantine-protobuf-catalog/v1" or
+        catalog.get("method") != "sha256-ascii-lower-slash-cache-token-v1" or
+        catalog.get("official") != {"repository": "https://github.com/protocolbuffers/protobuf",
+                                    "tag": "v21.12", "commit": "f0dc78d7e6e331b8c6bb2d5283e06aa26883ca7c",
+                                    "tree": "279ae3a7ce3cac503885a3dceb4d9c957a265e27"}):
+        raise ValueError("Invalid quarantine catalog schema")
+    rc7 = catalog.get("rc7", {})
+    if (rc7.get("source_commit") != "32fe24c7e3c3d4599aad05bb7e9e730eb1a62adb" or
+        rc7.get("run") != "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/43078119058" or
+        rc7.get("run_attempt") != 1 or rc7.get("artifact_id") != "13884995968" or
+        not re.fullmatch(r"[0-9a-f]{64}", rc7.get("artifact_sha256", "")) or
+        set(rc7.get("dll_sha256", {})) != set(CATALOG_NAMES) or
+        any(not re.fullmatch(r"[0-9a-f]{64}", value) for value in rc7["dll_sha256"].values())):
+        raise ValueError("Invalid quarantine catalog provenance")
+    entries = catalog.get("entries")
+    if not isinstance(entries, list) or len(entries) != 31:
+        raise ValueError("Invalid quarantine catalog size")
+    by_hash = {}
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != {"canonical_path", "official_relative_path", "git_blob_sha", "diagnostic_sha256"}:
+            raise ValueError("Invalid quarantine catalog entry")
+        relative = entry["official_relative_path"]
+        if not isinstance(relative, str) or not relative.startswith("src/google/protobuf/") or any(
+            part in ("", ".", "..") or not re.fullmatch(r"[a-z0-9_.+\-]+", part)
+            for part in relative.split("/")):
+            raise ValueError("Invalid quarantine catalog relative path")
+        allowed = {CATALOG_PREFIX + "b/src/" + relative,
+                   CATALOG_PREFIX + "p/include/" + relative[len("src/"):]}
+        path = entry["canonical_path"]
+        digest = entry["diagnostic_sha256"]
+        if (path not in allowed or not re.fullmatch(r"[0-9a-f]{40}", entry["git_blob_sha"]) or
+            not re.fullmatch(r"[0-9a-f]{64}", digest) or sha(path.encode("ascii")) != digest or digest in by_hash):
+            raise ValueError("Invalid quarantine catalog mapping")
+        by_hash[digest] = path
+    groups = catalog.get("dll_entries")
+    if not isinstance(groups, dict) or set(groups) != set(CATALOG_NAMES):
+        raise ValueError("Invalid quarantine catalog DLL scope")
+    used = set()
+    for name in CATALOG_NAMES:
+        group = groups[name]
+        if (not isinstance(group, list) or len(group) != 29 or len(set(group)) != 29 or
+            not set(group).issubset(by_hash)):
+            raise ValueError("Invalid quarantine catalog DLL entries")
+        used.update(group)
+    if used != set(by_hash):
+        raise ValueError("Unreferenced quarantine catalog entry")
+    return {name: [by_hash[digest].replace("{cache}", "0000000000000") for digest in groups[name]]
+            for name in CATALOG_NAMES}
+
+
+def load_quarantine_catalog():
+    # Caller cannot select a policy. Both code and catalog are source-owned and
+    # the pin makes catalog changes explicit in the reviewed source diff.
+    data = CATALOG_PATH.read_bytes()
+    if sha(data) != CATALOG_SHA256:
+        raise ValueError("Quarantine catalog hash mismatch")
+    return validate_quarantine_catalog(json.loads(data))
+
+
+def review_literals(name, records):
+    source = records["public_ci_source_records"]
+    old = ([literal for record in source.values() for literal in record["nul_terminated_literals"]]
+           if name == "ProtobufParser.dll" else source[name]["nul_terminated_literals"])
+    return list(old) + load_quarantine_catalog().get(name, [])
 
 
 def canonical(literal):
@@ -257,12 +332,10 @@ def candidate_privacy(data, name, records, check_metadata):
     temporary = copy.deepcopy(records)
     source_records = temporary.setdefault("public_ci_source_records", {})
     if name == "ProtobufParser.dll":
-        old = [literal for record in records["public_ci_source_records"].values()
-               for literal in record["nul_terminated_literals"]]
-        policy = source_records[name] = {"nul_terminated_literals": old}
+        policy = source_records[name] = {"nul_terminated_literals": []}
     else:
         policy = source_records[name]
-        old = policy["nul_terminated_literals"]
+    old = review_literals(name, records)
     literals = observed_public_literals(data, old)
     # This exact digest is a quarantine scan aid, never a production approval.
     policy["observed_plugin_sha256"] = sha(data)

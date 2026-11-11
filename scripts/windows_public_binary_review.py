@@ -18,7 +18,7 @@ import sys
 from package_privacy import check_metadata, load_public_records
 from pe_content_fingerprint import fingerprint, METHOD
 from windows_public_binary_review_helpers import (
-    NAMES, QRC_EXPECTED, candidate_privacy, derive_qrc_offsets, observed_public_literals, unknown_marker_count, path_diagnostics, rc5_shadow, sha,
+    NAMES, QRC_EXPECTED, candidate_privacy, derive_qrc_offsets, observed_public_literals, unknown_marker_count, path_diagnostics, rc5_shadow, review_literals, CATALOG_SHA256, sha,
 )
 
 COLLECTION_PHASE = "argument validation"
@@ -103,10 +103,7 @@ def main():
                 continue
             data = path.read_bytes()
             entry["sha256"] = sha(data)
-            old = ([literal for record in records["public_ci_source_records"].values()
-                    for literal in record["nul_terminated_literals"]]
-                   if name == "ProtobufParser.dll" else
-                   records["public_ci_source_records"][name]["nul_terminated_literals"])
+            old = review_literals(name, records)
             literals = observed_public_literals(data, old)
             entry["unknown_marker_count"] = unknown_marker_count(data, literals)
             entry["path_diagnostics"] = path_diagnostics(data, old)
@@ -171,6 +168,7 @@ def main():
         "run": expected_repo + "/actions/runs/" + args.run,
         "run_attempt": int(args.run_attempt),
         "approved_policy_sha256": sha(policy_path.read_bytes()),
+        "quarantine_catalog_sha256": CATALOG_SHA256,
         "build_info": {"commit": args.commit, "source_revision": args.commit[:12],
                        "repository": expected_repo, "sha256": sha(info_bytes)},
         "production_gate_unchanged": True,

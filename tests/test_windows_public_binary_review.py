@@ -2,6 +2,7 @@
 """Offline review-only boundary tests; no real DLLs, build tree or network."""
 from pathlib import Path
 import json
+import copy
 import os
 import struct
 import subprocess
@@ -14,7 +15,7 @@ sys.path.insert(0, str(REPO / "scripts"))
 from package_privacy import check_metadata as check
 from pe_content_fingerprint import fingerprint, METHOD
 from windows_public_binary_review_helpers import (
-    candidate_privacy, derive_qrc_offsets, observed_public_literals, unknown_public_path_hashes, path_diagnostics, rc5_shadow, qrc_struct, sha,
+    candidate_privacy, derive_qrc_offsets, observed_public_literals, unknown_public_path_hashes, path_diagnostics, rc5_shadow, qrc_struct, sha, load_quarantine_catalog, validate_quarantine_catalog,
 )
 
 PUBLIC_SOURCE = r"C:\Users\runneradmin\.conan2\p\b\arrow5bfe34ade08ff\b\src\cpp\src\arrow\array\array_base.cc"
@@ -159,6 +160,76 @@ class ReviewScope(unittest.TestCase):
             check(data, "DataLoadParquet.dll", original)
 
 
+class QuarantineCatalog(unittest.TestCase):
+    def setUp(self):
+        self.catalog = json.loads((REPO / "tests/data/windows-quarantine-protobuf-catalog.json").read_text())
+        self.paths = load_quarantine_catalog()
+        self.name = "ToolboxMosaico.dll"
+        self.other = "ProtobufParser.dll"
+        self.policy = FIXTURE_RECORDS
+        self.path = self.paths[self.name][0].replace("0000000000000", "0123456789abc")
+
+    def test_finite_exact_per_dll_catalog_and_production_rejection(self):
+        self.assertEqual(len(self.catalog["entries"]), 31)
+        self.assertEqual([len(self.paths[n]) for n in (self.name, self.other)], [29, 29])
+        for name in (self.name, self.other):
+            for path in self.paths[name]:
+                data = (path.replace("0000000000000", "0123456789abc") + "\0").encode()
+                literals, _, _ = candidate_privacy(data, name, self.policy, check)
+                self.assertEqual(len(literals), 1)
+                with self.assertRaises(ValueError):
+                    check(data, name, self.policy)
+        unique = set(self.paths[self.other]) - set(self.paths[self.name])
+        self.assertTrue(unique)
+        data = (next(iter(unique)) + "\0").encode()
+        with self.assertRaises(ValueError):
+            candidate_privacy(data, self.name, self.policy, check)
+        unique = set(self.paths[self.name]) - set(self.paths[self.other])
+        self.assertTrue(unique)
+        with self.assertRaises(ValueError):
+            candidate_privacy((next(iter(unique)) + "\0").encode(), self.other, self.policy, check)
+
+    def test_exact_filename_and_cache_boundary(self):
+        path = self.path
+        for value in (path.replace("runneradmin", "anotheruser"),
+                      path.replace("proto0123456789abc", "other0123456789abc"),
+                      path.replace("/p/b/", "/p/"),
+                      path.replace("0123456789abc", "0123456789ab"),
+                      path.replace("0123456789abc", "0123456789abcd"),
+                      path.replace("/google/", "/../google/"),
+                      path + ".extra", path.rsplit("/", 1)[0] + "/unreviewed.cc"):
+            with self.subTest(case=sha(value.encode())):
+                with self.assertRaises(ValueError):
+                    candidate_privacy((value + "\0").encode(), self.name, self.policy, check)
+        with self.assertRaises(ValueError):
+            candidate_privacy(path.encode(), self.name, self.policy, check)
+        for encoding, prefix in (("ascii", b""), ("utf-16le", b""), ("utf-16le", b"x")):
+            value = path.upper().replace("/", "\\")
+            self.assertEqual(candidate_privacy(prefix + (value + "\0").encode(encoding), self.name, self.policy, check)[0], [value])
+
+    def test_catalog_never_masks_adjacent_secret_or_private_path(self):
+        for encoding, alignment in (("ascii", b""), ("utf-16le", b""), ("utf-16le", b"x")):
+            for prefix in ("person@qq.com", r"C:\Users\OtherUser\private.bin", "gh"+"p_"+"x"*36,
+                           "-----BEGIN PRIVATE KEY-----\n"+"A"*128+"\n-----END PRIVATE KEY-----"):
+                with self.subTest(encoding=encoding, alignment=len(alignment), case=sha(prefix.encode())):
+                    with self.assertRaises(ValueError):
+                        candidate_privacy(alignment + (prefix + self.path + "\0").encode(encoding), self.name, self.policy, check)
+
+    def test_catalog_schema_and_mapping_fail_closed(self):
+        cases = []
+        for field, value in (("canonical_path", "c:/other"), ("official_relative_path", "src/google/protobuf/../private.cc"),
+                             ("git_blob_sha", "invalid"), ("diagnostic_sha256", "0"*64)):
+            bad = copy.deepcopy(self.catalog)
+            bad["entries"][0][field] = value
+            cases.append(bad)
+        bad = copy.deepcopy(self.catalog)
+        bad["dll_entries"][self.name][0] = "0"*64
+        cases.append(bad)
+        for value in cases:
+            with self.assertRaises(ValueError):
+                validate_quarantine_catalog(value)
+
+
 class ResourceEvidence(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -245,6 +316,8 @@ class CollectorIntegration(unittest.TestCase):
             (scripts / name).write_bytes((REPO / "scripts" / name).read_bytes())
         policy = root / "tests/data/public-build-records.json"
         policy.parent.mkdir(parents=True)
+        (policy.parent / "windows-quarantine-protobuf-catalog.json").write_bytes(
+            (REPO / "tests/data/windows-quarantine-protobuf-catalog.json").read_bytes())
         policy.write_text(json.dumps(FIXTURE_RECORDS), encoding="utf-8")
         installer = root / "installer/config.xml"
         installer.parent.mkdir()
@@ -436,6 +509,24 @@ class CollectorIntegration(unittest.TestCase):
             self.assertEqual(len(entry["path_diagnostics"]["path_sha256"]), 1)
             self.assertFalse(entry["existing_production_gate"]["passed"])
             self.assertFalse(entry["approved_for_release"])
+
+    def test_catalog_paths_produce_quarantine_only_exports(self):
+        with tempfile.TemporaryDirectory(prefix="pj-review-fixture-") as temp:
+            root = Path(temp)
+            payload, command = self.setup_fixture(root)
+            catalog = load_quarantine_catalog()
+            for name in ("ToolboxMosaico.dll", "ProtobufParser.dll"):
+                path = payload / name
+                with path.open("ab") as stream:
+                    stream.write((catalog[name][0] + "\0").encode())
+            result = subprocess.run(command, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            report = json.loads((root / "review/review-manifest.json").read_text())
+            for name in ("ToolboxMosaico.dll", "ProtobufParser.dll"):
+                self.assertEqual((root / "review" / name).read_bytes(), (payload / name).read_bytes())
+                self.assertIn(catalog[name][0], report["selected"][name]["observed_public_literals"])
+                self.assertFalse(report["selected"][name]["existing_production_gate"]["passed"])
+                self.assertFalse(report["selected"][name]["approved_for_release"])
 
     def test_secret_in_selected_dll_suppresses_all_path_hashes(self):
         with tempfile.TemporaryDirectory(prefix="pj-review-fixture-") as temp:
