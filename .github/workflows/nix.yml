@@ -2,11 +2,13 @@ name: Nix
 
 # The flake is community-maintained: it is checked on demand (Actions → Nix →
 # Run workflow) and on pull requests that touch it, never on every pull request.
+# Drafts wait: marking one ready runs it.
 on:
   workflow_dispatch:
 
 jobs:
   build:
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: depot-ubuntu-22.04-4
     # A cold Nix store builds FFmpeg, Luau and the app from source.
     timeout-minutes: 120

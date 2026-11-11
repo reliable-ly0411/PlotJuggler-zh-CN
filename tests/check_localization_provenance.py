@@ -8,7 +8,7 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 record = json.loads((ROOT / "docs/localization/upstream-baseline.json").read_text(encoding="utf-8"))
-assert record["upstream_branch"] == "main-4.x"
+assert record["upstream_branch"] == "main"
 assert record["stable_branch"] == "zh-CN-4.x"
 assert record["development_branch"] == "zh-CN-4.x-dev"
 assert record["status"] in ("development", "prerelease")

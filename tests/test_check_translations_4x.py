@@ -49,6 +49,21 @@ class TranslationGuardTest(unittest.TestCase):
         wrong = '<translation><numerusform>%n 个</numerusform><numerusform>%n 个</numerusform></translation>'
         self.assertTrue(validate(self.catalog(wrong, numerus=True))[1])
 
+    def test_traditional_catalog_has_its_own_locale_and_one_plural_form(self) -> None:
+        root = self.catalog('<translation><numerusform>%n 個資料來源</numerusform></translation>', numerus=True)
+        root.set('language', 'zh_TW')
+        self.assertFalse(validate(root, 'zh_TW')[1])
+        self.assertTrue(validate(root, 'zh_CN')[1])
+        message = root.find('context/message/translation')
+        ET.SubElement(message, 'numerusform').text = '%n 個資料來源'
+        self.assertTrue(validate(root, 'zh_TW')[1])
+
+    def test_unsupported_or_ambiguous_locale_is_rejected(self) -> None:
+        for language in ('zh', 'zh_HK', 'zh_Hant', 'en_US', ''):
+            root = self.catalog('<translation>你好 %1</translation>')
+            root.set('language', language)
+            self.assertTrue(validate(root)[1], language)
+
     def test_wrong_context_is_missing_and_stale(self) -> None:
         root = self.catalog('<translation>你好 %1</translation>')
         messages = catalog_messages(root)

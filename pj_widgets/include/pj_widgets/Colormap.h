@@ -4,14 +4,16 @@
 
 #include <QString>
 
+#include <QStringView>
 #include <cstdint>
+#include <optional>
 #include <string_view>
 #include <vector>
 
 namespace PJ {
 
 /// Scientific colormaps shared by the visualization views — the 3D pointcloud
-/// field colouring (`PointcloudRenderPass`) and the 2D depth-image LUT
+/// field colouring (`PointRhiPass`) and the 2D depth-image LUT
 /// (`DepthImageLayer`) — so the same scalar maps to the same colour in every
 /// view. The order is the LUT row index AND the persisted id: append only,
 /// never reorder.
@@ -31,6 +33,14 @@ inline constexpr int kColormapCount = 4;
 
 /// Localized presentation only; never use as a serialized colormap token.
 [[nodiscard]] QString colormapDisplayName(Colormap colormap);
+/// Persisted layout-XML spelling ("turbo", "viridis", "plasma", "grayscale"), the
+/// one mapping shared by every view that saves a colormap by name: colormapName()
+/// lowercased, so a renamed label changes the saved layouts too.
+[[nodiscard]] QString colormapToken(Colormap colormap);
+
+/// The colormap `token` spells: an exact, case-sensitive match of a
+/// colormapToken(); nullopt for anything else (the caller picks the fallback).
+[[nodiscard]] std::optional<Colormap> parseColormap(QStringView token);
 
 /// Default LUT width (samples of t per colormap row). 256 8-bit entries is the
 /// resolution the GPU LUT texture is built and uploaded at.

@@ -44,6 +44,13 @@ class PreferencesDialog : public Dialog {
   // picks them up without a restart; a running one keeps its options.
   void recordingSettingsChanged();
 
+  // The derived-markers mode and reload rate were just written to QSettings on OK
+  // (see MainWindow::applyDerivedBatchPreferences).
+  void derivedBatchSettingsChanged();
+  // The clock time-zone preference (MainWindow::kClockUtcKey) was just written
+  // to QSettings on OK; the host re-applies the time-label format.
+  void timeLabelSettingsChanged();
+
  private:
   // Validates the registry-URL field when editing finishes: syntax first, then
   // a reachability probe (async GET; file:// URLs check existence instead;

@@ -1,63 +1,86 @@
-# PlotJuggler 4 简体中文开发说明
+# PlotJuggler 4 中文与多语言开发说明
 
-本开发线在官方 PJ4 `main`（原 `main-4.x`）的真实 Git 历史上实现中文界面及 ArduPilot
-DataFlash BIN 加载器。当前版本为 **`4.0.0-zh.1.rc.4`**，为第四个开发发布候选，GitHub 状态仍为预发布。
-`zh-CN-4.x` 为稳定线，`zh-CN-4.x-dev` 为开发集成线；主题变更通过保留提交的
-合并进入开发线，验证及发布准备完成后再晋级稳定线。初始化为空白上游基线的稳定分支
-不表示已经交付汉化版本。参见[分支规范](../BRANCHING.zh-CN.md)。
+这是 [PlotJuggler](https://github.com/PlotJuggler/PlotJuggler) 的非官方中文分支，
+在真实上游 Git 历史上实现中文界面及独立的 ArduPilot DataFlash BIN 加载器。
+安装入口见[项目首页](../../README.md#下载与安装中文版)。
+
+## 已发布版本与开发源码
+
+| 范围 | 版本与工具链 | 语言与交付状态 |
+|---|---|---|
+| [已发布 rc.4](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.0.0-zh.1.rc.4) | `4.0.0-zh.1.rc.4`，Qt `6.11.1`，宿主 SDK `0.34.1` | 简体中文 / English；Windows x64、Linux x86_64 原生预发布包 |
+| 本文描述的开发线 | `4.1.0-zh.1.dev.2`，Qt `6.12.0`，宿主 SDK `0.40.0` | 简体中文 / 繁體中文（台灣）/ English；尚未发布或完成最终原包验收 |
+
+`zh-CN-4.x` 为默认稳定维护线，`zh-CN-4.x-dev` 为开发集成线；“稳定线”是分支用途，
+不将 rc.4 变为正式稳定发行版。新增繁中、插件元数据和 FFT 显示修复属于开发线，
+不改变历史 rc.4 包。下载、资产校验及最终验收范围以对应 Release 为准。
+
+主题变更通过保留提交的合并进入开发线，验证及发布准备完成后再晋级稳定线。
+`main` 仅作为上游镜像；3.x 两条线独立维护。参见[分支规范](../BRANCHING.zh-CN.md)。
+草稿或尚未合并的 PR 不属于当前交付；请查看
+[本分支 PR 列表](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pulls)确认最新进度。
 
 ## 上游与移植边界
 
 | 项目 | 基准 |
 |---|---|
-| PlotJuggler 官方上游 | `PlotJuggler/PlotJuggler`，`main`（PJ4） |
-| 精确上游提交 | `0345ec513bde7f05ad3148548ac30401f2b6f7a7` |
+| PlotJuggler 官方上游 | `PlotJuggler/PlotJuggler`，`main` |
+| 精确上游提交 | `2b8e34316f71e50e291a85f3fbb2d28925a09761` |
 | 3.x 翻译参考 | 本仓库 `zh-CN` 的 `766a88d8e689c7803f32acb315ac872a0a67a57b` |
-| Qt | `6.11.1`，以 `versions.env` 为准 |
+| Qt | `6.12.0`，以 `versions.env` 为准 |
 | C++ / 构建 | C++20、CMake、Conan 2 |
-| 插件 SDK | `plotjuggler_sdk/0.34.1`，以 `conanfile.txt` 及锁文件为准 |
+| 插件 SDK | `plotjuggler_sdk/0.40.0`，以 `conanfile.txt` 及锁文件为准 |
 
 4.x 是重新设计的模块化应用：界面、数据存储、脚本、插件宿主和 2D/3D 视图已分离。
 3.x 的 Qt5 插件不能直接加载；旧工程配置、发布工作流及诊断补丁没有整体合并进来。
 基准与来源的机器可读记录位于 [upstream-baseline.json](upstream-baseline.json)。
+本快照基于官方 `4.1.0` 发布后新增的 19 个上游提交；本轮从开发线已有基线再合入 5 个提交。
+保留 #33 插件反馈、FFT、简繁目录、Copy-only 拖入安全保护与原有构建配置；
+具体范围和未验证项见[本轮同步记录](UPSTREAM-SYNC-20261108.md)及[此前记录](UPSTREAM-SYNC-20261107.md)。
+宿主 SDK 已升级，固定插件自身的历史 SDK 来源锁不因此改写；新宿主兼容性须另行验证。
 
 ## 界面语言
 
-- 新配置默认使用简体中文。首选项的“语言”可选择中文或 English，确认后在下次启动生效；取消不保存。
-- `plotjuggler4 --language en_US` 或 `--language zh_CN` 只覆盖当前会话，不改写保存的选择。
+- 开发线包含繁體中文（台灣），未随已发布的 rc.4 提供；不改变历史发布内容。
+  具体 locale、术语、插件、安装器及验证边界见[多语言开发说明](MULTILINGUAL.zh-CN.md)。
+- 新配置默认使用简体中文。首选项的“语言”可选择简体中文、繁體中文（台灣）或 English，确认后在下次启动生效；取消不保存。
+- `plotjuggler4 --language en_US`、`--language zh_CN` 或 `--language zh_TW` 只覆盖当前会话，不改写保存的选择。
 - 无效的已保存语言值回退到英文源文。语言设置不修改数据解析或数值格式使用的 locale。
 - 翻译目录与 Qt 标准对话框译文编译进程序，无须在运行时下载语言包。
 - 英文源字符串和数据、主题、插件等序列化标识保留原值，便于合并上游更新。
 
 当前目录覆盖应用、插件市场、插件对话框宿主、绘图、2D/3D 场景和通用控件中
-**1,968 条 Qt 可提取消息**，未完成条目为 0。其中 97 条精确复用了 3.x 中文翻译。
+简中与繁中各 **2,107 条 Qt 可提取消息**，未完成条目为 0。简中其中 97 条精确复用了 3.x 中文翻译。
 这个数字是指定提取范围的目录覆盖率，不代表所有可见内容均已汉化。
 内置 Lua 滤波器的名称、说明及参数标签仅在显示时翻译，稳定 ID、参数值、源码和生成的
 曲线名称保持不变，自定义滤波器元数据不改写。启动横幅的 15 条随机文案可翻译。
-中文会话尊重趣图/严肃启动图设置。现有无文字哭猫/胜利小孩底图配合 Qt 可翻译排版组成
+两种中文会话均尊重趣图/严肃启动图设置。现有无文字哭猫/胜利小孩底图配合 Qt 可翻译排版组成
 8 组已审阅的额外中文双格趣图；这不是原 37 张的翻译。原图原梗另有 33 张可用
-（31 张中文像素版本及 2 张仅含产品/技术名的原图），共组成 41 项中文池。原编号
+（31 张简中像素版本及 2 张仅含产品/技术名的原图），共组成 41 项简中池。繁中仅使用前述 8 组动态字幕趣图，不使用简中像素版本。原编号
 09/11/13/24 暂不可用，未进入中文池，也不回退到英文图。英文原池不变，不能声称原 37 张全完成。
 市场当前固定目录共 30 项（Windows 平台显示 29 项），未安装项目的名称、描述和分类也翻译；
 保留英文搜索和 canonical ID，未知或改变的原文保守回退。
-固定随包官方插件使用精确 UI 字节哈希、控件属性及固定版本的显示映射；Windows CRLF 仅在身份哈希前规范化为 LF。
+固定随包官方插件的面板使用精确 UI 字节哈希和控件属性匹配，菜单另按固定版本匹配；Windows CRLF 仅在身份哈希前规范化为 LF。
 5 个插件采用固定源提交的显示层补丁重建，覆盖内部文案与用户数据混排、固定导入错误等场景；Windows 使用其中 4 个，Assistant 仅随 Linux 提供。原始协议和数据保持不变。
 Mosaico 1.3.0 保留官方原包与混合正文剩余英文，不重建其独立 SDK；例外及原因见 [#20](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/20)。
-后装第三方插件不在固定随包范围；部分浏览器上传错误、WebAssembly、macOS 仍需单独验证；
+后装官方 FFT 1.0.1 新增精确 UI 显示映射，支持菜单、动态状态、报错及导出文案；
+已安装插件的作者、许可证、网站和仓库地址从嵌入清单传递，未收录时也可显示详情。
+两项均为未发布开发修复，来源及验收边界见[插件反馈回归](PLUGIN-FEEDBACK.zh-CN.md)。
+其他后装第三方插件不在固定随包范围；部分浏览器上传错误、WebAssembly、macOS 仍需单独验证；
 原生候选包的独立验收入口见下文。rc.2 另外覆盖扩展安装/解压、URDF/网格错误和安装器自定义页。
 发布状态与最终验收范围以对应 Release 和固定提交的 CI 记录为准；旧 rc.1/rc.2 包不变。
-本段新增修复纳入 rc.3；最终原包验收和发布状态见对应 Release 及其精确提交的 CI 记录。
+本段原有修复纳入 rc.3；新增繁中、元数据和 FFT 修复未随 rc.4 发布，最终原包验收和发布状态见对应 Release 及其精确提交的 CI 记录。
 历史 Release 文档继续描述当时已发布字节，晋级稳定维护分支不改变当前上游快照及预发布属性。
 Windows GUI 子系统、嵌入图标和重定向 CLI 的新检查针对实际 PE；自动化不能替代 Windows 桌面视觉验收。
 更新检查只查询本仓同一主版本汉化发布列表，包含候选序号比较，不调用未配置的 IFW/APT 上游更新。
-安装器标准页中文和重启式语言切换实现见 packaging/installer/README.md，实际安装验收另行记录。
+安装器标准页中文和重启式语言切换实现见[安装器中文说明](../../packaging/installer/README.zh-CN.md)，实际安装验收另行记录。
 同一系统用户下验证新原生候选包时，可显式使用
 [`--profile-dir` 独立测试目录](ISOLATED_PROFILE.zh-CN.md)，隔离应用设置、市场仓库及核心缓存。
 该选项不是插件沙箱，也不约束 IFW 安装器。
 
 ## CSV 中文路径修复
 
-本主题另外将官方 CSV Loader 1.0.7 的 UTF-8 路径修复接入固定源码重建链，
+本分支将官方 CSV Loader 1.0.7 的 UTF-8 路径修复接入固定源码重建链，
 同时覆盖预览和实际导入的文件打开。不改变 CSV 字节解码、数值、时间轴或配置语义。
 插件补丁、源提交、SDK、测试选择、许可证和重建产物身份均由现有打包工具校验；
 官方原包校验和仍只标识官方下载。回归输入全部为合成数据，不使用私人日志。
@@ -90,7 +113,7 @@ git submodule update --init --recursive
 ./build.sh
 ```
 
-Windows 使用上游的 `build.bat` 入口及固定的 MSVC 2022 / Qt 6.11.1 工具链。
+Windows 使用上游的 `build.bat` 入口及固定的 MSVC 2022 / Qt 6.12.0 工具链。
 `PJ_BUILD_ARDUPILOT_PLUGIN=OFF` 可以显式关闭原生 BIN 插件。没有初始化插件子模块且保持
 默认启用时，配置会明确失败，避免生成看似完整却缺少 BIN 功能的构建。
 WebAssembly 不启用这个原生共享插件。
@@ -100,9 +123,9 @@ WebAssembly 不启用这个原生共享插件。
 ```sh
 python3 tests/test_branch_policy.py
 python3 tests/test_check_translations_4x.py
-python3 tests/check_translations_4x.py --lupdate .qt/6.11.1/gcc_64/bin/lupdate
+python3 tests/check_translations_4x.py --lupdate .qt/6.12.0/gcc_64/bin/lupdate
 cmake -S pj_app/tests/i18n -B build-i18n \
-  -DCMAKE_PREFIX_PATH="$PWD/.qt/6.11.1/gcc_64"
+  -DCMAKE_PREFIX_PATH="$PWD/.qt/6.12.0/gcc_64"
 cmake --build build-i18n
 ctest --test-dir build-i18n --output-on-failure
 ```
@@ -157,4 +180,6 @@ Python、中文文件名真实 BIN、实际曲线样本与视口及中英文截�
 
 候选不启用上游 APT/Windows 自动更新发布，不冒充上游正式发布。
 
-原包干净环境验收区分插件清单与运行状态：Linux 包含 21 个插件，其中 ROS 2 订阅插件需要外部 ROS 安装及环境设置。无 ROS 的验收环境要求其给出明确的未安装诊断，其余 20 个插件仍须全部加载并匹配版本；不将该边界视为 ROS 功能通过。Windows 包含并验证 19 个插件。
+rc.4 原包干净环境验收区分插件清单与运行状态：Linux 包含 21 个插件，其中 ROS 2 订阅插件需要外部 ROS 安装及环境设置。无 ROS 的验收环境要求其给出明确的未安装诊断，其余 20 个插件仍须全部加载并匹配版本；不将该边界视为 ROS 功能通过。Windows 包含并验证 19 个插件。
+这些是已发布版本的范围，不是当前 Qt 6.12 / SDK 0.39 开发快照的完整包验收结果。
+没有 macOS、ARM 或 WebAssembly 中文发布包；系统与人工视觉验证的具体限制见 rc.4 Release。

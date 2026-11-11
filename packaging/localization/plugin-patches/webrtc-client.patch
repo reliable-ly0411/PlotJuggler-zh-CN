@@ -10,7 +10,7 @@
          selected_labels.push_back(p.name);
        }
 -      rows.push_back({p.name, joinTracks(p.tracks), p.ready ? "yes" : "no"});
-+      rows.push_back({p.name, joinTracks(p.tracks), p.ready ? pj_zh_localization::text("yes", "是") : pj_zh_localization::text("no", "否")});
++      rows.push_back({p.name, joinTracks(p.tracks), p.ready ? pj_zh_localization::text("yes", "是", "是") : pj_zh_localization::text("no", "否", "否")});
      }
      for (const auto& m : manual_paths_) {
        const bool in_catalog =
@@ -19,7 +19,7 @@
          selected_labels.push_back(m);
        }
 -      rows.push_back({m, "(manual)", "-"});
-+      rows.push_back({m, pj_zh_localization::text("(manual)", "（手动）"), "-"});
++      rows.push_back({m, pj_zh_localization::text("(manual)", "（手动）", "（手動）"), "-"});
      }
    }
    wd.setTableRows("camerasList", rows);

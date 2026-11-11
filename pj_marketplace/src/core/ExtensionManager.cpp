@@ -22,6 +22,7 @@
 #include <optional>
 #include <utility>
 
+#include "internal/plugin_display_metadata.hpp"
 #include "internal/utf8_path.hpp"
 #include "pj_marketplace/artifact_store.hpp"
 #include "pj_marketplace/content_manifest.hpp"
@@ -45,10 +46,6 @@ static constexpr const char* kPendingUninstallMarker = ".pj_pending_uninstall";
 static constexpr const char* kPendingInstallIntent = ".pj_pending_install";
 static constexpr const char* kQuarantinePrefix = ".pj_quarantine_";
 static constexpr int kMaxDiagnostics = 50;
-// How long construction waits for the store's single-writer lock. Long enough to
-// ride out another instance's in-flight rename, short enough not to stall startup:
-// a busy store means read-only, never a hang.
-static constexpr int kStoreLockTimeoutMs = 200;
 // QSettings key holding the QStringList of disabled extension ids (installed but
 // not loaded). Read by both the marketplace and the runtime plugin catalog.
 static constexpr const char* kDisabledExtensionsKey = "Marketplace/disabledExtensions";
@@ -564,6 +561,11 @@ DirectoryDiscovery discoverExtensionDirectory(const QString& ext_root) {
   result.record.name = first.name.empty() ? result.record.id : QString::fromStdString(first.name);
   result.record.description = QString::fromStdString(first.description);
   result.record.category = QString::fromStdString(first.category);
+  const auto display = marketplace_internal::readPluginDisplayMetadata(first);
+  result.record.author = QString::fromStdString(display.author);
+  result.record.license = QString::fromStdString(display.license);
+  result.record.website = QString::fromStdString(display.website);
+  result.record.repository = QString::fromStdString(display.repository);
   result.record.abi_major = first.abi_major;
   result.record.min_sdk_required = QString::fromStdString(effective_min_sdk_required);
   result.record.suggested_sdk_version = QString::fromStdString(effective_suggested_sdk_version);
@@ -657,6 +659,10 @@ DirectoryDiscovery discoverExtensionDirectoryOutOfProcess(const QString& ext_roo
   result.record.name = first.name.isEmpty() ? first.id : first.name;
   result.record.description = first.description;
   result.record.category = first.category;
+  result.record.author = first.author;
+  result.record.license = first.license;
+  result.record.website = first.website;
+  result.record.repository = first.repository;
   result.record.abi_major = first.abi_major;
   result.record.min_sdk_required = effective_min_sdk_required;
   result.record.min_plotjuggler_version = effective_min_plotjuggler_version;
@@ -996,9 +1002,9 @@ ExtensionManager::HostCompatibility ExtensionManager::hostCompatibility(const Ex
 }
 
 ExtensionManager::HostCompatibility ExtensionManager::hostCompatibility(const InstalledExtension& installed) const {
-  // There is no registry platform map for a sideload. ABI, SDK contract, and
-  // application release claims all come from the embedded descriptor and are
-  // evaluated by the same primitive the runtime loader and seed use.
+  // There is no registry platform map for a sideload. The ABI and SDK contract
+  // claims come from the embedded descriptor and are evaluated by the same
+  // primitive the runtime loader and seed use.
   const std::string version = installed.version.toStdString();
   const std::string minimum_sdk = installed.min_sdk_required.toStdString();
   const PluginCompatibilityResult result = evaluatePluginCompatibility(

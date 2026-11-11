@@ -11,6 +11,10 @@ inline QString bundledPluginText(const QString& id, const QString& version, cons
     const char* source;
   };
   static constexpr Entry entries[] = {
+      {"toolbox-fft", "1.0.1", QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata", "Fast Fourier Transform")},
+      {"toolbox-fft", "1.0.1",
+       QT_TRANSLATE_NOOP(
+           "PJ::BundledPluginMetadata", "Compute the frequency-domain amplitude of numeric time series using FFT.")},
       {"arrow-parser", "1.0.0", QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata", "Arrow IPC Parser")},
       {"arrow-parser", "1.0.0",
        QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata", "Message parser for self-describing Arrow IPC streams.")},

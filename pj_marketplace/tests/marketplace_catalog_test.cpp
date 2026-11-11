@@ -37,8 +37,8 @@ class MarketplaceCatalogTest : public QObject {
     QFETCH(QString, id);
     QFETCH(QString, version);
     QFETCH(QString, source);
-    {
-      const PJ::AppLanguage language(*QCoreApplication::instance(), u"zh_CN"_s);
+    for (const QString& code : {u"zh_CN"_s, u"zh_TW"_s}) {
+      const PJ::AppLanguage language(*QCoreApplication::instance(), code);
       const QString translated = PJ::marketplacePluginText(id, version, source);
       QVERIFY2(translated != source, qPrintable(id + ": " + source));
       QVERIFY(!translated.isEmpty());
@@ -50,20 +50,25 @@ class MarketplaceCatalogTest : public QObject {
   }
 
   void categoriesTranslateWithoutChangingCanonicalTokens() {
-    const PJ::AppLanguage language(*QCoreApplication::instance(), u"zh_CN"_s);
-    for (const char* source : {"Data loaders", "Data streams", "Message parsers", "Toolboxes"}) {
-      QVERIFY(QCoreApplication::translate("PJ::MarketplaceWindow", source) != QString::fromUtf8(source));
+    for (const QString& code : {u"zh_CN"_s, u"zh_TW"_s}) {
+      const PJ::AppLanguage language(*QCoreApplication::instance(), code);
+      for (const char* source : {"Data loaders", "Data streams", "Message parsers", "Toolboxes"}) {
+        QVERIFY(QCoreApplication::translate("PJ::MarketplaceWindow", source) != QString::fromUtf8(source));
+      }
     }
   }
 
   void exactSourceAndIdAreRequired() {
+    for (const QString& code : {u"zh_CN"_s, u"zh_TW"_s}) {
+      const PJ::AppLanguage language(*QCoreApplication::instance(), code);
+      QCOMPARE(
+          PJ::marketplacePluginText(u"unknown-fft"_s, u"1.0.1"_s, u"Fast Fourier Transform"_s),
+          u"Fast Fourier Transform"_s);
+      QCOMPARE(
+          PJ::marketplacePluginText(u"toolbox-fft"_s, u"1.0.1"_s, u"A changed upstream description"_s),
+          u"A changed upstream description"_s);
+    }
     const PJ::AppLanguage language(*QCoreApplication::instance(), u"zh_CN"_s);
-    QCOMPARE(
-        PJ::marketplacePluginText(u"unknown-fft"_s, u"1.0.1"_s, u"Fast Fourier Transform"_s),
-        u"Fast Fourier Transform"_s);
-    QCOMPARE(
-        PJ::marketplacePluginText(u"toolbox-fft"_s, u"1.0.1"_s, u"A changed upstream description"_s),
-        u"A changed upstream description"_s);
     QCOMPARE(
         PJ::marketplacePluginText(u"toolbox-fft"_s, u"1.0.1"_s, u"Fast Fourier Transform"_s),
         u"快速傅里叶变换（FFT）"_s);

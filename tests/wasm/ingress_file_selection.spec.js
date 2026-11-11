@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const { test, expect } = require('@playwright/test');
-const { waitForQtApp } = require('./support/app');
+const { waitForQtApp, wasmHeap } = require('./support/app');
+const { nativePickerType } = require('./support/browser');
 const { clickActiveDialogButton } = require('./support/dialogs');
 const { base64Fixture } = require('./support/fixtures');
+const { writeSparseRos2Float64Mcap } = require('./support/large_mcap');
 const { openFileChooser } = require('./support/pickers');
 
 async function csvDialogControlGeometry(page, consoleMessages) {
@@ -18,14 +23,15 @@ async function csvDialogControlGeometry(page, consoleMessages) {
     entry => entry.includes('PJ_WASM_CSV_DIALOG_CONTROLS delimiter='),
   ).at(-1) || '';
   const match = message.match(
-    /delimiter=(-?\d+),(-?\d+) semicolon=(-?\d+),(-?\d+) select=(-?\d+),(-?\d+) time=(-?\d+),(-?\d+)/,
+    /delimiter=(-?\d+),(-?\d+) enabled=(\d) auto=(-?\d+),(-?\d+) checked=(\d) mode=(-?\d+),(-?\d+) mode_index=(\d+) item1=(-?\d+),(-?\d+) time=(-?\d+),(-?\d+)/,
   );
   expect(match, `unparseable CSV-dialog control geometry: ${message}`).not.toBeNull();
   return {
-    delimiter: { x: Number(match[1]), y: Number(match[2]) },
-    semicolon: { x: Number(match[3]), y: Number(match[4]) },
-    select: { x: Number(match[5]), y: Number(match[6]) },
-    time: { x: Number(match[7]), y: Number(match[8]) },
+    delimiter: { x: Number(match[1]), y: Number(match[2]), enabled: match[3] === '1' },
+    autoDelimiter: { x: Number(match[4]), y: Number(match[5]), checked: match[6] === '1' },
+    mode: { x: Number(match[7]), y: Number(match[8]), index: Number(match[9]) },
+    item1: { x: Number(match[10]), y: Number(match[11]) },
+    time: { x: Number(match[12]), y: Number(match[13]) },
   };
 }
 
@@ -77,8 +83,9 @@ function makeLargeCsv(rowCount = 1_000_000) {
   return Buffer.from(rows.join(''));
 }
 
-test('browser picker falls back under cross-origin isolation without removing the native API', async ({ page }) => {
+test('browser picker falls back under cross-origin isolation without removing the native API', async ({ page, browserName }) => {
   test.setTimeout(90000);
+  const nativePicker = nativePickerType(browserName);
   const errors = [];
   const consoleMessages = [];
   page.on('pageerror', error => errors.push(String(error)));
@@ -89,7 +96,7 @@ test('browser picker falls back under cross-origin isolation without removing th
   await expect.poll(() => page.evaluate(() => crossOriginIsolated)).toBe(true);
   await expect.poll(
     () => page.evaluate(() => typeof window.showOpenFilePicker),
-  ).toBe('function');
+  ).toBe(nativePicker);
 
   const screen = await page.locator('#screen').boundingBox();
   expect(screen).not.toBeNull();
@@ -105,8 +112,120 @@ test('browser picker falls back under cross-origin isolation without removing th
     { timeout: 10000 },
   ).toContain('bytes=5 sum=15');
 
-  expect(await page.evaluate(() => typeof window.showOpenFilePicker)).toBe('function');
+  expect(await page.evaluate(() => typeof window.showOpenFilePicker)).toBe(nativePicker);
   expect(errors).toEqual([]);
+});
+
+// A picked File is read lazily, never copied. A sparse file larger than the wasm32 address space can only load that
+// way, and the linear memory, which never shrinks, records the peak: it must not grow with the file.
+test('a picked file larger than the wasm address space loads without a copy', async ({ page }) => {
+  test.setTimeout(600000);
+  const errors = [];
+  const consoleMessages = [];
+  page.on('pageerror', error => errors.push(String(error)));
+  page.on('console', message => consoleMessages.push(message.text()));
+  await page.goto(process.env.PJ_WASM_URL || 'http://127.0.0.1:6931/plotjuggler4.html');
+  await waitForQtApp(page, consoleMessages);
+  const screen = await page.locator('#screen').boundingBox();
+  expect(screen).not.toBeNull();
+
+  // Sparse, from disk: Playwright refuses in-memory buffers over 50 MB.
+  const fileBytes = 4.5 * 1024 * 1024 * 1024;
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'pj-pick-'));
+  const file = path.join(directory, 'large.pjprobe');
+  fs.closeSync(fs.openSync(file, 'w'));
+  fs.truncateSync(file, fileBytes);
+  try {
+    const before = await wasmHeap(page, consoleMessages);
+    const chooser = await openFileChooser(page, screen, true);
+    await chooser.setFiles(file);
+    await page.waitForTimeout(1000);
+    await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
+    await expect.poll(
+      () => consoleMessages.find(message => message.includes('PJ_WASM_INGRESS_PROBE_OK')) || '',
+      { timeout: 540000 },
+    ).toContain(`bytes=${fileBytes} sum=0`);
+    const after = await wasmHeap(page, consoleMessages);
+    expect(after.memory - before.memory).toBeLessThan(64 * 1024 * 1024);
+    expect(errors).toEqual([]);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+// Every offset past 2 GiB, where a 32-bit `long` stops, and past 4 GiB, where a 32-bit `size_t` wraps, must reach the
+// MCAP loader intact: its dialog and its loader both seek to the chunk, summary and footer beyond the sparse hole.
+test('a picked MCAP larger than 4 GiB loads its data', async ({ page }) => {
+  test.setTimeout(300000);
+  const errors = [];
+  const consoleMessages = [];
+  page.on('pageerror', error => errors.push(String(error)));
+  page.on('console', message => consoleMessages.push(message.text()));
+  await page.goto(process.env.PJ_WASM_URL || 'http://127.0.0.1:6931/plotjuggler4.html');
+  await waitForQtApp(page, consoleMessages);
+  const screen = await page.locator('#screen').boundingBox();
+  expect(screen).not.toBeNull();
+
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'pj-pick-'));
+  const file = path.join(directory, 'large-ros2.mcap');
+  writeSparseRos2Float64Mcap(file, 4.5 * 1024 * 1024 * 1024, [1.25, 4.5, 7.75]);
+  try {
+    const chooser = await openFileChooser(page, screen, true);
+    await chooser.setFiles(file);
+    await page.waitForTimeout(2000);
+    await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
+    await expect.poll(
+      () => consoleMessages.find(message => message.includes('/ros2/value/data:3@')) || '',
+      { timeout: 240000 },
+    ).toContain('=1.25..7.75');
+    expect(errors).toEqual([]);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+// A lazily read File that changes on disk after the pick fails its reads; a std::istream reader would take that for
+// the end of the file, so the failure must be reported, and the app must stay usable for the next pick.
+test('a picked file changed on disk reports the failed read and leaves the app usable', async ({ page }) => {
+  test.setTimeout(180000);
+  const errors = [];
+  const consoleMessages = [];
+  page.on('pageerror', error => errors.push(String(error)));
+  page.on('console', message => consoleMessages.push(message.text()));
+  await page.goto(process.env.PJ_WASM_URL || 'http://127.0.0.1:6931/plotjuggler4.html');
+  await waitForQtApp(page, consoleMessages);
+  const screen = await page.locator('#screen').boundingBox();
+  expect(screen).not.toBeNull();
+
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'pj-pick-'));
+  const changing = path.join(directory, 'changing.pjprobe');
+  const good = path.join(directory, 'good.pjprobe');
+  fs.writeFileSync(changing, Buffer.alloc(8 * 1024 * 1024, 1));
+  fs.writeFileSync(good, Buffer.alloc(1024, 1));
+  try {
+    const chooser = await openFileChooser(page, screen, true);
+    await chooser.setFiles(changing);
+    await page.waitForTimeout(1000);
+    fs.writeFileSync(changing, Buffer.alloc(4 * 1024 * 1024, 2));
+    await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
+    await expect.poll(
+      () => consoleMessages.find(message => message.includes('PJ_BROWSER_PICK_READ_FAILED')) || '',
+      { timeout: 60000 },
+    ).toContain('changing.pjprobe');
+
+    const probesBefore = consoleMessages.filter(message => message.includes('PJ_WASM_INGRESS_PROBE_OK')).length;
+    const next = await openFileChooser(page, screen, true);
+    await next.setFiles(good);
+    await page.waitForTimeout(1000);
+    await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
+    await expect.poll(
+      () => consoleMessages.filter(message => message.includes('PJ_WASM_INGRESS_PROBE_OK')).slice(probesBefore).join(),
+      { timeout: 60000 },
+    ).toContain('bytes=1024 sum=1024');
+    expect(errors).toEqual([]);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test('browser file dialog can reject then accept without a nested event loop', async ({ page }) => {
@@ -223,21 +342,24 @@ test('official CSV plugin applies delimiter and time-column choices', async ({ p
   });
   await page.waitForTimeout(750);
 
-  // Select semicolon in the delimiter combo, then select `time` as the X axis.
-  // The controls live in Qt's canvas; sample their current geometry because the
-  // canonical host title bar changes the embedded plugin's origin.
+  // An unambiguous semicolon file is auto-detected: the dialog locks the
+  // delimiter (auto-detection on, combo disabled) and the imported series names
+  // below prove it was applied. Then switch the Time Axis mode to "Selected
+  // Column" and pick `time`. The controls live in Qt's canvas; sample their
+  // current geometry because the canonical host title bar changes the embedded
+  // plugin's origin.
   let controls = await csvDialogControlGeometry(page, consoleMessages);
-  await page.mouse.click(screen.x + controls.delimiter.x, screen.y + controls.delimiter.y);
+  expect(controls.autoDelimiter.checked).toBe(true);
+  expect(controls.delimiter.enabled).toBe(false);
+  controls = await csvDialogControlGeometry(page, consoleMessages);
+  await page.mouse.click(screen.x + controls.mode.x, screen.y + controls.mode.y);
   await page.waitForTimeout(250);
   controls = await csvDialogControlGeometry(page, consoleMessages);
-  expect(controls.semicolon.x).toBeGreaterThanOrEqual(0);
-  expect(controls.semicolon.y).toBeGreaterThanOrEqual(0);
-  await page.mouse.click(screen.x + controls.semicolon.x, screen.y + controls.semicolon.y);
+  expect(controls.item1.x).toBeGreaterThanOrEqual(0);
+  await page.mouse.click(screen.x + controls.item1.x, screen.y + controls.item1.y);
   await page.waitForTimeout(500);
   controls = await csvDialogControlGeometry(page, consoleMessages);
-  await page.mouse.click(screen.x + controls.select.x, screen.y + controls.select.y);
-  await page.waitForTimeout(500);
-  controls = await csvDialogControlGeometry(page, consoleMessages);
+  expect(controls.mode.index).toBe(1);
   expect(controls.time.x).toBeGreaterThanOrEqual(0);
   expect(controls.time.y).toBeGreaterThanOrEqual(0);
   await page.mouse.click(screen.x + controls.time.x, screen.y + controls.time.y);
@@ -449,9 +571,13 @@ test('official Protobuf parser imports scalars and cold-decodes a Foxglove objec
     () => consoleMessages.find(message => message.includes('/protobuf/telemetry/temperature:3@')) || '',
     { timeout: 30000 },
   ).toContain('=12.5..-2');
-  const object = consoleMessages.find(
-    message => message.includes('PJ_WASM_PROTOBUF_OBJECT_OK topic=/foxglove/tf'),
+  // The object probe logs after the load does, once its cold fetch has read the picked file on demand.
+  const objectMessage = () => consoleMessages.find(
+    message => message.includes('PJ_WASM_PROTOBUF_OBJECT_OK topic=/foxglove/tf')
+      || message.includes('PJ_WASM_PROTOBUF_OBJECT_FAILED'),
   ) || '';
+  await expect.poll(objectMessage, { timeout: 30000 }).not.toBe('');
+  const object = objectMessage();
   expect(object).toContain('entries=1 type=kFrameTransforms');
   expect(object).toContain('transforms=1 parent=map child=base_link');
   expect(consoleMessages.some(message => message.includes('PJ_WASM_PROTOBUF_OBJECT_FAILED'))).toBe(false);

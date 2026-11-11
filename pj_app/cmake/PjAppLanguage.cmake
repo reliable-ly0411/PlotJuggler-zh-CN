@@ -12,7 +12,9 @@ function(pj_add_app_language)
     endif()
     find_package(Qt6 REQUIRED COMPONENTS Core LinguistTools)
     get_filename_component(app_dir "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
-    set(ts_file "${app_dir}/translations/plotjuggler4_zh_CN.ts")
+    set(ts_files
+        "${app_dir}/translations/plotjuggler4_zh_CN.ts"
+        "${app_dir}/translations/plotjuggler4_zh_TW.ts")
     set(qm_dir "${CMAKE_CURRENT_BINARY_DIR}/translations")
 
     add_library(pj_app_language STATIC
@@ -20,6 +22,9 @@ function(pj_add_app_language)
         "${app_dir}/src/AppLanguage.h")
     target_include_directories(pj_app_language PUBLIC "${app_dir}/src")
     target_link_libraries(pj_app_language PUBLIC Qt6::Core)
+    if(MSVC)
+        target_compile_options(pj_app_language PRIVATE /utf-8)
+    endif()
     if(DEFINED PJ_WARNING_FLAGS)
         target_compile_options(pj_app_language PRIVATE ${PJ_WARNING_FLAGS})
     endif()
@@ -27,7 +32,7 @@ function(pj_add_app_language)
     # Qt6.9+ can merge Qt's own strings into the embedded catalog. There is no
     # runtime dependency on a developer machine's Qt translations directory.
     qt_add_lrelease(
-        TS_FILES "${ts_file}"
+        TS_FILES ${ts_files}
         LRELEASE_TARGET pj_app_lrelease
         QM_OUTPUT_DIRECTORY "${qm_dir}"
         QM_FILES_OUTPUT_VARIABLE qm_files
@@ -54,7 +59,7 @@ endfunction()
 # Both the full application build and the standalone i18n project run this
 # exact executable against the production catalog (no test-only translations).
 function(pj_add_app_language_test)
-    find_package(Qt6 REQUIRED COMPONENTS Test)
+    find_package(Qt6 REQUIRED COMPONENTS Test Xml)
     get_filename_component(app_dir "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
     add_executable(app_language_test "${app_dir}/tests/app_language_test.cpp")
     set_target_properties(app_language_test PROPERTIES AUTOMOC ON)
@@ -67,6 +72,20 @@ function(pj_add_app_language_test)
         target_compile_options(app_language_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME AppLanguageTest COMMAND app_language_test)
+    # Keep the persistence allowlist aligned with the actual language choices,
+    # without requiring a browser or the full SDK graph for this policy check.
+    add_executable(browser_language_test
+        "${app_dir}/tests/browser_language_test.cpp"
+        "${app_dir}/src/BrowserPersistence.cpp")
+    set_target_properties(browser_language_test PROPERTIES AUTOMOC ON)
+    target_link_libraries(browser_language_test PRIVATE pj_app_language Qt6::Xml Qt6::Test)
+    if(MSVC)
+        target_compile_options(browser_language_test PRIVATE /utf-8)
+    endif()
+    if(DEFINED PJ_WARNING_FLAGS)
+        target_compile_options(browser_language_test PRIVATE ${PJ_WARNING_FLAGS})
+    endif()
+    add_test(NAME BrowserLanguageTest COMMAND browser_language_test)
     if(Python3_Interpreter_FOUND)
         add_test(NAME TranslationCatalog4x
             COMMAND "${Python3_EXECUTABLE}" "${app_dir}/../tests/check_translations_4x.py"

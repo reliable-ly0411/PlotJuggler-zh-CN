@@ -98,6 +98,15 @@ constexpr int kDatasetGhostRole = Qt::UserRole + 14;
 // Stores the opaque key needed to route a row-local cancel request. Keeping it
 // beside the progress payload also makes loading ghosts unambiguous.
 constexpr int kDatasetRowKeyRole = Qt::UserRole + 15;
+// Stores CurveTreeView::DerivedGlyphState (as int) on a derived-topic row — see
+// setDerivedTopicGlyphs(). Invalid (unset) means "no entry"; the row's native
+// tooltip (Qt::ToolTipRole, set alongside it) carries the detail text.
+constexpr int kDerivedGlyphStateRole = Qt::UserRole + 16;
+// Short grey tag painted after the Name text (CurvePath::badge); presentation only.
+constexpr int kBadgeRole = Qt::UserRole + 17;
+// True on a row whose catalog key is displayed (see setDisplayedKeys) and on every
+// ancestor of such a row, so a collapsed group still shows that it holds one.
+constexpr int kDisplayedRole = Qt::UserRole + 18;
 constexpr int kAnimationIntervalMs = 1000 / 30;
 
 QStringList splitPath(const QString& name) {
@@ -154,9 +163,62 @@ class CurveTreeItem : public QTreeWidgetItem {
   }
 };
 
+// Whether a stamped derived-topic state paints a dot: kIdle and kReady carry only the tooltip.
+bool derivedGlyphPaints(int state) {
+  const auto glyph = static_cast<PJ::CurveTreeView::DerivedGlyphState>(state);
+  return glyph != PJ::CurveTreeView::DerivedGlyphState::kIdle && glyph != PJ::CurveTreeView::DerivedGlyphState::kReady;
+}
+
+// Status color for a derived-topic glyph dot (see kDerivedGlyphStateRole); only for a state that paints.
+QColor derivedGlyphColor(int state) {
+  switch (static_cast<PJ::CurveTreeView::DerivedGlyphState>(state)) {
+    case PJ::CurveTreeView::DerivedGlyphState::kPending:
+      return theme::status(theme::Status::Info, theme::Theme::Dark);
+    case PJ::CurveTreeView::DerivedGlyphState::kMissingInput:
+      return theme::status(theme::Status::Warning, theme::Theme::Dark);
+    case PJ::CurveTreeView::DerivedGlyphState::kError:
+      return theme::status(theme::Status::Error, theme::Theme::Dark);
+    case PJ::CurveTreeView::DerivedGlyphState::kIdle:
+    case PJ::CurveTreeView::DerivedGlyphState::kReady:
+      break;
+  }
+  return QColor();
+}
+
 class CurveTreeItemDelegate : public QStyledItemDelegate {
  public:
   using QStyledItemDelegate::QStyledItemDelegate;
+
+  /// The badge sits right after the name text, in muted bold ink. It is dropped
+  /// when the cell is too narrow for it and the glyph dot at the trailing edge.
+  static void paintBadge(
+      QPainter* painter, const QStyleOptionViewItem& opt, const QWidget* widget, const QStyle* style,
+      const QString& badge) {
+    constexpr int kGap = 8;
+    constexpr int kReservedTrailing = 16;  // glyph dot + margin
+    const QRect text_rect = style->subElementRect(QStyle::SE_ItemViewItemText, &opt, widget);
+    const int text_margin = style->pixelMetric(QStyle::PM_FocusFrameHMargin, &opt, widget) + 1;
+    QFont font = opt.font;
+    font.setBold(true);
+    font.setLetterSpacing(QFont::PercentageSpacing, 104.0);
+    if (font.pointSizeF() > 0) {
+      font.setPointSizeF(font.pointSizeF() * 0.85);
+    }
+    const int name_width = opt.fontMetrics.horizontalAdvance(opt.text);
+    const int badge_width = QFontMetrics(font).horizontalAdvance(badge);
+    const int x = text_rect.left() + text_margin + name_width + kGap;
+    if (x + badge_width > opt.rect.right() - kReservedTrailing) {
+      return;
+    }
+    QColor ink = opt.palette.color(QPalette::Text);
+    ink.setAlphaF(0.45);
+    const QPainterStateGuard guard(painter);
+    painter->setRenderHint(QPainter::TextAntialiasing, true);
+    painter->setPen(ink);
+    painter->setFont(font);
+    painter->drawText(
+        QRect(x, opt.rect.top(), badge_width, opt.rect.height()), Qt::AlignVCenter | Qt::AlignLeft, badge);
+  }
 
   void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override {
     QStyleOptionViewItem opt(option);
@@ -178,6 +240,12 @@ class CurveTreeItemDelegate : public QStyledItemDelegate {
       painter->save();
       painter->setOpacity(painter->opacity() * 0.5);
     }
+    if (index.column() == kNameColumn && name_index.data(kDisplayedRole).toBool()) {
+      // A font style, not a hue: blue is the forced mark and pink the time cursor and failures.
+      opt.font.setWeight(QFont::DemiBold);
+      opt.font.setItalic(true);
+      opt.fontMetrics = QFontMetrics(opt.font);  // paintBadge places the badge after the styled name
+    }
     if (index.column() == kNameColumn && name_index.data(kForcedRole).toBool()) {
       // Forced streaming: accent the topic's name so the state is visible —
       // brightness alone can't distinguish "subscribed because displayed" from
@@ -195,6 +263,29 @@ class CurveTreeItemDelegate : public QStyledItemDelegate {
     const QWidget* widget = opt.widget;
     const QStyle* style = widget != nullptr ? widget->style() : QApplication::style();
     style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, widget);
+
+    if (index.column() == kNameColumn) {
+      if (const QString badge = name_index.data(kBadgeRole).toString(); !badge.isEmpty()) {
+        paintBadge(painter, opt, widget, style, badge);
+      }
+      // Derived-topic glyph: a small dot at the Name cell's trailing edge. The
+      // row's native tooltip (set with the role by applyDerivedTopicGlyphs)
+      // carries the detail text.
+      if (const QVariant glyph_state = name_index.data(kDerivedGlyphStateRole);
+          glyph_state.isValid() && derivedGlyphPaints(glyph_state.toInt())) {
+        constexpr int kDotExtent = 6;
+        constexpr int kDotMargin = 4;
+        const QRect cell = opt.rect;
+        const QRect dot(
+            cell.right() - kDotExtent - kDotMargin, cell.top() + (cell.height() - kDotExtent) / 2, kDotExtent,
+            kDotExtent);
+        const QPainterStateGuard dot_guard(painter);
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(derivedGlyphColor(glyph_state.toInt()));
+        painter->drawEllipse(dot);
+      }
+    }
 
     if (dimmed) {
       painter->restore();
@@ -450,6 +541,13 @@ QTreeWidgetItem* CurveTreeView::ensureGroupSegments(const QStringList& segments)
   return parent;
 }
 
+QTreeWidgetItem* CurveTreeView::newFlatRow(const QString& label) {
+  auto* item = new CurveTreeItem(invisibleRootItem());
+  setItemName(item, label);
+  item->setFlags(item->flags() & ~Qt::ItemIsDragEnabled);
+  return item;
+}
+
 QTreeWidgetItem* CurveTreeView::ensureGroup(const QString& path) {
   return ensureGroupSegments(splitPath(path));
 }
@@ -468,6 +566,12 @@ void CurveTreeView::mutateStructure(const std::function<void()>& mutate) {
   // filter is re-applied by rebuildProgressDecorations' tail (see its contract).
   expandPendingGroups();
   applyForcedTopicMarks();
+  if (!displayed_keys_.isEmpty()) {  // new rows start unmarked; an empty set has nothing to stamp
+    applyDisplayedMarks();
+  }
+  if (!derived_topic_glyphs_.isEmpty()) {  // a view never given glyphs has nothing to re-stamp or clear
+    applyDerivedTopicGlyphs();
+  }
   rebuildProgressDecorations();
 }
 
@@ -507,6 +611,10 @@ void CurveTreeView::addCurve(const QString& name, SortMode sort_mode) {
   if (sort_mode == SortMode::kImmediate) {
     sortTree();
   }
+}
+
+QString CurveTreeView::badgeOf(const QTreeWidgetItem* item) {
+  return item != nullptr ? item->data(kNameColumn, kBadgeRole).toString() : QString{};
 }
 
 QString CurveTreeView::treePathFromCurvePath(const CurvePath& path) {
@@ -574,7 +682,12 @@ void CurveTreeView::addCatalogItem(const CurvePath& path, SortMode sort_mode) {
     if (path.selectable) {
       segments += splitPath(normalizedPathSegment(path.field));
       QString leaf_name = segments.isEmpty() ? tree_path : segments.takeLast();
-      QTreeWidgetItem* parent = ensureGroupSegments(segments);
+      QTreeWidgetItem* parent = invisibleRootItem();
+      if (!path.display_name.isEmpty()) {
+        leaf_name = path.display_name;  // one flat, still draggable, curve row
+      } else {
+        parent = ensureGroupSegments(segments);
+      }
       item = new CurveTreeItem(parent);
       setItemName(item, leaf_name);
       styleValueCell(item, font());
@@ -582,8 +695,8 @@ void CurveTreeView::addCatalogItem(const CurvePath& path, SortMode sort_mode) {
       item->setData(kNameColumn, kCatalogItemRole, path.key);
       applyLeafSelectability(item, path.draggable);
     } else {
-      // Object topic: terminal at dataset ▸ topic.
-      item = ensureGroupSegments(segments);
+      // Object topic: terminal at dataset ▸ topic, or one flat row.
+      item = path.display_name.isEmpty() ? ensureGroupSegments(segments) : newFlatRow(path.display_name);
       item->setData(kNameColumn, kObjectTopicRole, path.key);
       item->setData(kNameColumn, kCatalogItemRole, path.key);
       applyObjectTopicSelectability(item, path.draggable);
@@ -593,7 +706,9 @@ void CurveTreeView::addCatalogItem(const CurvePath& path, SortMode sort_mode) {
     const int last_sep = tree_path.lastIndexOf('/');
     QTreeWidgetItem* parent = invisibleRootItem();
     QString leaf_name = tree_path;
-    if (last_sep >= 0) {
+    if (!path.display_name.isEmpty()) {
+      leaf_name = path.display_name;
+    } else if (last_sep >= 0) {
       parent = ensureGroup(tree_path.left(last_sep));
       leaf_name = tree_path.mid(last_sep + 1);
     }
@@ -604,7 +719,7 @@ void CurveTreeView::addCatalogItem(const CurvePath& path, SortMode sort_mode) {
     item->setData(kNameColumn, kCatalogItemRole, path.key);
     applyLeafSelectability(item, path.draggable);
   } else {
-    item = ensureGroup(tree_path);
+    item = path.display_name.isEmpty() ? ensureGroup(tree_path) : newFlatRow(path.display_name);
     item->setData(kNameColumn, kObjectTopicRole, path.key);
     item->setData(kNameColumn, kCatalogItemRole, path.key);
     applyObjectTopicSelectability(item, path.draggable);
@@ -616,6 +731,9 @@ void CurveTreeView::addCatalogItem(const CurvePath& path, SortMode sort_mode) {
     item->setToolTip(kNameColumn, path.tooltip);
   }
   item->setData(kNameColumn, kSearchRole, tree_path);
+  if (!path.badge.isEmpty() || item->data(kNameColumn, kBadgeRole).isValid()) {
+    item->setData(kNameColumn, kBadgeRole, path.badge);
+  }
   item->setData(kNameColumn, kPlaceholderRole, path.is_placeholder);
   item->setData(kNameColumn, kUnsubscribedRole, path.is_unsubscribed);
   if (sort_mode == SortMode::kImmediate) {
@@ -950,9 +1068,11 @@ void CurveTreeView::deselectProgressRow(QTreeWidgetItem* row, DatasetProgress::S
   // name column and drowns the translucent bar wash, so the highlight's own
   // right edge (~2/3 of the row) reads as a stuck progress bar — during the
   // load AND after it, since the selection outlives the decoration. The
-  // reload gesture itself is what selected the row; drop it.
+  // reload gesture itself is what selected the row; drop it. A curve row (one with a
+  // catalog key: a flat row whose computation is replaying) keeps its selection, since
+  // the user edits, deletes or drags it while it computes.
   if ((state != DatasetProgress::State::kLoading && state != DatasetProgress::State::kStopping) ||
-      selectionModel() == nullptr) {
+      selectionModel() == nullptr || !catalogKeyOf(row).isEmpty()) {
     return;
   }
   const QModelIndex node_index = indexFromItem(row);
@@ -1670,6 +1790,89 @@ void CurveTreeView::applyForcedTopicMarks() {
   }
 }
 
+namespace {
+// Stamps kDisplayedRole below `item`; returns whether any row there carries it.
+bool markDisplayedRows(QTreeWidgetItem* item, const QSet<QString>& keys) {
+  bool any = false;
+  for (int i = 0; i < item->childCount(); ++i) {
+    QTreeWidgetItem* child = item->child(i);
+    const bool below = markDisplayedRows(child, keys);
+    const QString key = catalogKeyForItem(child);  // empty on a group row: never matched, only propagated
+    const bool marked = below || (!key.isEmpty() && keys.contains(key));
+    if (child->data(kNameColumn, kDisplayedRole).toBool() != marked) {
+      child->setData(kNameColumn, kDisplayedRole, marked);
+    }
+    any = any || marked;
+  }
+  return any;
+}
+}  // namespace
+
+void CurveTreeView::setDisplayedKeys(const QSet<QString>& keys) {
+  if (displayed_keys_ == keys) {
+    return;
+  }
+  displayed_keys_ = keys;
+  applyDisplayedMarks();
+}
+
+bool CurveTreeView::isMarkedDisplayed(const QTreeWidgetItem* item) {
+  return item != nullptr && item->data(kNameColumn, kDisplayedRole).toBool();
+}
+
+void CurveTreeView::applyDisplayedMarks() {
+  markDisplayedRows(invisibleRootItem(), displayed_keys_);
+}
+
+void CurveTreeView::setDerivedTopicGlyphs(const QHash<QString, DerivedGlyph>& by_topic_path) {
+  derived_topic_glyphs_ = by_topic_path;
+  applyDerivedTopicGlyphs();
+}
+
+CurveTreeView::DerivedGlyphState CurveTreeView::derivedGlyphStateAt(const QString& topic_path) {
+  QTreeWidgetItem* node = findTopicNode(topic_path);
+  const QVariant state = node != nullptr ? node->data(kNameColumn, kDerivedGlyphStateRole) : QVariant();
+  return state.isValid() && derivedGlyphPaints(state.toInt()) ? static_cast<DerivedGlyphState>(state.toInt())
+                                                              : DerivedGlyphState::kIdle;
+}
+
+void CurveTreeView::applyDerivedTopicGlyphs() {
+  // Full-set replace in one walk: a row whose search path has an entry is stamped
+  // (state and tooltip, whatever the state), any other loses a stale entry. Never
+  // clear-then-stamp: an unchanged row must keep its data untouched (an equal setData
+  // emits nothing), or re-sending a set would invalidate the native hover tooltip the
+  // user is reading. A path no row carries exactly (a promoted scalar topic's group)
+  // falls back to findTopicNode.
+  const auto stamp = [](QTreeWidgetItem* node, const DerivedGlyph& glyph) {
+    node->setData(kNameColumn, kDerivedGlyphStateRole, static_cast<int>(glyph.state));
+    node->setToolTip(kNameColumn, glyph.tooltip);
+  };
+  QSet<QString> matched;
+  std::function<void(QTreeWidgetItem*)> walk = [&](QTreeWidgetItem* item) {
+    for (int i = 0; i < item->childCount(); ++i) {
+      QTreeWidgetItem* child = item->child(i);
+      const QString search = child->data(kNameColumn, kSearchRole).toString();
+      const auto glyph = search.isEmpty() ? derived_topic_glyphs_.cend() : derived_topic_glyphs_.constFind(search);
+      if (glyph != derived_topic_glyphs_.cend()) {
+        stamp(child, *glyph);
+        matched.insert(search);
+      } else if (child->data(kNameColumn, kDerivedGlyphStateRole).isValid()) {
+        child->setData(kNameColumn, kDerivedGlyphStateRole, QVariant());
+        child->setToolTip(kNameColumn, QString());
+      }
+      walk(child);
+    }
+  };
+  walk(invisibleRootItem());
+  for (auto it = derived_topic_glyphs_.cbegin(); it != derived_topic_glyphs_.cend(); ++it) {
+    if (!matched.contains(it.key())) {
+      if (QTreeWidgetItem* node = findTopicNode(it.key()); node != nullptr) {
+        stamp(node, it.value());
+      }
+    }
+  }
+}
+
 bool CurveTreeView::isTopicPathForced(const QString& topic_path) {
   QTreeWidgetItem* node = findTopicNode(topic_path);
   return node != nullptr && node->data(kNameColumn, kForcedRole).toBool();
@@ -2237,8 +2440,8 @@ void CurveTreeView::updateWasmDrag(
   }
   if (wasm_drag_target_ != nullptr && target_is_ancestor) {
     QDragMoveEvent move_event(
-        wasm_drag_target_->mapFromGlobal(global_pos), Qt::CopyAction | Qt::MoveAction, wasm_drag_mime_.get(), buttons,
-        modifiers);
+        QPointF(wasm_drag_target_->mapFromGlobal(global_pos)), Qt::CopyAction | Qt::MoveAction, wasm_drag_mime_.get(),
+        buttons, modifiers);
     QApplication::sendEvent(wasm_drag_target_, &move_event);
     if (move_event.isAccepted()) {
       return;
@@ -2265,7 +2468,8 @@ void CurveTreeView::updateWasmDrag(
       continue;
     }
     QDragEnterEvent enter_event(
-        current->mapFromGlobal(global_pos), Qt::CopyAction | Qt::MoveAction, wasm_drag_mime_.get(), buttons, modifiers);
+        QPointF(current->mapFromGlobal(global_pos)), Qt::CopyAction | Qt::MoveAction, wasm_drag_mime_.get(), buttons,
+        modifiers);
     QApplication::sendEvent(current, &enter_event);
     if (enter_event.isAccepted() && current != nullptr) {
       wasm_drag_target_ = current;

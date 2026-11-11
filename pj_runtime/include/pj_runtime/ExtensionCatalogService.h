@@ -2,6 +2,7 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
+#include <QHash>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -28,6 +29,7 @@ class ExtensionManager;
 using LoadedDataSource = RuntimeDataSourcePlugin;
 using LoadedMessageParser = RuntimeMessageParserPlugin;
 using LoadedToolbox = RuntimeToolboxPlugin;
+using LoadedWidget = RuntimeWidgetPlugin;
 
 // Bundles the marketplace (ExtensionManager) with the plugin catalog (per-family
 // loaders from pj_plugins) behind one Qt-friendly facade. `pj_app` never touches
@@ -56,7 +58,8 @@ class ExtensionCatalogService : public QObject {
     // PlatformUtils::extensionsDir().
     QString marketplace_dir;
     // Seed source (share). Empty = <prefix>/lib/plotjuggler/plugins resolved
-    // relative to the executable.
+    // relative to the executable (Contents/Resources/plugins in a macOS app
+    // bundle).
     QString bundled_dir;
   };
 
@@ -125,6 +128,12 @@ class ExtensionCatalogService : public QObject {
   // Returns all loaded Toolbox plugins.
   const std::vector<LoadedToolbox>& toolboxes() const;
 
+  // Returns all loaded Widget plugins, including the ones whose Qt build does not match this host
+  // (qt_compatible == false; the dock explains why instead of dropping them). A Widget library is
+  // never unloaded, so an entry leaves this vector only when reload() withdraws a plugin the user
+  // disabled; its library stays mapped and panels already running it keep working.
+  const std::vector<LoadedWidget>& widgets() const;
+
   // Returns file-import capable DataSource plugins.
   std::vector<const LoadedDataSource*> fileImportSources() const;
 
@@ -145,6 +154,49 @@ class ExtensionCatalogService : public QObject {
   // The Toolbox plugin with manifest id `id`, or null when it is not loaded.
   // Same lifetime and threading rules as findParserByEncoding.
   const LoadedToolbox* findToolbox(QStringView id) const;
+
+  // The Widget plugin with manifest id `plugin_id`, or null when it is not loaded. Same lifetime and
+  // threading rules as findToolbox: the pointer indexes the catalog vector and is valid only until
+  // the next reload(), GUI thread only. A caller that keeps the library beyond that (a dock with a
+  // live widget) copies the WidgetLibrary's shared ownership through createHandle(), never the pointer.
+  const LoadedWidget* findWidget(QStringView plugin_id) const;
+
+  // Short label naming the Toolbox `id` on a tab watermark or a Custom Topics row badge: its manifest `badge`, else
+  // the toolbox name, else the id; an ad-hoc owner's name; empty when neither is known. Same lifetime and threading
+  // rules as findToolbox.
+  [[nodiscard]] QString toolboxBadge(QStringView id) const;
+  // The toolbox's display name, else an ad-hoc owner's name, else `id` itself. Same rules as findToolbox.
+  [[nodiscard]] QString toolboxDisplayName(QStringView id) const;
+  // Names `id`, an owner of tabs and derived series that is no plugin (an AI agent acting through the toolbox
+  // services), so toolboxBadge and toolboxDisplayName label it instead of reporting a missing plugin. A loaded
+  // toolbox with the same id still wins. Kept for the process lifetime (its tabs and series outlive the agent).
+  // Main thread.
+  void registerAdHocOwner(const QString& id, const QString& name);
+
+  // The id of the loaded toolbox whose manifest lists `custom_topics_editor` in its `capabilities`: the editor of
+  // the host's Custom Topics (the "+" opens it, and its recipes are the only ones the panel lets the user edit or
+  // delete). When several declare it, one wins (see pickCustomTopicsEditor) and one warning names the rest. Empty
+  // when none does. Resolved by the constructor and by every reload() that changed the catalog, so this is a plain
+  // read. Same lifetime and threading rules as findToolbox.
+  [[nodiscard]] const QString& customTopicsEditorId() const noexcept {
+    return custom_topics_editor_id_;
+  }
+  // Test seam: names the editor of a catalog that loaded no plugin declaring it.
+  void setCustomTopicsEditorIdForTest(const QString& plugin_id) {
+    custom_topics_editor_id_ = plugin_id;
+  }
+  // The one ownership predicate: `owner` is the Custom Topics editor. False for everyone when none is declared.
+  // The static form serves a holder of the id that has no catalog at hand (the Custom Topics panel).
+  [[nodiscard]] static bool isEditorOwner(const QString& editor_id, const QString& owner) noexcept {
+    return !editor_id.isEmpty() && owner == editor_id;
+  }
+  [[nodiscard]] bool isCustomTopicsEditor(const QString& owner) const noexcept {
+    return isEditorOwner(custom_topics_editor_id_, owner);
+  }
+  // The editor among `declarers` (the toolboxes declaring `custom_topics_editor`, in scan order): `current` while it
+  // is still one of them, else the first. A reload appends an updated plugin after the others, so first-scanned
+  // alone would hand the editor to another plugin on every update. Empty when there is no declarer.
+  [[nodiscard]] static QString pickCustomTopicsEditor(const QString& current, const QStringList& declarers);
 
   // [thread-safe] The set of encodings the loaded parsers accept, returned by
   // value (a snapshot copy) so a caller never holds a reference into the
@@ -201,7 +253,7 @@ class ExtensionCatalogService : public QObject {
   // non-empty reason triggers the rescue path (overwrite with the bundled
   // build, compatible by construction).
   //
-  // Three gates, evaluated by the same headless primitive as marketplace
+  // Two gates, evaluated by the same headless primitive as marketplace
   // admission and PluginRuntimeCatalog:
   //   - ABI: `abi_major` (baked into the manifest at build time by the SDK's
   //     CMake helper) must equal the host's `PJ_ABI_VERSION`. A zero
@@ -210,8 +262,7 @@ class ExtensionCatalogService : public QObject {
   //     will catch a real mismatch there).
   //   - `min_sdk_required`: the SDK used by the host must be at least the
   //     concrete SemVer contract floor. Empty means undeclared.
-  //   - `min_plotjuggler_version`: the host must be at least the declared
-  //     concrete SemVer minimum. An empty value is no floor.
+  // `min_plotjuggler_version` is display-only and never gates.
   //
   // The reason string mirrors ExtensionManager::hostCompatibility's wording
   // so seed diagnostics and marketplace UI say the same thing.
@@ -255,6 +306,11 @@ class ExtensionCatalogService : public QObject {
   // set, so no resolution can run against a catalog the claims do not describe.
   // Caller holds routing_mutex_ and catalog_mutex_ (exclusive).
   void rebuildParserClaims();
+
+  // Picks the `custom_topics_editor` toolbox into custom_topics_editor_id_ (see customTopicsEditorId). Run
+  // wherever the toolbox list changes.
+  void resolveCustomTopicsEditor();
+  QString custom_topics_editor_id_;
 
   // Host-derived trust tier for one loaded parser (spec §4): statically linked
   // or seeded-bundled → kBundled; loaded from a user-explicit (authoritative)
@@ -324,6 +380,7 @@ class ExtensionCatalogService : public QObject {
   // manifest forge the highest trust tier. (Authenticated install receipts are
   // the full answer and arrive with the marketplace-receipts follow-up.)
   std::unordered_map<std::string, BundledPluginInfo> bundled_plugin_versions_;
+  QHash<QString, QString> ad_hoc_owners_;  // registerAdHocOwner: id -> name; main thread
 
   // Serializes every use of routing_ (externally synchronized). Lock order is
   // routing_mutex_ -> catalog_mutex_: resolve/classify take routing_mutex_ then
@@ -336,5 +393,12 @@ class ExtensionCatalogService : public QObject {
   mutable std::mutex routing_mutex_;
   ParserRoutingService routing_;
 };
+
+// The DataSource a saved layout names among `candidates`: the one whose manifest id is
+// `manifest_id`, else the one whose display name is `name` (the legacy identity); an empty
+// hint skips its tier. Each tier sweeps every candidate, so an id match on a later candidate
+// beats a name match on an earlier one. Null when neither matches; null candidates are skipped.
+[[nodiscard]] const LoadedDataSource* findDataSourceByIdentity(
+    const std::vector<const LoadedDataSource*>& candidates, const QString& manifest_id, const QString& name);
 
 }  // namespace PJ

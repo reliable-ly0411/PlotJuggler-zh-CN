@@ -122,6 +122,7 @@ target_link_libraries(pj_marketplace_ui PUBLIC
 # than picking it up through pj_base or pj_plugin_catalog, which it deliberately
 # does not link so its packaging closure stays Qt-free and headless.
 find_package(nlohmann_json REQUIRED)
+target_link_libraries(pj_marketplace PRIVATE nlohmann_json::nlohmann_json)
 
 # Standalone configure (this directory as the CMake root) resolves the SDK
 # itself; in the PJ4 tree the root CMakeLists.txt already did.
@@ -188,7 +189,6 @@ if(PJ_BUILD_TESTS)
     # through the install pipeline.
     # artifact_store_test — the content-addressed store primitives. Builds its ZIP
     # fixtures with libarchive directly, so it links it in addition to the library.
-    # WARNINGS: all 6 merged tests carried PJ_WARNING_FLAGS before
     pj_add_test_runner(pj_marketplace_tests MAIN gui WARNINGS
         SOURCES
             tests/download_manager_test.cpp
@@ -197,7 +197,7 @@ if(PJ_BUILD_TESTS)
             tests/registry_manager_test.cpp
             tests/registry_resolver_test.cpp
             tests/version_compare_test.cpp
-        LIBS pj_marketplace Qt6::Network Qt6::Test LibArchive::LibArchive
+        LIBS pj_marketplace pj_marketplace_ui Qt6::Network Qt6::Test LibArchive::LibArchive
     )
 
     # Helper exit-status checks retain their independent process-lifecycle target.
@@ -211,6 +211,12 @@ target_compile_definitions(plugin_check_runner_test PRIVATE
   PJ_PLUGIN_CHECK_HELPER_PATH="$<TARGET_FILE:pj-plugin-check>"
 )
 add_dependencies(plugin_check_runner_test pj-plugin-check)
+# The Qt-free Widget fixture pj_runtime builds for its own tests (pj_runtime is configured first).
+if(TARGET runtime_widget_plugin)
+  target_compile_definitions(plugin_check_runner_test PRIVATE
+    PJ_TEST_WIDGET_PLUGIN_PATH="$<TARGET_FILE:runtime_widget_plugin>")
+  add_dependencies(plugin_check_runner_test runtime_widget_plugin)
+endif()
 set_target_properties(plugin_check_runner_test PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
 )
@@ -299,5 +305,9 @@ target_compile_definitions(extension_manager_check_plugin_management PRIVATE
   RESULTS_DIR="${CMAKE_CURRENT_BINARY_DIR}/tests/results"
 )
 target_compile_options(extension_manager_check_plugin_management PRIVATE ${PJ_WARNING_FLAGS})
+
+if(PJ4_BUILD_APP)
+  add_subdirectory(tests/metadata)
+endif()
 
 endif() # PJ_BUILD_TESTS

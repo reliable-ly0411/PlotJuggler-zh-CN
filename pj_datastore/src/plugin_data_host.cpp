@@ -19,9 +19,11 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -29,8 +31,10 @@
 
 #include "nanoarrow/nanoarrow.h"
 #include "nanoarrow/nanoarrow.hpp"
+#include "pj_base/builtin/builtin_object.hpp"
 #include "pj_base/dataset.hpp"
 #include "pj_base/plugin_data_api.h"
+#include "pj_base/sdk/object_topic_metadata.hpp"
 #include "pj_base/sdk/plugin_data_api.hpp"
 #include "pj_base/type_tree.hpp"
 #include "pj_datastore/arrow_import.hpp"
@@ -39,6 +43,7 @@
 #include "pj_datastore/encoding.hpp"
 #include "pj_datastore/engine.hpp"
 #include "pj_datastore/object_store.hpp"
+#include "pj_datastore/query.hpp"
 #include "pj_datastore/topic_storage.hpp"
 #include "pj_datastore/writer.hpp"
 
@@ -348,7 +353,296 @@ void flattenColumnsImpl(
   return nullptr;
 }
 
+/// The Arrow type a column of `type` reads back as through read_series_arrow.
+[[nodiscard]] ArrowType arrowTypeOf(PrimitiveType type) {
+  switch (type) {
+    case PrimitiveType::kFloat32:
+      return NANOARROW_TYPE_FLOAT;
+    case PrimitiveType::kFloat64:
+      return NANOARROW_TYPE_DOUBLE;
+    case PrimitiveType::kInt8:
+      return NANOARROW_TYPE_INT8;
+    case PrimitiveType::kInt16:
+      return NANOARROW_TYPE_INT16;
+    case PrimitiveType::kInt32:
+      return NANOARROW_TYPE_INT32;
+    case PrimitiveType::kInt64:
+      return NANOARROW_TYPE_INT64;
+    case PrimitiveType::kUint8:
+      return NANOARROW_TYPE_UINT8;
+    case PrimitiveType::kUint16:
+      return NANOARROW_TYPE_UINT16;
+    case PrimitiveType::kUint32:
+      return NANOARROW_TYPE_UINT32;
+    case PrimitiveType::kUint64:
+      return NANOARROW_TYPE_UINT64;
+    case PrimitiveType::kBool:
+      return NANOARROW_TYPE_BOOL;
+    case PrimitiveType::kString:
+      return NANOARROW_TYPE_STRING;
+    case PrimitiveType::kUnspecified:
+      return NANOARROW_TYPE_NA;
+  }
+  return NANOARROW_TYPE_NA;
+}
+
+/// The index of `field` among `chunk`'s columns; none for a chunk sealed before the field appeared.
+[[nodiscard]] std::optional<std::size_t> columnIndexOf(const TopicChunk& chunk, FieldId field) {
+  for (std::size_t i = 0; i < chunk.columns.size(); ++i) {
+    if (chunk.columns[i].descriptor->field_id == field) {
+      return i;
+    }
+  }
+  return std::nullopt;
+}
+
+/// `fn(T{})` with the C++ type a numeric `type` is stored as; none for bool, string and unspecified.
+template <typename Fn>
+[[nodiscard]] std::optional<bool> visitNumeric(PrimitiveType type, Fn&& fn) {
+  switch (type) {
+    case PrimitiveType::kFloat32:
+      return fn(float{});
+    case PrimitiveType::kFloat64:
+      return fn(double{});
+    case PrimitiveType::kInt8:
+      return fn(int8_t{});
+    case PrimitiveType::kInt16:
+      return fn(int16_t{});
+    case PrimitiveType::kInt32:
+      return fn(int32_t{});
+    case PrimitiveType::kInt64:
+      return fn(int64_t{});
+    case PrimitiveType::kUint8:
+      return fn(uint8_t{});
+    case PrimitiveType::kUint16:
+      return fn(uint16_t{});
+    case PrimitiveType::kUint32:
+      return fn(uint32_t{});
+    case PrimitiveType::kUint64:
+      return fn(uint64_t{});
+    case PrimitiveType::kBool:
+    case PrimitiveType::kString:
+    case PrimitiveType::kUnspecified:
+      break;
+  }
+  return std::nullopt;
+}
+
+template <typename T>
+[[nodiscard]] ArrowErrorCode appendValue(ArrowArray* child, T value) {
+  if constexpr (std::is_floating_point_v<T>) {
+    return ArrowArrayAppendDouble(child, value);
+  } else if constexpr (std::is_signed_v<T>) {
+    return ArrowArrayAppendInt(child, value);
+  } else {
+    return ArrowArrayAppendUInt(child, value);
+  }
+}
+
+/// Appends one row to the [timestamp, value] struct being built, as its own element: any type, nulls included.
+[[nodiscard]] bool appendRow(
+    ArrowArray* array, const TopicChunk& chunk, std::size_t col_index, std::size_t row, PrimitiveType type) {
+  ArrowArray* val_child = array->children[1];
+  if (ArrowArrayAppendInt(array->children[0], chunk.timestamps[row]) != NANOARROW_OK) {
+    return false;
+  }
+  ArrowErrorCode rc = NANOARROW_OK;
+  if (chunk.isNull(col_index, row)) {
+    rc = ArrowArrayAppendNull(val_child, 1);
+  } else if (const auto appended = visitNumeric(type, [&](auto tag) {
+               return appendValue(val_child, decodeNumericExact<decltype(tag)>(chunk, col_index, row)) == NANOARROW_OK;
+             })) {
+    rc = *appended ? NANOARROW_OK : EINVAL;
+  } else if (type == PrimitiveType::kBool) {
+    rc = ArrowArrayAppendInt(val_child, chunk.readBool(col_index, row) ? 1 : 0);
+  } else if (type == PrimitiveType::kString) {
+    const auto text = chunk.readString(col_index, row);
+    rc = ArrowArrayAppendString(val_child, ArrowStringView{text.data(), static_cast<int64_t>(text.size())});
+  } else {
+    rc = ArrowArrayAppendNull(val_child, 1);
+  }
+  return rc == NANOARROW_OK && ArrowArrayFinishElement(array) == NANOARROW_OK;
+}
+
+/// appendRow over rows [begin, end) of a numeric column without nulls, as one block. Measured on a 7.2M-sample
+/// float64 series, the row-by-row append costs ~36 ns a sample; whole-series toolbox reads go through here.
+template <typename T>
+[[nodiscard]] bool appendNumericRun(
+    ArrowArray* array, const TopicChunk& chunk, std::size_t col, std::size_t begin, std::size_t end) {
+  const std::size_t n = end - begin;
+  const auto start = static_cast<std::size_t>(array->length);
+  if (ArrowArrayAppendEmpty(array, static_cast<int64_t>(n)) != NANOARROW_OK) {
+    return false;
+  }
+  std::memcpy(
+      reinterpret_cast<int64_t*>(ArrowArrayBuffer(array->children[0], 1)->data) + start,
+      chunk.timestamps.data() + begin, n * sizeof(Timestamp));
+  T* out = reinterpret_cast<T*>(ArrowArrayBuffer(array->children[1], 1)->data) + start;
+  if (chunk.columnEncoding(col) == EncodingType::kConstant) {
+    std::fill_n(out, n, decodeNumericExact<T>(chunk, col, begin));
+  } else {
+    for (std::size_t i = 0; i < n; ++i) {
+      out[i] = decodeNumericExact<T>(chunk, col, begin + i);
+    }
+  }
+  return true;
+}
+
+/// Appends rows [begin, end) of `chunk`: as one block when the column is numeric without nulls in the chunk, row by
+/// row otherwise.
+[[nodiscard]] bool appendChunkRun(
+    ArrowArray* array, const TopicChunk& chunk, std::size_t col, std::size_t begin, std::size_t end,
+    PrimitiveType type) {
+  if (!chunk.columns[col].validity_bitmap.has_value()) {
+    if (const auto appended = visitNumeric(
+            type, [&](auto tag) { return appendNumericRun<decltype(tag)>(array, chunk, col, begin, end); })) {
+      return *appended;
+    }
+  }
+  for (std::size_t row = begin; row < end; ++row) {
+    if (!appendRow(array, chunk, col, row, type)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/// A field's storage and column descriptor, looked up under the caller's engine lock.
+struct FieldColumn {
+  const TopicStorage* storage = nullptr;
+  ColumnDescriptor desc;
+};
+
+[[nodiscard]] Expected<FieldColumn> lookupFieldColumn(const DataEngine& engine, PJ_field_handle_t field) {
+  const auto* storage = engine.getTopicStorage(field.topic.id);
+  if (storage == nullptr) {
+    return unexpected(fmt::format("topic {} not found", field.topic.id));
+  }
+  const auto columns = effectiveColumns(engine, *storage);
+  const auto* desc = findFieldDescriptor(columns, field.id);
+  if (desc == nullptr) {
+    return unexpected(fmt::format("field {} not found in topic {}", field.id, field.topic.id));
+  }
+  return FieldColumn{storage, *desc};
+}
+
+/// `fn(chunk, column, begin, end)` over the rows of `field` stamped in [t_min, t_max], in time order, a run of one
+/// chunk at a time (RangeCursor::forEachOrderedRun). Chunks sealed before the field appeared hold none of its rows.
+/// Stops at the first `fn` returning false, and returns false then.
+template <typename Fn>
+[[nodiscard]] bool forEachFieldRun(
+    const std::deque<TopicChunk>& chunks, FieldId field, Timestamp t_min, Timestamp t_max, Fn&& fn) {
+  const TopicChunk* column_chunk = nullptr;
+  std::optional<std::size_t> col;
+  bool ok = true;
+  RangeCursor(chunks, t_min, t_max).forEachOrderedRun([&](const ChunkRowRange& run) {
+    if (run.chunk != column_chunk) {
+      column_chunk = run.chunk;
+      col = columnIndexOf(*column_chunk, field);
+    }
+    if (ok && col) {
+      ok = fn(*run.chunk, *col, run.row_start, run.row_end);
+    }
+  });
+  return ok;
+}
+
 }  // namespace
+
+Status readSeriesArrowWindow(
+    const DataEngine& engine, PJ_field_handle_t field, Timestamp first, Timestamp last, ArrowSchema* out_schema,
+    ArrowArray* out_array) {
+  if (out_schema == nullptr || out_array == nullptr) {
+    return unexpected(std::string("readSeriesArrow: out_schema and out_array must be non-null"));
+  }
+  engine.awaitCompleteSeries(field.topic.id);  // a snapshot must not catch a derived series mid-replay
+  auto lock = engine.lockEngine();
+
+  auto column = lookupFieldColumn(engine, field);
+  if (!column) {
+    return unexpected(column.error());
+  }
+  const TopicStorage* storage = column->storage;
+  const PrimitiveType type = column->desc.logical_type;
+
+  nanoarrow::UniqueSchema schema;
+  ArrowSchemaInit(schema.get());
+  if (ArrowSchemaSetTypeStruct(schema.get(), 2) != NANOARROW_OK) {
+    return unexpected(std::string("readSeriesArrow: ArrowSchemaSetTypeStruct failed"));
+  }
+  ArrowSchemaInit(schema->children[0]);
+  if (ArrowSchemaSetType(schema->children[0], NANOARROW_TYPE_INT64) != NANOARROW_OK ||
+      ArrowSchemaSetName(schema->children[0], "timestamp") != NANOARROW_OK) {
+    return unexpected(std::string("readSeriesArrow: failed to set timestamp child schema"));
+  }
+  ArrowSchemaInit(schema->children[1]);
+  if (ArrowSchemaSetType(schema->children[1], arrowTypeOf(type)) != NANOARROW_OK ||
+      ArrowSchemaSetName(schema->children[1], column->desc.field_path.c_str()) != NANOARROW_OK) {
+    return unexpected(std::string("readSeriesArrow: failed to set value child schema"));
+  }
+  nanoarrow::UniqueArray array;
+  ArrowError arrow_err;
+  if (ArrowArrayInitFromSchema(array.get(), schema.get(), &arrow_err) != NANOARROW_OK) {
+    return unexpected(std::string("readSeriesArrow: ArrowArrayInitFromSchema failed: ") + arrow_err.message);
+  }
+  if (ArrowArrayStartAppending(array.get()) != NANOARROW_OK) {
+    return unexpected(std::string("readSeriesArrow: ArrowArrayStartAppending failed"));
+  }
+
+  // Rows below the topic's retention floor are logically evicted: a reader must not see them (the retention contract).
+  const auto& chunks = storage->sealedChunks();
+  const Timestamp floor = storage->retentionFloor();
+  const Timestamp t_min = std::max(first, floor);
+  if (t_min > std::numeric_limits<Timestamp>::min()) {
+    const auto before = latestAt(chunks, t_min - 1, floor, [&field](const TopicChunk& chunk) {
+      return columnIndexOf(chunk, field.id).has_value();
+    });
+    if (before &&
+        !appendRow(array.get(), *before->chunk, *columnIndexOf(*before->chunk, field.id), before->row_index, type)) {
+      return unexpected(std::string("readSeriesArrow: append failed"));
+    }
+  }
+  if (!forEachFieldRun(
+          chunks, field.id, t_min, last,
+          [&](const TopicChunk& chunk, std::size_t col, std::size_t begin, std::size_t end) {
+            return appendChunkRun(array.get(), chunk, col, begin, end, type);
+          })) {
+    return unexpected(std::string("readSeriesArrow: append failed"));
+  }
+
+  if (ArrowArrayFinishBuildingDefault(array.get(), &arrow_err) != NANOARROW_OK) {
+    return unexpected(std::string("readSeriesArrow: finish building failed: ") + arrow_err.message);
+  }
+  ArrowSchemaMove(schema.get(), out_schema);
+  ArrowArrayMove(array.get(), out_array);
+  return okStatus();
+}
+
+Status scanSeriesValues(const DataEngine& engine, PJ_field_handle_t field, const SampleBlockCallback& on_block) {
+  engine.awaitCompleteSeries(field.topic.id);
+  auto lock = engine.lockEngine();
+  auto column = lookupFieldColumn(engine, field);
+  if (!column) {
+    return unexpected(column.error());
+  }
+  if (!visitNumeric(column->desc.logical_type, [](auto) { return true; })) {
+    return okStatus();
+  }
+  std::vector<double> values;
+  (void)forEachFieldRun(
+      column->storage->sealedChunks(), field.id, column->storage->retentionFloor(),
+      std::numeric_limits<Timestamp>::max(),
+      [&](const TopicChunk& chunk, std::size_t col, std::size_t begin, std::size_t end) {
+        const Span<const Timestamp> ts(chunk.timestamps.data() + begin, end - begin);
+        const bool constant =
+            chunk.columnEncoding(col) == EncodingType::kConstant && !chunk.columns[col].validity_bitmap.has_value();
+        values.resize(constant ? 1 : ts.size());
+        chunk.readColumnAsDoubles(col, Span<double>(values), begin);
+        on_block(ts, values);
+        return true;
+      });
+  return okStatus();
+}
 
 // Engine lock(s) for a write-host operation (driven by the worker while the GUI
 // reads). The shared PJ::lockEnginePair (engine.hpp) in this file's vocabulary:
@@ -603,21 +897,16 @@ struct WriteCore {
       return true;
     }
 
-    const auto* storage = engine.getTopicStorage(topic.id);
-    if (storage == nullptr) {
-      setError(fmt::format("topic {} not found", topic.id));
-      return false;
-    }
-    const auto columns = effectiveColumns(engine, *storage);
-    const auto* desc = findFieldDescriptor(columns, field_id);
-    if (desc == nullptr) {
-      setError(fmt::format("field {} not found in topic {}", field_id, topic.id));
+    const auto column = lookupFieldColumn(engine, FieldHandle{.topic = topic, .id = field_id});
+    if (!column) {
+      setError(column.error());
       return false;
     }
 
-    *out_type = desc->logical_type;
-    field_types[key] = desc->logical_type;
-    field_cache[{.topic_id = topic.id, .field_name = desc->field_path}] = FieldHandle{.topic = topic, .id = field_id};
+    *out_type = column->desc.logical_type;
+    field_types[key] = column->desc.logical_type;
+    field_cache[{.topic_id = topic.id, .field_name = column->desc.field_path}] =
+        FieldHandle{.topic = topic, .id = field_id};
     return true;
   }
 
@@ -1046,6 +1335,7 @@ struct CatalogSnapshotState {
   std::vector<PJ_data_source_info_t> data_sources;
   std::vector<PJ_topic_info_t> topics;
   std::vector<PJ_field_info_t> fields;
+  std::vector<PJ_object_topic_info_t> object_topics;  // v2 only
 };
 
 void releaseCatalogSnapshot(void* ctx) {
@@ -1058,15 +1348,67 @@ PJ_string_view_t storeString(CatalogSnapshotState& state, std::string_view value
   return PJ_string_view_t{stored.data(), stored.size()};
 }
 
+// A topic's `builtin_object_type` as its static PJ::sdk::name(), or "" when the metadata
+// names no type this SDK knows (kNone, a non-string, metadata that is not an object).
+[[nodiscard]] std::string_view canonicalObjectType(std::string_view metadata_json) {
+  const auto doc = nlohmann::json::parse(metadata_json.begin(), metadata_json.end(), nullptr, false);
+  if (!doc.is_object()) {
+    return {};
+  }
+  const auto field = doc.find(std::string(sdk::kBuiltinObjectTypeMetadataKey));
+  if (field == doc.end() || !field->is_string()) {
+    return {};
+  }
+  const auto type = sdk::parseBuiltinObjectType(field->get_ref<const std::string&>());
+  if (!type || *type == sdk::BuiltinObjectType::kNone) {
+    return {};
+  }
+  return sdk::name(*type);
+}
+
+// v2 only: every object topic of every dataset, derived and marker topics included, sorted
+// by (dataset, name). Called with the engine lock released, since the engine lock and the
+// ObjectStore lock never nest. The strings are copied under the store's shared lock; each
+// type is read from the copied metadata after it.
+void fillObjectTopics(CatalogSnapshotState* state, const ObjectStore& object_store) {
+  object_store.forEachTopicRetained(
+      [state](ObjectTopicId id, const ObjectTopicDescriptor& desc, const ObjectStore::RetainedRange& retained) {
+        state->object_topics.push_back(
+            PJ_object_topic_info_t{
+                .handle = PJ_object_topic_handle_t{.id = id.id},
+                .source = DataSourceHandle{.id = desc.dataset_id},
+                .name = storeString(*state, desc.topic_name),
+                .builtin_object_type = {},
+                .metadata_json = storeString(*state, desc.metadata_json),
+                .entry_count = retained.entry_count,
+                .time_min_ns = retained.first,
+                .time_max_ns = retained.last,
+                .reserved = {0, 0},
+            });
+      });
+  for (auto& info : state->object_topics) {
+    const std::string_view type = canonicalObjectType(toStringView(info.metadata_json));
+    info.builtin_object_type = PJ_string_view_t{type.data(), type.size()};
+  }
+  std::sort(
+      state->object_topics.begin(), state->object_topics.end(),
+      [](const PJ_object_topic_info_t& lhs, const PJ_object_topic_info_t& rhs) {
+        if (lhs.source.id != rhs.source.id) {
+          return lhs.source.id < rhs.source.id;
+        }
+        return toStringView(lhs.name) < toStringView(rhs.name);
+      });
+}
+
 struct ToolboxCore {
   explicit ToolboxCore(DataEngine& data_engine) : write(data_engine), engine(data_engine) {}
 
   WriteCore write;
   DataEngine& engine;
 
-  [[nodiscard]] bool acquireCatalogSnapshot(PJ_catalog_snapshot_t* out_snapshot) {
-    auto lock = engine.lockEngine();  // held through the deep-copy below
-    auto* state = new CatalogSnapshotState{};
+  // The scalar half of the catalog (data sources / topics / fields), shared by v1 and
+  // v2. Caller holds engine.lockEngine(): every read here is a live view into engine state.
+  void fillScalarCatalog(CatalogSnapshotState* state) {
     auto dataset_ids = engine.listDatasets();
     std::sort(dataset_ids.begin(), dataset_ids.end());
     state->data_sources.reserve(dataset_ids.size());
@@ -1113,6 +1455,12 @@ struct ToolboxCore {
               .topic_count = static_cast<uint32_t>(state->topics.size()) - first_topic,
           });
     }
+  }
+
+  [[nodiscard]] bool acquireCatalogSnapshot(PJ_catalog_snapshot_t* out_snapshot) {
+    auto lock = engine.lockEngine();  // held through the deep-copy below
+    auto* state = new CatalogSnapshotState{};
+    fillScalarCatalog(state);
 
     *out_snapshot = PJ_catalog_snapshot_t{
         .data_sources = state->data_sources.data(),
@@ -1128,200 +1476,45 @@ struct ToolboxCore {
     return true;
   }
 
-  // v4: materialise one field's time series into host-owned Arrow structs.
-  // Output is a struct array with 2 columns: ["timestamp" (int64),
-  // <field_name> (typed)]. The caller must invoke out_schema->release and
-  // out_array->release when done; release callbacks are set by nanoarrow
-  // and free all allocated buffers.
+  // v2: the scalar half under the engine lock, then the object half once it is released.
+  // sdk::storeCatalogSnapshotV2 applies the caller-size rule and releases the snapshot
+  // itself when it refuses the caller's struct.
+  [[nodiscard]] bool acquireCatalogSnapshotV2(PJ_catalog_snapshot_v2_t* out_snapshot, const ObjectStore& object_store) {
+    auto state = std::make_unique<CatalogSnapshotState>();
+    {
+      auto lock = engine.lockEngine();
+      fillScalarCatalog(state.get());
+    }
+    fillObjectTopics(state.get(), object_store);
+
+    PJ_catalog_snapshot_v2_t filled{};
+    filled.data_sources = state->data_sources.data();
+    filled.data_source_count = state->data_sources.size();
+    filled.topics = state->topics.data();
+    filled.topic_count = state->topics.size();
+    filled.fields = state->fields.data();
+    filled.field_count = state->fields.size();
+    filled.object_topics = state->object_topics.data();
+    filled.object_topic_count = state->object_topics.size();
+    filled.release = releaseCatalogSnapshot;
+    filled.release_ctx = state.release();
+    if (auto stored = sdk::storeCatalogSnapshotV2(out_snapshot, filled); !stored) {
+      write.setError(stored.error());
+      return false;
+    }
+    write.last_error.clear();
+    return true;
+  }
+
+  // v4: one field's whole time series as host-owned Arrow structs (readSeriesArrowWindow, unbounded).
   [[nodiscard]] bool readSeriesArrow(FieldHandle field, struct ArrowSchema* out_schema, struct ArrowArray* out_array) {
-    if (out_schema == nullptr || out_array == nullptr) {
-      write.setError("readSeriesArrow: out_schema and out_array must be non-null");
+    if (auto status = readSeriesArrowWindow(
+            engine, field, std::numeric_limits<Timestamp>::min(), std::numeric_limits<Timestamp>::max(), out_schema,
+            out_array);
+        !status) {
+      write.setError(status.error());
       return false;
     }
-    auto lock = engine.lockEngine();  // held through the row-decode loop below
-
-    const auto* storage = engine.getTopicStorage(field.topic.id);
-    if (storage == nullptr) {
-      write.setError(fmt::format("topic {} not found", field.topic.id));
-      return false;
-    }
-    const auto columns = effectiveColumns(engine, *storage);
-    const auto* desc = findFieldDescriptor(columns, field.id);
-    if (desc == nullptr) {
-      write.setError(fmt::format("field {} not found in topic {}", field.id, field.topic.id));
-      return false;
-    }
-
-    const ArrowType value_arrow_type = [&]() {
-      switch (desc->logical_type) {
-        case PrimitiveType::kFloat32:
-          return NANOARROW_TYPE_FLOAT;
-        case PrimitiveType::kFloat64:
-          return NANOARROW_TYPE_DOUBLE;
-        case PrimitiveType::kInt8:
-          return NANOARROW_TYPE_INT8;
-        case PrimitiveType::kInt16:
-          return NANOARROW_TYPE_INT16;
-        case PrimitiveType::kInt32:
-          return NANOARROW_TYPE_INT32;
-        case PrimitiveType::kInt64:
-          return NANOARROW_TYPE_INT64;
-        case PrimitiveType::kUint8:
-          return NANOARROW_TYPE_UINT8;
-        case PrimitiveType::kUint16:
-          return NANOARROW_TYPE_UINT16;
-        case PrimitiveType::kUint32:
-          return NANOARROW_TYPE_UINT32;
-        case PrimitiveType::kUint64:
-          return NANOARROW_TYPE_UINT64;
-        case PrimitiveType::kBool:
-          return NANOARROW_TYPE_BOOL;
-        case PrimitiveType::kString:
-          return NANOARROW_TYPE_STRING;
-        case PrimitiveType::kUnspecified:
-          return NANOARROW_TYPE_NA;
-      }
-      return NANOARROW_TYPE_NA;
-    }();
-
-    nanoarrow::UniqueSchema schema;
-    ArrowSchemaInit(schema.get());
-    if (ArrowSchemaSetTypeStruct(schema.get(), 2) != NANOARROW_OK) {
-      write.setError("readSeriesArrow: ArrowSchemaSetTypeStruct failed");
-      return false;
-    }
-    ArrowSchemaInit(schema->children[0]);
-    if (ArrowSchemaSetType(schema->children[0], NANOARROW_TYPE_INT64) != NANOARROW_OK ||
-        ArrowSchemaSetName(schema->children[0], "timestamp") != NANOARROW_OK) {
-      write.setError("readSeriesArrow: failed to set timestamp child schema");
-      return false;
-    }
-    ArrowSchemaInit(schema->children[1]);
-    if (ArrowSchemaSetType(schema->children[1], value_arrow_type) != NANOARROW_OK ||
-        ArrowSchemaSetName(schema->children[1], desc->field_path.c_str()) != NANOARROW_OK) {
-      write.setError("readSeriesArrow: failed to set value child schema");
-      return false;
-    }
-
-    nanoarrow::UniqueArray array;
-    ArrowError arrow_err;
-    if (ArrowArrayInitFromSchema(array.get(), schema.get(), &arrow_err) != NANOARROW_OK) {
-      write.setError(std::string("readSeriesArrow: ArrowArrayInitFromSchema failed: ") + arrow_err.message);
-      return false;
-    }
-    if (ArrowArrayStartAppending(array.get()) != NANOARROW_OK) {
-      write.setError("readSeriesArrow: ArrowArrayStartAppending failed");
-      return false;
-    }
-
-    auto* ts_child = array->children[0];
-    auto* val_child = array->children[1];
-
-    // Rows below the topic's retention floor are logically evicted: a toolbox
-    // plugin reading this series must not see them (the retention contract).
-    const auto retention_floor = storage->retentionFloor();
-    for (const auto& chunk : storage->sealedChunks()) {
-      if (chunk.stats.t_max < retention_floor) {
-        continue;  // whole chunk below the floor
-      }
-      int col_index = -1;
-      for (std::size_t i = 0; i < chunk.columns.size(); ++i) {
-        if (chunk.columns[i].descriptor->field_id == field.id) {
-          col_index = static_cast<int>(i);
-          break;
-        }
-      }
-      if (col_index < 0) {
-        continue;
-      }
-      const auto col_sz = static_cast<std::size_t>(col_index);
-
-      for (uint32_t row = 0; row < chunk.stats.row_count; ++row) {
-        // Skip logically-evicted rows; ts_child and val_child stay in sync
-        // because both appends are gated by this single guard.
-        const auto ts = chunk.readTimestamp(row);
-        if (ts < retention_floor) {
-          continue;
-        }
-        if (ArrowArrayAppendInt(ts_child, ts) != NANOARROW_OK) {
-          write.setError("readSeriesArrow: timestamp append failed");
-          return false;
-        }
-
-        const bool is_null = chunk.isNull(col_sz, row);
-        if (is_null) {
-          if (ArrowArrayAppendNull(val_child, 1) != NANOARROW_OK) {
-            write.setError("readSeriesArrow: null append failed");
-            return false;
-          }
-        } else {
-          ArrowErrorCode rc = NANOARROW_OK;
-          switch (desc->logical_type) {
-            case PrimitiveType::kFloat32:
-              rc = ArrowArrayAppendDouble(val_child, decodeNumericExact<float>(chunk, col_sz, row));
-              break;
-            case PrimitiveType::kFloat64:
-              rc = ArrowArrayAppendDouble(val_child, decodeNumericExact<double>(chunk, col_sz, row));
-              break;
-            case PrimitiveType::kInt8:
-              rc = ArrowArrayAppendInt(val_child, decodeNumericExact<int8_t>(chunk, col_sz, row));
-              break;
-            case PrimitiveType::kInt16:
-              rc = ArrowArrayAppendInt(val_child, decodeNumericExact<int16_t>(chunk, col_sz, row));
-              break;
-            case PrimitiveType::kInt32:
-              rc = ArrowArrayAppendInt(val_child, decodeNumericExact<int32_t>(chunk, col_sz, row));
-              break;
-            case PrimitiveType::kInt64:
-              rc = ArrowArrayAppendInt(val_child, decodeNumericExact<int64_t>(chunk, col_sz, row));
-              break;
-            case PrimitiveType::kUint8:
-              rc = ArrowArrayAppendUInt(val_child, decodeNumericExact<uint8_t>(chunk, col_sz, row));
-              break;
-            case PrimitiveType::kUint16:
-              rc = ArrowArrayAppendUInt(val_child, decodeNumericExact<uint16_t>(chunk, col_sz, row));
-              break;
-            case PrimitiveType::kUint32:
-              rc = ArrowArrayAppendUInt(val_child, decodeNumericExact<uint32_t>(chunk, col_sz, row));
-              break;
-            case PrimitiveType::kUint64:
-              rc = ArrowArrayAppendUInt(val_child, decodeNumericExact<uint64_t>(chunk, col_sz, row));
-              break;
-            case PrimitiveType::kBool:
-              rc = ArrowArrayAppendInt(val_child, chunk.readBool(col_sz, row) ? 1 : 0);
-              break;
-            case PrimitiveType::kString: {
-              const auto text = chunk.readString(col_sz, row);
-              const ArrowStringView sv{text.data(), static_cast<int64_t>(text.size())};
-              rc = ArrowArrayAppendString(val_child, sv);
-              break;
-            }
-            case PrimitiveType::kUnspecified:
-              rc = ArrowArrayAppendNull(val_child, 1);
-              break;
-          }
-          if (rc != NANOARROW_OK) {
-            write.setError("readSeriesArrow: value append failed");
-            return false;
-          }
-        }
-
-        if (ArrowArrayFinishElement(array.get()) != NANOARROW_OK) {
-          write.setError("readSeriesArrow: ArrowArrayFinishElement failed");
-          return false;
-        }
-      }
-    }
-
-    if (ArrowArrayFinishBuildingDefault(array.get(), &arrow_err) != NANOARROW_OK) {
-      write.setError(std::string("readSeriesArrow: finish building failed: ") + arrow_err.message);
-      return false;
-    }
-
-    // Move schema + array into caller-provided out params (transfers release
-    // callbacks; the UniqueXxx destructors become no-ops).
-    ArrowSchemaMove(schema.get(), out_schema);
-    ArrowArrayMove(array.get(), out_array);
     write.last_error.clear();
     return true;
   }
@@ -1682,6 +1875,18 @@ bool toolboxAcquireCatalogSnapshot(void* ctx, PJ_catalog_snapshot_t* out_snapsho
   return guardHostCallback(out_error, [&] {
     auto* impl = static_cast<DatastoreToolboxHostState*>(ctx);
     if (!impl->core.acquireCatalogSnapshot(out_snapshot)) {
+      propagateError(out_error, impl->core.write.lastError());
+      return false;
+    }
+    return true;
+  });
+}
+
+bool toolboxAcquireCatalogSnapshotV2(
+    void* ctx, PJ_catalog_snapshot_v2_t* out_snapshot, PJ_error_t* out_error) noexcept {
+  return guardHostCallback(out_error, [&] {
+    auto* impl = static_cast<DatastoreToolboxHostState*>(ctx);
+    if (!impl->core.acquireCatalogSnapshotV2(out_snapshot, impl->object_store)) {
       propagateError(out_error, impl->core.write.lastError());
       return false;
     }
@@ -2333,6 +2538,7 @@ const PJ_toolbox_host_vtable_t kToolboxVTable = {
     toolboxPushOwnedObject,
     toolboxRegisterObjectTopicOnDataset,
     toolboxSetObjectTopicRetention,
+    toolboxAcquireCatalogSnapshotV2,
 };
 
 const PJ_object_write_host_vtable_t kSourceObjectWriteVTable = {

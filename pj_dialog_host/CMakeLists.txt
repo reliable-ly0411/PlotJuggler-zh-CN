@@ -27,9 +27,11 @@ add_library(pj_dialog_engine_qt STATIC
     src/bundled_translations.cpp
     src/chart_preview_widget.cpp
     src/chart_placeholder_overlay.hpp
+    src/host_info.hpp
     include/pj_plugins/host_qt/chart_preview_widget.hpp
     include/pj_plugins/host_qt/dialog_engine.hpp
     include/pj_plugins/host_qt/drop_event_filter.hpp
+    include/pj_plugins/host_qt/embedded_view_host.hpp
     include/pj_plugins/host_qt/panel_engine.hpp
     include/pj_plugins/host_qt/pj_ui_loader.hpp
     include/pj_plugins/host_qt/widget_adapters.hpp
@@ -73,6 +75,7 @@ if(PJ_BUILD_TESTS)
             ${plotjuggler_sdk_SOURCE_DIR}/pj_plugins/dialog_protocol/examples/mock_dialog.cpp
             tests/widget_binding_test.cpp
             tests/combo_rules_test.cpp
+            tests/chart_preview_widget_test.cpp
         LIBS pj_dialog_engine_qt plotjuggler_sdk::plugin_sdk Qt6::Test
     )
     set_target_properties(pj_dialog_host_tests PROPERTIES AUTOMOC ON)
@@ -86,7 +89,7 @@ if(PJ_BUILD_TESTS)
     set_target_properties(pj_dialog_host_panel_tests PROPERTIES AUTOMOC ON)
     add_executable(pj_bundled_translations_test tests/bundled_translations_qtest.cpp)
     set_target_properties(pj_bundled_translations_test PROPERTIES AUTOMOC ON WIN32_EXECUTABLE FALSE)
-    target_link_libraries(pj_bundled_translations_test PRIVATE pj_dialog_engine_qt Qt6::Test)
+    target_link_libraries(pj_bundled_translations_test PRIVATE pj_dialog_engine_qt Qt6::Xml Qt6::UiTools Qt6::Test)
     if(PJ4_BUILD_APP)
         # pj_app is configured later; CMake resolves this target at generation.
         target_link_libraries(pj_bundled_translations_test PRIVATE pj_app_language)

@@ -39,8 +39,20 @@ def download(url, target, expected):
     target.write_bytes(data)
 
 
+def require_clean_source():
+    """Release provenance must identify committed source, not an unstamped index."""
+    dirty = subprocess.check_output(['git', 'status', '--porcelain=v1', '--untracked-files=all',
+                                     '--ignore-submodules=none'], cwd=ROOT, text=True)
+    if dirty.strip():
+        raise ValueError('Release payload requires a clean committed source tree; local feedback candidates are not releases')
+    revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+    tree = subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], cwd=ROOT, text=True).strip()
+    return revision, tree
+
+
 def stage(build, prefix, config, linux_tools):
     """Copy the exact CMake-selected DSO plus its legal and font payload."""
+    revision, tree = require_clean_source()
     build, prefix = build.resolve(), prefix.resolve()
     if prefix.exists():
         raise ValueError(f'Use an empty staging destination: {prefix}')
@@ -75,8 +87,6 @@ def stage(build, prefix, config, linux_tools):
     plugin_manifest = json.loads(manifest.read_text(encoding='utf-8'))
     assert plugin_manifest['license'] == baseline['ardupilot_plugin']['license'] == 'LGPL-3.0-only'
     assert plugin_manifest['version'] == baseline['ardupilot_plugin']['version']
-    revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
-    tree = subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], cwd=ROOT, text=True).strip()
     record = {'version': values['PJ_APP_VERSION'], 'source_commit': revision, 'source_tree': tree,
               'upstream_commit': baseline['upstream_commit'], 'sdk_version': '0.34.1',
               'bin_plugin_commit': baseline['ardupilot_plugin']['commit'],

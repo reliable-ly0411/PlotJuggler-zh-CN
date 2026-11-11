@@ -7,9 +7,11 @@
 
 #include <QTimer>
 #include <algorithm>
+#include <utility>
 
 #include "LayoutXml.h"
 #include "PendingDisplayBinder.h"
+#include "pj_custom_widgets/CustomWidgetDockWidget.h"
 #include "pj_datastore/engine.hpp"
 #include "pj_plotting/DatastoreCurveAdapter.h"
 #include "pj_plotting/PlotWidget.h"
@@ -24,13 +26,14 @@ namespace PJ {
 
 TopicDemandController::TopicDemandController(
     CatalogModel& catalog, TopicDemandTracker& tracker, DataProcessorService& processors,
-    PendingDisplayBinder& pending_binder, DataEngine& engine, QObject* parent)
+    PendingDisplayBinder& pending_binder, DataEngine& engine, VisibleStartSink visible_start, QObject* parent)
     : QObject(parent),
       catalog_(catalog),
       tracker_(tracker),
       processors_(processors),
       pending_binder_(pending_binder),
-      engine_(engine) {
+      engine_(engine),
+      visible_start_(std::move(visible_start)) {
   // The one persistent catalog wiring this controller owns: drives preview
   // release-on-promotion, the advertise-burst census, and preview teardown.
   connect(&catalog_, &CatalogModel::itemsAdded, this, &TopicDemandController::onCatalogItemsAdded);
@@ -71,6 +74,12 @@ void TopicDemandController::registerPlot(PlotWidget* plot) {
   }
   plot_topics_.emplace(plot, std::vector<std::pair<DatasetId, QString>>{});
   connect(plot, &PlotWidgetBase::curveListChanged, this, [this, plot]() { syncPlot(plot); });
+  // Any move of its time axis, a linked peer's or a plugin's zoom included; only this plot's datasets.
+  connect(plot, &PlotWidget::visibleXRangeChanged, this, [this, plot]() {
+    if (const auto found = plot_topics_.find(plot); found != plot_topics_.end()) {
+      reportVisibleStart(plot, found->second);
+    }
+  });
   // A canvas drop named an advertised placeholder — register demand + a pending
   // bind instead of the (impossible, no storage id) normal add-curve path.
   connect(plot, &PlotWidget::placeholderCurveDropped, this, [this, plot](const QString& catalog_key) {
@@ -88,6 +97,7 @@ void TopicDemandController::registerPlot(PlotWidget* plot) {
       tracker_.removeReference(dataset_id, topic_name);
     }
     plot_topics_.erase(it);
+    emit displayedSeriesChanged();
   });
   syncPlot(plot);  // covers curves already present (e.g. restored before this call)
 }
@@ -112,7 +122,23 @@ void TopicDemandController::syncPlot(PlotWidget* plot) {
     const TopicId topic_id = isScalarField(*item) ? asScalarField(*item)->topic_id : 0;
     appendTopicRefs(current, item->dataset_id, item->topic_name, topic_id);
   }
+  reportVisibleStart(plot, current);
   applyTopicDelta(std::move(current), plot_topics_[plot]);
+  emit displayedSeriesChanged();
+}
+
+void TopicDemandController::reportVisibleStart(
+    PlotWidget* plot, const std::vector<std::pair<DatasetId, QString>>& topics) {
+  if (!visible_start_ || plot->isXYPlot()) {
+    return;  // an XY plot's x axis is not time
+  }
+  const DisplaySeconds start = fromAxisDouble(plot->currentBoundingRect().left());
+  std::set<DatasetId> reported;
+  for (const auto& [dataset_id, topic_name] : topics) {
+    if (reported.insert(dataset_id).second) {
+      visible_start_(dataset_id, start);
+    }
+  }
 }
 
 void TopicDemandController::applyTopicDelta(
@@ -139,13 +165,8 @@ void TopicDemandController::applyTopicDelta(
 }
 
 std::optional<std::pair<DatasetId, QString>> TopicDemandController::resolveObjectTopic(ObjectTopicId topic_id) const {
-  for (const CatalogItem& item : catalog_.items()) {
-    if (const auto* object_topic = asObjectTopic(item);
-        object_topic != nullptr && object_topic->object_topic_id == topic_id) {
-      return std::make_pair(item.dataset_id, item.topic_name);
-    }
-  }
-  return std::nullopt;
+  const std::optional<CatalogItem> item = catalog_.objectTopicItem(topic_id);
+  return item.has_value() ? std::optional(std::make_pair(item->dataset_id, item->topic_name)) : std::nullopt;
 }
 
 void TopicDemandController::registerSceneDock(SceneDockWidget* dock) {
@@ -153,7 +174,9 @@ void TopicDemandController::registerSceneDock(SceneDockWidget* dock) {
     return;  // idempotent, mirroring registerPlot
   }
   scene_layer_topics_.emplace(dock, decltype(scene_layer_topics_)::mapped_type{});
+  connect(dock, &SceneDockWidget::configTopicsChanged, this, &TopicDemandController::displayedSeriesChanged);
   connect(dock, &SceneDockWidget::layerAdded, this, [this, dock](ObjectTopicId topic_id) {
+    emit displayedSeriesChanged();
     const auto resolved = resolveObjectTopic(topic_id);
     if (!resolved.has_value()) {
       return;
@@ -162,6 +185,7 @@ void TopicDemandController::registerSceneDock(SceneDockWidget* dock) {
     scene_layer_topics_[dock][topic_id.id] = *resolved;
   });
   connect(dock, &SceneDockWidget::layerRemoved, this, [this, dock](ObjectTopicId topic_id) {
+    emit displayedSeriesChanged();
     auto dock_it = scene_layer_topics_.find(dock);
     if (dock_it == scene_layer_topics_.end()) {
       return;
@@ -183,6 +207,7 @@ void TopicDemandController::registerSceneDock(SceneDockWidget* dock) {
       tracker_.removeReference(topic.first, topic.second);
     }
     scene_layer_topics_.erase(dock_it);
+    emit displayedSeriesChanged();
   });
 }
 
@@ -203,6 +228,7 @@ void TopicDemandController::registerStateTransitionsDock(StateTransitionsDockWid
       tracker_.removeReference(dataset_id, topic_name);
     }
     state_dock_topics_.erase(it);
+    emit displayedSeriesChanged();
   });
   syncStateTransitionsDock(dock);  // covers rows restored before this call
 }
@@ -215,6 +241,111 @@ void TopicDemandController::syncStateTransitionsDock(StateTransitionsDockWidget*
     current.emplace_back(dataset_id, topic_name);
   }
   applyTopicDelta(std::move(current), state_dock_topics_[dock]);
+  emit displayedSeriesChanged();
+}
+
+void TopicDemandController::registerCustomWidgetDock(CustomWidgetDockWidget* dock) {
+  if (dock == nullptr || custom_dock_topics_.count(dock) > 0) {
+    return;  // idempotent, mirroring registerPlot
+  }
+  custom_dock_topics_.emplace(dock, std::vector<std::pair<DatasetId, QString>>{});
+  connect(dock, &CustomWidgetDockWidget::bindingsChanged, this, [this, dock]() { syncCustomWidgetDock(dock); });
+  connect(dock, &QObject::destroyed, this, [this, dock]() {
+    auto it = custom_dock_topics_.find(dock);
+    if (it == custom_dock_topics_.end()) {
+      return;
+    }
+    for (const auto& [dataset_id, topic_name] : it->second) {
+      tracker_.removeReference(dataset_id, topic_name);
+    }
+    custom_dock_topics_.erase(it);
+    emit displayedSeriesChanged();
+  });
+  syncCustomWidgetDock(dock);  // covers wires restored before this call
+}
+
+void TopicDemandController::syncCustomWidgetDock(CustomWidgetDockWidget* dock) {
+  applyTopicDelta(dock->displayedTopics(), custom_dock_topics_[dock]);
+  emit displayedSeriesChanged();
+}
+
+QSet<QString> TopicDemandController::displayedKeys(const QWidget* root) const {
+  QSet<QString> keys;
+  if (root == nullptr) {
+    return keys;
+  }
+  const auto include = [root](const QWidget* widget) { return root->isAncestorOf(widget); };
+  const auto add_object_topic = [this, &keys](DatasetId dataset, ObjectTopicId topic_id) {
+    if (const auto key = catalog_.objectTopicKey(dataset, topic_id); key.has_value()) {
+      keys.insert(*key);
+    }
+  };
+  for (const auto& [plot, topics] : plot_topics_) {
+    if (!include(plot)) {
+      continue;
+    }
+    for (const auto& info : plot->curveList()) {
+      const auto* xy_series = info.curve != nullptr ? dynamic_cast<const PointSeriesXY*>(info.curve->data()) : nullptr;
+      if (xy_series != nullptr) {
+        keys.insert(xy_series->xSource().name);
+        keys.insert(xy_series->ySource().name);
+      } else {
+        keys.insert(info.source_name);
+      }
+    }
+  }
+  for (const auto& [dock, topics] : scene_layer_topics_) {
+    if (!include(dock)) {
+      continue;
+    }
+    // The dataset recorded when the layer was added is a fast first guess; a merge re-keys the topic under the
+    // anchor without touching the layer, and a config topic (TF) has no layer, so a miss asks the catalog by id.
+    const std::optional<DatasetId> any_dataset =
+        topics.empty() ? std::nullopt : std::optional<DatasetId>(topics.begin()->second.first);
+    const auto add_scene_topic = [&](ObjectTopicId topic_id) {
+      const auto recorded = topics.find(topic_id.id);
+      const std::optional<DatasetId> dataset = recorded != topics.end() ? recorded->second.first : any_dataset;
+      if (dataset.has_value()) {
+        if (const auto key = catalog_.objectTopicKey(*dataset, topic_id); key.has_value()) {
+          keys.insert(*key);
+          return;
+        }
+      }
+      if (const auto item = catalog_.objectTopicItem(topic_id); item.has_value()) {
+        keys.insert(item->key);
+      }
+    };
+    for (const SceneLayerInfo& layer : dock->layers()) {
+      add_scene_topic(layer.topic_id);
+    }
+    for (const SceneLayerInfo& config_topic : dock->configTopics()) {
+      add_scene_topic(config_topic.topic_id);
+    }
+  }
+  for (const auto& [dock, topics] : state_dock_topics_) {
+    if (!include(dock)) {
+      continue;
+    }
+    for (const QString& key : dock->controller()->currentSeriesKeys()) {
+      keys.insert(key);
+    }
+  }
+  for (const auto& [dock, topics] : custom_dock_topics_) {
+    if (!include(dock)) {
+      continue;
+    }
+    for (const WidgetWire& wire : dock->bindings()) {
+      if (!wire.resolved) {
+        continue;
+      }
+      if (wire.kind == WidgetInputKind::kObject) {
+        add_object_topic(wire.dataset, wire.target.object_topic);
+      } else {
+        keys.insert(wire.key);
+      }
+    }
+  }
+  return keys;
 }
 
 void TopicDemandController::handlePlaceholderPlotDrop(
@@ -240,6 +371,7 @@ void TopicDemandController::onCatalogItemsAdded(const std::vector<CatalogItem>& 
   // then census the freshly-advertised scalar placeholders.
   releaseCompletedPreviews(items);
   runCensus(items);
+  emit displayedSeriesChanged();
 }
 
 void TopicDemandController::releaseCompletedPreviews(const std::vector<CatalogItem>& items) {

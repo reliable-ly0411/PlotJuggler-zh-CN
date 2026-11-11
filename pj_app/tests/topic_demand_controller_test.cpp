@@ -5,28 +5,49 @@
 #include <qwt_plot_curve.h>
 
 #include <QApplication>
+#include <QDomDocument>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include <QEventLoop>
+#include <QMimeData>
+#include <QRectF>
+#include <QSet>
+#include <QSignalSpy>
 #include <QTimer>
 #include <QtGlobal>
 #include <memory>
+#include <optional>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 #include "PendingDisplayBinder.h"
 #include "TopicDemandController.h"
+#include "in_process_widget_plugin.h"
+#include "pj_base/builtin/image_codec.hpp"
 #include "pj_base/type_tree.hpp"
+#include "pj_custom_widgets/CustomWidgetDockWidget.h"
 #include "pj_datastore/writer.hpp"
+#include "pj_plotting/DockWidget.h"
+#include "pj_plotting/PlotDocker.h"
+#include "pj_plotting/PlotWidget.h"
 #include "pj_plotting/StateTransitionsDockWidget.h"
+#include "pj_plugins/host/message_parser_handle.hpp"
+#include "pj_plugins/sdk/message_parser_plugin_base.hpp"
 #include "pj_runtime/AppSession.h"
 #include "pj_runtime/CatalogModel.h"
 #include "pj_runtime/DataProcessorService.h"
+#include "pj_runtime/ExtensionCatalogService.h"
 #include "pj_runtime/SessionManager.h"
 #include "pj_runtime/Time.h"
 #include "pj_runtime/TopicDemandTracker.h"
+#include "pj_runtime/TransformService.h"
+#include "pj_scene3d_widgets/Scene3DDockWidget.h"
 #include "pj_scene_common/layer_factory.h"
 #include "pj_scene_common/scene_dock_widget.h"
 #include "pj_scripting/filter_catalogue.h"
 #include "pj_scripting/script_engine.h"
+#include "pj_widgets/CurveTreeView.h"
 using namespace Qt::StringLiterals;
 
 namespace {
@@ -62,8 +83,7 @@ QString addScalarTopic(PJ::AppSession& app_session, DatasetId dataset_id, std::s
     return {};
   }
   app_session.catalogModel().rebuildFromDatastore();
-  const auto key = PJ::resolveSeriesPath(
-      app_session.catalogModel(),
+  const auto key = app_session.catalogModel().resolveCurveKey(
       PJ::layout_xml::SeriesPath{
           QString::fromUtf8(topic_name.data(), static_cast<int>(topic_name.size())), u"value"_s});
   return key.value_or(QString());
@@ -100,7 +120,7 @@ QString addRawScalarTopic(PJ::AppSession& app_session, DatasetId dataset_id, con
     return {};
   }
   app_session.catalogModel().rebuildFromDatastore();
-  const auto key = PJ::resolveSeriesPath(app_session.catalogModel(), PJ::layout_xml::SeriesPath{topic_name, QString()});
+  const auto key = app_session.catalogModel().resolveCurveKey(PJ::layout_xml::SeriesPath{topic_name, QString()});
   return key.value_or(QString());
 }
 
@@ -188,6 +208,31 @@ class StubSceneDockWidget : public PJ::SceneDockWidget {
     return object_type == PJ::sdk::BuiltinObjectType::kPointCloud;
   }
   void syncViewLayers(const std::vector<PJ::ISceneLayer*>& /*ordered_layers*/) override {}
+  // A topic titled "/tf" is consumed as a config topic, the way a 3D view takes FrameTransforms.
+  bool handleSceneConfigTopic(
+      ObjectTopicId topic_id, PJ::sdk::BuiltinObjectType object_type, const QString& title) override {
+    if (title != u"/tf"_s) {
+      return false;
+    }
+    config_topics_.push_back(PJ::SceneLayerInfo{topic_id, object_type, title, u"stub"_s, true});
+    emit configTopicsChanged();
+    return true;
+  }
+  bool removeSceneConfigTopic(ObjectTopicId topic_id) override {
+    if (std::erase_if(config_topics_, [&](const PJ::SceneLayerInfo& info) { return info.topic_id == topic_id; }) == 0) {
+      return false;
+    }
+    emit configTopicsChanged();
+    return true;
+  }
+
+ public:
+  [[nodiscard]] std::vector<PJ::SceneLayerInfo> configTopics() const override {
+    return config_topics_;
+  }
+
+ private:
+  std::vector<PJ::SceneLayerInfo> config_topics_;
 };
 
 void wireSceneDock(StubSceneDockWidget& dock, PJ::AppSession& app_session) {
@@ -241,14 +286,88 @@ class TopicDemandControllerTest : public ::testing::Test {
         std::make_unique<PJ::PendingDisplayBinder>(app_session_->catalogModel(), &app_session_->topicDemandTracker());
     controller_ = std::make_unique<PJ::TopicDemandController>(
         app_session_->catalogModel(), app_session_->topicDemandTracker(),
-        app_session_->sessionManager().dataProcessorService(), *binder_, app_session_->sessionManager().dataEngine());
+        app_session_->sessionManager().dataProcessorService(), *binder_, app_session_->sessionManager().dataEngine(),
+        [this](PJ::DatasetId dataset_id, PJ::DisplaySeconds start) {
+          visible_starts_.emplace_back(dataset_id, start.value);
+        });
   }
 
   std::unique_ptr<PJ::AppSession> app_session_;
   DatasetId dataset_id_ = 0;
   std::unique_ptr<PJ::PendingDisplayBinder> binder_;
   std::unique_ptr<PJ::TopicDemandController> controller_;
+  /// What the controller reported as each plot's view start, in order.
+  std::vector<std::pair<PJ::DatasetId, double>> visible_starts_;
 };
+
+// GAP-40: a plot reports where its time view starts for each dataset it shows, on a curve change and on a range
+// change; a linked peer showing another dataset (a series) reports its new start when the plot it follows pans.
+TEST_F(TopicDemandControllerTest, PlotViewStartReachesTheSessionAlsoThroughALinkedPan) {
+  const DatasetId series_dataset = createDataset(*app_session_);
+  const QString key = addScalarTopic(*app_session_, dataset_id_, "/speed");
+  const QString series_key = addScalarTopic(*app_session_, series_dataset, "/series");
+  ASSERT_FALSE(key.isEmpty());
+  ASSERT_FALSE(series_key.isEmpty());
+  PJ::PlotWidget panned(&app_session_->sessionManager(), &app_session_->catalogModel());
+  PJ::PlotWidget peer(&app_session_->sessionManager(), &app_session_->catalogModel());
+  // MainWindow's linked zoom, connected before the controller registers the plot.
+  QObject::connect(&panned, &PJ::PlotWidget::rectChanged, &peer, [&peer](PJ::PlotWidget* /*modified*/, QRectF rect) {
+    peer.setVisibleXRange(rect.left(), rect.right());
+  });
+  controller_->registerPlot(&panned);
+  controller_->registerPlot(&peer);
+  ASSERT_NE(panned.addCurve(key), nullptr);
+  ASSERT_NE(peer.addCurve(series_key), nullptr);
+  ASSERT_FALSE(visible_starts_.empty());
+  EXPECT_EQ(visible_starts_.back().first, series_dataset) << "a curve change reports its plot's start";
+
+  visible_starts_.clear();
+  panned.setZoomRectangle(QRectF(10, -5, 10, 10), true);
+  const auto last_start = [&](DatasetId dataset) -> std::optional<double> {
+    std::optional<double> start;
+    for (const auto& [reported, seconds] : visible_starts_) {
+      start = reported == dataset ? std::optional(seconds) : start;
+    }
+    return start;
+  };
+  EXPECT_EQ(last_start(dataset_id_), 10.0);
+  EXPECT_EQ(last_start(series_dataset), 10.0) << "the linked peer's dataset";
+}
+
+// Codex 11b-1: every change of a plot's time view reports its start, a programmatic one (a plugin's zoom, a state
+// strip's linked pan) included, and only for the plot that moved: panning a plot of another dataset leaves the last
+// moved plot of this dataset the winner.
+TEST_F(TopicDemandControllerTest, EveryViewChangeReportsOnlyThePlotThatMoved) {
+  const DatasetId other = createDataset(*app_session_);
+  const QString a_key = addScalarTopic(*app_session_, dataset_id_, "/a");
+  const QString b_key = addScalarTopic(*app_session_, dataset_id_, "/b");
+  const QString c_key = addScalarTopic(*app_session_, other, "/c");
+  PJ::PlotWidget a(&app_session_->sessionManager(), &app_session_->catalogModel());
+  PJ::PlotWidget b(&app_session_->sessionManager(), &app_session_->catalogModel());
+  PJ::PlotWidget c(&app_session_->sessionManager(), &app_session_->catalogModel());
+  for (auto [plot, key] : {std::pair{&a, a_key}, std::pair{&b, b_key}, std::pair{&c, c_key}}) {
+    controller_->registerPlot(plot);
+    ASSERT_NE(plot->addCurve(key), nullptr);
+  }
+  const auto starts_of = [&](DatasetId dataset) {
+    std::vector<double> starts;
+    for (const auto& [reported, seconds] : visible_starts_) {
+      if (reported == dataset) {
+        starts.push_back(seconds);
+      }
+    }
+    return starts;
+  };
+
+  visible_starts_.clear();
+  a.setVisibleXRange(10, 20);
+  b.setVisibleXRange(30, 40);
+  EXPECT_EQ(starts_of(dataset_id_), (std::vector<double>{10.0, 30.0})) << "programmatic changes, the plot moved";
+  visible_starts_.clear();
+  c.setZoomRectangle(QRectF(50, -5, 10, 10), true);
+  EXPECT_TRUE(starts_of(dataset_id_).empty()) << "a plot of another dataset moved";
+  EXPECT_EQ(starts_of(other), (std::vector<double>{50.0}));
+}
 
 TEST_F(TopicDemandControllerTest, PlotCurveAddRemoveTracksDemand) {
   const QString key = addScalarTopic(*app_session_, dataset_id_, "/speed");
@@ -299,7 +418,7 @@ TEST_F(TopicDemandControllerTest, DerivedFilterOutputReferencesSourceNotOutput) 
   app_session_->catalogModel().rebuildFromDatastore();
 
   const auto output_key =
-      PJ::resolveSeriesPath(app_session_->catalogModel(), PJ::layout_xml::SeriesPath{u"speed[Absolute]"_s, u"value"_s});
+      app_session_->catalogModel().resolveCurveKey(PJ::layout_xml::SeriesPath{u"speed[Absolute]"_s, u"value"_s});
   ASSERT_TRUE(output_key.has_value());
 
   PJ::PlotWidget plot(&app_session_->sessionManager(), &app_session_->catalogModel());
@@ -426,6 +545,103 @@ TEST_F(TopicDemandControllerTest, SceneDockPlaceholderDropCompletesOnRealTopicWi
   EXPECT_FALSE(referencesTopic(tracker, dataset_id_, u"/points"_s));
 }
 
+/// Supplies the parser-bound Image contract used by live image streams.
+class StreamImageParser final : public PJ::MessageParserPluginBase {
+ public:
+  StreamImageParser() {
+    PJ::sdk::SchemaHandler handler;
+    handler.object_type = PJ::sdk::BuiltinObjectType::kImage;
+    handler.parse_object = [](PJ::Timestamp, PJ::sdk::PayloadView payload) -> PJ::Expected<PJ::sdk::ObjectRecord> {
+      auto image = PJ::deserializeImage(payload.bytes.data(), payload.bytes.size());
+      if (!image) {
+        return PJ::unexpected(image.error());
+      }
+      return PJ::sdk::ObjectRecord{.ts = std::nullopt, .object = PJ::sdk::BuiltinObject{std::move(*image)}};
+    };
+    registerSchemaHandler("test/image", std::move(handler));
+  }
+};
+
+TEST_F(TopicDemandControllerTest, AdvertisedImagesDemandDataBeforeTheDepthGateDecides) {
+  auto& session = app_session_->sessionManager();
+  auto& catalog = app_session_->catalogModel();
+  auto& tracker = app_session_->topicDemandTracker();
+  catalog.setPerTopicPauseCapable(dataset_id_, true);
+  PJ::TransformService transforms(session);
+
+  for (const bool depth : {true, false}) {
+    const QString name = depth ? u"/camera/depth"_s : u"/camera/color"_s;
+    catalog.setAdvertisedTopics(dataset_id_, {{name, PJ::sdk::BuiltinObjectType::kImage}});
+    QString key;
+    for (const auto& item : catalog.items()) {
+      if (item.topic_name == name && PJ::asAdvertisedTopic(item) != nullptr) {
+        key = item.key;
+      }
+    }
+    ASSERT_FALSE(key.isEmpty());
+    ASSERT_FALSE(referencesTopic(tracker, dataset_id_, name));
+
+    PJ::PlotDocker docker(u"images"_s, &session, &catalog);
+    auto* host = docker.plotAt(0);
+    ASSERT_NE(host, nullptr);
+    auto* scene = new PJ::Scene3DDockWidget();
+    scene->setSessionManager(&session);
+    scene->setTransformService(&transforms);
+    controller_->registerSceneDock(scene);
+    int refusals = 0;
+    QObject::connect(scene, &PJ::SceneDockWidget::topicRefused, scene, [&](const QString&) { ++refusals; });
+    QObject::connect(
+        host, &PJ::DockWidget::placeholderTopicDropped, host,
+        [this, scene](PJ::DockWidget*, DatasetId dataset, const QString& topic, PJ::sdk::BuiltinObjectType type) {
+          controller_->handleSceneDockPlaceholderDrop(scene, dataset, topic, type);
+        });
+    host->adoptObjectWidget(scene);
+
+    QMimeData mime;
+    mime.setData(PJ::CurveTreeView::catalogItemsMimeType(), PJ::CurveTreeView::encodeCatalogKeys({key}));
+    QDragEnterEvent enter(QPointF(1, 1), Qt::CopyAction, &mime, Qt::LeftButton, Qt::NoModifier);
+    QApplication::sendEvent(scene->widget(), &enter);
+    ASSERT_TRUE(enter.isAccepted()) << "an advertised image has no encoding yet";
+    QDropEvent drop(QPointF(1, 1), Qt::CopyAction, &mime, Qt::LeftButton, Qt::NoModifier);
+    QApplication::sendEvent(scene->widget(), &drop);
+    ASSERT_TRUE(drop.isAccepted());
+    ASSERT_TRUE(referencesTopic(tracker, dataset_id_, name));
+    EXPECT_TRUE(scene->layers().empty());
+
+    const auto topic = session.objectStore().registerTopic(
+        {dataset_id_, name.toStdString(), R"({"builtin_object_type":"kImage","image_codec":"pj_image_v1"})"});
+    ASSERT_TRUE(topic);
+    auto parser = std::make_unique<PJ::MessageParserHandle>(PJ::MessageParserPluginBase::vtableWithCreate(
+        []() noexcept -> void* { return new StreamImageParser(); },
+        R"({"id":"test-image","name":"Test Image","version":"1.0.0","encoding":["test"]})"));
+    ASSERT_TRUE(parser->valid());
+    ASSERT_TRUE(parser->bindSchema("test/image", {}));
+    session.registerObjectTopicParser(*topic, std::move(parser));
+    catalog.rebuildFromDatastore();
+    EXPECT_EQ(scene->retryPendingRestores({name}), 0) << "wait for the payload, not just topic registration";
+    EXPECT_FALSE(scene->pendingRestoreDemands().empty());
+
+    const std::vector<uint8_t> pixels(depth ? 16 : 12, 0);
+    PJ::sdk::Image image;
+    image.width = 2;
+    image.height = 2;
+    image.encoding = depth ? "32FC1" : "rgb8";
+    image.row_step = depth ? 8 : 6;
+    image.frame_id = "camera";
+    image.data = PJ::Span<const uint8_t>(pixels.data(), pixels.size());
+    ASSERT_TRUE(session.objectStore().pushOwned(*topic, 100, PJ::serializeImage(image)));
+    catalog.rebuildFromDatastore();
+    EXPECT_EQ(scene->retryPendingRestores({name}), depth ? 1 : 0);
+    EXPECT_EQ(binder_->flush({name}), 1);
+    EXPECT_TRUE(scene->pendingRestoreDemands().empty());
+    EXPECT_EQ(scene->layerFor(*topic) != nullptr, depth);
+    EXPECT_EQ(refusals, depth ? 0 : 1);
+    EXPECT_EQ(scene->canAcceptObjectTopic(*topic, PJ::sdk::BuiltinObjectType::kImage), depth);
+    EXPECT_EQ(referencesTopic(tracker, dataset_id_, name), depth)
+        << "a rejected colour image must release its provisional demand";
+  }
+}
+
 TEST_F(TopicDemandControllerTest, StateStripSeriesAddRemoveTracksDemand) {
   const QString key = addStringTopic(*app_session_, dataset_id_, "/robot/state");
   ASSERT_FALSE(key.isEmpty());
@@ -459,6 +675,231 @@ TEST_F(TopicDemandControllerTest, StateStripDestructionReleasesReferences) {
 
   dock.reset();
   EXPECT_FALSE(referencesTopic(tracker, dataset_id_, u"/robot/state"_s));
+}
+
+TEST_F(TopicDemandControllerTest, CustomWidgetWireAddRemoveTracksDemand) {
+  ASSERT_TRUE(app_session_->extensionCatalog().pluginCatalog().registerStaticWidget(pj_cw_test::goodVtable()));
+  const QString key = addScalarTopic(*app_session_, dataset_id_, "/speed");
+  ASSERT_FALSE(key.isEmpty());
+
+  PJ::CustomWidgetDockWidget dock(
+      &app_session_->sessionManager(), &app_session_->catalogModel(), &app_session_->extensionCatalog(),
+      &app_session_->playbackEngine());
+  ASSERT_TRUE(dock.bindToWidget(u"test_widgets"_s, u"gauge"_s));
+  controller_->registerCustomWidgetDock(&dock);
+  // Double registration is a no-op (mirrors registerPlot's guard).
+  controller_->registerCustomWidgetDock(&dock);
+
+  auto& tracker = app_session_->topicDemandTracker();
+  EXPECT_FALSE(referencesTopic(tracker, dataset_id_, u"/speed"_s));
+  ASSERT_TRUE(dock.setBinding(u"value"_s, 0, key));
+  EXPECT_TRUE(referencesTopic(tracker, dataset_id_, u"/speed"_s));
+
+  dock.removeBinding(u"value"_s, 0);
+  EXPECT_FALSE(referencesTopic(tracker, dataset_id_, u"/speed"_s));
+}
+
+TEST_F(TopicDemandControllerTest, DisplayedKeysCoverEveryFamilyInsideTheRoot) {
+  ASSERT_TRUE(app_session_->extensionCatalog().pluginCatalog().registerStaticWidget(pj_cw_test::goodVtable()));
+  const QString speed = addScalarTopic(*app_session_, dataset_id_, "/speed");
+  const QString x_key = addScalarTopic(*app_session_, dataset_id_, "/pose_x");
+  const QString y_key = addScalarTopic(*app_session_, dataset_id_, "/pose_y");
+  const QString gauge = addScalarTopic(*app_session_, dataset_id_, "/gauge");
+  const QString state = addStringTopic(*app_session_, dataset_id_, "/robot/state");
+  addObjectTopic(*app_session_, dataset_id_, u"/points"_s);
+  addObjectTopic(*app_session_, dataset_id_, u"/tf"_s);
+  const ObjectTopicId points_id = findObjectTopicId(app_session_->catalogModel(), u"/points"_s);
+  const ObjectTopicId tf_id = findObjectTopicId(app_session_->catalogModel(), u"/tf"_s);
+  const auto points = app_session_->catalogModel().objectTopicItem(points_id);
+  const auto tf = app_session_->catalogModel().objectTopicItem(tf_id);
+  ASSERT_TRUE(points.has_value());
+  ASSERT_TRUE(tf.has_value());
+
+  // Two roots, as the shell's selected dock and another one: declared first, so they outlive their children.
+  QWidget everything;
+  QWidget selected(&everything);
+  PJ::PlotWidget plot(&app_session_->sessionManager(), &app_session_->catalogModel());
+  PJ::PlotWidget xy_plot(&app_session_->sessionManager(), &app_session_->catalogModel());
+  StubSceneDockWidget scene;
+  wireSceneDock(scene, *app_session_);
+  PJ::StateTransitionsDockWidget strip(
+      &app_session_->sessionManager(), &app_session_->catalogModel(), &app_session_->playbackEngine());
+  PJ::CustomWidgetDockWidget custom(
+      &app_session_->sessionManager(), &app_session_->catalogModel(), &app_session_->extensionCatalog(),
+      &app_session_->playbackEngine());
+  ASSERT_TRUE(custom.bindToWidget(u"test_widgets"_s, u"gauge"_s));
+  plot.setParent(&selected);
+  scene.setParent(&selected);
+  xy_plot.setParent(&everything);
+  strip.setParent(&everything);
+  custom.setParent(&everything);
+  controller_->registerPlot(&plot);
+  controller_->registerPlot(&xy_plot);
+  controller_->registerSceneDock(&scene);
+  controller_->registerStateTransitionsDock(&strip);
+  controller_->registerCustomWidgetDock(&custom);
+
+  EXPECT_TRUE(controller_->displayedKeys(&everything).isEmpty());
+  EXPECT_TRUE(controller_->displayedKeys(nullptr).isEmpty());
+
+  QSignalSpy changed(controller_.get(), &PJ::TopicDemandController::displayedSeriesChanged);
+  const auto emits_on = [&changed](const auto& mutate) {
+    changed.clear();
+    mutate();
+    return changed.count() > 0;
+  };
+  EXPECT_TRUE(emits_on([&] { ASSERT_NE(plot.addCurve(speed), nullptr); }));
+  xy_plot.setModeXY(true);
+  EXPECT_TRUE(emits_on([&] { ASSERT_NE(xy_plot.addCurveXY(x_key, y_key, u"xy"_s), nullptr); }));
+  EXPECT_TRUE(
+      emits_on([&] { ASSERT_TRUE(scene.addTopic(points_id, PJ::sdk::BuiltinObjectType::kPointCloud, u"/points"_s)); }));
+  EXPECT_TRUE(emits_on([&] { ASSERT_TRUE(strip.controller()->addSeries(state)); }));
+  EXPECT_TRUE(emits_on([&] { ASSERT_TRUE(custom.setBinding(u"value"_s, 0, gauge)); }));
+  EXPECT_TRUE(emits_on([&] { ASSERT_TRUE(scene.addTopic(tf_id, PJ::sdk::BuiltinObjectType::kPointCloud, u"/tf"_s)); }))
+      << "a config topic has no layer signal";
+
+  EXPECT_EQ(
+      controller_->displayedKeys(&everything),
+      (QSet<QString>{speed, x_key, y_key, points->key, tf->key, state, gauge}));
+  EXPECT_EQ(controller_->displayedKeys(&selected), (QSet<QString>{speed, points->key, tf->key}))
+      << "only the widgets inside the root (the shell: the selected dock)";
+
+  EXPECT_TRUE(emits_on([&] { scene.removeTopic(points_id); }));
+  EXPECT_TRUE(controller_->displayedKeys(&everything).contains(tf->key)) << "a view left with only TF keeps its mark";
+  EXPECT_TRUE(emits_on([&] { scene.removeTopic(tf_id); }));
+  const QSet<QString> after_removal = controller_->displayedKeys(&everything);
+  EXPECT_FALSE(after_removal.contains(points->key));
+  EXPECT_FALSE(after_removal.contains(tf->key));
+}
+
+// A merge moves a topic under the anchor dataset without touching the layer that shows it.
+TEST_F(TopicDemandControllerTest, DisplayedSceneTopicFollowsADatasetMerge) {
+  const DatasetId other = createDataset(*app_session_);
+  ASSERT_NE(addScalarTopic(*app_session_, dataset_id_, "/a"), QString());
+  ASSERT_NE(addScalarTopic(*app_session_, other, "/b"), QString());
+  addObjectTopic(*app_session_, other, u"/points"_s);
+  const ObjectTopicId points_id = findObjectTopicId(app_session_->catalogModel(), u"/points"_s);
+  QWidget root;
+  StubSceneDockWidget scene;
+  wireSceneDock(scene, *app_session_);
+  scene.setParent(&root);
+  controller_->registerSceneDock(&scene);
+  ASSERT_TRUE(scene.addTopic(points_id, PJ::sdk::BuiltinObjectType::kPointCloud, u"/points"_s));
+
+  ASSERT_EQ(app_session_->mergeDatasets({dataset_id_, other}), dataset_id_);
+  app_session_->catalogModel().rebuildFromDatastore();
+  const auto merged = app_session_->catalogModel().objectTopicItem(points_id);
+  ASSERT_TRUE(merged.has_value());
+  ASSERT_EQ(merged->dataset_id, dataset_id_) << "the topic now belongs to the anchor";
+  EXPECT_TRUE(controller_->displayedKeys(&root).contains(merged->key));
+}
+
+TEST_F(TopicDemandControllerTest, DisplayedSeriesChangedFollowsDestructionAndLateCatalogItems) {
+  const QString state = addStringTopic(*app_session_, dataset_id_, "/robot/state");
+  QWidget root;
+  auto strip = std::make_unique<PJ::StateTransitionsDockWidget>(
+      &app_session_->sessionManager(), &app_session_->catalogModel(), &app_session_->playbackEngine(), &root);
+  controller_->registerStateTransitionsDock(strip.get());
+  ASSERT_TRUE(strip->controller()->addSeries(state));
+  ASSERT_EQ(controller_->displayedKeys(&root), QSet<QString>{state});
+
+  QSignalSpy changed(controller_.get(), &PJ::TopicDemandController::displayedSeriesChanged);
+  strip.reset();
+  EXPECT_EQ(changed.count(), 1) << "a destroyed widget no longer displays anything";
+  EXPECT_TRUE(controller_->displayedKeys(&root).isEmpty());
+
+  // An object layer may resolve to its key only once the catalog lists it, so new catalog items are a change too.
+  changed.clear();
+  addObjectTopic(*app_session_, dataset_id_, u"/late"_s);
+  EXPECT_GE(changed.count(), 1);
+}
+
+TEST_F(TopicDemandControllerTest, CustomWidgetDestructionReleasesReferences) {
+  ASSERT_TRUE(app_session_->extensionCatalog().pluginCatalog().registerStaticWidget(pj_cw_test::goodVtable()));
+  const QString key = addScalarTopic(*app_session_, dataset_id_, "/speed");
+  ASSERT_FALSE(key.isEmpty());
+
+  auto dock = std::make_unique<PJ::CustomWidgetDockWidget>(
+      &app_session_->sessionManager(), &app_session_->catalogModel(), &app_session_->extensionCatalog(),
+      &app_session_->playbackEngine());
+  ASSERT_TRUE(dock->bindToWidget(u"test_widgets"_s, u"gauge"_s));
+  controller_->registerCustomWidgetDock(dock.get());
+  ASSERT_TRUE(dock->setBinding(u"value"_s, 0, key));
+  auto& tracker = app_session_->topicDemandTracker();
+  EXPECT_TRUE(referencesTopic(tracker, dataset_id_, u"/speed"_s));
+
+  dock.reset();
+  EXPECT_FALSE(referencesTopic(tracker, dataset_id_, u"/speed"_s));
+}
+
+// A restored wire whose topic a demand-driven stream only advertises: the panel cannot resolve it
+// until data flows, and data flows only once something references the topic.
+class CustomWidgetPendingWireTest : public TopicDemandControllerTest {
+ protected:
+  void SetUp() override {
+    TopicDemandControllerTest::SetUp();
+    ASSERT_TRUE(app_session_->extensionCatalog().pluginCatalog().registerStaticWidget(pj_cw_test::goodVtable()));
+    app_session_->catalogModel().setAdvertisedTopics(
+        dataset_id_, {PJ::AdvertisedTopic{u"/speed"_s, PJ::sdk::BuiltinObjectType::kNone}});
+  }
+
+  std::unique_ptr<PJ::CustomWidgetDockWidget> restoreDock() {
+    auto dock = std::make_unique<PJ::CustomWidgetDockWidget>(
+        &app_session_->sessionManager(), &app_session_->catalogModel(), &app_session_->extensionCatalog(),
+        &app_session_->playbackEngine());
+    controller_->registerCustomWidgetDock(dock.get());
+    QDomDocument doc;
+    EXPECT_TRUE(doc.setContent(
+        u"<CustomWidget plugin=\"test_widgets\" type=\"gauge\"><input name=\"value\" slot=\"0\" kind=\"number\" "
+        u"dataset_source=\"test\" topic=\"/speed\" field=\"value\"/></CustomWidget>"_s));
+    EXPECT_TRUE(dock->xmlLoadState(doc.documentElement()));
+    // What MainWindow::collectPendingDisplayBindings does for every Custom Widget panel.
+    for (const PJ::PendingWireDemand& demand : dock->pendingDemands()) {
+      binder_->addPendingCustomWidgetWire(dock.get(), demand.topic_name, demand.preferred_dataset);
+    }
+    return dock;
+  }
+};
+
+TEST_F(CustomWidgetPendingWireTest, ARestoredUnresolvedWireHoldsItsTopicUntilItResolves) {
+  auto dock = restoreDock();
+  auto& tracker = app_session_->topicDemandTracker();
+  ASSERT_EQ(dock->bindings().size(), 1U);
+  ASSERT_FALSE(dock->bindings()[0].resolved);
+  EXPECT_EQ(binder_->size(), 1);
+  EXPECT_TRUE(referencesTopic(tracker, dataset_id_, u"/speed"_s)) << "the pending wire subscribes its topic";
+  binder_->addPendingCustomWidgetWire(dock.get(), u"/speed"_s, dataset_id_);
+  binder_->addPendingCustomWidgetWire(dock.get(), u"/elsewhere"_s, dataset_id_);
+  EXPECT_EQ(binder_->size(), 1) << "one intent per topic, and none for a topic the panel does not wait on";
+
+  // The data arrives; the panel resolves the wire itself and its resolved-wire demand takes over.
+  ASSERT_FALSE(addScalarTopic(*app_session_, dataset_id_, "/speed").isEmpty());
+  ASSERT_TRUE(dock->bindings()[0].resolved);
+  EXPECT_TRUE(binder_->empty()) << "the binder let go once the wire resolved";
+  EXPECT_TRUE(referencesTopic(tracker, dataset_id_, u"/speed"_s));
+
+  // Released exactly once: with the wire gone nothing references the topic any more.
+  dock->removeBinding(u"value"_s, 0);
+  EXPECT_FALSE(referencesTopic(tracker, dataset_id_, u"/speed"_s));
+}
+
+TEST_F(CustomWidgetPendingWireTest, TheReferenceGoesWithTheDock) {
+  auto dock = restoreDock();
+  auto& tracker = app_session_->topicDemandTracker();
+  ASSERT_TRUE(referencesTopic(tracker, dataset_id_, u"/speed"_s));
+  dock.reset();
+  EXPECT_TRUE(binder_->empty());
+  EXPECT_FALSE(referencesTopic(tracker, dataset_id_, u"/speed"_s));
+}
+
+TEST_F(CustomWidgetPendingWireTest, ClearReleasesTheReference) {
+  auto dock = restoreDock();
+  auto& tracker = app_session_->topicDemandTracker();
+  ASSERT_TRUE(referencesTopic(tracker, dataset_id_, u"/speed"_s));
+  binder_->clear();
+  EXPECT_FALSE(referencesTopic(tracker, dataset_id_, u"/speed"_s));
+  dock.reset();  // no second release
+  EXPECT_FALSE(referencesTopic(tracker, dataset_id_, u"/speed"_s));
 }
 
 TEST_F(TopicDemandControllerTest, PlaceholderPlotDropBindsConventionalValueFieldTopic) {
@@ -702,8 +1143,8 @@ TEST_F(TopicDemandControllerTest, SameTopicXyPreviewResumesWithFreshSamples) {
   writer.set(*topic, 1, 2.0);
   ASSERT_TRUE(writer.finishRow(*topic).has_value());
   EXPECT_FALSE(session.commitChunks(writer.flushAll()).empty());
-  const auto x = PJ::resolveSeriesPath(catalog, PJ::layout_xml::SeriesPath{u"/xy"_s, u"x"_s});
-  const auto y = PJ::resolveSeriesPath(catalog, PJ::layout_xml::SeriesPath{u"/xy"_s, u"y"_s});
+  const auto x = catalog.resolveCurveKey(PJ::layout_xml::SeriesPath{u"/xy"_s, u"x"_s});
+  const auto y = catalog.resolveCurveKey(PJ::layout_xml::SeriesPath{u"/xy"_s, u"y"_s});
   ASSERT_TRUE(x.has_value());
   ASSERT_TRUE(y.has_value());
 

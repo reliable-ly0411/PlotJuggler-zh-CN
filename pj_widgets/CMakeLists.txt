@@ -1,5 +1,11 @@
 find_package(Qt6 REQUIRED COMPONENTS Core Gui GuiPrivate Network Svg Widgets)
 
+# Fnv1a.h alone: header-only and Qt-free, in an include root of its own, so a module that hashes
+# but shows no widget (pj_custom_widgets core) links it without pulling in the widget library.
+add_library(pj_fnv1a INTERFACE)
+target_include_directories(pj_fnv1a INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/fnv1a/include>)
+target_compile_features(pj_fnv1a INTERFACE cxx_std_20)
+
 add_library(pj_widgets STATIC
     src/CheckButton.cpp
     src/DualOptionsWidget.cpp
@@ -18,6 +24,7 @@ add_library(pj_widgets STATIC
     src/FileDialog.cpp
     src/FrameworkTokens.cpp
     src/GraphicsApi.cpp
+    src/RhiTestHooks.cpp
     src/FlowLayout.cpp
     src/HeaderDividerHighlight.cpp
     src/HeaderResizePolicy.cpp
@@ -26,12 +33,14 @@ add_library(pj_widgets STATIC
     src/LayerListView.cpp
     src/MarkerTimeline.cpp
     src/MessageBox.cpp
+    src/OwnedMenu.cpp
     src/Search.cpp
     src/ProgressBar.cpp
     src/ProgressDialog.cpp
     src/RangeSlider.cpp
     src/RasterFrame.cpp
     src/RecentFilesMenu.cpp
+    src/RenderingWarningLabel.cpp
     src/ScrubberBase.cpp
     src/SectionHeaderBand.cpp
     src/SideDrawer.cpp
@@ -39,6 +48,7 @@ add_library(pj_widgets STATIC
     src/SvgButton.cpp
     src/Scrollbar.cpp
     src/TailFollowOverlay.cpp
+    src/TimeFormat.cpp
     src/Timeline.cpp
     src/ToastManager.cpp
     src/ToastNotification.cpp
@@ -65,12 +75,14 @@ add_library(pj_widgets STATIC
     include/pj_widgets/FlowLayout.h
     include/pj_widgets/FrameworkTokens.h
     include/pj_widgets/GraphicsApi.h
+    include/pj_widgets/RhiTestHooks.h
     include/pj_widgets/HeaderDividerHighlight.h
     include/pj_widgets/HeaderResizePolicy.h
     include/pj_widgets/IngestProgressWidget.h
     include/pj_widgets/IntScrubber.h
     include/pj_widgets/LayerListView.h
     include/pj_widgets/MarkerTimeline.h
+    include/pj_widgets/TimeFormat.h
     include/pj_widgets/MessageBox.h
     include/pj_widgets/Search.h
     include/pj_widgets/ProgressBar.h
@@ -79,6 +91,8 @@ add_library(pj_widgets STATIC
     include/pj_widgets/RangeSlider.h
     include/pj_widgets/RasterFrame.h
     include/pj_widgets/RecentFilesMenu.h
+    include/pj_widgets/RenderingWarningLabel.h
+    include/pj_widgets/RhiBlend.h
     include/pj_widgets/ScrubberBase.h
     include/pj_widgets/SectionHeaderBand.h
     include/pj_widgets/StateColors.h
@@ -115,6 +129,7 @@ target_include_directories(pj_widgets PUBLIC
 )
 
 target_link_libraries(pj_widgets PUBLIC
+    pj_fnv1a
     Qt6::Core
     Qt6::Gui
     Qt6::Network

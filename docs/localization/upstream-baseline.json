@@ -1,16 +1,16 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
-  "upstream_branch": "main-4.x",
-  "upstream_commit": "0345ec513bde7f05ad3148548ac30401f2b6f7a7",
+  "upstream_branch": "main",
+  "upstream_commit": "2b8e34316f71e50e291a85f3fbb2d28925a09761",
   "upstream_version_file": "versions.env",
-  "baseline_recorded_utc": "2026-10-19",
+  "baseline_recorded_utc": "2026-11-10",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
   "localization_source_branch": "zh-CN",
   "localization_source_commit": "766a88d8e689c7803f32acb315ac872a0a67a57b",
   "port_strategy": "Module-level port, preserving English source strings and independent plugin licensing; no merge of PJ3 history.",
   "stable_branch": "zh-CN-4.x",
   "development_branch": "zh-CN-4.x-dev",
-  "status": "prerelease",
+  "status": "development",
   "ardupilot_plugin": {
     "upstream_repository": "https://github.com/ArduPilot/plotjuggler-apbin-plugins",
     "upstream_branch": "main",
@@ -27,10 +27,11 @@
     "release_tag": "v1.2.0-pj4.rc.1"
   },
   "upstream_release": {
-    "tag": "4.0.0",
-    "commit": "d278b1fe98f699d27b820867f454a697e50def2e",
-    "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.0.0",
-    "relationship": "The pinned main-4.x snapshot is a descendant of 4.0.0; it is not the unchanged 4.0.0 release."
+    "tag": "4.1.0",
+    "tag_object": "da079f6670d3a1873ed1011dedc15556e6f838de",
+    "commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
+    "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.1.0",
+    "relationship": "Development snapshot with 19 upstream commits after the official 4.1.0 release; not the unchanged release or an accepted localization package."
   },
   "csv_path_fix": {
     "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
@@ -41,5 +42,40 @@
     "patch": "packaging/localization/plugin-patches/csv-loader.patch",
     "patch_sha256": "00ecc1514fde0b6d8b97750a1cac1d2a251c0aa955c884e1dde7fa995f95c02c",
     "scope": "UTF-8 filesystem paths in preview and import; synthetic ABI regressions; no parsing-locale or data-value changes"
+  },
+  "fft_display_mapping": {
+    "repository": "https://github.com/PlotJuggler/pj-official-plugins",
+    "release_tag": "toolbox_fft/v1.0.1",
+    "commit": "2bc991cae2dba7f9f1468dbf8dd72d89797699bc",
+    "ui_path": "toolbox_fft/fft_dialog.ui",
+    "ui_sha256_lf": "f7d484492d4b2033fc141c9ea3a9f83e9a976049947ba9dd90079df2d19099c0",
+    "license": "MIT",
+    "strategy": "Host display mapping for the unchanged official binary; no plugin rebuild or SDK change."
+  },
+  "host_sdk_version": "0.39.0",
+  "qt_version": "6.12.0",
+  "previous_upstream_commit": "0345ec513bde7f05ad3148548ac30401f2b6f7a7",
+  "integration_parents": {
+    "development": "5544b1cbfc87f73c2060af031544081bc29e7f3c",
+    "stable": "1f42375cb861e529a2e04d56f11cdee14e4638b7"
+  },
+  "published_localization_release": {
+    "version": "4.0.0-zh.1.rc.4",
+    "qt_version": "6.11.1",
+    "host_sdk_version": "0.34.1",
+    "note": "Historical released package scope; not an acceptance claim for the new development snapshot."
+  },
+  "latest_sync": {
+    "previous_upstream_commit": "349c74e3b0ada0081b7d0006e729de66e8e3b6e5",
+    "development_parent": "82a787414217e32638f257e02fdb03d8d08d477a",
+    "upstream_commits": [
+      "08aa99c272bbeca4024cbbd45d78320c7fca335f",
+      "a0956b2023849e0bf8755ece425fe184b700f09d",
+      "092bcfa205f2bd2282f471f29507bbcd14755eef",
+      "b0cd6fca1d916ebb63190dc5d811dfdacac636fb",
+      "0511b57bb1806b08c1ee3fee60d96c1e0448c358"
+    ],
+    "upstream_commits_after_release": 19,
+    "macos_package_status": "Upstream source integrated; localization, native package acceptance and publication are not enabled."
   }
 }

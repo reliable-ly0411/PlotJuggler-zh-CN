@@ -2,14 +2,17 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
+#include <QList>
 #include <QObject>
 #include <QString>
 #include <QStringList>
 #include <functional>
 #include <memory>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
+#include "LayoutXml.h"
 #include "pj_base/types.hpp"
 #include "pj_runtime/RecordingService.h"
 #include "pj_widgets/ChromeMetrics.h"
@@ -27,6 +30,7 @@ class DataEngine;
 class DataSourceRuntimeHost;
 class ExtensionCatalogService;
 class ObjectStore;
+struct RuntimeDataSourcePlugin;
 class SessionManager;
 class TopicDemandTracker;
 
@@ -44,6 +48,13 @@ struct RecordingTargets {
 // at a fixed cadence until stopped. Multistream-capable by design: each Start
 // creates an independent dataset/handle/worker triple keyed by DatasetId,
 // even though the LeftPanel UX currently drives one active stream at a time.
+// A session starts interactively (the plugin's dialog) or from a layout record
+// (startFromLayout, no dialog); both share createSession/launchSession.
+//
+// Threading: configuration, start() and stop requests happen on the GUI thread;
+// once launched, a session's worker is the only caller of the plugin (poll(),
+// then stop()). What a save needs is captured before the worker starts, so
+// layoutSources() never calls into a plugin while it polls.
 //
 // Lives in pj_app because it talks to dialog_presenter and owns Qt threads.
 class StreamingSourceManager : public QObject {
@@ -70,6 +81,32 @@ class StreamingSourceManager : public QObject {
 
   // True iff any session is currently live.
   bool hasActiveSession() const;
+
+  // Starts `source` with `expanded_config` (its saved template with deployment
+  // variables filled in) and no dialog: the configuration is never read from or
+  // written to the remembered plugin settings, and a plugin that refuses it fails
+  // the start instead of falling back to anything else. The plugin resolves by
+  // manifest id first, display name second. Returns the new session's dataset,
+  // or 0 with `error` set and nothing left behind. Emits
+  // streamStarted on success and never setupError/streamError for a failed
+  // start; failures after start() keep the usual streamError/streamStopped path.
+  // GUI thread only; synchronous (the plugin's start() must not block).
+  [[nodiscard]] DatasetId startFromLayout(
+      const layout_xml::StreamingSourceRef& source, const QString& expanded_config, QString& error);
+
+  // One record per live session, in start order, as a source-bound save writes
+  // it: the configuration is the template it started from (layout sessions) or
+  // the one the dialog produced (interactive ones), with each session's current
+  // display offset. Ids are unique: a session keeps its layout id unless an
+  // earlier session holds it, interactive ones are named "stream". The timeline
+  // order is left to the caller. Reads only state captured before each session's
+  // worker began polling, so it never calls into a plugin and is safe while the
+  // workers run. GUI thread only.
+  [[nodiscard]] QList<layout_xml::StreamingSourceRef> layoutSources() const;
+
+  // The id layoutSources() gives the session streaming into `dataset_id`; empty
+  // when no session does. GUI thread only.
+  [[nodiscard]] QString layoutSourceId(DatasetId dataset_id) const;
 
   // Requests cooperative stop for one session and joins its worker before
   // returning. Used before real-deleting a dataset so no writer can race the
@@ -99,6 +136,21 @@ class StreamingSourceManager : public QObject {
   // Test seams for the secondary tail buffers (the pause-target endpoints).
   DataEngine& secondaryEngineForTests();
   ObjectStore& secondaryStoreForTests();
+
+  // Test seam: runs one ingest tick for `dataset_id`. GUI thread only.
+  void ingestTickForTests(DatasetId dataset_id);
+
+  // The interactive start of stream source `plugin_id` (display name), whatever the Stream combo
+  // shows: builds the session (createSession), configures it from the remembered settings and the
+  // plugin's dialog (its title prefixed by `dialog_title_prefix`, e.g. who asked), then launches
+  // it. The dialog is modal: this returns once the user has answered it. `still_allowed`, when
+  // given, is asked once the dialog is accepted: false abandons the start as a cancel does,
+  // applying none of the user's choices. Emits streamStarted() on success, setupError()/
+  // streamError() on a failure; nothing when the user cancels. A start that does not launch,
+  // a cancelled dialog included, leaves no dataset behind.
+  void startSession(
+      const QString& plugin_id, const QString& dialog_title_prefix = {},
+      const std::function<bool()>& still_allowed = {});
 
  public slots:
   // Wired from LeftPanel::streamingStartRequested. Starts a session for the
@@ -148,8 +200,11 @@ class StreamingSourceManager : public QObject {
   // domain creation failed, etc.). No DatasetId is available yet.
   void setupError(QString message);
 
-  // Emitted on the UI thread for errors on an already-created session
-  // (dialog rejection, bind failure, plugin start/poll error). The session
+  // Emitted on the UI thread for a failure once the session's dataset exists:
+  // an interactive start that fails after its dialog opened (plugin contract
+  // violation, refused configuration, start() failure), or a launched session
+  // that fails while running (poll error). In the first case the dataset is
+  // already discarded and no streamStopped follows; in the second the session
   // typically stops shortly after via streamStopped().
   void streamError(DatasetId dataset_id, QString message);
 
@@ -172,11 +227,40 @@ class StreamingSourceManager : public QObject {
   // erasing the session.
   void rememberSkippedLazy(const StreamingSession& session);
 
-  // Bootstraps one new session: resolves the plugin by display name, creates
-  // handle/dataset/ingest, runs the dialog flow, calls start(), spawns the
-  // worker. Emits streamStarted() on success, streamError() and tears down
-  // on any failure path.
-  void startSession(const QString& plugin_id);
+  // What startSession does between createSession and the stream running:
+  // configures `session` from the remembered settings and the plugin's dialog
+  // (titled with `dialog_title_prefix`), asks `still_allowed` once the dialog is
+  // accepted, then launchSession()s it. Returns false when nothing launched, with
+  // `error` the failure to report (empty when the user cancelled the dialog or
+  // `still_allowed` refused). Owns no cleanup: the caller destroys `session` and
+  // discards its dataset.
+  [[nodiscard]] bool configureAndLaunch(
+      const RuntimeDataSourcePlugin& source, std::unique_ptr<StreamingSession>& session,
+      const QString& dialog_title_prefix, const std::function<bool()>& still_allowed, QString& error);
+
+  // The construction both starts share, up to and including bind(): handle,
+  // time domain and dataset ("[stream] <label>", mirrored on the secondary
+  // engine), runtime host and services. Configuration stays with the caller.
+  // Returns null with `error` set, the dataset it created already discarded.
+  [[nodiscard]] std::unique_ptr<StreamingSession> createSession(
+      const RuntimeDataSourcePlugin& source, const QString& label, QString& error);
+
+  // Points the write hosts at the current pause target, calls start(), records
+  // the capabilities, pushes the initial demand, spawns the worker and emits
+  // streamStarted(). On a start() failure returns false with `error` set; the
+  // session is destroyed, its dataset left for the caller.
+  [[nodiscard]] bool launchSession(std::unique_ptr<StreamingSession> session, QString& error);
+
+  // Removes a dataset whose session never launched (or is gone) from both
+  // engines, the object stores and the catalog.
+  void discardDataset(DatasetId dataset_id);
+
+  // Drops `dataset_id`'s secondary-buffer topics and dataset: the half of a teardown a
+  // stopped stream shares with a discarded one (its primary dataset stays).
+  void removeSecondaryDataset(DatasetId dataset_id);
+
+  // Each live session's record id (see layoutSources), in start order.
+  [[nodiscard]] std::vector<std::pair<DatasetId, QString>> layoutIds() const;
 
   // Pushes `active_topics` through the "pj.topic_subscription.v1" extension
   // (DataSourceHandle::setActiveTopics), gated on kCapabilityPerTopicPause —
@@ -192,10 +276,16 @@ class StreamingSourceManager : public QObject {
   // the session already tore down before the QueuedConnection marshal landed.
   void applyAdvertisedTopics(DatasetId dataset_id, std::vector<AdvertisedTopic> topics);
 
-  // Worker thread body. Looks the session up by dataset_id (the map is only
-  // mutated on the UI thread, so reads from the worker are safe as long as
-  // its own entry exists).
-  void workerLoop(DatasetId dataset_id);
+  // The GUI-thread half of one poll cycle, queued by workerLoop after each
+  // poll + flush: eager processors consume the new rows, retention trims, then
+  // the ingest is announced. The order is the streaming correctness order: a
+  // stateful node must see a sample before it can age out of the window.
+  void onIngestTick(DatasetId dataset_id);
+
+  // Worker thread body for `session`, handed over at launch: the worker never
+  // reads sessions_, which the UI thread mutates while workers run. The
+  // session is erased only after its worker is joined.
+  void workerLoop(StreamingSession& session);
 
   // Drain every entry of every object topic in the secondary store back into
   // the primary (SessionManager::objectStore), then evict the secondary so

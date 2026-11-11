@@ -16,6 +16,7 @@ get_filename_component(profile_root "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUT
 add_executable(app_profile_test
     app_profile_test.cpp
     "${profile_root}/pj_app/src/AppProfile.cpp"
+    "${profile_root}/pj_runtime/src/HttpGet.cpp"
     "${profile_root}/pj_app/src/WidgetTuner.cpp"
     "${profile_root}/pj_widgets/src/FrameworkTokens.cpp"
     "${profile_root}/pj_marketplace/src/core/PlatformUtils.cpp"
@@ -23,6 +24,7 @@ add_executable(app_profile_test
 set_target_properties(app_profile_test PROPERTIES AUTOMOC ON WIN32_EXECUTABLE FALSE)
 target_include_directories(app_profile_test PRIVATE
     "${profile_root}/pj_app/src"
+    "${profile_root}/pj_runtime/include"
     "${profile_root}/pj_marketplace/include"
     "${profile_root}/pj_widgets/include"
     "${profile_root}/pj_scene3D/widgets/src"

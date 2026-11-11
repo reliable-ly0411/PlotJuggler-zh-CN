@@ -37,6 +37,7 @@
 #include <utility>
 
 #include "TimelineItems.h"
+#include "pj_widgets/Fnv1a.h"
 #include "pj_widgets/FrameworkTokens.h"
 #include "pj_widgets/Hatch.h"
 #include "pj_widgets/Scrollbar.h"
@@ -603,6 +604,7 @@ Timeline::Timeline(QWidget* parent) : QWidget(parent) {
   connect(v_scrollbar_, &Scrollbar::scrollChangeCommitted, this, &Timeline::viewStateChangeCommitted);
 
   align_button_ = new QPushButton(tr("Align"), this);
+  align_button_->setObjectName(u"timelineAlignButton"_s);
   align_button_->setToolTip(tr("Shift every source so their starts line up at the earliest start"));
   connect(align_button_, &QPushButton::clicked, this, &Timeline::alignRequested);
 
@@ -764,11 +766,10 @@ void Timeline::setTracks(const std::vector<TimelineTrack>& tracks) {
   // INDEPENDENT (XOR of per-track hashes) so a pure reorder leaves it unchanged.
   quint64 sig = 0;
   for (const TimelineTrack& t : all_tracks_) {
-    quint64 h = 1469598103934665603ULL;  // FNV-1a offset basis
-    const auto mix = [&h](quint64 v) { h = (h ^ v) * 1099511628211ULL; };
-    mix(t.id);
-    mix(static_cast<quint64>(t.t_min_ns));
-    mix(static_cast<quint64>(t.t_max_ns));
+    std::uint64_t h = kFnv1aOffsetBasis;
+    h = fnv1aMix(h, t.id);
+    h = fnv1aMix(h, static_cast<std::uint64_t>(t.t_min_ns));
+    h = fnv1aMix(h, static_cast<std::uint64_t>(t.t_max_ns));
     sig ^= h;
   }
   if (sig != raw_data_sig_) {
@@ -826,8 +827,10 @@ void Timeline::setPlayhead(double display_seconds) {
 
 QString Timeline::markerLabel(qint64 display_ns) const {
   // fixed_ms=true so the pill matches the playback readout (always 3 decimals).
-  return absolute_time_labels_ ? timeline_detail::formatAbsoluteSeconds(display_ns, /*fixed_ms=*/true)
-                               : formatMarkerTime(display_ns - ruler_epoch_ns_);
+  if (!absolute_time_labels_) {
+    return formatMarkerTime(display_ns - ruler_epoch_ns_);
+  }
+  return timeline_detail::formatAbsoluteLabel(display_ns, absolute_clock_format_, /*fixed_ms=*/true);
 }
 
 void Timeline::setAbsoluteTimeLabels(bool absolute) {
@@ -837,6 +840,16 @@ void Timeline::setAbsoluteTimeLabels(bool absolute) {
   absolute_time_labels_ = absolute;
   ruler_item_->setAbsoluteFormat(absolute);
   // Refresh the (lazily-shown) pill labels so the next grab reads the new format.
+  playhead_item_->setLabel(markerLabel(playhead_ns_));
+  reference_item_->setLabel(markerLabel(reference_ns_));
+}
+
+void Timeline::setAbsoluteClockFormat(TimeLabelFormat format) {
+  if (absolute_clock_format_ == format) {
+    return;
+  }
+  absolute_clock_format_ = format;
+  ruler_item_->setClockFormat(format);
   playhead_item_->setLabel(markerLabel(playhead_ns_));
   reference_item_->setLabel(markerLabel(reference_ns_));
 }

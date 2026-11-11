@@ -9,6 +9,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLatin1StringView>
+#include <QLibraryInfo>
 #include <QProcess>
 #include <string_view>
 
@@ -48,6 +49,10 @@ PluginCheckDescriptor descriptorFromJson(const QJsonObject& obj) {
   d.version = obj.value("version").toString();
   d.description = obj.value("description").toString();
   d.category = obj.value("category").toString();
+  d.author = obj.value("author").toString();
+  d.license = obj.value("license").toString();
+  d.website = obj.value("website").toString();
+  d.repository = obj.value("repository").toString();
   d.family = obj.value("family").toString();
   d.abi_major = static_cast<quint32>(obj.value("abi_major").toInt());
   d.min_sdk_required = obj.value("min_sdk_required").toString();
@@ -72,6 +77,30 @@ QString PluginCheckRunner::locateHelper(const QString& override_path) {
   return override_path.isEmpty() ? autoLocateHelper() : override_path;
 }
 
+QProcessEnvironment PluginCheckRunner::childEnvironment(
+    const QProcessEnvironment& base, const QString& qt_libraries_dir) {
+  QProcessEnvironment env = base;
+#if defined(_WIN32)
+  constexpr auto kSearchPathVariable = "PATH";
+#elif defined(__linux__)
+  constexpr auto kSearchPathVariable = "LD_LIBRARY_PATH";
+#else
+  // macOS: the helper finds Qt through its rpath; nothing to prepend.
+  Q_UNUSED(qt_libraries_dir);
+  return env;
+#endif
+#if defined(_WIN32) || defined(__linux__)
+  if (qt_libraries_dir.isEmpty()) {
+    return env;
+  }
+  const QString existing = env.value(QLatin1StringView(kSearchPathVariable));
+  env.insert(
+      QLatin1StringView(kSearchPathVariable),
+      existing.isEmpty() ? qt_libraries_dir : qt_libraries_dir + QDir::listSeparator() + existing);
+  return env;
+#endif
+}
+
 PluginCheckResult PluginCheckRunner::run(const QString& extension_directory) const {
   PluginCheckResult result;
 
@@ -79,6 +108,12 @@ PluginCheckResult PluginCheckRunner::run(const QString& extension_directory) con
   QProcess proc;
   proc.setProgram(helper);
   proc.setArguments({extension_directory});
+#if defined(_WIN32)
+  const QString qt_libraries_dir = QLibraryInfo::path(QLibraryInfo::BinariesPath);
+#else
+  const QString qt_libraries_dir = QLibraryInfo::path(QLibraryInfo::LibrariesPath);
+#endif
+  proc.setProcessEnvironment(childEnvironment(QProcessEnvironment::systemEnvironment(), qt_libraries_dir));
   proc.setProcessChannelMode(QProcess::SeparateChannels);
   proc.start();
 

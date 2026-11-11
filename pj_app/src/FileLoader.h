@@ -4,6 +4,7 @@
 
 #include <QElapsedTimer>
 #include <QHash>
+#include <QMimeData>
 #include <QObject>
 #include <QPointer>
 #include <QString>
@@ -18,6 +19,10 @@
 #include <unordered_map>
 
 #include "LoadInput.h"
+#ifdef PJ_TARGET_WASM
+#include "FileSelectionService.h"
+#endif
+#include "pj_base/diagnostic_sink.hpp"
 #include "pj_base/types.hpp"
 #include "pj_runtime/SessionManager.h"
 
@@ -27,16 +32,13 @@ class QThread;
 class QDialog;
 QT_END_NAMESPACE
 
-namespace pj::scene3d {
-class TransformService;
-}  // namespace pj::scene3d
-
 namespace PJ::sdk {
 class ObjectIngestPolicyResolver;
 }  // namespace PJ::sdk
 
 namespace PJ {
 
+class TransformService;
 class CatalogModel;
 class BrowserFileStore;
 class DataSourceRuntimeHost;
@@ -59,8 +61,11 @@ enum class DialogPolicy {
   // Automated (layout-driven) replay: dialogs are PROHIBITED and the saved
   // preset is AUTHORITATIVE — even an intentionally empty one (a plugin
   // whose saveConfig returned nothing is legitimate; it gets the minimal
-  // fresh-filepath config). A preset the plugin rejects FAILS the source
-  // (kFailed). Also skips the QSettings persist an interactive load performs.
+  // fresh-filepath config). The preset's `filepath`, and each fan-out child's,
+  // are rewritten to LoadInput::backing_path before loadConfig(), so a moved
+  // or copied layout replays the file beside it. A non-empty preset that is
+  // not a JSON object, or that the plugin rejects, FAILS the source (kFailed).
+  // Also skips the QSettings persist an interactive load performs.
   kNever,
 };
 
@@ -90,11 +95,11 @@ struct LoadHints {
   // the load visibly instead of silently choosing the first plugin. Default
   // false preserves plain interactive selection.
   bool require_expected_plugin = false;
-  // A saved browser preset contains the old upload's vanished MEMFS filepath.
-  // Rewrite only that field to LoadInput::backing_path before loadConfig().
-  // Honored by the kNever policy (automated replay is the only rewrite
-  // consumer). Default false preserves desktop preset bytes exactly.
-  bool rewrite_preset_filepath = false;
+  // With kNever: the plugin also receives the replaced absolute path as
+  // `__pj_saved_filepath` (native inputs only), so it can rebase sidecar files
+  // that lived beside the old source. Layout replays set it; other rewrites
+  // (source promotion's staging path) do not.
+  bool record_saved_filepath = false;
   // Non-zero -> this load REPLACES the given dataset regardless of source
   // identity (the dataset "Replace" action: the incoming file is usually a
   // different path). Rides the transactional reload machinery — the in-place
@@ -108,6 +113,13 @@ struct LoadHints {
   // instead of degrading to a plain fresh load. No effect without
   // replace_dataset_id. Default false preserves the degrade.
   bool require_replacement = false;
+  // Put before the plugin dialog's title (e.g. "An AI agent asked you to choose: "), so the user
+  // knows who opened it. Only that dialog; empty leaves the title alone.
+  QString dialog_title_prefix{};
+  // Asked when the request leaves the queue and again once its dialog is accepted: false
+  // cancels the load (kCancelled, no legacy signals) before anything is applied. For a caller
+  // whose right to load can lapse while it waits (an MCP agent's revoked token).
+  std::function<bool()> still_allowed{};
 };
 
 // Ticket naming one ACCEPTED load request, minted at enqueue time by
@@ -141,6 +153,15 @@ class FileLoader : public QObject {
   // is persisted in QSettings under "FileLoader/lastDir".
   void openFromDialog(QWidget* dialog_parent);
 
+  // Runs loadFile() for each path in order, as openFromDialog does for a
+  // multi-select pick: each file reports its own failures, so one bad file
+  // does not stop the rest. Used by files dropped on the main window.
+  void loadFiles(const QStringList& paths, QWidget* dialog_parent);
+
+  // The local regular files among a drag's URLs, in order. Folders and
+  // non-local URLs are skipped; empty when nothing is loadable.
+  [[nodiscard]] static QStringList droppedFilePaths(const QMimeData& mime);
+
   // The dataset "Replace" entry point: same plugin-extension filter and lastDir
   // persistence as openFromDialog, but single-select, and the chosen file loads
   // with replace_dataset_id set so it transactionally replaces `dataset_id`'s
@@ -158,15 +179,22 @@ class FileLoader : public QObject {
   // Opens the same browser picker/staging path used by openFromDialog, but
   // returns the staged LoadInput without enqueuing it. Source-bound layout
   // replay uses this to finish every required selection before importing any
-  // data. Cancellation is an empty input/error pair.
-  void selectBrowserInput(QWidget* dialog_parent, BrowserSelectionCallback callback);
-
-  // Fingerprint captured while BrowserFileStore staged this opaque upload.
-  // Empty for native paths, unknown identities, and failed pre-staging calls.
-  // Kept outside SessionManager because it is browser-session metadata, not a
-  // durable source path or plugin concern.
-  [[nodiscard]] QString browserContentSha256(const QString& source_identity) const;
+  // data, with its content fingerprint already set (it compares it). Cancellation
+  // is an empty input/error pair.
+  void selectBrowserInput(
+      QWidget* dialog_parent, BrowserSelectionCallback callback,
+      FileSelectionService::Fingerprint fingerprint = FileSelectionService::Fingerprint::kBeforeSelection);
 #endif
+
+  // Fingerprint captured while BrowserFileStore staged this opaque upload (or a
+  // preset's download, on any platform). A picked file loaded through
+  // openFromDialog is fingerprinted in the background, so its value stays empty
+  // until that finishes (or for good, if the file changed since the pick), and a
+  // picked file whose read fails loses it, whenever it was computed. Empty
+  // for native paths, unknown identities, and failed pre-staging calls. Kept
+  // outside SessionManager because it is browser-session metadata, not a durable
+  // source path or plugin concern.
+  [[nodiscard]] QString browserContentSha256(const QString& source_identity) const;
 
   // Resolves the "pick file(s)" interaction inside openFromDialog() /
   // replaceFromDialog(). Returns the selected paths (empty on cancel; at most
@@ -178,6 +206,13 @@ class FileLoader : public QObject {
       QWidget* parent, const QString& caption, const QString& dir, const QString& filter, bool multi)>;
   void setFilePicker(FilePicker picker) {
     file_picker_ = std::move(picker);
+  }
+
+  // Load failures (data-source-load-failed) and the loading plugin's warnings/errors
+  // (data-source-message) go here; unset = console log only. MainWindow passes its
+  // QtDiagnosticBridge sink. A load already in flight keeps the sink its hosts got.
+  void setDiagnosticSink(DiagnosticSink sink) {
+    diagnostic_sink_ = std::move(sink);
   }
 
   // Programmatic entry point. ENQUEUES the load and returns immediately; the
@@ -263,11 +298,10 @@ class FileLoader : public QObject {
   // BEFORE tearing down the session/datastore; also invoked by the destructor.
   void joinForShutdown();
 
-  // 3D TF ingest is triggered at load time through this service (owned by the
-  // app shell, not the domain-neutral runtime). When unset, TF ingest is
-  // skipped — non-3D builds simply never set it.
+  // TF ingest is triggered at load time through this service (owned by the app
+  // shell). When unset, TF ingest is skipped — non-3D builds simply never set it.
 #ifdef PJ_WITH_SCENE3D
-  void setTransformService(pj::scene3d::TransformService* service) {
+  void setTransformService(PJ::TransformService* service) {
     transform_service_ = service;
   }
 #endif
@@ -484,16 +518,24 @@ class FileLoader : public QObject {
   // load) — then only the count is tracked and no dialog is shown.
   void reportLoadWarning(QWidget* parent, const QString& reason);
 
+  // Logs the failure (`log_text` when given, else `reason`) and reports one
+  // data-source-load-failed error (never for a user cancel). GUI thread.
+  void logLoadFailure(const QString& identity, const QString& reason, const QString& log_text = {}) const;
+
   SessionManager& session_;
   ExtensionCatalogService& extensions_;
   CatalogModel& catalog_;
   FilePicker file_picker_;
+  DiagnosticSink diagnostic_sink_;
   std::shared_ptr<BrowserFileStore> browser_file_store_;
-#ifdef PJ_TARGET_WASM
   QHash<QString, QString> browser_content_sha256_;
+#ifdef PJ_TARGET_WASM
+  // Source identity of every browser upload loaded, by backing path: a failed read of a picked file reports its path.
+  // A picked file leaves it at its first failed read.
+  QHash<QString, QString> browser_identity_by_path_;
 #endif
 #ifdef PJ_WITH_SCENE3D
-  pj::scene3d::TransformService* transform_service_ = nullptr;
+  PJ::TransformService* transform_service_ = nullptr;
 #endif
 
   // --- Sequential async load queue (single-instance loads run on a worker) ---

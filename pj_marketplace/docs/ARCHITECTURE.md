@@ -203,6 +203,10 @@ struct InstalledExtension {
     QString name;
     QString description;
     QString category;
+    QString author;
+    QString license;
+    QString website;
+    QString repository;
     uint32_t abi_major;
     QString min_sdk_required;
     QString min_plotjuggler_version;
@@ -224,7 +228,7 @@ struct InstalledExtension {
 
 `RegistryManager` parses every record before making a host-specific choice. The
 pure `resolveRegistryCandidates()` function then validates every extension
-version, SDK floor, and application floor with SDK `PJ::SemVer` and returns one
+version and SDK floor with SDK `PJ::SemVer` and returns one
 row per id. It selects the highest compatible release for the current platform;
 if none is compatible, the highest release for that platform remains visible as
 blocked; if the platform has no artifact, the highest release overall remains
@@ -256,6 +260,8 @@ A companion no-arg `ExtensionManager()` overload also exists; it creates an owne
 - No `detectPlatform()` private method — delegated to `PlatformUtils::currentPlatform()`
 - Local installation state (`QMap<QString, InstalledExtension>`) is a private cache in `ExtensionManager` — populated at construction by scanning `extensions_dir`, loading plugin DSOs, and reading their embedded manifests; testability is preserved via the `extensions_dir` parameter pointing to a temp directory
 - No local installed-state sidecars — disk is scanned, but `id` and `version` come from the embedded DSO manifest
+- Display-only `author`, `license`, `website` and `repository` travel with the installed record and the admission helper's JSON. SDK 0.34.1's `PluginDescriptor` does not contain them: `internal/plugin_display_metadata.hpp` uses the SDK's validated public family loaders to read the embedded manifest, requiring the admitted ID/version to match. Direct-vtable families are not instantiated. SDK headers, ABI and admission identity are unchanged; missing/malformed optional display fields stay empty. Sidecar display values are not trusted.
+- Registry display fields take precedence when nonempty. Installed metadata fills empty author/license/website/repository fields and supplies local-only or staged-uninstall rows. The website action uses trimmed `website`, then `repository`; no URL means no action. This fallback never provides download artifacts, update versions or checksums.
 - Staged updates write a transient `.pj_pending_install` intent containing the registry id/version. It is deleted after promotion and exists only so restart-time validation can compare the staged DSO against the registry request that created it. Both the id and the version inside the intent file are validated against the same safe-path/regex rules used elsewhere, so a tampered intent cannot escape `extensions_dir`.
 - Embedding apps may seed the marketplace with a loaded-plugin snapshot before first render. That snapshot is initialization data, not a second source of truth; the embedded manifest remains the authority for installed state.
 - **Pending queues drained at construction.** `ExtensionManager::initComponents()` runs `applyPendingUninstalls()` then `applyPendingInstalls()` before computing the installed snapshot, so restart-deferred work is processed regardless of which `MarketplaceWindow` constructor (or host wiring) ends up using the manager.
@@ -733,13 +739,13 @@ Binary compatibility (ABI) is the biggest technical challenge:
 
 ### 6.3 Compatibility Policy
 
-- The registry may declare both `min_plotjuggler_version` and `min_sdk_required`; embedded plugin manifests carry the same floors, while discovery supplies the ABI major.
+- The gate is the ABI major plus `min_sdk_required`: the registry and the embedded plugin manifest both declare the SDK floor, while discovery supplies the ABI major. A plugin that needs a newer host declares the SDK release that added the surface it needs. `min_plotjuggler_version` is still parsed and shown, but never gates.
 - One headless admission evaluator, backed by the SDK's strict `PJ::SemVer`, is shared by registry/local-ZIP admission, pending-install promotion, bundled-seed rescue, static registration, and runtime DSO loading. Plugin versions and floors fail closed when malformed. A multi-DSO extension retains the highest valid floor; invalid metadata keeps the complete extension unloadable without removing its installed marketplace row.
-- Registry metadata is only a pre-screen: after extraction the embedded ABI, SDK floor, and application floor are rechecked before promotion, and staged work is rechecked again at restart. `platforms` remains registry-only; a foreign binary fails DSO discovery before the embedded gate.
+- Registry metadata is only a pre-screen: after extraction the embedded ABI and SDK floor are rechecked before promotion, and staged work is rechecked again at restart. `platforms` remains registry-only; a foreign binary fails DSO discovery before the embedded gate.
 - Compatibility is a hard runtime gate. `--plugin-dir` and Preferences folders retain strict shadow priority: an incompatible authoritative copy suppresses a managed same-id fallback but is itself not loaded, making developer override failures explicit instead of silently testing another build.
 - If SDK changes incompatibly, PlotJuggler provides internal adapter
 - **Existing plugins are never broken by PlotJuggler updates**
-- Stability target: current Qt baseline 6.11 (6.12 LTS target); see REQUIREMENTS.md NF-02.
+- Stability target: current Qt baseline 6.12 LTS; see REQUIREMENTS.md NF-02.
 
 ---
 

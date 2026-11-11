@@ -4,10 +4,12 @@
 #include <gtest/gtest.h>
 
 #include <QByteArray>
+#include <QDomDocument>
 #include <QString>
 #include <QVariant>
 
 #include "BrowserPersistence.h"
+#include "LayoutXml.h"
 using namespace Qt::StringLiterals;
 
 namespace PJ {
@@ -85,6 +87,8 @@ TEST(BrowserPersistencePolicy, DurablePreferenceAllowlistIsAnExactClosedSet) {
       u"MainWindow.buttonRatio"_s,
       u"MainWindow.buttonLink"_s,
       u"MainWindow.useTimeOffset"_s,
+      u"MainWindow.dateTimeDisplay"_s,
+      u"Preferences::clock_utc"_s,
       u"MainWindow.timeTrackerSetting"_s,
       u"MainWindow.legendStatus"_s,
       u"MainWindow.panelBottomExpandedHeight"_s,
@@ -138,12 +142,13 @@ TEST(BrowserPersistencePolicy, RejectsWrongTypesRangesAndPathShapedIdentifiers) 
 }
 
 TEST(BrowserPersistencePolicy, LanguagePreferenceAcceptsOnlyCanonicalSupportedCodes) {
-  for (const QString& language : {u"zh_CN"_s, u"en_US"_s}) {
+  for (const QString& language : {u"zh_CN"_s, u"zh_TW"_s, u"en_US"_s}) {
     EXPECT_EQ(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, language), QVariant(language));
     const QByteArray stored = u"{\"version\":1,\"values\":{\"Preferences::language\":\"%1\"}}"_s.arg(language).toUtf8();
     EXPECT_EQ(BrowserPersistenceTestPeer::decodeValues(stored).value(u"Preferences::language"_s), QVariant(language));
   }
-  for (const QString& rejected : {u"zh-CN"_s, u"fr_FR"_s, u"/private/path"_s, QString{}}) {
+  for (const QString& rejected :
+       {u"zh-CN"_s, u"zh-TW"_s, u"zh_HK"_s, u"zh-Hant"_s, u"fr_FR"_s, u"/private/path"_s, QString{}}) {
     EXPECT_FALSE(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, rejected).has_value());
   }
   EXPECT_FALSE(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, true).has_value());
@@ -168,6 +173,45 @@ TEST(BrowserPersistencePolicy, AcceptsOnlyBoundedSourceFreeLayoutRecipes) {
       BrowserPersistence::isSafeGenericLayoutRecipe(
           "<root pj4_version=\"4\" binding=\"generic\"><materialize provider=\"p\"/></root>"));
   EXPECT_FALSE(BrowserPersistence::isSafeGenericLayoutRecipe(QByteArray(256 * 1024 + 1, 'x')));
+}
+
+TEST(BrowserPersistenceTest, StreamRecordsNeverBecomeDurableRecipes) {
+  // A stream record carries plugin configuration (endpoints, maybe credentials), so neither the
+  // record nor its identity may enter durable browser storage, even in a document marked generic.
+  const QByteArray stream_block =
+      "<root pj4_version=\"5\" binding=\"generic\"><previouslyLoaded_StreamingSources/></root>";
+  const QByteArray nested_record =
+      "<root pj4_version=\"5\" binding=\"generic\"><tabbed_widget><streamInfo id=\"robot\"/></tabbed_widget></root>";
+  const QByteArray stream_qualifier =
+      "<root pj4_version=\"4\" binding=\"generic\"><plot><curve "
+      "dataset_path=\"pj-stream&#x3a;//robot\"/></plot></root>";
+  for (const QByteArray& xml : {stream_block, nested_record, stream_qualifier}) {
+    EXPECT_FALSE(BrowserPersistence::isSafeGenericLayoutRecipe(xml)) << xml.toStdString();
+  }
+  BrowserPersistence persistence;
+  QString error;
+  EXPECT_FALSE(persistence.rememberGenericLayout(u"robot.pj4.xml"_s, stream_block, &error));
+  EXPECT_FALSE(error.isEmpty());
+  EXPECT_TRUE(persistence.recentLayouts().isEmpty());
+
+  // The shell retains an opened browser layout as a recipe only when it is not source-bound:
+  // a stream record alone makes a layout source-bound.
+  const auto source_bound = [](const char* xml) {
+    QDomDocument doc;
+    EXPECT_TRUE(static_cast<bool>(doc.setContent(QByteArray(xml)))) << xml;
+    return layout_xml::isSourceBoundLayout(doc);
+  };
+  EXPECT_TRUE(source_bound(
+      R"(<root binding="source"><previouslyLoaded_StreamingSources><streamInfo id="robot">)"
+      R"(<plugin ID="PlotJuggler Bridge"><![CDATA[{"url":"ws://10.0.0.2:9871"}]]></plugin>)"
+      R"(</streamInfo></previouslyLoaded_StreamingSources></root>)"));
+  EXPECT_TRUE(source_bound(
+      R"(<root binding="source"><previouslyLoaded_Datafiles><fileInfo filename="run.csv"/>)"
+      R"(</previouslyLoaded_Datafiles></root>)"));
+  EXPECT_FALSE(source_bound(
+      R"(<root binding="generic"><previouslyLoaded_StreamingSources><streamInfo id="robot"/>)"
+      R"(</previouslyLoaded_StreamingSources></root>)"));
+  EXPECT_FALSE(source_bound(R"(<root binding="source"><tabbed_widget/></root>)"));
 }
 
 TEST(BrowserPersistencePolicy, RecentRecipesAreDeduplicatedBoundedAndClearable) {

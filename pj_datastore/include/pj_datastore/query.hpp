@@ -11,6 +11,7 @@
 #include <functional>
 #include <mutex>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include "pj_base/types.hpp"
@@ -80,6 +81,15 @@ struct MaterializedSample {
   std::vector<double> values;
 };
 
+/// One string cell, its row's time and its row (`DataReader::latestStringAt`). A sealed chunk never changes and its id
+/// is never reused, so `chunk_id` and `row_index` name the cell's content for as long as it is retained.
+struct StringSample {
+  PJ::Timestamp timestamp = 0;
+  std::optional<std::string> value;  ///< nullopt: the cell is null
+  ChunkId chunk_id = 0;
+  std::size_t row_index = 0;
+};
+
 /// Contiguous row interval inside one chunk.
 struct ChunkRowRange {
   /// Source chunk.
@@ -136,6 +146,11 @@ class RangeCursor {
   /// chunks may overlap in time — bulk consumers must tolerate that (or use
   /// forEach for a globally ordered stream). Exhausts the cursor.
   void forEachChunk(std::function<void(const ChunkRowRange&)> callback);
+
+  /// Iterate in forEach's row order, a run of consecutive rows of one chunk at a time: each run is as long as the
+  /// merge allows, so chunks that do not overlap come as one run each and only an overlap splits them. Exhausts the
+  /// cursor.
+  void forEachOrderedRun(const std::function<void(const ChunkRowRange&)>& callback);
 
  private:
   const std::deque<TopicChunk>* chunks_;
@@ -222,7 +237,9 @@ class SeriesReader {
   /// True when the virtual series contains no samples.
   [[nodiscard]] bool empty() const;
 
-  /// Return the sample at a virtual series index.
+  /// Return the sample at a virtual series index. O(n) per call: it scans rows from
+  /// the first chunk, so never call it in a loop over indices (O(n^2)); iterate with
+  /// samples(range) instead.
   [[nodiscard]] std::optional<SeriesSample> sampleAt(std::size_t index) const;
 
   /// Return the virtual series index of the latest sample at or before `t`.
@@ -291,6 +308,11 @@ class SeriesReader {
 // "no floor" value is kNoRetentionFloor.
 [[nodiscard]] std::optional<SampleRow> latestAt(
     const std::deque<TopicChunk>& chunks, PJ::Timestamp t, PJ::Timestamp retention_floor = kNoRetentionFloor);
+
+// latestAt among the chunks `include` accepts only, e.g. those holding a column that appeared mid-stream.
+[[nodiscard]] std::optional<SampleRow> latestAt(
+    const std::deque<TopicChunk>& chunks, PJ::Timestamp t, PJ::Timestamp retention_floor,
+    const std::function<bool(const TopicChunk&)>& include);
 
 // Create a range cursor
 [[nodiscard]] RangeCursor rangeQuery(const std::deque<TopicChunk>& chunks, PJ::Timestamp t_min, PJ::Timestamp t_max);
