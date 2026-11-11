@@ -12,8 +12,8 @@ from pathlib import Path
 import re
 import struct
 
-NAMES = ("DataLoadParquet.dll", "ToolboxMosaico.dll")
-CACHE = re.compile(r"\.conan2[\\/]p[\\/](?:b[\\/])?([a-z][a-z0-9]*?)([0-9a-f]{13})(?=[\\/])")
+NAMES = ("DataLoadParquet.dll", "ToolboxMosaico.dll", "ProtobufParser.dll")
+CACHE = re.compile(r"/\.conan2/p/(?:b/)?[a-z][a-z0-9]*?([0-9a-f]{13})(?=/)")
 QRC_EXPECTED = {"qrc_mosaico_resources.cpp": 1, "qrc_qcodeeditor_resources.cpp": 5}
 EPOCH_MIN, EPOCH_MAX = 1577836800000, 2524608000000
 
@@ -22,37 +22,119 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def canonical(literal):
+    # ASCII-only Windows equivalence; do not normalize path segments.
+    if not literal.isascii():
+        return None
+    value = literal.translate(str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ\\", "abcdefghijklmnopqrstuvwxyz/"))
+    matches = list(CACHE.finditer(value))
+    if len(matches) != 1:
+        return None
+    match = matches[0]
+    return value[:match.start(1)] + "{cache}" + value[match.end(1):]
+
+
 def observed_public_literals(data, old_literals):
-    """Only vary 13 lowercase hex bytes, preserving complete path and NUL end."""
+    from package_privacy import PRIVATE_PATH
+    keys = {canonical(value) for value in old_literals}
+    if None in keys:
+        raise ValueError("Invalid reviewed literal")
     seen = set()
-    for literal in old_literals:
-        matches = list(CACHE.finditer(literal))
-        if len(matches) != 1:
-            raise ValueError("Reviewed source literal has unrecognized Conan cache form")
-        match = matches[0]
-        before, after = literal[:match.start(2)], literal[match.end(2):]
-        for encoding in ("ascii", "utf-16le"):
-            if encoding == "ascii":
-                hex_pattern = b"[0-9a-f]{13}"
-            else:
-                hex_pattern = b"(?:[0-9a-f]\\x00){13}"
-            pattern = (re.escape(before.encode(encoding)) + hex_pattern +
-                       re.escape((after + "\0").encode(encoding)))
-            for occurrence in re.finditer(pattern, data):
-                seen.add(occurrence.group().decode(encoding)[:-1])
+    # All scanner views, including both UTF-16 byte alignments. A candidate is
+    # bounded and must terminate at NUL; never normalize incomplete paths.
+    for text in (data.decode("latin1"), data.decode("utf-16le", errors="ignore"),
+                 data[1:].decode("utf-16le", errors="ignore")):
+        for match in PRIVATE_PATH.finditer(text):
+            if match.start() and text[match.start() - 1] != "\0":
+                continue
+            end = text.find("\0", match.start(), min(len(text), match.start() + 4097))
+            if end < 0:
+                continue
+            value = text[match.start():end]
+            if canonical(value) in keys:
+                seen.add(value)
     return sorted(seen)
+
+
+def unknown_marker_count(data, literals):
+    from package_privacy import PRIVATE_PATH
+    count = 0
+    for text in (data.decode("latin1"), data.decode("utf-16le", errors="ignore"),
+                 data[1:].decode("utf-16le", errors="ignore")):
+        for literal in literals:
+            text = re.sub(r"(?<![^\x00])" + re.escape(literal + "\0"), "\0", text)
+        count += sum(1 for _ in PRIVATE_PATH.finditer(text))
+    return count
+
+
+def unknown_public_path_hashes(data, old_literals, observed):
+    """Hash normalized complete paths only under an already reviewed CI root/package.
+
+    Hashes support offline source-tree comparison, not classification or approval.
+    Strings must be ASCII, NUL-bounded, and contain ordinary path components.
+    """
+    from package_privacy import PRIVATE_PATH
+    prefixes = set()
+    for literal in old_literals:
+        key = canonical(literal)
+        if key is None:
+            raise ValueError("Invalid reviewed literal")
+        marker = key.index("{cache}") + len("{cache}")
+        prefixes.add(key[:marker] + "/")
+    known = {canonical(value) for value in observed}
+    hashes = set()
+    for text in (data.decode("latin1"), data.decode("utf-16le", errors="ignore"),
+                 data[1:].decode("utf-16le", errors="ignore")):
+        for match in PRIVATE_PATH.finditer(text):
+            start = match.start()
+            if start and text[start - 1] != "\0":
+                continue
+            end = text.find("\0", start, min(len(text), start + 4097))
+            if end < 0:
+                continue
+            value = text[start:end]
+            key = canonical(value)
+            if key is None or key in known or not any(key.startswith(prefix) for prefix in prefixes):
+                continue
+            suffix = key.split("{cache}/", 1)[1]
+            parts = suffix.split("/")
+            if not parts or any(part in ("", ".", "..") or
+                                not re.fullmatch(r"[a-z0-9_.+\-]+", part) for part in parts):
+                continue
+            hashes.add(sha(key.encode("ascii")))
+    return sorted(hashes)
 
 
 def candidate_privacy(data, name, records, check_metadata):
     if name not in NAMES:
         raise ValueError("Not a review-scope DLL")
     temporary = copy.deepcopy(records)
-    policy = temporary["public_ci_source_records"][name]
-    literals = observed_public_literals(data, policy["nul_terminated_literals"])
-    if not literals:
-        raise ValueError("No reviewed public source records observed")
-    # LOCAL temporary scan identity; never written to public-build-records.json.
+    source_records = temporary.setdefault("public_ci_source_records", {})
+    if name == "ProtobufParser.dll":
+        old = [literal for record in records["public_ci_source_records"].values()
+               for literal in record["nul_terminated_literals"]]
+        policy = source_records[name] = {"nul_terminated_literals": old}
+    else:
+        policy = source_records[name]
+        old = policy["nul_terminated_literals"]
+    literals = observed_public_literals(data, old)
+    # Prevent the scanner's literal replacement from masking a suffix inside a
+    # longer string when the same literal is also present at a valid boundary.
+    for text in (data.decode("latin1"), data.decode("utf-16le", errors="ignore"),
+                 data[1:].decode("utf-16le", errors="ignore")):
+        for literal in literals:
+            needle = literal + "\0"
+            start = 0
+            while True:
+                pos = text.find(needle, start)
+                if pos < 0:
+                    break
+                if pos and text[pos - 1] != "\0":
+                    raise ValueError("Ambiguous source literal boundary")
+                start = pos + len(needle)
+    # This exact digest is a quarantine scan aid, never a production approval.
     policy["observed_plugin_sha256"] = sha(data)
+    policy.pop("content_fingerprint", None)
     policy["nul_terminated_literals"] = literals
     markers = check_metadata(data, name, temporary)
     return literals, markers, temporary

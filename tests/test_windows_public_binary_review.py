@@ -2,6 +2,7 @@
 """Offline review-only boundary tests; no real DLLs, build tree or network."""
 from pathlib import Path
 import json
+import os
 import struct
 import subprocess
 import sys
@@ -13,7 +14,7 @@ sys.path.insert(0, str(REPO / "scripts"))
 from package_privacy import check_metadata as check
 from pe_content_fingerprint import fingerprint, METHOD
 from windows_public_binary_review_helpers import (
-    candidate_privacy, derive_qrc_offsets, observed_public_literals, qrc_struct, sha,
+    candidate_privacy, derive_qrc_offsets, observed_public_literals, unknown_public_path_hashes, qrc_struct, sha,
 )
 
 PUBLIC_SOURCE = r"C:\Users\runneradmin\.conan2\p\b\arrow5bfe34ade08ff\b\src\cpp\src\arrow\array\array_base.cc"
@@ -85,6 +86,30 @@ class ReviewScope(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         candidate_privacy((self.new + "\0" + extra + "\0").encode(encoding),
                                           "DataLoadParquet.dll", self.policy(), check)
+
+    def test_ascii_equivalence_and_strict_rejections(self):
+        equivalent = self.new.upper().replace("\\", "/")
+        self.assertEqual(observed_public_literals((equivalent + "\0").encode(), [self.old]), [equivalent])
+        for value in (self.new.replace("runneradmin", "runneradmın"),
+                      self.new.replace("array_base.cc", "../array_base.cc"),
+                      self.new + ".extra", self.new.replace("0123456789abc", "123")):
+            self.assertEqual(observed_public_literals((value + "\0").encode("utf-16le"), [self.old]), [])
+
+    def test_unknown_public_path_hash_requires_bounded_reviewed_root_and_package(self):
+        value = self.new.replace("array_base.cc", "new_source.cc")
+        expected = unknown_public_path_hashes((value + "\0").encode(), [self.old], [])
+        self.assertEqual(len(expected), 1)
+        for encoding, prefix in (("ascii", b""), ("utf-16le", b""), ("utf-16le", b"x")):
+            self.assertEqual(unknown_public_path_hashes(prefix + (value + "\0").encode(encoding), [self.old], []), expected)
+        for bad in (value.replace("runneradmin", "SomeOtherUser"),
+                    value.replace("arrow0123456789abc", "other0123456789abc"),
+                    value.replace("0123456789abc", "0123456789ab"),
+                    value.replace("new_source.cc", "..\\new_source.cc"),
+                    value.replace("new_source.cc", "new_sourcе.cc")):
+            self.assertEqual(unknown_public_path_hashes((bad + "\0").encode("utf-16le"), [self.old], []), [])
+        self.assertEqual(unknown_public_path_hashes(value.encode(), [self.old], []), [])
+        self.assertEqual(unknown_public_path_hashes(("X" + value + "\0").encode(), [self.old], []), [])
+        self.assertEqual(unknown_public_path_hashes((value + "\0").encode(), [self.old], [value]), [])
 
     def test_old_production_gate_still_rejects_unreviewed_candidate(self):
         data = (self.new + "\0").encode()
@@ -206,6 +231,7 @@ class CollectorIntegration(unittest.TestCase):
             literals = b"\0".join(value.encode() for value in record["nul_terminated_literals"]) + b"\0"
             data[8192:8192 + len(literals)] = literals
             (payload / name).write_bytes(data)
+        (payload / "ProtobufParser.dll").write_bytes((payload / "DataLoadParquet.dll").read_bytes())
         head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
         info = {"commit": head, "source_revision": head[:12],
                 "repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
@@ -228,11 +254,17 @@ class CollectorIntegration(unittest.TestCase):
             report = json.loads((root / "review/review-manifest.json").read_text())
             self.assertFalse(report["whole_payload_privacy_diagnostic"]["approved_for_release"])
             self.assertEqual(report["whole_payload_privacy_diagnostic"]["errors"], [])
-            for name in ("DataLoadParquet.dll", "ToolboxMosaico.dll"):
+            for name in ("DataLoadParquet.dll", "ToolboxMosaico.dll", "ProtobufParser.dll"):
                 self.assertFalse(report["selected"][name]["existing_production_gate"]["passed"])
                 self.assertTrue((root / "review" / name).is_file())
+                self.assertEqual(report["selected"][name]["file_bytes"], (root / "review" / name).stat().st_size)
+                self.assertEqual(report["selected"][name]["observed_public_literals"], [PUBLIC_SOURCE])
+            self.assertEqual(len(report["selected"]["ToolboxMosaico.dll"]["qrc_field_provenance"]), 2)
+            info_bytes = (root / "payload/BUILD-INFO.json").read_bytes()
+            self.assertEqual(report["build_info"]["sha256"], sha(info_bytes))
+            self.assertNotIn("version", report["build_info"])
             self.assertEqual(sorted(path.name for path in (root / "review").iterdir()),
-                             ["DataLoadParquet.dll", "ToolboxMosaico.dll", "review-manifest.json"])
+                             ["DataLoadParquet.dll", "ProtobufParser.dll", "ToolboxMosaico.dll", "review-manifest.json"])
             self.assertEqual((root / "tests/data/public-build-records.json").read_text(encoding="utf-8"),
                              json.dumps(FIXTURE_RECORDS))
 
@@ -246,7 +278,9 @@ class CollectorIntegration(unittest.TestCase):
             result = subprocess.run(command, text=True, capture_output=True)
             self.assertNotEqual(result.returncode, 0)
             self.assertNotIn("AnotherUser", result.stderr + result.stdout)
-            self.assertFalse((root / "review").exists())
+            self.assertFalse((root / "review/DataLoadParquet.dll").exists())
+            self.assertTrue((root / "review/ToolboxMosaico.dll").exists())
+            self.assertNotIn("AnotherUser", (root / "review/review-manifest.json").read_text())
 
     def test_second_dll_privacy_failure_exports_neither_dll(self):
         with tempfile.TemporaryDirectory(prefix="pj-review-fixture-") as temp:
@@ -256,7 +290,8 @@ class CollectorIntegration(unittest.TestCase):
                 stream.write(("\0gh" + "p_" + "x" * 36).encode())
             result = subprocess.run(command, text=True, capture_output=True)
             self.assertNotEqual(result.returncode, 0)
-            self.assertFalse((root / "review").exists())
+            self.assertFalse((root / "review/ToolboxMosaico.dll").exists())
+            self.assertTrue((root / "review/DataLoadParquet.dll").exists())
 
     def test_build_identity_cannot_disclose_secret_in_manifest(self):
         with tempfile.TemporaryDirectory(prefix="pj-review-fixture-") as temp:
@@ -302,6 +337,68 @@ class CollectorIntegration(unittest.TestCase):
             self.assertIn("redacted unsafe filename", text)
             errors = json.loads(text)["whole_payload_privacy_diagnostic"]["errors"]
             self.assertEqual([item["rule"] for item in errors], ["Unsafe relative filename"])
+
+    def test_partial_manifest_and_output_are_safe(self):
+        with tempfile.TemporaryDirectory(prefix="pj-review-fixture-") as temp:
+            root = Path(temp)
+            payload, command = self.setup_fixture(root)
+            canary = "CANARY_PRIVATE_USER"
+            with (payload / "ToolboxMosaico.dll").open("ab") as stream:
+                stream.write(("\0C:\\Users\\" + canary + "\\secret.bin\0").encode())
+            output = root / "github-output"
+            output.write_text("sentinel\n")
+            result = subprocess.run(command, text=True, capture_output=True,
+                                    env={**os.environ, "GITHUB_OUTPUT": str(output)})
+            self.assertNotEqual(result.returncode, 0)
+            manifest = (root / "review/review-manifest.json").read_text()
+            self.assertNotIn(canary, manifest + result.stdout + result.stderr)
+            self.assertEqual(output.read_text(), "sentinel\nmanifest-ready=true\n")
+            self.assertFalse((root / "review/ToolboxMosaico.dll").exists())
+            self.assertTrue((root / "review/DataLoadParquet.dll").exists())
+            self.assertGreater(json.loads(manifest)["selected"]["ToolboxMosaico.dll"]["unknown_marker_count"], 0)
+
+    def test_ambiguous_embedded_public_suffix_rejected(self):
+        literal = ReviewScope.new
+        data = (literal + "\0X" + literal + "\0").encode()
+        with self.assertRaises(ValueError):
+            candidate_privacy(data, "DataLoadParquet.dll", ReviewScope().policy(), check)
+
+    def test_stale_review_directory_never_signals_or_overwrites(self):
+        with tempfile.TemporaryDirectory(prefix="pj-review-fixture-") as temp:
+            root = Path(temp)
+            payload, command = self.setup_fixture(root)
+            review = root / "review"
+            review.mkdir()
+            manifest = review / "review-manifest.json"
+            dll = review / "DataLoadParquet.dll"
+            manifest.write_text("stale manifest")
+            dll.write_bytes(b"stale dll")
+            output = root / "github-output"
+            output.write_text("sentinel\n")
+            result = subprocess.run(command, text=True, capture_output=True,
+                                    env={**os.environ, "GITHUB_OUTPUT": str(output)})
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(output.read_text(), "sentinel\n")
+            self.assertEqual(manifest.read_text(), "stale manifest")
+            self.assertEqual(dll.read_bytes(), b"stale dll")
+            self.assertEqual({p.name for p in review.iterdir()},
+                             {"review-manifest.json", "DataLoadParquet.dll"})
+
+    def test_build_info_extra_fields_do_not_enter_manifest(self):
+        with tempfile.TemporaryDirectory(prefix="pj-review-fixture-") as temp:
+            root = Path(temp)
+            payload, command = self.setup_fixture(root)
+            path = payload / "BUILD-INFO.json"
+            info = json.loads(path.read_text(encoding="utf-8"))
+            info["extra"] = "CANARY_UNRELATED_BUILD_METADATA"
+            path.write_text(json.dumps(info), encoding="utf-8")
+            result = subprocess.run(command, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            manifest = (root / "review/review-manifest.json").read_text()
+            self.assertNotIn(info["extra"], manifest + result.stdout + result.stderr)
+            report = json.loads(manifest)
+            self.assertEqual(report["build_info"]["sha256"], sha(path.read_bytes()))
+            self.assertEqual(set(report["build_info"]), {"commit", "source_revision", "repository", "sha256"})
 
     def test_mismatched_source_commit_cannot_create_review_folder(self):
         with tempfile.TemporaryDirectory(prefix="pj-review-fixture-") as temp:

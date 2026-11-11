@@ -254,13 +254,14 @@ jobs:
         python scripts/windows_public_binary_review.py --repo . --build build --payload installer/io.plotjuggler.application/data --out review-only/public-binaries --commit "$env:REVIEW_SOURCE_SHA" --run "$env:GITHUB_RUN_ID" --run-attempt "$env:GITHUB_RUN_ATTEMPT"
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Upload isolated DLL review evidence
-      if: always() && steps.public-binary-review.outcome == 'success'
+      if: always() && steps.public-binary-review.outputs.manifest-ready == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: ReviewOnly-Windows-public-binaries-${{ steps.native-build.outputs.source-sha }}
         path: |
           review-only/public-binaries/DataLoadParquet.dll
           review-only/public-binaries/ToolboxMosaico.dll
+          review-only/public-binaries/ProtobufParser.dll
           review-only/public-binaries/review-manifest.json
         if-no-files-found: error
         retention-days: 14
