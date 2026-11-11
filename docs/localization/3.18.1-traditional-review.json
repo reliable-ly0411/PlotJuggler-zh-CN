@@ -1,0 +1,1008 @@
+{
+  "locale": "zh_TW",
+  "initial_conversion": "OpenCC 0.1.7 s2twp used only to draft; not a build/runtime dependency",
+  "reviewed_changes": [
+    {
+      "context": "CheatsheetDialog",
+      "source": "Resize Fonts",
+      "before": "調整字號",
+      "after": "調整字型大小"
+    },
+    {
+      "context": "CheatsheetDialog",
+      "source": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Select/Find a curve</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Hundreds or thousands of timeseries? The search filter on the left side can help you find easily one or more curve.</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Use one or more chunks of text that the name of the curve must contain.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">For instance, the search filter <span style=\" font-weight:600;\">&quot;pos x</span>&quot; will select:</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">-  /turtle1/<span style=\" font-weight:600;\">pos</span>e/<span style=\" font-weight:600;\">x</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">-  /turtle2/<span style=\" font-weight:600;\">pos</span>e/<span style=\" font-weight:600;\">x</span></p></body></html>",
+      "before": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">選擇或查詢曲線</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">時間序列太多？左側篩選框可以幫助您快速查詢曲線。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">輸入一個或多個曲線名稱中應包含的文字片段。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">例如，篩選條件 <span style=\" font-weight:600;\">\"pos x</span>”將選出：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">-  /turtle1/<span style=\" font-weight:600;\">pos</span>e/<span style=\" font-weight:600;\">x</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">-  /turtle2/<span style=\" font-weight:600;\">pos</span>e/<span style=\" font-weight:600;\">x</span></p></body></html>",
+      "after": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">選擇或查詢曲線</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">時間序列太多？左側篩選框可以說明您快速查詢曲線。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">輸入一個或多個曲線名稱中應包含的文字片段。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">例如，篩選條件 <span style=\" font-weight:600;\">\"pos x</span>”將選出：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">-  /turtle1/<span style=\" font-weight:600;\">pos</span>e/<span style=\" font-weight:600;\">x</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">-  /turtle2/<span style=\" font-weight:600;\">pos</span>e/<span style=\" font-weight:600;\">x</span></p></body></html>"
+    },
+    {
+      "context": "CheatsheetDialog",
+      "source": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Multiple Plotting Areas</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">PlotJuggler allows you to have multiple Plotting Areas.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">- You can split an Area vertically or horizontally (<span style=\" font-weight:600;\">A</span>)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">- You may create multiple tabs (<span style=\" font-weight:600;\">B</span>).</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">- You can temporary see a single Area in &quot;fullscreen&quot; mode (<span style=\" font-weight:600;\">C</span>)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">- Areas can be moved and re-arranged. Drag and drop on its title to move it (<span style=\" font-weight:600;\">D</span>)</p></body></html>",
+      "before": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">多個繪圖區</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">PlotJuggler 支援同時使用多個繪圖區。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">－可垂直或水平拆分繪圖區（<span style=\" font-weight:600;\">A</span>)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">－可建立多個分頁（<span style=\" font-weight:600;\">B</span>).</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">－可臨時以全屏模式檢視單個繪圖區（<span style=\" font-weight:600;\">C</span>)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">－可拖動繪圖區標題，移動並重新排列繪圖區（<span style=\" font-weight:600;\">D</span>)</p></body></html>",
+      "after": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">多個繪圖區</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">PlotJuggler 支援同時使用多個繪圖區。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">－可垂直或水平拆分繪圖區（<span style=\" font-weight:600;\">A</span>)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">－可建立多個分頁（<span style=\" font-weight:600;\">B</span>).</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">－可臨時以全螢幕模式檢視單個繪圖區（<span style=\" font-weight:600;\">C</span>)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">－可拖動繪圖區標題，移動並重新排列繪圖區（<span style=\" font-weight:600;\">D</span>)</p></body></html>"
+    },
+    {
+      "context": "CheatsheetDialog",
+      "source": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">The time tracker</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">The time tracker is a vertical line that is used to see the value of the curves across Plotting Areas (<span style=\" font-weight:600;\">A</span>). Use button <span style=\" font-weight:600;\">B</span> to customize the amount of information shown. </p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">You can move the time tracker using the time slider at the bottom or pressing <span style=\" font-weight:600;\">[SHIFT + Left Mouse]</span> on any plot.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">The purpose of the time tracker is not limited to visualization: in fact, its position triggers the so called &quot;Statepublishers&quot; (<span style=\" font-weight:600;\">C</span>), which will react to the motion of the tracker. Use the play button (<span style=\" font-weight:600;\">D</span>) to animate the tracker.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>",
+      "before": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">時間遊標</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">時間遊標是一條豎線，用於檢視各繪圖區在同一時刻的曲線數值（<span style=\" font-weight:600;\">A</span>）。使用按鈕 <span style=\" font-weight:600;\">B</span>調整顯示的資訊量。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">拖動底部時間滑塊，或在任意繪圖區按<span style=\" font-weight:600;\">Shift + 滑鼠左鍵</span>，即可移動時間遊標。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">時間遊標還會觸發“狀態釋出器”（<span style=\" font-weight:600;\">C</span>），使其響應遊標移動。使用播放按鈕（<span style=\" font-weight:600;\">D</span>）可自動移動時間遊標。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>",
+      "after": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">時間遊標</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">時間遊標是一條豎線，用於檢視各繪圖區在同一時刻的曲線數值（<span style=\" font-weight:600;\">A</span>）。使用按鈕 <span style=\" font-weight:600;\">B</span>調整顯示的資訊量。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">拖動底部時間滑桿，或在任意繪圖區按<span style=\" font-weight:600;\">Shift + 滑鼠左鍵</span>，即可移動時間遊標。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">時間遊標還會觸發“狀態發布器”（<span style=\" font-weight:600;\">C</span>），使其響應遊標移動。使用播放按鈕（<span style=\" font-weight:600;\">D</span>）可自動移動時間遊標。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"
+    },
+    {
+      "context": "CheatsheetDialog",
+      "source": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Resize Fonts</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Use <span style=\" font-weight:600;\">CTRL + Mouse Wheel</span> to resize the size of the fonts in the Curves list or the Legend.</p></body></html>",
+      "before": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">調整字號</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">使用 <span style=\" font-weight:600;\">Ctrl + 滑鼠滾輪</span>可調整曲線列表或圖例的字號。</p></body></html>",
+      "after": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">調整字型大小</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">使用 <span style=\" font-weight:600;\">Ctrl + 滑鼠滾輪</span>可調整曲線清單或圖例的字型大小。</p></body></html>"
+    },
+    {
+      "context": "CheatsheetDialog",
+      "source": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Apply filters and simple timeseries transforms</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">PlotJuggler provides an intuitive way to apply transformations to your data using a simple graphical interface. For instance you can apply:</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    - A moving average filter.</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    - A first order derivative.</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    - Calculate the integral.</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    - An outlier removal.</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    - Add your own using plugins!</p></body></html>",
+      "before": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">應用濾波器和簡單時間序列變換</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">PlotJuggler 提供直觀的圖形介面，可對資料應用以下變換：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    －滑動平均濾波。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    －一階導數。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    －積分。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    －異常值剔除。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    －透過外掛程式新增自定義變換。</p></body></html>",
+      "after": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">應用濾波器和簡單時間序列變換</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">PlotJuggler 提供直觀的圖形介面，可對資料應用以下變換：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    －滑動平均濾波。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    －一階導數。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    －積分。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    －異常值剔除。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    －透過外掛程式新增自訂變換。</p></body></html>"
+    },
+    {
+      "context": "CheatsheetDialog",
+      "source": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Advanced transforms: create a custom timeseries</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">You can create a<span style=\" font-weight:600;\"> Multiple-Inputs / Single Output</span> function using existing timeseries.</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">The scripting language is based on Lua, a programming language that will take you 5 minutes to understand ;)</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    A</span>) Main timeseries that provide the time points and a value (mandatory)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    B</span>) Additional data source for multi-inputs formulas (optional).</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    C</span>) The main function called to create a data point.</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    D</span>) Global context to initialize global variables.</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    E</span>) Semaphore: <span style=\" color:#cc0000;\">red</span> if anything is wrong/missing. </p></body></html>",
+      "before": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">高階變換：建立自定義時間序列</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">您可以使用現有時間序列建立<span style=\" font-weight:600;\">多輸入、單輸出</span>函式。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">指令碼使用 Lua 語言，幾分鐘即可瞭解基本用法。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    A</span>）提供時間點和數值的主時間序列（必填）。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    B</span>）多輸入公式的附加資料源（可選）。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    C</span>）生成資料點的主函式。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    D</span>）初始化全域性變數的全域性上下文。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    E</span>）狀態指示燈：出現錯誤或缺失資訊時顯示<span style=\" color:#cc0000;\">紅色</span>。</p></body></html>",
+      "after": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">高階變換：建立自訂時間序列</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">您可以使用現有時間序列建立<span style=\" font-weight:600;\">多輸入、單輸出</span>函式。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">指令碼使用 Lua 語言，幾分鐘即可瞭解基本用法。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    A</span>）提供時間點和數值的主時間序列（必填）。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    B</span>）多輸入公式的附加資料源（可選）。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    C</span>）生成資料點的主函式。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    D</span>）初始化全域變數的全域上下文。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">    E</span>）狀態指示燈：出現錯誤或缺失資訊時顯示<span style=\" color:#cc0000;\">紅色</span>。</p></body></html>"
+    },
+    {
+      "context": "ConfigZCM",
+      "source": "<html><head/><body><p>Use the libraries in the list below</p></body></html>",
+      "before": "<html><head/><body><p>使用下方列表中的庫</p></body></html>",
+      "after": "<html><head/><body><p>使用下方清單中的庫</p></body></html>"
+    },
+    {
+      "context": "CurveListPanel",
+      "source": "<html><head/><body><p>Show/Hide the second column with the current value of the time series.</p></body></html>",
+      "before": "<html><head/><body><p>顯示或隱藏包含時間序列當前數值的第二列。</p></body></html>",
+      "after": "<html><head/><body><p>顯示或隱藏包含時間序列目前數值的第二欄。</p></body></html>"
+    },
+    {
+      "context": "CurveListPanel",
+      "source": "<html><head/><body><p>Search box to Custom Series</p></body></html>",
+      "before": "<html><head/><body><p>搜尋自定義時間序列</p></body></html>",
+      "after": "<html><head/><body><p>搜尋自訂時間序列</p></body></html>"
+    },
+    {
+      "context": "CurveListPanel",
+      "source": "Custom Series:",
+      "before": "自定義序列：",
+      "after": "自訂序列："
+    },
+    {
+      "context": "DataLoadAPBIN",
+      "source": "Unsupported DataFlash format code",
+      "before": "不支援的 DataFlash 格式程式碼",
+      "after": "不支援的 DataFlash 格式代碼"
+    },
+    {
+      "context": "DataLoadCSV",
+      "source": "Combine Date + Time columns",
+      "before": "合併日期和時間列",
+      "after": "合併日期和時間欄"
+    },
+    {
+      "context": "DataLoadCSV",
+      "source": "Combine Date + Time columns (%1)",
+      "before": "合併日期和時間列（%1）",
+      "after": "合併日期和時間欄（%1）"
+    },
+    {
+      "context": "DataLoadMCAP",
+      "source": "Code: %0\n Message: %1",
+      "before": "程式碼：%0\n訊息：%1",
+      "after": "代碼：%0\n訊息：%1"
+    },
+    {
+      "context": "DataLoadMCAP",
+      "source": "The MCAP file appears to be corrupted. PlotJuggler loaded the readable data before the first unreadable record.\n\nCode: %0\nMessage: %1",
+      "before": "此 MCAP 檔案似乎已損壞。PlotJuggler 已載入首條不可讀取記錄之前的可用資料。\n\n程式碼：%0\n訊息：%1",
+      "after": "此 MCAP 檔案似乎已損壞。PlotJuggler 已載入首條不可讀取記錄之前的可用資料。\n\n代碼：%0\n訊息：%1"
+    },
+    {
+      "context": "DataStreamMQTT",
+      "source": "Port:",
+      "before": "埠：",
+      "after": "連接埠："
+    },
+    {
+      "context": "DataStreamMQTT",
+      "source": "Protocol:",
+      "before": "協議：",
+      "after": "通訊協定："
+    },
+    {
+      "context": "DataStreamMQTT",
+      "source": "Server Certificate (CA):",
+      "before": "伺服器證書（CA）：",
+      "after": "伺服器憑證（CA）："
+    },
+    {
+      "context": "DataStreamMQTT",
+      "source": "Client Certificate:",
+      "before": "客戶端證書：",
+      "after": "用戶端憑證："
+    },
+    {
+      "context": "DataStreamMQTT",
+      "source": "Message SerializationProtocol:",
+      "before": "訊息序列化協議：",
+      "after": "訊息序列化通訊協定："
+    },
+    {
+      "context": "DataStreamMQTT",
+      "source": "Protocol options:",
+      "before": "協議選項：",
+      "after": "通訊協定選項："
+    },
+    {
+      "context": "DataStreamMQTT",
+      "source": "MQTT Client",
+      "before": "MQTT 客戶端",
+      "after": "MQTT 用戶端"
+    },
+    {
+      "context": "DataStreamZMQ",
+      "source": "Port",
+      "before": "埠",
+      "after": "連接埠"
+    },
+    {
+      "context": "DataStreamZMQ",
+      "source": "Message Protocol:",
+      "before": "訊息協議：",
+      "after": "訊息通訊協定："
+    },
+    {
+      "context": "DataStreamZMQ",
+      "source": "Protocol options:",
+      "before": "協議選項：",
+      "after": "通訊協定選項："
+    },
+    {
+      "context": "DatastreamSerialPort",
+      "source": "Serial Port",
+      "before": "串列埠",
+      "after": "串列連接埠"
+    },
+    {
+      "context": "DatastreamSerialPort",
+      "source": "Serial port opened \"%1\"",
+      "before": "已開啟串列埠“%1”",
+      "after": "已開啟串列連接埠“%1”"
+    },
+    {
+      "context": "DatastreamSerialPort",
+      "source": "Couldn't open serial port \"%1\": %2",
+      "before": "無法開啟串列埠“%1”：%2",
+      "after": "無法開啟串列連接埠“%1”：%2"
+    },
+    {
+      "context": "DateTimeHelp",
+      "source": "All other input characters will be treated as text. Any non-empty sequence of characters enclosed in single quotes will also be treated (stripped of the quotes) as text and not be interpreted as expressions.",
+      "before": "其他輸入字元均按普通文書處理。用單引號括起的非空字元序列也按普通文書處理（去除引號），不會被解釋為格式表示式。",
+      "after": "其他輸入字元均按一般文字處理。用單引號括起的非空字元序列也按一般文字處理（去除引號），不會被解釋為格式運算式。"
+    },
+    {
+      "context": "DateTimeHelp",
+      "source": "Expression",
+      "before": "表示式",
+      "after": "運算式"
+    },
+    {
+      "context": "DialogCSV",
+      "source": "Use row number as X axis",
+      "before": "使用行號作為 X 軸",
+      "after": "使用列號作為 X 軸"
+    },
+    {
+      "context": "DialogCSV",
+      "source": "Select a column to be used as X axis",
+      "before": "選擇用作 X 軸的列",
+      "after": "選擇用作 X 軸的欄"
+    },
+    {
+      "context": "DialogCSV",
+      "source": "Combine Date + Time columns",
+      "before": "合併日期和時間列",
+      "after": "合併日期和時間欄"
+    },
+    {
+      "context": "DialogCSV",
+      "source": "Columns:",
+      "before": "列：",
+      "after": "欄："
+    },
+    {
+      "context": "DialogCSV",
+      "source": "\"\\t\" (tab)",
+      "before": "“\\t”（製表符）",
+      "after": "“\\t”（定位字元）"
+    },
+    {
+      "context": "DialogCSV",
+      "source": "Skip lines before header:",
+      "before": "跳過表頭前的行數：",
+      "after": "跳過表頭前的列數："
+    },
+    {
+      "context": "DialogCSV",
+      "source": "Custom Format",
+      "before": "自定義格式",
+      "after": "自訂格式"
+    },
+    {
+      "context": "DialogCSV",
+      "source": "Date Format Help",
+      "before": "日期格式幫助",
+      "after": "日期格式說明"
+    },
+    {
+      "context": "DialogParquet",
+      "source": "Select a column to be used as timestamp",
+      "before": "選擇用作時間戳的列",
+      "after": "選擇用作時間戳的欄"
+    },
+    {
+      "context": "DialogParquet",
+      "source": "Use row number as X axis",
+      "before": "使用行號作為 X 軸",
+      "after": "使用列號作為 X 軸"
+    },
+    {
+      "context": "DialogParquet",
+      "source": "Columns:",
+      "before": "列：",
+      "after": "欄："
+    },
+    {
+      "context": "DraggableToolbar",
+      "source": "<html><head/><body><p>Fullscreen</p></body></html>",
+      "before": "<html><head/><body><p>全屏</p></body></html>",
+      "after": "<html><head/><body><p>全螢幕</p></body></html>"
+    },
+    {
+      "context": "FirstDerivariveForm",
+      "source": "(It might be noisy!)",
+      "before": "（可能包含噪聲）",
+      "after": "（可能包含雜訊）"
+    },
+    {
+      "context": "FirstDerivariveForm",
+      "source": "<html><head/><body><p>Use a fixed, custom value of dT.</p></body></html>",
+      "before": "<html><head/><body><p>使用固定的自定義 dT 值。</p></body></html>",
+      "after": "<html><head/><body><p>使用固定的自訂 dT 值。</p></body></html>"
+    },
+    {
+      "context": "FirstDerivariveForm",
+      "source": "Custom:",
+      "before": "自定義：",
+      "after": "自訂："
+    },
+    {
+      "context": "FunctionEditor",
+      "source": "Help",
+      "before": "幫助",
+      "after": "說明"
+    },
+    {
+      "context": "FunctionEditor",
+      "source": "<html><head/><body><p>Global:<span style=\" font-weight:400;\"> this code runs once before &quot;function&quot;. Initialize global, persistent variables here.</span></p></body></html>",
+      "before": "<html><head/><body><p>全域性：<span style=\" font-weight:400;\">此程式碼會在 function 之前執行一次。請在此初始化需要保留的全域性變數。</span></p></body></html>",
+      "after": "<html><head/><body><p>全域：<span style=\" font-weight:400;\">此程式碼會在 function 之前執行一次。請在此初始化需要保留的全域變數。</span></p></body></html>"
+    },
+    {
+      "context": "FunctionEditor",
+      "source": "<html><head/><body><p>Portion of code outside the function.</p><p>Useful to add global variables.</p></body></html>",
+      "before": "<html><head/><body><p>函式之外的程式碼。</p><p>可用於新增全域性變數。</p></body></html>",
+      "after": "<html><head/><body><p>函式之外的程式碼。</p><p>可用於新增全域變數。</p></body></html>"
+    },
+    {
+      "context": "FunctionEditor",
+      "source": "<html><head/><body><p>Save the current function in the library.</p></body></html>",
+      "before": "<html><head/><body><p>將當前函式儲存到函式庫。</p></body></html>",
+      "after": "<html><head/><body><p>將目前函式儲存到函式庫。</p></body></html>"
+    },
+    {
+      "context": "FunctionEditor",
+      "source": "RegExp",
+      "before": "正規表示式",
+      "after": "正規運算式"
+    },
+    {
+      "context": "FunctionEditor",
+      "source": "<html><head/><body><p>Global variables</p></body></html>",
+      "before": "<html><head/><body><p>全域性變數</p></body></html>",
+      "after": "<html><head/><body><p>全域變數</p></body></html>"
+    },
+    {
+      "context": "FunctionEditor",
+      "source": "Add your global variables here",
+      "before": "在此新增全域性變數",
+      "after": "在此新增全域變數"
+    },
+    {
+      "context": "FunctionEditorHelp",
+      "source": "Help",
+      "before": "幫助",
+      "after": "說明"
+    },
+    {
+      "context": "FunctionEditorHelp",
+      "source": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:14pt; font-weight:600;\">Function editor Help</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:14pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">The function editor uses the scrioting language Lua. You may want to read <a href=\"http://tylerneylon.com/a/learn-lua/\"><span style=\" text-decoration: underline; color:#0000ff;\">Learn Lua in 15 minutes</span></a>.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">In practice, you don't need to know that much to use it in PlotJuggler.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">You should implement the body of a <span style=\" font-style:italic; color:#204a87;\">function(time, value),</span> that is invoked for each point. The returned value is the point [time, your_value]</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Single input, stateless functions:</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Example:</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   </span><span style=\" font-style:italic; color:#204a87;\">return (value *  2) + 1</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">or you can use the <a href=\"https://www.tutorialspoint.com/lua/lua_math_library.htm\"><span style=\" text-decoration: underline; color:#0000ff;\">math library from Lua</span></a>:</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">  </span><span style=\" font-style:italic; color:#204a87;\">return math.log(value)</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic; color:#204a87;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#000000;\">The new point will have the same time of the original point. If you want to modify the timestamp, just return two values like this:</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; color:#000000;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   </span><span style=\" font-style:italic; color:#204a87;\">return time +1, (value *  2) </span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Return multiple points at once:</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Since version 3.1, you may also return multiple values at once, using a Lua table:</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">   </span><span style=\" font-style:italic; color:#204a87;\">-- Calculate t1,v1, t2, v2, etc...</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   </span><span style=\" font-style:italic; color:#204a87;\">return { {t1, v1}, {t2, v2} }</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Statefull functions:</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Some transformations require some form of &quot;memory&quot;, i.e. they need the previous value. To do this you may use the &quot;global variable&quot; textbox.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">For instance, to compute the finite difference between two consecutive value, you would add this to the <span style=\" font-weight:600;\">Global Variables</span> textbox:</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   prev = nil</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">And this to the <span style=\" font-weight:600;\">Function() </span>textbox</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   if ( prev == nil ) then</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">        prev = value</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   end</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic; color:#204a87;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   diff = value - prev</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   prev = value</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   return diff  </span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Multi input, single output:</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Select an additional time series and drop it in the table on the left side. Not your function definition will look like<span style=\" font-style:italic;\"> </span><span style=\" font-style:italic; color:#204a87;\">function(time,value,v1)</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Average of two time series:</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">  <span style=\" font-style:italic;\"> </span><span style=\" font-style:italic; color:#204a87;\">return (value + v1) / 2</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p></body></html>",
+      "before": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:14pt; font-weight:600;\">函式編輯器幫助</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:14pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">函式編輯器使用 Lua 指令碼語言。您可以閱讀 <a href=\"http://tylerneylon.com/a/learn-lua/\"><span style=\" text-decoration: underline; color:#0000ff;\">15 分鐘瞭解 Lua</span></a>.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">在 PlotJuggler 中使用時，只需瞭解基本語法即可。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">您需要實現 <span style=\" font-style:italic; color:#204a87;\">function(time, value),</span> 的函式體。每個資料點都會呼叫該函式，返回值構成新資料點 [time, your_value]。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">單輸入、無狀態函式：</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">示例：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   </span><span style=\" font-style:italic; color:#204a87;\">return (value *  2) + 1</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">也可使用 <a href=\"https://www.tutorialspoint.com/lua/lua_math_library.htm\"><span style=\" text-decoration: underline; color:#0000ff;\">Lua 數學庫</span></a>:</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">  </span><span style=\" font-style:italic; color:#204a87;\">return math.log(value)</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic; color:#204a87;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#000000;\">新資料點預設保留原時間。如需修改時間戳，請返回兩個值，例如：</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; color:#000000;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   </span><span style=\" font-style:italic; color:#204a87;\">return time +1, (value *  2) </span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">一次返回多個資料點：</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">從 3.1 版本起，您也可使用 Lua 表一次返回多個值：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">   </span><span style=\" font-style:italic; color:#204a87;\">-- 計算 t1、v1、t2、v2 等</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   </span><span style=\" font-style:italic; color:#204a87;\">return { {t1, v1}, {t2, v2} }</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">有狀態函式：</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">部分變換需要“記憶”，例如保留上一個值。您可在“全域性變數”文字框中實現。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">例如，要計算相鄰兩個值的有限差分，可在<span style=\" font-weight:600;\">全域性變數</span>文字框中新增：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   prev = nil</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">然後在<span style=\" font-weight:600;\">Function() </span>文字框中新增：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   if ( prev == nil ) then</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">        prev = value</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   end</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic; color:#204a87;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   diff = value - prev</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   prev = value</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   return diff  </span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">多輸入、單輸出：</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">選擇附加時間序列並拖到左側表格中，此時函式定義如下：<span style=\" font-style:italic;\"> </span><span style=\" font-style:italic; color:#204a87;\">function(time,value,v1)</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">兩個時間序列的平均值：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">  <span style=\" font-style:italic;\"> </span><span style=\" font-style:italic; color:#204a87;\">return (value + v1) / 2</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p></body></html>",
+      "after": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:14pt; font-weight:600;\">函式編輯器說明</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:14pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">函式編輯器使用 Lua 指令碼語言。您可以閱讀 <a href=\"http://tylerneylon.com/a/learn-lua/\"><span style=\" text-decoration: underline; color:#0000ff;\">15 分鐘瞭解 Lua</span></a>.</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">在 PlotJuggler 中使用時，只需瞭解基本語法即可。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">您需要實現 <span style=\" font-style:italic; color:#204a87;\">function(time, value),</span> 的函式體。每個資料點都會呼叫該函式，返回值構成新資料點 [time, your_value]。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">單輸入、無狀態函式：</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">示例：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   </span><span style=\" font-style:italic; color:#204a87;\">return (value *  2) + 1</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">也可使用 <a href=\"https://www.tutorialspoint.com/lua/lua_math_library.htm\"><span style=\" text-decoration: underline; color:#0000ff;\">Lua 數學庫</span></a>:</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">  </span><span style=\" font-style:italic; color:#204a87;\">return math.log(value)</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic; color:#204a87;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#000000;\">新資料點預設保留原時間。如需修改時間戳，請返回兩個值，例如：</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; color:#000000;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   </span><span style=\" font-style:italic; color:#204a87;\">return time +1, (value *  2) </span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">一次返回多個資料點：</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">從 3.1 版本起，您也可使用 Lua 表一次返回多個值：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">   </span><span style=\" font-style:italic; color:#204a87;\">-- 計算 t1、v1、t2、v2 等</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic;\">   </span><span style=\" font-style:italic; color:#204a87;\">return { {t1, v1}, {t2, v2} }</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">有狀態函式：</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">部分變換需要“記憶”，例如保留上一個值。您可在“全域變數”文字框中實現。</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">例如，要計算相鄰兩個值的有限差分，可在<span style=\" font-weight:600;\">全域變數</span>文字框中新增：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   prev = nil</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">然後在<span style=\" font-weight:600;\">Function() </span>文字框中新增：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   if ( prev == nil ) then</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">        prev = value</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   end</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic; color:#204a87;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   diff = value - prev</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   prev = value</span></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-style:italic; color:#204a87;\">   return diff  </span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">多輸入、單輸出：</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">選擇附加時間序列並拖到左側表格中，此時函式定義如下：<span style=\" font-style:italic;\"> </span><span style=\" font-style:italic; color:#204a87;\">function(time,value,v1)</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">兩個時間序列的平均值：</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">  <span style=\" font-style:italic;\"> </span><span style=\" font-style:italic; color:#204a87;\">return (value + v1) / 2</span></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;\"><br /></p></body></html>"
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "Python is unavailable in this build (embedded interpreter could not initialize). Use Lua instead.",
+      "before": "此構建無法使用 Python（嵌入式直譯器初始化失敗）。請使用 Lua。",
+      "after": "此版本無法使用 Python（嵌入式直譯器初始化失敗）。請使用 Lua。"
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "This snippet was saved as Python, but Python is disabled in this build. Falling back to Lua.",
+      "before": "此片段儲存為 Python，但當前構建已禁用 Python，將使用 Lua。",
+      "after": "此片段儲存為 Python，但目前版本已禁用 Python，將使用 Lua。"
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "This snippet was saved as Python, but this build has no Python support. Falling back to Lua.",
+      "before": "此片段儲存為 Python，但當前構建不支援 Python，將使用 Lua。",
+      "after": "此片段儲存為 Python，但目前版本不支援 Python，將使用 Lua。"
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "This custom plot was created in Python, but Python is disabled in this build. The editor will open in Lua mode.",
+      "before": "此自定義曲線由 Python 建立，但當前構建已禁用 Python，編輯器將以 Lua 模式開啟。",
+      "after": "此自訂曲線由 Python 建立，但目前版本已禁用 Python，編輯器將以 Lua 模式開啟。"
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "This custom plot was created in Python, but this build has no Python support. The editor will open in Lua mode.",
+      "before": "此自定義曲線由 Python 建立，但當前構建不支援 Python，編輯器將以 Lua 模式開啟。",
+      "after": "此自訂曲線由 Python 建立，但目前版本不支援 Python，編輯器將以 Lua 模式開啟。"
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "A function with the same name exists already in the list of saved functions.\n",
+      "before": "已儲存的函式列表中已有同名函式。\n",
+      "after": "已儲存的函式清單中已有同名函式。\n"
+    },
+    {
+      "context": "FunctionEditorWidget",
+      "source": "A custom time series with the same name exists already.\n Do you want to overwrite it?\n",
+      "before": "已有同名自定義時間序列。\n是否覆蓋？\n",
+      "after": "已有同名自訂時間序列。\n是否覆蓋？\n"
+    },
+    {
+      "context": "IntegralTransform",
+      "source": "(It might be noisy!)",
+      "before": "（可能包含噪聲）",
+      "after": "（可能包含雜訊）"
+    },
+    {
+      "context": "IntegralTransform",
+      "source": "<html><head/><body><p>Use a fixed, custom value of dT.</p></body></html>",
+      "before": "<html><head/><body><p>使用固定的自定義 dT 值。</p></body></html>",
+      "after": "<html><head/><body><p>使用固定的自訂 dT 值。</p></body></html>"
+    },
+    {
+      "context": "IntegralTransform",
+      "source": "Custom:",
+      "before": "自定義：",
+      "after": "自訂："
+    },
+    {
+      "context": "Launcher",
+      "source": "PlotJuggler exited with code %1.",
+      "before": "PlotJuggler 已退出，退出碼為 %1。",
+      "after": "PlotJuggler 已結束，結束代碼為 %1。"
+    },
+    {
+      "context": "LuaEditor",
+      "source": "Global code, execute once:",
+      "before": "全域性程式碼，僅執行一次：",
+      "after": "全域程式碼，僅執行一次："
+    },
+    {
+      "context": "LuaEditor",
+      "source": "define here your global variables",
+      "before": "在此定義全域性變數",
+      "after": "在此定義全域變數"
+    },
+    {
+      "context": "LuaEditor",
+      "source": "body of the function. tracker_time is the value of the time slider",
+      "before": "函式體；tracker_time 表示時間滑塊的值",
+      "after": "函式體；tracker_time 表示時間滑桿的值"
+    },
+    {
+      "context": "LuaEditor",
+      "source": "<html><head/><body><p>Recent scripts (double-click to load):</p></body></html>",
+      "before": "<html><head/><body><p>最近使用的指令碼（雙擊載入）：</p></body></html>",
+      "after": "<html><head/><body><p>最近使用的指令碼（按兩下載入）：</p></body></html>"
+    },
+    {
+      "context": "LuaEditor",
+      "source": "Apply changes",
+      "before": "應用更改",
+      "after": "套用變更"
+    },
+    {
+      "context": "LuaEditor",
+      "source": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:12pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">--[[ Helper function to create a series from arrays</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> new_series: a series previously created with ScatterXY.new(name)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> prefix:     prefix of the timeseries, before the index of the array</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> suffix_X:   suffix to complete the name of the series containing the X value. If [nil], use the index of the array.</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> suffix_Y:   suffix to complete the name of the series containing the Y value</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> timestamp:   usually the tracker_time variable</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">              </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> Example:</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> Assuming we have multiple series in the form:</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   /trajectory/node.{X}/position/x</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   /trajectory/node.{X}/position/y</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> where {N} is the index of the array (integer). We can create a reactive series from the array with:</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   new_series = ScatterXY.new(&quot;my_trajectory&quot;) </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   CreateSeriesFromArray( new_series, &quot;/trajectory/node&quot;, &quot;position/x&quot;, &quot;position/y&quot;, tracker_time );</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">--]]</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">function CreateSeriesFromArray( new_series, prefix, suffix_X, suffix_Y, timestamp )</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  --- clear previous values</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  new_series:clear()</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  --- Append points to new_series</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  index = 0</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  while(true) do</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    x = index;</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    -- if not nil, get the X coordinate from a series</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    if suffix_X ~= nil then </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">      series_x = TimeseriesView.find( string.format( &quot;%s.%d/%s&quot;, prefix, index, suffix_X) )</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">      if series_x == nil then break end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">      x = series_x:atTime(timestamp)\t </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    series_y = TimeseriesView.find( string.format( &quot;%s.%d/%s&quot;, prefix, index, suffix_Y) )</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    if series_y == nil then break end </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    y = series_y:atTime(timestamp)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    new_series:push_back(x,y)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    index = index+1</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">end</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">--[[ Similar to the built-in function GetSeriesNames(), but select only the names with a give prefix. --]]</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">function GetSeriesNamesByPrefix(prefix)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  -- GetSeriesNames(9 is a built-in function</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  all_names = GetSeriesNames()</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  filtered_names = {}</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  for i, name in ipairs(all_names)  do</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    -- check the prefix</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    if name:find(prefix, 1, #prefix) then</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">      table.insert(filtered_names, name);</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  return filtered_names</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">end</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">--[[ Modify an existing series, applying offsets to all their X and Y values</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> series: an existing timeseries, obtained with TimeseriesView.find(name)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> delta_x: offset to apply to each x value</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> delta_y: offset to apply to each y value </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">  </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">--]]</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">function ApplyOffsetInPlace(series, delta_x, delta_y)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  -- use C++ indices, not Lua indices</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  for index=0, series:size()-1 do</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    x,y = series:at(index)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    series:set(index, x + delta_x, y + delta_y)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">end</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>",
+      "before": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:12pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">--[[ 從陣列建立序列的輔助函式</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> new_series：使用 ScatterXY.new(name) 建立的序列</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> prefix：陣列索引之前的時間序列字首</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> suffix_X：包含 X 值的序列名稱字尾。為 nil 時使用陣列索引。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> suffix_Y：包含 Y 值的序列名稱字尾</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> timestamp：通常使用 tracker_time 變數</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">              </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> 示例：</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> 假設有以下形式的多個序列：</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   /trajectory/node.{X}/position/x</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   /trajectory/node.{X}/position/y</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> where {N} is the index of the array (integer). We can create a reactive series from the array with:</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   new_series = ScatterXY.new(\"my_trajectory\") </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   CreateSeriesFromArray( new_series, \"/trajectory/node\", \"position/x\", \"position/y\", tracker_time );</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">--]]</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">function CreateSeriesFromArray( new_series, prefix, suffix_X, suffix_Y, timestamp )</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  --- 清空先前的值</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  new_series:clear()</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  --- 向 new_series 追加資料點</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  index = 0</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  while(true) do</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    x = index;</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    -- 不為 nil 時，從序列獲取 X 座標</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    if suffix_X ~= nil then </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">      series_x = TimeseriesView.find( string.format( \"%s.%d/%s\", prefix, index, suffix_X) )</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">      if series_x == nil then break end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">      x = series_x:atTime(timestamp)\t </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    series_y = TimeseriesView.find( string.format( \"%s.%d/%s\", prefix, index, suffix_Y) )</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    if series_y == nil then break end </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    y = series_y:atTime(timestamp)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    new_series:push_back(x,y)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    index = index+1</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">end</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">--[[ 類似內建函式 GetSeriesNames()，但僅選擇具有指定字首的名稱。--]]</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">function GetSeriesNamesByPrefix(prefix)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  -- GetSeriesNames() 是內建函式</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  all_names = GetSeriesNames()</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  filtered_names = {}</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  for i, name in ipairs(all_names)  do</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    -- 檢查字首</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    if name:find(prefix, 1, #prefix) then</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">      table.insert(filtered_names, name);</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  return filtered_names</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">end</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">--[[ 修改現有序列，為所有 X 和 Y 值應用偏移量</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> series：透過 TimeseriesView.find(name) 獲得的現有序列</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> delta_x：每個 X 值的偏移量</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> delta_y：每個 Y 值的偏移量</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">  </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">--]]</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">function ApplyOffsetInPlace(series, delta_x, delta_y)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  -- 使用 C++ 索引，而非 Lua 索引</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  for index=0, series:size()-1 do</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    x,y = series:at(index)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    series:set(index, x + delta_x, y + delta_y)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">end</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>",
+      "after": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:12pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">--[[ 從陣列建立序列的輔助函式</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> new_series：使用 ScatterXY.new(name) 建立的序列</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> prefix：陣列索引之前的時間序列字首</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> suffix_X：包含 X 值的序列名稱字尾。為 nil 時使用陣列索引。</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> suffix_Y：包含 Y 值的序列名稱字尾</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> timestamp：通常使用 tracker_time 變數</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">              </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> 示例：</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> 假設有以下形式的多個序列：</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   /trajectory/node.{X}/position/x</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   /trajectory/node.{X}/position/y</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> where {N} is the index of the array (integer). We can create a reactive series from the array with:</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   new_series = ScatterXY.new(\"my_trajectory\") </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">   CreateSeriesFromArray( new_series, \"/trajectory/node\", \"position/x\", \"position/y\", tracker_time );</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">--]]</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">function CreateSeriesFromArray( new_series, prefix, suffix_X, suffix_Y, timestamp )</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  --- 清空先前的值</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  new_series:clear()</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  --- 向 new_series 追加資料點</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  index = 0</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  while(true) do</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    x = index;</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    -- 不為 nil 時，從序列取得 X 座標</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    if suffix_X ~= nil then </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">      series_x = TimeseriesView.find( string.format( \"%s.%d/%s\", prefix, index, suffix_X) )</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">      if series_x == nil then break end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">      x = series_x:atTime(timestamp)\t </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    series_y = TimeseriesView.find( string.format( \"%s.%d/%s\", prefix, index, suffix_Y) )</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    if series_y == nil then break end </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    y = series_y:atTime(timestamp)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    new_series:push_back(x,y)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    index = index+1</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">end</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">--[[ 類似內建函式 GetSeriesNames()，但僅選擇具有指定字首的名稱。--]]</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">function GetSeriesNamesByPrefix(prefix)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  -- GetSeriesNames() 是內建函式</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  all_names = GetSeriesNames()</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  filtered_names = {}</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  for i, name in ipairs(all_names)  do</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    -- 檢查字首</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    if name:find(prefix, 1, #prefix) then</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">      table.insert(filtered_names, name);</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  return filtered_names</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">end</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">--[[ 修改現有序列，為所有 X 和 Y 值應用偏移量</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> series：透過 TimeseriesView.find(name) 獲得的現有序列</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> delta_x：每個 X 值的偏移量</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\"> delta_y：每個 Y 值的偏移量</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:1;\">  </p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">--]]</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">function ApplyOffsetInPlace(series, delta_x, delta_y)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  -- 使用 C++ 索引，而非 Lua 索引</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  for index=0, series:size()-1 do</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    x,y = series:at(index)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">    series:set(index, x + delta_x, y + delta_y)</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">  end</p>\n<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;\">end</p>\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"
+    },
+    {
+      "context": "MQTT_Dialog",
+      "source": "CRT (*.crt)",
+      "before": "證書（*.crt）",
+      "after": "憑證（*.crt）"
+    },
+    {
+      "context": "MainWindow",
+      "source": "<html><head/><body><p>Select the streaming plugin.</p></body></html>",
+      "before": "<html><head/><body><p>選擇流資料外掛程式。</p></body></html>",
+      "after": "<html><head/><body><p>選擇資料流外掛程式。</p></body></html>"
+    },
+    {
+      "context": "MainWindow",
+      "source": "<html><head/><body><p>Start/Stop the streaming plugin.</p></body></html>",
+      "before": "<html><head/><body><p>啟動或停止流資料外掛程式。</p></body></html>",
+      "after": "<html><head/><body><p>啟動或停止資料流外掛程式。</p></body></html>"
+    },
+    {
+      "context": "MainWindow",
+      "source": "Publishers",
+      "before": "釋出器",
+      "after": "發布器"
+    },
+    {
+      "context": "MainWindow",
+      "source": "Timeseries List",
+      "before": "時間序列列表",
+      "after": "時間序列清單"
+    },
+    {
+      "context": "MainWindow",
+      "source": "<html><head/><body><p>If active, visualize the current time as DateTime ( YYYY/MM/DD:m::s::ms)</p></body></html>",
+      "before": "<html><head/><body><p>啟用後，以日期時間格式顯示當前時間（YYYY/MM/DD:m::s::ms）</p></body></html>",
+      "after": "<html><head/><body><p>啟用後，以日期時間格式顯示目前時間（YYYY/MM/DD:m::s::ms）</p></body></html>"
+    },
+    {
+      "context": "MainWindow",
+      "source": "Help (ALT+H)",
+      "before": "幫助（Alt+H）",
+      "after": "說明（Alt+H）"
+    },
+    {
+      "context": "MainWindow",
+      "source": "Help",
+      "before": "幫助",
+      "after": "說明"
+    },
+    {
+      "context": "MainWindow",
+      "source": "Exit",
+      "before": "退出",
+      "after": "結束"
+    },
+    {
+      "context": "MainWindow",
+      "source": "The dropped item is not a valid file and will be ignored:\n [%1]",
+      "before": "拖入的專案不是有效檔案，將被忽略：\n[%1]",
+      "after": "拖入的項目不是有效檔案，將被忽略：\n[%1]"
+    },
+    {
+      "context": "MainWindow",
+      "source": "Cyclic dependency detected in custom equations.",
+      "before": "自定義表示式中檢測到迴圈依賴。",
+      "after": "自訂運算式中檢測到迴圈依賴。"
+    },
+    {
+      "context": "MainWindow",
+      "source": "Failed to load customMathEquation [%1] \n\n %2\n",
+      "before": "無法載入自定義表示式 [%1]：\n\n%2\n",
+      "after": "無法載入自訂運算式 [%1]：\n\n%2\n"
+    },
+    {
+      "context": "MainWindow",
+      "source": "Failed to create the custom timeseries. Error:\n\n%1",
+      "before": "無法建立自定義時間序列。錯誤：\n\n%1",
+      "after": "無法建立自訂時間序列。錯誤：\n\n%1"
+    },
+    {
+      "context": "MovingVarianceFilter",
+      "source": "Apply square root",
+      "before": "應用平方根",
+      "after": "取平方根"
+    },
+    {
+      "context": "OutlierRemovalFilter",
+      "source": "Outlier are detected using the difference between the current 1st order derivative and the previous one.",
+      "before": "根據當前一階導數與前一次一階導數之差檢測異常值。",
+      "after": "根據目前一階導數與前一次一階導數之差檢測異常值。"
+    },
+    {
+      "context": "PreferencesDialog",
+      "source": "global color sequence",
+      "before": "全域性顏色序列",
+      "after": "全域顏色序列"
+    },
+    {
+      "context": "PreferencesDialog",
+      "source": "Add custom folders. Drag and drop the items to change the order.",
+      "before": "新增自定義目錄。拖動專案可改變載入順序。",
+      "after": "新增自訂目錄。拖曳項目可變更載入順序。"
+    },
+    {
+      "context": "PreferencesDialog",
+      "source": "List of built-in folders:",
+      "before": "內建目錄列表：",
+      "after": "內建目錄清單："
+    },
+    {
+      "context": "QObject",
+      "source": "Python custom functions are disabled for this session. Lua custom functions remain available.\n\nThis usually means the Python standard library expected by this build is not present on the host system (common when running an AppImage on a distro with a different Python version).",
+      "before": "本次執行已禁用 Python 自定義函式，Lua 自定義函式仍然可用。\n\n通常是主機缺少此構建所需的 Python 標準庫，例如在 Python 版本不同的發行版上執行 AppImage。",
+      "after": "本次執行已禁用 Python 自訂函式，Lua 自訂函式仍然可用。\n\n通常是主機缺少此版本所需的 Python 標準庫，例如在 Python 版本不同的發行版上執行 AppImage。"
+    },
+    {
+      "context": "QObject",
+      "source": "Even",
+      "before": "偶校驗",
+      "after": "偶同位"
+    },
+    {
+      "context": "QObject",
+      "source": "Odd",
+      "before": "奇校驗",
+      "after": "奇同位"
+    },
+    {
+      "context": "QObject",
+      "source": "An error occurred while attempting to open an already opened device by another process or a user not having enough permission and credentials to open.",
+      "before": "無法開啟裝置：裝置已被其他程序佔用，或當前使用者沒有足夠的許可權和憑據。",
+      "after": "無法開啟裝置：裝置已被其他程序佔用，或目前使用者沒有足夠的權限和憑據。"
+    },
+    {
+      "context": "QObject",
+      "source": "A timeout error occurred.",
+      "before": "操作超時。",
+      "after": "操作逾時。"
+    },
+    {
+      "context": "QObject",
+      "source": "Serial Port",
+      "before": "串列埠",
+      "after": "串列連接埠"
+    },
+    {
+      "context": "QObject",
+      "source": "Missing package [plotjuggler-ros]",
+      "before": "缺少 [plotjuggler-ros] 軟體包",
+      "after": "缺少 [plotjuggler-ros] 套件"
+    },
+    {
+      "context": "QObject",
+      "source": "If you just upgraded from PlotJuggler 2.x to 3.x , try installing this package:\n\nsudo apt install ros-${ROS_DISTRO}-plotjuggler-ros",
+      "before": "如果剛從 PlotJuggler 2.x 升級到 3.x，請嘗試安裝以下軟體包：\n\nsudo apt install ros-${ROS_DISTRO}-plotjuggler-ros",
+      "after": "如果剛從 PlotJuggler 2.x 升級到 3.x，請嘗試安裝以下套件：\n\nsudo apt install ros-${ROS_DISTRO}-plotjuggler-ros"
+    },
+    {
+      "context": "QObject",
+      "source": "State publishers stopped",
+      "before": "狀態釋出器已停止",
+      "after": "狀態發布器已停止"
+    },
+    {
+      "context": "QObject",
+      "source": "All the state publishers have been stopped because old data has been deleted.",
+      "before": "舊資料已刪除，所有狀態釋出器均已停止。",
+      "after": "舊資料已刪除，所有狀態發布器均已停止。"
+    },
+    {
+      "context": "QObject",
+      "source": "Overwrite custom transforms?",
+      "before": "覆蓋自定義變換？",
+      "after": "覆蓋自訂變換？"
+    },
+    {
+      "context": "QObject",
+      "source": "Your layout file contains a set of custom transforms different from the last one you used.\nWant to load these transformations?",
+      "before": "版面配置檔案中的自定義變換與上次使用的不同。\n是否載入這些變換？",
+      "after": "版面配置檔案中的自訂變換與上次使用的不同。\n是否載入這些變換？"
+    },
+    {
+      "context": "QObject",
+      "source": "&Apply filter to data...",
+      "before": "對資料應用濾波(&A)…",
+      "after": "對資料套用濾波器(&A)…"
+    },
+    {
+      "context": "QObject",
+      "source": "&Copy image to clipboard",
+      "before": "複製影象到剪貼簿(&I)",
+      "after": "複製影像到剪貼簿(&I)"
+    },
+    {
+      "context": "QObject",
+      "source": "Create a custom timeseries",
+      "before": "建立自定義時間序列",
+      "after": "建立自訂時間序列"
+    },
+    {
+      "context": "QObject",
+      "source": "Duplicate Column Name",
+      "before": "列名重複",
+      "after": "欄名重複"
+    },
+    {
+      "context": "QObject",
+      "source": "Multiple Columns have the same name.\nThe column number will be added (as suffix) to the name.",
+      "before": "多列使用了相同名稱。\n將在名稱後新增列號作為字尾。",
+      "after": "多欄使用了相同名稱。\n將在名稱後新增欄號作為字尾。"
+    },
+    {
+      "context": "QObject",
+      "source": "MQTT Client",
+      "before": "MQTT 客戶端",
+      "after": "MQTT 用戶端"
+    },
+    {
+      "context": "QObject",
+      "source": "Client disconnected. Maybe a problem with authentication?",
+      "before": "客戶端已斷開，可能是身份驗證失敗。",
+      "after": "用戶端已斷開，可能是身份驗證失敗。"
+    },
+    {
+      "context": "QObject",
+      "source": "Select Server Certificate",
+      "before": "選擇伺服器證書",
+      "after": "選擇伺服器憑證"
+    },
+    {
+      "context": "QObject",
+      "source": "Select Client Certificate",
+      "before": "選擇客戶端證書",
+      "after": "選擇用戶端憑證"
+    },
+    {
+      "context": "QObject",
+      "source": "WebSocket Client",
+      "before": "WebSocket 客戶端",
+      "after": "WebSocket 用戶端"
+    },
+    {
+      "context": "QObject",
+      "source": "host:port",
+      "before": "主機:埠",
+      "after": "主機:連接埠"
+    },
+    {
+      "context": "QObject",
+      "source": "Certificate & API key (cert optional — system trust store used by default)",
+      "before": "證書與 API 金鑰（證書可選，預設使用系統信任庫）",
+      "after": "憑證與 API 金鑰（憑證可選，預設使用系統信任庫）"
+    },
+    {
+      "context": "QObject",
+      "source": "Fetch Error",
+      "before": "獲取錯誤",
+      "after": "取得錯誤"
+    },
+    {
+      "context": "QObject",
+      "source": "Fetch Errors (%1 topics)",
+      "before": "獲取錯誤（%1 個話題）",
+      "after": "取得錯誤（%1 個話題）"
+    },
+    {
+      "context": "QObject",
+      "source": "%1 topic(s) failed:\n\n%2",
+      "before": "%1 個話題獲取失敗：\n\n%2",
+      "after": "%1 個話題取得失敗：\n\n%2"
+    },
+    {
+      "context": "QObject",
+      "source": "Fetching %1 (%2/%3): %4",
+      "before": "正在獲取 %1（%2/%3）：%4",
+      "after": "正在取得 %1（%2/%3）：%4"
+    },
+    {
+      "context": "QObject",
+      "source": "Fetching %1 topic(s)...",
+      "before": "正在獲取 %1 個話題…",
+      "after": "正在取得 %1 個話題…"
+    },
+    {
+      "context": "QObject",
+      "source": "Connectivity to insecure channels is disabled, visit certificate settings",
+      "before": "已禁用非安全通道連線，請檢視證書設定",
+      "after": "已禁用非安全通道連線，請檢視憑證設定"
+    },
+    {
+      "context": "QObject",
+      "source": "TLS certificate path contains invalid characters.",
+      "before": "TLS 證書路徑含有無效字元。",
+      "after": "TLS 憑證路徑含有無效字元。"
+    },
+    {
+      "context": "QObject",
+      "source": "\nMetadata:\n",
+      "before": "\n元資料：\n",
+      "after": "\n中繼資料：\n"
+    },
+    {
+      "context": "QObject",
+      "source": "Status   : live\n",
+      "before": "狀態：實時\n",
+      "after": "狀態：即時\n"
+    },
+    {
+      "context": "QObject",
+      "source": "Custom",
+      "before": "自定義",
+      "after": "自訂"
+    },
+    {
+      "context": "QObject",
+      "source": "Certificate & API Key",
+      "before": "證書與 API 金鑰",
+      "after": "憑證與 API 金鑰"
+    },
+    {
+      "context": "QObject",
+      "source": "Path to CA certificate (.pem) (optional)",
+      "before": "CA 證書路徑（.pem，可選）",
+      "after": "CA 憑證路徑（.pem，可選）"
+    },
+    {
+      "context": "QObject",
+      "source": "When enabled, if the TLS handshake fails and no custom certificate is set, the plugin retries the connection in plaintext. API keys will be sent unencrypted — only enable for trusted networks or local servers.",
+      "before": "啟用後，如果 TLS 握手失敗且未設定自定義證書，外掛程式將嘗試使用明文連線。API 金鑰會以未加密形式傳送。請僅在可信網路或本地伺服器中啟用。",
+      "after": "啟用後，如果 TLS 握手失敗且未設定自訂憑證，外掛程式將嘗試使用明文連線。API 金鑰會以未加密形式傳送。請僅在可信網路或本地伺服器中啟用。"
+    },
+    {
+      "context": "QObject",
+      "source": "Select CA Certificate",
+      "before": "選擇 CA 證書",
+      "after": "選擇 CA 憑證"
+    },
+    {
+      "context": "QObject",
+      "source": "Use regular expression",
+      "before": "使用正規表示式",
+      "after": "使用正規運算式"
+    },
+    {
+      "context": "QObject",
+      "source": "listSequences failed: ",
+      "before": "獲取序列失敗：",
+      "after": "取得序列失敗："
+    },
+    {
+      "context": "QObject",
+      "source": "listTopics failed: ",
+      "before": "獲取話題失敗：",
+      "after": "取得話題失敗："
+    },
+    {
+      "context": "ScaleTransform",
+      "source": "Apply offset",
+      "before": "應用偏移",
+      "after": "套用偏移"
+    },
+    {
+      "context": "ScaleTransform",
+      "source": "Useful constants:",
+      "before": "常用常量：",
+      "after": "常用常數："
+    },
+    {
+      "context": "SerialPortDialog",
+      "source": "Serial Port Settings:",
+      "before": "串列埠設定：",
+      "after": "串列連接埠設定："
+    },
+    {
+      "context": "SerialPortDialog",
+      "source": "Parity:",
+      "before": "奇偶校驗：",
+      "after": "同位檢查："
+    },
+    {
+      "context": "SerialPortDialog",
+      "source": "Message Protocol:",
+      "before": "訊息協議：",
+      "after": "訊息通訊協定："
+    },
+    {
+      "context": "SerialPortDialog",
+      "source": "Stop Bits:",
+      "before": "停止位：",
+      "after": "停止位元："
+    },
+    {
+      "context": "SerialPortDialog",
+      "source": "Baud Rate:",
+      "before": "波特率：",
+      "after": "鮑率："
+    },
+    {
+      "context": "SerialPortDialog",
+      "source": "Data Bits:",
+      "before": "資料位：",
+      "after": "資料位元："
+    },
+    {
+      "context": "SerialPortDialog",
+      "source": "Port:",
+      "before": "埠：",
+      "after": "連接埠："
+    },
+    {
+      "context": "SerialPortDialog",
+      "source": "Protocol Options:",
+      "before": "協議選項：",
+      "after": "通訊協定選項："
+    },
+    {
+      "context": "SupportDialog",
+      "source": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Hi!</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">I am Davide, the creator of<span style=\" font-weight:600;\"> </span><span style=\" font-weight:600; color:#ff00ff;\">Plot</span><span style=\" font-weight:600; color:#0000ff;\">Juggler.</span> I hope you find this software useful!</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">I have been developing PlotJuggler in my spare time since 2016,  because I wanted to build the best tool to visualize logs, traces and data.</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">If you are an individual, consider making a <span style=\" font-weight:600;\">donation</span> with <a href=\"https://www.paypal.me/facontidavide\"><span style=\" text-decoration: underline; color:#0000ff;\">PayPal.</span></a></p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">If you use PlotJuggler at <span style=\" font-weight:600;\">work</span>, your company can become a <span style=\" font-weight:600;\">sponsor</span> or support the development of a specific feature.</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><a href=\"mailto:davide.faconti@gmail.com\"><span style=\" text-decoration: underline; color:#0000ff;\">Contact me</span></a> for more details.</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"> </p></body></html>",
+      "before": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">您好！</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">我是 Davide，以下軟體的作者：<span style=\" font-weight:600;\"> </span><span style=\" font-weight:600; color:#ff00ff;\">Plot</span><span style=\" font-weight:600; color:#0000ff;\">Juggler。</span>希望這款軟體對您有所幫助！</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">從 2016 年起，我一直利用業餘時間開發 PlotJuggler，希望打造優秀的記錄檔、跟蹤記錄和資料視覺化工具。</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">個人使用者可考慮透過以下方式<span style=\" font-weight:600;\">捐贈</span>：<a href=\"https://www.paypal.me/facontidavide\"><span style=\" text-decoration: underline; color:#0000ff;\">PayPal。</span></a></p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">如果您在<span style=\" font-weight:600;\">工作中</span>使用 PlotJuggler，您的公司可以成為<span style=\" font-weight:600;\">贊助商</span>，或支援某項功能的開發。</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><a href=\"mailto:davide.faconti@gmail.com\"><span style=\" text-decoration: underline; color:#0000ff;\">聯絡作者</span></a>瞭解詳情。</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"> </p></body></html>",
+      "after": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { white-space: pre-wrap; }\n</style></head><body style=\" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;\">\n<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">您好！</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">我是 Davide，以下軟體的作者：<span style=\" font-weight:600;\"> </span><span style=\" font-weight:600; color:#ff00ff;\">Plot</span><span style=\" font-weight:600; color:#0000ff;\">Juggler。</span>希望這款軟體對您有所說明！</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">從 2016 年起，我一直利用業餘時間開發 PlotJuggler，希望打造優秀的記錄檔、跟蹤記錄和資料視覺化工具。</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">個人使用者可考慮透過以下方式<span style=\" font-weight:600;\">捐贈</span>：<a href=\"https://www.paypal.me/facontidavide\"><span style=\" text-decoration: underline; color:#0000ff;\">PayPal。</span></a></p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">如果您在<span style=\" font-weight:600;\">工作中</span>使用 PlotJuggler，您的公司可以成為<span style=\" font-weight:600;\">贊助商</span>，或支援某項功能的開發。</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><a href=\"mailto:davide.faconti@gmail.com\"><span style=\" text-decoration: underline; color:#0000ff;\">聯絡作者</span></a>瞭解詳情。</p>\n<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"> </p></body></html>"
+    },
+    {
+      "context": "TabbedPlotWidget",
+      "source": "tab%1",
+      "before": "標籤%1",
+      "after": "分頁%1"
+    },
+    {
+      "context": "UDPServerDialog",
+      "source": "Port:",
+      "before": "埠：",
+      "after": "連接埠："
+    },
+    {
+      "context": "UDPServerDialog",
+      "source": "Message Protocol:",
+      "before": "訊息協議：",
+      "after": "訊息通訊協定："
+    },
+    {
+      "context": "UDPServerDialog",
+      "source": "Protocol options:",
+      "before": "協議選項：",
+      "after": "通訊協定選項："
+    },
+    {
+      "context": "UDPServerDialog",
+      "source": "Strip a fixed-size type ID from the start of every datagram and pass it as topic name to the parser. Enables multi-type protobuf/JSON/etc. on a single UDP port when the publisher prepends a type identifier.",
+      "before": "從每個資料報的開頭提取固定長度的型別 ID，並將其作為話題名稱傳遞給解析器。當傳送端新增型別標識時，同一 UDP 埠可處理多種 Protobuf、JSON 等訊息。",
+      "after": "從每個資料報的開頭提取固定長度的型別 ID，並將其作為話題名稱傳遞給解析器。當傳送端新增型別標識時，同一 UDP 連接埠可處理多種 Protobuf、JSON 等訊息。"
+    },
+    {
+      "context": "UDPServerDialog",
+      "source": "Decimal",
+      "before": "十進位制",
+      "after": "十進位"
+    },
+    {
+      "context": "UDPServerDialog",
+      "source": "Hex",
+      "before": "十六進位制",
+      "after": "十六進位"
+    },
+    {
+      "context": "UDP_Server",
+      "source": "Couldn't bind IPv%3 UDP socket (%1, %2)",
+      "before": "無法繫結 IPv%3 UDP 套接字（%1，%2）",
+      "after": "無法繫結 IPv%3 UDP 通訊端（%1，%2）"
+    },
+    {
+      "context": "VideoDialog",
+      "source": "<html><head/><body><p><span style=\" font-weight:600;\">WARNING</span>: this option might use a LOT of memory.</p><p>Decode and save all the frames as individual images.</p><p>Playback will be smoother but more memory is used.</p></body></html>",
+      "before": "<html><head/><body><p><span style=\" font-weight:600;\">警告</span>：此選項可能佔用大量記憶體。</p><p>將所有影片幀解碼並儲存為單獨影象。</p><p>播放更流暢，但記憶體佔用更高。</p></body></html>",
+      "after": "<html><head/><body><p><span style=\" font-weight:600;\">警告</span>：此選項可能佔用大量記憶體。</p><p>將所有影片影格解碼並儲存為單獨影像。</p><p>播放更流暢，但記憶體佔用更高。</p></body></html>"
+    },
+    {
+      "context": "VideoDialog",
+      "source": "Decode as individual Images",
+      "before": "解碼為單獨影象",
+      "after": "解碼為單獨影像"
+    },
+    {
+      "context": "VideoDialog",
+      "source": "<html><head/><body><p>Drag and Drop a curve/series here.</p><p><br/></p><p>If this number contain the <span style=\" font-weight:600;\">frame number</span> or the <span style=\" font-weight:600;\">relative time in milliseconds </span>the slider will be moved accordingly when the vertical tracker is updated.</p></body></html>",
+      "before": "<html><head/><body><p>將曲線或時間序列拖放到此處。</p><p><br/></p><p>如果數值包含<span style=\" font-weight:600;\">幀號</span>或<span style=\" font-weight:600;\">相對時間（毫秒），</span>更新垂直時間遊標時，將相應移動滑塊。</p></body></html>",
+      "after": "<html><head/><body><p>將曲線或時間序列拖放到此處。</p><p><br/></p><p>如果數值包含<span style=\" font-weight:600;\">影格號</span>或<span style=\" font-weight:600;\">相對時間（毫秒），</span>更新垂直時間遊標時，將相應移動滑桿。</p></body></html>"
+    },
+    {
+      "context": "VideoDialog",
+      "source": "time series connected to slider",
+      "before": "連線到滑塊的時間序列",
+      "after": "連線到滑桿的時間序列"
+    },
+    {
+      "context": "VideoDialog",
+      "source": "Frame number",
+      "before": "幀號",
+      "after": "影格號"
+    },
+    {
+      "context": "VideoDialog",
+      "source": "Can not create video renderer",
+      "before": "無法建立影片渲染器",
+      "after": "無法建立影片繪製器"
+    },
+    {
+      "context": "VideoDialog",
+      "source": "Video is not seekable. You will need to decode the video into individual frames.\n",
+      "before": "此影片不支援定位，需要先解碼為單獨的影片幀。\n",
+      "after": "此影片不支援定位，需要先解碼為單獨的影片影格。\n"
+    },
+    {
+      "context": "WebSocketDialog",
+      "source": "Port of the Websocket server:",
+      "before": "WebSocket 伺服器埠：",
+      "after": "WebSocket 伺服器連接埠："
+    },
+    {
+      "context": "WebSocketDialog",
+      "source": "Message Protocol:",
+      "before": "訊息協議：",
+      "after": "訊息通訊協定："
+    },
+    {
+      "context": "WebSocketDialog",
+      "source": "Protocol options:",
+      "before": "協議選項：",
+      "after": "通訊協定選項："
+    },
+    {
+      "context": "WebsocketClient",
+      "source": "WebSocket Client",
+      "before": "WebSocket 客戶端",
+      "after": "WebSocket 用戶端"
+    },
+    {
+      "context": "WebsocketClient",
+      "source": "Problem parsing the message. WebSocket Client will be stopped.\n%1",
+      "before": "訊息解析失敗，WebSocket 客戶端將停止。\n%1",
+      "after": "訊息解析失敗，WebSocket 用戶端將停止。\n%1"
+    },
+    {
+      "context": "WebsocketServer",
+      "source": "Couldn't open websocket on port %1",
+      "before": "無法在埠 %1 上開啟 WebSocket",
+      "after": "無法在連接埠 %1 上開啟 WebSocket"
+    },
+    {
+      "context": "colormap_editor",
+      "source": "<html><head/><body><p>For each value of the series, the <span style=\" font-weight:600;\">ColorMap</span> function must return a string containing a color. </p><p>You can use hexadecimal notation ('<span style=\" font-weight:600;\">#98fb98</span>') or any of <a href=\"https://doc.qt.io/qt-5/qml-color.html#svg-color-reference\"><span style=\" text-decoration: underline; color:#0000ff;\">these names</span></a> ('<span style=\" font-weight:600;\">palegreen</span>').</p><p>Return no parameters if you want to skip this point.</p></body></html>",
+      "before": "<html><head/><body><p>對於序列中的每個數值，<span style=\" font-weight:600;\">顏色對映</span>函式必須返回包含顏色的字串。</p><p>您可以使用十六進位制表示法（'<span style=\" font-weight:600;\">#98fb98</span>'）或以下<a href=\"https://doc.qt.io/qt-5/qml-color.html#svg-color-reference\"><span style=\" text-decoration: underline; color:#0000ff;\">顏色名稱</span></a> ('<span style=\" font-weight:600;\">palegreen</span>').</p><p>如需跳過此資料點，請不返回任何引數。</p></body></html>",
+      "after": "<html><head/><body><p>對於序列中的每個數值，<span style=\" font-weight:600;\">顏色對映</span>函式必須返回包含顏色的字串。</p><p>您可以使用十六進位表示法（'<span style=\" font-weight:600;\">#98fb98</span>'）或以下<a href=\"https://doc.qt.io/qt-5/qml-color.html#svg-color-reference\"><span style=\" text-decoration: underline; color:#0000ff;\">顏色名稱</span></a> ('<span style=\" font-weight:600;\">palegreen</span>').</p><p>如需跳過此資料點，請不返回任何引數。</p></body></html>"
+    },
+    {
+      "context": "colormap_editor",
+      "source": "Double-click to load.",
+      "before": "雙擊載入。",
+      "after": "按兩下載入。"
+    },
+    {
+      "context": "dialog_mcap",
+      "source": "publish time",
+      "before": "釋出時間",
+      "after": "發布時間"
+    },
+    {
+      "context": "toolBoxUI",
+      "source": "Remove all curves from the list",
+      "before": "從列表中移除全部曲線",
+      "after": "從清單中移除全部曲線"
+    }
+  ]
+}

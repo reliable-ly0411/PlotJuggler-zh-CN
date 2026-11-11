@@ -208,10 +208,13 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
   auto* language_menu = ui->menuHelp->addMenu(tr("Language"));
   auto* language_group = new QActionGroup(this);
   const QString selected_language = qApp->property("interfaceLanguage").toString();
-  for (const auto& entry : {qMakePair(QStringLiteral("zh_CN"), tr("Simplified Chinese")),
+  language_menu->setObjectName("menuLanguage");
+  for (const auto& entry : {qMakePair(QStringLiteral("zh_CN"), QString::fromUtf8("简体中文")),
+                           qMakePair(QStringLiteral("zh_TW"), QString::fromUtf8("繁體中文")),
                            qMakePair(QStringLiteral("en_US"), QStringLiteral("English"))})
   {
     QAction* action = language_menu->addAction(entry.second);
+    action->setObjectName("language:" + entry.first);
     action->setCheckable(true);
     action->setChecked(selected_language == entry.first);
     language_group->addAction(action);
@@ -3151,7 +3154,7 @@ void MainWindow::on_actionAbout_triggered()
   auto ui = new Ui::AboutDialog();
   ui->setupUi(dialog);
 
-  ui->label_version->setText(QString::fromUtf8("版本 / Version: %1").arg(QApplication::applicationVersion()));
+  ui->label_version->setText(tr("Version: %1").arg(QApplication::applicationVersion()));
   ui->label_version->setWordWrap(true);
   dialog->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -3161,11 +3164,21 @@ void MainWindow::on_actionAbout_triggered()
     ui->titleTextBrowser->setHtml(fileTitle.readAll());
   }
 
-  QFile fileBody(":/resources/skin/about_window_body.html");
-  if (fileBody.open(QIODevice::ReadOnly))
-  {
-    ui->bodyTextBrowser->setHtml(fileBody.readAll());
-  }
+  ui->bodyTextBrowser->setHtml(tr(
+      "<html><body>"
+      "<p><b>PlotJuggler</b><br/>Built with love by <b>Davide Faconti</b></p>"
+      "<p><a href=\"https://www.plotjuggler.io\">Official website</a> · "
+      "<a href=\"https://github.com/PlotJuggler/PlotJuggler\">Official upstream</a></p>"
+      "<p>Chinese localization and ArduPilot integration:<br/>"
+      "<a href=\"https://github.com/reliable-ly0411/PlotJuggler-zh-CN\">"
+      "reliable-ly0411/PlotJuggler-zh-CN</a><br/>"
+      "<a href=\"https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/new?template=translation.yml\">"
+      "Report a translation issue</a></p>"
+      "<p>Original copyright and MPL-2.0 license retained.<br/>"
+      "ArduPilot DataFlash plugin: LGPL-3.0.</p>"
+      "<p>For commercial support and custom development, contact the original author:<br/>"
+      "<a href=\"mailto:davide.faconti@gmail.com\">davide.faconti@gmail.com</a></p>"
+      "</body></html>"));
 
   dialog->setAttribute(Qt::WA_DeleteOnClose);
   dialog->exec();

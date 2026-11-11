@@ -14,7 +14,7 @@ SUFFIXES = ("Windows-x64.zip", "Windows-x64.exe", "x86_64.AppImage", "aarch64.Ap
 def expected_files(source):
     if not re.fullmatch(r"[0-9a-f]{40}", source):
         raise ValueError("A full source commit is required")
-    version = "3.18.0-zh.4+upstream.3.17.2.apbin.1.g" + source[:12]
+    version = "3.18.1-rc.1+upstream.3.17.2.apbin.1.g" + source[:12]
     return version, {"PlotJuggler-" + version + "-" + suffix for suffix in SUFFIXES}
 
 
@@ -80,18 +80,20 @@ def collect(software, metadata, source, output, report):
     for name, path in files.items():
         shutil.copyfile(path, output / name)
     report.mkdir(parents=True, exist_ok=True)
-    result = {"tag": "v3.18.0-zh.4", "version": version, "source_commit": source,
+    result = {"tag": "v3.18.1-rc.1", "version": version, "source_commit": source,
               "software_assets": sorted(identities, key=lambda item: item["name"]),
               "asset_count": 7, "process_attachments": 0, "published": False}
     (report / "seven-packages.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
-    notes = f"""PlotJuggler 简体中文 v3.18.0-zh.4
+    notes = f"""PlotJuggler 三语言 v3.18.1-rc.1 (Pre-release)
 
-Source: `{source}`; upstream baseline: PlotJuggler 3.17.2.
+Source: `{source}`; upstream `main-3.x`: `df5cbaad9bb087413470e818fa5cdb88d6357ce5` (declares 3.17.2).
+3.18.1 is a downstream version, not an upstream release.
 
-- Simplified Chinese UI with English switching and bundled ArduPilot DataFlash BIN loader.
-- 88 localized startup images: 71 lossless overlays and 17 complete images. 10 untranslated fallbacks and 8 technical originals remain.
+- English, 简体中文 and 繁體中文, with embedded matching Qt5 standard dialog catalogs.
+- Optional sibling launcher; arguments and the caller's working directory are retained.
+- Traditional Chinese startup images fall back to original English images. Simplified Chinese retains the existing localized images and explicit fallbacks.
 - Seven software assets: Windows x64 ZIP/installer, x86_64/aarch64 AppImages, Ubuntu 24.04 and Debian bookworm/trixie amd64 DEBs.
-- Smaller localized image resources. Measured timings and limitations, including the English first-render regression, are in docs/zh4-performance.md. No universal startup-speed improvement is claimed.
+- Native/GUI/package validation and remaining limits are tracked in issue #44 and docs/localization/3.18.1-validation.md.
 - Original copyright and MPL-2.0 notices retained; the DataFlash plugin retains its LGPL-3.0 notices. DataFlash text logs are not supported by this loader.
 
 Checksums:

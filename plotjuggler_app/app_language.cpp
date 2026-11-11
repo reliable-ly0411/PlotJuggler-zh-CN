@@ -8,26 +8,43 @@
 #include <QTranslator>
 #include <QDebug>
 
-void installApplicationLanguage(QApplication& app)
+QString normalizedApplicationLanguage(QString language)
+{
+  language.replace('-', '_');
+  if (language == "zh_CN" || language == "zh_Hans") return "zh_CN";
+  if (language == "zh_TW" || language == "zh_Hant") return "zh_TW";
+  return "en_US";
+}
+
+QString selectedApplicationLanguage(const QApplication& app)
 {
   QString language = QSettings().value("Preferences::language", "zh_CN").toString();
   const auto arguments = app.arguments();
   for (int i = 1; i < arguments.size(); ++i)
   {
+    if (arguments[i] == "--") break;
     if (arguments[i].startsWith("--language=")) language = arguments[i].mid(11);
     else if (arguments[i] == "--language" && i + 1 < arguments.size()) language = arguments[++i];
   }
-  language = (language == "zh_CN" || language == "zh-CN") ? "zh_CN" : "en_US";
+  return normalizedApplicationLanguage(language);
+}
+
+void installApplicationLanguage(QApplication& app)
+{
+  Q_INIT_RESOURCE(i18n);
+  const QString language = selectedApplicationLanguage(app);
   app.setProperty("interfaceLanguage", language);
-  if (language != "zh_CN") return;
-  QLocale::setDefault(QLocale(QLocale::Chinese, QLocale::China));
+  if (language == "en_US") return;
+  // Interface language must not change numeric parsing, protocol or export locales.
   auto* qt = new QTranslator(&app);
-  if (qt->load("qtbase_zh_CN", app.applicationDirPath() + "/translations") ||
-      qt->load("qtbase_zh_CN", QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+  const QString qt_catalog = "qtbase_" + language;
+  if (qt->load(":/i18n/" + qt_catalog + ".qm") ||
+      qt->load(qt_catalog, app.applicationDirPath() + "/translations") ||
+      qt->load(qt_catalog, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
     app.installTranslator(qt);
   auto* catalog = new QTranslator(&app);
-  if (catalog->load(":/i18n/plotjuggler_zh_CN.qm")) app.installTranslator(catalog);
-  else qWarning() << "Simplified Chinese translation catalog is missing";
+  if (catalog->load(":/i18n/plotjuggler_" + language + ".qm")) app.installTranslator(catalog);
+  else qWarning() << "Translation catalog is missing:" << language;
 }
 
 // Qt 5.15 standard button keys; our own translations also work without qtbase_zh_CN.qm.

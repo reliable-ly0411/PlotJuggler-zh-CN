@@ -1,9 +1,11 @@
 [Desktop Entry]
 Type=Application
-Name=PlotJuggler
-Exec=plotjuggler
+Name=PlotJuggler 3 Chinese
+Exec=plotjuggler-launcher
 Icon=plotjuggler
 Comment=Visualize timeseries like a pro
 Terminal=false
 Categories=Development;
-Name[en_US]=PlotJuggler
+Name[en_US]=PlotJuggler 3 Chinese
+Name[zh_CN]=PlotJuggler 3 中文版
+Name[zh_TW]=PlotJuggler 3 中文版

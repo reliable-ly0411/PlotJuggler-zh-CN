@@ -63,8 +63,8 @@ QJsonObject checkLocalizedUi(QMainWindow* window, const QString& output, bool ch
     const QString button = close ? close->text() : QString();
     about_ok = html.contains("reliable-ly0411/PlotJuggler-zh-CN/issues/new") &&
       text.contains("Davide Faconti") && text.contains("Built with love") &&
-      text.contains(QString::fromUtf8("向汉化项目报告问题")) &&
-      (chinese ? button == QString::fromUtf8("关闭") : button == "Close");
+      text.contains(QCoreApplication::translate("MainWindow", "Report a translation issue")) &&
+      button == QCoreApplication::translate("QPlatformTheme", "Close");
     result["about_text"] = text;
     result["close_button"] = button;
     result["about_screenshot"] = dialog->grab().save(output + "/about.png");

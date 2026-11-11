@@ -6,6 +6,7 @@
 
 #include "mainwindow.h"
 #include "app_language.h"
+#include "app_settings.h"
 #include "localized_meme.h"
 #include "localization_checks.h"
 #include <QTableWidget>
@@ -215,17 +216,7 @@ int main(int argc, char* argv[])
 
   //-------------------------
 
-  QCoreApplication::setOrganizationName("PlotJuggler");
-  QCoreApplication::setApplicationName("io.plotjuggler.PlotJuggler.zh-CN");
-  QSettings::setDefaultFormat(QSettings::IniFormat);
-  const QStringList startup_arguments = app.arguments();
-  const int test_argument = startup_arguments.indexOf("--self-test-ui");
-  if (test_argument >= 0 && test_argument + 1 < startup_arguments.size())
-  {
-    const QString settings_path = startup_arguments[test_argument + 1] + "/settings";
-    QDir().mkpath(settings_path);
-    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings_path);
-  }
+  if (!configureApplicationSettings(app)) return 2;
 
   installApplicationLanguage(app);
 
@@ -258,7 +249,8 @@ int main(int argc, char* argv[])
   QCommandLineParser parser;
   parser.setApplicationDescription("PlotJuggler: the time series visualization"
                                    " tool that you deserve ");
-  parser.addOption(QCommandLineOption("language", QObject::tr("Interface language: zh_CN or en_US"), "locale"));
+  parser.addOption(QCommandLineOption("language", QObject::tr("Interface language: en_US, zh_CN or zh_TW (this session only)"), "locale"));
+  parser.addOption(QCommandLineOption("config-dir", QObject::tr("Use an independent configuration directory"), "directory"));
   parser.addVersionOption();
   parser.addHelpOption();
   const QCommandLineOption ui_test_option("self-test-ui", "Write UI acceptance evidence, then exit", "directory");
@@ -465,8 +457,11 @@ int main(int argc, char* argv[])
       auto* menu = window->findChild<QMenu*>("menuFile");
       const QString expected = QCoreApplication::translate("MainWindow", "App");
       const bool menu_ok = menu && menu->title() == expected;
-      const bool chinese = app.property("interfaceLanguage").toString() == "zh_CN";
-      const bool language_ok = chinese ? expected == QString::fromUtf8("\xE5\xBA\x94\xE7\x94\xA8") : expected == "App";
+      const QString language = app.property("interfaceLanguage").toString();
+      const bool chinese = language.startsWith("zh_");
+      const QString expected_title = language == "zh_CN" ? QString::fromUtf8("应用") :
+                                     language == "zh_TW" ? QString::fromUtf8("應用") : QString("App");
+      const bool language_ok = expected == expected_title;
       const bool image_ok = window->grab().save(output + "/main-window.png");
       const auto details = checkLocalizedUi(window, output, chinese);
       const bool details_ok = details.value("ok").toBool();

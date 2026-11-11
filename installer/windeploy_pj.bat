@@ -23,11 +23,15 @@ echo Using: %WINDEPLOYQT%
 REM Deploy for main executable
 echo Processing: plotjuggler.exe
 "%WINDEPLOYQT%" --release "%DATA_DIR%\plotjuggler.exe"
+if errorlevel 1 exit /b 1
+"%WINDEPLOYQT%" --release "%DATA_DIR%\plotjuggler-launcher.exe"
+if errorlevel 1 exit /b 1
 
 REM Deploy for all plugin DLLs
 for %%f in ("%DATA_DIR%\*.dll") do (
     echo Processing: %%~nxf
     "%WINDEPLOYQT%" --release "%%f"
+    if errorlevel 1 exit /b 1
 )
 
 echo Done.

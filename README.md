@@ -1,12 +1,16 @@
-# PlotJuggler 简体中文 / ArduPilot 分支
+# PlotJuggler 三语言 / ArduPilot Qt5 分支
 
-本 fork 基于官方 Qt5 3.17.2，提供简体中文界面、English 切换及默认随包的
-ArduPilot DataFlash BIN 加载器。当前开发候选版本采用
-`3.18.0-zh.3+upstream.3.17.2.apbin.1.g<commit>`（SemVer 2.0.0）。
-启动图库使用离线内嵌的 AI 中文嵌字图片，修复矩形遮罩及背景留白。
+本 fork 基于官方 Qt5 / C++17 3.x 维护线，提供 English、简体中文、繁體中文、
+独立启动器和随包的 ArduPilot DataFlash BIN 加载器。当前准备下游
+`3.18.1-rc.1+upstream.3.17.2.apbin.1.g<commit>`；仍在验证，尚未发布。
+上游 `main-3.x` 固定为 `df5cbaad9bb087413470e818fa5cdb88d6357ce5`，其声明版本为 3.17.2；
+3.18.1 是下游发行目标。Qt6 / 4.x 的功能、插件 ABI 和验收记录不适用于这里。
+简体模式保留既有离线图库；繁体模式使用英文原图。
 
 - [汉化分支命名、开发流程与发布规则](docs/BRANCHING.zh-CN.md)
 - [使用、解析范围、许可和同步说明](docs/zh-CN.md)
+- [本轮实施与验收状态](docs/localization/3.18.1-validation.md)
+- [翻译修订逐项回移记录](docs/localization/3.18.1-backport.json)
 - [Windows 安装器与 portable 构建](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-windows.yml)
 - [Linux AppImage 构建](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-linux.yml)
 - [每日上游同步及冲突报告](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-sync.yml)

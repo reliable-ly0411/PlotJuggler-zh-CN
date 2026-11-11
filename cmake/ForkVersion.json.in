@@ -1,6 +1,8 @@
 {
   "version": "@PJ_FORK_SEMVER@",
   "upstream_version": "@PJ_UPSTREAM_VERSION@",
+  "upstream_sha": "@PJ_UPSTREAM_SHA@",
+  "downstream_start": "@PJ_DOWNSTREAM_START@",
   "source_revision": "@PJ_FORK_GIT_REVISION@",
   "ardupilot_revision": "@PJ_ARDUPILOT_REVISION@"
 }

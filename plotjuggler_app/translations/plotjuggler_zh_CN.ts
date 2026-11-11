@@ -576,19 +576,19 @@ p, li { white-space: pre-wrap; }
             <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;删除所选时间序列&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
         </message>
         <message>
-            <location filename="../curvelist_panel.cpp" line="461" />
+            <location filename="../curvelist_panel.cpp" line="473" />
             <source>Warning</source>
             <translation>警告</translation>
         </message>
         <message>
-            <location filename="../curvelist_panel.cpp" line="462" />
+            <location filename="../curvelist_panel.cpp" line="474" />
             <source>Do you really want to remove these data?
 </source>
             <translation>确定要移除这些数据吗？
 </translation>
         </message>
         <message>
-            <location filename="../curvelist_panel.cpp" line="594" />
+            <location filename="../curvelist_panel.cpp" line="606" />
             <source>Delete data:
 
 [Delete All]: remove timeseries and plots.
@@ -601,12 +601,12 @@ p, li { white-space: pre-wrap; }
 </translation>
         </message>
         <message>
-            <location filename="../curvelist_panel.cpp" line="602" />
+            <location filename="../curvelist_panel.cpp" line="614" />
             <source>Delete All</source>
             <translation>全部删除</translation>
         </message>
         <message>
-            <location filename="../curvelist_panel.cpp" line="605" />
+            <location filename="../curvelist_panel.cpp" line="617" />
             <source>Delete Points</source>
             <translation>清空数据点</translation>
         </message>
@@ -706,25 +706,25 @@ p, li { white-space: pre-wrap; }
     <context>
         <name>DataLoadMCAP</name>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="338" />
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="382" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="340" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="384" />
             <source>Code: %0
  Message: %1</source>
             <translation>代码：%0
 消息：%1</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="351" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="353" />
             <source>Corrupted MCAP file</source>
             <translation>MCAP 文件损坏</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="352" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="354" />
             <source>The MCAP file appears to be corrupted.</source>
             <translation>此 MCAP 文件似乎已损坏。</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="355" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="357" />
             <source>It can be recovered using the official MCAP CLI tool.
 
 Do you want to try anyway?</source>
@@ -733,17 +733,17 @@ Do you want to try anyway?</source>
 是否仍要尝试加载？</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="356" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="358" />
             <source>Try Anyway</source>
             <translation>仍然尝试</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="467" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="469" />
             <source>No readable MCAP channels were found in the file.</source>
             <translation>文件中未找到可读取的 MCAP 通道。</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="724" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="735" />
             <source>The MCAP file appears to be corrupted. PlotJuggler loaded the readable data before the first unreadable record.
 
 Code: %0
@@ -882,7 +882,7 @@ Message: %1</source>
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamMQTT/datastream_mqtt.ui" line="560" />
             <source>Topics filter:</source>
-            <translation>主题筛选：</translation>
+            <translation>话题筛选：</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamMQTT/datastream_mqtt.ui" line="567" />
@@ -893,7 +893,7 @@ Message: %1</source>
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamMQTT/datastream_mqtt.ui" line="579" />
             <source>Select a specific topic:</source>
-            <translation>选择特定主题：</translation>
+            <translation>选择特定话题：</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamMQTT/datastream_mqtt.ui" line="621" />
@@ -981,7 +981,7 @@ Message: %1</source>
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamZMQ/datastream_zmq.ui" line="175" />
             <source>Topics:</source>
-            <translation>主题：</translation>
+            <translation>话题：</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamZMQ/datastream_zmq.cpp" line="53" />
@@ -1741,7 +1741,7 @@ Message: %1</source>
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_client.ui" line="220" />
             <source>Topic Name</source>
-            <translation>主题名称</translation>
+            <translation>话题名称</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamFoxgloveBridge/foxglove_client.ui" line="225" />
@@ -2236,6 +2236,65 @@ p, li { white-space: pre-wrap; }
         </message>
     </context>
     <context>
+        <name>Launcher</name>
+        <message>
+            <location filename="../launcher.cpp" line="28" />
+            <source>PlotJuggler 3 launcher</source>
+            <translation>PlotJuggler 3 启动器</translation>
+        </message>
+        <message>
+            <location filename="../launcher.cpp" line="40" />
+            <source>Interface language:</source>
+            <translation>界面语言：</translation>
+        </message>
+        <message>
+            <location filename="../launcher.cpp" line="41" />
+            <source>The selected language is saved when you click Start. Files and command-line options are passed to PlotJuggler.</source>
+            <translation>点击“启动”时保存所选语言。文件和命令行选项会传递给 PlotJuggler。</translation>
+        </message>
+        <message>
+            <location filename="../launcher.cpp" line="46" />
+            <source>Start</source>
+            <translation>启动</translation>
+        </message>
+        <message>
+            <location filename="../launcher.cpp" line="55" />
+            <source>Unable to start PlotJuggler:
+%1
+%2</source>
+            <translation>无法启动 PlotJuggler：
+%1
+%2</translation>
+        </message>
+        <message>
+            <location filename="../launcher.cpp" line="60" />
+            <source>PlotJuggler stopped unexpectedly.</source>
+            <translation>PlotJuggler 意外停止。</translation>
+        </message>
+        <message>
+            <location filename="../launcher.cpp" line="62" />
+            <source>PlotJuggler exited with code %1.</source>
+            <translation>PlotJuggler 已退出，退出码为 %1。</translation>
+        </message>
+        <message>
+            <location filename="../launcher.cpp" line="93" />
+            <source>Language</source>
+            <translation>语言</translation>
+        </message>
+        <message>
+            <location filename="../launcher.cpp" line="94" />
+            <source>Unable to save the language preference:
+%1</source>
+            <translation>无法保存语言设置：
+%1</translation>
+        </message>
+        <message>
+            <location filename="../launcher.cpp" line="112" />
+            <source>Launch failed</source>
+            <translation>启动失败</translation>
+        </message>
+    </context>
+    <context>
         <name>LuaEditor</name>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxLuaEditor/lua_editor.ui" line="14" />
@@ -2498,13 +2557,23 @@ p, li { white-space: pre-wrap; }
     <context>
         <name>MQTT_Dialog</name>
         <message>
-            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="248" />
-            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="267" />
+            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="238" />
+            <source>Disconnect</source>
+            <translation>断开连接</translation>
+        </message>
+        <message>
+            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="238" />
+            <source>Connect</source>
+            <translation>连接</translation>
+        </message>
+        <message>
+            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="249" />
+            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="268" />
             <source>CRT (*.crt)</source>
             <translation>证书（*.crt）</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="286" />
+            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="287" />
             <source>Key (*.key)</source>
             <translation>密钥（*.key）</translation>
         </message>
@@ -2603,7 +2672,7 @@ p, li { white-space: pre-wrap; }
         <message>
             <location filename="../mainwindow.ui" line="655" />
             <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the streaming plugin.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-            <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;选择数据流插件。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+            <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;选择流数据插件。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
         </message>
         <message>
             <location filename="../mainwindow.ui" line="680" />
@@ -2613,7 +2682,7 @@ p, li { white-space: pre-wrap; }
         <message>
             <location filename="../mainwindow.ui" line="746" />
             <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start/Stop the streaming plugin.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-            <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;启动或停止数据流插件。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+            <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;启动或停止流数据插件。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
         </message>
         <message>
             <location filename="../mainwindow.ui" line="749" />
@@ -2668,7 +2737,7 @@ p, li { white-space: pre-wrap; }
         <message>
             <location filename="../mainwindow.ui" line="1320" />
             <source>Show point in plot</source>
-            <translation>在曲线图中显示数据点</translation>
+            <translation>显示光标处数据点的数值</translation>
         </message>
         <message>
             <location filename="../mainwindow.ui" line="1358" />
@@ -2747,7 +2816,7 @@ p, li { white-space: pre-wrap; }
         </message>
         <message>
             <location filename="../mainwindow.ui" line="2081" />
-            <location filename="../main.cpp" line="466" />
+            <location filename="../main.cpp" line="458" />
             <source>App</source>
             <translation>应用</translation>
         </message>
@@ -2788,6 +2857,7 @@ p, li { white-space: pre-wrap; }
         </message>
         <message>
             <location filename="../mainwindow.ui" line="2137" />
+            <location filename="../localization_checks.cpp" line="66" />
             <source>Report a translation issue</source>
             <translation>向汉化项目报告问题</translation>
         </message>
@@ -2849,7 +2919,7 @@ p, li { white-space: pre-wrap; }
         </message>
         <message>
             <location filename="../mainwindow.ui" line="2211" />
-            <location filename="../mainwindow.cpp" line="3545" />
+            <location filename="../mainwindow.cpp" line="3618" />
             <source>Load StyleSheet</source>
             <translation>加载样式表</translation>
         </message>
@@ -2860,52 +2930,47 @@ p, li { white-space: pre-wrap; }
         </message>
         <message>
             <location filename="../mainwindow.cpp" line="208" />
-            <location filename="../mainwindow.cpp" line="220" />
+            <location filename="../mainwindow.cpp" line="223" />
             <source>Language</source>
             <translation>语言</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="211" />
-            <source>Simplified Chinese</source>
-            <translation>简体中文</translation>
-        </message>
-        <message>
-            <location filename="../mainwindow.cpp" line="220" />
+            <location filename="../mainwindow.cpp" line="223" />
             <source>Restart PlotJuggler to apply the selected language.</source>
             <translation>请重启 PlotJuggler，以应用所选语言。</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="482" />
-            <location filename="../mainwindow.cpp" line="3520" />
+            <location filename="../mainwindow.cpp" line="501" />
+            <location filename="../mainwindow.cpp" line="3593" />
             <source>:/resources/stylesheet_%1.qss</source>
             <translation>:/resources/stylesheet_%1.qss</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1148" />
+            <location filename="../mainwindow.cpp" line="1159" />
             <source>One or more timeseries in the layout haven't been loaded yet
 What do you want to do?</source>
             <translation>布局中的部分时间序列尚未加载。
 您希望如何处理？</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1152" />
+            <location filename="../mainwindow.cpp" line="1163" />
             <source>Remove curves from plots</source>
             <translation>从曲线图中移除曲线</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1154" />
+            <location filename="../mainwindow.cpp" line="1165" />
             <source>Create empty placeholders</source>
             <translation>创建空占位序列</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1493" />
-            <location filename="../mainwindow.cpp" line="3034" />
-            <location filename="../mainwindow.cpp" line="3219" />
+            <location filename="../mainwindow.cpp" line="1505" />
+            <location filename="../mainwindow.cpp" line="3097" />
+            <location filename="../mainwindow.cpp" line="3292" />
             <source>Warning</source>
             <translation>警告</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1494" />
+            <location filename="../mainwindow.cpp" line="1506" />
             <source>Do you want to remove the previously loaded data?
 Yes removes old data, No merges new and old data
 </source>
@@ -2914,37 +2979,37 @@ Yes removes old data, No merges new and old data
 </translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1582" />
+            <location filename="../mainwindow.cpp" line="1614" />
             <source>QInputDialog::getItem()</source>
             <translation>QInputDialog::getItem()</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1582" />
+            <location filename="../mainwindow.cpp" line="1614" />
             <source>Select the loader to use:</source>
             <translation>选择要使用的加载器：</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1597" />
+            <location filename="../mainwindow.cpp" line="1629" />
             <source>Datafile</source>
             <translation>数据文件</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1598" />
-            <location filename="../mainwindow.cpp" line="2150" />
+            <location filename="../mainwindow.cpp" line="1630" />
+            <location filename="../mainwindow.cpp" line="2197" />
             <source>Cannot read file %1:
 %2.</source>
             <translation>无法读取文件 %1：
 %2。</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1647" />
-            <location filename="../mainwindow.cpp" line="1804" />
+            <location filename="../mainwindow.cpp" line="1679" />
+            <location filename="../mainwindow.cpp" line="1836" />
             <source>Exception from the plugin</source>
             <translation>插件发生异常</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1648" />
-            <source>The plugin [%1] thrown the following exception:&#32;
+            <location filename="../mainwindow.cpp" line="1680" />
+            <source>The plugin [%1] thrown the following exception: 
 
  %3
 </source>
@@ -2954,13 +3019,13 @@ Yes removes old data, No merges new and old data
 </translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1656" />
-            <location filename="../mainwindow.cpp" line="1975" />
+            <location filename="../mainwindow.cpp" line="1688" />
+            <location filename="../mainwindow.cpp" line="2007" />
             <source>Error</source>
             <translation>错误</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1657" />
+            <location filename="../mainwindow.cpp" line="1689" />
             <source>Cannot read files with extension %1.
  No plugin can handle that!
 </source>
@@ -2969,8 +3034,8 @@ Yes removes old data, No merges new and old data
 </translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1805" />
-            <source>The plugin thrown the following exception:&#32;
+            <location filename="../mainwindow.cpp" line="1837" />
+            <source>The plugin thrown the following exception: 
 
  %1
 </source>
@@ -2980,49 +3045,49 @@ Yes removes old data, No merges new and old data
 </translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1890" />
+            <location filename="../mainwindow.cpp" line="1922" />
             <source>Error loading StyleSheet</source>
             <translation>加载样式表失败</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1976" />
+            <location filename="../mainwindow.cpp" line="2008" />
             <source>The dropped item is not a valid file and will be ignored:
  [%1]</source>
             <translation>拖入的项目不是有效文件，将被忽略：
 [%1]</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2029" />
+            <location filename="../mainwindow.cpp" line="2061" />
             <source>Error loading Plugin State from Layout</source>
             <translation>从布局加载插件状态失败</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2030" />
+            <location filename="../mainwindow.cpp" line="2062" />
             <source>The method xmlSaveState() must return a node like this &lt;plugin ID="PluginName" </source>
             <translation>xmlSaveState() 方法必须返回类似这样的节点：&lt;plugin ID="PluginName" </translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2149" />
+            <location filename="../mainwindow.cpp" line="2196" />
             <source>Layout</source>
             <translation>布局</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2167" />
+            <location filename="../mainwindow.cpp" line="2214" />
             <source>XML Layout</source>
             <translation>XML 布局</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2168" />
+            <location filename="../mainwindow.cpp" line="2215" />
             <source>Parse error at line %1:
 %2</source>
             <translation>第 %1 行解析错误：
 %2</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2214" />
+            <location filename="../mainwindow.cpp" line="2289" />
             <source>Start the previously used streaming plugin?
 
- %1&#32;
+ %1 
 
 </source>
             <translation>启动上次使用的数据流插件吗？
@@ -3032,39 +3097,39 @@ Yes removes old data, No merges new and old data
 </translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2215" />
+            <location filename="../mainwindow.cpp" line="2290" />
             <source>Yes</source>
             <translation>是</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2216" />
+            <location filename="../mainwindow.cpp" line="2291" />
             <source>No</source>
             <translation>否</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2240" />
+            <location filename="../mainwindow.cpp" line="2303" />
             <source>Error Loading Streamer</source>
             <translation>加载数据流插件失败</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2241" />
+            <location filename="../mainwindow.cpp" line="2304" />
             <source>The streamer named %1 can not be loaded.</source>
             <translation>无法加载名为 %1 的数据流插件。</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2342" />
-            <location filename="../mainwindow.cpp" line="2382" />
+            <location filename="../mainwindow.cpp" line="2405" />
+            <location filename="../mainwindow.cpp" line="2445" />
             <source>Exception</source>
             <translation>异常</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2343" />
+            <location filename="../mainwindow.cpp" line="2406" />
             <source>Cyclic dependency detected in custom equations.</source>
             <translation>自定义表达式中检测到循环依赖。</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2383" />
-            <source>Failed to load customMathEquation [%1]&#32;
+            <location filename="../mainwindow.cpp" line="2446" />
+            <source>Failed to load customMathEquation [%1] 
 
  %2
 </source>
@@ -3074,24 +3139,24 @@ Yes removes old data, No merges new and old data
 </translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2697" />
+            <location filename="../mainwindow.cpp" line="2760" />
             <source> sec</source>
             <translation> 秒</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2863" />
+            <location filename="../mainwindow.cpp" line="2926" />
             <source>Note</source>
             <translation>提示</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2864" />
+            <location filename="../mainwindow.cpp" line="2927" />
             <source>When "Use Date Time" is checked, the option "Remove Time Offset" is automatically disabled.
 This message will be shown only once.</source>
             <translation>勾选“使用日期时间”后，将自动禁用“移除时间偏移”。
 此提示仅显示一次。</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="3035" />
+            <location filename="../mainwindow.cpp" line="3098" />
             <source>Failed to create the custom timeseries. Error:
 
 %1</source>
@@ -3100,21 +3165,31 @@ This message will be shown only once.</source>
 %1</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="3219" />
+            <location filename="../mainwindow.cpp" line="3157" />
+            <source>Version: %1</source>
+            <translation>版本：%1</translation>
+        </message>
+        <message>
+            <location filename="../mainwindow.cpp" line="3167" />
+            <source>&lt;html&gt;&lt;body&gt;&lt;p&gt;&lt;b&gt;PlotJuggler&lt;/b&gt;&lt;br/&gt;Built with love by &lt;b&gt;Davide Faconti&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;a href="https://www.plotjuggler.io"&gt;Official website&lt;/a&gt; · &lt;a href="https://github.com/PlotJuggler/PlotJuggler"&gt;Official upstream&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Chinese localization and ArduPilot integration:&lt;br/&gt;&lt;a href="https://github.com/reliable-ly0411/PlotJuggler-zh-CN"&gt;reliable-ly0411/PlotJuggler-zh-CN&lt;/a&gt;&lt;br/&gt;&lt;a href="https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/new?template=translation.yml"&gt;Report a translation issue&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Original copyright and MPL-2.0 license retained.&lt;br/&gt;ArduPilot DataFlash plugin: LGPL-3.0.&lt;/p&gt;&lt;p&gt;For commercial support and custom development, contact the original author:&lt;br/&gt;&lt;a href="mailto:davide.faconti@gmail.com"&gt;davide.faconti@gmail.com&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+            <translation>&lt;html&gt;&lt;body&gt;&lt;p&gt;&lt;b&gt;PlotJuggler&lt;/b&gt;&lt;br/&gt;Built with love by &lt;b&gt;Davide Faconti&lt;/b&gt;&lt;/p&gt;&lt;p&gt;&lt;a href="https://www.plotjuggler.io"&gt;官方网站&lt;/a&gt; · &lt;a href="https://github.com/PlotJuggler/PlotJuggler"&gt;上游项目&lt;/a&gt;&lt;/p&gt;&lt;p&gt;中文界面与 ArduPilot 集成：&lt;br/&gt;&lt;a href="https://github.com/reliable-ly0411/PlotJuggler-zh-CN"&gt;reliable-ly0411/PlotJuggler-zh-CN&lt;/a&gt;&lt;br/&gt;&lt;a href="https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/new?template=translation.yml"&gt;向汉化项目报告问题&lt;/a&gt;&lt;/p&gt;&lt;p&gt;保留原项目版权与 MPL-2.0 许可证。&lt;br/&gt;ArduPilot DataFlash 插件：LGPL-3.0。&lt;/p&gt;&lt;p&gt;商业支持与定制开发请联系原作者：&lt;br/&gt;&lt;a href="mailto:davide.faconti@gmail.com"&gt;davide.faconti@gmail.com&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        </message>
+        <message>
+            <location filename="../mainwindow.cpp" line="3292" />
             <source>No plugin was loaded to process a data file
 </source>
             <translation>未加载可处理数据文件的插件。
 </translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="3493" />
+            <location filename="../mainwindow.cpp" line="3566" />
             <source>Do you want to remove the previously loaded data?
 </source>
             <translation>是否移除先前加载的数据？
 </translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="3545" />
+            <location filename="../mainwindow.cpp" line="3618" />
             <source>(*.qss)</source>
             <translation>(*.qss)</translation>
         </message>
@@ -3289,28 +3364,28 @@ This message will be shown only once.</source>
         <message>
             <location filename="../../plotjuggler_plugins/ParserProtobuf/protobuf_factory.cpp" line="491" />
             <source>Type a topic or type ID</source>
-            <translation>输入主题名称或类型 ID</translation>
+            <translation>输入话题名称或类型 ID</translation>
         </message>
     </context>
     <context>
         <name>PlotWidget</name>
         <message>
-            <location filename="../plotwidget.cpp" line="566" />
+            <location filename="../plotwidget.cpp" line="567" />
             <source>This is a [XY plot], you can not drop a timeseries here.
 To convert this widget into a [timeseries plot], you must first remove all its curves.</source>
             <translation>这是 XY 曲线图，无法拖入时间序列。
 若要转换为时间序列曲线图，请先移除其中的全部曲线。</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="573" />
-            <location filename="../plotwidget.cpp" line="599" />
+            <location filename="../plotwidget.cpp" line="574" />
+            <location filename="../plotwidget.cpp" line="600" />
             <source>This is a [timeseries plot], you can not drop XY scatter data here.
 To convert this widget into a [XY plot], you must first remove all its curves.</source>
             <translation>这是时间序列曲线图，无法拖入 XY 散点数据。
 若要转换为 XY 曲线图，请先移除其中的全部曲线。</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="842" />
+            <location filename="../plotwidget.cpp" line="843" />
             <source>Can't restore the transform for curve [%1].
 Transform [%2] not found.
 Are you using an old configuration file?</source>
@@ -3319,7 +3394,7 @@ Are you using an old configuration file?</source>
 是否使用了旧版配置文件？</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="883" />
+            <location filename="../plotwidget.cpp" line="884" />
             <source>Can't find one or more curves.
 This message will be shown only once.
 %1</source>
@@ -3328,21 +3403,21 @@ This message will be shown only once.
 %1</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="948" />
+            <location filename="../plotwidget.cpp" line="949" />
             <source>Can't restore the background color.
 Series [%1] not found.</source>
             <translation>无法恢复背景颜色。
 找不到序列 [%1]。</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="958" />
+            <location filename="../plotwidget.cpp" line="959" />
             <source>Can't restore the background color.
 ColorMap [%1] not found.</source>
             <translation>无法恢复背景颜色。
 找不到颜色映射 [%1]。</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="1842" />
+            <location filename="../plotwidget.cpp" line="1843" />
             <source>The creation of the XY plot failed with the following message:
  %1</source>
             <translation>创建 XY 曲线图失败，消息如下：
@@ -3384,7 +3459,7 @@ ColorMap [%1] not found.</source>
         <message>
             <location filename="../plotwidget_editor.ui" line="431" />
             <source>Sticks</source>
-            <translation>棒状</translation>
+            <translation>竖线</translation>
         </message>
         <message>
             <location filename="../plotwidget_editor.ui" line="441" />
@@ -3681,7 +3756,7 @@ ColorMap [%1] not found.</source>
         <message>
             <location filename="../../plotjuggler_plugins/ParserProtobuf/protobuf_parser.ui" line="48" />
             <source>Load one or more .proto files. The "Default message type" is used for streams with no topic (e.g. UDP) or for topics not listed in the Topic Mapping tab.</source>
-            <translation>加载一个或多个 .proto 文件。“默认消息类型”用于无主题的数据流（如 UDP），以及未在“主题映射”中列出的主题。</translation>
+            <translation>加载一个或多个 .proto 文件。“默认消息类型”用于无话题的数据流（如 UDP），以及未在“话题映射”中列出的话题。</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ParserProtobuf/protobuf_parser.ui" line="66" />
@@ -3717,12 +3792,12 @@ ColorMap [%1] not found.</source>
         <message>
             <location filename="../../plotjuggler_plugins/ParserProtobuf/protobuf_parser.ui" line="130" />
             <source>Topic Mapping</source>
-            <translation>主题映射</translation>
+            <translation>话题映射</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ParserProtobuf/protobuf_parser.ui" line="136" />
             <source>Map specific topics to specific message types. Works for MQTT/ZMQ streamers (each topic gets its own parser). Topics not listed here fall back to the Default message type. UDP streamers pass an empty topic — use the Default type.</source>
-            <translation>将主题映射到对应消息类型。适用于 MQTT/ZMQ 数据流，每个主题使用独立解析器。未列出的主题使用默认消息类型。UDP 传递空主题，应使用默认类型。</translation>
+            <translation>将话题映射到对应消息类型。适用于 MQTT/ZMQ 数据流，每个话题使用独立解析器。未列出的话题使用默认消息类型。UDP 传递空话题，应使用默认类型。</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ParserProtobuf/protobuf_parser.ui" line="151" />
@@ -3732,7 +3807,7 @@ ColorMap [%1] not found.</source>
         <message>
             <location filename="../../plotjuggler_plugins/ParserProtobuf/protobuf_parser.ui" line="184" />
             <source>Topic</source>
-            <translation>主题</translation>
+            <translation>话题</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ParserProtobuf/protobuf_parser.ui" line="189" />
@@ -3758,22 +3833,27 @@ ColorMap [%1] not found.</source>
     <context>
         <name>QObject</name>
         <message>
-            <location filename="../main.cpp" line="261" />
-            <source>Interface language: zh_CN or en_US</source>
-            <translation>界面语言：zh_CN 或 en_US</translation>
+            <location filename="../main.cpp" line="252" />
+            <source>Interface language: en_US, zh_CN or zh_TW (this session only)</source>
+            <translation>界面语言：en_US、zh_CN 或 zh_TW（仅本次启动）</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="506" />
+            <location filename="../main.cpp" line="253" />
+            <source>Use an independent configuration directory</source>
+            <translation>使用独立的配置目录</translation>
+        </message>
+        <message>
+            <location filename="../main.cpp" line="501" />
             <source>Python disabled</source>
             <translation>Python 已禁用</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="507" />
+            <location filename="../main.cpp" line="502" />
             <source>PlotJuggler could not initialize the embedded Python interpreter.</source>
             <translation>PlotJuggler 无法初始化嵌入式 Python 解释器。</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="510" />
+            <location filename="../main.cpp" line="505" />
             <source>Python custom functions are disabled for this session. Lua custom functions remain available.
 
 This usually means the Python standard library expected by this build is not present on the host system (common when running an AppImage on a distro with a different Python version).</source>
@@ -3782,12 +3862,12 @@ This usually means the Python standard library expected by this build is not pre
 通常是主机缺少此构建所需的 Python 标准库，例如在 Python 版本不同的发行版上运行 AppImage。</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="515" />
+            <location filename="../main.cpp" line="510" />
             <source>Don't show this again</source>
             <translation>不再显示</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="554" />
+            <location filename="../main.cpp" line="549" />
             <source>New release available: &lt;b&gt;%1&lt;/b&gt;&lt;br&gt;&lt;a href="%2"&gt;View on GitHub&lt;/a&gt;</source>
             <translation>发现新版本：&lt;b&gt;%1&lt;/b&gt;&lt;br&gt;&lt;a href="%2"&gt;在 GitHub 上查看&lt;/a&gt;</translation>
         </message>
@@ -3947,30 +4027,30 @@ This usually means the Python standard library expected by this build is not pre
             <translation>0 / 0</translation>
         </message>
         <message>
-            <location filename="../curvelist_panel.cpp" line="443" />
+            <location filename="../curvelist_panel.cpp" line="455" />
             <source>%1 of %2</source>
             <translation>%1 / %2</translation>
         </message>
         <message>
-            <location filename="../curvelist_panel.cpp" line="593" />
-            <location filename="../mainwindow.cpp" line="3492" />
+            <location filename="../curvelist_panel.cpp" line="605" />
+            <location filename="../mainwindow.cpp" line="3565" />
             <source>Warning. Can't be undone.</source>
             <translation>警告：此操作无法撤销。</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="430" />
-            <location filename="../mainwindow.cpp" line="435" />
-            <location filename="../mainwindow.cpp" line="440" />
+            <location filename="../mainwindow.cpp" line="449" />
+            <location filename="../mainwindow.cpp" line="454" />
+            <location filename="../mainwindow.cpp" line="459" />
             <source>+</source>
             <translation>+</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="699" />
+            <location filename="../mainwindow.cpp" line="705" />
             <source>Missing package [plotjuggler-ros]</source>
             <translation>缺少 [plotjuggler-ros] 软件包</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="700" />
+            <location filename="../mainwindow.cpp" line="706" />
             <source>If you just upgraded from PlotJuggler 2.x to 3.x , try installing this package:
 
 sudo apt install ros-${ROS_DISTRO}-plotjuggler-ros</source>
@@ -3979,7 +4059,7 @@ sudo apt install ros-${ROS_DISTRO}-plotjuggler-ros</source>
 sudo apt install ros-${ROS_DISTRO}-plotjuggler-ros</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1147" />
+            <location filename="../mainwindow.cpp" line="1158" />
             <location filename="../transforms/function_editor.cpp" line="1076" />
             <location filename="../transforms/function_editor.cpp" line="1115" />
             <location filename="../../plotjuggler_plugins/ToolboxLuaEditor/lua_editor.cpp" line="255" />
@@ -3987,17 +4067,17 @@ sudo apt install ros-${ROS_DISTRO}-plotjuggler-ros</translation>
             <translation>警告</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1384" />
+            <location filename="../mainwindow.cpp" line="1396" />
             <source>State publishers stopped</source>
             <translation>状态发布器已停止</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1385" />
+            <location filename="../mainwindow.cpp" line="1397" />
             <source>All the state publishers have been stopped because old data has been deleted.</source>
             <translation>旧数据已删除，所有状态发布器均已停止。</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1737" />
+            <location filename="../mainwindow.cpp" line="1769" />
             <source>Start</source>
             <translation>启动</translation>
         </message>
@@ -4020,86 +4100,86 @@ sudo apt install ros-${ROS_DISTRO}-plotjuggler-ros</translation>
             <translation />
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1819" />
+            <location filename="../mainwindow.cpp" line="1851" />
             <source>Stop streaming to be able to delete the data</source>
             <translation>请先停止数据流，再删除数据</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="1821" />
+            <location filename="../mainwindow.cpp" line="1853" />
             <source>Stop</source>
             <translation>停止</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2212" />
+            <location filename="../mainwindow.cpp" line="2287" />
             <source>Start Streaming?</source>
             <translation>启动数据流？</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2429" />
+            <location filename="../mainwindow.cpp" line="2492" />
             <source>Overwrite custom transforms?</source>
             <translation>覆盖自定义变换？</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2430" />
+            <location filename="../mainwindow.cpp" line="2493" />
             <source>Your layout file contains a set of custom transforms different from the last one you used.
 Want to load these transformations?</source>
             <translation>布局文件中的自定义变换与上次使用的不同。
 是否加载这些变换？</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2852" />
+            <location filename="../mainwindow.cpp" line="2915" />
             <source>View streaming alerts</source>
             <translation>查看数据流警报</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2974" />
+            <location filename="../mainwindow.cpp" line="3037" />
             <source>error</source>
             <translation>错误</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="2975" />
+            <location filename="../mainwindow.cpp" line="3038" />
             <source>Failed to refresh data : </source>
             <translation>刷新数据失败：</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="3276" />
+            <location filename="../mainwindow.cpp" line="3349" />
             <source>Open Layout</source>
             <translation>打开布局</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="3310" />
+            <location filename="../mainwindow.cpp" line="3383" />
             <source>Save Layout options</source>
             <translation>保存布局选项</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="3314" />
+            <location filename="../mainwindow.cpp" line="3387" />
             <source>Save data source</source>
             <translation>保存数据来源</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="3315" />
+            <location filename="../mainwindow.cpp" line="3388" />
             <source>the layout will remember the source of your data,
 i.e. the Datafile used or the Streaming Plugin loaded ?</source>
             <translation>布局是否记住数据来源，
 例如数据文件或已加载的数据流插件？</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="3321" />
+            <location filename="../mainwindow.cpp" line="3394" />
             <source>Save Scripts (transforms and colormaps)</source>
             <translation>保存脚本（变换和颜色映射）</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="3322" />
+            <location filename="../mainwindow.cpp" line="3395" />
             <source>Do you want the layout to save your Lua scripts?</source>
             <translation>是否在布局中保存 Lua 脚本？</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="3442" />
+            <location filename="../mainwindow.cpp" line="3515" />
             <source>Remember!</source>
             <translation>提示</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="3442" />
+            <location filename="../mainwindow.cpp" line="3515" />
             <source>Press F10 to switch back to the normal view</source>
             <translation>按 F10 返回普通视图</translation>
         </message>
@@ -4114,82 +4194,82 @@ i.e. the Datafile used or the Streaming Plugin loaded ?</source>
             <translation>...</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="152" />
+            <location filename="../plotwidget.cpp" line="153" />
             <source>&amp;Edit curves...</source>
             <translation>编辑曲线(&amp;E)…</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="159" />
+            <location filename="../plotwidget.cpp" line="160" />
             <source>&amp;Apply filter to data...</source>
             <translation>对数据应用滤波(&amp;A)…</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="170" />
-            <source>&amp;Split Horizontally</source>
-            <translation>水平拆分(&amp;H)</translation>
-        </message>
-        <message>
-            <location filename="../plotwidget.cpp" line="173" />
-            <source>&amp;Split Vertically</source>
-            <translation>垂直拆分(&amp;V)</translation>
-        </message>
-        <message>
-            <location filename="../plotwidget.cpp" line="176" />
+            <location filename="../plotwidget.cpp" line="177" />
             <source>&amp;Remove ALL curves</source>
             <translation>移除全部曲线(&amp;R)</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="180" />
+            <location filename="../plotwidget.cpp" line="181" />
             <source>&amp;Zoom Out</source>
             <translation>缩小至全范围(&amp;Z)</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="187" />
-            <source>&amp;Zoom Out Horizontally</source>
-            <translation>水平方向缩小至全范围(&amp;H)</translation>
+            <location filename="../plotwidget.cpp" line="171" />
+            <source>Split &amp;Horizontally</source>
+            <translation>水平拆分(&amp;H)</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="194" />
-            <source>&amp;Zoom Out Vertically</source>
-            <translation>垂直方向缩小至全范围(&amp;V)</translation>
+            <location filename="../plotwidget.cpp" line="174" />
+            <source>Split &amp;Vertically</source>
+            <translation>垂直拆分(&amp;V)</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="204" />
+            <location filename="../plotwidget.cpp" line="188" />
+            <source>Zoom Out Horizontally</source>
+            <translation>水平方向缩小至全范围</translation>
+        </message>
+        <message>
+            <location filename="../plotwidget.cpp" line="195" />
+            <source>Zoom Out Vertically</source>
+            <translation>垂直方向缩小至全范围</translation>
+        </message>
+        <message>
+            <location filename="../plotwidget.cpp" line="205" />
             <source>&amp;Save plot to file</source>
             <translation>保存曲线图到文件(&amp;S)</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="207" />
+            <location filename="../plotwidget.cpp" line="208" />
             <source>&amp;Copy</source>
             <translation>复制(&amp;C)</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="210" />
+            <location filename="../plotwidget.cpp" line="211" />
             <source>&amp;Paste</source>
             <translation>粘贴(&amp;P)</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="213" />
+            <location filename="../plotwidget.cpp" line="214" />
             <source>&amp;Copy image to clipboard</source>
             <translation>复制图像到剪贴板(&amp;I)</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="216" />
+            <location filename="../plotwidget.cpp" line="217" />
             <source>&amp;Flip Horizontal Axis</source>
             <translation>翻转水平坐标轴(&amp;H)</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="220" />
+            <location filename="../plotwidget.cpp" line="221" />
             <source>&amp;Flip Vertical Axis</source>
             <translation>翻转垂直坐标轴(&amp;V)</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="224" />
+            <location filename="../plotwidget.cpp" line="225" />
             <source>&amp;Show data statistics</source>
             <translation>显示数据统计(&amp;S)</translation>
         </message>
         <message>
-            <location filename="../plotwidget.cpp" line="1841" />
+            <location filename="../plotwidget.cpp" line="1842" />
             <source>Warnings</source>
             <translation>警告</translation>
         </message>
@@ -4272,38 +4352,38 @@ The column number will be added (as suffix) to the name.</source>
             <translation>正在加载，请稍候…</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="337" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="339" />
             <source>Can't open file</source>
             <translation>无法打开文件</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="381" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="383" />
             <source>Can't open summary of the file</source>
             <translation>无法打开文件摘要</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="466" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="468" />
             <source>Can't load MCAP file</source>
             <translation>无法加载 MCAP 文件</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="556" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="558" />
             <location filename="../../plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_client.cpp" line="763" />
             <source>Encoding problem</source>
             <translation>编码问题</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="593" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="604" />
             <source>Parser Error</source>
             <translation>解析器错误</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="625" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="636" />
             <source>Loading the MCAP file</source>
             <translation>正在加载 MCAP 文件</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="723" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dataload_mcap.cpp" line="734" />
             <source>MCAP file recovered partially</source>
             <translation>MCAP 文件已部分恢复</translation>
         </message>
@@ -4389,27 +4469,27 @@ The column number will be added (as suffix) to the name.</source>
             <translation>MQTT 客户端</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="117" />
+            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="118" />
             <source>Connection Lost</source>
             <translation>连接中断</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="118" />
+            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="119" />
             <source>Client disconnected. Maybe a problem with authentication?</source>
             <translation>客户端已断开，可能是身份验证失败。</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="248" />
+            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="249" />
             <source>Select Server Certificate</source>
             <translation>选择服务器证书</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="267" />
+            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="268" />
             <source>Select Client Certificate</source>
             <translation>选择客户端证书</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="286" />
+            <location filename="../../plotjuggler_plugins/DataStreamMQTT/mqtt_dialog.cpp" line="287" />
             <source>Select PrivateKey</source>
             <translation>选择私钥</translation>
         </message>
@@ -4469,7 +4549,7 @@ The column number will be added (as suffix) to the name.</source>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxCSV/toolbox_ui.cpp" line="61" />
             <source>Click to select all topics</source>
-            <translation>点击以选择全部主题</translation>
+            <translation>点击以选择全部话题</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxCSV/toolbox_ui.cpp" line="151" />
@@ -4550,7 +4630,7 @@ The column number will be added (as suffix) to the name.</source>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="241" />
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="690" />
             <source>Download selected topics</source>
-            <translation>下载所选主题</translation>
+            <translation>下载所选话题</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="259" />
@@ -4575,17 +4655,17 @@ The column number will be added (as suffix) to the name.</source>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="463" />
             <source>Loading topics for %1...</source>
-            <translation>正在加载 %1 的主题…</translation>
+            <translation>正在加载 %1 的话题…</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="476" />
             <source>No topics returned — enter a topic name manually if needed</source>
-            <translation>未返回主题 — 如有需要，请手动输入主题名称</translation>
+            <translation>未返回话题 — 如有需要，请手动输入话题名称</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="480" />
             <source>%1 topic(s) available</source>
-            <translation>可用主题：%1 个</translation>
+            <translation>可用话题：%1 个</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="538" />
@@ -4595,7 +4675,7 @@ The column number will be added (as suffix) to the name.</source>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="543" />
             <source>Selected %1 topics — adjust range and click Fetch</source>
-            <translation>已选 %1 个主题 — 调整范围后点击「下载」</translation>
+            <translation>已选 %1 个话题 — 调整范围后点击「下载」</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="713" />
@@ -4615,14 +4695,14 @@ The column number will be added (as suffix) to the name.</source>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="734" />
             <source>Fetch Errors (%1 topics)</source>
-            <translation>获取错误（%1 个主题）</translation>
+            <translation>获取错误（%1 个话题）</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="737" />
             <source>%1 topic(s) failed:
 
 %2</source>
-            <translation>%1 个主题获取失败：
+            <translation>%1 个话题获取失败：
 
 %2</translation>
         </message>
@@ -4646,7 +4726,7 @@ The column number will be added (as suffix) to the name.</source>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="819" />
             <source>Fetching %1 topic(s)...</source>
-            <translation>正在获取 %1 个主题…</translation>
+            <translation>正在获取 %1 个话题…</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/main_window.cpp" line="875" />
@@ -4707,7 +4787,7 @@ The column number will be added (as suffix) to the name.</source>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/download_stats_dialog.cpp" line="72" />
             <source>Topic</source>
-            <translation>主题</translation>
+            <translation>话题</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/download_stats_dialog.cpp" line="73" />
@@ -4805,7 +4885,7 @@ Metadata:
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/metadata/data_view_panel.cpp" line="172" />
             <source>Topic    : %1
 </source>
-            <translation>主题：%1
+            <translation>话题：%1
 </translation>
         </message>
         <message>
@@ -4873,12 +4953,12 @@ Metadata:
             <translation>键</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/metadata/query_bar.cpp" line="232" />
+            <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/metadata/query_bar.cpp" line="233" />
             <source>Op</source>
             <translation>操作符</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/metadata/query_bar.cpp" line="241" />
+            <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/metadata/query_bar.cpp" line="243" />
             <source>Value</source>
             <translation>数值</translation>
         </message>
@@ -5055,12 +5135,12 @@ Metadata:
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/topic/topic_panel.cpp" line="46" />
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/topic/topic_panel.cpp" line="147" />
             <source>Topics</source>
-            <translation>主题</translation>
+            <translation>话题</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/topic/topic_panel.cpp" line="129" />
             <source>Topics (none — click a topic manually)</source>
-            <translation>主题（未选择，请手动点击主题）</translation>
+            <translation>话题（未选择，请手动点击话题）</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/VideoViewer/video_dialog.cpp" line="162" />
@@ -5110,7 +5190,7 @@ Metadata:
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/fetch_worker.cpp" line="128" />
             <source>listTopics failed: </source>
-            <translation>获取主题失败：</translation>
+            <translation>获取话题失败：</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/fetch_worker.cpp" line="169" />
@@ -5125,103 +5205,104 @@ Metadata:
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/fetch_worker.cpp" line="292" />
             <source>pullTopics failed: </source>
-            <translation>拉取主题失败：</translation>
+            <translation>拉取话题失败：</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxMosaico/src/ui/fetch_worker.cpp" line="302" />
             <source>pullTopics failed: unknown error</source>
-            <translation>拉取主题失败：未知错误</translation>
+            <translation>拉取话题失败：未知错误</translation>
         </message>
     </context>
     <context>
         <name>QPlatformTheme</name>
         <message>
-            <location filename="../app_language.cpp" line="35" />
+            <location filename="../app_language.cpp" line="52" />
             <source>OK</source>
             <translation>确定</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="36" />
+            <location filename="../app_language.cpp" line="53" />
             <source>Save</source>
             <translation>保存</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="37" />
+            <location filename="../app_language.cpp" line="54" />
             <source>Save All</source>
             <translation>全部保存</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="38" />
+            <location filename="../app_language.cpp" line="55" />
             <source>Open</source>
             <translation>打开</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="39" />
+            <location filename="../app_language.cpp" line="56" />
             <source>&amp;Yes</source>
             <translation>是(&amp;Y)</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="40" />
+            <location filename="../app_language.cpp" line="57" />
             <source>Yes to &amp;All</source>
             <translation>全部是(&amp;A)</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="41" />
+            <location filename="../app_language.cpp" line="58" />
             <source>&amp;No</source>
             <translation>否(&amp;N)</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="42" />
+            <location filename="../app_language.cpp" line="59" />
             <source>N&amp;o to All</source>
             <translation>全部否(&amp;O)</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="43" />
+            <location filename="../app_language.cpp" line="60" />
             <source>Abort</source>
             <translation>中止</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="44" />
+            <location filename="../app_language.cpp" line="61" />
             <source>Retry</source>
             <translation>重试</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="45" />
+            <location filename="../app_language.cpp" line="62" />
             <source>Ignore</source>
             <translation>忽略</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="46" />
+            <location filename="../app_language.cpp" line="63" />
+            <location filename="../localization_checks.cpp" line="67" />
             <source>Close</source>
             <translation>关闭</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="47" />
+            <location filename="../app_language.cpp" line="64" />
             <source>Cancel</source>
             <translation>取消</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="48" />
+            <location filename="../app_language.cpp" line="65" />
             <source>Discard</source>
             <translation>放弃</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="49" />
+            <location filename="../app_language.cpp" line="66" />
             <source>Help</source>
             <translation>帮助</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="50" />
+            <location filename="../app_language.cpp" line="67" />
             <source>Apply</source>
             <translation>应用</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="51" />
+            <location filename="../app_language.cpp" line="68" />
             <source>Reset</source>
             <translation>重置</translation>
         </message>
         <message>
-            <location filename="../app_language.cpp" line="52" />
+            <location filename="../app_language.cpp" line="69" />
             <source>Restore Defaults</source>
             <translation>恢复默认值</translation>
         </message>
@@ -5480,27 +5561,27 @@ p, li { white-space: pre-wrap; }
     <context>
         <name>ToolboxMenu</name>
         <message>
-            <location filename="../mainwindow.cpp" line="830" />
+            <location filename="../mainwindow.cpp" line="836" />
             <source>CSV/Parquet Exporter</source>
             <translation>CSV/Parquet 导出器（CSV/Parquet Exporter）</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="831" />
+            <location filename="../mainwindow.cpp" line="837" />
             <source>Fast Fourier Transform</source>
             <translation>快速傅里叶变换（Fast Fourier Transform）</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="832" />
+            <location filename="../mainwindow.cpp" line="838" />
             <source>Quaternion to RPY</source>
             <translation>四元数转滚转/俯仰/偏航（Quaternion to RPY）</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="833" />
+            <location filename="../mainwindow.cpp" line="839" />
             <source>Reactive Script Editor</source>
             <translation>响应式脚本编辑器（Reactive Script Editor）</translation>
         </message>
         <message>
-            <location filename="../mainwindow.cpp" line="834" />
+            <location filename="../mainwindow.cpp" line="840" />
             <source>Mosaico Cloud Server</source>
             <translation>Mosaico 云端服务器（Mosaico Cloud Server）</translation>
         </message>
@@ -5545,7 +5626,7 @@ p, li { white-space: pre-wrap; }
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamUDP/udp_server.ui" line="140" />
             <source>Strip a fixed-size type ID from the start of every datagram and pass it as topic name to the parser. Enables multi-type protobuf/JSON/etc. on a single UDP port when the publisher prepends a type identifier.</source>
-            <translation>从每个数据报的开头提取固定长度的类型 ID，并将其作为主题名称传递给解析器。当发送端添加类型标识时，同一 UDP 端口可处理多种 Protobuf、JSON 等消息。</translation>
+            <translation>从每个数据报的开头提取固定长度的类型 ID，并将其作为话题名称传递给解析器。当发送端添加类型标识时，同一 UDP 端口可处理多种 Protobuf、JSON 等消息。</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamUDP/udp_server.ui" line="146" />
@@ -5821,7 +5902,7 @@ p, li { white-space: pre-wrap; }
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_client.ui" line="165" />
             <source>Select one or multiple topics:</source>
-            <translation>选择一个或多个主题：</translation>
+            <translation>选择一个或多个话题：</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_client.ui" line="185" />
@@ -5831,7 +5912,7 @@ p, li { white-space: pre-wrap; }
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_client.ui" line="220" />
             <source>Topic Name</source>
-            <translation>主题名称</translation>
+            <translation>话题名称</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/DataStreamPlotJugglerBridge/websocket_client.ui" line="225" />
@@ -5975,6 +6056,7 @@ p, li { white-space: pre-wrap; }
     <context>
         <name>dialog_mcap</name>
         <message>
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="78" />
             <source>Enable for RTI DDS Micro and older CDR implementations that align from byte 0.
 Modern XCDR2 standard aligns from byte 4 (after CDR header).
 Only affects OMGIDL-encoded channels in this file.</source>
@@ -5983,6 +6065,7 @@ Only affects OMGIDL-encoded channels in this file.</source>
 仅影响此文件中采用 OMGIDL 编码的通道。</translation>
         </message>
         <message>
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="83" />
             <source>Use legacy CDR alignment (byte 0) for OMGIDL messages</source>
             <translation>对 OMGIDL 消息使用旧版 CDR 对齐方式（字节 0）</translation>
         </message>
@@ -6012,27 +6095,27 @@ Only affects OMGIDL-encoded channels in this file.</source>
             <translation>使用消息中的时间戳（如有）</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="80" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="95" />
             <source>Select the MCAP timestamping mode:</source>
             <translation>选择 MCAP 时间戳模式：</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="87" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="102" />
             <source>publish time</source>
             <translation>发布时间</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="100" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="115" />
             <source>log time</source>
             <translation>记录时间</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="132" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="147" />
             <source>Select the channels that you want to load</source>
             <translation>选择要加载的通道</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="144" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="159" />
             <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Press
            &lt;span style="
            font-weight:600;"&gt;Ctrl+A&lt;/span&gt; to select
@@ -6040,31 +6123,31 @@ Only affects OMGIDL-encoded channels in this file.</source>
            font-weight:600;"&gt;Ctrl+Shift+A&lt;/span&gt; to
            deselect all&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
             <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;按&lt;span style="
-           font-weight:600;"&gt;Ctrl+A&lt;/span&gt;可选择全部主题，按&lt;span style="
+           font-weight:600;"&gt;Ctrl+A&lt;/span&gt;可选择全部话题，按&lt;span style="
            font-weight:600;"&gt;Ctrl+Shift+A&lt;/span&gt;可取消全选&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="166" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="181" />
             <source>Filter Topic Names: </source>
-            <translation>筛选主题名称：</translation>
+            <translation>筛选话题名称：</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="209" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="224" />
             <source>Channel name</source>
             <translation>通道名称</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="214" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="229" />
             <source>Schema</source>
             <translation>数据结构</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="219" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="234" />
             <source>Encoding</source>
             <translation>编码</translation>
         </message>
         <message>
-            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="224" />
+            <location filename="../../plotjuggler_plugins/DataLoadMCAP/dialog_mcap.ui" line="239" />
             <source>Msg Count</source>
             <translation>消息数量</translation>
         </message>
@@ -6072,12 +6155,12 @@ Only affects OMGIDL-encoded channels in this file.</source>
     <context>
         <name>main</name>
         <message>
-            <location filename="../main.cpp" line="305" />
+            <location filename="../main.cpp" line="297" />
             <source>Change the maximum size of the streaming buffer (minimum: 10 default: 60)</source>
             <translation>修改数据流缓冲区最大长度（最小 10 秒，默认 60 秒）</translation>
         </message>
         <message>
-            <location filename="../main.cpp" line="307" />
+            <location filename="../main.cpp" line="299" />
             <source>seconds</source>
             <translation>秒</translation>
         </message>
@@ -6321,13 +6404,13 @@ Only affects OMGIDL-encoded channels in this file.</source>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxCSV/toolbox_csv.ui" line="233" />
             <source>Topic</source>
-            <translation>主题</translation>
+            <translation>话题</translation>
         </message>
         <message>
             <location filename="../../plotjuggler_plugins/ToolboxCSV/toolbox_csv.ui" line="258" />
             <source>If enabled, one file per group (i.e. "topic" or "channel") will be created in a user provided folder
 </source>
-            <translation>启用后，在指定目录中为每个分组（主题或通道）创建一个文件。
+            <translation>启用后，在指定目录中为每个分组（话题或通道）创建一个文件。
 </translation>
         </message>
         <message>

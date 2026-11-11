@@ -57,7 +57,9 @@ jobs:
         path: ${{ runner.temp }}/pj-conan-cache.tgz
         key: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt
           }}
-        restore-keys: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-
+        restore-keys: |
+          pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-
+          pj3-conan-win194-native-v2-
     - name: Import cached Conan packages
       shell: pwsh
       run: |
@@ -89,7 +91,7 @@ jobs:
     - name: Build Plotjuggler
       shell: pwsh
       run: |
-        cmake --preset conan-default -S . -B build -DCMAKE_BUILD_TYPE=Release -DPJ_INSTALLATION="windows" -DPJ_PLUGINS_DIRECTORY="bin" -DBUILD_TESTING=OFF
+        cmake --preset conan-default -S . -B build -DCMAKE_BUILD_TYPE=Release -DPJ_INSTALLATION="windows" -DPJ_PLUGINS_DIRECTORY="bin" -DBUILD_TESTING=ON
         cmake --build build --config Release
 
         $version = (Get-Content build/FORK-VERSION.json -Raw | ConvertFrom-Json).version

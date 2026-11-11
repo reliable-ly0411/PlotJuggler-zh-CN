@@ -8,6 +8,7 @@
  lz4/1.9.4
  zstd/1.5.7
  abseil/20230802.1
+ gtest/1.14.0
 
  [options]
  zeromq*:shared=False

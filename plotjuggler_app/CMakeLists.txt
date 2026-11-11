@@ -1,5 +1,6 @@
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+include(${CMAKE_SOURCE_DIR}/cmake/ApplicationLanguage.cmake)
 
 set(RES_SRC ${PJ_APP_RESOURCES})
 set_source_files_properties(${RES_SRC} PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
@@ -50,7 +51,6 @@ set(PLOTJUGGLER_SRC
     curvetree_view.cpp
     dummy_data.cpp
     main.cpp
-    app_language.cpp
     localized_meme.cpp
     localization_checks.cpp
     mainwindow.cpp
@@ -221,16 +221,18 @@ else()
   install(TARGETS plotjuggler DESTINATION bin)
 endif()
 
-find_package(Qt5 REQUIRED COMPONENTS LinguistTools)
-qt5_add_translation(PJ_QM_FILES translations/plotjuggler_zh_CN.ts)
-set(PJ_QM_FILE "${CMAKE_CURRENT_BINARY_DIR}/plotjuggler_zh_CN.qm")
-configure_file(translations/i18n.qrc.in ${CMAKE_CURRENT_BINARY_DIR}/i18n.qrc @ONLY)
-qt5_add_resources(PJ_I18N_RESOURCES ${CMAKE_CURRENT_BINARY_DIR}/i18n.qrc)
-add_custom_target(pj_translations DEPENDS ${PJ_QM_FILES})
-add_dependencies(plotjuggler pj_translations)
-target_sources(plotjuggler PRIVATE ${PJ_I18N_RESOURCES})
+target_link_libraries(plotjuggler PRIVATE pj_application_language)
+qt5_add_resources(PJ_LAUNCHER_RESOURCES launcher.qrc)
+add_executable(plotjuggler-launcher launcher.cpp ${PJ_LAUNCHER_RESOURCES})
+target_link_libraries(plotjuggler-launcher PRIVATE pj_application_language)
+target_compile_definitions(plotjuggler-launcher PRIVATE PJ_FORK_SEMVER="${PJ_FORK_SEMVER}")
+if(WIN32)
+  target_sources(plotjuggler-launcher PRIVATE plotjuggler.rc)
+endif()
+install(TARGETS plotjuggler-launcher DESTINATION bin)
 
 if(PJ_BUILD_FORK_TESTS)
+  include(${CMAKE_SOURCE_DIR}/cmake/ApplicationLanguageTests.cmake)
   add_executable(semver_test ${CMAKE_SOURCE_DIR}/tests/semver_test.cpp)
   target_include_directories(semver_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   target_link_libraries(semver_test PRIVATE Qt5::Core)
@@ -240,6 +242,7 @@ endif()
 
 if(BUILD_TESTING)
   add_executable(test_nlohmann_layout tests/nlohmann_layout_probe.cpp nlohmann_parsers.cpp)
+  set_target_properties(test_nlohmann_layout PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests_bin")
   target_link_libraries(test_nlohmann_layout PRIVATE ${QT_LINK_LIBRARIES} plotjuggler_base
                                                    nlohmann_json::nlohmann_json fmt::fmt)
   add_test(NAME NlohmannLayout COMMAND test_nlohmann_layout)

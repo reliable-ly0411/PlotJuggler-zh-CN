@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: MPL-2.0
-# Public product version policy: additive Qt5 functionality is a minor release.
+# Downstream maintenance target requested in #44; Qt5 plugin/configuration contracts are retained.
 set(PJ_UPSTREAM_VERSION "3.17.2")
-set(PJ_FORK_PRERELEASE "zh.4")
+set(PJ_FORK_PRERELEASE "rc.1")
+set(PJ_UPSTREAM_SHA "df5cbaad9bb087413470e818fa5cdb88d6357ce5")
+set(PJ_DOWNSTREAM_START "cbc7b7287884208b5a9042de45bcab4b5dcd79c0")
 set(PJ_ARDUPILOT_REVISION "1")
 find_package(Git QUIET)
 set(PJ_FORK_GIT_REVISION "source")

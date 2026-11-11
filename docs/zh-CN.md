@@ -1,4 +1,48 @@
-# PlotJuggler 简体中文与 ArduPilot 版本
+# PlotJuggler 三语言与 ArduPilot Qt5 版本
+
+## 3.18.1 候选使用方式
+
+本轮是 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44) 的下游维护候选
+`3.18.1-rc.1`，不是上游 3.18.1。使用上游 Qt5 / C++17 `main-3.x`
+`df5cbaad9bb087413470e818fa5cdb88d6357ce5`（仍声明 3.17.2），开发起点为
+`cbc7b7287884208b5a9042de45bcab4b5dcd79c0`。
+当前状态、候选 SHA 和已运行/失败/未运行检查见 [验收记录](localization/3.18.1-validation.md)。
+完成该记录中的门槛后才发布新的 Pre-release；已有标签和资产保持不变。
+
+安装/解压后可运行 `plotjuggler-launcher.exe`（Windows）或 `plotjuggler-launcher`（Linux），
+选择 English、简体中文、繁體中文后点击启动。选择写入原有 3.x 的语言设置；
+4.x 使用另一套标识，不导入或覆盖其配置。直接运行主程序仍然有效。
+在主程序“帮助/說明 → 语言/語言”菜单选择语言后，重启生效。
+
+```text
+plotjuggler --language en_US
+plotjuggler --language zh_CN
+plotjuggler --language zh_TW
+plotjuggler-launcher --launch --language zh_TW -d "相对路径/样本.csv"
+plotjuggler-launcher --config-dir "便携目录/settings"
+```
+
+`--language` 只覆盖本次启动，不改已保存语言。`--config-dir` 使用指定的独立设置目录，
+不迁移原配置；便携版需要自包含设置时可显式指定。启动器只运行自身同目录的主程序，
+逐项转发参数并保留调用者工作目录，因此相对数据/布局路径仍以调用者为基准。
+启动器等待主程序退出并返回其退出码；启动失败返回 127，崩溃返回 128。
+可直接打开主程序诊断或使用 `--launch` 跳过启动器窗口。
+
+升级前备份既有 3.x 配置；候选安装器沿用独立 `PlotJuggler-zh-CN` 目录。
+安装到空目录或使用便携包并存最便于回退，避免选取 4.x 或任意其他软件目录。
+不要删除旧配置来测试升级。Linux DEB 沿用 3.x 包名 `plotjuggler`；
+其系统命令与桌面入口由包管理器管理，安装前检查同名包，AppImage 便于并存。
+
+两种中文的应用目录和 Qt5 标准对话框目录均嵌入包内；未知第三方字符串回退英文。
+语言选择不改变数值 locale。繁体使用台湾地区词汇（欄/列、檔案、儲存、設定、外掛程式），
+协议标识、格式表达式、插件 ID、用户数据和布局 XML 不做转换。
+繁体启动图目前回退原英文图，简体保留既有图库；第三方插件动态异常、飞行日志内的说明与用户文本仍可能是英文。
+该候选没有接入 4.x 的插件市场或 SDK，也没有宣称全部日志格式已经验证。
+版权及随包文本清单见 [3.x 第三方说明](THIRD-PARTY-3X.md)。
+
+## 3.18.0 历史记录
+
+以下保留 zh.2～zh.4 的历史设计和验证范围，不代表 3.18.1 的验收结果。
 
 本分支对应本机使用的 Qt5 PlotJuggler 3.17.2，初始基线为官方
 `3.17.2` 标签（`034a5cc919909aebb124e0dc1abbe2029c3eed0f`）。

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project(
   plotjuggler
   LANGUAGES C CXX
-  VERSION 3.18.0)
+  VERSION 3.18.1)
 
 include(cmake/ForkVersion.cmake)
 
@@ -361,7 +361,10 @@ if(PJ_BUILD_FORK_TESTS)
   add_dependencies(pj_time_picker_test pj_translations)
   add_test(NAME LocalizedTimePicker COMMAND pj_time_picker_test
     ${CMAKE_CURRENT_BINARY_DIR}/plotjuggler_app/plotjuggler_zh_CN.qm)
+  add_test(NAME TraditionalTimePicker COMMAND pj_time_picker_test
+    ${CMAKE_CURRENT_BINARY_DIR}/plotjuggler_app/plotjuggler_zh_TW.qm)
   set_tests_properties(LocalizedTimePicker PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+  set_tests_properties(TraditionalTimePicker PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
   add_executable(pj_resource_image_test tests/resource_image_test.cpp)
   target_link_libraries(pj_resource_image_test PRIVATE Qt5::Gui pj_resource_images)

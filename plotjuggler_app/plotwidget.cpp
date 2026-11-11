@@ -168,10 +168,10 @@ void PlotWidget::buildActions()
     }
   });
 
-  _action_split_horizontal = new QAction(QObject::tr("&Split Horizontally"), this);
+  _action_split_horizontal = new QAction(QObject::tr("Split &Horizontally"), this);
   connect(_action_split_horizontal, &QAction::triggered, this, &PlotWidget::splitHorizontal);
 
-  _action_split_vertical = new QAction(QObject::tr("&Split Vertically"), this);
+  _action_split_vertical = new QAction(QObject::tr("Split &Vertically"), this);
   connect(_action_split_vertical, &QAction::triggered, this, &PlotWidget::splitVertical);
 
   _action_removeAllCurves = new QAction(QObject::tr("&Remove ALL curves"), this);
@@ -185,14 +185,14 @@ void PlotWidget::buildActions()
     emit undoableChange();
   });
 
-  _action_zoomOutHorizontally = new QAction(QObject::tr("&Zoom Out Horizontally"), this);
+  _action_zoomOutHorizontally = new QAction(QObject::tr("Zoom Out Horizontally"), this);
   connect(_action_zoomOutHorizontally, &QAction::triggered, this, [this]() {
     on_zoomOutHorizontal_triggered(true);
     replot();
     emit undoableChange();
   });
 
-  _action_zoomOutVertically = new QAction(QObject::tr("&Zoom Out Vertically"), this);
+  _action_zoomOutVertically = new QAction(QObject::tr("Zoom Out Vertically"), this);
   connect(_action_zoomOutVertically, &QAction::triggered, this, [this]() {
     on_zoomOutVertical_triggered(true);
     replot();

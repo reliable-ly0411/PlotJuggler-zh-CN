@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-"""Capture both language modes from the compiled app using synthetic data only."""
+"""Capture three language modes from the compiled Qt5 app using synthetic data only."""
 import argparse
 import json
 import os
@@ -24,12 +24,12 @@ if a.original_images:
 fixture = root / "plotjuggler_plugins/DataLoadAPBin/tests/synthetic.BIN"
 expected_version = json.loads((root / "build/FORK-VERSION.json").read_text(encoding="utf-8"))["version"]
 reports = []
-for language in ("zh_CN", "en_US"):
+for language in ("zh_CN", "zh_TW", "en_US"):
     out = Path(a.out).resolve() / language
     out.mkdir(parents=True, exist_ok=True)
     command = [str(app), "-n", "--disable_opengl",
                "--self-test-ui", str(out), "-d", str(fixture)]
-    if language == "en_US": command += ["--language", "en_US"]
+    if language != "zh_CN": command += ["--language", language]
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60)
     (out / "process.log").write_bytes(result.stdout)
     if result.returncode:
@@ -48,4 +48,4 @@ for language in ("zh_CN", "en_US"):
     assert sum(m["rendering"] in ("localized-overlay", "localized-full-image") for m in memes) == (localized_count if language == "zh_CN" else 0), memes
     reports.append({"language": language, **report, "meme_images": len(memes)})
 Path(a.out, "summary.json").write_text(json.dumps(reports, ensure_ascii=False, indent=2), encoding="utf-8")
-print("PASS: Chinese default catalog, English override, real UI screenshots, bundled DataFlash loader")
+print("PASS: three language catalogs, UI window captures, bundled synthetic DataFlash loader")

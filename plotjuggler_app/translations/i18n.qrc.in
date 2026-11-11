@@ -1,1 +1,6 @@
-<RCC><qresource prefix="/i18n"><file alias="plotjuggler_zh_CN.qm">@PJ_QM_FILE@</file></qresource></RCC>
+<RCC><qresource prefix="/i18n">
+  <file alias="plotjuggler_zh_CN.qm">@PJ_CN_QM@</file>
+  <file alias="plotjuggler_zh_TW.qm">@PJ_TW_QM@</file>
+  <file alias="qtbase_zh_CN.qm">@PJ_QTBASE_CN_QM@</file>
+  <file alias="qtbase_zh_TW.qm">@PJ_QTBASE_TW_QM@</file>
+</qresource></RCC>
