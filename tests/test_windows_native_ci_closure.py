@@ -274,26 +274,47 @@ class PartitionTests(unittest.TestCase):
             put('s/.github/windows-native-kit/tool-pins.json',
                 json.dumps({'artifacts':[{'name':'python','version':'3.12.10'}]}).encode())
             put(folder+'/bin/python312.dll',b'locked runtime')
-            put(folder+'/bin/DLLs/math.pyd',b'locked math')
+            put(folder+'/bin/DLLs/unicodedata.pyd',b'locked unicodedata')
             put(folder+'/bin/Lib/encodings/__init__.py',b'encoding')
             put(folder+'/bin/Lib/os.py',b'os')
             probe='b/pj_scripting/RelWithDebInfo/pj_scripting_python_tests.exe'
             home=(LOGICAL+'\\'+folder.replace('/','\\')+'\\bin').replace('\\','/')
             probe_bytes=(home+'\0'+hashlib.sha256(b'locked runtime').hexdigest()+'\0'+
-                         hashlib.sha256(b'locked math').hexdigest()+'\0').encode()
+                         hashlib.sha256(b'locked unicodedata').hexdigest()+'\0').encode()
             put(probe,probe_bytes)
             policy['approved_cases'][0]['executable']=probe
             docs['i18n']['tests'][0]['command'][0]=LOGICAL+'\\'+probe.replace('/','\\')
             paths.append(probe)
             policy['approved_cases'][0]['dynamic_files']=[
                 {'selector':'locked-cpython','artifact':'runtime-dll','role':'runtime-module'},
-                {'selector':'locked-cpython','artifact':'math-extension','role':'runtime-module'},
+                {'selector':'locked-cpython','artifact':'unicodedata-extension','role':'runtime-module'},
                 {'selector':'locked-cpython','artifact':'stdlib-encodings','role':'data'},
                 {'selector':'locked-cpython','artifact':'stdlib-os','role':'data'}]
             partition=self.derive(policy,docs,paths,coverage)
             inventory=closure.derive_dynamic_inventory(policy,partition,plan,docs,LOGICAL)
             scope=next(x for x in inventory['scopes'] if x['suite']=='i18n')
             self.assertEqual(len(scope['dynamic_files']),4)
+            extension=folder+'/bin/DLLs/unicodedata.pyd'
+            self.assertIn({'path':extension, 'sha256':hashlib.sha256(b'locked unicodedata').hexdigest(),
+                           'role':'runtime-module'},scope['dynamic_files'])
+            self.assertFalse((base/folder/'bin/DLLs/math.pyd').exists())
+            for defect in ('missing-extension', 'changed-extension', 'changed-recorded-hash', 'old-math-selector'):
+                with self.subTest(defect=defect):
+                    altered_plan=copy.deepcopy(plan); altered_policy=copy.deepcopy(policy)
+                    if defect == 'missing-extension':
+                        altered_plan['files']=[row for row in altered_plan['files'] if row['destination']!=extension]
+                    elif defect in ('changed-extension', 'changed-recorded-hash'):
+                        (base/extension).write_bytes(b'tampered unicodedata')
+                        if defect == 'changed-recorded-hash':
+                            next(row for row in altered_plan['files'] if row['destination']==extension)['sha256'] = (
+                                hashlib.sha256(b'tampered unicodedata').hexdigest())
+                    else:
+                        altered_policy['approved_cases'][0]['dynamic_files'][1]['artifact']='math-extension'
+                    try:
+                        with self.assertRaises(closure.ClosureError):
+                            closure.derive_dynamic_inventory(altered_policy,partition,altered_plan,docs,LOGICAL)
+                    finally:
+                        (base/extension).write_bytes(b'locked unicodedata')
             later_ref='cpython/3.12.17#'+'c'*32
             graph['graph']['nodes']['1']['ref']=later_ref
             for relative, data in (('b/conan-install-graph.json', json.dumps(graph).encode()),

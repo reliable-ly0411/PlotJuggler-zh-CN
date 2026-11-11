@@ -1,7 +1,11 @@
 # SPDX-License-Identifier: MPL-2.0
 """Synthetic identity receipts and source contracts, not a Windows execution."""
+import hashlib
 import importlib.util
+import json
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import unittest
 
@@ -19,9 +23,69 @@ class PythonIdentityTests(unittest.TestCase):
         self.assertIn('python_runtime_identity_win_test.cpp', cmake)
         self.assertIn('PJ_NATIVE_EXPECTED_PYTHON_HOME="${_pj_python_home_define}"', cmake)
         for required in ('GetModuleHandleW', 'GetModuleFileNameW', 'Py_GetVersion()', 'PY_VERSION',
-                         'ensureInterpreter()', 'attr("prefix")', 'import("math")', 'std::filesystem::equivalent'):
+                         'ensureInterpreter()', 'attr("prefix")', 'import("unicodedata")', 'std::filesystem::equivalent'):
             self.assertIn(required, source)
         self.assertNotIn('3.12.7', source)
+        self.assertLess(source.index('#include <windows.h>'), source.index('#include <bcrypt.h>'))
+        for required in ('DLLs/unicodedata.pyd', '_pj_expected_unicodedata_sha256',
+                         'PJ_NATIVE_EXPECTED_UNICODEDATA_SHA256'):
+            self.assertIn(required, cmake)
+        for required in ('ASSERT_TRUE(within(unicodedata, home))',
+                         'std::filesystem::equivalent(unicodedata, home / "DLLs" / "unicodedata.pyd", error)',
+                         'ASSERT_EQ(*unicodedata_sha256, PJ_NATIVE_EXPECTED_UNICODEDATA_SHA256)'):
+            self.assertIn(required, source)
+        self.assertNotIn('DLLs/math.pyd', cmake)
+        self.assertNotIn('PJ_NATIVE_EXPECTED_MATH_SHA256', cmake + source)
+
+    @unittest.skipUnless(shutil.which('cmake'), 'CMake is unavailable')
+    def test_cmake_gate_requires_the_real_windows_extension_and_hashes_its_bytes(self):
+        # Exercise the source's file/hash gate without configuring native targets.
+        cmake = (ROOT / 'pj_scripting/CMakeLists.txt').read_text(encoding='utf-8')
+        gate = cmake.split('if(WIN32 AND PJ_NATIVE_BUNDLE_MODE)', 1)[1].split('target_sources(', 1)[0]
+        for defect in (None, 'missing-extension', 'math-only', 'not-conan', 'missing-runtime'):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as directory:
+                home = Path(directory) / 'runtime'; (home / 'DLLs').mkdir(parents=True)
+                runtime = home / 'python312.dll'; runtime.write_bytes(b'locked runtime')
+                extension = home / 'DLLs/unicodedata.pyd'; extension.write_bytes(b'locked unicodedata')
+                if defect in ('missing-extension', 'math-only'):
+                    extension.unlink()
+                if defect == 'math-only':
+                    (home / 'DLLs/math.pyd').write_bytes(b'not a Windows stdlib extension')
+                if defect == 'missing-runtime':
+                    runtime.unlink()
+                conan = 'FALSE' if defect == 'not-conan' else 'TRUE'
+                script = Path(directory) / 'gate.cmake'
+                script.write_text(f'set(_pj_python_home_is_conan {conan})\n'
+                                  f'set(_pj_python_home_define "{home.as_posix()}")\n' + gate +
+                                  '\nmessage(STATUS "dll=${_pj_expected_python_sha256}")\n'
+                                  'message(STATUS "extension=${_pj_expected_unicodedata_sha256}")\n',
+                                  encoding='utf-8')
+                result = subprocess.run([shutil.which('cmake'), '-P', str(script)], capture_output=True,
+                                        text=True, encoding='utf-8', timeout=15)
+                if defect is None:
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertFalse((home / 'DLLs/math.pyd').exists())
+                    for payload in (b'locked runtime', b'locked unicodedata'):
+                        self.assertIn(hashlib.sha256(payload).hexdigest(), result.stdout)
+                else:
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn('Native test kit requires its locked Conan CPython runtime', result.stderr)
+
+    def test_runtime_identity_policy_keeps_the_extension_mandatory_and_sources_pinned(self):
+        policy = json.loads((ROOT / '.github/windows-native-kit/ci-closure-policy.json').read_text(encoding='utf-8'))
+        rule = next(row for row in policy['approved_cases'] if row['case'] ==
+                    'pj_scripting_python_tests.WindowsPythonRuntimeIdentity.ConanLibraryAndStdlibAreActuallyLoaded')
+        self.assertEqual(rule['dynamic_files'], [
+            {'selector': 'locked-cpython', 'artifact': 'runtime-dll', 'role': 'runtime-module'},
+            {'selector': 'locked-cpython', 'artifact': 'unicodedata-extension', 'role': 'runtime-module'},
+            {'selector': 'locked-cpython', 'artifact': 'stdlib-encodings', 'role': 'data'},
+            {'selector': 'locked-cpython', 'artifact': 'stdlib-os', 'role': 'data'},
+        ])
+        for source in ('pj_scripting/CMakeLists.txt', 'pj_scripting/tests/python_runtime_identity_win_test.cpp'):
+            self.assertIn('s/' + source, rule['source_files'])
+            # Git checkouts may use CRLF, but reviewed pins describe repository bytes.
+            content = (ROOT / source).read_bytes().replace(b'\r\n', b'\n')
+            self.assertEqual(policy['reviewed_source_sha256']['s/' + source], hashlib.sha256(content).hexdigest())
 
     def test_driver_receipt_rejects_wrong_pid_version_modules_or_manifest(self):
         with tempfile.TemporaryDirectory() as directory:

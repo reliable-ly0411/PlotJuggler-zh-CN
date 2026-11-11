@@ -20,7 +20,28 @@ CATEGORIES = {
     'invalid-target': r'cannot specify .* for target|target .* was not found',
     'generator-conflict': r'does not match the generator used previously',
     'compiler-check-failed': r'is not able to compile a simple test program',
+    'native-cpython-runtime-missing': r'native test kit requires its locked conan cpython runtime',
+    'cpython-version-mismatch': r'cmake detected wrong cpython version',
+    'cmake-syntax-error': r'syntax error in cmake code|invalid (?:character )?escape',
+    'download-failed': r'each download failed!|download failed',
 }
+
+
+def classify_output(text):
+    """Return fixed hints/counts only; wrapped messages never become output text."""
+    labels = set()
+    errors = unclassified = 0
+    # Separate other CMake diagnostics/progress so a later known warning cannot
+    # give an unrelated, unclassified error a false category.
+    blocks = re.split(r'(?=^CMake (?:Error|Warning|Deprecation Warning)\b|^-- )', text, flags=re.M)
+    for block in blocks:
+        flattened = re.sub(r'\s+', ' ', block)
+        matches = {label for label, pattern in CATEGORIES.items() if re.search(pattern, flattened, re.I)}
+        labels.update(matches)
+        if re.match(r'^CMake Error\b', block):
+            errors += 1
+            unclassified += not matches
+    return sorted(labels), errors, unclassified
 
 
 def read_checked(path):
@@ -80,10 +101,10 @@ def collect(root, output, sha, tree):
             if receipt.get(key) != hashlib.sha256(data).hexdigest():
                 raise ValueError('stream hash mismatch')
             text = data.decode('utf-8', errors='replace')
-            for label, pattern in CATEGORIES.items():
-                if re.search(pattern, text, re.I):
-                    report['diagnostic_categories'].append(label)
-            report['cmake_error_headers'] = report.get('cmake_error_headers', 0) + len(re.findall(r'^CMake Error', text, re.M))
+            labels, errors, unclassified = classify_output(text)
+            report['diagnostic_categories'].extend(labels)
+            report['cmake_error_headers'] = report.get('cmake_error_headers', 0) + errors
+            report['unclassified_error_count'] = report.get('unclassified_error_count', 0) + unclassified
     report['diagnostic_categories'] = sorted(set(report['diagnostic_categories']))
     output.mkdir()
     (output / 'failure-diagnostics.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')

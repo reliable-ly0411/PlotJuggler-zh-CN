@@ -974,7 +974,7 @@ def derive_dynamic_inventory(policy, ci_policy, candidate_plan, discoveries, log
         return result[0]['path']
     cpython_verified = {}
     def source_locked_cpython(artifact, executable):
-        allowed = {'runtime-dll': 'bin/python312.dll', 'math-extension': 'bin/DLLs/math.pyd',
+        allowed = {'runtime-dll': 'bin/python312.dll', 'unicodedata-extension': 'bin/DLLs/unicodedata.pyd',
                    'stdlib-encodings': 'bin/Lib/encodings/__init__.py', 'stdlib-os': 'bin/Lib/os.py'}
         if artifact not in allowed:
             raise ClosureError('unknown locked CPython runtime artifact')
@@ -994,13 +994,13 @@ def derive_dynamic_inventory(policy, ci_policy, candidate_plan, discoveries, log
             raise ClosureError('locked CPython selector is restricted to the reviewed runtime-identity probe')
         if folder not in cpython_verified:
             dll = candidate_file(folder + '/' + allowed['runtime-dll'])
-            math = candidate_file(folder + '/' + allowed['math-extension'])
+            unicodedata = candidate_file(folder + '/' + allowed['unicodedata-extension'])
             runner = candidate_file(probe)
             home = ntpath.join(logical_root, *folder.split('/'), 'bin')
             if (not any(_compiled_literal_present(runner, spelling) for spelling in (home, home.replace('\\', '/'))) or
                     not _compiled_literal_present(runner, digest(dll)) or
-                    not _compiled_literal_present(runner, digest(math))):
-                raise ClosureError('runtime identity probe does not contain the exact Conan home, DLL and math hashes')
+                    not _compiled_literal_present(runner, digest(unicodedata))):
+                raise ClosureError('runtime identity probe does not contain the exact Conan home, DLL and unicodedata hashes')
             cpython_verified[folder] = True
         path = folder + '/' + allowed[artifact]
         candidate_file(path)
@@ -1055,7 +1055,7 @@ def derive_dynamic_inventory(policy, ci_policy, candidate_plan, discoveries, log
                           item['selector'] == 'cmake-runtime-catalog-plugin' and item['role'] == 'plugin'):
                         path = source_codemodel_plugin(item['definition'])
                     elif (set(item) == {'selector', 'artifact', 'role'} and item['selector'] == 'locked-cpython' and
-                          ((item['artifact'] in {'runtime-dll', 'math-extension'} and item['role'] == 'runtime-module') or
+                          ((item['artifact'] in {'runtime-dll', 'unicodedata-extension'} and item['role'] == 'runtime-module') or
                            (item['artifact'] in {'stdlib-encodings', 'stdlib-os'} and item['role'] == 'data'))):
                         path = source_locked_cpython(item['artifact'], executable)
                     else:

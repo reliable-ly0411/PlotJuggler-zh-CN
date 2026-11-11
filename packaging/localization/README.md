@@ -95,6 +95,20 @@ failure; the verifier never deletes that directory. Relative, nonempty, file,
 root, parent-traversal, symbolic-link and junction paths are rejected. Omitting the option
 keeps the automatically cleaned CI temporary directory.
 Windows capture uses Pillow ImageGrab; it is not an application screenshot CLI.
+Capture selects the launched process's unique main window, not a matching title.
+Windows uses physical per-monitor coordinates, the taskbar-excluding work area,
+and the window's actual minimum size before moving/resizing it. A window that
+cannot fit, changes identity, or remains obscured fails acceptance; capture does
+not change display modes, DPI scale, or application settings. Linux capture is
+limited to the dedicated unmanaged 1920×1080 Xvfb display. It verifies the GUI's
+isolated process session, exact profile argument and packaged executable bytes
+(including an AppImage child PID), then moves the original-size window without
+shrinking it. `xdotool` and `x11-utils` are required in the clean container.
+Both platforms recheck geometry/visibility around the unscaled whole-desktop
+screenshot and retain `gui-<language>.geometry.json` with its PNG hash. Missing
+helpers, ambiguous windows, clipping, or inconsistent image dimensions fail
+closed. These checks establish capture completeness, not full widget usability;
+the original screenshots still require visual review.
 
 `verify_package.py` checks package provenance, CJK font bytes, legal texts, the
 real app `--version`, Python, and every expected plugin/version. It restores

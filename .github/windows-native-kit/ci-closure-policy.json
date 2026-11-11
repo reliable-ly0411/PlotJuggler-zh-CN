@@ -1193,7 +1193,7 @@
       "case": "pj_scripting_python_tests.WindowsPythonRuntimeIdentity.ConanLibraryAndStdlibAreActuallyLoaded",
       "executable": "b/pj_scripting/RelWithDebInfo/pj_scripting_python_tests.exe",
       "gtest_filter": "WindowsPythonRuntimeIdentity.ConanLibraryAndStdlibAreActuallyLoaded",
-      "reason": "Windows native-kit probe verifies the actual locked Conan Python DLL and stdlib in this isolated test process; source-locked DLL, math extension, stdlib, compiled expected hashes and real Windows execution are mandatory.",
+      "reason": "Windows native-kit probe verifies the actual locked Conan Python DLL and stdlib in this isolated test process; source-locked DLL, unicodedata extension, stdlib, compiled expected hashes and real Windows execution are mandatory.",
       "evidence": [
         "s/pj_scripting/CMakeLists.txt",
         "s/pj_scripting/tests/python_runtime_identity_win_test.cpp",
@@ -1218,7 +1218,7 @@
         },
         {
           "selector": "locked-cpython",
-          "artifact": "math-extension",
+          "artifact": "unicodedata-extension",
           "role": "runtime-module"
         },
         {
@@ -3017,7 +3017,7 @@
       }
     }
   ],
-  "verifier_sha256": "c20e0daf700ba30a97151baaab6fa5c3a3486d4f0eca82e017d751a991b1aefd",
+  "verifier_sha256": "02d2ab1fb686fb7ab507682f6c050c518c796ccee716bd511a658a754e375fc2",
   "reviewed_source_sha256": {
     "s/cmake/PjTests.cmake": "5dbc86dbd40aad8d5ce0fdf34c86293b4802419e129905452b451a4649a0b7dd",
     "s/cmake/test_mains/pj_gpu_test_gate.h": "5f76ca2d4ecf7f5543920d6970f624d3109b32482c2fee7fc2f390149231b5ef",
@@ -3525,7 +3525,7 @@
     "s/pj_scene_common/src/scene_layer.cpp": "1a2e38e4c130051a692ac15b33348b13bf312b59729c21065a40afa443687150",
     "s/pj_scene_common/tests/CMakeLists.txt": "68f32019d7e0a14ebed8394a53c19654168c5e82e2fea5643aacf2249c1f0a2c",
     "s/pj_scene_common/tests/scene_common_test.cpp": "b00ca56ecb862e947ab236e34d640159b73ea4e4f306aa17d68bb781482b5497",
-    "s/pj_scripting/CMakeLists.txt": "a0678aba7c20a829d8a6558402c10e6ac3c04eba6c008f38fc738c234467c52c",
+    "s/pj_scripting/CMakeLists.txt": "c3b68106d8aa0641f5d06f218b9e0d945c6cec013d618107d0f46f398b9e1bbb",
     "s/pj_scripting/src/luau_sandbox_state.h": "8f761f2d24acaa39e6f80189d70fa99cee49f47eeef3a9c21e515d2df6584d1d",
     "s/pj_scripting/src/native/depth_ops.cpp": "a504bff901d63b52faecb6f348cd81ee5ba37c3f15672c9f84098b8b7273be4b",
     "s/pj_scripting/src/native/depth_ops.h": "55d61dbbb614b09649fe1636798e57fa8538b11cf19376a753e499c6cc6c2e87",
@@ -3558,7 +3558,7 @@
     "s/pj_scripting/tests/object_script_test.cpp": "ee865712ad6cfcd2600a64e42e127003b11d841c015adda8ee0aee6ccfb3802b",
     "s/pj_scripting/tests/object_script_test_utils.h": "21c9bd87050f1e30a25e378acc7c2275947a31b4a76c12d89ff3b5d461b50a09",
     "s/pj_scripting/tests/object_summary_test.cpp": "b9c3dfe581cf91dd6d696e3c937b873be7809b1014e744d576ca8f14af0d66bb",
-    "s/pj_scripting/tests/python_runtime_identity_win_test.cpp": "91f90cf74b675eb4ba391e865aaace7f3848bd717ae291f42f81ea1abb8f4954",
+    "s/pj_scripting/tests/python_runtime_identity_win_test.cpp": "d1ffaec9acf242a5d51bd4a597042e06a6aae83861d4b120a32c2b194a2e362a",
     "s/pj_tf/CMakeLists.txt": "ac5a379244149b1c382e74287fc1fb99a3ee01ca65a43ef07749a84fb6bcb91f",
     "s/pj_tf/include/pj_tf/tf_buffer.h": "2c6ef2df5053826a4c25cbe2afc03cc77dcb7bc84e51e49eda6bf1a371e65ae4",
     "s/pj_tf/include/pj_tf/transform.h": "0ab31d7bbf28a69faae302d941a2b158720bb6543680a396b3a0158ea4a6f672",
