@@ -1332,16 +1332,16 @@ TEST(ChunkTest, FOREncodeLargeRange) {
 
 TEST(ChunkDeathTest, SetWithoutBeginRowAsserts) {
   std::vector<ColumnDescriptor> cols = {
-      make_col(1, PrimitiveType::kFloat32, "val"),
+      makeCol(1, PrimitiveType::kFloat32, "val"),
   };
   TopicChunkBuilder builder(/*topic_id=*/300, /*schema_id=*/1, std::move(cols), /*max_rows=*/100);
 
-  PJ_EXPECT_ASSERT_FAIL(builder.set(0, 1.0F), "set_float32 called without begin_row");
+  PJ_EXPECT_ASSERT_FAIL(builder.set(0, 1.0F), "set<float> called without begin_row");
 }
 
 TEST(ChunkDeathTest, FinishRowWithoutBeginRowAsserts) {
   std::vector<ColumnDescriptor> cols = {
-      make_col(1, PrimitiveType::kFloat32, "val"),
+      makeCol(1, PrimitiveType::kFloat32, "val"),
   };
   TopicChunkBuilder builder(/*topic_id=*/301, /*schema_id=*/1, std::move(cols), /*max_rows=*/100);
 
@@ -1350,7 +1350,7 @@ TEST(ChunkDeathTest, FinishRowWithoutBeginRowAsserts) {
 
 TEST(ChunkDeathTest, BeginRowWhileRowInProgressAsserts) {
   std::vector<ColumnDescriptor> cols = {
-      make_col(1, PrimitiveType::kFloat32, "val"),
+      makeCol(1, PrimitiveType::kFloat32, "val"),
   };
   TopicChunkBuilder builder(/*topic_id=*/302, /*schema_id=*/1, std::move(cols), /*max_rows=*/100);
 
@@ -1360,7 +1360,7 @@ TEST(ChunkDeathTest, BeginRowWhileRowInProgressAsserts) {
 
 TEST(ChunkDeathTest, OutOfBoundsColIndexAsserts) {
   std::vector<ColumnDescriptor> cols = {
-      make_col(1, PrimitiveType::kFloat32, "val"),
+      makeCol(1, PrimitiveType::kFloat32, "val"),
   };
   TopicChunkBuilder builder(/*topic_id=*/303, /*schema_id=*/1, std::move(cols), /*max_rows=*/100);
 
@@ -1368,20 +1368,29 @@ TEST(ChunkDeathTest, OutOfBoundsColIndexAsserts) {
   PJ_EXPECT_ASSERT_FAIL(builder.set(5, 1.0F), "col_index out of bounds");
 }
 
-TEST(ChunkDeathTest, OutOfOrderTimestampAsserts) {
-  std::vector<ColumnDescriptor> cols = {
-      make_col(1, PrimitiveType::kFloat32, "val"),
-  };
-  TopicChunkBuilder builder(/*topic_id=*/304, /*schema_id=*/1, std::move(cols), /*max_rows=*/100);
-
-  builder.beginRow(200);
-  builder.set(0, 1.0F);
-  builder.finishRow();
-
-  PJ_EXPECT_ASSERT_FAIL(builder.beginRow(100), "timestamps must be monotonically non-decreasing");
-}
-
 #endif  // !defined(NDEBUG) || defined(PJ_ASSERT_THROWS)
+
+TEST(ChunkTest, OutOfOrderTimestampsSealStablyWithoutLosingValues) {
+  std::vector<ColumnDescriptor> cols = {makeCol(1, PrimitiveType::kFloat32, "val")};
+  TopicChunkBuilder builder(/*topic_id=*/304, /*schema_id=*/1, std::move(cols), /*max_rows=*/100);
+  const Timestamp timestamps[] = {200, 100, 200, 50};
+  const float values[] = {2.0F, 1.0F, 3.0F, 0.5F};
+  for (std::size_t i = 0; i < 4; ++i) {
+    builder.beginRow(timestamps[i]);
+    builder.set(0, values[i]);
+    builder.finishRow();
+  }
+  ASSERT_EQ(builder.rowCount(), 4U);
+  const TopicChunk chunk = builder.seal();
+  ASSERT_EQ(chunk.stats.row_count, 4U);
+  const Timestamp expected_timestamps[] = {50, 100, 200, 200};
+  const double expected_values[] = {0.5, 1.0, 2.0, 3.0};
+  for (std::size_t i = 0; i < 4; ++i) {
+    EXPECT_EQ(chunk.readTimestamp(i), expected_timestamps[i]);
+    EXPECT_FALSE(chunk.isNull(0, i));
+    EXPECT_DOUBLE_EQ(chunk.readNumericAsDouble(0, i), expected_values[i]);
+  }
+}
 
 // ===========================================================================
 // ColumnStats::all_integral — whole-number detection, independent of encoding

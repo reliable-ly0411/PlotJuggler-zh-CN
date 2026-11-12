@@ -113,17 +113,17 @@ TEST_F(FileDialogTest, LocalizedDetailsPreserveNamesRolesPathsAndSourceSorting) 
   EXPECT_EQ(proxy->data(shown).toString(), u"原始 Name %1.xml"_s);
   EXPECT_EQ(proxy->data(shown, QFileSystemModel::FilePathRole).toString(), path);
   EXPECT_EQ(proxy->data(shown, Qt::EditRole), source->data(original, Qt::EditRole));
-  EXPECT_EQ(proxy->data(shown.siblingAtColumn(1)).toString(),
-            QLocale(QLocale::Chinese, QLocale::China).formattedDataSize(7));
-  EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)).toString(),
-            QCoreApplication::translate("PJ::FileDialog", "XML document"));
+  EXPECT_EQ(
+      proxy->data(shown.siblingAtColumn(1)).toString(), QLocale(QLocale::Chinese, QLocale::China).formattedDataSize(7));
+  EXPECT_EQ(
+      proxy->data(shown.siblingAtColumn(2)).toString(), QCoreApplication::translate("PJ::FileDialog", "XML document"));
   picker.selectFile(path);
   EXPECT_EQ(picker.selectedFile(), path);
   qApp->setProperty("interfaceLanguage", u"en_US"_s);
   EXPECT_EQ(proxy->data(shown.siblingAtColumn(1)), source->data(original.siblingAtColumn(1)));
   EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)), source->data(original.siblingAtColumn(2)))
-        << "actual=" << proxy->data(shown.siblingAtColumn(2)).toString().toStdString()
-        << " expected=" << source->data(original.siblingAtColumn(2)).toString().toStdString();
+      << "actual=" << proxy->data(shown.siblingAtColumn(2)).toString().toStdString()
+      << " expected=" << source->data(original.siblingAtColumn(2)).toString().toStdString();
 }
 
 TEST_F(FileDialogTest, FileLinksKeepOriginalIdentityAndLocalizedMimeType) {
@@ -145,8 +145,11 @@ TEST_F(FileDialogTest, FileLinksKeepOriginalIdentityAndLocalizedMimeType) {
     std::error_code error;
     const auto link = QFileInfo(directory.filePath(names[i])).filesystemFilePath();
     const auto destination = QFileInfo(targets[i]).filesystemFilePath();
-    if (i == 2) std::filesystem::create_directory_symlink(destination, link, error);
-    else std::filesystem::create_symlink(destination, link, error);
+    if (i == 2) {
+      std::filesystem::create_directory_symlink(destination, link, error);
+    } else {
+      std::filesystem::create_symlink(destination, link, error);
+    }
     ASSERT_FALSE(error) << "Native symbolic link fixture must be exercised: " << error.message();
   }
   PJ::FileDialog picker;
@@ -180,13 +183,15 @@ TEST_F(FileDialogTest, FileLinksKeepOriginalIdentityAndLocalizedMimeType) {
     if (i < 2) {
       const QString mime = QMimeDatabase().mimeTypeForFile(QFileInfo(path)).name();
       ASSERT_TRUE(mime == u"text/plain"_s || mime == u"application/xml"_s || mime == u"text/xml"_s);
-      EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)).toString(), QCoreApplication::translate(
-          "PJ::FileDialog", mime == u"text/plain"_s ? "Plain text document" : "XML document"));
+      EXPECT_EQ(
+          proxy->data(shown.siblingAtColumn(2)).toString(),
+          QCoreApplication::translate(
+              "PJ::FileDialog", mime == u"text/plain"_s ? "Plain text document" : "XML document"));
     } else {
       EXPECT_EQ(proxy->data(shown.siblingAtColumn(1)), source->data(original.siblingAtColumn(1)));
       EXPECT_EQ(proxy->data(shown.siblingAtColumn(2)), source->data(original.siblingAtColumn(2)))
-        << "actual=" << proxy->data(shown.siblingAtColumn(2)).toString().toStdString()
-        << " expected=" << source->data(original.siblingAtColumn(2)).toString().toStdString();
+          << "actual=" << proxy->data(shown.siblingAtColumn(2)).toString().toStdString()
+          << " expected=" << source->data(original.siblingAtColumn(2)).toString().toStdString();
     }
   }
 }
@@ -217,9 +222,9 @@ TEST_F(FileDialogTest, GetSaveFileNameFillsInSelectedName) {
 }
 
 // Start-folder guard. Qt keeps its own file-dialog memory under QtProject; each
-// case points file-based settings at a private root. On Windows that memory is
-// in the registry, which QSettings::setPath does not redirect: there the cases
-// write the user's real QtProject key, as any QFileDialog use does.
+// case points file-based settings at a private root. On Windows the runner maps
+// HKCU to a new private key before QApplication starts: QSettings::setPath cannot
+// redirect NativeFormat registry settings. The real Qt backend stays exercised.
 class FileDialogStartFolderTest : public ::testing::Test {
  protected:
   void SetUp() override {

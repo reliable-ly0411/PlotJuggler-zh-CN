@@ -9,7 +9,7 @@ from version_map import versions
 
 def resolve(ref_name, version):
     tag = versions(version)['tag']
-    slug = tag.replace('.', '-')
+    slug = tag.replace('+', '-plus-').replace('.', '-')
     pattern = r'zh-CN-4\.x-ci/publish-accepted-' + re.escape(slug) + r'-run-([1-9][0-9]*)-attempt-([1-9][0-9]*)'
     match = re.fullmatch(pattern, ref_name)
     if not match:

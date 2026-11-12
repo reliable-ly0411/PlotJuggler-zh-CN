@@ -1,0 +1,219 @@
+{
+  "upstream_tag": "4.1.0",
+  "upstream_commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
+  "scope": "Files touched by the 14 upstream commits after 4.1.0, through 349c74e3. Unmodified entries must match the tag, including absence; modified entries have explicit fork localization/distribution changes.",
+  "tag_matches": [
+    {
+      "path": ".github/workflows/macos-release.yml",
+      "sha256": null
+    },
+    {
+      "path": "docs/QT_NOTES.md",
+      "sha256": "9b28552e432c6447125de86b3f4236ac501674161a760ba40d610036532e0c94"
+    },
+    {
+      "path": "packaging/README.md",
+      "sha256": "21af392215c9816d0177199ea08781f353803e59297226691e804846b695afbd"
+    },
+    {
+      "path": "packaging/appimage/Dockerfile.build",
+      "sha256": "e2fc5f3996e6cce745846082fbfbb2bb2e0c2103019d9b060181528a2d5ff4e3"
+    },
+    {
+      "path": "packaging/appimage/smoke_test.sh",
+      "sha256": "d2d6a5a7f8d75cbd136e7dfd79d2d8c5dd8f825f987c33bf42fc35f3fff8a7c3"
+    },
+    {
+      "path": "packaging/conda/README.md",
+      "sha256": "18fa9a7bef861206197657f21d814f56e53bf75574ec94e7d57bcc2090e72e9d"
+    },
+    {
+      "path": "packaging/deb/README.md",
+      "sha256": "4ec8f043dc03f27d57b6e27fc082862e75abf40aa1a47e80a4d29dbd3737cabe"
+    },
+    {
+      "path": "packaging/deb/smoke_test.sh",
+      "sha256": "8c55bd2bc941b3e46eb702bffdc6412ba1ad2e234f05621246eeb9cbb30c5d51"
+    },
+    {
+      "path": "packaging/macos/README.md",
+      "sha256": null
+    },
+    {
+      "path": "packaging/macos/build_macos_bundle.sh",
+      "sha256": null
+    },
+    {
+      "path": "packaging/macos/entitlements.plist",
+      "sha256": null
+    },
+    {
+      "path": "packaging/smoke/wayland_check.sh",
+      "sha256": null
+    },
+    {
+      "path": "pj_app/src/FileLoader.h",
+      "sha256": "72d36069a7a8226e939fee859af446a3bf38e7ae112ac88a87c5894f94a4d270"
+    },
+    {
+      "path": "pj_app/src/ui/DiagnosticsDialog.cpp",
+      "sha256": "dbd51f7210ab923b03995fbcd7dca8c553fae98b43d7227a22ae7f472b42d1dc"
+    },
+    {
+      "path": "pj_app/src/ui/DiagnosticsDialog.ui",
+      "sha256": "4fa01367368a22ee0fb163e7259b5fe25c38ce0251f3f8c3634925f637e60a61"
+    },
+    {
+      "path": "pj_app/tests/main_window_file_drop_test.cpp",
+      "sha256": null
+    },
+    {
+      "path": "pj_app/tests/main_window_rhi_window_test.cpp",
+      "sha256": null
+    },
+    {
+      "path": "pj_app/tests/rhi_mixed_dock_test.cpp",
+      "sha256": "5907b2537c837e4d352b71efb2f2a95750a38966be1bbe6121162123bd98e82f"
+    },
+    {
+      "path": "pj_plotting/tests/plot_widget_legend_toggle_test.cpp",
+      "sha256": null
+    },
+    {
+      "path": "pj_plotting/widget/include/pj_plotting/PlotWidgetBase.h",
+      "sha256": "7cdcca8d90e8a659d3ec6288396345430ac5285aba6b5c3133fc7a043322b3c7"
+    },
+    {
+      "path": "pj_plotting/widget/src/PlotWidgetBase.cpp",
+      "sha256": "4f91cf3c69d5e008878a7a961d472642bb86262406c2e03d10a0cb0162c0c5a5"
+    },
+    {
+      "path": "pj_scene2D/docs/TECHNICAL_NOTES.md",
+      "sha256": "5e6d356d95887909bf3f80c8d83526214b6109f6830e77ccc7438eaf904bcb85"
+    },
+    {
+      "path": "pj_widgets/include/pj_widgets/ElidingLabel.h",
+      "sha256": "73a412b378eece3ebc8c207c6663b953b55897b159a9eaed3c947c666646f32c"
+    },
+    {
+      "path": "pj_widgets/include/pj_widgets/FileDialog.h",
+      "sha256": "9a2abda4f3fff99587225e092e2bf8f8b6129b3e4e4f1406deb916df12de6d3d"
+    },
+    {
+      "path": "pj_widgets/tests/eliding_label_test.cpp",
+      "sha256": "7c432cebf7227a9959f5b2f015638d5d8d31518d5c7c2007820fef9041cba01c"
+    },
+    {
+      "path": "resources/feature_catalog.json",
+      "sha256": "f674d5805a6f79fb033e14956fdf17314a67a28cd979a277d85d7ac8716d44c5"
+    }
+  ],
+  "fork_modified": [
+    {
+      "path": ".github/workflows/appimage-builder-image.yml",
+      "sha256": "3a30d9287ffe5cf3cdab379f01ce614a72543817cd4756949a0342ba6fbed8ae"
+    },
+    {
+      "path": ".github/workflows/conda-release.yml",
+      "sha256": "525ed689eedc10cc5cbecfc217b1a6baeecfb20f08120da5309adb518f598b5f"
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "5055eb1040a026d07b5003f13d0f330737723ae94cea5225f6c8355a0c84608a"
+    },
+    {
+      "path": "CMakeLists.txt",
+      "sha256": "9a7e5a75a8b07151543bc0e86bf74a878b63cbaee384ab3f2fd42ccd4bdc3193"
+    },
+    {
+      "path": "build.sh",
+      "sha256": "2875732b7beab010fc406e5d9822c4c9bf4361eca1ee5c49f0df329c053a67d2"
+    },
+    {
+      "path": "docs/BUILDING.md",
+      "sha256": "c9eb99e4f0f69a55844f270d554efec42dd02c4e9e90d4d72bf5bd65584a95e2"
+    },
+    {
+      "path": "packaging/appimage/README.md",
+      "sha256": "42f14cef80083f3a87599c21b53ebe75a1d5237ba903492dc8347e67652bd342"
+    },
+    {
+      "path": "packaging/appimage/build_appimage.sh",
+      "sha256": "b7967a3c4dbf42fe138d3b0c62dd4156f9e6b53b5d1755b671e6155d6a695fe1"
+    },
+    {
+      "path": "packaging/deb/build_deb.sh",
+      "sha256": "4273fb335bd20597e939e366fd7634a7c69152b3da26d90c721fdfa1bd8d3041"
+    },
+    {
+      "path": "pj_app/CMakeLists.txt",
+      "sha256": "575b05030fb2d2dc50f3e7ce5cd2274d650b4279460f379ce1f005299803ca2c"
+    },
+    {
+      "path": "pj_app/docs/ARCHITECTURE.md",
+      "sha256": "91646fcc34e35fe512c36f1bcba8de72f26bc2d7bdb998d27f92d152463be7c8"
+    },
+    {
+      "path": "pj_app/plotjuggler.rc.in",
+      "sha256": null
+    },
+    {
+      "path": "pj_app/src/FileLoader.cpp",
+      "sha256": "f3cb20dc52c3ec100cdb6a4c6ad9beade21cc3515113faa3dd93c74807865e3f"
+    },
+    {
+      "path": "pj_app/src/MainWindow.cpp",
+      "sha256": "e53b5d1ffc1da1d7798f35803b1c856c9e263701613d0530d01e7c7cdcc1bf21"
+    },
+    {
+      "path": "pj_app/src/MainWindow.h",
+      "sha256": "859c8652f268b97318c274e6aa4d13635030286030aa1318828970639b566adb"
+    },
+    {
+      "path": "pj_app/src/PreferencesDialog.cpp",
+      "sha256": "7e07f0dfb39d426ade7f7491623dc3a68017c8e9bbcc518512ffa5cbcf684de0"
+    },
+    {
+      "path": "pj_app/src/PreferencesDialog.ui",
+      "sha256": "202250a59c753e1cc3106ad6a92581957a4143962eec22b3a1cd2eb9f2ba5cbb"
+    },
+    {
+      "path": "pj_app/src/main.cpp",
+      "sha256": "682a5d03d16495639f71b26c823cdae933aaab28e341514677750d550fe5f786"
+    },
+    {
+      "path": "pj_app/tests/file_loader_test.cpp",
+      "sha256": "b99a9865df726d933feaed0b033332d52f44342eea45d39bc0be2b14f5d61cbd"
+    },
+    {
+      "path": "pj_plotting/tests/CMakeLists.txt",
+      "sha256": "2758f2628603db2b27ca3d827dd43dd9baafb4131c09a6da8be271cd22cbf7ad"
+    },
+    {
+      "path": "pj_runtime/include/pj_runtime/ExtensionCatalogService.h",
+      "sha256": "a17af95c4df8f14f644aeafb79cac39e3f98a00f529e27c6fc64c2d576c6f082"
+    },
+    {
+      "path": "pj_runtime/src/ExtensionCatalogService.cpp",
+      "sha256": "ed431f001d3f89d756ed28a58dfb39bfd51e635feb400ff9c1c4c1dc63bd72f4"
+    },
+    {
+      "path": "pj_widgets/CLAUDE.md",
+      "sha256": "7a77f60075366b196aa28e8a8ec23d8094064759f12002155e4c3f7a2adb3aaf"
+    },
+    {
+      "path": "pj_widgets/src/FileDialog.cpp",
+      "sha256": "a741ba73e77fb936ef18274ec0c24e40d70944fbd78a2daf2f4d606af4517d6c",
+      "note": "Initialize Qt widget dialog before restoring history/sidebar on native-capable platforms; tag defect release repair."
+    },
+    {
+      "path": "resources/plotjuggler.ico",
+      "sha256": null
+    },
+    {
+      "path": "scripts/windows/run.ps1",
+      "sha256": "197b1195e0c7b8aafd36821c5ebbe274637582d8beba91f6bda6cdae3842e1f9"
+    }
+  ],
+  "sha256_semantics": "Every sha256 records upstream_commit bytes, or null when absent there. fork_modified classifies intentional candidate differences; its sha256 is not a candidate digest."
+}

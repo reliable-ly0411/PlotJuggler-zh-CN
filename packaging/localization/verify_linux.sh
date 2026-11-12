@@ -7,21 +7,21 @@ cd /pkg
 sha256sum -c SHA256SUMS-Linux.txt
 # First prove Depends and uninstall behavior using the upstream smoke contract.
 bash /src/packaging/deb/smoke_test.sh
-# Exercise the same immutable AppImage through both X11 and native Wayland.
-# The Debian smoke installed the runtime and compositor prerequisites above.
+# Exercise the same immutable AppImage through X11/xcb.
+# The Debian smoke installed the runtime and Xvfb prerequisites above.
 bash /src/packaging/appimage/smoke_test.sh /pkg/*.AppImage
 # Reinstall the same immutable package for language/BIN acceptance.
 apt-get install -y -qq /pkg/*.deb >/dev/null
-apt-get install -y -qq python3 imagemagick >/dev/null
+apt-get install -y -qq python3 imagemagick xdotool x11-utils >/dev/null
 real=/src/3rdparty/plotjuggler-apbin-plugins/tests/logs/00000001.BIN
-xvfb-run -a --server-args='-screen 0 1440x1000x24' python3 /src/packaging/localization/verify_package.py \
+xvfb-run -a --server-args='-screen 0 1920x1080x24' python3 /src/packaging/localization/verify_package.py \
   --prefix /opt/plotjuggler4 --executable /usr/bin/plotjuggler4 --real-bin "$real" --output /reports/deb --expected-source "$EXPECTED_SOURCE_SHA" --expected-version "$EXPECTED_VERSION" --capture
 mkdir /tmp/appimage
 cp /pkg/*.AppImage /tmp/appimage/app.AppImage
 chmod +x /tmp/appimage/app.AppImage
 cd /tmp/appimage
 env -u APPIMAGE_EXTRACT_AND_RUN ./app.AppImage --appimage-extract >/dev/null
-xvfb-run -a --server-args='-screen 0 1440x1000x24' python3 /src/packaging/localization/verify_package.py \
+xvfb-run -a --server-args='-screen 0 1920x1080x24' python3 /src/packaging/localization/verify_package.py \
   --prefix /tmp/appimage/squashfs-root/usr --executable /tmp/appimage/app.AppImage \
   --real-bin "$real" --output /reports/appimage --expected-source "$EXPECTED_SOURCE_SHA" --expected-version "$EXPECTED_VERSION" --capture
 cd /pkg

@@ -19,11 +19,13 @@ if (-not (Test-Path -LiteralPath (Join-Path $payload "bin/PlotJuggler4.exe") -Pa
 }
 $payload = (Resolve-Path -LiteralPath $payload).ProviderPath
 
-# IFW carries these in package metadata; the ZIP needs its own copies.
+# Copy the actual rendered IFW metadata, including its pinned Qt license.
+# Source templates can differ from the license staged by the installer builder.
+$metadata = Join-Path $StageDir "packages/io.plotjuggler.application/meta"
 $licenses = Join-Path $payload "licenses"
 New-Item -ItemType Directory -Force -Path $licenses | Out-Null
 foreach ($name in @("license_mpl.txt", "license_lgpl.txt")) {
-  Copy-Item -LiteralPath (Join-Path $PSScriptRoot "packages/io.plotjuggler.application/meta/$name") `
+  Copy-Item -LiteralPath (Join-Path $metadata $name) `
     -Destination $licenses -Force
 }
 

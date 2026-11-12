@@ -22,23 +22,53 @@ The display patches translate only fixed prose at its construction site:
   Lua compiler errors, source and canonical series identifiers remain unchanged.
 - WebRTC: ready/manual display columns only. Path selection/event keys stay raw.
 
-## CSV UTF-8 file paths
+## CSV UTF-8 paths and runtime display
 
 `csv-loader.patch` fixes the two native file-open sites in CSV Loader 1.0.7,
 pinned to `ba6ee417d91a01aae778a0ec3a4443a024671123` and SDK 0.34.1. It
 converts the incoming UTF-8 path to a native `std::filesystem::path` before
 opening the preview and import streams. CSV decoding, numeric parsing, time
 selection, configuration strings, plugin ID/version and ABI remain unchanged.
-This functional repair is separate from the five display patches above; it does
-not translate CSV data or include the separate APBIN/FFT feedback changes.
+The same pinned source patch also translates runtime progress, warning titles,
+fixed warning prose and import-count logs at their construction sites. Internal
+`CsvParseWarning::detail` remains canonical English; its separate display-only
+`localized_detail` is composed from the original counts/timestamp values, never
+by replacing text inside user data. Column names, quoted values, `%1` and paths
+are appended unchanged. Parser decisions, warning order, cancellation and output
+samples are unchanged. Dynamic file-open errors and external write-host errors
+remain raw; no arbitrary error prefix or embedded user text is translated.
+
+The existing host display allowlist accepts the exact SDK `plugin: ` wrapper for
+only CSV 1.0.7's five fixed errors, preserving the wrapper. Unknown identities,
+versions, domains and messages fall back unchanged. It does not add CSV policy
+to `pj_app` or `pj_runtime`.
 
 Both native platforms consume the same reviewed patch through `source-lock.json`.
 The CSV build requires the parser and dynamically loaded plugin path tests,
-plus the four existing display-helper checks. The tests generate all inputs;
+plus five existing display-helper checks and five process-isolated real CSV
+runtime-ABI suites (Simplified/Traditional/English/unknown/empty). The tests generate all inputs;
 they cover ASCII, Chinese directory, Chinese filename and supplementary Unicode
 paths, exact synthetic values/time axes, and missing-file behavior. Full package
 acceptance also restores both generated fields and all three finite samples in
 ASCII and Chinese paths with the English and Chinese application sessions.
+The runtime suites cover malformed row 4 (expected 3 columns, actual 2), exact
+Continue/Abort/Close results, no writes on failure, sorting, mixed-column names,
+single/combined invalid timestamps, canonical warning order and progress Stop.
+The first display language stays fixed even when the environment changes later.
+
+After plugin staging, `run_csv_runtime_acceptance.py` validates the source lock
+and DSO hash, enables `PJ_CSV_RUNTIME_PLUGIN`, freshly builds the real FileLoader
+test target and requires all three language suites with `--no-tests=error`.
+On Windows, both CTest discovery and execution receive the configured Qt kit's
+`bin` and plugin paths plus this build's recorded FFmpeg/CPython DLL directories.
+This native gate does not rely on PATH changes from an earlier CI step or on the
+not-yet-deployed package runtime; clean original-package acceptance is separate.
+The resulting JUnit must contain three unique executed passes, each with all
+seven exact GTest cases and the complete pass summary; disabled, skipped,
+filtered, missing or truncated results fail staging even if CTest returns zero.
+These exercise real DiagnosticDump JSON for empty CSV and the short/scrolling
+warning UI including Continue/Abort/Close. The earlier full native test run cannot
+substitute for this post-staging gate. Final package acceptance remains required.
 
 The seed identity lists only the verified official 1.0.7 DSO hash for each
 platform as an eligible same-version predecessor. Unknown same-version builds

@@ -23,6 +23,7 @@
 #include "Theme.h"
 #include "TitleBar.h"
 #include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
 
 using namespace Qt::StringLiterals;
 
@@ -56,7 +57,7 @@ void renderMainWindow(const QString& language) {
   EXPECT_EQ(running.catalogLoaded(), language != u"en_US"_s);
   const QTemporaryDir extensions;
   ASSERT_TRUE(extensions.isValid());
-  PJ::MainWindow window(extensions.path());
+  pj_app_test::IsolatedMainWindow window(extensions.path());
   ASSERT_TRUE(window.populateTestData());
   window.resize(1280, 800);
   const QString file_title = window.titleBar()->fileMenu()->title();
@@ -255,16 +256,13 @@ TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReacha
     auto* label = dialog.findChild<QLabel*>(u"labelLanguage"_s);
     auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
     auto* notice = dialog.findChild<QLabel*>(u"labelLanguageRestart"_s);
-    auto* last_control = dialog.findChild<QWidget*>(u"mcpServerToggle"_s);
-    auto* mcp_label = dialog.findChild<QLabel*>(u"labelMcpServer"_s);
+    auto* last_control = dialog.findChild<QWidget*>(u"telemetryToggle"_s);
     ASSERT_NE(pages, nullptr);
     ASSERT_NE(scroll, nullptr);
     ASSERT_NE(label, nullptr);
     ASSERT_NE(combo, nullptr);
     ASSERT_NE(notice, nullptr);
     ASSERT_NE(last_control, nullptr);
-    ASSERT_NE(mcp_label, nullptr);
-    EXPECT_TRUE(mcp_label->wordWrap());
     EXPECT_EQ(pages->widget(PJ::PreferencesDialog::kAppearancePage), scroll);
     dialog.showPage(PJ::PreferencesDialog::kPluginsPage);
     ASSERT_NE(pages->currentWidget(), nullptr);
@@ -273,18 +271,13 @@ TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReacha
     EXPECT_EQ(pages->currentWidget(), scroll);
     EXPECT_GE(combo->width(), combo->minimumSizeHint().width());
     EXPECT_GE(notice->height(), notice->heightForWidth(notice->width()));
-    EXPECT_GE(mcp_label->height(), mcp_label->heightForWidth(mcp_label->width()));
     for (QWidget* control :
-         {static_cast<QWidget*>(label), static_cast<QWidget*>(combo), static_cast<QWidget*>(notice),
-          static_cast<QWidget*>(mcp_label), last_control}) {
+         {static_cast<QWidget*>(label), static_cast<QWidget*>(combo), static_cast<QWidget*>(notice), last_control}) {
       scroll->ensureWidgetVisible(control, 0, 0);
       QCoreApplication::processEvents();
       EXPECT_TRUE(control->isVisible());
       const QRect visible_rect(control->mapTo(scroll->viewport(), QPoint(0, 0)), control->size());
-      EXPECT_TRUE(scroll->viewport()->rect().contains(visible_rect))
-          << control->objectName().toStdString() << " rect=" << visible_rect.x() << "," << visible_rect.y()
-          << "," << visible_rect.width() << "x" << visible_rect.height() << " viewport="
-          << scroll->viewport()->width() << "x" << scroll->viewport()->height();
+      EXPECT_TRUE(scroll->viewport()->rect().contains(visible_rect)) << control->objectName().toStdString();
     }
     dialog.reject();
   }
@@ -297,6 +290,9 @@ class LanguageSettingsEnvironment : public ::testing::Environment {
   void SetUp() override {
     if (!pj_app_test::isTestSuiteSelected("PreferencesLanguageTest")) {
       return;
+    }
+    if (!settings_dir_.isValid() || settings_dir_.path().isEmpty()) {
+      qFatal("Cannot create private GUI test settings directory");
     }
     QCoreApplication::setOrganizationName(u"PlotJugglerTest"_s);
     QCoreApplication::setApplicationName(u"preferences_language_test"_s);

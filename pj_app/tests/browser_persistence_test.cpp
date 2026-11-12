@@ -87,8 +87,6 @@ TEST(BrowserPersistencePolicy, DurablePreferenceAllowlistIsAnExactClosedSet) {
       u"MainWindow.buttonRatio"_s,
       u"MainWindow.buttonLink"_s,
       u"MainWindow.useTimeOffset"_s,
-      u"MainWindow.dateTimeDisplay"_s,
-      u"Preferences::clock_utc"_s,
       u"MainWindow.timeTrackerSetting"_s,
       u"MainWindow.legendStatus"_s,
       u"MainWindow.panelBottomExpandedHeight"_s,
@@ -147,8 +145,7 @@ TEST(BrowserPersistencePolicy, LanguagePreferenceAcceptsOnlyCanonicalSupportedCo
     const QByteArray stored = u"{\"version\":1,\"values\":{\"Preferences::language\":\"%1\"}}"_s.arg(language).toUtf8();
     EXPECT_EQ(BrowserPersistenceTestPeer::decodeValues(stored).value(u"Preferences::language"_s), QVariant(language));
   }
-  for (const QString& rejected :
-       {u"zh-CN"_s, u"zh-TW"_s, u"zh_HK"_s, u"zh-Hant"_s, u"fr_FR"_s, u"/private/path"_s, QString{}}) {
+  for (const QString& rejected : {u"zh-CN"_s, u"zh-TW"_s, u"zh_HK"_s, u"zh-Hant"_s, u"fr_FR"_s, u"/private/path"_s, QString{}}) {
     EXPECT_FALSE(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, rejected).has_value());
   }
   EXPECT_FALSE(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, true).has_value());

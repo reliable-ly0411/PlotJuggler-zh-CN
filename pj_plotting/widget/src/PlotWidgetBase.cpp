@@ -231,7 +231,14 @@ PlotWidgetBase::PlotWidgetBase(QWidget* parent) : QWidget(parent) {
   // is applied after construction or toggled at runtime.
   const QColor canvas_bg = dataBackdropForCurrentTheme();
 
-  const bool gpu_canvas = gpuCanvasEnabled();
+  // The browser has no raster canvas; on desktop the "GPU canvas" preference and
+  // --disable-opengl select it.
+#ifdef PJ_TARGET_WASM
+  const bool gpu_canvas = true;
+#else
+  const bool gpu_canvas =
+      !g_gpu_canvas_disabled_override && QSettings().value("Preferences::use_opengl", true).toBool();
+#endif
   PlotRhiCanvas* rhi_canvas = nullptr;
   QWidget* canvas = nullptr;
   if (gpu_canvas) {
@@ -539,33 +546,6 @@ void PlotWidgetBase::setModeXY(bool enable) {
   if (plot_ != nullptr && plot_->magnifier != nullptr) {
     plot_->magnifier->setTimeXAxis(!enable);
   }
-  applyTimeAxisFormat();
-}
-
-void PlotWidgetBase::setTimeLabelFormat(TimeLabelFormat format) {
-  time_label_format_ = format;
-  applyTimeAxisFormat();
-}
-
-void PlotWidgetBase::applyTimeAxisFormat() {
-  const TimeLabelFormat format = xy_mode_ ? TimeLabelFormat::kSeconds : time_label_format_;
-  if (plot_ == nullptr || format == applied_time_format_) {
-    return;
-  }
-  applied_time_format_ = format;
-  QwtScaleEngine* engine = nullptr;
-  if (format == TimeLabelFormat::kSeconds) {
-    engine = new QwtLinearScaleEngine;
-    plot_->setAxisScaleDraw(QwtPlot::xBottom, new PlotScaleDraw);
-  } else {
-    engine = new PlotTimeScaleEngine(format);
-    plot_->setAxisScaleDraw(QwtPlot::xBottom, new PlotTimeScaleDraw(format));
-  }
-  // The visible interval stays as last set by setAxisScale: Qwt keeps the axis
-  // min/max across an engine swap and only re-divides the ticks.
-  engine->setAttribute(QwtScaleEngine::Floating, true);
-  plot_->setAxisScaleEngine(QwtPlot::xBottom, engine);
-  replot();
 }
 
 bool PlotWidgetBase::isXYPlot() const noexcept {
@@ -809,16 +789,6 @@ void PlotWidgetBase::setGpuCanvasDisabledOverride(bool disabled) {
   g_gpu_canvas_disabled_override = disabled;
 }
 
-bool PlotWidgetBase::gpuCanvasEnabled() {
-  // The browser has no raster canvas; on desktop the "GPU canvas" preference and
-  // --disable-opengl select it.
-#ifdef PJ_TARGET_WASM
-  return true;
-#else
-  return !g_gpu_canvas_disabled_override && QSettings().value("Preferences::use_opengl", true).toBool();
-#endif
-}
-
 QWidget* PlotWidgetBase::canvasWidget() const {
   return plot_ != nullptr ? plot_->canvas() : nullptr;
 }
@@ -971,6 +941,7 @@ bool PlotWidgetBase::eventFilter(QObject* obj, QEvent* event) {
       for (auto& info : curveList()) {
         if (clicked_item == info.curve) {
           info.curve->setVisible(!info.curve->isVisible());
+          resetZoom();
           replot();
           return true;
         }

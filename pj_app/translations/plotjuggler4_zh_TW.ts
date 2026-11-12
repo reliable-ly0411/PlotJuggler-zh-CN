@@ -27,7 +27,7 @@
 <context>
     <name>AppLanguage</name>
     <message>
-        <location filename="../src/main.cpp" line="+402"/>
+        <location filename="../src/main.cpp" line="+375"/>
         <source>Interface language for this session (zh_CN, zh_TW or en_US).</source>
         <translation>此工作階段的介面語言（zh_CN、zh_TW 或 en_US）。</translation>
     </message>
@@ -120,7 +120,12 @@
         <translation>自訂控制項</translation>
     </message>
     <message>
-        <location line="+83"/>
+        <location line="+3"/>
+        <source>labelWidgetName</source>
+        <translation>labelWidgetName</translation>
+    </message>
+    <message>
+        <location line="+80"/>
         <source>Inputs</source>
         <translation>輸入</translation>
     </message>
@@ -145,7 +150,12 @@
         <translation>篩選…</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+3"/>
+        <source>customWidgetSeriesFilter</source>
+        <translation>customWidgetSeriesFilter</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>Double-click a series to wire it.</source>
         <translation>按兩下序列以連接。</translation>
     </message>
@@ -168,7 +178,12 @@
         <translation>篩選…</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+3"/>
+        <source>customWidgetFilter</source>
+        <translation>customWidgetFilter</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Choose the widget to show in the selected panel.</source>
         <translation>選擇要在所選面板中顯示的控制項。</translation>
     </message>
@@ -850,7 +865,12 @@
         <translation>外掛程式設定：開啟「偏好設定 ▸ 外掛程式」</translation>
     </message>
     <message>
-        <location line="+96"/>
+        <location line="+46"/>
+        <source>font-weight:700; font-size:14px;</source>
+        <translation>font-weight:700; font-size:14px;</translation>
+    </message>
+    <message>
+        <location line="+50"/>
         <source>Details</source>
         <translation>詳細資料</translation>
     </message>
@@ -3896,7 +3916,7 @@ Message: %3</source>
         <translation>右鍵查看資訊…</translation>
     </message>
     <message>
-        <location line="+106"/>
+        <location line="+71"/>
         <source>%1 topics were left out of the drag: no view can display them.</source>
         <translation>拖曳時已跳過 %1 個主題：沒有檢視能夠顯示它們。</translation>
     </message>
@@ -4014,7 +4034,7 @@ Message: %3</source>
 <context>
     <name>PJ::CurveTreeView</name>
     <message>
-        <location filename="../../pj_widgets/src/CurveTreeView.cpp" line="+403"/>
+        <location filename="../../pj_widgets/src/CurveTreeView.cpp" line="+394"/>
         <source>Name</source>
         <translation>名稱</translation>
     </message>
@@ -4024,7 +4044,7 @@ Message: %3</source>
         <translation>值</translation>
     </message>
     <message>
-        <location line="+988"/>
+        <location line="+985"/>
         <source>Stop loading and keep the data received so far</source>
         <translation>停止載入並保留已接收的資料</translation>
     </message>
@@ -4415,7 +4435,7 @@ from %2</source>
         <translation>診斷資訊</translation>
     </message>
     <message>
-        <location line="+130"/>
+        <location line="+129"/>
         <source>All sources</source>
         <translation>全部來源</translation>
     </message>
@@ -4476,7 +4496,7 @@ from %2</source>
 <context>
     <name>PJ::ExtensionCatalogService</name>
     <message>
-        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+889"/>
+        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+875"/>
         <source>All supported files</source>
         <translation>所有支援的檔案</translation>
     </message>
@@ -4497,42 +4517,42 @@ from %2</source>
 <context>
     <name>PJ::FileDialog</name>
     <message>
-        <location filename="../../pj_widgets/src/FileDialog.cpp" line="+75"/>
+        <location filename="../../pj_widgets/src/FileDialog.cpp" line="+76"/>
         <source>Binary file</source>
         <translation>二進位檔案</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>XML document</source>
         <translation>XML 文件</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+3"/>
         <source>Plain text document</source>
         <translation>純文字文件</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+3"/>
         <source>CSV document</source>
         <translation>CSV 文件</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+3"/>
         <source>ZIP archive</source>
         <translation>ZIP 壓縮檔</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>%1 file</source>
         <translation>%1 檔案</translation>
     </message>
     <message>
-        <location line="+130"/>
+        <location line="+129"/>
         <source>Open File</source>
         <translation>開啟檔案</translation>
     </message>
     <message>
-        <location line="+158"/>
+        <location line="+128"/>
         <source>The folder %1 is not responding, showing your home folder instead.</source>
         <translation>資料夾 %1 沒有回應，改為顯示您的家目錄。</translation>
     </message>
@@ -4540,24 +4560,24 @@ from %2</source>
 <context>
     <name>PJ::FileLoader</name>
     <message>
-        <location filename="../src/FileLoader.cpp" line="+1050"/>
+        <location filename="../src/FileLoader.cpp" line="+1030"/>
         <location line="+1"/>
         <source>Load Data</source>
         <translation>載入資料</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+32"/>
         <location line="+3"/>
         <source>Replace Data</source>
         <translation>替換資料</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+24"/>
         <source>Could not stage the selected file.</source>
         <translation>無法暫存選取的檔案。</translation>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+95"/>
         <source>File has no extension; cannot pick a plugin.</source>
         <translation>檔案沒有副檔名，無法選擇外掛程式。</translation>
     </message>
@@ -4578,12 +4598,12 @@ from %2</source>
     </message>
     <message>
         <location line="+16"/>
-        <location line="+587"/>
+        <location line="+584"/>
         <source>Plugin &apos;%1&apos;: createHandle failed.</source>
         <translation>外掛程式「%1」：createHandle 失敗。</translation>
     </message>
     <message>
-        <location line="-564"/>
+        <location line="-561"/>
         <source>Could not create the time domain for %1.</source>
         <translation>無法為 %1 建立時間域。</translation>
     </message>
@@ -4594,24 +4614,24 @@ from %2</source>
     </message>
     <message>
         <location line="+83"/>
-        <location line="+448"/>
+        <location line="+445"/>
         <source>createDataset failed: %1</source>
         <translation>createDataset 失敗：%1</translation>
     </message>
     <message>
-        <location line="-406"/>
-        <location line="+439"/>
+        <location line="-404"/>
+        <location line="+437"/>
         <source>Plugin &apos;%1&apos;: service registration failed: %2</source>
         <translation>外掛程式「%1」：服務註冊失敗：%2</translation>
     </message>
     <message>
-        <location line="-434"/>
-        <location line="+442"/>
+        <location line="-431"/>
+        <location line="+439"/>
         <source>Plugin &apos;%1&apos;: bind failed: %2</source>
         <translation>外掛程式「%1」：繫結失敗：%2</translation>
     </message>
     <message>
-        <location line="-409"/>
+        <location line="-406"/>
         <source>Plugin &apos;%1&apos;: the saved configuration is not a JSON object and cannot be replayed.</source>
         <translation>外掛程式 &apos;%1&apos;：已儲存的組態不是 JSON 物件，無法重新套用。</translation>
     </message>
@@ -4626,18 +4646,18 @@ from %2</source>
         <translation>「%1」拒絕了版面配置預設：%2；將改為顯示設定對話方塊</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+384"/>
+        <location line="+8"/>
+        <location line="+380"/>
         <source>Plugin &apos;%1&apos;: loadConfig failed: %2</source>
         <translation>外掛程式「%1」：loadConfig 失敗：%2</translation>
     </message>
     <message>
-        <location line="-350"/>
+        <location line="-347"/>
         <source>Plugin contract violation: %1. Reinstall the plugin from the Marketplace.</source>
         <translation>外掛程式介面契約違規：%1。請從擴充功能市場重新安裝此外掛程式。</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+34"/>
         <source>Plugin &apos;%1&apos;: loadConfig (post-dialog) failed: %2</source>
         <translation>外掛程式「%1」：對話方塊關閉後 loadConfig 失敗：%2</translation>
     </message>
@@ -4652,30 +4672,30 @@ from %2</source>
         <translation>無法替換資料集 %1：選取的設定會產生 %2 個資料集。</translation>
     </message>
     <message>
-        <location line="-775"/>
+        <location line="-728"/>
         <source>Plugin &apos;%1&apos;: saveConfig failed: %2 — layout save will skip plugin config</source>
         <translation>外掛程式「%1」：saveConfig 失敗：%2；儲存版面配置時將跳過外掛程式設定</translation>
     </message>
     <message>
-        <location line="+992"/>
+        <location line="+945"/>
         <source>Could not create the time domain for %1: %2</source>
         <translation>無法為 %1 建立時間域：%2</translation>
     </message>
     <message>
         <location line="+329"/>
-        <location line="+436"/>
+        <location line="+422"/>
         <source>Loader metadata rejected: %1</source>
         <translation>載入器中繼資料被拒絕：%1</translation>
     </message>
     <message>
-        <location line="-392"/>
-        <location line="+208"/>
+        <location line="-378"/>
+        <location line="+192"/>
         <location line="+8"/>
         <source>Import discarded</source>
         <translation>匯入已丟棄</translation>
     </message>
     <message>
-        <location line="-210"/>
+        <location line="-194"/>
         <source>All %1 entries of &apos;%2&apos; failed to load:
 %3</source>
         <translation>「%2」的全部 %1 個條目均載入失敗：
@@ -4688,22 +4708,17 @@ from %2</source>
     </message>
     <message>
         <location line="-246"/>
-        <location line="+412"/>
+        <location line="+396"/>
         <source>Plugin &apos;%1&apos;: start failed: %2</source>
         <translation>外掛程式「%1」：啟動失敗：%2</translation>
     </message>
     <message>
-        <location line="-1440"/>
-        <source>The browser can no longer read &apos;%1&apos;: it changed or was removed on disk since it was opened. Data loaded from it may be incomplete; open it again to reload it.</source>
-        <translation>瀏覽器已無法讀取「%1」：檔案開啟後已在磁碟上變更或刪除。從中載入的資料可能不完整；請重新開啟檔案以重新載入。</translation>
-    </message>
-    <message>
-        <location line="+1275"/>
+        <location line="-149"/>
         <source>not a readable file.</source>
         <translation>不是可讀取的檔案。</translation>
     </message>
     <message>
-        <location line="+196"/>
+        <location line="+182"/>
         <source>Plugin &apos;%1&apos;: derived-series replay failed: %2</source>
         <translation>外掛程式「%1」：衍生序列重播失敗：%2</translation>
     </message>
@@ -4726,20 +4741,6 @@ from %2</source>
         <location line="+15"/>
         <source>OK</source>
         <translation>確定</translation>
-    </message>
-</context>
-<context>
-    <name>PJ::FileSelectionService</name>
-    <message>
-        <location filename="../src/FileSelectionService.cpp" line="+121"/>
-        <location line="+47"/>
-        <source>Browser file staging is unavailable.</source>
-        <translation>瀏覽器檔案暫存無法使用。</translation>
-    </message>
-    <message>
-        <location line="-22"/>
-        <source>The browser could not read %1 (moved or changed since it was picked?).</source>
-        <translation>瀏覽器無法讀取 %1（選取後檔案是否已移動或變更？）。</translation>
     </message>
 </context>
 <context>
@@ -5170,12 +5171,12 @@ for example when the stream is already rectified.</source>
 <context>
     <name>PJ::MainWindow</name>
     <message>
-        <location filename="../src/MainWindow.cpp" line="+419"/>
+        <location filename="../src/MainWindow.cpp" line="+409"/>
         <source>PlotJuggler 4 Layout (*.pj4.xml)</source>
         <translation>PlotJuggler 4 版面配置 (*.pj4.xml)</translation>
     </message>
     <message>
-        <location line="+450"/>
+        <location line="+433"/>
         <source>Open Data File...</source>
         <translation>開啟資料檔案…</translation>
     </message>
@@ -5263,14 +5264,14 @@ for example when the stream is already rectified.</source>
         <translation>無法在二維檢視中顯示此物件主題（型別為 %1）。通常是因為資料來源未為該主題註冊解析器，或者內建查看器尚不支援此型別。</translation>
     </message>
     <message>
-        <location line="+153"/>
-        <location line="+2239"/>
+        <location line="+151"/>
+        <location line="+2192"/>
         <location line="+87"/>
         <source>dataset removed</source>
         <translation>資料集已移除</translation>
     </message>
     <message>
-        <location line="-1946"/>
+        <location line="-1899"/>
         <source>Start Streaming</source>
         <translation>開始接收串流資料</translation>
     </message>
@@ -5298,7 +5299,7 @@ for example when the stream is already rectified.</source>
 %1</translation>
     </message>
     <message>
-        <location line="+255"/>
+        <location line="+257"/>
         <source>Stop loading…</source>
         <translation>停止載入…</translation>
     </message>
@@ -5324,9 +5325,9 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+1493"/>
-        <location line="+173"/>
-        <location line="+2056"/>
+        <location line="+1448"/>
+        <location line="+169"/>
+        <location line="+1996"/>
         <location line="+305"/>
         <location line="+2074"/>
         <location line="+1219"/>
@@ -5334,7 +5335,7 @@ for example when the stream is already rectified.</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-7230"/>
+        <location line="-7121"/>
         <source>Undo</source>
         <translation>復原</translation>
     </message>
@@ -5344,12 +5345,12 @@ for example when the stream is already rectified.</source>
         <translation>重做</translation>
     </message>
     <message>
-        <location line="+91"/>
+        <location line="+77"/>
         <source>No widget selected</source>
         <translation>未選擇檢視元件</translation>
     </message>
     <message>
-        <location line="+439"/>
+        <location line="+430"/>
         <source>Loaded test sin/cos data</source>
         <translation>已載入正弦/餘弦測試資料</translation>
     </message>
@@ -5384,18 +5385,18 @@ for example when the stream is already rectified.</source>
         <translation>某個瀏覽器資料來源沒有可用的檔案名稱。</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>&apos;%1&apos; has no content fingerprint yet: it is still being computed, or the file changed since it was picked. Save the layout again in a moment, or open the file again.</source>
-        <translation>「%1」尚無內容指紋：仍在計算中，或檔案自選取後已變更。請稍後再次儲存配置，或重新開啟檔案。</translation>
+        <location line="+4"/>
+        <source>A browser source no longer has its staged content fingerprint.</source>
+        <translation>某個瀏覽器資料來源的暫存內容指紋已遺失。</translation>
     </message>
     <message>
-        <location line="+89"/>
-        <location line="+2435"/>
+        <location line="+87"/>
+        <location line="+2354"/>
         <source>The layout still contains an ephemeral browser path and was not downloaded.</source>
         <translation>版面配置仍包含暫時瀏覽器路徑，因此未下載。</translation>
     </message>
     <message>
-        <location line="-2303"/>
+        <location line="-2222"/>
         <source>Remove all Datasets</source>
         <translation>移除全部資料集</translation>
     </message>
@@ -5406,12 +5407,12 @@ for example when the stream is already rectified.</source>
         <translation>擴充功能市場</translation>
     </message>
     <message>
-        <location line="+260"/>
+        <location line="+240"/>
         <source>The source was reloaded, but some workspace bindings could not be mapped to its new datasets.</source>
         <translation>已重新載入資料來源，但部分工作區繫結無法映射到新的資料集。</translation>
     </message>
     <message numerus="yes">
-        <location line="+48"/>
+        <location line="+51"/>
         <source>%n derived series</source>
         <translation>
             <numerusform>%n 個衍生序列</numerusform>
@@ -5433,12 +5434,12 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+2"/>
-        <location line="+4608"/>
+        <location line="+4544"/>
         <source>Delete</source>
         <translation>刪除</translation>
     </message>
     <message>
-        <location line="-4441"/>
+        <location line="-4381"/>
         <source>Are you sure you want to remove &apos;%1&apos; and its data?</source>
         <translation>確定要移除「%1」及其資料嗎？</translation>
     </message>
@@ -5463,7 +5464,7 @@ for example when the stream is already rectified.</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location line="+250"/>
+        <location line="+247"/>
         <source>New release available: &lt;b&gt;%1&lt;/b&gt;</source>
         <translation>有新版本可用：&lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
@@ -5508,7 +5509,7 @@ for example when the stream is already rectified.</source>
         <translation>無法啟動 PlotJuggler 維護工具。</translation>
     </message>
     <message>
-        <location line="+844"/>
+        <location line="+794"/>
         <source>Nothing to record: start a streaming source first.</source>
         <translation>沒有可錄製的內容：請先啟動一個串流資料來源。</translation>
     </message>
@@ -5595,7 +5596,7 @@ for example when the stream is already rectified.</source>
         <translation>應用程式關閉</translation>
     </message>
     <message>
-        <location line="+111"/>
+        <location line="+104"/>
         <location line="+461"/>
         <location line="+101"/>
         <location line="+13"/>
@@ -6156,7 +6157,7 @@ for example when the stream is already rectified.</source>
         <translation>無法從版面配置重建圖表分頁。</translation>
     </message>
     <message>
-        <location line="+236"/>
+        <location line="+235"/>
         <source>Link X axis</source>
         <translation>聯動 X 軸</translation>
     </message>
@@ -6201,7 +6202,12 @@ for example when the stream is already rectified.</source>
         <translation>在播放位置新增藍色參考線；數值顯示為相對於該位置的差值</translation>
     </message>
     <message>
-        <location line="+126"/>
+        <location line="+3"/>
+        <source>Use time offset: show time relative to each dataset&apos;s start (axis begins at 0) instead of absolute time</source>
+        <translation>使用時間偏移：顯示相對於各資料集起點的時間（橫軸從 0 開始），而非絕對時間</translation>
+    </message>
+    <message>
+        <location line="+138"/>
         <source>Align sources: line every source&apos;s start up at the earliest start</source>
         <translation>對齊資料來源：將各資料來源的起點對齊到最早的起點</translation>
     </message>
@@ -6306,7 +6312,7 @@ for example when the stream is already rectified.</source>
         <translation>繼續下載</translation>
     </message>
     <message>
-        <location line="+301"/>
+        <location line="+293"/>
         <source>Failed to publish toolbox services for &apos;%1&apos;: %2</source>
         <translation>無法為「%1」發佈工具箱服務：%2</translation>
     </message>
@@ -6336,22 +6342,7 @@ for example when the stream is already rectified.</source>
         <translation>無法為「%1」發佈圖表分頁服務：%2</translation>
     </message>
     <message>
-        <location line="+41"/>
-        <source>The MCP server could not listen on 127.0.0.1, so AI agents cannot reach PlotJuggler.</source>
-        <translation>MCP 伺服器無法監聽 127.0.0.1，因此 AI 代理程式無法連線至 PlotJuggler。</translation>
-    </message>
-    <message>
-        <location line="+11"/>
-        <source>AI agent: %1</source>
-        <translation>AI 代理程式：%1</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>%1 is controlling PlotJuggler through MCP. Turn this off in Preferences → Appearance.</source>
-        <translation>%1 正透過 MCP 控制 PlotJuggler。可在「偏好設定 → 外觀」中關閉。</translation>
-    </message>
-    <message>
-        <location line="+35"/>
+        <location line="+22"/>
         <source>Toolbox</source>
         <translation>工具箱</translation>
     </message>
@@ -7612,24 +7603,6 @@ Details: %1</source>
     </message>
 </context>
 <context>
-    <name>PJ::McpServer</name>
-    <message>
-        <location filename="../src/mcp/McpServer.cpp" line="+359"/>
-        <source>an MCP client</source>
-        <translation>一個 MCP 用戶端</translation>
-    </message>
-    <message>
-        <location line="+52"/>
-        <source>AI agent (%1)</source>
-        <translation>AI 代理程式（%1）</translation>
-    </message>
-    <message>
-        <location filename="../src/mcp/McpServerTools.cpp" line="+97"/>
-        <source>An AI agent asked you to choose: </source>
-        <translation>AI 代理程式要求選擇：</translation>
-    </message>
-</context>
-<context>
     <name>PJ::MediaViewerWidget</name>
     <message>
         <location filename="../../pj_scene2D/widgets/src/media_viewer_widget.cpp" line="+51"/>
@@ -7765,26 +7738,16 @@ Details: %1</source>
     </message>
     <message>
         <location line="+57"/>
-        <source>Split &amp;Horizontally</source>
-        <translation>水平分割(&amp;H)</translation>
+        <source>&amp;Split Horizontally</source>
+        <translation>水平分割(&amp;S)</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Split &amp;Vertically</source>
-        <translation>垂直分割(&amp;V)</translation>
+        <source>&amp;Split Vertically</source>
+        <translation>垂直分割(&amp;S)</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>Zoom Out Horizontally</source>
-        <translation>水平縮小</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Zoom Out Vertically</source>
-        <translation>垂直縮小</translation>
-    </message>
-    <message>
-        <location line="-16"/>
+        <location line="+3"/>
         <source>&amp;Remove ALL curves</source>
         <translation>移除全部曲線(&amp;R)</translation>
     </message>
@@ -7794,7 +7757,17 @@ Details: %1</source>
         <translation>縮小至全範圍(&amp;Z)</translation>
     </message>
     <message>
-        <location line="+200"/>
+        <location line="+6"/>
+        <source>&amp;Zoom Out Horizontally</source>
+        <translation>水平方向縮小至全範圍(&amp;H)</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&amp;Zoom Out Vertically</source>
+        <translation>垂直方向縮小至全範圍(&amp;V)</translation>
+    </message>
+    <message>
+        <location line="+188"/>
         <source>Apply Filter...</source>
         <translation>套用濾波器…</translation>
     </message>
@@ -7877,22 +7850,12 @@ Details: %1</source>
         <translation>手動</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>local</source>
-        <translation>本機</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>UTC</source>
-        <translation>UTC</translation>
-    </message>
-    <message>
-        <location line="+26"/>
+        <location line="+25"/>
         <source>Choose funny images or the serious banner. Both modes support the selected language.</source>
         <translation>選擇趣圖或簡潔橫幅，兩種模式均支援所選介面語言。</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+38"/>
         <source>This folder does not exist.</source>
         <translation>此資料夾不存在。</translation>
     </message>
@@ -8315,15 +8278,15 @@ Details: %1</source>
     <message>
         <location filename="../../pj_scene3D/widgets/src/Scene3DDockWidget.cpp" line="+248"/>
         <location line="+368"/>
-        <location line="+282"/>
-        <location line="+1149"/>
+        <location line="+279"/>
+        <location line="+1145"/>
         <location line="+110"/>
         <location line="+3"/>
         <source>3D View</source>
         <translation>三維檢視</translation>
     </message>
     <message>
-        <location line="-1801"/>
+        <location line="-1794"/>
         <source>Orbit</source>
         <translation>環繞</translation>
     </message>
@@ -8349,19 +8312,19 @@ Details: %1</source>
     </message>
     <message>
         <location line="+245"/>
-        <location line="+282"/>
-        <location line="+1262"/>
+        <location line="+279"/>
+        <location line="+1258"/>
         <source>3D View - %1</source>
         <translation>三維檢視 - %1</translation>
     </message>
     <message>
-        <location line="-1532"/>
+        <location line="-1525"/>
         <location line="+21"/>
         <source>Robot model</source>
         <translation>機器人模型</translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+185"/>
         <source>Create trail for &apos;%1&apos;</source>
         <translation>建立「%1」的軌跡</translation>
     </message>
@@ -8376,7 +8339,7 @@ Details: %1</source>
         <translation>跟隨此座標系</translation>
     </message>
     <message>
-        <location line="+701"/>
+        <location line="+695"/>
         <source>Frame &apos;%1&apos; can&apos;t be resolved</source>
         <translation>無法解析座標系「%1」</translation>
     </message>
@@ -8632,12 +8595,12 @@ Details: %1</source>
         <translation>未選擇串流資料來源。</translation>
     </message>
     <message>
-        <location line="+229"/>
+        <location line="+228"/>
         <source>Stream plugin &apos;%1&apos; not found.</source>
         <translation>未找到串流資料外掛程式「%1」。</translation>
     </message>
     <message>
-        <location line="-133"/>
+        <location line="-132"/>
         <source>Plugin &apos;%1&apos;: createHandle failed.</source>
         <translation>外掛程式「%1」：createHandle 失敗。</translation>
     </message>
@@ -8672,17 +8635,17 @@ Details: %1</source>
         <translation>外掛程式「%1」：繫結失敗：%2</translation>
     </message>
     <message>
-        <location line="+90"/>
+        <location line="+72"/>
         <source>Plugin contract violation: %1. Reinstall the plugin from the Marketplace.</source>
         <translation>外掛程式介面契約違規：%1。請從擴充功能市場重新安裝此外掛程式。</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+23"/>
         <source>Plugin &apos;%1&apos;: loadConfig (post-dialog) failed: %2</source>
         <translation>外掛程式「%1」：對話方塊關閉後 loadConfig 失敗：%2</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Stream plugin &apos;%1&apos; is not installed.</source>
         <translation>尚未安裝串流外掛程式 &apos;%1&apos;。</translation>
     </message>
@@ -8705,7 +8668,7 @@ Details: %1</source>
 <context>
     <name>PJ::TabbedPlotWidget</name>
     <message>
-        <location filename="../../pj_plotting/widget/src/TabbedPlotWidget.cpp" line="+327"/>
+        <location filename="../../pj_plotting/widget/src/TabbedPlotWidget.cpp" line="+326"/>
         <source>Toggle left panel</source>
         <translation>顯示或隱藏左側面板</translation>
     </message>
@@ -8723,16 +8686,6 @@ Details: %1</source>
         <location line="+85"/>
         <source>tab%1</source>
         <translation>分頁%1</translation>
-    </message>
-    <message>
-        <location line="+102"/>
-        <source>%1 (copy)</source>
-        <translation>%1（副本）</translation>
-    </message>
-    <message>
-        <location line="+106"/>
-        <source>Duplicate tab</source>
-        <translation>複製分頁</translation>
     </message>
 </context>
 <context>
@@ -8823,13 +8776,13 @@ Details: %1</source>
     <name>PJ::VisualizationPlaceholderWidget</name>
     <message>
         <location filename="../../pj_widgets/src/VisualizationPlaceholderWidget.cpp" line="+95"/>
-        <source>Split &amp;Horizontally</source>
-        <translation>水平分割(&amp;H)</translation>
+        <source>&amp;Split Horizontally</source>
+        <translation>水平分割(&amp;S)</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Split &amp;Vertically</source>
-        <translation>垂直分割(&amp;V)</translation>
+        <source>&amp;Split Vertically</source>
+        <translation>垂直分割(&amp;S)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -8921,17 +8874,7 @@ Details: %1</source>
 <context>
     <name>PreferencesContent</name>
     <message>
-        <location filename="../src/PreferencesDialog.ui" line="+478"/>
-        <source>System file dialog:</source>
-        <translation>系統檔案對話方塊：</translation>
-    </message>
-    <message>
-        <location line="-3"/>
-        <source>Open and save files with the system&apos;s own file dialog instead of PlotJuggler&apos;s (Save Layout keeps PlotJuggler&apos;s). It does not stall on disconnected network drives, but does not follow the app&apos;s theme.</source>
-        <translation>使用系統內建的檔案對話方塊開啟和儲存檔案，而非 PlotJuggler 的對話方塊（儲存版面配置仍使用 PlotJuggler 的對話方塊）。它不會因已中斷連線的網路磁碟機而停滯，但不會套用應用程式的佈景主題。</translation>
-    </message>
-    <message>
-        <location line="-308"/>
+        <location filename="../src/PreferencesDialog.ui" line="+167"/>
         <source>Language:</source>
         <translation>語言：</translation>
     </message>
@@ -9021,16 +8964,6 @@ Details: %1</source>
         <translation>匿名使用統計：</translation>
     </message>
     <message>
-        <location line="+37"/>
-        <source>Serve the Model Context Protocol on this computer only (127.0.0.1, behind a secret token), so AI agents such as Claude Code or Codex can open files, read series, and draw in their own tabs. The status bar names an agent while it is active. Shows whether outside agents may connect now (also when allowed with --mcp); on by default; applies on OK. An agent a toolbox plugin starts itself gets its own private access and does not need this.</source>
-        <translation>僅在本機提供模型內容協定服務（127.0.0.1，由秘密權杖保護），讓 Claude Code 或 Codex 等 AI 代理程式能開啟檔案、讀取序列並在各自的分頁中繪圖。代理程式活動時，狀態列會顯示其名稱。此項顯示目前是否允許外部代理程式連線（包括透過 --mcp 允許時）；預設開啟，按一下「確定」後生效。工具箱外掛程式自行啟動的代理程式具有獨立的專用存取權限，無需開啟此項。</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Let AI agents control PlotJuggler (MCP server):</source>
-        <translation>允許 AI 代理程式控制 PlotJuggler（MCP 伺服器）：</translation>
-    </message>
-    <message>
         <location line="+52"/>
         <source>Rescale a plot&apos;s vertical axis to fit its curves whenever a curve is added or removed (the shared time axis is left unchanged).</source>
         <translation>新增或移除曲線時，自動調整圖表縱軸以適合曲線範圍（共用時間軸保持不變）。</translation>
@@ -9072,17 +9005,7 @@ Details: %1</source>
         <translation> Hz</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Time zone of the clock times shown while the date-time toggle (bottom left) is on.</source>
-        <translation>開啟左下角的日期時間開關時，時鐘時間顯示所使用的時區。</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Clock time zone:</source>
-        <translation>時鐘時區：</translation>
-    </message>
-    <message>
-        <location line="+46"/>
+        <location line="+36"/>
         <source>Coming soon</source>
         <translation>即將推出</translation>
     </message>
@@ -9306,10 +9229,10 @@ Details: %1</source>
     </message>
     <message>
         <location line="+2"/>
-        <location filename="../src/FileLoader.cpp" line="-2099"/>
+        <location filename="../src/FileLoader.cpp" line="-2038"/>
         <location line="+90"/>
         <location line="+7"/>
-        <location filename="../src/MainWindow.cpp" line="-10632"/>
+        <location filename="../src/MainWindow.cpp" line="-10445"/>
         <source>OK</source>
         <translation>確定</translation>
     </message>
@@ -9391,7 +9314,7 @@ Details: %1</source>
         <translation>移至停駐面板</translation>
     </message>
     <message>
-        <location filename="../src/ui/CurveListPanel.cpp" line="-1133"/>
+        <location filename="../src/ui/CurveListPanel.cpp" line="-1098"/>
         <source>Camera calibration topic, used automatically by 2D and 3D views. It cannot be displayed on its own, but a plugin panel can read it.</source>
         <translation>相機校正主題，由 2D 和 3D 視圖自動使用。無法單獨顯示，但外掛程式面板可以讀取。</translation>
     </message>
@@ -9458,7 +9381,7 @@ Details: %1</source>
         <translation>持續時間</translation>
     </message>
     <message>
-        <location filename="../src/BrowserPersistence.cpp" line="+591"/>
+        <location filename="../src/BrowserPersistence.cpp" line="+589"/>
         <source>The layout is not a bounded, source-free browser recipe.</source>
         <translation>此版面配置不符合瀏覽器版面配置設定的要求：大小受限且不包含資料來源。</translation>
     </message>
@@ -9670,17 +9593,7 @@ Details: %1</source>
 <context>
     <name>TimelineWidget</name>
     <message>
-        <location filename="../src/ui/TimelineWidget.ui" line="+42"/>
-        <source>Use time offset: show time relative to each dataset&apos;s start (axis begins at 0) instead of absolute time</source>
-        <translation>使用時間偏移：顯示相對於各資料集起點的時間（座標軸從 0 開始），而非絕對時間</translation>
-    </message>
-    <message>
-        <location line="+37"/>
-        <source>Show time as clock time (HH:mm:ss) instead of seconds</source>
-        <translation>以時鐘時間（HH:mm:ss）顯示時間，而非秒數</translation>
-    </message>
-    <message>
-        <location line="+85"/>
+        <location filename="../src/ui/TimelineWidget.ui" line="+90"/>
         <source>Loop</source>
         <translation>循環播放</translation>
     </message>
@@ -11483,6 +11396,25 @@ Details: %1</source>
         <location line="+35"/>
         <source>Opacity:</source>
         <translation>不透明度：</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::PluginRuntimeCatalog</name>
+    <message>
+        <source>Loaded DataSource %1 from %2</source>
+        <translation>已從 %2 載入資料來源 %1</translation>
+    </message>
+    <message>
+        <source>Loaded MessageParser %1 from %2</source>
+        <translation>已從 %2 載入訊息解析器 %1</translation>
+    </message>
+    <message>
+        <source>Loaded Toolbox %1 from %2</source>
+        <translation>已從 %2 載入工具箱 %1</translation>
+    </message>
+    <message>
+        <source>Loaded Widget %1 from %2</source>
+        <translation>已從 %2 載入元件 %1</translation>
     </message>
 </context>
 </TS>

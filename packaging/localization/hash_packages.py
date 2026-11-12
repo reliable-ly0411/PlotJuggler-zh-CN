@@ -9,7 +9,7 @@ p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('directory', type=Path)
 p.add_argument('--output', required=True)
 a = p.parse_args()
-files = sorted(x for x in a.directory.iterdir() if x.suffix in ['.exe', '.AppImage', '.deb'])
+files = sorted(x for x in a.directory.iterdir() if x.suffix in ['.exe', '.zip', '.AppImage', '.deb'])
 assert files, 'No final packages found'
 lines = []
 for path in files:

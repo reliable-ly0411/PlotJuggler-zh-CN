@@ -8,6 +8,8 @@ from pathlib import Path
 import re
 import shutil
 
+from version_map import versions
+
 
 def sha256(path):
     """Hash without loading a release package into memory."""
@@ -21,7 +23,7 @@ def sha256(path):
 def public_name(name):
     """Map Debian tildes only; do not guess GitHub's general renaming algorithm."""
     result = name.replace('~', '.')
-    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*[A-Za-z0-9]', result):
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+-]*[A-Za-z0-9]', result):
         raise ValueError(f'Unsupported public asset filename: {name!r}')
     return result
 
@@ -39,7 +41,7 @@ def stage_public_assets(source, destination, assets):
     result = []
     for asset, name in zip(assets, mapped):
         path = source / asset['name']
-        if path.is_symlink() or not path.is_file() or path.suffix not in ['.exe', '.AppImage', '.deb']:
+        if path.is_symlink() or not path.is_file() or path.suffix not in ['.exe', '.AppImage', '.deb', '.zip']:
             raise ValueError(f'Not a regular candidate package: {path}')
         if path.stat().st_size != asset['size'] or sha256(path) != asset['sha256']:
             raise ValueError(f'Candidate bytes do not match the acceptance manifest: {path.name}')
@@ -57,9 +59,9 @@ def stage_public_assets(source, destination, assets):
 def verify_release(directory, release, responses, tag, draft, notes, downloads=None):
     """Require exact names, upload IDs, server digests and optional downloaded bytes."""
     paths = sorted(directory.iterdir())
-    if (len(paths) != 4 or sum(path.suffix in ['.exe', '.AppImage', '.deb'] for path in paths) != 3
+    if (len(paths) != 5 or sum(path.suffix in ['.exe', '.AppImage', '.deb', '.zip'] for path in paths) != 4
             or not (directory / 'SHA256SUMS.txt').is_file()):
-        raise ValueError('Require three final packages and SHA256SUMS.txt')
+        raise ValueError('Require four final packages and SHA256SUMS.txt')
     expected = {}
     for path in paths:
         if path.is_symlink() or not path.is_file() or public_name(path.name) != path.name:
@@ -69,7 +71,7 @@ def verify_release(directory, release, responses, tag, draft, notes, downloads=N
                    for path in paths if path.name != 'SHA256SUMS.txt')
     if (directory / 'SHA256SUMS.txt').read_text(encoding='utf-8') != sums:
         raise ValueError('SHA256SUMS.txt does not match the exact public package names/bytes')
-    if release['tag_name'] != tag or release['draft'] is not draft or release['prerelease'] is not True:
+    if release['tag_name'] != tag or release['draft'] is not draft or release['prerelease'] is not versions(tag.removeprefix('v'))['prerelease']:
         raise ValueError('Unexpected release identity or publication state')
     if release['body'].replace('\r\n', '\n').rstrip('\n') != notes.replace('\r\n', '\n').rstrip('\n'):
         raise ValueError('Release notes differ from the reviewed full rendered notes')

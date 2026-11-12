@@ -40,6 +40,7 @@
 #include "pj_widgets/Timeline.h"
 #include "pj_widgets/VisualizationPlaceholderWidget.h"
 #include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
 #include "ui/CurveListPanel.h"
 
 using namespace Qt::StringLiterals;
@@ -81,6 +82,9 @@ class SettingsEnvironment : public ::testing::Environment {
   void SetUp() override {
     if (!pj_app_test::isTestSuiteSelected("FeatureCatalogResourceTest")) {
       return;
+    }
+    if (!settings_dir_.isValid() || settings_dir_.path().isEmpty()) {
+      qFatal("Cannot create private GUI test settings directory");
     }
     QCoreApplication::setOrganizationName(u"PlotJugglerTest"_s);
     QCoreApplication::setApplicationName(u"feature_catalog_test"_s);
@@ -185,7 +189,6 @@ LiveLabels readLiveLabels(PJ::MainWindow& window) {
   labels["playback.loop"] = toolTipOf(window, "playbackLoop");
   labels["playback.rate"] = toolTipOf(window, "playbackRate");
   labels["playback.step"] = toolTipOf(window, "labelStep");
-  labels["playback.date_time"] = toolTipOf(window, "buttonUseDateTime");
   if (auto* tabs = window.findChild<PJ::TabbedPlotWidget*>()) {
     labels["tabs.toggle_bottom"] = tabs->bottomPanelButton()->toolTip().toStdString();
   }
@@ -212,8 +215,6 @@ LiveLabels readLiveLabels(PJ::MainWindow& window) {
     }
   }
   labels["prefs.check_updates"] = textOf(prefs, "labelCheckUpdates");
-  labels["prefs.clock_time_zone"] = textOf(prefs, "labelClockTimeZone");
-  labels["prefs.mcp_server"] = textOf(prefs, "labelMcpServer");
   return live;
 }
 
@@ -234,7 +235,6 @@ const std::map<std::string, std::vector<std::string>>& labelsNamedBy() {
       {"viewer_2d", {"viz.2d", "datasets.title"}},
       {"scene_3d", {"viz.3d", "datasets.title"}},
       {"playback", {"playback.play", "playback.loop", "playback.rate", "playback.step"}},
-      {"clock_time", {"playback.date_time", "menu.file", "action.preferences", "prefs.clock_time_zone"}},
       {"source_timeline", {"tabs.toggle_bottom", "timeline.align", "timeline.merge", "datasets.title"}},
       {"state_transitions", {"viz.state", "datasets.title"}},
       {"custom_widget", {"viz.custom", "datasets.title"}},
@@ -245,7 +245,6 @@ const std::map<std::string, std::vector<std::string>>& labelsNamedBy() {
       {"diagnostics", {"titlebar.diagnostics"}},
       {"check_updates",
        {"menu.help", "action.check_updates", "menu.file", "action.preferences", "prefs.check_updates"}},
-      {"mcp_server", {"menu.file", "action.preferences", "prefs.mcp_server"}},
   };
   return table;
 }
@@ -266,7 +265,7 @@ class FeatureCatalogResourceTest : public ::testing::Test {
   static const LiveLabels& live() {
     if (!live_) {
       extensions_dir_ = std::make_unique<QTemporaryDir>();
-      window_ = std::make_unique<PJ::MainWindow>(extensions_dir_->path());
+      window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_->path());
       live_ = std::make_unique<LiveLabels>(readLiveLabels(*window_));
     }
     return *live_;

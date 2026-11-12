@@ -1,0 +1,14 @@
+Windows installer license presentation
+
+The root Licenses/license_mpl.txt and Licenses/license_lgpl.txt in an IFW
+installation are written from its staged component metadata. The portable ZIP
+copies those same staged metadata files into licenses/ (Windows paths are
+case-insensitive). The localization build uses the locked Qt LGPL text for
+license_lgpl.txt; independent MPL, Qt LGPL and GPL texts remain in share/licenses.
+
+This directory preserves the upstream PlotJuggler installer license_lgpl.txt,
+including its historical Davide Faconti copyright header, byte-for-byte from
+packaging/installer/packages/io.plotjuggler.application/meta/license_lgpl.txt.
+It is an additional historical notice, not a replacement for the application's
+MPL-2.0 license or any bundled dependency's license. No license terms, copyright
+attribution or component licensing are changed by the packaging arrangement.

@@ -267,16 +267,12 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
   // Derived markers (Plotting): the batch engine's mode and its automatic reload
   // rate; MainWindow applies both at startup and on OK (derivedBatchSettingsChanged).
   ui_->derivedBatchMode->setOptions(tr("Automatic"), tr("Manual"));
-  // Clock time zone (Plotting): wall-clock labels in the system zone or UTC;
-  // MainWindow re-applies it on OK (timeLabelSettingsChanged).
-  ui_->clockTimeZone->setOptions(tr("local"), tr("UTC"));
   ui_->scrubberDerivedReloadHz->setRange(BatchEngine::kMinReloadHz, BatchEngine::kMaxReloadHz);
   {
     QSettings settings;
     ui_->languageCombo->setCurrentIndex(ui_->languageCombo->findData(AppLanguage::preferredLanguage(settings)));
     ui_->scrubberFloatPrecision->setValue(settings.value(u"Preferences::precision"_s, 3).toInt());
     ui_->curveColorMode->setSelectedIndex(settings.value(u"Preferences::curve_color_global"_s, true).toBool() ? 0 : 1);
-    ui_->clockTimeZone->setSelectedIndex(settings.value(MainWindow::kClockUtcKey, false).toBool() ? 1 : 0);
     const BatchEngine::Settings batch = BatchEngine::loadSettings();
     ui_->derivedBatchMode->setSelectedIndex(batch.mode == BatchEngine::Mode::kManual ? 1 : 0);
     ui_->scrubberDerivedReloadHz->setValue(batch.reload_hz);
@@ -300,18 +296,6 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
       ui_->labelCustomTitleBar->hide();
       ui_->customTitleBarToggle->hide();
     }
-    ui_->systemFileDialogToggle->setChecked(
-        settings.value(MainWindow::kSystemFileDialogKey, false).toBool(),
-        /*animate=*/false);
-#ifndef PJ_TARGET_WASM
-    // The switch shows whether public access is open now (--mcp included), so OK can always revoke
-    // it. A toolbox plugin's private endpoint does not count: it is not for outside agents.
-    ui_->mcpServerToggle->setChecked(main_window != nullptr && main_window->mcpPublicAccess(), /*animate=*/false);
-#endif
-    if (!FileDialog::systemDialogSupported()) {
-      ui_->labelSystemFileDialog->hide();
-      ui_->systemFileDialogToggle->hide();
-    }
 #ifdef PJ_TARGET_WASM
     // Neither startup network call exists in the browser build (see main.cpp):
     // a tab cannot self-update, and it is a page view rather than an installed
@@ -323,8 +307,6 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
     // The browser has no raster canvas: plots always render through WebGL.
     ui_->labelOpenGL->hide();
     ui_->openglToggle->hide();
-    // A page cannot listen on a socket.
-    ui_->mcpServerRow->hide();
 #endif
   }
 
@@ -644,8 +626,6 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
     settings.setValue(u"Preferences::precision"_s, ui_->scrubberFloatPrecision->value());
     settings.setValue(u"Preferences::use_opengl"_s, ui_->openglToggle->isChecked());
     settings.setValue(MainWindow::kCustomTitleBarKey, ui_->customTitleBarToggle->isChecked());
-    settings.setValue(MainWindow::kSystemFileDialogKey, ui_->systemFileDialogToggle->isChecked());
-    FileDialog::setUseSystemDialog(ui_->systemFileDialogToggle->isChecked());
     settings.setValue(u"Preferences::check_updates_on_startup"_s, ui_->checkUpdatesToggle->isChecked());
     settings.setValue(u"Preferences::send_anonymous_stats"_s, ui_->telemetryToggle->isChecked());
     settings.setValue(u"Preferences::curve_color_global"_s, ui_->curveColorMode->selectedIndex() == 0);
@@ -656,21 +636,6 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
              ui_->derivedBatchMode->selectedIndex() == 1 ? BatchEngine::Mode::kManual : BatchEngine::Mode::kAutomatic,
          .reload_hz = ui_->scrubberDerivedReloadHz->value()});
     emit derivedBatchSettingsChanged();
-    settings.setValue(MainWindow::kClockUtcKey, ui_->clockTimeZone->selectedIndex() == 1);
-    emit timeLabelSettingsChanged();
-#ifndef PJ_TARGET_WASM
-    // The MCP switch applies only when it differs from the current state: public access opened
-    // with --mcp stays open (the stored setting untouched) unless the user turns it off here.
-    if (const bool mcp_on = ui_->mcpServerToggle->isChecked();
-        main_window != nullptr && mcp_on != main_window->mcpPublicAccess()) {
-      settings.setValue(MainWindow::kMcpServerKey, mcp_on);
-      if (mcp_on) {
-        main_window->openMcpPublicAccess();
-      } else {
-        main_window->closeMcpPublicAccess();
-      }
-    }
-#endif
   });
 
   connect(ui_->buttonOk, &QPushButton::clicked, this, &QDialog::accept);

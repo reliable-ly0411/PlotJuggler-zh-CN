@@ -1,3 +1,4 @@
+#include "support/isolated_main_window.h"
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
@@ -126,7 +127,7 @@ class MainWindowLayoutImportBinderTest : public ::testing::Test {
     const QString plugin_src = QString::fromUtf8(PJ_MOCK_FILE_SOURCE_PLUGIN_PATH);
     ASSERT_TRUE(QFile::copy(plugin_src, extensions_dir_->filePath(QFileInfo(plugin_src).fileName())))
         << "could not stage " << plugin_src.toStdString();
-    window_ = std::make_unique<PJ::MainWindow>(extensions_dir_->path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_->path());
     ASSERT_FALSE(appSession().extensionCatalog().findSourcesForExtension(QStringLiteral(".mock")).empty())
         << "mock_file_source_plugin did not load from the staged extensions dir";
     ASSERT_TRUE(appSession().extensionCatalog().pluginCatalog().registerStaticToolbox(&fake::kFakeVtable));

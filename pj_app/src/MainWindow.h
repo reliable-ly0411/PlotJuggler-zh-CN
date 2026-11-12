@@ -28,15 +28,13 @@
 #include <utility>
 #include <vector>
 
-#include "FileLoader.h"  // DialogPolicy, LoadRequestId
 #include "LayoutXml.h"
 #include "LoadInput.h"
 #include "ToolboxPresenter.h"
 #include "pj_base/builtin/builtin_object.hpp"  // sdk::BuiltinObjectType — onPlaceholderTopicDropped's slot parameter
 #include "pj_base/diagnostic_sink.hpp"
-#include "pj_base/expected.hpp"       // PJ::Status — the plot-tab and viewport host services report through it
-#include "pj_base/plugin_data_api.h"  // PJ_service_registry_t — toolboxSessionServices returns it
-#include "pj_base/time.hpp"           // PJ::Timepoint — the frame-invariant absolute instant the reference line stores
+#include "pj_base/expected.hpp"  // PJ::Status — the plot-tab and viewport host services report through it
+#include "pj_base/time.hpp"      // PJ::Timepoint — the frame-invariant absolute instant the reference line stores
 #include "pj_base/types.hpp"
 #include "pj_plotting/CurveTracker.h"
 #include "pj_plugins/host_qt/embedded_view_host.hpp"  // makeEmbeddedViewHost returns it by value
@@ -45,16 +43,11 @@
 #include "pj_runtime/RecordingService.h"  // CaptureResult / SourceRecordingStart — recording slot parameters
 #include "pj_runtime/SessionManager.h"
 #include "pj_widgets/ChromeMetrics.h"
-#include "pj_widgets/TimeFormat.h"
 #include "pj_widgets/VisualizationKind.h"
 
 class QAction;
-class QLabel;
 class QButtonGroup;
 class QCloseEvent;
-class QDragEnterEvent;
-class QDragMoveEvent;
-class QDropEvent;
 class QMenu;
 class QPaintEvent;
 class QPushButton;
@@ -88,7 +81,6 @@ class DiagnosticHistory;
 class DiagnosticsDialog;
 class DockWidget;
 class FileLoader;
-class McpServer;
 class IngestProgressController;
 class IDataWidget;
 class LayoutImportBatch;
@@ -153,7 +145,6 @@ class MainWindow : public QMainWindow {
   friend class MainWindowMarkerGeneratorTestPeer;
   friend class MainWindowMarkerStatusTestPeer;
   friend class MainWindowLayoutDatasetPathsTestPeer;
-  friend class MainWindowReloadButtonTestPeer;
   friend class MainWindowHistoryExemptTestPeer;
   friend class MainWindowCustomSeriesTestPeer;
   friend class MainWindowCustomTopicsTestPeer;
@@ -164,7 +155,6 @@ class MainWindow : public QMainWindow {
   friend class PresetTestPeer;
   friend class ToolboxPanelFoldTestPeer;
   friend class FeatureCatalogTestPeer;
-  friend class McpTestPeer;
   friend class ToolboxPresenter;
 
  public:
@@ -362,19 +352,6 @@ class MainWindow : public QMainWindow {
   // on the next launch.
   static constexpr QLatin1StringView kCustomTitleBarKey{"Preferences::custom_title_bar"};
 
-  // Preferences key (bool): open/save through the platform's file picker
-  // (FileDialog::setUseSystemDialog). Applied at construction and on
-  // Preferences OK.
-  static constexpr QLatin1StringView kSystemFileDialogKey{"Preferences::system_file_dialog"};
-
-  // Preferences key (bool): wall-clock time labels show UTC instead of the
-  // system time zone. Applied at construction and on Preferences OK.
-  static constexpr QLatin1StringView kClockUtcKey{"Preferences::clock_utc"};
-
-  // Key (bool) of the date-time toggle (buttonUseDateTime): time labels read as
-  // a clock instead of seconds. The name is PJ3's.
-  static constexpr QLatin1StringView kDateTimeDisplayKey{"MainWindow.dateTimeDisplay"};
-
   // Whether the user gets a choice of frame on this platform. False on macOS
   // (the platform's window controls are not ours to imitate) and in the
   // browser (see usesCustomFrame); the Preferences toggle is hidden there.
@@ -383,95 +360,6 @@ class MainWindow : public QMainWindow {
   // Whether a new MainWindow draws its own frameless frame: the saved
   // preference where selectable, always in the browser, never elsewhere.
   [[nodiscard]] static bool usesCustomFrame();
-
-  // --- Agent control: the services and actions the MCP server (src/mcp/) drives. ---
-
-  // Before deleting `removed_topics`, find every derived series (transform) that
-  // depends on them transitively, warn the user, and — if confirmed — remove those
-  // transforms and their Custom Topics entries, then run `proceed`. `proceed` runs
-  // at once when nothing depends on the removed series, and never on cancel or a
-  // failed removal. It may run after this returns (the browser prompt is
-  // non-blocking), so it must re-validate anything that could change meanwhile.
-  // `still_allowed`, when given, is asked once the prompt is accepted and before
-  // anything is removed: false abandons the whole delete (it reports why itself).
-  // `cancelled`, when given, runs instead of `proceed` when the delete is abandoned
-  // (the user cancelled, `still_allowed` refused, or removing the processors failed),
-  // so an asynchronous caller always hears exactly one outcome.
-  void confirmAndRemoveDependentTransforms(
-      const std::vector<TopicId>& removed_topics, std::function<void()> proceed,
-      std::function<bool()> still_allowed = {}, std::function<void()> cancelled = {});
-
-  // Erases `dataset_ids` with no prompt (the caller has confirmed, and has already
-  // removed the derived series depending on them), then re-seeds playback (unless a
-  // stream is live) and resets undo once for the batch.
-  void removeDatasets(const QList<DatasetId>& dataset_ids);
-
-  // Reloads `dataset_id` from its file with the plugin + config recorded when that
-  // file was loaded. `policy` overrides the dialog policy the interactive reload picks
-  // (skip the dialog when both are known); `still_allowed` becomes the load's
-  // LoadHints::still_allowed. Returns the load ticket, 0 when the dataset is not
-  // file-backed or the load was rejected.
-  LoadRequestId reloadDataset(
-      DatasetId dataset_id, std::optional<DialogPolicy> policy = std::nullopt,
-      std::function<bool()> still_allowed = {});
-
-  // Re-derives the Custom Topics rows from the live transform recipes and the
-  // persistent on-demand recipes (one flat row per object output, with its node's
-  // state) and hands the whole set to the panel.
-  //
-  // The panel cannot maintain that list on its own: only the services know which
-  // catalog topics are derived. Every on-demand install (onDemandRecipeInstalled)
-  // calls this after the catalog has relisted; call it from any other path that changes the recipe set WITHOUT
-  // retiring the outputs' catalog items — a plugin creating or withdrawing a
-  // transform, and a layout restore. A path that does retire them needs nothing:
-  // the panel prunes on CatalogModel::itemsRemoved. Call it AFTER the catalog
-  // rebuild, or the new outputs have no keys yet.
-  void syncCustomTopicsPanel();
-
-  // The session services the MCP server reads and drives; they live as long as this window.
-  [[nodiscard]] AppSession& appSession() const {
-    return *session_;
-  }
-  [[nodiscard]] FileLoader& fileLoader() const {
-    return *file_loader_;
-  }
-  [[nodiscard]] StreamingSourceManager& streamingSources() const {
-    return *streaming_manager_;
-  }
-  [[nodiscard]] PluginPlotTabsController& pluginPlotTabs() const {
-    return *plugin_plot_tabs_;
-  }
-
-  // The service assembly a toolbox plugin with id `owner` would get (data processors, object
-  // reads, playback, its own plot and scene tabs) with no plugin loaded: an MCP agent's tools run
-  // against it. Null after reporting the failure to the diagnostics. The caller must release it
-  // before this window's services die (~MainWindow destroys the MCP server right after the
-  // toolboxes).
-  [[nodiscard]] std::shared_ptr<ToolboxPanelSession> buildAgentSession(const QString& owner, const QString& label);
-  // The service registry of `session`; valid while the session lives.
-  [[nodiscard]] static PJ_service_registry_t toolboxSessionServices(ToolboxPanelSession& session);
-
-#ifndef PJ_TARGET_WASM
-  // The feature catalog `about` serves (desktop only).
-  [[nodiscard]] FeatureCatalogHost* featureCatalog() const {
-    return feature_catalog_.get();
-  }
-
-  // Preferences key (bool, default on): open MCP public access so AI agents can control this
-  // window. Read at startup by main.cpp, which ignores it for an unattended run; the Preferences
-  // switch shows whether public access is open and applies on OK.
-  static constexpr QLatin1StringView kMcpServerKey{"Preferences::mcp_server"};
-
-  // Opens MCP public access: any local agent (the bridge) may connect with a random token, which
-  // the discovery file advertises. Starts the server on a free 127.0.0.1 port unless it already
-  // runs for a toolbox plugin's endpoint (a failure goes to the diagnostics). A no-op while open.
-  // Shows a status-bar indicator while a public client is active.
-  void openMcpPublicAccess();
-  // Closes public access (token and discovery file); agents' tabs and derived series stay. The
-  // server keeps listening, refusing everything but toolbox plugins' private endpoints.
-  void closeMcpPublicAccess();
-  [[nodiscard]] bool mcpPublicAccess() const;
-#endif
 
  public slots:
   // Apply-only: clamp, update chrome_metrics_, broadcast chromeMetricsChanged.
@@ -566,8 +454,20 @@ class MainWindow : public QMainWindow {
   // Removes selected catalog entries from the curve/object tree.
   void onCatalogTrashRequested(QStringList keys, bool covers_all);
 
+  // Before deleting `removed_topics`, find every derived series (transform) that
+  // depends on them transitively, warn the user, and — if confirmed — remove those
+  // transforms and their Custom Topics entries, then run `proceed`. `proceed` runs
+  // at once when nothing depends on the removed series, and never on cancel or a
+  // failed removal. It may run after this returns (the browser prompt is
+  // non-blocking), so it must re-validate anything that could change meanwhile.
+  // `still_allowed`, when given, is asked once the prompt is accepted and before
+  // anything is removed: false abandons the whole delete (it reports why itself).
+  void confirmAndRemoveDependentTransforms(
+      const std::vector<TopicId>& removed_topics, std::function<void()> proceed,
+      std::function<bool()> still_allowed = {});
+
   // Removes the selected datasets (curve tree "Remove"): shows one
-  // combined confirmation, then removeDatasets(). Widget sync is signal-driven.
+  // combined confirmation, then erases each. Widget sync is signal-driven.
   void onRemoveDatasetsRequested(const QList<DatasetId>& dataset_ids);
 
   // Merges the selected datasets (curve tree "Merge"): shows the shared
@@ -732,11 +632,6 @@ class MainWindow : public QMainWindow {
   // once) to every plot and the Source Timeline.
   void broadcastReferenceLine();
 
-  // Recomputes time_label_format_ from the date-time toggle and the UTC
-  // preference, and pushes it to every plot, the playback readout and the Source
-  // Timeline. Cheap to repeat: each receiver no-ops on an unchanged format.
-  void applyTimeLabelFormat();
-
   // Drop-time fast path for the live-ingest seed below: if data is already present
   // when the user drops a scalar curve or object topic, set the playback range and
   // playhead immediately. Live ingest can also seed without any drop.
@@ -794,11 +689,9 @@ class MainWindow : public QMainWindow {
 
   // Pushes the derived-markers mode and reload rate the Preferences Plotting page
   // persists to the batch engine: at startup, and on OK of every Preferences dialog
-  // this window opens (bindPlottingPreferences).
+  // this window opens (bindDerivedBatchPreferences).
   void applyDerivedBatchPreferences();
-  // Connects the Plotting page's OK signals: the derived-markers settings above and
-  // the clock time zone (applyTimeLabelFormat).
-  void bindPlottingPreferences(PreferencesDialog& dialog);
+  void bindDerivedBatchPreferences(PreferencesDialog& dialog);
 
   // Tells every plot which of the marker rules it displays are computing or failed
   // (PlotWidget::setMarkerStatus), on BatchEngine::runningChanged. "Computing" waits
@@ -812,17 +705,10 @@ class MainWindow : public QMainWindow {
   // (PlotWidget::setSeriesStatus); on SessionManager::seriesStateChanged and for a new plot.
   void pushSeriesStatus(PlotWidget* only);
 
-  // Reloads a recorded source through its plugin + config (dialog skipped when both are known,
-  // unless `policy` says otherwise). Shared by the Reload button and reloadDataset (the per-dataset
-  // reload, also an MCP tool's); the loader asks `still_allowed` before applying anything. Returns
-  // the load ticket, 0 when the loader refused the request outright.
-  LoadRequestId reloadSource(
-      const QString& path, const QString& plugin_id, const QString& plugin_config_json,
-      std::optional<DialogPolicy> policy = std::nullopt, std::function<bool()> still_allowed = {});
-
-  // Enables the Reload button iff a reloadable source is recorded. reloadSource disables it for the
-  // request's duration; call this from every way that request can end.
-  void refreshReloadEnabled();
+  // Reloads a recorded source through its plugin + config (dialog skipped when
+  // both are known). Shared by the global Reload button and the per-dataset
+  // context-menu reload.
+  void reloadSource(const QString& path, const QString& plugin_id, const QString& plugin_config_json);
 
   // Sets legend position (or hides if `position` already matches the
   // current state — clicking the active corner toggles the legend off).
@@ -1330,6 +1216,18 @@ class MainWindow : public QMainWindow {
   // re-derives the Custom Topics list. The default (empty) snapshot clears every recipe.
   [[nodiscard]] bool applyDataProcessors(DerivedSnapshot snapshot);
 
+  // Re-derives the Custom Topics rows from the live transform recipes and the
+  // persistent on-demand recipes (one flat row per object output, with its node's
+  // state) and hands the whole set to the panel.
+  //
+  // The panel cannot maintain that list on its own: only the services know which
+  // catalog topics are derived. Every on-demand install (onDemandRecipeInstalled)
+  // calls this after the catalog has relisted; call it from any other path that changes the recipe set WITHOUT
+  // retiring the outputs' catalog items — a plugin creating or withdrawing a
+  // transform, and a layout restore. A path that does retire them needs nothing:
+  // the panel prunes on CatalogModel::itemsRemoved. Call it AFTER the catalog
+  // rebuild, or the new outputs have no keys yet.
+  void syncCustomTopicsPanel();
   // The rows again with the transform rows of the last sync (rebuilt only once the catalog changed since):
   // what a node's state or an offset changes. Costs per derived row, never per catalog row.
   void refreshCustomTopicsPanel();
@@ -1434,15 +1332,6 @@ class MainWindow : public QMainWindow {
   // starts a system-resize on press.
   bool eventFilter(QObject* watched, QEvent* event) override;
 
-  // Local files dragged onto the window (from a file manager) load as if picked
-  // in Load Data. Plots and placeholders ignore file drags, and Qt offers an
-  // ignored drag-enter to each ancestor that accepts drops, so a drop on them
-  // reaches here too. Floating docks are separate windows and do not take file
-  // drops. Folders are not expanded.
-  void dragEnterEvent(QDragEnterEvent* event) override;
-  void dragMoveEvent(QDragMoveEvent* event) override;
-  void dropEvent(QDropEvent* event) override;
-
   // Paints a 1-px border flush with the window edge. Self-painted via
   // PJ::theme:: token accessors — FrameworkTokens.h is built for exactly this
   // case (a top-level widget QSS can't reach). Custom frame only (the system
@@ -1540,11 +1429,6 @@ class MainWindow : public QMainWindow {
   std::shared_ptr<ToolboxPanelSession> buildToolboxPanelSession(
       const RuntimeToolboxPlugin& toolbox, const QString& plugin_id, const QString& source,
       const std::function<void(const QString&, const QString&)>& report_error);
-#ifndef PJ_TARGET_WASM
-  // The MCP server, started on a free 127.0.0.1 port when none runs; nullptr when it cannot
-  // listen (reported to the diagnostics once per run of failures, not per call).
-  McpServer* ensureMcpServer();
-#endif
 
   // The registry of live toolboxes, one presenter per plugin id whatever its
   // presentation. registerToolbox requires the id to be absent; teardownToolbox
@@ -1643,14 +1527,6 @@ class MainWindow : public QMainWindow {
   // Backs "pj.feature_catalog.v1" for every toolbox session. Declared before
   // session_ and the toolbox registry, so it outlives every plugin bound to it.
   std::unique_ptr<FeatureCatalogHost> feature_catalog_;
-  // The MCP server, from the first need (public access or a plugin's endpoint) until ~MainWindow
-  // destroys it, after the toolboxes (whose endpoints revoke their tokens) and before the services
-  // its agent sessions point into.
-  std::unique_ptr<McpServer> mcp_server_;
-  // A failed listen was reported and no start has succeeded since.
-  bool mcp_listen_failure_reported_ = false;
-  // Status-bar indicator naming the active MCP client; created on first use.
-  QLabel* mcp_client_label_ = nullptr;
 #endif
   QAction* undo_action_ = nullptr;
   QAction* redo_action_ = nullptr;
@@ -1994,6 +1870,10 @@ class MainWindow : public QMainWindow {
   QToolButton* button_ratio_ = nullptr;
   QToolButton* button_dots_ = nullptr;
   QToolButton* button_reference_point_ = nullptr;
+  // Re-bases the time axis to start near zero (each dataset relative to its own
+  // earliest sample) instead of absolute Unix-epoch time. The frame state lives
+  // in SessionManager; this button mirrors it.
+  QToolButton* button_t0_ = nullptr;
   // Global-column "Legend" button — single icon that combines a corner
   // picker (left-click) with a show/hide toggle (right-click). Checked
   // while the legend is shown at one of the four corners; unchecked
@@ -2011,9 +1891,6 @@ class MainWindow : public QMainWindow {
   LegendStatus legend_status_ = LegendStatus::kTopRight;
   bool show_points_ = false;
   bool activate_grid_ = false;
-  // Derived from kDateTimeDisplayKey + kClockUtcKey by applyTimeLabelFormat();
-  // new plots pick it up in applyGlobalToggles.
-  TimeLabelFormat time_label_format_ = TimeLabelFormat::kSeconds;
   bool dots_ = false;
 
   // A refreshCustomTopicsPanel is queued by scheduleCustomTopicsSync and has not run yet.

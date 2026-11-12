@@ -8,17 +8,25 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 record = json.loads((ROOT / "docs/localization/upstream-baseline.json").read_text(encoding="utf-8"))
-assert record["upstream_branch"] == "main"
+assert record["upstream_branch"] == "main-4.x"
 assert record["stable_branch"] == "zh-CN-4.x"
 assert record["development_branch"] == "zh-CN-4.x-dev"
-assert record["status"] in ("development", "prerelease")
+assert record["status"] in ("development", "prerelease", "release")
 for key in ("upstream_commit", "localization_source_commit"):
     assert re.fullmatch(r"[0-9a-f]{40}", record[key]), f"Invalid {key}"
 values = dict(line.split("=", 1) for line in (ROOT / "versions.env").read_text(encoding='utf-8').splitlines()
               if line and not line.startswith("#"))
-assert re.fullmatch(r"4\.\d+\.\d+-zh\.[1-9]\d*\.(?:dev|rc)\.[1-9]\d*", values["PJ_APP_VERSION"]), \
-    "The 4.x development line must use an explicit SemVer prerelease"
-assert (".rc." in values["PJ_APP_VERSION"]) == (record["status"] == "prerelease")
+version = values["PJ_APP_VERSION"]
+if record["status"] == "release":
+    match = re.fullmatch(r"(4\.\d+\.\d+)\+zh\.[1-9]\d*", version)
+    assert match, "Stable Chinese releases use a SemVer core plus build metadata"
+    assert record["upstream_tag"] == record["upstream_release"]["tag"] == match.group(1)
+    assert record["upstream_commit"] == record["upstream_release"]["commit"]
+    assert re.fullmatch(r"[0-9a-f]{40}", record["upstream_tag_object"])
+else:
+    assert re.fullmatch(r"4\.\d+\.\d+-zh\.[1-9]\d*\.(?:dev|rc)\.[1-9]\d*", version), \
+        "Development and candidate builds require an explicit SemVer prerelease"
+    assert (".rc." in version) == (record["status"] == "prerelease")
 assert values["PJ_QT_VERSION"].startswith("6."), "Qt5 is not the PJ4 toolchain"
 # Shallow CI clones cannot prove historical ancestry. Deep checkouts must.
 shallow = subprocess.run(["git", "rev-parse", "--is-shallow-repository"], cwd=ROOT,
@@ -40,4 +48,4 @@ url = subprocess.run(["git", "config", "-f", ".gitmodules", "--get",
                       f"submodule.{plugin['path']}.url"], cwd=ROOT,
                      check=True, capture_output=True, text=True).stdout.strip()
 assert url == plugin["repository"] + ".git", "Unexpected BIN submodule repository"
-print("4.x provenance, development SemVer and fixed BIN gitlink verified")
+print("4.x provenance, release/development SemVer and fixed BIN gitlink verified")

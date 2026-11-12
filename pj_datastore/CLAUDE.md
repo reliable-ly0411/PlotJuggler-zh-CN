@@ -5,7 +5,7 @@ Level-0 foundation library — a **top-level PJ4 module** (app-internal, not par
 ## Layout
 - `include/pj_datastore/` — public headers (engine/writer/reader/query/chunk, `object_store` (+ its internal `ordered_entries` value type, + `resident_payload_pool` — the byte-bounded FIFO window behind `pushLazyWithSeed`), `sequential_uid` (`SequentialUID`: a stable entry identity, allocated process-wide and never reused after eviction), `merge_result` / `replace_result` (the outcomes of `DataEngine::mergeDatasets` / `replaceDatasetFrom`, in anchor / primary topic ids), `saturating_time` (`saturatingAdd`/`saturatingSub`: Timestamp arithmetic that clamps at the int64 limits), `marker_topic_metadata` (the metadata a plot-markers topic is identified by, and the stamp `ObjectStore` gives a legacy `__markers__/<key>` write on registration), `incremental_engine` + `builtin_transforms`, `plugin_data_host`, `colormap_registry` + `colormap_registry_host` (its C-ABI wrapper for toolbox plugins), `arrow_import`, low-level buffer/column_buffer/encoding/topic_storage/type_registry, plus the data-processor substrate `data_processor`/`sample`/`processor_siso_adapter`/`processor_detail` — namespace `PJ::proc`).
 - `src/` — implementations, one `.cpp` per header.
-- `tests/` — GTest suites grouped by layer (see `CMakeLists.txt` for the live set). `plugin_host_write_test.cpp` and `plugin_host_read_test.cpp` exercise the removed v3 ABI and are not built.
+- `tests/` — GTest suites grouped by layer (see `CMakeLists.txt` for the live set). `plugin_host_write_test.cpp` and `plugin_host_read_test.cpp` cover the current scalar host wrappers, catalog snapshots, and Arrow stream/read ABI, including nulls and schema evolution.
 - `benchmarks/` — `read_benchmark`, `ingest_benchmark`, `concurrency_benchmark` (writer commit against a GUI reader walk under the engine lock; prints numbers, not a unit test).
 - `examples/` — `parquet_import` (gated by `PJ_BUILD_PARQUET_IMPORT_EXAMPLE`).
 - `docs/` — see table below.
@@ -37,4 +37,4 @@ ThreadSanitizer entry points in `build.sh` and CI, with their 90-second timeouts
 | Write / read facades | `include/pj_datastore/writer.hpp`, `reader.hpp` |
 | Series / range / latest-at queries | `include/pj_datastore/query.hpp` |
 | Transform interfaces + built-ins | `include/pj_datastore/incremental_engine.hpp`, `builtin_transforms.hpp` |
-| C-ABI host bridges (source/parser/toolbox, object surfaces, catalog snapshot v2), the windowed series read and value scan the MCP tools use | `include/pj_datastore/plugin_data_host.hpp` (the `DatastoreToolboxHost` comment owns the v2 rules), `docs/OBJECT_STORE_DESIGN.md` |
+| C-ABI host bridges (source/parser/toolbox, object surfaces, catalog snapshot v2) | `include/pj_datastore/plugin_data_host.hpp` (the `DatastoreToolboxHost` comment owns the v2 rules), `docs/OBJECT_STORE_DESIGN.md` |

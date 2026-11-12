@@ -46,6 +46,7 @@
 #include "pj_widgets/Timeline.h"
 #include "pj_widgets/VisualizationPlaceholderWidget.h"
 #include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
 
 using namespace Qt::StringLiterals;
 
@@ -293,7 +294,7 @@ class MainWindowHistoryFixture : public ::testing::Test {
   static void SetUpTestSuite() {
     extensions_dir_ = std::make_unique<QTemporaryDir>();
     ASSERT_TRUE(extensions_dir_->isValid());
-    window_ = std::make_unique<PJ::MainWindow>(extensions_dir_->path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_->path());
   }
 
   static void TearDownTestSuite() {

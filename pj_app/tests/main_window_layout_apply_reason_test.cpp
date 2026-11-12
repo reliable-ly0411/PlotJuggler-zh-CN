@@ -1,3 +1,4 @@
+#include "support/isolated_main_window.h"
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
@@ -30,7 +31,7 @@ TEST(MainWindowLayoutApplyReasonTest, ApplyFailureReportCarriesTheCapturedReason
   ASSERT_TRUE(extensions_dir.isValid());
   ASSERT_TRUE(project_dir.isValid());
 
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   ASSERT_TRUE(window.populateTestData());  // past the catalog-empty guard
 
   QString failure_message;

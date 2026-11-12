@@ -24,7 +24,7 @@
       <string>Custom Widget</string>
      </property>
      <property name="titleObjectName">
-      <string notr="true">labelWidgetName</string>
+      <string>labelWidgetName</string>
      </property>
     </widget>
    </item>
@@ -194,7 +194,7 @@
           <string>Filter...</string>
          </property>
          <property name="filterFieldName">
-          <string notr="true">customWidgetSeriesFilter</string>
+          <string>customWidgetSeriesFilter</string>
          </property>
         </widget>
        </item>

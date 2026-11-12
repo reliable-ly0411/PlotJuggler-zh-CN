@@ -74,6 +74,9 @@ using namespace Qt::StringLiterals;
 
 namespace {
 
+// Runs before main(); see pjPreferRealDisplayQpa().
+const bool kRealDisplayPlatform = pjPreferRealDisplayQpa();
+
 PJ::PlotRhiCanvas* rhiCanvas(QwtPlot* plot) {
   return qobject_cast<PJ::PlotRhiCanvas*>(plot->canvas());
 }

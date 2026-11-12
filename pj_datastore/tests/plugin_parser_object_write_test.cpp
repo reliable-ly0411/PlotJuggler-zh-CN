@@ -146,9 +146,9 @@ TEST(ParserObjectWriteHostTest, ParserWritesToBothHostsFromOneParse) {
   EXPECT_TRUE(
       std::equal(resolved->payload.bytes.begin(), resolved->payload.bytes.end(), expected.begin(), expected.end()));
 
-  // (Scalar side requires flushing + a read path; Phase-3 scope is proving
-  // both hosts were resolved and invoked. Scalar writes go into DataEngine
-  // and are covered by plugin_host_write_test's existing scalar tests.)
+  // This case checks that both hosts are invoked and the object payload lands.
+  // PluginDataHostWriteTest.ParserHostIsBoundToSingleTopic separately flushes
+  // and verifies scalar values and rejects foreign-topic field handles.
 }
 
 TEST(ParserObjectWriteHostTest, ParserFallsBackToScalarOnlyWhenObjectServiceAbsent) {

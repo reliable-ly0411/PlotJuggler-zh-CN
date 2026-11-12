@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "../../cmake/test_mains/pj_test_owned_directory.h"
 #include "hermetic_catalog.h"
 #include "pj_base/sdk/data_source_host_views.hpp"
 #include "pj_base/sdk/service_registry.hpp"
@@ -58,8 +59,8 @@ class ToolboxCaptureWiringTest : public ::testing::Test {
  protected:
   void SetUp() override {
     ASSERT_NE(catalog_.findParserByEncoding(u"runtime_host_object"_s), nullptr);
-    std::random_device entropy;
-    cache_root_ = fs::temp_directory_path() / ("toolbox_capture_test-" + std::to_string(entropy()));
+    ASSERT_TRUE(cache_owner_.ownsTree());
+    cache_root_ = fs::path((cache_owner_.path() + "/cache").toStdU16String());
     store_.emplace(cache_root_);
     service_.emplace(*store_);
 
@@ -87,8 +88,7 @@ class ToolboxCaptureWiringTest : public ::testing::Test {
 
   void TearDown() override {
     host_.reset();
-    std::error_code ec;
-    fs::remove_all(cache_root_, ec);
+    // cache_owner_ cleans only its fresh tree after service_ and store_ die.
   }
 
   /// createDataSource + createDatasetIngest — one delegated download.
@@ -142,6 +142,7 @@ class ToolboxCaptureWiringTest : public ::testing::Test {
   ObjectStore object_store_;
   sdk::InMemorySettingsBackend settings_;
   ServiceRegistryBuilder builder_;
+  PjTestOwnedDirectory cache_owner_;
   fs::path cache_root_;
   std::optional<SourceCacheStore> store_;
   std::optional<SourceCaptureService> service_;

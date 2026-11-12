@@ -3,18 +3,13 @@
 
 #include "FileSelectionService.h"
 
-#include <QCoreApplication>
 #include <QFileDialog>
-#include <QRegularExpression>
-#include <memory>
 #include <string>
 #include <utility>
 
 #include "BrowserFileStore.h"
 #ifdef Q_OS_WASM
 #include <emscripten/val.h>
-
-#include "BrowserPickedFile.h"
 #endif
 using namespace Qt::StringLiterals;
 
@@ -58,19 +53,6 @@ QString FileSelectionService::browserContentFilter(const QString& name_filter) {
   return name_filter.section(u";;"_s, 0, 0);
 }
 
-QString FileSelectionService::browserAcceptList(const QString& name_filter) {
-  static const QRegularExpression pattern(u"(?<![^\\s(])\\*(\\.[^\\s()*]+)?(?=[\\s)]|$)"_s);
-  QStringList extensions;
-  for (const QRegularExpressionMatch& match : pattern.globalMatch(browserContentFilter(name_filter))) {
-    if (!match.hasCaptured(1)) {
-      return {};
-    }
-    extensions.append(match.captured(1));
-  }
-  extensions.removeDuplicates();
-  return extensions.join(u',');
-}
-
 void FileSelectionService::selectFileContent(QWidget* parent, const QString& name_filter, Callback callback) {
   // The aggregate first filter already contains every supported extension.
   const QString browser_filter = browserContentFilter(name_filter);
@@ -104,58 +86,7 @@ void FileSelectionService::saveFileContent(QWidget* parent, const QByteArray& by
 }
 
 void FileSelectionService::selectAndStageFile(
-    QWidget* parent, const QString& name_filter, std::shared_ptr<BrowserFileStore> store, StagedCallback callback,
-    Fingerprint fingerprint) {
-#ifdef Q_OS_WASM
-  Q_UNUSED(parent);
-  browser_picked_file::pick(
-      browserAcceptList(name_filter), [store = std::move(store), callback = std::move(callback), fingerprint](
-                                          quint32 pick_id, QString browser_name) mutable {
-        if (browser_name.isEmpty()) {
-          callback({});
-          return;
-        }
-        BrowserFileStore::StageResult staged =
-            store ? store->reserve(browser_name)
-                  : BrowserFileStore::StageResult{
-                        .error = QCoreApplication::translate(
-                            "PJ::FileSelectionService", "Browser file staging is unavailable.")};
-        if (!staged.input.has_value()) {
-          browser_picked_file::forget(pick_id);
-          callback({.browser_name = browser_name, .error = std::move(staged.error)});
-          return;
-        }
-        LoadInput input = std::move(*staged.input);
-        if (!browser_picked_file::mount(pick_id, input.backing_path)) {
-          callback(
-              {.browser_name = browser_name, .error = u"The browser lost the picked file %1."_s.arg(browser_name)});
-          return;
-        }
-        if (fingerprint == Fingerprint::kInBackground) {
-          callback({.browser_name = browser_name, .input = std::move(input)});
-          return;
-        }
-        const QString path = input.backing_path;
-        browser_picked_file::hash(
-            path, [callback = std::move(callback), browser_name,
-                   input = std::make_shared<LoadInput>(std::move(input))](QString sha256) mutable {
-              if (sha256.isEmpty()) {
-                // Dropping `input` releases its lease, which removes the mounted file.
-                callback({
-                    .browser_name = browser_name,
-                    .error = QCoreApplication::translate(
-                                 "PJ::FileSelectionService",
-                                 "The browser could not read %1 (moved or changed since it was picked?).")
-                                 .arg(browser_name),
-                });
-                return;
-              }
-              input->content_sha256 = std::move(sha256);
-              callback({.browser_name = browser_name, .input = std::move(*input)});
-            });
-      });
-#else
-  Q_UNUSED(fingerprint);
+    QWidget* parent, const QString& name_filter, std::shared_ptr<BrowserFileStore> store, StagedCallback callback) {
   selectFileContent(
       parent, name_filter, [store = std::move(store), callback = std::move(callback)](Selection selection) mutable {
         if (selection.browser_name.isEmpty()) {
@@ -165,7 +96,7 @@ void FileSelectionService::selectAndStageFile(
         if (!store) {
           callback({
               .browser_name = selection.browser_name,
-              .error = QCoreApplication::translate("PJ::FileSelectionService", "Browser file staging is unavailable."),
+              .error = QStringLiteral("Browser file staging is unavailable."),
           });
           return;
         }
@@ -180,7 +111,6 @@ void FileSelectionService::selectAndStageFile(
               });
             });
       });
-#endif
 }
 
 }  // namespace PJ

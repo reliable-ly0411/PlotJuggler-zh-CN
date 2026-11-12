@@ -135,6 +135,7 @@ inline QString bundledPluginText(const QString& id, const QString& version, cons
   }
   return source;
 }
+// Translate only exact allowlisted diagnostics; domain wrappers are not arbitrary prefixes.
 inline QString bundledPluginError(const QString& id, const QString& version, const QString& source) {
   struct Entry {
     const char* id;
@@ -168,6 +169,12 @@ inline QString bundledPluginError(const QString& id, const QString& version, con
     if (id == QLatin1String(entry.id) && version == QLatin1String(entry.version) &&
         source == QString::fromUtf8(entry.source)) {
       return QCoreApplication::translate("PJ::BundledPluginDiagnostics", entry.source);
+    }
+    // The fixed CSV SDK adds this exact domain before FileLoader receives the error.
+    // Preserve it, and never strip prefixes from unknown IDs, versions or messages.
+    if (id == QLatin1String("csv-loader") && id == QLatin1String(entry.id) && version == QLatin1String(entry.version) &&
+        source == QStringLiteral("plugin: ") + QString::fromUtf8(entry.source)) {
+      return QStringLiteral("plugin: ") + QCoreApplication::translate("PJ::BundledPluginDiagnostics", entry.source);
     }
   }
   return source;

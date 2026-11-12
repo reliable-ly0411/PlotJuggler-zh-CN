@@ -34,6 +34,7 @@
 #include "pj_marketplace/platform_utils.hpp"
 #include "pj_plotting/PlotWidgetBase.h"
 #include "pj_widgets/CurveTreeView.h"
+#include "support/isolated_main_window.h"
 #endif
 
 using namespace Qt::StringLiterals;
@@ -98,7 +99,7 @@ void PluginFeedbackTest::mainWindowFlow() {
     QVERIFY(QDir().mkpath(QFileInfo(to).absolutePath()));
     QVERIFY(QFile::copy(from, to));
   }
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   QVERIFY(window.populateTestData());
   window.resize(1500, 830);
   window.show();

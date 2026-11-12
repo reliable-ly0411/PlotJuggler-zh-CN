@@ -38,9 +38,20 @@ else()
 endif()
 
 # Each case owns a fresh process: profile installation is deliberately immutable.
-# Every created file stays below this build-tree directory, including failures.
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test-data/tmp"
-                    "${CMAKE_CURRENT_BINARY_DIR}/test-data/framework-cache")
+option(PJ_NATIVE_BUNDLE_MODE "Use launcher-owned native test output directories" OFF)
+if(PJ_NATIVE_BUNDLE_MODE)
+    get_filename_component(profile_bundle_root "${CMAKE_BINARY_DIR}/.." ABSOLUTE)
+    target_compile_definitions(app_profile_test PRIVATE
+        PJ_NATIVE_BUNDLE_MODE=1 PJ_NATIVE_BUNDLE_ROOT="${profile_bundle_root}")
+    set(profile_test_directory "--native-bundle-owned")
+    set(profile_test_environment "QT_QPA_PLATFORM=offscreen")
+else()
+    # Preserve the existing standalone and release-test behavior.
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test-data/tmp"
+                        "${CMAKE_CURRENT_BINARY_DIR}/test-data/framework-cache")
+    set(profile_test_directory "${CMAKE_CURRENT_BINARY_DIR}/test-data")
+    set(profile_test_environment "QT_QPA_PLATFORM=offscreen;TMP=${CMAKE_CURRENT_BINARY_DIR}/test-data/tmp;TEMP=${CMAKE_CURRENT_BINARY_DIR}/test-data/tmp;TMPDIR=${CMAKE_CURRENT_BINARY_DIR}/test-data/tmp;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-data/framework-cache")
+endif()
 set(profile_cases DefaultPaths IsolatedPaths EqualsSyntax EarlyWidgetSettings AtomicSettingsProbe
         InvalidArguments RootIsFile ChildIsFile UnwritableDirectory UnwritableSettings
         LinkedDirectory LinkedSettingsFile StartupOrder)
@@ -49,9 +60,9 @@ if(WIN32)
 endif()
 foreach(profile_case IN LISTS profile_cases)
     add_test(NAME AppProfile.${profile_case}
-        COMMAND app_profile_test "${profile_case}" "${CMAKE_CURRENT_BINARY_DIR}/test-data")
+        COMMAND app_profile_test "${profile_case}" "${profile_test_directory}")
     set_tests_properties(AppProfile.${profile_case} PROPERTIES
-        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;TMP=${CMAKE_CURRENT_BINARY_DIR}/test-data/tmp;TEMP=${CMAKE_CURRENT_BINARY_DIR}/test-data/tmp;TMPDIR=${CMAKE_CURRENT_BINARY_DIR}/test-data/tmp;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-data/framework-cache"
+        ENVIRONMENT "${profile_test_environment}"
         TIMEOUT 30 SKIP_RETURN_CODE 77)
 endforeach()
 
@@ -73,6 +84,10 @@ if(TARGET pj_runtime)
         PJ_PROFILE_MARKETPLACE_PARSER_PATH="$<TARGET_FILE:profile_marketplace_parser>")
     add_dependencies(app_profile_services_test mock_data_source_v2_plugin profile_bundled_parser profile_marketplace_parser)
     set_target_properties(app_profile_services_test PROPERTIES WIN32_EXECUTABLE FALSE)
+    if(PJ_NATIVE_BUNDLE_MODE)
+        target_compile_definitions(app_profile_services_test PRIVATE
+            PJ_NATIVE_BUNDLE_MODE=1 PJ_NATIVE_BUNDLE_ROOT="${profile_bundle_root}")
+    endif()
     if(TARGET pj_scene3d_widgets)
         # This source directly includes GLM; a sibling's non-GLOBAL imported
         # target is not visible in this directory's scope.
@@ -91,6 +106,6 @@ if(TARGET pj_runtime)
         target_compile_options(app_profile_services_test PRIVATE -Wall -Wextra -Wshadow -Wconversion -Wpedantic -Werror)
     endif()
     add_test(NAME AppProfile.RuntimeServices
-        COMMAND app_profile_services_test "${CMAKE_CURRENT_BINARY_DIR}/test-data")
+        COMMAND app_profile_services_test "${profile_test_directory}")
     set_tests_properties(AppProfile.RuntimeServices PROPERTIES TIMEOUT 60)
 endif()

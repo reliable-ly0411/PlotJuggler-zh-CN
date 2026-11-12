@@ -23,7 +23,6 @@
 #include <QStyle>
 #include <QThread>
 #include <QTimer>
-#include <QUrl>
 #include <QVBoxLayout>
 #include <algorithm>
 #include <chrono>
@@ -44,9 +43,6 @@
 #include "FanoutConfig.h"
 #include "FileLoader.h"
 #include "FileSelectionService.h"
-#ifdef PJ_TARGET_WASM
-#include "BrowserPickedFile.h"
-#endif
 #include "LayoutXml.h"
 #include "pj_base/data_source_protocol.h"
 #include "pj_base/dataset.hpp"
@@ -991,28 +987,9 @@ FileLoader::FileLoader(
       catalog_(catalog),
       browser_file_store_(std::make_shared<BrowserFileStore>()),
       active_plugin_message_dialog_(std::make_shared<QPointer<QDialog>>()),
-      message_gate_(std::make_shared<PluginMessageGate>()) {
-#ifdef PJ_TARGET_WASM
-  // A picked file is read lazily, for the whole session: a change on disk after the pick turns up later as failed
-  // reads, which a std::istream-based source takes for the end of the file. Say so, or the data looks complete.
-  browser_picked_file::setReadFailureHandler([this](const QString& path) {
-    // Its content is no longer what was fingerprinted: a layout must not pin the session to that fingerprint, nor
-    // to one a hash still running stores later.
-    browser_content_sha256_.remove(browser_identity_by_path_.take(path));
-    emitDiagnosticTo(
-        diagnostic_sink_, DiagnosticLevel::kWarning, "File Loader", "browser-file-read-failed",
-        tr("The browser can no longer read '%1': it changed or was removed on disk since it was opened. Data loaded "
-           "from it may be incomplete; open it again to reload it.")
-            .arg(QFileInfo(path).fileName())
-            .toStdString());
-  });
-#endif
-}
+      message_gate_(std::make_shared<PluginMessageGate>()) {}
 
 FileLoader::~FileLoader() {
-#ifdef PJ_TARGET_WASM
-  browser_picked_file::setReadFailureHandler({});
-#endif
   // Stricter admission than a reusable shutdown: the final synchronous
   // terminal flush inside joinForShutdown runs loadFinished slots, and one of
   // them starting fresh work here would leave an accepted request nothing can
@@ -1043,9 +1020,10 @@ void FileLoader::openFromDialog(QWidget* dialog_parent) {
   const QString last_dir = settings.value(kLastDirKey, QString()).toString();
 
   // PJ::FileDialog wraps a non-native QFileDialog in our frameless
-  // chrome, or opens the system dialog where the user opted in
-  // (FileDialog::setUseSystemDialog, Windows and macOS only) — see
-  // pj_widgets/FileDialog.h. The shell-injected picker threads MainWindow's chrome
+  // chrome — see pj_widgets/FileDialog.h. The native GTK dialog also
+  // crashes on this app's libpng ABI skew (see the --exclude-libs,ALL
+  // note in pj_app/CMakeLists.txt), so we avoid it both for look and
+  // for stability. The shell-injected picker threads MainWindow's chrome
   // metrics into the dialog (toolbar icon size, kept in step via
   // chromeMetricsChanged) — see setFilePicker().
   const QStringList paths = file_picker_ != nullptr
@@ -1056,24 +1034,13 @@ void FileLoader::openFromDialog(QWidget* dialog_parent) {
   }
   // Remember the directory of the last pick for next time.
   settings.setValue(kLastDirKey, QFileInfo(paths.last()).absolutePath());
-  loadFiles(paths, dialog_parent);
-#endif
-}
-
-void FileLoader::loadFiles(const QStringList& paths, QWidget* dialog_parent) {
+  // Load each selected file in order so several datasets populate in one go.
+  // Each loadFile may pop its own data-source config dialog and reports its own
+  // failures, so a single bad file doesn't abort the rest.
   for (const QString& path : paths) {
     loadFile(path, dialog_parent);
   }
-}
-
-QStringList FileLoader::droppedFilePaths(const QMimeData& mime) {
-  QStringList paths;
-  for (const QUrl& url : mime.urls()) {
-    if (url.isLocalFile() && QFileInfo(url.toLocalFile()).isFile()) {
-      paths.append(url.toLocalFile());
-    }
-  }
-  return paths;
+#endif
 }
 
 void FileLoader::replaceFromDialog(DatasetId dataset_id, QWidget* dialog_parent) {
@@ -1113,11 +1080,8 @@ void FileLoader::loadFromBrowserPicker(QWidget* dialog_parent, LoadHints hints) 
   // QEventLoop/exec() is involved.
   QPointer<FileLoader> self(this);
   QPointer<QWidget> guarded_parent(dialog_parent);
-  // A plain open needs no fingerprint up front (only saving a source-bound layout does), so it is computed while the
-  // file loads instead of before its dialog opens.
   selectBrowserInput(
-      dialog_parent,
-      [self, guarded_parent, hints = std::move(hints)](BrowserSelectionResult staged) mutable {
+      dialog_parent, [self, guarded_parent, hints = std::move(hints)](BrowserSelectionResult staged) mutable {
         if (self.isNull() || (!staged.input.has_value() && staged.error.isEmpty())) {
           return;  // loader destroyed, or picker cancelled.
         }
@@ -1130,12 +1094,10 @@ void FileLoader::loadFromBrowserPicker(QWidget* dialog_parent, LoadHints hints) 
           return;
         }
         self->loadFile(std::move(*staged.input), guarded_parent, hints);
-      },
-      FileSelectionService::Fingerprint::kInBackground);
+      });
 }
 
-void FileLoader::selectBrowserInput(
-    QWidget* dialog_parent, BrowserSelectionCallback callback, FileSelectionService::Fingerprint fingerprint) {
+void FileLoader::selectBrowserInput(QWidget* dialog_parent, BrowserSelectionCallback callback) {
   const QString filter = extensions_.buildFileFilter([](const RuntimeDataSourcePlugin& source) {
     return bundledPluginText(
                QString::fromStdString(source.id), QString::fromStdString(source.version),
@@ -1151,8 +1113,7 @@ void FileLoader::selectBrowserInput(
             .input = std::move(staged.input),
             .error = std::move(staged.error),
         });
-      },
-      fingerprint);
+      });
 }
 #endif
 
@@ -1218,22 +1179,6 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
     emit fileLoadFailed(source_identity, reason);
     return false;
   };
-  // The caller's right to load lapsed (LoadHints::still_allowed): a terminal cancel, silent like
-  // a declined dialog.
-  const auto disallowed = [&]() -> bool {
-    if (!hints.still_allowed || hints.still_allowed()) {
-      return false;
-    }
-    qCInfo(lcFileLoader).noquote() << "load no longer allowed by its caller:" << source_identity;
-    cancel_mode_.store(0);  // a cancel latched for this load is honoured: it ends here
-    erase_created_live_dataset();
-    rollback_tombstones();
-    emitLoadFinished(ticket, LoadOutcome::kCancelled, source_identity, 0);
-    return true;
-  };
-  if (disallowed()) {
-    co_return;
-  }
 
   const QString ext = normalizeExtension(input.display_name);
   if (ext.isEmpty()) {
@@ -1555,7 +1500,6 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
         .parent = dialog_parent,
         .initial_parser_config = initial_parser_config,
         .browser_file_store = browser_file_store_,
-        .title_prefix = hints.dialog_title_prefix,
     });
     const auto dlg = co_await std::move(dialog_awaiter);
     if (dlg.outcome == dialog_presenter::Outcome::kPluginContractViolation) {
@@ -1575,9 +1519,6 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
       erase_created_live_dataset();
       rollback_tombstones();
       emitLoadFinished(ticket, LoadOutcome::kCancelled, source_identity, 0);
-      co_return;
-    }
-    if (disallowed()) {
       co_return;
     }
     if (dlg.payload.has_value()) {
@@ -2292,22 +2233,6 @@ LoadRequestId FileLoader::loadFileTicketed(LoadInput input, QWidget* dialog_pare
   if (!input.content_sha256.isEmpty()) {
     browser_content_sha256_.insert(input.source_identity, input.content_sha256);
   }
-#ifdef PJ_TARGET_WASM
-  if (isBrowserUploadIdentity(input.source_identity)) {
-    browser_identity_by_path_.insert(input.backing_path, input.source_identity);
-    // Only a lazily read pick arrives unfingerprinted (a copied or downloaded file is hashed as it is written); an
-    // empty result means its File changed since the pick, which its reads report.
-    if (input.content_sha256.isEmpty()) {
-      browser_picked_file::hash(
-          input.backing_path, [self = QPointer<FileLoader>(this), path = input.backing_path,
-                               identity = input.source_identity](QString sha256) {
-            if (self && !sha256.isEmpty() && self->browser_identity_by_path_.contains(path)) {
-              self->browser_content_sha256_.insert(identity, std::move(sha256));
-            }
-          });
-    }
-  }
-#endif
   ++next_load_ticket_;
   if (next_load_ticket_ == 0) {
     ++next_load_ticket_;  // reserve zero for "invalid", even after wraparound

@@ -72,12 +72,21 @@ class FileDetailsDisplayProxy final : public QIdentityProxyModel {
     }
     if (index.column() == 2 && regular_file) {
       const QString mime = QMimeDatabase().mimeTypeForFile(info).name();
-      if (mime == u"application/octet-stream"_s) return QCoreApplication::translate("PJ::FileDialog", "Binary file");
-      if (mime == u"application/xml"_s || mime == u"text/xml"_s)
+      if (mime == u"application/octet-stream"_s) {
+        return QCoreApplication::translate("PJ::FileDialog", "Binary file");
+      }
+      if (mime == u"application/xml"_s || mime == u"text/xml"_s) {
         return QCoreApplication::translate("PJ::FileDialog", "XML document");
-      if (mime == u"text/plain"_s) return QCoreApplication::translate("PJ::FileDialog", "Plain text document");
-      if (mime == u"text/csv"_s) return QCoreApplication::translate("PJ::FileDialog", "CSV document");
-      if (mime == u"application/zip"_s) return QCoreApplication::translate("PJ::FileDialog", "ZIP archive");
+      }
+      if (mime == u"text/plain"_s) {
+        return QCoreApplication::translate("PJ::FileDialog", "Plain text document");
+      }
+      if (mime == u"text/csv"_s) {
+        return QCoreApplication::translate("PJ::FileDialog", "CSV document");
+      }
+      if (mime == u"application/zip"_s) {
+        return QCoreApplication::translate("PJ::FileDialog", "ZIP archive");
+      }
       // Unknown formats retain their machine-readable MIME identity, never an
       // untrusted file name or an OS-specific English prose description.
       return QCoreApplication::translate("PJ::FileDialog", "%1 file").arg(mime);
@@ -102,7 +111,6 @@ constexpr int kInputRowHeightPx = 24;
 // Test hooks (see FileDialog.h); read on the GUI thread only.
 std::function<bool(const QString&)> g_start_folder_probe;
 int g_start_folder_timeout_ms = -1;
-bool g_use_system_dialog = false;
 
 #ifndef PJ_TARGET_WASM
 // How long the dialog waits for a folder to answer before giving up on it.
@@ -324,34 +332,6 @@ void FileDialog::setNameFilter(const QString& filter) {
   inner_->setNameFilter(filter);
 }
 
-void FileDialog::setUseSystemDialog(bool enabled) {
-  g_use_system_dialog = enabled;
-}
-
-bool FileDialog::useSystemDialog() {
-  return systemDialogSupported() && g_use_system_dialog;
-}
-
-QStringList FileDialog::runSystemDialog(
-    QWidget* parent, const QString& caption, const QString& dir, const QString& filter, QFileDialog::FileMode mode,
-    QFileDialog::AcceptMode accept, const QString& default_suffix, const QString& selected_name) {
-  // QFileDialog's constructor stats the start folder on this thread; a dead
-  // network share would hang it, so open in the default folder instead.
-  const QString start_dir = (dir.isEmpty() || foldersAnsweringInTime({dir}).front() != 0) ? dir : QString();
-  QFileDialog dlg(parent, caption, start_dir, filter);
-  dlg.setFileMode(mode);
-  dlg.setAcceptMode(accept);
-  dlg.setOption(QFileDialog::ShowDirsOnly, mode == QFileDialog::Directory);
-  dlg.setDefaultSuffix(default_suffix);
-  if (!selected_name.isEmpty()) {
-    dlg.selectFile(selected_name);
-  }
-  if (dlg.exec() != QDialog::Accepted) {
-    return {};
-  }
-  return dlg.selectedFiles();
-}
-
 void FileDialog::setStartFolderProbeForTest(std::function<bool(const QString&)> probe) {
   g_start_folder_probe = std::move(probe);
 }
@@ -392,12 +372,6 @@ QString FileDialog::selectedFile() const {
 
 QString FileDialog::getOpenFileName(
     QWidget* parent, const QString& caption, const QString& dir, const QString& filter, const QString& selected_name) {
-  if (useSystemDialog()) {
-    return runSystemDialog(
-               parent, caption, dir, filter, QFileDialog::ExistingFile, QFileDialog::AcceptOpen, QString(),
-               selected_name)
-        .value(0);
-  }
   FileDialog dlg(parent);
   if (!caption.isEmpty()) {
     dlg.setDialogTitle(caption);
@@ -421,9 +395,6 @@ QString FileDialog::getOpenFileName(
 
 QStringList FileDialog::getOpenFileNames(
     QWidget* parent, const QString& caption, const QString& dir, const QString& filter) {
-  if (useSystemDialog()) {
-    return runSystemDialog(parent, caption, dir, filter, QFileDialog::ExistingFiles, QFileDialog::AcceptOpen);
-  }
   FileDialog dlg(parent);
   if (!caption.isEmpty()) {
     dlg.setDialogTitle(caption);
@@ -443,9 +414,6 @@ QStringList FileDialog::getOpenFileNames(
 }
 
 QString FileDialog::getExistingDirectory(QWidget* parent, const QString& caption, const QString& dir) {
-  if (useSystemDialog()) {
-    return runSystemDialog(parent, caption, dir, QString(), QFileDialog::Directory, QFileDialog::AcceptOpen).value(0);
-  }
   FileDialog dlg(parent);
   if (!caption.isEmpty()) {
     dlg.setDialogTitle(caption);
@@ -465,12 +433,6 @@ QString FileDialog::getExistingDirectory(QWidget* parent, const QString& caption
 QString FileDialog::getSaveFileName(
     QWidget* parent, const QString& caption, const QString& dir, const QString& filter, const QString& default_suffix,
     const QString& selected_name) {
-  if (useSystemDialog()) {
-    return runSystemDialog(
-               parent, caption, dir, filter, QFileDialog::AnyFile, QFileDialog::AcceptSave, default_suffix,
-               selected_name)
-        .value(0);
-  }
   FileDialog dlg(parent);
   if (!caption.isEmpty()) {
     dlg.setDialogTitle(caption);

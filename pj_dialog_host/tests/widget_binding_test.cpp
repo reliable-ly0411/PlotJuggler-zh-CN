@@ -25,7 +25,6 @@
 #include <QDateTimeEdit>
 #include <QDesktopServices>
 #include <QDialog>
-#include <QFontDatabase>
 #include <QFrame>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -605,11 +604,10 @@ TEST(WidgetBindingMarkdown, RendersGitHubMarkdownUnicodeAndBlocksEmbeddedResourc
   QTextCursor code = findText(browser->document(), u"printf"_s);
   EXPECT_EQ(code.blockFormat().property(QTextFormat::BlockCodeFence).toString(), u"`"_s);
   EXPECT_EQ(code.blockFormat().property(QTextFormat::BlockCodeLanguage).toString(), u"cpp"_s);
-  const QStringList fixed_families = QFontDatabase::systemFont(QFontDatabase::FixedFont).families();
-  ASSERT_FALSE(fixed_families.isEmpty());
-  EXPECT_EQ(code.charFormat().fontFamilies().toStringList(), fixed_families)
-      << "the Markdown importer requests the platform's system fixed font; QFontInfo would instead "
-         "report the resolved face, which is environment-dependent";
+  EXPECT_TRUE(code.charFormat().fontFamilies().toStringList().contains(u"monospace"_s))
+      << "the Markdown importer requests the generic \"monospace\" family for a code fence "
+         "(fontFixedPitch() is not set); QFontInfo would instead report whatever face the host actually "
+         "resolved, which is environment-dependent";
   EXPECT_TRUE(browser->toPlainText().contains(u"✓"_s));
   EXPECT_TRUE(browser->toPlainText().contains(u"<b>raw html</b>"_s)) << "MarkdownNoHTML renders tags literally";
   EXPECT_TRUE(browser->document()

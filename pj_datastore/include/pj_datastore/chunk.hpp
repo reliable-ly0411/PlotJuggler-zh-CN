@@ -35,8 +35,7 @@ inline constexpr Timestamp kNoRetentionFloor = std::numeric_limits<Timestamp>::m
 struct ColumnStats {
   /// Number of null rows in this column within the chunk.
   uint32_t null_count = 0;
-  /// Number of value runs (for compression heuristics), counted in arrival order: seal sorts the rows by timestamp
-  /// afterwards, so it is not the stored rows' run count once rows arrived out of order.
+  /// Number of value runs (for compression heuristics).
   uint32_t run_count = 0;
   /// True if all non-null values are equal.
   bool is_constant = true;
@@ -192,10 +191,16 @@ class TopicChunkBuilder {
   [[nodiscard]] Timestamp lastTimestamp() const noexcept;
 
   // Seal: finalize stats, apply encodings, produce immutable TopicChunk
-  /// Seal builder into immutable chunk.
+  /// Seal builder into immutable chunk. Requires no row in progress.
   [[nodiscard]] TopicChunk seal();
 
  private:
+  friend class DataWriter;
+
+  /// Seal only finished rows, retaining the active row and its unset columns.
+  /// Used by DataWriter when flushing between beginRow() and finishRow().
+  [[nodiscard]] TopicChunk sealCompletedRows();
+
   TopicId topic_id_;
   SchemaId schema_id_;
   uint32_t max_rows_;

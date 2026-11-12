@@ -6,7 +6,8 @@ PJ4's four build lanes are `none`, `asan` (ASan + UBSan), `tsan`
 (ThreadSanitizer) and `msan` (MemorySanitizer).
 The build and test scripts accept `--sanitize none|asan|tsan|msan`, or
 `PJ_SANITIZE` as the environment equivalent; the command-line option wins.
-The default is `none`.
+The default is `none`. Windows wrappers support only `none`; the diagnostic
+lanes require the Linux toolchain described below.
 
 | Diagnostic lane | Selector | Build tree | Coverage |
 | --- | --- | --- | --- |
@@ -117,8 +118,8 @@ for example `./test.sh --sanitize asan -R '^pj_scripting\.'`.
 runs them instrumented. Before merging a change to QRhi resource lifetimes or
 failure handling, run the GPU lifetime and failure runners under ASan locally, on
 Mesa's software rasterizers: llvmpipe for the `.opengl` passes, lavapipe (via
-`VK_ICD_FILENAMES`) for the `.vulkan` ones. `--display` runs them inside a private
-Xvfb instead of `offscreen`, and `PJ_REQUIRE_GPU_TESTS=1` turns a skip into a failure.
+`VK_ICD_FILENAMES`) for the `.vulkan` ones. `--display` keeps the caller's display
+instead of `offscreen`, and `PJ_REQUIRE_GPU_TESTS=1` turns a skip into a failure.
 They need a session bus (`dbus-run-session`): without one, Qt's D-Bus client on
 xcb leaks a libdbus read buffer in every process and LeakSanitizer fails each
 case:
@@ -126,7 +127,7 @@ case:
 ```bash
 ./build.sh --sanitize asan
 PJ_REQUIRE_GPU_TESTS=1 VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json \
-  dbus-run-session -- ./test.sh --sanitize asan --display --timeout 300 \
+  dbus-run-session -- xvfb-run -a ./test.sh --sanitize asan --display --timeout 300 \
   -R '^(scene3d_rhi_failure_test|scene3d_rhi_marker_cache_test|scene3d_rhi_model_cache_test|rhi_dock_lifecycle_test|rhi_mixed_dock_test|plot_rhi_render_test)\.(opengl|vulkan)\.'
 ```
 
@@ -314,6 +315,12 @@ does not clear an inherited environment.
 | `LSAN_OPTIONS` | `suppressions=<absolute path to cmake/sanitizers/lsan.supp>` | Point LeakSanitizer, the only runtime that reads `leak:` entries, at the reviewed file. |
 | `UBSAN_OPTIONS` | `print_stacktrace=1` | Show where the unrecoverable undefined behavior occurred. |
 | `PYTHONMALLOC` | `malloc` | Bypass CPython's obmalloc pools so ASan can observe individual allocations instead of a whole pool as one block. |
+
+These defaults are also exported for `--sanitize msan`; they do not enable
+other sanitizers in an MSan binary. `test.sh --sanitize msan` selects the
+existing `build/msan` tree and preserves caller-supplied `MSAN_OPTIONS`. It
+does not build or verify instrumentation; use `build.sh --sanitize msan` for
+the instrumented build and its checks.
 
 The ASan/LSan/UBSan variables are also exported for `--sanitize tsan`, but
 they do not enable those sanitizers in a TSan binary. TSan uses its own

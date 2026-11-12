@@ -459,8 +459,12 @@ if ($PackageVersion -notmatch '^[0-9]+((\.|-)[0-9]+)*$') { Die "IFW requires a n
 # pull Qt modules (Qt Charts, Qt SVG, Qt QuickWidgets …) the main exe does
 # not, and without walking each plugin those transitive Qt DLLs never land in
 # the bundle — the classic "window doesn't render fully" symptom.
+# Localized Qt 6.12 products target Windows 10 1809+ and use the OS compiler.
+# Apply the official option to EVERY deployment pass; never delete DLLs afterward.
+$systemCompilerArgs = @()
+if ($ExtraPrefix) { $systemCompilerArgs = @('--no-system-d3d-compiler') }
 Info "running windeployqt on exe + plugins ..."
-& $windeployqt --release --no-translations --compiler-runtime $stagedExe
+& $windeployqt --release --no-translations --compiler-runtime @systemCompilerArgs $stagedExe
 if ($LASTEXITCODE -ne 0) { Die "windeployqt failed on the exe (exit $LASTEXITCODE)." }
 # Only the bundled plugin DLLs — NOT every DLL in data\, which by now also holds the
 # non-Qt files windeployqt itself dropped (D3Dcompiler_47.dll, opengl32sw.dll, …);
@@ -469,7 +473,7 @@ foreach ($d in $pluginDlls) {
   # --dir $stageBin: the plugin lives under lib\..., but its extra Qt module DLLs
   # must land in bin\ next to the exe (the dir Windows searches at load time), not
   # next to the plugin — otherwise a plugin-only Qt module never resolves.
-  & $windeployqt --dir $stageBin --release --no-translations $d.FullName
+  & $windeployqt --dir $stageBin --release --no-translations @systemCompilerArgs $d.FullName
   # Warn, don't Die: a recursively-collected DLL that is not a Qt-linked plugin
   # makes windeployqt exit 1, which must not abort the whole bundle.
   if ($LASTEXITCODE -ne 0) { Warn "windeployqt on $($d.Name) returned $LASTEXITCODE -- harmless if it is not a Qt-linked plugin." }
@@ -668,8 +672,22 @@ New-Item -ItemType Directory -Force -Path $ifwLicenseDir | Out-Null
 Copy-Item (Join-Path $installerRoot "translations/LICENSE.GPL3-EXCEPT") $ifwLicenseDir
 Copy-Item (Join-Path $installerRoot "translations/README.md") $ifwLicenseDir
 
+# Preserve the upstream historical installer notice byte-for-byte in both
+# payload formats, separately from the canonical Qt license shown by IFW.
+$historyDir = Join-Path $stageData "share/licenses/PlotJuggler-installer-history"
+New-Item -ItemType Directory -Force -Path $historyDir | Out-Null
+Copy-Item (Join-Path $pkgSrc "meta/license_lgpl.txt") (Join-Path $historyDir "license_lgpl.txt") -Force
+Copy-Item (Join-Path $installerRoot "LICENSE-PROVENANCE.txt") $historyDir -Force
+
 if ($ExtraPrefix) {
   Copy-Item (Join-Path $stageData "share/licenses/Qt-LGPL.txt") (Join-Path $stageMeta "license_lgpl.txt") -Force
+}
+
+# Check the actual deployed helper DLL and its original notices before either
+# IFW or the portable ZIP can consume this stage. This is fork-payload specific.
+if ($ExtraPrefix) {
+  python (Join-Path $PSScriptRoot "../localization/windows_mesa_notices.py") --prefix $stageData
+  if ($LASTEXITCODE -ne 0) { Die "Windows Mesa notice verification failed." }
 }
 
 # --- build the installer ---------------------------------------------------

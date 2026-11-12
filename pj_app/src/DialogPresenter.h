@@ -2,7 +2,6 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
-#include <QString>
 #include <QtCore/QtGlobal>
 #include <functional>
 #include <memory>
@@ -72,8 +71,6 @@ struct DataSourceRequest {
   // plugin dialog to the canonical band height. Leave unset for callers whose
   // dialogs have no bands (e.g. file loaders) or that lack live app metrics.
   std::optional<ChromeMetrics> section_band_metrics{};
-  // Put before the plugin dialog's own title (who asked for it); empty leaves it alone.
-  QString title_prefix{};
 };
 
 // Caller decides what to persist and whether to re-loadConfig before start().

@@ -44,6 +44,7 @@
 #include "pj_scene3d_widgets/Scene3DDockWidget.h"
 #include "pj_widgets/CurveTreeView.h"
 #include "pj_widgets/VisualizationKind.h"
+#include "support/isolated_main_window.h"
 #include "ui/CurveListPanel.h"
 
 using namespace Qt::StringLiterals;
@@ -193,7 +194,7 @@ struct Fixture {
   PJ::test::FakeRun fake;  ///< outlives the window, whose session's pool joins the runs
   PJ::test::ScopedRun scoped_run{fake};
   QTemporaryDir extensions_dir;
-  PJ::MainWindow window{extensions_dir.path()};
+  pj_app_test::IsolatedMainWindow window{extensions_dir.path()};
   PJ::AppSession& app = Peer::session(window);
   PJ::SessionManager& manager = app.sessionManager();
   PJ::DatasetId dataset = 0;

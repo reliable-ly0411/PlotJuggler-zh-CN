@@ -35,6 +35,7 @@
 #include "pj_runtime/SessionManager.h"
 #include "pj_runtime/Time.h"
 #include "pj_widgets/CurveTreeView.h"
+#include "support/isolated_main_window.h"
 #include "ui/CurveListPanel.h"
 
 using namespace Qt::StringLiterals;
@@ -164,7 +165,7 @@ class MessageBoxAnswerer {
 // One window with a dataset holding an (empty) cloud topic and a scalar topic, and the editor named.
 struct CustomTopicsFixture {
   QTemporaryDir extensions_dir;
-  PJ::MainWindow window{extensions_dir.path()};
+  pj_app_test::IsolatedMainWindow window{extensions_dir.path()};
   PJ::CurveListPanel* panel = window.findChild<PJ::CurveListPanel*>(u"curveListPanel"_s);
   CurveTreeView* tree = panel != nullptr ? panel->findChild<CurveTreeView*>(u"treeView"_s) : nullptr;
   CurveTreeView* custom = panel != nullptr ? panel->findChild<CurveTreeView*>(u"customView"_s) : nullptr;

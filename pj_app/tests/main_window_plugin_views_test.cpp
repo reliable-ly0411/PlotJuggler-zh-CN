@@ -8,7 +8,6 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QFrame>
-#include <QLabel>
 #include <QMimeData>
 #include <QPointer>
 #include <QSignalSpy>
@@ -45,6 +44,7 @@
 #include "pj_runtime/TopicDemandTracker.h"
 #include "pj_scene_common/scene_dock_widget.h"
 #include "pj_widgets/ToastNotification.h"
+#include "support/isolated_main_window.h"
 #ifdef PJ_WITH_SCENE3D
 #include "pj_scene3d_widgets/Scene3DDockWidget.h"
 #endif
@@ -1154,18 +1154,6 @@ class MainWindowPluginViewsTestPeer {
     ASSERT_TRUE(config);
     EXPECT_NE(config->find("Renamed"), std::string::npos);
 
-    // Re-creating an owned tab with a new title retitles its tab-strip label too, not only the docker.
-    ASSERT_TRUE(pluginTabs(window).createTab(owner, u"run-b"_s, u"Retitled"_s));
-    EXPECT_EQ(pluginTabs(window).ownedTab(owner, u"run-b"_s), second);
-    EXPECT_EQ(second->name(), u"Retitled"_s);
-    QStringList strip_labels;
-    for (const QFrame* frame : tabs->findChildren<QFrame*>(u"plotTabFrame"_s)) {
-      for (const QLabel* label : frame->findChildren<QLabel*>()) {
-        strip_labels << label->text();
-      }
-    }
-    EXPECT_TRUE(strip_labels.contains(u"Retitled"_s)) << strip_labels.join(u", "_s).toStdString();
-
     DockWidget* second_dock = second->plotAt(0);
     ASSERT_NE(second_dock, nullptr);
     if (second_dock->plotWidget() == nullptr) {
@@ -1238,7 +1226,7 @@ class MainWindowPluginViewsTest : public ::testing::Test {
   static void SetUpTestSuite() {
     extensions_ = std::make_unique<QTemporaryDir>();
     ASSERT_TRUE(extensions_->isValid());
-    window_ = std::make_unique<PJ::MainWindow>(extensions_->path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_->path());
   }
   static void TearDownTestSuite() {
     window_.reset();

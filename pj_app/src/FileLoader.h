@@ -4,7 +4,6 @@
 
 #include <QElapsedTimer>
 #include <QHash>
-#include <QMimeData>
 #include <QObject>
 #include <QPointer>
 #include <QString>
@@ -19,9 +18,6 @@
 #include <unordered_map>
 
 #include "LoadInput.h"
-#ifdef PJ_TARGET_WASM
-#include "FileSelectionService.h"
-#endif
 #include "pj_base/diagnostic_sink.hpp"
 #include "pj_base/types.hpp"
 #include "pj_runtime/SessionManager.h"
@@ -113,13 +109,6 @@ struct LoadHints {
   // instead of degrading to a plain fresh load. No effect without
   // replace_dataset_id. Default false preserves the degrade.
   bool require_replacement = false;
-  // Put before the plugin dialog's title (e.g. "An AI agent asked you to choose: "), so the user
-  // knows who opened it. Only that dialog; empty leaves the title alone.
-  QString dialog_title_prefix{};
-  // Asked when the request leaves the queue and again once its dialog is accepted: false
-  // cancels the load (kCancelled, no legacy signals) before anything is applied. For a caller
-  // whose right to load can lapse while it waits (an MCP agent's revoked token).
-  std::function<bool()> still_allowed{};
 };
 
 // Ticket naming one ACCEPTED load request, minted at enqueue time by
@@ -153,15 +142,6 @@ class FileLoader : public QObject {
   // is persisted in QSettings under "FileLoader/lastDir".
   void openFromDialog(QWidget* dialog_parent);
 
-  // Runs loadFile() for each path in order, as openFromDialog does for a
-  // multi-select pick: each file reports its own failures, so one bad file
-  // does not stop the rest. Used by files dropped on the main window.
-  void loadFiles(const QStringList& paths, QWidget* dialog_parent);
-
-  // The local regular files among a drag's URLs, in order. Folders and
-  // non-local URLs are skipped; empty when nothing is loadable.
-  [[nodiscard]] static QStringList droppedFilePaths(const QMimeData& mime);
-
   // The dataset "Replace" entry point: same plugin-extension filter and lastDir
   // persistence as openFromDialog, but single-select, and the chosen file loads
   // with replace_dataset_id set so it transactionally replaces `dataset_id`'s
@@ -179,21 +159,14 @@ class FileLoader : public QObject {
   // Opens the same browser picker/staging path used by openFromDialog, but
   // returns the staged LoadInput without enqueuing it. Source-bound layout
   // replay uses this to finish every required selection before importing any
-  // data, with its content fingerprint already set (it compares it). Cancellation
-  // is an empty input/error pair.
-  void selectBrowserInput(
-      QWidget* dialog_parent, BrowserSelectionCallback callback,
-      FileSelectionService::Fingerprint fingerprint = FileSelectionService::Fingerprint::kBeforeSelection);
+  // data. Cancellation is an empty input/error pair.
+  void selectBrowserInput(QWidget* dialog_parent, BrowserSelectionCallback callback);
 #endif
 
   // Fingerprint captured while BrowserFileStore staged this opaque upload (or a
-  // preset's download, on any platform). A picked file loaded through
-  // openFromDialog is fingerprinted in the background, so its value stays empty
-  // until that finishes (or for good, if the file changed since the pick), and a
-  // picked file whose read fails loses it, whenever it was computed. Empty
-  // for native paths, unknown identities, and failed pre-staging calls. Kept
-  // outside SessionManager because it is browser-session metadata, not a durable
-  // source path or plugin concern.
+  // preset's download, on any platform). Empty for native paths, unknown
+  // identities, and failed pre-staging calls. Kept outside SessionManager because
+  // it is browser-session metadata, not a durable source path or plugin concern.
   [[nodiscard]] QString browserContentSha256(const QString& source_identity) const;
 
   // Resolves the "pick file(s)" interaction inside openFromDialog() /
@@ -529,11 +502,6 @@ class FileLoader : public QObject {
   DiagnosticSink diagnostic_sink_;
   std::shared_ptr<BrowserFileStore> browser_file_store_;
   QHash<QString, QString> browser_content_sha256_;
-#ifdef PJ_TARGET_WASM
-  // Source identity of every browser upload loaded, by backing path: a failed read of a picked file reports its path.
-  // A picked file leaves it at its first failed read.
-  QHash<QString, QString> browser_identity_by_path_;
-#endif
 #ifdef PJ_WITH_SCENE3D
   PJ::TransformService* transform_service_ = nullptr;
 #endif

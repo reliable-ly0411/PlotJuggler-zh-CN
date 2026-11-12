@@ -26,6 +26,25 @@ class ReleaseVersionsTest(unittest.TestCase):
         self.assertEqual(v['deb'], '4.0.0~zh.1~rc.1-1')
         self.assertEqual(v['ifw'], '4.0.0.1.0.1')
 
+    def test_stable_metadata_maps_to_formal_channel(self):
+        v = module.versions('4.1.0+zh.1')
+        self.assertEqual(v['tag'], 'v4.1.0+zh.1')
+        self.assertEqual(v['deb'], '4.1.0+zh.1-1')
+        self.assertEqual(v['ifw'], '4.1.0.1.1.0')
+        self.assertFalse(v['prerelease'])
+        self.assertTrue(v['latest'])
+        for candidate in ['4.1.0-zh.1.rc.1', '4.1.0-zh.1']:
+            old = module.versions(candidate)
+            self.assertTrue(old['prerelease'])
+            self.assertFalse(old['latest'])
+            if shutil.which('dpkg'):
+                subprocess.run(['dpkg', '--compare-versions', old['deb'], 'lt', v['deb']], check=True)
+        self.assertLess(tuple(map(int, module.versions('4.1.0-zh.1.rc.100')['ifw'].split('.'))),
+                        tuple(map(int, v['ifw'].split('.'))))
+        for value in ['4.1.0+zh.01', '4.1.0+zh.0', '4.1.0+zh.1.rc.1', '4.1.0+other.1']:
+            with self.assertRaises(ValueError):
+                module.versions(value)
+
     def test_monotonic_sequence(self):
         sequence = ['4.0.0-zh.1.rc.1', '4.0.0-zh.1.rc.2', '4.0.0-zh.1',
                     '4.0.0-zh.2.rc.1', '4.0.0-zh.2', '4.0.1-zh.1.rc.1']
@@ -50,6 +69,14 @@ class ReleasePromotionTest(unittest.TestCase):
                           'CANDIDATE_ATTEMPT': '2'})
         subprocess.run([sys.executable, str(Path(__file__).resolve().parents[1] /
                                             'scripts/check_branch_name.py'), ref], check=True)
+
+    def test_stable_promotion_slug_binds_metadata_without_plus(self):
+        ref = 'zh-CN-4.x-ci/publish-accepted-v4-1-0-plus-zh-1-run-12345-attempt-2'
+        self.assertEqual(promotion.resolve(ref, '4.1.0+zh.1')['RELEASE_TAG'], 'v4.1.0+zh.1')
+        subprocess.run([sys.executable, str(Path(__file__).resolve().parents[1] /
+                                            'scripts/check_branch_name.py'), ref], check=True)
+        with self.assertRaises(ValueError):
+            promotion.resolve(ref, '4.1.0-zh.1')
 
     def test_reject_unbound_or_wrong_version(self):
         prefix = 'zh-CN-4.x-ci/publish-accepted-'

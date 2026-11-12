@@ -310,7 +310,7 @@ struct DialogEngine::AsyncRunner {
     if (config_.section_band_metrics) {
       dialog->setChromeMetrics(*config_.section_band_metrics);
     }
-    dialog->setDialogTitle(config_.title_prefix + loaded->windowTitle());
+    dialog->setDialogTitle(loaded->windowTitle());
     dialog->contentLayout()->addWidget(loaded);
     forwardEmbeddedDialogClose(loaded, dialog);
 

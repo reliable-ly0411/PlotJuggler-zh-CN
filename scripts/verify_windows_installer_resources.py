@@ -5,12 +5,15 @@
 The language fixture never installs. The separate upgrade fixture installs only
 its freshly generated inert receipt payload, through the production GUI slot.
 Windows-only integration smoke. Requires PowerShell, 7z and a Qt kit (Linguist,
-rcc and qtbase_zh_CN.qm). Downloads only the existing hash-pinned official IFW
-helper's package. This is not application packaging or installation acceptance.
+rcc and qtbase_zh_CN.qm). Uses the existing hash-pinned official IFW package,
+from an explicit offline input or the download helper. This is not application
+packaging or installation acceptance.
 """
+import argparse
 import base64
 import gzip
-import argparse
+import hashlib
+import re
 from pathlib import Path
 import shutil
 import struct
@@ -21,6 +24,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 MARKER = 'pj_zh_cn_resource_smoke_marker.txt'
+IFW_ARCHIVE_SHA256 = 'bf460f2f60b858d9bfb6c709fc4687fd6967856984bd730711df2c4df9dd49f2'
 
 
 def run(command, *, cwd=None):
@@ -81,7 +85,37 @@ def verify_pe_resources(path):
             raise ValueError(f'Embedded translation resource name missing: {name}')
 
 
-def smoke(lrelease, rcc=None, qtbase=None):
+def file_sha256(path):
+    """Hash tools and input archives without buffering them in memory."""
+    digest = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def extract_pinned_ifw(archive, extractor, extractor_sha256, destination):
+    """Extract only the pinned official archive with the supplied verified tool."""
+    archive = Path(archive).resolve(strict=True)
+    extractor = Path(extractor).resolve(strict=True)
+    destination = Path(destination)
+    if not archive.is_file() or not extractor.is_file():
+        raise ValueError('IFW archive and extractor must be regular files')
+    if destination.exists():
+        raise ValueError('Refusing to replace an existing IFW destination')
+    if not re.fullmatch(r'[0-9a-f]{64}', extractor_sha256):
+        raise ValueError('Extractor SHA-256 must be 64 lower-case hex digits')
+    if file_sha256(archive) != IFW_ARCHIVE_SHA256:
+        raise ValueError('Pinned IFW archive SHA-256 mismatch')
+    if file_sha256(extractor) != extractor_sha256:
+        raise ValueError('Extractor SHA-256 mismatch')
+    run([extractor, 'x', archive, '-o' + str(destination), '-y'])
+    for name in ('binarycreator.exe', 'installerbase.exe', 'repogen.exe'):
+        if not (destination / 'bin' / name).is_file():
+            raise ValueError(f'Pinned IFW archive missing tool: {name}')
+
+
+def smoke(lrelease, rcc=None, qtbase=None, ifw_archive=None, extractor=None, extractor_sha256=None):
     if sys.platform != 'win32':
         raise RuntimeError('This integration smoke requires Windows; no GUI emulation is used')
     lrelease = Path(lrelease).resolve(strict=True)
@@ -101,8 +135,14 @@ def smoke(lrelease, rcc=None, qtbase=None):
     with tempfile.TemporaryDirectory(prefix='pj installer resource smoke ') as directory:
         temporary = Path(directory)
         tools = temporary / 'IFW tools'
-        run([shell, '-NoProfile', '-NonInteractive', '-File',
-             ROOT / 'packaging/installer/install_ifw.ps1', '-Destination', tools])
+        offline = (ifw_archive, extractor, extractor_sha256)
+        if any(value is not None for value in offline):
+            if not all(value is not None for value in offline):
+                raise ValueError('Offline IFW requires an archive, extractor and extractor SHA-256')
+            extract_pinned_ifw(ifw_archive, extractor, extractor_sha256, tools)
+        else:
+            run([shell, '-NoProfile', '-NonInteractive', '-File',
+                 ROOT / 'packaging/installer/install_ifw.ps1', '-Destination', tools])
         version = run([tools / 'bin/installerbase.exe', '--version'])
         if 'IFW Version: 4.10.0, built with Qt ' not in version:
             raise RuntimeError('Pinned IFW runtime version mismatch')
@@ -137,8 +177,11 @@ def main():
     parser.add_argument('--lrelease', required=True, help='Selected Qt kit lrelease.exe')
     parser.add_argument('--rcc', help='Optional explicit matching Qt rcc.exe')
     parser.add_argument('--qtbase-catalog', help='Optional explicit qtbase_zh_CN.qm')
+    parser.add_argument('--ifw-archive', help='Pinned official IFW archive for offline execution')
+    parser.add_argument('--extractor', help='Absolute path to the verified 7z executable')
+    parser.add_argument('--extractor-sha256', help='Expected SHA-256 of that executable')
     args = parser.parse_args()
-    smoke(args.lrelease, args.rcc, args.qtbase_catalog)
+    smoke(args.lrelease, args.rcc, args.qtbase_catalog, args.ifw_archive, args.extractor, args.extractor_sha256)
 
 
 if __name__ == '__main__':

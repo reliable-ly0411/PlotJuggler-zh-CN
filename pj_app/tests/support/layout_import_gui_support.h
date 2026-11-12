@@ -27,6 +27,7 @@
 #include <memory>
 #include <utility>
 
+#include "../../../cmake/test_mains/pj_test_managed_profile.h"
 #include "CustomWidgetController.h"
 #include "LayoutImportBatch.h"
 #include "LayoutXml.h"
@@ -378,6 +379,8 @@ inline void recordDiagnosticIds(PJ::MainWindow& window, QStringList& ids) {
       qputenv("QT_QPA_PLATFORM", "offscreen");           \
     }                                                    \
     QStandardPaths::setTestModeEnabled(true);            \
+    PJ_TEST_INITIALIZE_PRIVATE_HKCU                      \
+    PJ_TEST_INITIALIZE_MANAGED_PROFILE                   \
     QApplication app(argc, argv);                        \
     ::testing::InitGoogleTest(&argc, argv);              \
     return RUN_ALL_TESTS();                              \

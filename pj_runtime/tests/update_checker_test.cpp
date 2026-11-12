@@ -425,3 +425,45 @@ class UpdateCheckerEnvironment final : public ::testing::Environment {
 static auto* const kEnv = ::testing::AddGlobalTestEnvironment(new UpdateCheckerEnvironment);
 
 }  // namespace
+
+TEST(UpdateCheckerTest, StableLocalizedBuildUsesForkDownloadForEveryInstallation) {
+  for (const QString& installation : {u"deb"_s, u"windows"_s, u"appimage"_s}) {
+    LocalHttpServer server;
+    server.setResponse("200 OK", R"([
+      {"tag_name":"v4.1.1+zh.1","draft":false,"prerelease":false},
+      {"tag_name":"v4.2.0-zh.1.rc.1","draft":false,"prerelease":true},
+      {"tag_name":"v4.3.0+zh.1","draft":true,"prerelease":false},
+      {"tag_name":"v4.4.0+zh.1","draft":false,"prerelease":true},
+      {"tag_name":"v4.5.0+zh.1","draft":false},
+      {"tag_name":"v5.0.0+zh.1","draft":false,"prerelease":false},
+      {"tag_name":"4.6.0","draft":false,"prerelease":false}])");
+    PJ::UpdateChecker checker;
+    checker.setCurrentVersion(u"4.1.0+zh.1"_s);
+    EXPECT_TRUE(checker.releaseApiUrl().toString().contains(u"reliable-ly0411/PlotJuggler-zh-CN"_s));
+    checker.setInstallation(installation);
+    checker.setAptCacheProgram(u"does-not-exist-must-not-run"_s);
+    checker.setMaintenanceToolPath(u"does-not-exist-must-not-run"_s);
+    checker.setReleaseApiUrl(server.url());
+    QSignalSpy update_spy(&checker, &PJ::UpdateChecker::updateAvailable);
+    QSignalSpy failed_spy(&checker, &PJ::UpdateChecker::checkFailed);
+    checker.checkLatestRelease();
+    ASSERT_TRUE(waitForSignal(update_spy));
+    EXPECT_TRUE(failed_spy.isEmpty());
+    const auto release = update_spy.first().at(0).value<PJ::ReleaseInfo>();
+    EXPECT_EQ(release.name, u"v4.1.1+zh.1"_s);
+    EXPECT_EQ(release.html_url, u"https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.1+zh.1"_s);
+    EXPECT_EQ(release.route, PJ::UpdateRoute::Download);
+  }
+}
+
+TEST(UpdateCheckerTest, CandidateCanDiscoverStableLocalizedRelease) {
+  LocalHttpServer server;
+  server.setResponse("200 OK", R"([{"tag_name":"v4.1.0+zh.1","draft":false,"prerelease":false}])");
+  PJ::UpdateChecker checker;
+  checker.setCurrentVersion(u"4.1.0-zh.1.rc.1"_s);
+  checker.setReleaseApiUrl(server.url());
+  QSignalSpy update_spy(&checker, &PJ::UpdateChecker::updateAvailable);
+  checker.checkLatestRelease();
+  ASSERT_TRUE(waitForSignal(update_spy));
+  EXPECT_EQ(update_spy.first().at(0).value<PJ::ReleaseInfo>().name, u"v4.1.0+zh.1"_s);
+}

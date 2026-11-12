@@ -7,8 +7,10 @@
 - **下载已发布中文版：** [v4.0.0-zh.1.rc.4](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.0.0-zh.1.rc.4)，
   提供 Windows x64 安装器、Linux x86_64 AppImage 和 amd64 DEB。
   此版本为预发布候选，支持简体中文与 English，使用 Qt 6.11.1。
-- **开发线：** `zh-CN-4.x-dev` 当前为 `4.1.0-zh.1.dev.2`，使用 Qt 6.12.0，
-  包含简体中文、繁體中文（台灣）与 English。开发源码尚未发布为新的已验安装包，繁中不在 rc.4 中。
+- **本分支发行源码：** `4.1.0+zh.1`，锁定上游正式 `4.1.0` 标签，Qt 6.12.0 / SDK 0.39.0，
+  支持简体中文、繁體中文（台灣）与 English；新加 Windows portable ZIP。实际可下载状态和最终原包验收以对应 Release 为准。
+- **开发线：** `zh-CN-4.x-dev` 继续独立集成较晚上游功能；本次发布分支未回退开发线。
+  [4.1.0发行说明](docs/localization/RELEASE-4.1.0+zh.1.md)列出标签边界、正式版本映射与兼容性。
 - **稳定维护线：** `zh-CN-4.x` 是默认分支；“稳定线”指分支用途，不改变 rc.4 的预发布状态。
   `main-4.x` 仅镜像上游，3.x 的 `zh-CN` / `zh-CN-dev` 独立维护。
 
@@ -17,7 +19,7 @@
 
 This is an unofficial Chinese-language fork of PlotJuggler. Published rc.4 packages support
 Simplified Chinese and English; Traditional Chinese (Taiwan) is available in the unpublished
-development line. For Chinese packages, use the fork release linked above, not the upstream downloads.
+4.1.0 release source. Package availability and acceptance are recorded in the corresponding Release. For Chinese packages, use the fork release linked above, not the upstream downloads.
 
 ## 上游功能概览 / Upstream capabilities
 
@@ -36,7 +38,7 @@ in a single application.
      https://plotjuggler.io/videos/pj-plotting-800.jpg,
      https://plotjuggler.io/videos/pj-waymo-800.jpg. -->
 
-![Robot model, camera feeds, depth images and joint torque plots in a shared PJ4 workspace](docs/images/anymal.png)
+![Robot model, camera feeds, depth images and joint torque plots in a shared PJ4 workspace](docs/images/workspace.jpg)
 
 ## Analyze signals interactively
 

@@ -759,7 +759,6 @@ bool Scene3DDockWidget::pruneEvictedObjects() {
   }
   if (config_changed) {
     resetTransformBindingIfDatasetGone();
-    emit configTopicsChanged();
   }
   return !layers().empty() || !config_topics_.empty();
 }
@@ -892,9 +891,7 @@ bool Scene3DDockWidget::handleSceneConfigTopic(
   // churn (revalidateObjects) and folds into the live-edge drive (H.3 / H.4).
   const DatasetId dataset = sessionManager()->objectStore().descriptor(topic_id).dataset_id;
   scene_topic_datasets_[topic_id.id] = dataset;
-  if (config_topics_.insert(topic_id.id).second) {
-    emit configTopicsChanged();
-  }
+  config_topics_.insert(topic_id.id);
   setWindowTitle(title.isEmpty() ? tr("3D View") : tr("3D View - %1").arg(title));
   return true;
 }
@@ -919,7 +916,6 @@ bool Scene3DDockWidget::removeSceneConfigTopic(ObjectTopicId topic_id) {
   }
   scene_topic_datasets_.erase(topic_id.id);
   resetTransformBindingIfDatasetGone();  // the last topic of the TF dataset frees the binding
-  emit configTopicsChanged();
   return true;
 }
 
@@ -1353,10 +1349,7 @@ void Scene3DDockWidget::resetDatasetBindingForRestore() {
   tf_buffer_is_local_ = false;
   dataset_id_ = 0;
   scene_topic_datasets_.clear();
-  if (!config_topics_.empty()) {
-    config_topics_.clear();
-    emit configTopicsChanged();
-  }
+  config_topics_.clear();
   available_frames_.clear();
   fallback_frames_.clear();
   orphan_states_.clear();

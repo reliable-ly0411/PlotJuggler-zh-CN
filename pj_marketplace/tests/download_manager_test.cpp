@@ -616,9 +616,12 @@ TEST(DownloadManagerTest, CancelDuringExtractEmitsCancelled) {
 TEST(DownloadManagerTest, MultipleOperationsHaveUniqueIds) {
   PJ::DownloadManager dm;
 
-  const int id1 = dm.fetch(QUrl("http://255.255.255.255/1"), {}, {});
-  const int id2 = dm.fetch(QUrl("http://255.255.255.255/2"), {}, {});
-  const int id3 = dm.fetch(QUrl("http://255.255.255.255/3"), {}, {});
+  QTcpServer server;
+  ASSERT_TRUE(server.listen(QHostAddress::LocalHost, 0));
+  const QUrl base(u"http://127.0.0.1:%1/"_s.arg(server.serverPort()));
+  const int id1 = dm.fetch(base.resolved(QUrl(u"1"_s)), {}, {});
+  const int id2 = dm.fetch(base.resolved(QUrl(u"2"_s)), {}, {});
+  const int id3 = dm.fetch(base.resolved(QUrl(u"3"_s)), {}, {});
 
   EXPECT_NE(id1, id2);
   EXPECT_NE(id2, id3);

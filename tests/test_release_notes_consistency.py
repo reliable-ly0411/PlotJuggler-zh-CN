@@ -17,6 +17,7 @@ class ReleaseNotesConsistencyTest(unittest.TestCase):
                              (ROOT / 'versions.env').read_text(encoding='utf-8').splitlines()
                              if line and not line.startswith('#'))
         baseline = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
+        self.baseline = baseline
         # Development snapshots have no release prose or accepted packages.
         # Check the explicit historical release without rewriting its claims.
         published = baseline.get('published_localization_release', {})
@@ -80,14 +81,24 @@ class ReleaseNotesConsistencyTest(unittest.TestCase):
         self.assertIn(format(int(series.group(1)), ',') + ' 条数值序列', self.notes)
 
     def test_platform_and_source_boundaries_are_explicit(self):
-        self.assertIn('Windows 未进行人工可见桌面目视验收', self.notes)
+        for boundary in [
+                'Windows 可见桌面补充观察仅对应旧候选 r2',
+                'c6cb43a32291c98e65b12035c3501d6b4842ac78',
+                'https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/42448805739',
+                '不带 `--language` 的真实重启', '简中→繁中→英文→简中',
+                '公开 BIN 的 `RCOU/C1` 全波形、缩放和复位均已观察到',
+                '未保存为持久截图文件', '不能替代 GUI 验收',
+                '这些旧候选观察不转作本页最终源码与 run 的验收结果']:
+            self.assertIn(boundary, self.notes)
+        self.assertNotIn('Windows 未进行人工可见桌面目视验收', self.notes)
         self.assertIn('Qt ' + self.notes_qt, self.notes)
         for sdk in {x['sdk'] for x in self.lock['plugins']}:
             self.assertIn(sdk, self.notes)
-        self.assertIn('上游 4.0.0 发布说明（全文）', self.notes)
+        upstream_tag = self.baseline['upstream_release']['tag'] if '+' in self.notes_version else '4.0.0'
+        self.assertIn('上游 ' + upstream_tag + ' 发布说明（全文）', self.notes)
         for placeholder in ['SOURCE_SHA', 'SOURCE_TREE', 'RUN_ID', 'RUN_URL', 'ASSET_TABLE']:
             self.assertIn('@' + placeholder + '@', self.notes)
-        self.assertIn('不设置为 Latest', self.notes)
+        self.assertIn('设为 Latest' if '+' in self.notes_version else '不设置为 Latest', self.notes)
         self.assertIn('旧标签及原包保持不变', self.notes)
 
 

@@ -23,6 +23,7 @@
 #include "pj_runtime/CatalogModel.h"
 #include "pj_runtime/SessionManager.h"
 #include "pj_runtime/Time.h"
+#include "support/isolated_main_window.h"
 
 namespace PJ {
 
@@ -82,7 +83,7 @@ TEST(MainWindowSourceLayoutTest, OneFanoutFileRoundTripsEveryOffsetAndTrackOrder
   ASSERT_TRUE(source_file.open(QIODevice::WriteOnly));
   source_file.close();
 
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = PJ::MainWindowSourceLayoutTestPeer::session(window);
   PJ::SessionManager& session = app.sessionManager();
   const PJ::DatasetId left = addDataset(app, "run/left", "/left");
@@ -154,7 +155,7 @@ TEST(MainWindowSourceLayoutTest, PrimaryDatasetSourceRecordEmitsMaterializeChild
   const QString cloud_path = make_source_file(QStringLiteral("cache.mcap"));
   const QString plain_path = make_source_file(QStringLiteral("plain.mcap"));
 
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = PJ::MainWindowSourceLayoutTestPeer::session(window);
   PJ::SessionManager& session = app.sessionManager();
   const PJ::DatasetId cloud_dataset = addDataset(app, "cache.mcap", "/cloud");
@@ -258,7 +259,7 @@ TEST(MainWindowSourceLayoutTest, CacheHitSessionStateResavesMaterializeWithByteE
   ASSERT_TRUE(artifact.open(QIODevice::WriteOnly));
   artifact.close();
 
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = PJ::MainWindowSourceLayoutTestPeer::session(window);
   PJ::SessionManager& session = app.sessionManager();
   const PJ::DatasetId dataset = addDataset(app, "cloud-download", "/imu");
