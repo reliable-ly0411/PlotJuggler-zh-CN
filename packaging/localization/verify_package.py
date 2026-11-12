@@ -626,6 +626,10 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
     notices = json.loads((prefix / 'share/licenses/DEPENDENCIES.json').read_text(encoding='utf-8'))
     for item in notices['files']:
         assert hashlib.sha256((prefix / 'share/licenses' / item['path']).read_bytes()).hexdigest() == item['sha256']
+    if os.name == 'nt':
+        from windows_mesa_notices import verify_windows_mesa_notices, verify_system_d3dcompiler
+        verify_windows_mesa_notices(Path(__file__).resolve().parents[2], prefix)
+        verify_system_d3dcompiler()
     assert hashlib.sha256(log.read_bytes()).hexdigest() == LOG_SHA, 'unexpected real BIN fixture'
     rebuilt = record.get('localized_plugin_rebuilds', [])
     required_rebuilt = {'protobuf-parser', 'toolbox-transform-editor', 'webrtc-client', 'mcap-loader', 'csv-loader'}

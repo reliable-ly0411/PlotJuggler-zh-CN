@@ -46,3 +46,6 @@ pj_widgets/include/pj_widgets/ElidingLabel.h text eol=lf
 pj_widgets/include/pj_widgets/FileDialog.h text eol=lf
 pj_widgets/tests/eliding_label_test.cpp text eol=lf
 resources/feature_catalog.json text eol=lf
+
+# These third-party notice originals are source-hashed without rewriting bytes.
+packaging/localization/windows-mesa-notices/* -text whitespace=-blank-at-eol

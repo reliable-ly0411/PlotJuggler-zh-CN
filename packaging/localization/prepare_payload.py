@@ -78,7 +78,7 @@ def stage(build, prefix, config, linux_tools):
              prefix / 'bin/fonts/NotoSansCJKsc-Regular.otf', FONT_SHA)
     download(base + 'LICENSE', licenses / 'NotoSansCJK-OFL.txt', FONT_LICENSE_SHA)
     qt = ROOT / '.qt' / host['qt_version'] / ('gcc_64' if linux_tools else 'msvc2022_64')
-    collect(ROOT, build, qt, licenses, download)
+    collect(ROOT, build, qt, licenses, download, windows=not linux_tools)
     baseline = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
     plugin_manifest = json.loads(manifest.read_text(encoding='utf-8'))
     assert plugin_manifest['license'] == baseline['ardupilot_plugin']['license'] == 'LGPL-3.0-only'

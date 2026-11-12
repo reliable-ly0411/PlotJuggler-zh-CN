@@ -1,5 +1,6 @@
 # resources/wasm-presets/*/assets/ holds verbatim third-party robot packages.
-exclude: ^.vscode/|^deps/|^build/|^3rdparty/|^resources/fonts/|^resources/wasm-presets/[^/]+/assets/
+# Retain source-pinned third-party notice originals byte for byte.
+exclude: ^packaging/localization/windows-mesa-notices/|^.vscode/|^deps/|^build/|^3rdparty/|^resources/fonts/|^resources/wasm-presets/[^/]+/assets/
 repos:
 
   # Standard hooks
