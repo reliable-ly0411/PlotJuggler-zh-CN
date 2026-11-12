@@ -312,12 +312,14 @@ class CollectorIntegration(unittest.TestCase):
         scripts = root / "scripts"
         scripts.mkdir()
         for name in ("windows_public_binary_review.py", "windows_public_binary_review_helpers.py",
-                     "package_privacy.py", "pe_content_fingerprint.py"):
+                     "package_privacy.py", "pe_content_fingerprint.py", "linux_public_elf.py"):
             (scripts / name).write_bytes((REPO / "scripts" / name).read_bytes())
         policy = root / "tests/data/public-build-records.json"
         policy.parent.mkdir(parents=True)
         (policy.parent / "windows-quarantine-protobuf-catalog.json").write_bytes(
             (REPO / "tests/data/windows-quarantine-protobuf-catalog.json").read_bytes())
+        (policy.parent / "linux-public-elf-records.json").write_bytes(
+            (REPO / "tests/data/linux-public-elf-records.json").read_bytes())
         policy.write_text(json.dumps(FIXTURE_RECORDS), encoding="utf-8")
         installer = root / "installer/config.xml"
         installer.parent.mkdir()

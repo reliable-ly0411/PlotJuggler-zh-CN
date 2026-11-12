@@ -342,6 +342,14 @@ add_subdirectory(plotjuggler_app)
 add_subdirectory(plotjuggler_plugins)
 
 if(PJ_BUILD_FORK_TESTS)
+  add_executable(pj_frame_fit_test tests/frame_fit_test.cpp)
+  target_include_directories(pj_frame_fit_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(pj_frame_fit_test PRIVATE Qt5::Widgets)
+  set_target_properties(pj_frame_fit_test PROPERTIES
+    WIN32_EXECUTABLE FALSE RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests_bin")
+  add_test(NAME FrameFitMath COMMAND pj_frame_fit_test)
+  set_tests_properties(FrameFitMath PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
   foreach(_pj_test_target test_csv_parser test_nlohmann_layout mosaico_unit_tests
       ToolboxMosaico_tests test_ros_field test_cdr_alignment)
     if(TARGET ${_pj_test_target})
@@ -396,6 +404,14 @@ if(PJ_BUILD_FORK_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_ifw_payload.py)
     add_test(NAME NoticeInventory COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_notice_inventory.py)
+    add_test(NAME DownloadedSourceResolution COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_downloaded_source_resolution.py)
+    add_test(NAME LinuxPublicElf COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_linux_public_elf.py)
+    add_test(NAME WindowsConanPathmap COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_conan_pathmap.py)
+    add_test(NAME WindowsConanBuildCheck COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_conan_build_check.py)
   endif()
 
   # Keep regression executables outside bin: packaging stages that entire directory.

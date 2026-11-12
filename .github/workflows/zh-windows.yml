@@ -47,47 +47,36 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: '3.12'
-    - name: Install Conan
-      uses: conan-io/setup-conan@v1
-      with:
-        cache_packages: false
-    - name: Restore complete Conan archive
-      uses: actions/cache/restore@v4
-      with:
-        path: ${{ runner.temp }}/pj-conan-cache.tgz
-        key: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt
-          }}
-        restore-keys: |
-          pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-
-          pj3-conan-win194-native-v2-
-    - name: Import cached Conan packages
+    - name: Create isolated Conan home and pathmap profile
       shell: pwsh
       run: |
-        $archive = Join-Path $env:RUNNER_TEMP 'pj-conan-cache.tgz'
-        if (Test-Path -LiteralPath $archive) {
-          conan cache restore $archive
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          conan cache check-integrity "*"
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        }
-    - name: Conan install
-      shell: pwsh
-      run: |
-        conan install . -of build --build=missing -pr:b=default -s build_type=Release -s compiler.cppstd=17 --deployer=./scripts/conan_license_deployer.py --deployer-folder=build/dependency-notices
-    - name: Export complete Conan packages
-      if: github.event_name != 'pull_request'
-      shell: pwsh
-      run: |
-        # Save only after a successful install; interrupted downloads are never cached.
-        conan cache save "*:*" --no-source --file "$env:RUNNER_TEMP/pj-conan-cache.tgz"
+        $homePath = Join-Path $env:RUNNER_TEMP "pj-conan-pathmap-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+        if (Test-Path -LiteralPath $homePath) { throw "Conan home already exists: $homePath" }
+        New-Item -ItemType Directory -Path $homePath | Out-Null
+        "CONAN_HOME=$homePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+        python -m pip install --disable-pip-version-check conan==2.34.0
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
-    - name: Preserve complete Conan archive
-      if: github.event_name != 'pull_request'
-      uses: actions/cache/save@v4
-      with:
-        path: ${{ runner.temp }}/pj-conan-cache.tgz
-        key: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt
-          }}
+        $env:CONAN_HOME = $homePath
+        conan profile detect
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        python scripts/windows_conan_pathmap.py --source "$env:GITHUB_WORKSPACE" --cache "$homePath" --output "$env:RUNNER_TEMP/pj-pathmap.profile"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+    - name: Conan install from source with path mapping
+      shell: pwsh
+      run: |
+        $buildArgs = @(python scripts/windows_conan_build_check.py arguments)
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        $profile = "$env:RUNNER_TEMP/pj-pathmap.profile"
+        $plan = "$env:RUNNER_TEMP/pj-conan-plan.json"
+        $result = "$env:RUNNER_TEMP/pj-conan-install.json"
+        conan graph info . @buildArgs --lockfile cmake/conan/windows-msvc194.lock -pr:h "$profile" -pr:b=default -s build_type=Release -s compiler.cppstd=17 --format=json --out-file "$plan"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        python scripts/windows_conan_build_check.py verify "$plan"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        conan install . -of build @buildArgs --lockfile cmake/conan/windows-msvc194.lock -pr:h "$profile" -pr:b=default -s build_type=Release -s compiler.cppstd=17 --deployer=./scripts/conan_license_deployer.py --deployer-folder=build/dependency-notices --format=json --out-file "$result"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        python scripts/windows_conan_build_check.py verify "$result"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Build Plotjuggler
       id: native-build
       shell: pwsh

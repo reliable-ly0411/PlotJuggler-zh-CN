@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import re
 from pe_content_fingerprint import fingerprint as pe_fingerprint
+from linux_public_elf import reviewed_spans
 
 # Prefix families, including variable-length installation JWTs, are documented at:
 # https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#githubs-token-formats
@@ -59,13 +60,17 @@ def check_metadata(data, relative_name, records):
     example = records.get("cpython_venv_example", {})
     python_example = bool(PYTHON_EXAMPLE_FILE.search(name) and digest == example.get("sha256"))
     markers = []
+    linux_spans = reviewed_spans(data, name)
     representations = (data.decode("latin1"), data.decode("utf-16le", errors="ignore"),
                        data[1:].decode("utf-16le", errors="ignore"))
-    for text in representations:
+    for index, text in enumerate(representations):
         # These checks precede path classification even for an approved dependency.
         if GITHUB_TOKEN.search(text):
             raise ValueError("Unexpected GitHub credential material in " + name)
         for match in PRIVATE_KEY.finditer(text):
+            if index == 0 and ("private_key", match.start(), match.end()) in linux_spans:
+                markers.append({"path": name, "kind": "exact public ELF NUL record", "rule": "private key"})
+                continue
             body = re.sub(r"\s+", "", match[2].replace("\\n", "").replace("\\r", ""))
             if len(body) >= 64 and re.fullmatch(r"[A-Za-z0-9+/=]+", body):
                 try:
@@ -78,6 +83,14 @@ def check_metadata(data, relative_name, records):
                                 "der_sha256": fingerprint})
         if PERSONAL_CONTACT.search(text):
             raise ValueError("Unexpected personal contact in " + name)
+        # Only the precise path regex span is masked, not its entire record.
+        # All other content and representations remain subject to every rule.
+        if index == 0:
+            replacements = [(m.start(), m.end()) for m in PRIVATE_PATH.finditer(text)
+                            if ("private_path", m.start(), m.end()) in linux_spans]
+            for start, end in reversed(replacements):
+                text = text[:start] + "X" * (end - start) + text[end:]
+                markers.append({"path": name, "kind": "exact public ELF NUL record", "rule": "private path"})
         count = 0
         for literal in immutable.get("literals", []):
             count += text.count(literal)

@@ -31,6 +31,10 @@
 #include <QKeySequence>
 #include <QLabel>
 #include <QScrollBar>
+#include <QScreen>
+#include <QShowEvent>
+#include <QTimer>
+#include "window_geometry_helpers.h"
 #include <QSettings>
 #include <QStringListModel>
 #include <QStringRef>
@@ -961,6 +965,69 @@ void MainWindow::on_splitterMoved(int size, int index)
     const bool collapsed = (sizes[0] == 0);
     ui->centralWidget->layout()->setContentsMargins(collapsed ? 8 : 0, 0, 0, 0);
   }
+}
+
+void MainWindow::scheduleScreenFit()
+{
+  QTimer::singleShot(0, this, [this]() { fitNormalWindowToScreen(); });
+}
+
+void MainWindow::fitNormalWindowToScreen()
+{
+  if (!isVisible() || isMinimized() || isMaximized() || isFullScreen() || !windowHandle())
+    return;
+  if (layout())
+    layout()->activate();
+  const QRect frame = frameGeometry();
+  const auto screens = QGuiApplication::screens();
+  QVector<QRect> available;
+  for (auto* screen : screens)
+    available.push_back(screen->availableGeometry());
+  const int screenIndex = chooseScreen(frame, available);
+  if (screenIndex < 0)
+    return;
+  if (!available.at(screenIndex).isValid())
+    return;
+  const QMargins margins = windowHandle()->frameMargins();
+  const QRect fitted = fitWindowFrame(frame, available.at(screenIndex), margins);
+  if (fitted == frame)
+    return;
+  resize(std::max(1, fitted.width() - margins.left() - margins.right()),
+         std::max(1, fitted.height() - margins.top() - margins.bottom()));
+  move(fitted.topLeft());
+}
+
+void MainWindow::showEvent(QShowEvent* event)
+{
+  QMainWindow::showEvent(event);
+  if (!_geometry_connections_initialized && windowHandle())
+  {
+    _geometry_connections_initialized = true;
+    auto watchScreen = [this](QScreen* screen) {
+      connect(screen, &QScreen::availableGeometryChanged, this,
+              [this](const QRect&) { scheduleScreenFit(); });
+    };
+    for (auto* screen : QGuiApplication::screens())
+      watchScreen(screen);
+    connect(qGuiApp, &QGuiApplication::screenAdded, this, [this, watchScreen](QScreen* screen) {
+      watchScreen(screen);
+      scheduleScreenFit();
+    });
+    connect(qGuiApp, &QGuiApplication::screenRemoved, this,
+            [this](QScreen*) { scheduleScreenFit(); });
+    connect(windowHandle(), &QWindow::screenChanged, this,
+            [this](QScreen*) { scheduleScreenFit(); });
+  }
+  scheduleScreenFit();
+  // Give asynchronous window managers another opportunity to publish margins.
+  QTimer::singleShot(250, this, [this]() { fitNormalWindowToScreen(); });
+}
+
+void MainWindow::changeEvent(QEvent* event)
+{
+  QMainWindow::changeEvent(event);
+  if (event->type() == QEvent::WindowStateChange)
+    scheduleScreenFit();
 }
 
 void MainWindow::resizeEvent(QResizeEvent*)

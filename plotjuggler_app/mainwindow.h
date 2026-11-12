@@ -118,6 +118,12 @@ public slots:
   void linkedZoomOut();
 
 private:
+  void showEvent(QShowEvent*) override;
+  void changeEvent(QEvent*) override;
+  void scheduleScreenFit();
+  void fitNormalWindowToScreen();
+  bool _geometry_connections_initialized = false;
+
   Ui::MainWindow* ui;
 
   TabbedPlotWidget* _main_tabbed_widget;

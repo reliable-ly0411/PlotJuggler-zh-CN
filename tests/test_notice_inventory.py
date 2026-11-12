@@ -2,7 +2,7 @@
 """Regression checks for evidence completeness in staged license inventories."""
 import importlib.util
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import subprocess
 import tempfile
 import types
@@ -44,7 +44,7 @@ class NoticeInventoryTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, 0,
                 'libexample:amd64\t1.0\nlibexample:i386\t1.0\n', '')
         with patch.object(module.subprocess, 'run', side_effect=run), \
-             patch.object(module.Path, 'resolve', return_value=Path('/usr/lib/example.so')):
+             patch.object(module.Path, 'resolve', return_value=PurePosixPath('/usr/lib/example.so')):
             self.assertEqual(module.query_dpkg_owner('/lib/example.so'), 'libexample:amd64')
             self.assertIsNone(module.query_dpkg_version('libexample:amd64'))
         with patch.object(module.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0,

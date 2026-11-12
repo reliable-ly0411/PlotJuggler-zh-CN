@@ -1,0 +1,42 @@
+{
+  "version": "0.5",
+  "requires": [
+    "abseil/20230802.1#b0fb32ec7a3ee48c23f78aa249362165",
+    "arrow/21.0.0#37214f2197966da4e1a12f0d722f470e",
+    "boost/1.90.0#c53082fe7f85e9c7f7d23ffcbbfc5c53",
+    "brotli/1.1.0#3f631ef77008f7b5eb388780116371a3",
+    "bzip2/1.0.8#c470882369c2d95c5c77e970c0c7e321",
+    "c-ares/1.34.9#52c1c4a734d0a79cbf918dd72fbc6179",
+    "fmt/11.2.0#15c2efeeecd75ba2fb9dafbec8dfa4cc",
+    "grpc/1.54.3#5f2e2cde7a46f9efc39da7f58072e3d4",
+    "gtest/1.14.0#f8f0757a574a8dd747d16af62d6eb1b7",
+    "libevent/2.1.12#7a7a21762e2b4ed13d29aee3e10c19e7",
+    "libsodium/1.0.22#4341e5bf9dbeb73e119e30ad0370bfe5",
+    "lz4/1.9.4#a2f02ad3908618757c68d3618256a196",
+    "mimalloc/2.2.4#dd236e6e0a2a1ef80cbc193d6f7f7090",
+    "mosquitto/2.0.18#1818b9f724357a3196e29b235ff41072",
+    "openssl/3.6.5#3c1311f37543e7140f33fe5989f315c2",
+    "protobuf/3.21.12#f4b3baecdc1169c9db2a96e395ca5462",
+    "rapidjson/cci.20250205#dc3e0ac7034c35032b107673d9f9bae3",
+    "re2/20230301#e697243fa7b545eefaa91fba7ba44146",
+    "snappy/1.1.9#23f887efb447e3e14ada195edd032e7e",
+    "thrift/0.21.0#5bc570802955a912ae4398fae81b3115",
+    "xsimd/14.0.0#0925747d035b2fd3385bf7940c77c5dd",
+    "zeromq/4.3.5#8cc1512649270a4781c130d9a25ec37c",
+    "zlib/1.4#f51abf05ab684e2283b6d4c1243b624f",
+    "zstd/1.5.7#b68ca8e3de04ba5957761751d1d661f4"
+  ],
+  "build_requires": [
+    "b2/5.6.1#41ae5699a0588de1202afe5b675cc86d",
+    "cmake/3.31.8#dde3bde00bb843687e55aea5afa0e220",
+    "cmake/3.31.12#71c3a0c80cc89cde62956db9e69550e0",
+    "cmake/4.4.4#9009f1989569bdbc583e48ea6e132723",
+    "nasm/2.16.01#31e26f2ee3c4346ecd347911bd126904",
+    "strawberryperl/5.32.1.1#8d114504d172cfea8ea1662d09b6333e",
+    "winflexbison/2.5.25#c61164028f2b2a92ac8fe3e70d008a57",
+    "protobuf/3.21.12#f4b3baecdc1169c9db2a96e395ca5462",
+    "zlib/1.4#f51abf05ab684e2283b6d4c1243b624f"
+  ],
+  "python_requires": [],
+  "config_requires": []
+}

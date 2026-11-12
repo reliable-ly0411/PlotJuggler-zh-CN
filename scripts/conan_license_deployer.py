@@ -5,6 +5,13 @@ import json
 from pathlib import Path
 import shutil
 
+import importlib.util
+
+_spec = importlib.util.spec_from_file_location("arrow_source_evidence", Path(__file__).with_name("arrow_source_evidence.py"))
+_arrow_source = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_arrow_source)
+stage_arrow_source = _arrow_source.stage
+
 
 def deploy(graph, output_folder, **kwargs):
     destination = Path(output_folder) / "Conan"
@@ -38,9 +45,20 @@ def deploy(graph, output_folder, **kwargs):
                 "review": "Compare with NOTICE from this exact Arrow source release; "
                           "this inventory is not license approval",
             }
+            source = stage_arrow_source(str(dependency.ref.version), destination / name / "upstream-source")
+            if source["status"] == "missing":
+                raise RuntimeError(f"Arrow {dependency.ref.version}: pinned source texts missing")
+            source["directory"] = f"{name}/upstream-source"
+            record["source_evidence"] = source
+            if source["status"] in ("source-texts-sha256-verified", "pinned-vendored-source-texts"):
+                source_hash = source["files"]["NOTICE.txt"]
+                record["notice_evidence"]["source_byte_matches"] = [
+                    entry["path"] for entry in entries
+                    if entry["path"] in notices and entry["sha256"] == source_hash]
         records.append(record)
     (destination / "manifest.json").write_text(
         json.dumps({"scope": "Conan host dependency notices, including test dependencies; "
                             "not a claim that every listed library is shipped",
+                    "closure_status": "incomplete",
                     "dependencies": sorted(records, key=lambda entry: entry["reference"])},
                    indent=2), encoding="utf-8")

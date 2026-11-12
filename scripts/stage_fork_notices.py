@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 """Ship the source location and license texts beside every packaged executable."""
+import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -8,6 +10,14 @@ import shutil
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+
+def stage_arrow_source(*args):
+    # Delay helper loading until after argparse, keeping --help free of work.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("arrow_source_evidence", Path(__file__).with_name("arrow_source_evidence.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.stage(*args)
 
 def query_dpkg_owner(path):
     """Resolve merged-/usr aliases and preserve architecture in package identity."""
@@ -83,22 +93,124 @@ def stage_distro_notices(destination):
     }, indent=2), encoding="utf-8")
 
 
-def stage_downloaded_notice(root, destination, dependency):
-    source = root / f"build/_deps/{dependency}-src/LICENSE"
-    if not source.is_file():
-        return
-    target = destination / "Licenses/Downloaded" / dependency / "LICENSE"
-    if dependency == "wasmer" and not (source.parent / "ATTRIBUTIONS").is_file():
-        raise RuntimeError("Wasmer ATTRIBUTIONS missing beside its staged LICENSE")
-    target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(source, target)
+def read_cmake_cache(build_dir):
+    cache = build_dir / "CMakeCache.txt"
+    if not cache.is_file():
+        return None
+    entries = {}
+    for line in cache.read_text(encoding="utf-8").splitlines():
+        if not line or line.startswith(("//", "#")) or "=" not in line or ":" not in line.split("=", 1)[0]:
+            continue
+        key, value = line.split("=", 1)
+        key = key.rsplit(":", 1)[0]
+        if key in entries:
+            raise RuntimeError(f"Duplicate CMake cache key: {key}")
+        entries[key] = value
+    return entries
+
+
+def resolve_downloaded_source(build_dir, dependency, cache):
+    """Find configured source, or a legacy fallback; never guess a system source."""
+    keys = (f"FETCHCONTENT_SOURCE_DIR_{dependency.upper()}",
+            f"CPM_PACKAGE_{dependency}_SOURCE_DIR", f"{dependency}_SOURCE_DIR")
+    found = []
+    if cache is not None:
+        for key in keys:
+            value = cache.get(key, "")
+            if not value or value.endswith("-NOTFOUND"):
+                continue
+            path = Path(value)
+            if not path.is_absolute():
+                raise RuntimeError(f"{dependency}: non-absolute configured source directory")
+            found.append(path.resolve())
+        if len(set(found)) > 1:
+            raise RuntimeError(f"{dependency}: conflicting configured source directories")
+        if found:
+            if not found[0].is_dir():
+                raise RuntimeError(f"{dependency}: configured source directory missing")
+            return found[0], "configured"
+    legacy = build_dir / "_deps" / f"{dependency}-src"
+    packages = cache.get("CPM_PACKAGES", "").split(";") if cache is not None else []
+    if legacy.is_dir() and (cache is None or dependency in packages):
+        return legacy.resolve(), "legacy-fallback"
+    if dependency in packages:
+        raise RuntimeError(f"{dependency}: CPM package is recorded but its source directory is unavailable")
+    if cache is None:
+        return None, "incomplete"
+    return None, "not-downloaded"
+
+
+def configured_arrow_version(cache):
+    """Read the literal CMake package version; no inference from system ldd."""
+    if not cache:
+        return None
+    directory = cache.get("Arrow_DIR", "")
+    if not directory or directory.endswith("-NOTFOUND"):
+        return None
+    directory = Path(directory)
+    if not directory.is_absolute():
+        raise RuntimeError("Arrow: configured package directory is not absolute")
+    files = [directory / n for n in ("ArrowConfigVersion.cmake", "arrow-config-version.cmake") if (directory / n).is_file()]
+    if not files:
+        raise RuntimeError("Arrow: configured package version file missing")
+    versions = set()
+    for file in files:
+        versions.update(re.findall(r'(?mi)^\s*set\s*\(\s*PACKAGE_VERSION\s+"([0-9]+\.[0-9]+\.[0-9]+)"\s*\)', file.read_text(encoding="utf-8")))
+    if len(versions) != 1:
+        raise RuntimeError("Arrow: configured package version ambiguous")
+    return versions.pop()
+
+
+def stage_downloaded_notice(root, destination, dependency, build_dir=None, cache=None):
+    # root retained for callers of the original helper and its legacy tests.
+    build_dir = Path(build_dir) if build_dir is not None else root / "build"
+    if cache is None:
+        cache = read_cmake_cache(build_dir)
+    source, resolution = resolve_downloaded_source(build_dir, dependency, cache)
+    record = {"dependency": dependency, "source_resolution": resolution,
+              "status": "incomplete" if resolution != "not-downloaded" else "not-downloaded",
+              "closure_status": "incomplete", "configured_version": None, "files": []}
+    if cache:
+        version = cache.get(f"CPM_PACKAGE_{dependency}_VERSION", "")
+        # Untrusted cache values must not leak arbitrary paths into the manifest.
+        if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.+_-]*", version):
+            record["configured_version"] = version
     if dependency == "wasmer":
-        shutil.copyfile(source.parent / "ATTRIBUTIONS", target.parent / "ATTRIBUTIONS")
+        recipe = root / "cmake/download_wasmer.cmake"
+        if recipe.is_file():
+            versions = re.findall(r'(?m)^\s*set\(WASMER_VERSION\s+"v([0-9]+\.[0-9]+\.[0-9]+)"\s*\)', recipe.read_text(encoding="utf-8"))
+            if len(versions) == 1:
+                record["recipe_declared_version"] = versions[0]
+                record["version_correspondence"] = "unverified"
+    if source is None:
+        return record
+    names = ["LICENSE"] + (["ATTRIBUTIONS"] if dependency == "wasmer" else [])
+    for name in names:
+        if not (source / name).is_file():
+            raise RuntimeError(f"{dependency}: required {name} missing from downloaded source")
+    target_dir = destination / "Licenses/Downloaded" / dependency
+    target_dir.mkdir(parents=True, exist_ok=True)
+    for name in names:
+        target = target_dir / name
+        shutil.copyfile(source / name, target)
+        record["files"].append({"path": f"{dependency}/{name}",
+                                "sha256": hashlib.sha256(target.read_bytes()).hexdigest()})
+    record["status"] = "staged-unverified"
+    return record
 
 
 def main():
     root = Path(__file__).resolve().parents[1]
-    destination = Path(sys.argv[1]).resolve()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("destination", type=Path)
+    parser.add_argument("--build-dir", type=Path, default=root / "build")
+    parser.add_argument("--arrow-source-version", choices=("21.0.0", "26.0.1"))
+    parser.add_argument("--arrow-source-archive", type=Path)
+    args = parser.parse_args()
+    if args.arrow_source_archive and not args.arrow_source_version:
+        parser.error("--arrow-source-archive requires --arrow-source-version")
+    destination = args.destination.resolve()
+    build_dir = args.build_dir.resolve()
     notices = destination / "Licenses" / "ArduPilot-DataFlash"
     notices.mkdir(parents=True, exist_ok=True)
     plugin = root / "plotjuggler_plugins/DataLoadAPBin"
@@ -108,17 +220,38 @@ def main():
     shutil.copyfile(root / "docs/zh-CN.md", destination / "README-zh-CN.md")
     shutil.copyfile(root / "docs/THIRD-PARTY-3X.md", destination / "Licenses/THIRD-PARTY-3X.md")
     shutil.copytree(root / "licenses/qt5", destination / "Licenses/Qt5", dirs_exist_ok=True)
-    shutil.copyfile(root / "build/plotjuggler_app/QT5-TRANSLATIONS.json",
+    shutil.copyfile(build_dir / "plotjuggler_app/QT5-TRANSLATIONS.json",
                     destination / "Licenses/Qt5/QT5-TRANSLATIONS.json")
-    conan_notices = root / "build/dependency-notices/Conan"
+    conan_notices = build_dir / "dependency-notices/Conan"
     if os.name == "nt":
         if not (conan_notices / "manifest.json").is_file():
             raise SystemExit("Conan dependency license inventory is missing")
         shutil.copytree(conan_notices, destination / "Licenses/Conan", dirs_exist_ok=True)
-    for dependency in ("data_tamer", "wasmer", "lz4", "zstd"):
-        stage_downloaded_notice(root, destination, dependency)
+    cache = read_cmake_cache(build_dir)
+    downloaded = [stage_downloaded_notice(root, destination, dependency, build_dir, cache)
+                  for dependency in ("data_tamer", "wasmer", "lz4", "zstd")]
+    manifest = destination / "Licenses/Downloaded/manifest.json"
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    manifest.write_text(json.dumps({"closure_status": "incomplete", "dependencies": downloaded,
+        "scope": "configured downloaded sources only; not a final package inventory"}, indent=2), encoding="utf-8")
     if sys.platform.startswith("linux"):
         stage_distro_notices(destination)
+    configured_arrow = configured_arrow_version(cache) if sys.platform.startswith("linux") else None
+    if args.arrow_source_version and configured_arrow and args.arrow_source_version != configured_arrow:
+        raise RuntimeError("Arrow: requested source version differs from configured package version")
+    arrow_version = args.arrow_source_version or configured_arrow
+    if arrow_version:
+        evidence = stage_arrow_source(arrow_version,
+            destination / "Licenses/ArrowSource" / arrow_version, args.arrow_source_archive)
+        if evidence["status"] == "missing":
+            raise RuntimeError(f"Arrow {arrow_version}: pinned source texts missing")
+        evidence["directory"] = arrow_version
+        evidence["version_origin"] = "cmake-package-version" if configured_arrow else "explicit"
+    else:
+        evidence = {"status": "version-unresolved", "closure_status": "incomplete"}
+    evidence_path = destination / "Licenses/ArrowSource/evidence.json"
+    evidence_path.parent.mkdir(parents=True, exist_ok=True)
+    evidence_path.write_text(json.dumps(evidence, indent=2), encoding="utf-8")
     for source in (
         "3rdparty/qwt/COPYING", "3rdparty/Qt-Advanced-Docking/LICENSE",
         "3rdparty/color_widgets/COPYING", "3rdparty/QCodeEditor/LICENSE.MIT",
@@ -128,7 +261,7 @@ def main():
         target = destination / "Licenses/Vendored" / source
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(root / source, target)
-    version_file = root / "build/FORK-VERSION.json"
+    version_file = build_dir / "FORK-VERSION.json"
     version_info = json.loads(version_file.read_text(encoding="utf-8"))
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
     info = {

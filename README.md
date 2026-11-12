@@ -2,7 +2,7 @@
 
 本 fork 基于官方 Qt5 / C++17 3.x 维护线，提供 English、简体中文、繁體中文、
 独立启动器和随包的 ArduPilot DataFlash BIN 加载器。本轮下游候选为
-`3.18.1-rc.10+upstream.3.17.2.apbin.1.g<commit>`；
+`3.18.1-rc.11+upstream.3.17.2.apbin.1.g<commit>`；
 当前为集中修复提案，尚未通过该候选验收。rc.9 的失败证据保留，
 修复范围及剩余门槛见 [集中修复方案](docs/localization/3.18.1-rc10-repair-plan.md)。
 精确提交的验证及发布状态见 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44)。

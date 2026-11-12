@@ -27,4 +27,8 @@ jobs:
           python3 tests/check_package_privacy.py -v
           python3 tests/test_windows_ifw_payload.py -v
           python3 tests/test_notice_inventory.py -v
+          python3 tests/test_downloaded_source_resolution.py -v
+          python3 tests/test_linux_public_elf.py -v
+          python3 tests/test_windows_conan_pathmap.py -v
+          python3 tests/test_windows_conan_build_check.py -v
           python3 scripts/release-tools/test_release_review.py -v
