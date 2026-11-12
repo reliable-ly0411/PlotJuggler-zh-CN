@@ -119,7 +119,8 @@ class CsvRuntimeAcceptanceTest(unittest.TestCase):
             with self.subTest(field=field), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
                 binary, manifest, record = self.stage(root)
-                self.assertEqual(acceptance.staged_csv(root), binary)
+                # Windows TEMP may use an 8.3 alias; staged_csv returns the canonical path.
+                self.assertEqual(acceptance.staged_csv(root), binary.resolve(strict=True))
                 records = [record]
                 if field == 'binary':
                     binary.write_bytes(b'tampered')
