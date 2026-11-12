@@ -1,0 +1,46 @@
+name: Recover the empty accepted 4.1.0 draft once
+on:
+  push:
+    branches: ['recover-publish-v4-1-0-draft-442876072-*']
+permissions:
+  contents: read
+concurrency:
+  group: recover-publish-draft-442876072
+  cancel-in-progress: false
+jobs:
+  recover:
+    if: github.event.created && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: control
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          ref: 0113492d7a7f96e486de1f9adcde6e43893ab630
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Offline recovery-only preflight before any API writes
+        run: python3 control/tests/test_recover_draft_442876072.py -v
+      - name: Resume only the exact empty draft with all original byte gates
+        run: python3 control/packaging/localization/recover_draft_442876072.py control source recovery
+      - name: Retain original API receipts and verification evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zh4-draft-442876072-recovery-evidence
+          path: |
+            recovery/evidence/
+            recovery/acceptance/release-manifest.json
+            recovery/public-asset-manifest.json
+            recovery/release-notes.md
+          if-no-files-found: warn
