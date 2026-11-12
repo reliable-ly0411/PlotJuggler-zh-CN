@@ -1,7 +1,7 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
   "upstream_branch": "main",
-  "upstream_commit": "1d49adade556c122e9e3f42d5cc56a6ebd2cdfdb",
+  "upstream_commit": "8b847cb74fa7938dcfb3b2385b1c7b8db3f69bc0",
   "upstream_version_file": "versions.env",
   "baseline_recorded_utc": "2026-11-12",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
@@ -31,7 +31,7 @@
     "tag_object": "da079f6670d3a1873ed1011dedc15556e6f838de",
     "commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
     "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.1.0",
-    "relationship": "Development snapshot with 55 upstream commits after official 4.1.0; not unchanged release or accepted localization package."
+    "relationship": "Development snapshot with 56 upstream commits after official 4.1.0; not unchanged release or accepted localization package."
   },
   "csv_path_fix": {
     "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
@@ -56,8 +56,8 @@
   "qt_version": "6.12.0",
   "previous_upstream_commit": "0345ec513bde7f05ad3148548ac30401f2b6f7a7",
   "integration_parents": {
-    "development": "f5f3fa830fe7eb412524d61b5efe8570c3365713",
-    "upstream": "1d49adade556c122e9e3f42d5cc56a6ebd2cdfdb"
+    "development": "86133d418f5d2909c1d9c99720c88cab0a3ba3fc",
+    "upstream": "8b847cb74fa7938dcfb3b2385b1c7b8db3f69bc0"
   },
   "published_localization_release": {
     "version": "4.0.0-zh.1.rc.4",

@@ -31,3 +31,9 @@ Native language configuration is blocked by missing Qt 6.12 development files in
 The strict provenance test requires the upstream parent to be an ancestor of committed HEAD. It cannot pass before the pending ordinary merge is committed; the uncommitted MERGE_HEAD is exactly the recorded upstream parent. Do not bypass the ancestry assertion.
 
 The development version is intentionally rejected by packaging version_map. Before producing a release candidate, choose and review a new candidate version and explicit build entry; keep development-only source testing separate. Native build/CI, final original-package acceptance and visual review are required before future promotion. No stable or published ref is moved by preparing this candidate.
+
+## Latest upstream follow-up
+
+After the reviewed twelve-commit integration was published as `86133d418f5d2909c1d9c99720c88cab0a3ba3fc` (the same reviewed tree `907f1390797fa9a2508ed8fb5b3bfdd090bd4440`), upstream added `8b847cb74fa7938dcfb3b2385b1c7b8db3f69bc0`. A second ordinary merge incorporates that commit without source conflicts. The full development snapshot now includes thirteen new upstream commits, 56 after official 4.1.0.
+
+The additional upstream change is a WebAssembly-only Qt 6.12.0 compositor override, including its source-offer disclosure. The three upstream changed files are retained without modification from the automatic merge; native Linux/Windows do not compile this WASM-specific source. Browser performance and the WASM build are not verified by the native source checks. Published 4.1 assets and stable refs remain fixed.
