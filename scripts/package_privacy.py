@@ -13,6 +13,14 @@ from pe_content_fingerprint import fingerprint as pe_fingerprint
 GITHUB_TOKEN = re.compile(r"(?:gh[pousr]_[A-Za-z0-9_.-]{24,}|github_pat_[A-Za-z0-9_]{20,})")
 PRIVATE_KEY = re.compile(r"-----BEGIN ((?:RSA |EC |DSA |OPENSSH |ENCRYPTED )?PRIVATE KEY)-----[ \t]*(?:\r?\n|\\r\\n|\\n)([A-Za-z0-9+/=\\\s]+?)-----END \1-----")
 PRIVATE_PATH = re.compile(r"[A-Z]:[\\/]Users[\\/](?!Public[\\/]|Default[\\/])[^\\/\x00\r\n]+", re.I)
+# Concrete task-owned root and Conan's identifiable package cache layout, on
+# any drive. Do not treat arbitrary absolute paths or vendor examples as private.
+PRIVATE_BUILD_PATH = re.compile(
+    r"[A-Z]:[\\/](?:PJ3181-20261111-1235(?:[\\/]|$)|"
+    r"(?:[^\x00\r\n]*?[\\/])?(?:\.conan2|conan[^\\/\x00\r\n]*)[\\/]p[\\/](?:b[\\/])?[^\\/\x00\r\n]+[\\/])",
+    re.I)
+REVIEWED_WINDOWS_MODULES = frozenset(name.casefold() for name in
+    ("DataLoadParquet.dll", "ToolboxMosaico.dll", "ProtobufParser.dll"))
 PERSONAL_CONTACT = re.compile(r"@qq\.com\b", re.I)
 PYTHON_EXAMPLE_FILE = re.compile(r"(^|/)python3\.\d+/venv/scripts/common/Activate\.ps1$")
 
@@ -33,6 +41,8 @@ def check_metadata(data, relative_name, records):
     qt = {key.casefold(): value for key, value in records.get("qt_records", {}).items()}.get(name.casefold())
     qt = qt if qt and qt["sha256"] == digest else None
     ci = records.get("public_ci_source_records", {}).get(name, {})
+    if name.rsplit("/", 1)[-1].casefold() in REVIEWED_WINDOWS_MODULES and not ci:
+        raise ValueError("Unapproved public-source binary content in " + name)
     if ci:
         content = ci.get("content_fingerprint", {})
         exact = digest == ci.get("observed_plugin_sha256")
@@ -96,6 +106,6 @@ def check_metadata(data, relative_name, records):
             text = text.replace(literal, "<verified CPython documentation example>")
             if count:
                 markers.append({"path": name, "kind": "hash-verified CPython documentation example", "count": count})
-        if PRIVATE_PATH.search(text):
+        if PRIVATE_PATH.search(text) or PRIVATE_BUILD_PATH.search(text):
             raise ValueError("Unexpected private path in " + name)
     return markers

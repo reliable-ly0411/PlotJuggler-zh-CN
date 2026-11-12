@@ -241,9 +241,13 @@ jobs:
         }
         $binarycreator_path = Join-Path "${{ github.workspace }}\qt_installation" $binarycreator
 
-        # Create installer using existing configuration files
+        # A single outer archive makes IFW extract python312.zip as a file,
+        # rather than treating it as a separate component archive.
+        $ifwPackages = Join-Path $env:RUNNER_TEMP "pj-ifw-packages-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+        python scripts/windows_ifw_payload.py --component installer/io.plotjuggler.application --output "$ifwPackages"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
         Write-Host "Creating installer: $installer_name"
-        & "$binarycreator_path" --offline-only -c installer\config.xml -p installer $installer_name
+        & "$binarycreator_path" --offline-only -c installer\config.xml -p "$ifwPackages" $installer_name
 
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Failed to create installer"

@@ -25,4 +25,6 @@ jobs:
           python3 tests/test_sync_upstream.py -v
           python3 tests/check_release_assets.py -v
           python3 tests/check_package_privacy.py -v
+          python3 tests/test_windows_ifw_payload.py -v
+          python3 tests/test_notice_inventory.py -v
           python3 scripts/release-tools/test_release_review.py -v

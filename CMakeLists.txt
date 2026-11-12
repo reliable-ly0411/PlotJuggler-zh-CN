@@ -392,6 +392,10 @@ if(PJ_BUILD_FORK_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_zh_acceptance.py)
     add_test(NAME PackageAuditInventory COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_package_audit_inventory.py)
+    add_test(NAME WindowsIfwPayload COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_ifw_payload.py)
+    add_test(NAME NoticeInventory COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_notice_inventory.py)
   endif()
 
   # Keep regression executables outside bin: packaging stages that entire directory.

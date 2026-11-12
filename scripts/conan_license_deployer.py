@@ -26,7 +26,19 @@ def deploy(graph, output_folder, **kwargs):
             shutil.copyfile(path, target)
             entries.append({"path": target.relative_to(destination).as_posix(),
                             "sha256": hashlib.sha256(target.read_bytes()).hexdigest()})
-        records.append({"reference": reference, "files": entries})
+        record = {"reference": reference, "files": entries}
+        if dependency.ref.name.lower() == "arrow":
+            # Do not borrow NOTICE from another Arrow version or infer that a
+            # copyright file contains all upstream attribution requirements.
+            notices = [entry["path"] for entry in entries
+                       if Path(entry["path"]).name.lower() in ("notice", "notice.txt")]
+            record["notice_evidence"] = {
+                "status": "packaged-unverified" if notices else "missing",
+                "paths": notices,
+                "review": "Compare with NOTICE from this exact Arrow source release; "
+                          "this inventory is not license approval",
+            }
+        records.append(record)
     (destination / "manifest.json").write_text(
         json.dumps({"scope": "Conan host dependency notices, including test dependencies; "
                             "not a claim that every listed library is shipped",

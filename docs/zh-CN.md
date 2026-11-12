@@ -3,10 +3,12 @@
 ## 3.18.1 候选使用方式
 
 本轮是 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44) 的下游维护候选
-`3.18.1-rc.9`，不是上游 3.18.1。使用上游 Qt5 / C++17 `main-3.x`
+`3.18.1-rc.10`，不是上游 3.18.1。使用上游 Qt5 / C++17 `main-3.x`
 `df5cbaad9bb087413470e818fa5cdb88d6357ce5`（仍声明 3.17.2），开发起点为
 `cbc7b7287884208b5a9042de45bcab4b5dcd79c0`。
 当前状态、候选 SHA 和已运行/失败/未运行检查见 [验收记录](localization/3.18.1-validation.md)。
+当前 rc.10 是集中修复提案；不把 rc.9 的成绩记作 rc.10 验收。
+集中缺陷、根因和复测顺序见[修复方案](localization/3.18.1-rc10-repair-plan.md)。
 完成该记录中的门槛后才发布新的 Pre-release；已有标签和资产保持不变。
 
 安装/解压后可运行 `plotjuggler-launcher.exe`（Windows）或 `plotjuggler-launcher`（Linux），
