@@ -34,9 +34,12 @@ class LocalizedUpdateTest : public QObject {
   }
   void newestForkOnly() {
     Server server(
-        "[{\"tag_name\":\"v3.18.0-zh.99\"},{\"tag_name\":\"v4.9.0\"},\n      "
-        "{\"tag_name\":\"v4.0.0-zh.99\",\"draft\":true},{\"tag_name\":\"v4.0.0-zh.1.rc.10\",\"html_url\":\"https://"
-        "bad.invalid\"},\n      {\"tag_name\":\"v4.0.0-zh.1.rc.3\"}]");
+        "["
+        "{\"tag_name\":\"v3.18.0-zh.99\",\"draft\":false,\"prerelease\":true},"
+        "{\"tag_name\":\"v4.9.0\",\"draft\":false,\"prerelease\":false},"
+        "{\"tag_name\":\"v4.0.0-zh.99\",\"draft\":true,\"prerelease\":true},"
+        "{\"tag_name\":\"v4.0.0-zh.1.rc.10\",\"draft\":false,\"prerelease\":true,\"html_url\":\"https://bad.invalid\"},"
+        "{\"tag_name\":\"v4.0.0-zh.1.rc.3\",\"draft\":false,\"prerelease\":true}]");
     PJ::UpdateChecker checker;
     checker.setCurrentVersion(u"4.0.0-zh.1.rc.2"_s);
     checker.setInstallation(u"windows"_s);

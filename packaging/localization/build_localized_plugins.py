@@ -149,10 +149,11 @@ def build_one(item, lock, work, prefix, platform):
         expected |= {'LocalizedDisplay_' + name for name in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']}
         assert selected == expected, (selected, expected)
     if identifier == 'csv-loader':
-        test_selection = ['-R', '^(LocalizedDisplay_.*|csv_(parser|file_paths)_test)$']
+        test_selection = ['-R', '^(LocalizedDisplay_.*|CsvRuntimeLanguage_.*|csv_(parser|file_paths)_test)$']
         listing = subprocess.check_output(['ctest', '--test-dir', build / 'native', '--show-only=json-v1', *test_selection], env=env, text=True, encoding='utf-8')
         selected = {test['name'] for test in json.loads(listing)['tests']}
         expected = {'csv_parser_test', 'csv_file_paths_test'}
+        expected |= {'CsvRuntimeLanguage_' + name for name in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']}
         expected |= {'LocalizedDisplay_' + name for name in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']}
         assert selected == expected, (selected, expected)
     run(['ctest', '--test-dir', build / 'native', '--no-tests=error', '--output-on-failure', '--timeout', '120',
@@ -208,7 +209,7 @@ def build_one(item, lock, work, prefix, platform):
             'sdk_acquisition': sdk_acquisition,
             'conan_graph_sha256': digest(graph), 'conan_lock_sha256': digest(build / 'conan.lock'),
             'dependencies': dependencies, 'files': files, 'license_files': notice_files,
-            'test_policy': ('CSV parser/path and display allowlist; no external services' if identifier == 'csv-loader' else
+            'test_policy': ('CSV parser/path/runtime-ABI and display allowlist; no external services' if identifier == 'csv-loader' else
                             'pure-model Assistant allowlist; other upstream tests exclude live/smoke; no external AI'),
             'ctest_selection': test_selection,
             'upstream_update_notice': 'Marketplace updates may replace this localized build; ID/version are preserved for compatibility.'}

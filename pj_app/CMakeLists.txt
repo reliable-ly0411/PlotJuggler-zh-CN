@@ -965,6 +965,29 @@ if(PJ_BUILD_TESTS)
     endif()
     add_test(NAME FileLoaderTest COMMAND file_loader_test)
 
+    # Explicit opt-in: requires the checksum-verified, rebuilt fixed CSV DSO.
+    # No mock substitutes and no silent skip when a requested path is missing.
+    set(PJ_CSV_RUNTIME_PLUGIN "" CACHE FILEPATH "Fixed CSV DSO for runtime localization acceptance")
+    if(PJ_CSV_RUNTIME_PLUGIN)
+        if(NOT EXISTS "${PJ_CSV_RUNTIME_PLUGIN}")
+            message(FATAL_ERROR "PJ_CSV_RUNTIME_PLUGIN does not exist: ${PJ_CSV_RUNTIME_PLUGIN}")
+        endif()
+        add_executable(csv_runtime_file_loader_test tests/csv_runtime_language_test.cpp
+            src/DiagnosticDump.cpp src/DiagnosticDump.h)
+        set_target_properties(csv_runtime_file_loader_test PROPERTIES AUTOMOC ON)
+        target_compile_definitions(csv_runtime_file_loader_test PRIVATE PJ_CSV_RUNTIME_PLUGIN="${PJ_CSV_RUNTIME_PLUGIN}")
+        target_link_libraries(csv_runtime_file_loader_test PRIVATE pj_app_loader_testlib pj_app_language pj_plotting pj_resources)
+        target_compile_options(csv_runtime_file_loader_test PRIVATE ${PJ_WARNING_FLAGS})
+        if(MSVC)
+            target_compile_options(csv_runtime_file_loader_test PRIVATE /utf-8)
+        endif()
+        foreach(language IN ITEMS zh_CN zh_TW en_US)
+            add_test(NAME CsvRuntimeFileLoader_${language} COMMAND csv_runtime_file_loader_test)
+            set_tests_properties(CsvRuntimeFileLoader_${language} PROPERTIES
+                TIMEOUT 120 ENVIRONMENT "PLOTJUGGLER_UI_LANGUAGE=${language};QT_QPA_PLATFORM=offscreen;PJ_CSV_DIAGNOSTIC_DIR=${CMAKE_BINARY_DIR}/csv-runtime-diagnostics")
+        endforeach()
+    endif()
+
     # Host side of the SDK's "pj.source_promotion.v1" service: drives the real
     # FileLoader replace pipeline through the C ABI. Same standalone shape and
     # scaffolding as file_loader_test above.

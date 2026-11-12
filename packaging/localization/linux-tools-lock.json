@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "tools": [
+    {
+      "repository": "linuxdeploy/linuxdeploy",
+      "release_id": 430855031,
+      "release_tag": "continuous",
+      "source_commit": "07333c6e942c7d71782b66be924c5d867f9dfdfc",
+      "asset_id": 699514588,
+      "name": "linuxdeploy-x86_64.AppImage",
+      "size": 19855864,
+      "sha256": "df908b19f1ed1cdafa79508d415aa12d6c56ce4d56d4149aa8c09286718706e5"
+    },
+    {
+      "repository": "linuxdeploy/linuxdeploy-plugin-qt",
+      "release_id": 374928323,
+      "release_tag": "continuous",
+      "source_commit": "9b9fca179e7312ae4a433ad6c3183d73c116180b",
+      "asset_id": 525032210,
+      "name": "linuxdeploy-plugin-qt-x86_64.AppImage",
+      "size": 12704248,
+      "sha256": "cfc1055b2b9dbc08412b579f20990b7b41a17b61beaa5847dc9477c96c9e9617"
+    },
+    {
+      "repository": "AppImage/appimagetool",
+      "release_id": 435944148,
+      "release_tag": "continuous",
+      "source_commit": "11d54c9acc7f246df1398050a4b880314ac76862",
+      "asset_id": 715388534,
+      "name": "appimagetool-x86_64.AppImage",
+      "size": 15133176,
+      "sha256": "e8c1169c4af66c3184d7ee110713d4be04befe671fa358e2c1591ee840553b03"
+    }
+  ]
+}

@@ -4,13 +4,9 @@
 用于时序信号、飞控日志及多模态数据的交互式分析。保留上游英文界面，新增中文界面和
 独立的 ArduPilot DataFlash BIN 加载插件。
 
-- **下载已发布中文版：** [v4.0.0-zh.1.rc.4](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.0.0-zh.1.rc.4)，
-  提供 Windows x64 安装器、Linux x86_64 AppImage 和 amd64 DEB。
-  此版本为预发布候选，支持简体中文与 English，使用 Qt 6.11.1。
-- **开发线：** `zh-CN-4.x-dev` 当前为 `4.1.0-zh.1.dev.2`，使用 Qt 6.12.0，
-  包含简体中文、繁體中文（台灣）与 English。开发源码尚未发布为新的已验安装包，繁中不在 rc.4 中。
-- **稳定维护线：** `zh-CN-4.x` 是默认分支；“稳定线”指分支用途，不改变 rc.4 的预发布状态。
-  `main-4.x` 仅镜像上游，3.x 的 `zh-CN` / `zh-CN-dev` 独立维护。
+- **正式版：** [v4.1.0+zh.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)，提供 Windows 安装器/便携包、Linux AppImage/DEB；已验范围及限制以 Release 为准。
+- **开发线：** `zh-CN-4.x-dev` 当前为 `4.1.0-zh.1.dev.3`，Qt 6.12.0 / SDK 0.39.0，精确上游快照 `1d49adad`。这不是已发布正式版，尚未完成本轮双平台原包验收。
+- **稳定维护线：** `zh-CN-4.x` 保持已发布 4.1 内容；`main` / `main-3.x` 为上游镜像，3.x 汉化线独立维护。
 
 新配置默认简体中文，可在首选项切换语言，下次启动生效。界面语言不改变数值或数据解析规则。
 详细覆盖和限制见[中文与多语言说明](docs/localization/README.zh-CN.md)。

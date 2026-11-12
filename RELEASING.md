@@ -40,7 +40,7 @@
 ## 本仓映射
 
 - 3.x：`zh-CN` / `zh-CN-dev`；已有 `v3.18.0-zh.N` 与资产保持不变。
-- 4.x：`zh-CN-4.x` / `zh-CN-4.x-dev`；主题分支用 `zh-CN-4.x-{feat,fix,ci,docs}/主题`；`main-4.x` 只镜像上游。
+- 4.x：`zh-CN-4.x` / `zh-CN-4.x-dev`；主题分支用 `zh-CN-4.x-{feat,fix,ci,docs}/主题`；`main` 只镜像上游。
 - 应用版本以 `versions.env` 的 `PJ_APP_VERSION` 为准；tag 是 `v` 加该版本。首个候选 `v4.0.0-zh.1.rc.1` 基于上游 4.0.0 之后的 `0345ec513bde7f05ad3148548ac30401f2b6f7a7`，设置 prerelease，不覆盖 Latest。
 - 保持上游 Windows IFW、Linux AppImage、Debian 三种格式；文件末尾增加 `-zh-CN`，只提供实际验收的 x64/x86_64/amd64。
 - `4.0.0-zh.1.rc.1` 为应用与下载名 SemVer。Debian 映射为 `4.0.0~zh.1~rc.1-1`，使候选排在正式版之前。IFW只允许数字组件，映射为 `4.0.0.1.0.1`（基础版、汉化修订1、候选阶段0、序号1）；这不是另一个应用版本。将来正式阶段使用1，不能倒退覆盖。

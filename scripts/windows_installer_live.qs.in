@@ -3,6 +3,7 @@
 var probe = __PROBE_CONFIG__;
 var stage = 0;
 var targetEdited = false;
+var metadataRecorded = false;
 function encodePowerShellCommand(command)
 {
     var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -33,6 +34,9 @@ function record(kind, values) {
     values.kind = kind;
     values.language = installer.value("UILanguage");
     values.target = installer.value("TargetDir");
+    values.desktopDir = installer.value("DesktopDir");
+    values.startMenuDir = installer.value("StartMenuDir");
+    values.productUUID = installer.value("ProductUUID");
     values.TEMP = installer.environmentVariable("TEMP");
     values.TMP = installer.environmentVariable("TMP");
     // The observer gets this actual installer's PID and command line, not the
@@ -67,6 +71,12 @@ Controller.prototype.IntroductionPageCallback = function() {
         gui.rejectWithoutPrompt();
         return;
     }
+    if (stage === 2 && metadataRecorded) {
+        record("finished", {});
+        // Return to Introduction for its real, prompt-free Cancel button.
+        gui.clickButton(buttons.CancelButton, 250);
+        return;
+    }
     var page = gui.pageById(QInstaller.Introduction);
     record("introduction", {
         title: String(page.title),
@@ -76,18 +86,28 @@ Controller.prototype.IntroductionPageCallback = function() {
         nextButton: String(gui.defaultButtonText(buttons.NextButton)),
         cancelButton: String(gui.defaultButtonText(buttons.CancelButton))
     });
-    if (stage === 2) {
-        record("finished", {});
-        // IFW clickButton schedules the real click with QTimer::singleShot.
-        // The introduction callback may run before show()/exec(); synchronously
-        // rejecting here can be undone by startup showing the dialog afterward.
-        // Cancel on Introduction directly rejects without a confirmation box.
-        gui.clickButton(buttons.CancelButton, 250);
-        return;
-    }
     gui.clickButton(buttons.NextButton, 250);
 };
 Controller.prototype.DynamicLanguageWidgetCallback = function() {
+    if (!metadataRecorded) {
+        // IFW loads the component tree while leaving Introduction, so this is
+        // the first page on which componentByName is expected to succeed.
+        var appComponent = installer.componentByName("io.plotjuggler.application");
+        if (!appComponent) {
+            record("unexpected-component", {});
+            gui.rejectWithoutPrompt();
+            return;
+        }
+        record("component-metadata", {
+            componentName: String(appComponent.value("DisplayName")),
+            componentDescription: String(appComponent.value("Description"))
+        });
+        metadataRecorded = true;
+    }
+    if (stage === 2) {
+        gui.clickButton(buttons.BackButton, 250);
+        return;
+    }
     if (!targetEdited) {
         gui.clickButton(buttons.NextButton, 250);
         return;
@@ -99,6 +119,11 @@ Controller.prototype.DynamicLanguageWidgetCallback = function() {
     gui.clickButton("applyLanguage", 250);
 };
 Controller.prototype.DynamicTargetWidgetCallback = function() {
+    if (stage >= 2) {
+        record("unexpected-page", {});
+        gui.rejectWithoutPrompt();
+        return;
+    }
     var target = gui.pageWidgetByObjectName("DynamicTargetWidget");
     record("target-before-edit", {field: String(target.targetDirectory.text), title: String(target.windowTitle), description: String(target.description.text)});
     target.targetDirectory.setText(probe.changedTargets[stage]);

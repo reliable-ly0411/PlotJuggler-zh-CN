@@ -3,6 +3,7 @@
 """Offline regressions for native input/result gates and package source identity."""
 import hashlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -15,6 +16,7 @@ import tempfile
 import textwrap
 import unittest
 from unittest import mock
+import urllib.error
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -73,7 +75,7 @@ class FixtureTests(unittest.TestCase):
             'platforms': {'linux-x86_64': spec, 'windows-x86_64': spec}}]}), encoding='utf-8')
 
     def prepare(self, platform='linux-x86_64'):
-        with mock.patch.object(fixtures.urllib.request, 'urlopen', side_effect=AssertionError('No test network')):
+        with mock.patch.object(fixtures.download_retry.urllib.request, 'urlopen', side_effect=AssertionError('No test network')):
             return fixtures.prepare(self.source, self.build, self.output, 'Release', platform, self.archive)
 
     def test_exact_two_inputs_and_external_identity(self):
@@ -82,6 +84,74 @@ class FixtureTests(unittest.TestCase):
         self.assertTrue(self.output.with_name('inputs-identity.json').is_file())
         for row in record['files']:
             self.assertEqual(hashlib.sha256((self.output/row['path']).read_bytes()).hexdigest(), row['sha256'])
+
+    def test_network_retry_keeps_locked_url_bound_and_platform_validation(self):
+        for platform in ('linux-x86_64', 'windows-x86_64'):
+            with self.subTest(platform=platform):
+                self.output = self.root / ('inputs-' + platform)
+                if platform == 'windows-x86_64':
+                    pe = bytearray(128)
+                    pe[:2] = b'MZ'
+                    struct.pack_into('<I', pe, 60, 64)
+                    pe[64:68] = b'PE\0\0'
+                    struct.pack_into('<H', pe, 68, 0x8664)
+                    self.apbin = self.build/'ardupilot.dll'
+                    self.apbin.write_bytes(pe)
+                    (self.build/'ardupilot-package-path-Release.txt').write_text(str(self.apbin), encoding='utf-8')
+                    with zipfile.ZipFile(self.archive, 'w') as zipped:
+                        zipped.writestr('toolbox-fft/manifest.json', json.dumps({'id': 'toolbox-fft', 'version': '1.0.1'}))
+                        zipped.writestr('toolbox-fft/fft.dll', pe)
+                    lock = json.loads(self.lock.read_text(encoding='utf-8'))
+                    lock['extensions'][0]['platforms'][platform]['checksum'] = 'sha256:' + hashlib.sha256(self.archive.read_bytes()).hexdigest()
+                    self.lock.write_text(json.dumps(lock), encoding='utf-8')
+                spec = json.loads(self.lock.read_text(encoding='utf-8'))['extensions'][0]['platforms'][platform]
+                raw = self.archive.read_bytes()
+                response = io.BytesIO(raw)
+                error = urllib.error.HTTPError(spec['url'], 503, 'unavailable', {}, None)
+                with mock.patch.object(fixtures.download_retry.urllib.request, 'urlopen',
+                                       side_effect=[error, TimeoutError(), response]) as fetch, \
+                     mock.patch.object(response, 'read', wraps=response.read) as read, \
+                     mock.patch.object(fixtures.download_retry.time, 'sleep') as sleep:
+                    record = fixtures.prepare(self.source, self.build, self.output, 'Release', platform)
+                self.assertEqual(fetch.call_args_list, [mock.call(spec['url'], timeout=120)] * 3)
+                read.assert_called_once_with(32*1024*1024+1)
+                self.assertEqual(sleep.call_args_list, [mock.call(2), mock.call(4)])
+                self.assertEqual(record['fft_url'], spec['url'])
+                self.assertEqual(record['fft_archive_sha256'], spec['checksum'].removeprefix('sha256:'))
+                self.assertEqual(record['platform'], platform)
+                self.assertEqual({p.name for p in self.output.iterdir()}, {'ardupilot-dataflash', 'toolbox-fft'})
+
+    def test_network_checksum_and_size_failure_are_not_retried(self):
+        for raw, message in ((b'wrong bytes', 'checksum'), (b'x' * (32*1024*1024+1), 'too large')):
+            with self.subTest(message=message), \
+                 mock.patch.object(fixtures.download_retry.urllib.request, 'urlopen', return_value=io.BytesIO(raw)) as fetch, \
+                 mock.patch.object(fixtures.download_retry.time, 'sleep') as sleep:
+                with self.assertRaisesRegex(ValueError, message):
+                    fixtures.prepare(self.source, self.build, self.output, 'Release', 'linux-x86_64')
+                self.assertEqual(fetch.call_count, 1)
+                sleep.assert_not_called()
+                self.assertFalse(self.output.exists())
+                self.assertFalse(self.output.with_name('inputs-identity.json').exists())
+
+    def test_network_archive_platform_failure_is_not_retried(self):
+        with mock.patch.object(fixtures.download_retry.urllib.request, 'urlopen',
+                               return_value=io.BytesIO(self.archive.read_bytes())) as fetch, \
+             mock.patch.object(fixtures.download_retry.time, 'sleep') as sleep:
+            with self.assertRaisesRegex(ValueError, 'platform'):
+                fixtures.prepare(self.source, self.build, self.output, 'Release', 'windows-x86_64')
+        self.assertEqual(fetch.call_count, 1)
+        sleep.assert_not_called()
+        self.assertFalse(self.output.exists())
+
+    def test_network_timeout_exhaustion_leaves_no_fixture_or_identity(self):
+        with mock.patch.object(fixtures.download_retry.urllib.request, 'urlopen', side_effect=TimeoutError()) as fetch, \
+             mock.patch.object(fixtures.download_retry.time, 'sleep') as sleep:
+            with self.assertRaises(TimeoutError):
+                fixtures.prepare(self.source, self.build, self.output, 'Release', 'linux-x86_64')
+        self.assertEqual(fetch.call_count, 3)
+        self.assertEqual(sleep.call_args_list, [mock.call(2), mock.call(4)])
+        self.assertFalse(self.output.exists())
+        self.assertFalse(self.output.with_name('inputs-identity.json').exists())
 
     def test_wrong_checksum_stops_before_output(self):
         self.archive.write_bytes(self.archive.read_bytes()+b'changed')
@@ -419,8 +489,9 @@ class PackageLanguagesTests(unittest.TestCase):
             try:
                 os.chdir(root)
                 Path('versions.env').write_text('PJ_APP_VERSION=4.0.0-zh.1.rc.4\n', encoding='utf-8')
-                for i in range(5):
-                    directory = root/'reports'/str(i); directory.mkdir(parents=True)
+                for relative, (platform, kind) in manifest.REPORT_IDENTITIES.items():
+                    i = 0 if platform == 'windows-2022' else 1
+                    directory = (root/'reports'/relative).parent; directory.mkdir(parents=True)
                     report = {'status': 'automated_checks_passed', 'languages': languages,
                               'release': {'source_commit': 'a'*40, 'source_tree': 'b'*40, 'version': '4.0.0-zh.1.rc.4'},
                               'plugin_count': 19 if i==0 else 21, 'loaded_plugin_count': 19 if i==0 else 20,
@@ -429,11 +500,20 @@ class PackageLanguagesTests(unittest.TestCase):
                     (directory/'acceptance.json').write_text(json.dumps(report), encoding='utf-8')
                     for language in png_languages:
                         (directory/f'gui-{language}.png').write_bytes(b'synthetic-size-check-only'*500)
+                    if i == 0:
+                        suffix = 'portable-zh-CN.zip' if kind == 'portable' else 'zh-CN.exe'
+                        name = 'PlotJuggler-4.0.0-zh.1.rc.4-Windows-x64-' + suffix
+                        digest = manifest.hashlib.sha256(b'synthetic package').hexdigest()
+                        (directory/'package-integrity.json').write_text(json.dumps({
+                            'format': kind, 'name': name, 'before': digest, 'after': digest}), encoding='utf-8')
                 Path('candidate').mkdir()
                 for name in ['PlotJuggler-4.0.0-zh.1.rc.4-Windows-x64-zh-CN.exe',
+                             'PlotJuggler-4.0.0-zh.1.rc.4-Windows-x64-portable-zh-CN.zip',
                              'PlotJuggler-4.0.0-zh.1.rc.4-x86_64-zh-CN.AppImage',
                              'plotjuggler4_4.0.0~zh.1~rc.4-1_amd64-zh-CN.deb']:
                     (Path('candidate')/name).write_bytes(b'synthetic package')
+                (Path('candidate')/'SHA256SUMS-test.txt').write_text(''.join(
+                    f'{manifest.sha256(p)}  {p.name}\n' for p in sorted(Path('candidate').iterdir())), encoding='utf-8')
                 with mock.patch.dict(os.environ, {'GITHUB_SHA':'a'*40,'GITHUB_WORKFLOW_SHA':'c'*40,'GITHUB_RUN_ID':'1','GITHUB_RUN_ATTEMPT':'1'}), \
                      mock.patch.object(manifest.subprocess, 'check_output', return_value='b'*40):
                     manifest.main()
@@ -441,9 +521,9 @@ class PackageLanguagesTests(unittest.TestCase):
             finally:
                 os.chdir(old)
 
-    def test_five_reports_require_fifteen_language_screenshots(self):
+    def test_six_reports_require_eighteen_language_screenshots(self):
         result = self.run_manifest(['zh_CN','zh_TW','en_US'], ['zh_CN','zh_TW','en_US'])
-        self.assertEqual(len(result['screenshots']), 15)
+        self.assertEqual(len(result['screenshots']), 18)
 
     def test_old_two_language_reports_rejected(self):
         with self.assertRaisesRegex(AssertionError, 'Incomplete language'):

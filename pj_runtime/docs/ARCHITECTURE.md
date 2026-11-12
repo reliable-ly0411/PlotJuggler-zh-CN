@@ -630,7 +630,7 @@ faster than the brake rate. The 3D fixed-frame preference is not here
 
 ## Recording
 
-Design: [docs/session_recorder_design.md](../../docs/session_recorder_design.md).
+Design: [docs/RECORDING_AND_CACHING.md §3.3](../../docs/RECORDING_AND_CACHING.md).
 
 - **`Recorder`** (one per source): `tapFor()` hands the source's host a stateless tap that
   co-owns the recorder; the binding→channel table is guarded by one mutex `mu_`; one writer
@@ -742,6 +742,7 @@ of the module: its files keep their own SPDX and copyright lines.
   else (and a fallback) asks GitHub's latest release; probes need `QT_CONFIG(process)`.
   It emits at most one result signal and routes every failure to `checkFailed`, so the
   shell can stay silent at startup.
+- Localized builds use only this fork's same-major download-only release feed. Stable `+zh.N` installs reject prereleases; development snapshots never route through upstream IFW/APT. Build metadata alone is not an upgrade.
 - `TelemetryPing`: the payload is built in `TelemetryPing.cpp`; its privacy contract is
   enforced by `telemetry_ping_test`'s allowed-key set, updated together with
   [docs/TELEMETRY.md](../../docs/TELEMETRY.md). An unstamped installation (`source`, the

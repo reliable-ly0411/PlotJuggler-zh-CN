@@ -151,3 +151,28 @@ downloading anything. The existing workflows' generated `build-i18n/` and
 remains a refusal. A local feedback tree must not masquerade as its HEAD.
 These changes require new native/package execution; historical reports do not
 become three-language package passes merely by rerunning the report generator.
+
+## Forward-development dependency and renderer checks
+
+Host dependency provenance comes from `host_versions.py`: Qt is read from
+`versions.env`, and the host SDK from the exact `conanfile.txt` requirement.
+Collection checks the selected Qt qconfig and resolved Conan host graph before
+retaining notices. This does not replace the development SDK with the historical
+4.1 Unicode backport, or rewrite independently pinned plugin SDK provenance.
+
+Windows payloads must retain the original Mesa 11.2.2 and LLVM 3.6.2 notices in
+`share/licenses/Windows-Mesa-llvmpipe`. The checked-in lock binds all original
+notice bytes and the renderer DLL to exact sizes and SHA-256 values. Unknown
+renderer bytes, missing or extra notices, and modified notices fail collection
+and final-stage verification. The reference source files are not a complete
+build-source or linked-object manifest. This forward-development checkout has
+not yet verified the actual Qt 6.12 DLL or accepted a newly built product.
+
+Both localized windeployqt passes use `--no-system-d3d-compiler`; no DLL is
+silently deleted after deployment. Final Windows acceptance rejects bundled
+`d3dcompiler*.dll`, requires Windows 10 1809 or newer, and resolves D3DCompile
+from system32's d3dcompiler_47.dll only. Other installer callers without
+`ExtraPrefix` retain their existing behavior. Offline unit tests do not replace
+Windows rendering, installer/portable or final screenshot acceptance.
+
+Historical candidate triggers are preserved unchanged from the development branch. No new development publication is admitted by forward integration; a new package candidate needs explicit version and trigger preparation. Four products require six clean format/OS reports and 18 screenshots; the development snapshot remains unaccepted until rebuilt and tested.

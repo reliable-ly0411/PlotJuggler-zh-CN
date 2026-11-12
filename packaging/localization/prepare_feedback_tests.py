@@ -9,8 +9,9 @@ import os
 from pathlib import Path, PurePosixPath
 import stat
 import struct
-import urllib.request
 import zipfile
+
+import download_retry
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -42,8 +43,7 @@ def prepare(source, build, output, config, platform, archive=None):
     require(spec['url'].startswith('https://github.com/PlotJuggler/pj-official-plugins/releases/download/'),
             'FFT fixture must come from the locked official release')
     if archive is None:
-        with urllib.request.urlopen(spec['url'], timeout=120) as response:
-            raw = response.read(32*1024*1024+1)
+        raw = download_retry.read_url(spec['url'], timeout=120, read_limit=32*1024*1024+1)
     else:
         require(archive.stat().st_size <= 32*1024*1024, 'FFT archive is too large')
         raw = archive.read_bytes()

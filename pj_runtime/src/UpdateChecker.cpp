@@ -95,7 +95,7 @@ void UpdateChecker::setReleaseApiUrl(const QUrl& url) {
 }
 
 QUrl UpdateChecker::releaseApiUrl() const {
-  if (release_api_url_ == QUrl(kDefaultReleaseApiUrl) && currentVersion().contains(u"-zh."_s)) {
+  if (release_api_url_ == QUrl(kDefaultReleaseApiUrl) && isLocalizedBuildVersion(currentVersion())) {
     return QUrl(kLocalizedReleaseApiUrl);
   }
   return release_api_url_;
@@ -144,7 +144,7 @@ void UpdateChecker::checkLatestRelease() {
 
   // Localized builds have no IFW/APT update repository. Never offer upstream
   // installers that would replace this fork, including when a maintenance tool exists.
-  if (currentVersion().contains(u"-zh."_s)) {
+  if (isLocalizedBuildVersion(currentVersion())) {
     checkGitHub(UpdateRoute::Download);
     return;
   }
@@ -204,7 +204,7 @@ void UpdateChecker::handleReply(QNetworkReply& reply, UpdateRoute route) {
     emit checkFailed(u"release JSON parse error: %1"_s.arg(parse_error.errorString()));
     return;
   }
-  if (currentVersion().contains(u"-zh."_s)) {
+  if (isLocalizedBuildVersion(currentVersion())) {
     if (!doc.isArray()) {
       emit checkFailed(u"localized release response was not a JSON array"_s);
       return;
@@ -215,6 +215,14 @@ void UpdateChecker::handleReply(QNetworkReply& reply, UpdateRoute route) {
       const QString tag = release.value(u"tag_name"_s).toString();
       // Only this major's localized release channel is eligible. A 3.x latest,
       // upstream tag, draft or development snapshot cannot replace the 4.x fork.
+      // A stable install never opts into a candidate channel. Require GitHub's
+      // publication state to agree with the tag, including for candidate users.
+      const bool stable_tag = isStableLocalizedVersion(tag);
+      const auto prerelease = release.value(u"prerelease"_s);
+      if (!release.value(u"draft"_s).isBool() || !prerelease.isBool() || prerelease.toBool() == stable_tag ||
+          (isStableLocalizedVersion(currentVersion()) && !stable_tag)) {
+        continue;
+      }
       if (!release.value(u"draft"_s).toBool() && isNewerLocalizedVersion(tag, newest)) {
         newest = tag;
       }

@@ -23,9 +23,23 @@ class TriggerTests(unittest.TestCase):
   self.assertIn('cancel-in-progress: false',text)
  def test_promotion_keeps_human_and_immutable_artifact_guards(self):
   text=(ROOT/'.github/workflows/zh-4x-publish.yml').read_text(encoding='utf-8')
-  for required in ('inputs.visual_reviewed','github.event.created','publish-accepted-','CANDIDATE_ATTEMPT','sha256sum -c','--downloads draft-check','--draft=false'):
+  for required in ('inputs.visual_reviewed','github.event.created','publish-accepted-','CANDIDATE_ATTEMPT','sha256sum -c','--downloads draft-check','--downloads public-check','release_by_id.py publish '):
    self.assertIn(required,text)
   self.assertNotIn('--clobber',text)
+  publish='release_by_id.py publish '
+  self.assertEqual(text.count(publish),1)
+  self.assertLess(text.index('--downloads draft-check'),text.index(publish))
+  self.assertLess(text.index(publish),text.index('--downloads public-check'))
+  self.assertLess(text.index('--upload-responses upload-responses'),text.index(publish))
+  for forbidden in ('gh release edit','gh release download','releases/tags/','continue-on-error:'):
+   self.assertNotIn(forbidden,text)
+  helper=(ROOT/'packaging/localization/release_by_id.py').read_text(encoding='utf-8')
+  self.assertIn("'POST' if endpoint.endswith('/releases') else 'PATCH'",helper)
+  self.assertIn("endpoint += f'/{number}'",helper)
+  self.assertIn("number = identity(original, repo, tag, True)",helper)
+  self.assertIn("payload = None if action != 'publish' else {'draft': False",helper)
+  self.assertIn("'make_latest': str(policy['latest']).lower()",helper)
+  self.assertIn("identity(release, repo, tag, action == 'draft', number)",helper)
  def test_plugin_preflight_has_one_creation_only_and_no_publication(self):
   text=(ROOT/'.github/workflows/zh-4x-plugin-preflight.yml').read_text(encoding='utf-8')
   branch='zh-CN-4.x-ci/plugin-preflight-rc2-final5'
