@@ -4,3 +4,8 @@
 /tests/data/linux-public-elf-records.json text eol=lf
 /licenses/apache-arrow/** text eol=lf
 /cmake/conan/windows-msvc194.lock text eol=lf
+/cmake/conan/openssl-overlay/** text eol=lf
+/cmake/conan/openssl-overlay.profile text eol=lf
+/licenses/windows-runtime-notices/** text eol=lf
+/licenses/ifw/** text eol=lf
+/installer/io.plotjuggler.application/meta/license_ifw.txt text eol=lf

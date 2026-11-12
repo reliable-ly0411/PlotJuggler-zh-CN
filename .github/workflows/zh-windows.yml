@@ -41,7 +41,7 @@ jobs:
         arch: win64_msvc2019_64
         dir: ${{ github.workspace }}/qt_installation/
         cache: true
-        tools: tools_ifw
+        tools: tools_ifw,qt.tools.ifw.47
         add-tools-to-path: 'true'
     - name: Select the bundled Python ABI after Qt setup
       uses: actions/setup-python@v6
@@ -67,13 +67,20 @@ jobs:
         $buildArgs = @(python scripts/windows_conan_build_check.py arguments)
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         $profile = "$env:RUNNER_TEMP/pj-pathmap.profile"
+        $overlayProfile = "cmake/conan/openssl-overlay.profile"
+        $export = "$env:RUNNER_TEMP/pj-openssl-overlay-export.json"
+        conan export cmake/conan/openssl-overlay --name=openssl --version=3.6.5 --user=plotjuggler --channel=stable --format=json --out-file "$export"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        $actual = (Get-Content -LiteralPath $export -Raw | ConvertFrom-Json).reference
+        $expected = @((Get-Content scripts/windows_conan_host_refs.json -Raw | ConvertFrom-Json) | Where-Object { $_ -match '^openssl/3\.6\.5@plotjuggler/stable#[0-9a-f]{32}$' })
+        if ($expected.Count -ne 1 -or $actual -cne $expected[0]) { throw "OpenSSL overlay export revision mismatch" }
         $plan = "$env:RUNNER_TEMP/pj-conan-plan.json"
         $result = "$env:RUNNER_TEMP/pj-conan-install.json"
-        conan graph info . @buildArgs --lockfile cmake/conan/windows-msvc194.lock -pr:h "$profile" -pr:b=default -s build_type=Release -s compiler.cppstd=17 --format=json --out-file "$plan"
+        conan graph info . @buildArgs --lockfile cmake/conan/windows-msvc194.lock -pr:h "$profile" -pr:h "$overlayProfile" -pr:b=default -s build_type=Release -s compiler.cppstd=17 --format=json --out-file "$plan"
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         python scripts/windows_conan_build_check.py verify "$plan"
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        conan install . -of build @buildArgs --lockfile cmake/conan/windows-msvc194.lock -pr:h "$profile" -pr:b=default -s build_type=Release -s compiler.cppstd=17 --deployer=./scripts/conan_license_deployer.py --deployer-folder=build/dependency-notices --format=json --out-file "$result"
+        conan install . -of build @buildArgs --lockfile cmake/conan/windows-msvc194.lock -pr:h "$profile" -pr:h "$overlayProfile" -pr:b=default -s build_type=Release -s compiler.cppstd=17 --deployer=./scripts/conan_license_deployer.py --deployer-folder=build/dependency-notices --format=json --out-file "$result"
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         python scripts/windows_conan_build_check.py verify "$result"
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
@@ -279,7 +286,18 @@ jobs:
       if: always() && steps.portable-archive.outcome == 'success' && steps.installer-package.outcome == 'success'
       shell: pwsh
       run: |
-        python scripts/package_size_audit.py --payload installer/io.plotjuggler.application/data --package "PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip" --package "PlotJuggler-$env:PJ_SEMVER-Windows-x64.exe" --out acceptance/package-size.json
+        $roots = Join-Path $env:RUNNER_TEMP "pj-private-roots-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT.json"
+        python scripts/collect_private_build_roots.py --source "$env:GITHUB_WORKSPACE" --build "$env:GITHUB_WORKSPACE/build" --cache "$env:CONAN_HOME" --sdk "$env:QT_ROOT_DIR" --cmake-cache "$env:GITHUB_WORKSPACE/build/CMakeCache.txt" --out "$roots"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        $exe = "PlotJuggler-$env:PJ_SEMVER-Windows-x64.exe"
+        $exeHash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
+        $devtools = @(Get-ChildItem -Path "$env:GITHUB_WORKSPACE/qt_installation" -Recurse -File -Filter devtool.exe)
+        if ($devtools.Count -ne 1) { throw "Expected exactly one IFW devtool" }
+        python scripts/verify_windows_archives.py --stage installer/io.plotjuggler.application/data --portable "PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip" --exe "$exe" --installer-sha "$exeHash" --devtool "$($devtools[0].FullName)" --private-build-roots "$roots" --out acceptance/windows-payload-binding.json
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        python scripts/package_size_audit.py --payload installer/io.plotjuggler.application/data --package "PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip" --package "$exe" --private-build-roots "$roots" --out acceptance/package-size.json
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        python scripts/verify_windows_binding.py --audit acceptance/package-size.json --binding acceptance/windows-payload-binding.json
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Test build without localized images
       id: images-disabled

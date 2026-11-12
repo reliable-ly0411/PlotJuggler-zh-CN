@@ -124,6 +124,14 @@ if [[ -n "${PJ_QT5_CORE_BACKPORT:-}" ]]; then
         "$PJ_QT5_CORE_BACKPORT/lib/libQt5Core.so.5" "$APPDIR/usr/lib/libQt5Core.so.5"
 fi
 
+# linuxdeploy has discovered the original dependencies and installed its hooks.
+# Normalize only the staged product copies, then audit every staged ELF.
+python3 "$REPO_ROOT/scripts/linux_stage_elfs.py" normalize --root "$APPDIR/usr/bin" \
+    --build-bin "$BUILD_DIR/bin" --layout appimage --report "$REPO_ROOT/acceptance/linux-appimage-stage-elfs.json"
+python3 "$REPO_ROOT/scripts/linux_stage_elfs.py" audit --root "$APPDIR" \
+    --private-root "$REPO_ROOT" --private-root "$(realpath "$BUILD_DIR")" --private-root "${RUNNER_TEMP:-$REPO_ROOT}" \
+    --report "$REPO_ROOT/acceptance/linux-appimage-private-paths.json"
+
 echo "==> Packaging AppImage"
 LDAI_OUTPUT="$REPO_ROOT/PlotJuggler-${ARCH}.AppImage" "$LDPLOY" --appimage-extract-and-run \
     --appdir "$APPDIR" \

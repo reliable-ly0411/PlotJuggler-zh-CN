@@ -2,11 +2,12 @@
 <Package>
     <DisplayName>PlotJuggler zh-CN</DisplayName>
     <Description>English, Simplified and Traditional Chinese UI, launcher and bundled ArduPilot DataFlash BIN loader.</Description>
-    <Version>3.18.1-11</Version>
+    <Version>3.18.1-12</Version>
     <ReleaseDate>2026-11-12</ReleaseDate>
     <Licenses>
         <License name="MPL-2.0" file="license_mpl.txt" />
         <License name="LGPL" file="license_lgpl.txt" />
+        <License name="Qt Installer Framework GPLv3 with exception" file="license_ifw.txt" />
     </Licenses>
     <Default>script</Default>
     <Script>installscript.qs</Script>

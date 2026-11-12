@@ -199,6 +199,35 @@ def stage_downloaded_notice(root, destination, dependency, build_dir=None, cache
     return record
 
 
+def validate_windows_runtime_materials(licenses, metadata_license):
+    """Verify reviewed bytes; this does not establish license closure."""
+    qt = licenses / "windows-runtime-notices"
+    ifw = licenses / "ifw"
+
+    def checked(path, expected):
+        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            raise RuntimeError(f"Missing or changed Windows notice: {path.name}")
+
+    manifest_path = qt / "upstream-text-manifest.json"
+    checked(manifest_path, "8a43392fb79228fc11278a06856c0dcc70c2fcdbb29a5c47f3eb0010f73793dd")
+    checked(qt / "NOTICE.txt", "163c15b72a9b1ce6bdf39dda60093864a5f1d4e991367429b7207a61bb241507")
+    checked(ifw / "NOTICE.txt", "a6cb6021b7babf75d0860a6a3d5325259ab1dded3365d087909eb549d6c8238f")
+    ifw_sha = "0dbe024961f6ab5c52689cbd036c977975d0d0f6a67ff97762d96cb819dd5652"
+    checked(ifw / "LICENSE.GPL3-EXCEPT", ifw_sha)
+    checked(metadata_license, ifw_sha)
+    if (ifw / "LICENSE.GPL3-EXCEPT").read_bytes() != metadata_license.read_bytes():
+        raise RuntimeError("IFW payload and installer metadata licenses differ")
+    records = json.loads(manifest_path.read_text(encoding="utf-8"))["files"]
+    names = [record["file"] for record in records]
+    if len(names) != 33 or len({name.casefold() for name in names}) != 33:
+        raise RuntimeError("Invalid Windows notice inventory")
+    for record in records:
+        name = record["file"]
+        if Path(name).name != name or "\\" in name:
+            raise RuntimeError("Invalid Windows notice filename")
+        checked(qt / name, record["sha256"])
+
+
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
@@ -209,6 +238,9 @@ def main():
     args = parser.parse_args()
     if args.arrow_source_archive and not args.arrow_source_version:
         parser.error("--arrow-source-archive requires --arrow-source-version")
+    metadata_license = root / "installer/io.plotjuggler.application/meta/license_ifw.txt"
+    if os.name == "nt":
+        validate_windows_runtime_materials(root / "licenses", metadata_license)
     destination = args.destination.resolve()
     build_dir = args.build_dir.resolve()
     notices = destination / "Licenses" / "ArduPilot-DataFlash"
@@ -227,6 +259,11 @@ def main():
         if not (conan_notices / "manifest.json").is_file():
             raise SystemExit("Conan dependency license inventory is missing")
         shutil.copytree(conan_notices, destination / "Licenses/Conan", dirs_exist_ok=True)
+        # Inventory integrity is evidence, not license closure.
+        for component in ("windows-runtime-notices", "ifw"):
+            shutil.copytree(root / "licenses" / component,
+                            destination / "Licenses" / component, dirs_exist_ok=True)
+        validate_windows_runtime_materials(destination / "Licenses", metadata_license)
     cache = read_cmake_cache(build_dir)
     downloaded = [stage_downloaded_notice(root, destination, dependency, build_dir, cache)
                   for dependency in ("data_tamer", "wasmer", "lz4", "zstd")]

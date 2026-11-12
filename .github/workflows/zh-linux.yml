@@ -19,6 +19,10 @@ concurrency:
 jobs:
   linux:
     runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.image }}
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 120
     strategy:
       fail-fast: false
@@ -133,6 +137,14 @@ jobs:
         cmake --build build --parallel 2
 
         python3 -c 'import json,os; v=json.load(open("build/FORK-VERSION.json"))["version"]; open(os.environ["GITHUB_ENV"],"a").write("PJ_SEMVER="+v+"\n")'
+    - name: Collect private build roots
+      if: steps.native-build.outcome == 'success'
+      run: |
+        roots="$RUNNER_TEMP/pj-private-roots-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.json"
+        sdk_args=()
+        if [ -n "${PJ_QT5_CORE_BACKPORT:-}" ]; then sdk_args+=(--sdk "$RUNNER_TEMP/qt5-core-backport"); fi
+        python3 scripts/collect_private_build_roots.py --source "$GITHUB_WORKSPACE" --build "$GITHUB_WORKSPACE/build" --cache "$RUNNER_TEMP/ccache" --cmake-cache "$GITHUB_WORKSPACE/build/CMakeCache.txt" "${sdk_args[@]}" --out "$roots"
+        echo "PJ_PRIVATE_BUILD_ROOTS=$roots" >> "$GITHUB_ENV"
     - name: Preserve compiler cache
       if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
       uses: actions/cache/save@v4
@@ -155,6 +167,7 @@ jobs:
         collect_check translations python3 tests/check_translations.py --fresh
         collect_check memes python3 tests/check_memes.py --reference-rev 3117288ce8d710bde4f7a86ca5ed5240ebb1c301 --export-reference reference-memes --pixel-report acceptance/image-pixels.json
         collect_check version python3 tests/check_version.py
+        collect_check elf_stage python3 tests/test_linux_stage_elfs.py
         collect_check ctest ctest --test-dir build --output-on-failure --no-tests=error
         collect_check gui xvfb-run -a python3 scripts/zh_acceptance.py --app build/bin/plotjuggler --plugin build/bin/libDataAPBin.so --out acceptance
         python3 -c 'import json,sys; from pathlib import Path; r={k:int(v) for k,v in (x.split(":",1) for x in sys.argv[1:])}; Path("acceptance/native-step-results.json").write_text(json.dumps(r,indent=2)); sys.exit(int(any(r.values())))' "${checks[@]}"
@@ -184,13 +197,20 @@ jobs:
         extracted="$(mktemp -d)"
         appimage="$PWD/PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage"
         (cd "$extracted"; env -u LD_LIBRARY_PATH "$appimage" --appimage-extract >/dev/null)
+        elf_exit=0
+        python3 scripts/linux_stage_elfs.py audit --root "$extracted/squashfs-root" \
+          --private-root "$GITHUB_WORKSPACE" --private-root "$RUNNER_TEMP" \
+          --report acceptance/linux-appimage-extracted-private-paths.json || elf_exit=$?
         core_exit=0
         python3 scripts/check_qt5_core_backport.py "$PJ_QT5_CORE_BACKPORT/lib/libQt5Core.so.5" "$extracted/squashfs-root/usr/lib/libQt5Core.so.5" || core_exit=$?
         gui_exit=0
         env -u LD_LIBRARY_PATH xvfb-run -a python3 scripts/zh_acceptance.py --app "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --plugin AppDir/usr/bin/libDataAPBin.so --out acceptance/packaged || gui_exit=$?
         audit_exit=0
-        python3 scripts/package_size_audit.py --payload AppDir --package "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --out acceptance/package-size.json || audit_exit=$?
-        python3 -c 'import json,sys; from pathlib import Path; r=dict(zip(("qtcore_identity_exit","packaged_gui_exit","package_audit_exit"),map(int,sys.argv[1:]))); Path("acceptance/packaged-step-results.json").write_text(json.dumps(r,indent=2)); sys.exit(int(any(r.values())))' "$core_exit" "$gui_exit" "$audit_exit"
+        python3 scripts/package_size_audit.py --payload AppDir --package "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --private-build-roots "$PJ_PRIVATE_BUILD_ROOTS" --out acceptance/package-size.json || audit_exit=$?
+        extracted_audit_exit=0
+        python3 scripts/package_size_audit.py --payload "$extracted/squashfs-root" --package "$appimage" --private-build-roots "$PJ_PRIVATE_BUILD_ROOTS" --out acceptance/appimage-extracted-size.json || extracted_audit_exit=$?
+        if [ "$extracted_audit_exit" -ne 0 ]; then audit_exit=1; fi
+        python3 -c 'import json,sys; from pathlib import Path; r=dict(zip(("elf_path_exit","qtcore_identity_exit","packaged_gui_exit","package_audit_exit"),map(int,sys.argv[1:]))); Path("acceptance/packaged-step-results.json").write_text(json.dumps(r,indent=2)); sys.exit(int(any(r.values())))' "$elf_exit" "$core_exit" "$gui_exit" "$audit_exit"
     - name: Validate packaged AppImage launcher Qt interaction
       if: always() && steps.appimage-package.outcome == 'success' && matrix.target == 'appimage'
       env:

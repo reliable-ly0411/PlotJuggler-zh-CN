@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 from pe_content_fingerprint import fingerprint as pe_fingerprint
 from linux_public_elf import reviewed_spans
+from private_build_roots import contains_private_root
 
 # Prefix families, including variable-length installation JWTs, are documented at:
 # https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#githubs-token-formats
@@ -20,6 +21,12 @@ PRIVATE_BUILD_PATH = re.compile(
     r"[A-Z]:[\\/](?:PJ3181-20261111-1235(?:[\\/]|$)|"
     r"(?:[^\x00\r\n]*?[\\/])?(?:\.conan2|conan[^\\/\x00\r\n]*)[\\/]p[\\/](?:b[\\/])?[^\\/\x00\r\n]+[\\/])",
     re.I)
+# Reject task directory families before any public-record substitutions.
+# Exact roots also come from the mandatory private package-audit manifest.
+TASK_PRIVATE_ROOT = re.compile(
+    r"[A-Z]:[\\/]PJ(?:[0-9]{2}[0-9A-Z]{2,4}|"
+    r"[0-9]{4}-RC[0-9]+-[0-9A-F]{8}-[0-9]{8})(?=$|[\\/\x00\s\"'=])",
+    re.I)
 REVIEWED_WINDOWS_MODULES = frozenset(name.casefold() for name in
     ("DataLoadParquet.dll", "ToolboxMosaico.dll", "ProtobufParser.dll"))
 PERSONAL_CONTACT = re.compile(r"@qq\.com\b", re.I)
@@ -31,13 +38,19 @@ def load_public_records():
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def check_metadata(data, relative_name, records):
+def check_metadata(data, relative_name, records, private_roots=None):
     """Return narrowly classified public markers, or reject unexpected sensitive data.
 
     Approved file hashes permit only exact path literals. Every byte is still
     checked for secret material and unrelated private paths before acceptance.
     """
     name = relative_name.replace("\\", "/")
+    # Examine the original bytes before identity checks or approved masks.
+    views = (data.decode("latin1"), data.decode("utf-8", errors="replace"),
+             data.decode("utf-16le", errors="ignore"), data[1:].decode("utf-16le", errors="ignore"))
+    if any(TASK_PRIVATE_ROOT.search(view) for view in views) or (
+            private_roots is not None and contains_private_root(data, private_roots)):
+        raise ValueError("Unexpected private path in " + name)
     digest = hashlib.sha256(data).hexdigest()
     qt = {key.casefold(): value for key, value in records.get("qt_records", {}).items()}.get(name.casefold())
     qt = qt if qt and qt["sha256"] == digest else None

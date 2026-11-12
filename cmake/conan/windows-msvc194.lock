@@ -15,7 +15,7 @@
     "lz4/1.9.4#a2f02ad3908618757c68d3618256a196",
     "mimalloc/2.2.4#dd236e6e0a2a1ef80cbc193d6f7f7090",
     "mosquitto/2.0.18#1818b9f724357a3196e29b235ff41072",
-    "openssl/3.6.5#3c1311f37543e7140f33fe5989f315c2",
+    "openssl/3.6.5@plotjuggler/stable#6c62e54cb81793d45ff39ab81d7d21ef",
     "protobuf/3.21.12#f4b3baecdc1169c9db2a96e395ca5462",
     "rapidjson/cci.20250205#dc3e0ac7034c35032b107673d9f9bae3",
     "re2/20230301#e697243fa7b545eefaa91fba7ba44146",

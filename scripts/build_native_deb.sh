@@ -13,6 +13,12 @@ mkdir -p "$stage/usr/lib/plotjuggler" "$stage/usr/bin" "$stage/DEBIAN" \
   "$stage/usr/share/applications" "$stage/usr/share/icons/hicolor/512x512/apps" \
   "$stage/usr/share/icons/hicolor/scalable/apps" package-metadata/debian output
 cp build/bin/plotjuggler build/bin/plotjuggler-launcher build/bin/*.so "$stage/usr/lib/plotjuggler/"
+# Only copied product binaries are rewritten. The build tree remains intact.
+python3 scripts/linux_stage_elfs.py normalize --root "$stage/usr/lib/plotjuggler" \
+  --build-bin "$PWD/build/bin" --layout deb --report acceptance/linux-deb-stage-elfs.json
+python3 scripts/linux_stage_elfs.py audit --root "$stage" \
+  --private-root "$PWD" --private-root "$(realpath build)" --private-root "${RUNNER_TEMP:-$PWD}" \
+  --report acceptance/linux-deb-private-paths.json
 python3 scripts/stage_fork_notices.py "$stage/usr/lib/plotjuggler"
 ln -s ../lib/plotjuggler/plotjuggler "$stage/usr/bin/plotjuggler"
 ln -s ../lib/plotjuggler/plotjuggler-launcher "$stage/usr/bin/plotjuggler-launcher"
@@ -33,4 +39,9 @@ printf 'Package: plotjuggler\nVersion: %s\nArchitecture: amd64\nSection: science
 dpkg-deb --root-owner-group --build "$stage" "output/PlotJuggler-${version}-${distribution}-amd64.deb"
 test "$(dpkg-deb -f output/*.deb Version)" = "$deb_version"
 test "$(dpkg-deb -f output/*.deb Architecture)" = amd64
-python3 scripts/package_size_audit.py --payload package --package output/*.deb --out acceptance/package-size.json
+private_roots="${PJ_PRIVATE_BUILD_ROOTS:?A private build roots manifest is required}"
+python3 scripts/package_size_audit.py --payload package --package output/*.deb --private-build-roots "$private_roots" --out acceptance/package-size.json
+extracted="$(mktemp -d)"
+trap 'rm -rf "$extracted"' EXIT
+dpkg-deb -x output/*.deb "$extracted"
+python3 scripts/package_size_audit.py --payload "$extracted" --package output/*.deb --private-build-roots "$private_roots" --out acceptance/deb-extracted-size.json

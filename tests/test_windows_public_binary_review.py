@@ -312,7 +312,8 @@ class CollectorIntegration(unittest.TestCase):
         scripts = root / "scripts"
         scripts.mkdir()
         for name in ("windows_public_binary_review.py", "windows_public_binary_review_helpers.py",
-                     "package_privacy.py", "pe_content_fingerprint.py", "linux_public_elf.py"):
+                     "package_privacy.py", "private_build_roots.py",
+                     "pe_content_fingerprint.py", "linux_public_elf.py"):
             (scripts / name).write_bytes((REPO / "scripts" / name).read_bytes())
         policy = root / "tests/data/public-build-records.json"
         policy.parent.mkdir(parents=True)

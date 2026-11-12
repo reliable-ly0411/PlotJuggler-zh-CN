@@ -33,6 +33,15 @@ class PackageAuditInventory(unittest.TestCase):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(data)
             out = root / "audit.json"
+            private_roots = root / "private-roots.json"
+            private_roots.write_text(json.dumps({
+                "schema": "private-build-roots/v1",
+                "platform": "windows" if os.name == "nt" else "unix",
+                "roots": {
+                    "source": [str(ROOT)], "build": [str(root)],
+                    "cache": {"not_applicable": True}, "sdk": []
+                }
+            }), encoding="utf-8")
             output = io.StringIO()
             rcc = "/fixture-only/rcc"
             environment = dict(os.environ)
@@ -48,7 +57,8 @@ class PackageAuditInventory(unittest.TestCase):
                 report.write_text(json.dumps({"fixture_only": True, "versions": []}))
                 return subprocess.CompletedProcess(command, 0)
 
-            argv = [str(SCRIPT), "--payload", str(stage), "--out", str(out)]
+            argv = [str(SCRIPT), "--payload", str(stage), "--private-build-roots",
+                    str(private_roots), "--out", str(out)]
             with (mock.patch.object(sys, "argv", argv),
                   mock.patch.object(sys, "path", [str(ROOT / "scripts"), *sys.path]),
                   mock.patch.dict(os.environ, environment, clear=True),

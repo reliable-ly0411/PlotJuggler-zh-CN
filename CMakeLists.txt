@@ -400,10 +400,20 @@ if(PJ_BUILD_FORK_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_zh_acceptance.py)
     add_test(NAME PackageAuditInventory COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_package_audit_inventory.py)
+    add_test(NAME PrivateBuildRoots COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_private_roots.py)
+    if(NOT WIN32)
+      add_test(NAME LinuxStageElfs COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_linux_stage_elfs.py)
+    endif()
+    add_test(NAME ReleaseAssets COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_release_assets.py)
     add_test(NAME WindowsIfwPayload COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_ifw_payload.py)
     add_test(NAME NoticeInventory COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_notice_inventory.py)
+    add_test(NAME WindowsRuntimeNotices COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_runtime_notices.py)
     add_test(NAME DownloadedSourceResolution COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_downloaded_source_resolution.py)
     add_test(NAME LinuxPublicElf COMMAND ${Python3_EXECUTABLE}
@@ -412,6 +422,8 @@ if(PJ_BUILD_FORK_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_conan_pathmap.py)
     add_test(NAME WindowsConanBuildCheck COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_conan_build_check.py)
+    add_test(NAME OpenSSLOverlay COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_openssl_overlay.py)
   endif()
 
   # Keep regression executables outside bin: packaging stages that entire directory.
