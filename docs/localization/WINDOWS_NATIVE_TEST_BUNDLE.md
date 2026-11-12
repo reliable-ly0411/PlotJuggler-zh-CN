@@ -36,6 +36,17 @@ actual session behavior still require verification; a non-Windows build fails
 closed and cannot validate a Windows token. Do not change SystemTemp, ACLs,
 security settings or accounts to make it pass.
 
+Immediately after aqt installation, the producer authenticates the complete
+retained Qt archive set against the source-reviewed official filenames, sizes,
+SHA-256 values and URLs. `qt_archive_aliases` explicitly maps each of the eight
+aqt basenames to its canonical official filename. All inputs are checked before
+any rename, Qt tool execution or CMake compilation; unknown, missing, colliding,
+linked or non-regular inputs fail closed. Only authenticated files are renamed,
+and the producer log records both names and the pinned identity. Declaration
+preparation and clean replay still require the complete canonical archive set
+and independently compare extracted Qt members. This check does not replace
+full native-kit production and clean-run acceptance.
+
 Record the full source commit, tree, recursive submodule commits, workflow
 commit, configuration, actual compiler/toolset and SDK, Qt version, Conan graph
 package IDs and revisions, exact tool versions, verified source URLs and SHA-256
@@ -47,6 +58,23 @@ tools to verified official sources and hashes. Keep tool licenses and applicable
 third-party notices. Official redistributable release MSVC runtime files may be
 needed; MSVC debug runtimes must not be redistributed.
 
+For each main and standalone i18n configure, resolve the activated environment's
+real `cl.exe` within the active MSVC toolset, rejecting PATH/CWD shadowing.
+Freeze its canonical path and SHA-256 before CMake runs; both roles must match
+the same independently established producer compiler identity. Initialize both compiler cache entries with absolute `FILEPATH` options. A
+non-cache compiler assignment in a Conan toolchain is not itself a cache entry,
+and a toolchain can override the requested compiler. Immediately after configure
+and before either build, require the strict existing cache contract and exactly
+one MSVC CXX compiler in a fresh nonce-bound File API `toolchains-v1` response.
+Both must match the independently recorded compiler, including its current bytes.
+Retain only the relevant query, index and toolchains bytes and hashes, bound to
+the source commit, tree and build role. Revalidate this preflight evidence and
+capture the final configure evidence for identity and staging checks; do not
+execute generated compiler `.cmake` files or package raw CMake caches. The nonce
+query prevents a prior configure's response from satisfying a fresh role.
+Linux tiny-project tests exercise CMake cache/File API behavior, not MSVC or
+Windows runner acceptance.
+
 The exact CTest command is also a dependency. In this project `PRE_TEST`
 discovery can launch test runners for `ctest --show-only=json-v1`. Generate the
 complete JSON under the configured runtime environment in CI and retain names,
@@ -54,6 +82,20 @@ commands, properties, working directories, configuration and their source
 identity. It is not safe to execute discovery on the target until the fixture
 and session-safety gates are closed. Do not assume a previous source tree's
 case count still applies.
+
+For a failed producer step, `collect_failed_config_diagnostics.py` retains only
+fixed configure categories, counts and file digests. Its existing `phase`,
+`binding` and `exit_code` describe configure evidence only. The separate
+`build_binding` and optional `build_exit_code` describe a completed build
+receipt independently matched to the expected source commit and tree.
+`phase_boundary` distinguishes an observed configure failure, successful
+configure with no observed build, build failure, and failure after successful
+configure/build exits. The boundary requires completed schema-1 receipts;
+missing configure or contradictory receipts leave it `not-established`.
+Missing or oversized build receipts remain unverified. A successful build exit
+does not identify the later failing operation, prove kit completion, or
+establish test or package acceptance.
+Raw output, arguments, environment and paths are not copied into this report.
 
 ## Explicit inputs and offline IFW test
 

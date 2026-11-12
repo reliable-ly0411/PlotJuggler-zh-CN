@@ -488,6 +488,11 @@ for ($attempt = 1; $attempt -le 5; $attempt++) {
   if ($attempt -eq 5) { throw 'Pinned Qt installation failed after five attempts.' }
   Start-Sleep -Seconds (15 * $attempt)
 }
+# aqt retains unprefixed basenames. Authenticate the entire reviewed inventory
+# and canonicalize it before executing Qt tools or starting any compilation.
+Invoke-Checked $builderPython @('-I', '-B', (Join-Path $source 'scripts/windows/verify_native_ci_closure.py'),
+  '--normalize-qt-archives', '--root', $root,
+  '--reviewed-policy', (Join-Path $source '.github/windows-native-kit/ci-closure-policy.json'))
 Assert-RealTree $qtRoot
 foreach ($path in @('bin/qmake.exe', 'bin/lrelease.exe', 'bin/lupdate.exe', 'bin/rcc.exe',
                     'translations/qtbase_zh_CN.qm')) {
@@ -558,6 +563,8 @@ foreach ($entry in $actualRemotes) {
   }
   $seenRemotes[$entry.name] = $true
 }
+# Use the provisioned interpreter, not every python.exe now present on PATH.
+Invoke-Checked $builderPython @((Join-Path $source 'scripts/bootstrap_host_sdk.py'))
 $conanGraph = Join-Path $build 'conan-install-graph.json'
 Invoke-RecordedBuildProcess 'install' $conan @('install', $source, "--output-folder=$build", '--build=missing',
   '-r=plotjuggler-conan', '-r=conancenter', "--lockfile=$(Join-Path $source 'conan.lock')", '--lockfile-partial',
@@ -756,24 +763,45 @@ $common = @('-G', 'Ninja Multi-Config', "-DCMAKE_PREFIX_PATH=$qt", "-DCMAKE_MAKE
   "-DPython3_EXECUTABLE=$testPython", "-DPJ_TEST_PYTHON=$testPython", "-DPJ_IFW_TEST_ARCHIVE=$archive",
   "-DPJ_IFW_TEST_EXTRACTOR=$extractor", "-DPJ_IFW_TEST_EXTRACTOR_SHA256=$extractorSha",
   '-DPJ_NATIVE_BUNDLE_MODE=ON', '-DCMAKE_BUILD_TYPE=RelWithDebInfo', '-DCMAKE_POLICY_DEFAULT_CMP0141=NEW', '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded')
-Invoke-Checked $cmake (@('-S', (Join-Path $source 'pj_app/tests/i18n'), '-B', $i18n) + $common)
+# Freeze the compiler independently of Conan/CMake, with a fresh query for each
+# role. Digests remain in this producer process across configure and build.
+$planner = Join-Path $source 'scripts/windows/plan_native_stage.py'
+$compilerEvidence = @{}
+function Initialize-CompilerEvidence([string]$Role, [string]$Tree) {
+  $expectedPath = Join-Path $Tree 'native-kit/compiler/expected.json'
+  Invoke-Checked $builderPython @('-I', '-B', $planner, '--root', $root, '--logical-root', $root,
+    '--source-sha', $sha, '--source-tree', $sourceTree, '--prepare-compiler', $Role, '--output', $expectedPath) | Out-Host
+  $expectedHash = (Get-FileHash -LiteralPath $expectedPath -Algorithm SHA256).Hash.ToLowerInvariant()
+  $expected = Get-Content -LiteralPath $expectedPath -Raw | ConvertFrom-Json
+  if ([IO.Path]::GetFullPath($expected.compiler.path) -ine [IO.Path]::GetFullPath($compilerPath) -or
+      $expected.compiler.sha256 -cne $registryIdentity.compiler_sha256) {
+    throw 'The activated compiler changed from the independently established producer identity.'
+  }
+  $compilerEvidence[$Role] = @{ Expected = $expectedHash }
+  return @("-DCMAKE_C_COMPILER:FILEPATH=$($expected.compiler.path)",
+           "-DCMAKE_CXX_COMPILER:FILEPATH=$($expected.compiler.path)")
+}
+function Confirm-CompilerEvidence([string]$Role, [string]$Tree) {
+  $preflightPath = Join-Path $Tree 'native-kit/compiler/preflight.json'
+  Invoke-Checked $builderPython @('-I', '-B', $planner, '--root', $root, '--logical-root', $root,
+    '--source-sha', $sha, '--source-tree', $sourceTree, '--check-compiler', $Role,
+    '--qt-version', $qtVersion, '--compiler-expectation-sha256', $compilerEvidence[$Role].Expected,
+    '--output', $preflightPath)
+  $compilerEvidence[$Role].Preflight = (Get-FileHash -LiteralPath $preflightPath -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+$i18nCompiler = Initialize-CompilerEvidence 'i18n' $i18n
+$mainCompiler = Initialize-CompilerEvidence 'main' $build
+Invoke-Checked $cmake (@('-S', (Join-Path $source 'pj_app/tests/i18n'), '-B', $i18n) + $common + $i18nCompiler)
+Confirm-CompilerEvidence 'i18n' $i18n
 Invoke-Checked $cmake @('--build', $i18n, '--config', 'RelWithDebInfo', '--parallel', '2')
-# Query before the first main-tree configure. No existing index/query is reused.
-$apiDirectory = Join-Path $build '.cmake/api/v1/query'
-if (Test-Path -LiteralPath (Join-Path $build '.cmake/api')) { throw 'Refusing to reuse a CMake File API query tree.' }
-New-Item -ItemType Directory -Path $apiDirectory -Force | Out-Null
-foreach ($dir in @((Join-Path $build '.cmake'), (Join-Path $build '.cmake/api'),
-                    (Join-Path $build '.cmake/api/v1'), $apiDirectory)) { Assert-RealDirectory $dir }
-$query = Join-Path $apiDirectory 'codemodel-v2'
-$queryHandle = [IO.File]::Open($query, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
-$queryHandle.Dispose()
 $codemodelEvidence = Join-Path $build 'native-kit/codemodel'
 if (Test-Path -LiteralPath $codemodelEvidence) { throw 'Refusing to reuse CMake File API evidence.' }
 New-Item -ItemType Directory -Path (Join-Path $codemodelEvidence 'process') -Force | Out-Null
 $mainConfigure = @('-S', $source, '-B', $build, "-DCMAKE_TOOLCHAIN_FILE=$(Join-Path $build 'conan_toolchain.cmake')",
   '-DPJ_BUILD_TESTS=ON', '-DPJ_BUILD_DEMOS=OFF', '-DPJ_PLUGIN_FEEDBACK_ACCEPTANCE=ON',
-  "-DPJ_CSV_RUNTIME_PLUGIN=$csvPlugin") + $common
+  "-DPJ_CSV_RUNTIME_PLUGIN=$csvPlugin") + $common + $mainCompiler
 Invoke-RecordedBuildProcess 'configure' $cmake $mainConfigure $root (Join-Path $codemodelEvidence 'process') 'cmake'
+Confirm-CompilerEvidence 'main' $build
 Invoke-RecordedBuildProcess 'build' $cmake @('--build', $build, '--config', 'RelWithDebInfo', '--parallel', '2') `
   $root (Join-Path $codemodelEvidence 'process') 'cmake'
 $planner = Join-Path $source 'scripts/windows/plan_native_stage.py'
@@ -831,10 +859,10 @@ if ($mutationReceipt.schema -ne 1 -or $mutationReceipt.complete -ne $true -or
     $mutationReceipt.mutant_runner_sha256 -ceq $mutationReceipt.restored_runner_sha256) {
   throw 'Linked marker mutation receipt does not bind the actual restored source, runner and Qt preflight.'
 }
-foreach ($phase in @('mutant-build', 'mutant-test', 'original-build', 'original-test')) {
+foreach ($mutationPhase in @('mutant-build', 'mutant-test', 'original-build', 'original-test')) {
   foreach ($extension in @('.stdout.bin', '.stderr.bin', '.process.json')) {
-    if (-not (Test-Path -LiteralPath (Join-Path $mutationEvidence ($phase + $extension)) -PathType Leaf)) {
-      throw "Missing raw linked marker mutation evidence: $phase$extension"
+    if (-not (Test-Path -LiteralPath (Join-Path $mutationEvidence ($mutationPhase + $extension)) -PathType Leaf)) {
+      throw "Missing raw linked marker mutation evidence: $mutationPhase$extension"
     }
   }
 }
@@ -900,10 +928,10 @@ if (Test-Path -LiteralPath (Join-Path $markerSource 'CMakeLists.txt') -PathType 
     $cacheValid = Test-Path -LiteralPath $cache -PathType Leaf
     if ($cacheValid) {
       $lines = [IO.File]::ReadAllLines($cache)
-      $home = @($lines | Where-Object { $_ -like 'CMAKE_HOME_DIRECTORY:INTERNAL=*' })
+      $markerHomeEntries = @($lines | Where-Object { $_ -like 'CMAKE_HOME_DIRECTORY:INTERNAL=*' })
       $generator = @($lines | Where-Object { $_ -ceq 'CMAKE_GENERATOR:INTERNAL=Ninja Multi-Config' })
-      $cacheValid = $home.Count -eq 1 -and $generator.Count -eq 1 -and
-        [string]::Equals([IO.Path]::GetFullPath($home[0].Substring('CMAKE_HOME_DIRECTORY:INTERNAL='.Length)),
+      $cacheValid = $markerHomeEntries.Count -eq 1 -and $generator.Count -eq 1 -and
+        [string]::Equals([IO.Path]::GetFullPath($markerHomeEntries[0].Substring('CMAKE_HOME_DIRECTORY:INTERNAL='.Length)),
                          [IO.Path]::GetFullPath($markerSource), [StringComparison]::OrdinalIgnoreCase)
     }
     if ($cacheValid) {
@@ -946,6 +974,8 @@ foreach ($item in @(@{ Role = 'main'; Tree = $build }, @{ Role = 'i18n'; Tree = 
   Invoke-Checked $builderPython @($planner, '--root', $root, '--logical-root', $root,
     '--source-sha', $sha, '--source-tree', $sourceTree, '--capture-identity', $item.Role,
     '--qt-version', $qtVersion, '--windows-sdk', $env:WindowsSDKVersion, '--msvc', $env:VCToolsVersion,
+    '--compiler-expectation-sha256', $compilerEvidence[$item.Role].Expected,
+    '--compiler-preflight-sha256', $compilerEvidence[$item.Role].Preflight,
     '--output', (Join-Path $evidence 'build_identity.json'))
 }
 

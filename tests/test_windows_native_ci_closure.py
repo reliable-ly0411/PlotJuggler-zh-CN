@@ -274,26 +274,47 @@ class PartitionTests(unittest.TestCase):
             put('s/.github/windows-native-kit/tool-pins.json',
                 json.dumps({'artifacts':[{'name':'python','version':'3.12.10'}]}).encode())
             put(folder+'/bin/python312.dll',b'locked runtime')
-            put(folder+'/bin/DLLs/math.pyd',b'locked math')
+            put(folder+'/bin/DLLs/unicodedata.pyd',b'locked unicodedata')
             put(folder+'/bin/Lib/encodings/__init__.py',b'encoding')
             put(folder+'/bin/Lib/os.py',b'os')
             probe='b/pj_scripting/RelWithDebInfo/pj_scripting_python_tests.exe'
             home=(LOGICAL+'\\'+folder.replace('/','\\')+'\\bin').replace('\\','/')
             probe_bytes=(home+'\0'+hashlib.sha256(b'locked runtime').hexdigest()+'\0'+
-                         hashlib.sha256(b'locked math').hexdigest()+'\0').encode()
+                         hashlib.sha256(b'locked unicodedata').hexdigest()+'\0').encode()
             put(probe,probe_bytes)
             policy['approved_cases'][0]['executable']=probe
             docs['i18n']['tests'][0]['command'][0]=LOGICAL+'\\'+probe.replace('/','\\')
             paths.append(probe)
             policy['approved_cases'][0]['dynamic_files']=[
                 {'selector':'locked-cpython','artifact':'runtime-dll','role':'runtime-module'},
-                {'selector':'locked-cpython','artifact':'math-extension','role':'runtime-module'},
+                {'selector':'locked-cpython','artifact':'unicodedata-extension','role':'runtime-module'},
                 {'selector':'locked-cpython','artifact':'stdlib-encodings','role':'data'},
                 {'selector':'locked-cpython','artifact':'stdlib-os','role':'data'}]
             partition=self.derive(policy,docs,paths,coverage)
             inventory=closure.derive_dynamic_inventory(policy,partition,plan,docs,LOGICAL)
             scope=next(x for x in inventory['scopes'] if x['suite']=='i18n')
             self.assertEqual(len(scope['dynamic_files']),4)
+            extension=folder+'/bin/DLLs/unicodedata.pyd'
+            self.assertIn({'path':extension, 'sha256':hashlib.sha256(b'locked unicodedata').hexdigest(),
+                           'role':'runtime-module'},scope['dynamic_files'])
+            self.assertFalse((base/folder/'bin/DLLs/math.pyd').exists())
+            for defect in ('missing-extension', 'changed-extension', 'changed-recorded-hash', 'old-math-selector'):
+                with self.subTest(defect=defect):
+                    altered_plan=copy.deepcopy(plan); altered_policy=copy.deepcopy(policy)
+                    if defect == 'missing-extension':
+                        altered_plan['files']=[row for row in altered_plan['files'] if row['destination']!=extension]
+                    elif defect in ('changed-extension', 'changed-recorded-hash'):
+                        (base/extension).write_bytes(b'tampered unicodedata')
+                        if defect == 'changed-recorded-hash':
+                            next(row for row in altered_plan['files'] if row['destination']==extension)['sha256'] = (
+                                hashlib.sha256(b'tampered unicodedata').hexdigest())
+                    else:
+                        altered_policy['approved_cases'][0]['dynamic_files'][1]['artifact']='math-extension'
+                    try:
+                        with self.assertRaises(closure.ClosureError):
+                            closure.derive_dynamic_inventory(altered_policy,partition,altered_plan,docs,LOGICAL)
+                    finally:
+                        (base/extension).write_bytes(b'locked unicodedata')
             later_ref='cpython/3.12.17#'+'c'*32
             graph['graph']['nodes']['1']['ref']=later_ref
             for relative, data in (('b/conan-install-graph.json', json.dumps(graph).encode()),
@@ -759,6 +780,123 @@ class QtArchiveTests(unittest.TestCase):
             pin = dict(self.pin, **{field: value})
             with self.subTest(field=field), self.assertRaises(closure.ClosureError):
                 closure.authenticate_qt_archive(self.path, pin)
+
+
+class QtArchiveNormalizationTests(unittest.TestCase):
+    """Exercise all eight real names with synthetic bytes, never replacing official pins."""
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
+        self.directory = Path(self.tmp.name) / 'archives'; self.directory.mkdir()
+        self.policy = json.loads((ROOT / '.github/windows-native-kit/ci-closure-policy.json').read_text(encoding='utf-8'))
+        self.aliases = self.policy['qt_archive_aliases']
+        self.assertEqual(len(self.aliases), 8)
+        for pin in self.policy['qt_archives']:
+            local = next(k for k, v in self.aliases.items() if v == pin['file'])
+            data = ('synthetic:' + local).encode()
+            pin.update(bytes=len(data), sha256=hashlib.sha256(data).hexdigest())
+            (self.directory / local).write_bytes(data)
+        self.local = next(iter(self.aliases))
+
+    def normalize(self):
+        return closure.normalize_qt_archives(self.directory, self.policy)
+
+    def test_all_eight_names_canonicalize_and_remain_strictly_authenticatable(self):
+        receipt = self.normalize()
+        self.assertEqual({x['retained_file'] for x in receipt}, set(self.aliases))
+        self.assertEqual({p.name for p in self.directory.iterdir()}, set(self.aliases.values()))
+        for pin in self.policy['qt_archives']:
+            closure.authenticate_qt_archive(self.directory / pin['file'], pin)
+        self.assertEqual(len(closure.retained_qt_archives(self.directory, self.policy['qt_archives'])), 8)
+        self.assertEqual(len(self.normalize()), 8)  # Safe retry after partial rename.
+
+    def test_bad_inventory_fails_before_any_rename(self):
+        for mutation in ('missing', 'unknown', 'case', 'collision', 'tamper', 'size',
+                         'directory', 'symlink', 'hardlink', 'fifo'):
+            with self.subTest(mutation=mutation):
+                with tempfile.TemporaryDirectory() as tmp:
+                    original = self.directory
+                    self.directory = Path(tmp) / 'archives'
+                    shutil.copytree(original, self.directory)
+                    path = self.directory / self.local
+                    if mutation == 'missing': path.unlink()
+                    elif mutation == 'unknown': (self.directory / 'unknown.7z').write_bytes(b'?')
+                    elif mutation == 'case': path.rename(path.with_name(path.name.upper()))
+                    elif mutation == 'collision': shutil.copyfile(path, self.directory / self.aliases[self.local])
+                    elif mutation == 'tamper': path.write_bytes(b'x' * path.stat().st_size)
+                    elif mutation == 'size': path.write_bytes(b'x')
+                    elif mutation == 'directory': (self.directory / 'ignored').mkdir()
+                    elif mutation == 'symlink': (self.directory / 'link').symlink_to(path)
+                    elif mutation == 'hardlink': os.link(path, self.directory / 'link')
+                    elif mutation == 'fifo':
+                        if not hasattr(os, 'mkfifo'):
+                            self.directory = original
+                            continue
+                        os.mkfifo(self.directory / 'pipe')
+                    before = sorted(p.name for p in self.directory.iterdir())
+                    with self.assertRaises(closure.ClosureError): self.normalize()
+                    self.assertEqual(sorted(p.name for p in self.directory.iterdir()), before)
+                    self.directory = original
+
+    def test_invalid_ambiguous_or_untrusted_policies_fail_without_rename(self):
+        for mutation in ('duplicate-pin', 'case-pin', 'alias-target', 'alias-collision',
+                         'alias-ambiguous', 'alias-missing', 'unsafe-alias', 'url', 'source', 'hash', 'size'):
+            with self.subTest(mutation=mutation):
+                original = self.policy
+                self.policy = copy.deepcopy(original)
+                pins, aliases = self.policy['qt_archives'], self.policy['qt_archive_aliases']
+                if mutation == 'duplicate-pin': pins.append(copy.deepcopy(pins[0]))
+                elif mutation == 'case-pin':
+                    pins.append(copy.deepcopy(pins[0])); pins[-1]['file'] = pins[-1]['file'].upper()
+                elif mutation == 'alias-target': aliases[self.local] = 'absent.7z'
+                elif mutation == 'alias-collision': aliases[self.local.upper()] = aliases[self.local]
+                elif mutation == 'alias-ambiguous': aliases['another.7z'] = aliases[self.local]
+                elif mutation == 'alias-missing': del aliases[self.local]
+                elif mutation == 'unsafe-alias': aliases['../unsafe.7z'] = aliases.pop(self.local)
+                elif mutation == 'url': pins[0]['url'] = 'https://example.org/' + pins[0]['file']
+                elif mutation == 'source': pins[0]['source'] += '?unreviewed'
+                elif mutation == 'hash': pins[0]['sha256'] = 'invalid'
+                elif mutation == 'size': pins[0]['bytes'] = True
+                before = sorted(p.name for p in self.directory.iterdir())
+                with self.assertRaises(closure.ClosureError): self.normalize()
+                self.assertEqual(sorted(p.name for p in self.directory.iterdir()), before)
+                self.policy = original
+
+    def test_canonical_only_consumer_rejects_alias_and_missing_archive(self):
+        with self.assertRaises(closure.ClosureError):
+            closure.retained_qt_archives(self.directory, self.policy['qt_archives'])
+        self.normalize()
+        (self.directory / self.aliases[self.local]).unlink()
+        with self.assertRaises(closure.ClosureError):
+            closure.retained_qt_archives(self.directory, self.policy['qt_archives'])
+
+    def test_cli_checks_policy_identity_and_emits_all_eight_mappings(self):
+        root = Path(self.tmp.name)
+        target = root / 'd/qt-archives'; target.parent.mkdir()
+        self.directory.rename(target); self.directory = target
+        policy_path = root / 's/.github/windows-native-kit/ci-closure-policy.json'
+        policy_path.parent.mkdir(parents=True)
+        self.policy['verifier_sha256'] = '0' * 64
+        policy_path.write_text(json.dumps(self.policy), encoding='utf-8')
+        command = [__import__('sys').executable, '-I', '-B', str(Path(closure.__file__)),
+                   '--normalize-qt-archives', '--root', str(root), '--reviewed-policy', str(policy_path)]
+        bad = subprocess.run(command, capture_output=True, text=True)
+        self.assertEqual(bad.returncode, 1)
+        self.assertIn('exact source-reviewed verifier', bad.stderr)
+        self.assertEqual({p.name for p in target.iterdir()}, set(self.aliases))
+        self.policy['verifier_sha256'] = closure.digest(Path(closure.__file__))
+        policy_path.write_text(json.dumps(self.policy), encoding='utf-8')
+        good = subprocess.run(command, capture_output=True, text=True)
+        self.assertEqual(good.returncode, 0, good.stderr)
+        receipt = json.loads(good.stdout)['qt_archive_identities']
+        self.assertEqual({x['retained_file']: x['file'] for x in receipt}, self.aliases)
+
+    def test_producer_authenticates_before_qt_execution_and_build(self):
+        script = (ROOT / 'scripts/windows/prepare_native_ci.ps1').read_text(encoding='utf-8')
+        check = script.index("'--normalize-qt-archives'")
+        self.assertLess(script.index('--archive-dest $qtArchives'), check)
+        for marker in ("$actualQt =", "@('profile', 'detect'", "Invoke-Checked $cmake @('-S'"):
+            self.assertLess(check, script.index(marker))
+        self.assertIn('Invoke-Checked $builderPython', script[check - 150:check])
 
 
 class HostedPreflightTests(unittest.TestCase):
@@ -1270,6 +1408,8 @@ class CMakeProcessTests(unittest.TestCase):
         win=lambda x: LOGICAL+'\\'+x.replace('/','\\')
         plugin=win('b/csv-prefix/plugin.dll')
         self.put('b/native-kit/csv-prebuilt.json',json.dumps({'plugin':plugin}).encode())
+        self.put_json('b/native-kit/build_identity.json', {'source_sha': SHA, 'source_tree': TREE,
+                      'role': 'main', 'compiler': {'path': r'C:\VS\bin\cl.exe', 'sha256': 'c' * 64}})
         qt=win('q/6.12.0/msvc2022_64'); ninja=win('t/builder/Scripts/ninja.exe')
         commands={'configure':[win('t/cmake/bin/cmake.exe'),'-S',win('s'),'-B',win('b'),
                    '-DCMAKE_TOOLCHAIN_FILE='+win('b/conan_toolchain.cmake'),'-DPJ_BUILD_TESTS=ON','-DPJ_BUILD_DEMOS=OFF',
@@ -1278,7 +1418,8 @@ class CMakeProcessTests(unittest.TestCase):
                    '-DPJ_TEST_PYTHON='+win('t/python/python.exe'),'-DPJ_IFW_TEST_ARCHIVE='+win('t/ifw/ifw.7z'),
                    '-DPJ_IFW_TEST_EXTRACTOR='+win('t/7z/7za.exe'),'-DPJ_IFW_TEST_EXTRACTOR_SHA256='+self.files['t/7z/7za.exe'],
                    '-DPJ_NATIVE_BUNDLE_MODE=ON','-DCMAKE_BUILD_TYPE=RelWithDebInfo','-DCMAKE_POLICY_DEFAULT_CMP0141=NEW',
-                   '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded'],
+                   '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded',
+                   r'-DCMAKE_C_COMPILER:FILEPATH=C:\VS\bin\cl.exe', r'-DCMAKE_CXX_COMPILER:FILEPATH=C:\VS\bin\cl.exe'],
                   'build':[win('t/cmake/bin/cmake.exe'),'--build',win('b'),'--config','RelWithDebInfo','--parallel','2']}
         for phase in ('configure','build'):
             self.put(self.base+phase+'.stdout.bin', b'runtime_catalog_language_test.cpp.obj runtime_catalog_language_test.exe' if phase=='build' else b'')
@@ -1299,6 +1440,15 @@ class CMakeProcessTests(unittest.TestCase):
                     SHA,TREE,LOGICAL,'6.12.0',{('main','RuntimeCatalogLanguageTest')})
     def test_exact_query_commands_and_selected_build_log(self):
         self.assertIn('raw producer',self.verify()['scope'])
+    def test_changed_missing_or_relative_compiler_pin_fails(self):
+        for value in (None, '-DCMAKE_CXX_COMPILER:FILEPATH=cl.exe', r'-DCMAKE_CXX_COMPILER:FILEPATH=C:\Other\cl.exe'):
+            with self.subTest(value=value):
+                self.setUp(); path = self.base + 'configure.process.json'; record = copy.deepcopy(self.docs[path])
+                if value is None: record['argv'].pop()
+                else: record['argv'][-1] = value
+                self.put_json(path, record)
+                with self.assertRaises(closure.ClosureError): self.verify()
+
     def test_wrong_command_query_or_missing_real_link_marker_fails(self):
         for defect in ('query','args','exit','log'):
             with self.subTest(defect=defect):

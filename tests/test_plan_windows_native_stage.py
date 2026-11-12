@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import types
 import unittest
 from unittest import mock
 import zipfile
@@ -1067,6 +1068,8 @@ class CandidateTests(unittest.TestCase):
             record = {'schema': 1, 'role': role, 'source_sha': self.sha, 'source_tree': self.tree,
                       'configuration': 'RelWithDebInfo', 'source_dir': source_dir, 'build_tree': tree.name,
                       'native_bundle_mode': True, 'cmake_cache_sha256': hashlib.sha256(cache).hexdigest()}
+            compiler, hashes = seed_compiler_fixture(self.root, self.logical, self.sha, self.tree, role)
+            record.update(compiler=compiler['compiler'], compiler_evidence=hashes)
             (tree / 'native-kit/build_identity.json').write_text(json.dumps(record), encoding='utf-8')
         dialog = importlib.util.spec_from_file_location('dialog_test_contract', self.source / 'packaging/localization/audit_file_dialog_results.py')
         dialog_module = importlib.util.module_from_spec(dialog); dialog.loader.exec_module(dialog_module)
@@ -1089,7 +1092,8 @@ class CandidateTests(unittest.TestCase):
         candidate = self.candidate()
         main_names = candidate.add_discovery('main', full); i18n_names = candidate.add_discovery('i18n', i18n)
         candidate.add_ctest_metadata()
-        plan, report = candidate.finish({'main': main_names, 'i18n': i18n_names})
+        with mock.patch.object(planner, 'actual_compiler_identity', return_value=compiler['compiler']):
+            plan, report = candidate.finish({'main': main_names, 'i18n': i18n_names})
         run_plan = json.loads((self.build / 'native-kit/run-plan.json').read_text(encoding='utf-8'))
         launcher = planner.load_module('test_derived_launcher', 'run_native_test_bundle.py')
         launcher.validate_plan(run_plan, self.sha, self.tree, 'RelWithDebInfo')
@@ -1107,9 +1111,12 @@ class CandidateTests(unittest.TestCase):
         for name in ('file-dialog-discovery.json', 'csv-discovery.json', 'run-plan.json', 'allowed-outputs.json'):
             (self.build / 'native-kit' / name).unlink()
         (self.i18n / 'native-kit/allowed-outputs.json').unlink()
-        for path in (runner, self.build / 'CMakeCache.txt'):
+        for path, reason in ((runner, 'CSV identity file differs from the actual runner bytes'),
+                             (self.build / 'CMakeCache.txt', 'build identity differs from the actual main CMake cache')):
             original = path.read_bytes(); path.write_bytes(original + b'tampered')
-            with self.subTest(path=path), self.assertRaises(planner.PlanError):
+            with self.subTest(path=path), \
+                    mock.patch.object(planner, 'actual_compiler_identity', return_value=compiler['compiler']), \
+                    self.assertRaisesRegex(planner.PlanError, reason):
                 candidate.add_run_plan_candidate()
             self.assertFalse((self.build / 'native-kit/run-plan.json').exists())
             path.write_bytes(original)
@@ -1519,6 +1526,230 @@ class BuildIdentityCacheTests(unittest.TestCase):
         for raw in ('NAME:STRING=x\nNAME:FILEPATH=y\n', 'NOT_A_CACHE_ENTRY\n'):
             with self.subTest(raw=raw), self.assertRaises(planner.PlanError):
                 planner.cache_values(raw)
+
+
+def seed_compiler_fixture(root, logical, sha, tree, role, cache=None):
+    """Synthetic Windows File API evidence, never a claim of native execution."""
+    root, context = planner.compiler_context(root, logical, sha, tree, role)
+    build = context['build_tree']
+    base = root / build / 'native-kit/compiler'
+    base.mkdir(parents=True, exist_ok=True)
+    client = 'client-native-compiler-' + role + '-' + '1' * 32
+    compiler = {'path': r'C:\VS\bin\cl.exe', 'sha256': 'c' * 64}
+    query_rel = build + '/.cmake/api/v1/query/' + client + '/toolchains-v1'
+    query = root / query_rel
+    query.parent.mkdir(parents=True, exist_ok=True); query.write_bytes(b'')
+    expected = {**context, 'compiler': compiler, 'client': client,
+                'query': {'path': query_rel, 'sha256': hashlib.sha256(b'').hexdigest()}}
+    planner.write_new(base / 'expected.json', expected)
+    reply = root / build / '.cmake/api/v1/reply'; reply.mkdir()
+    response = {'kind': 'toolchains', 'version': {'major': 1, 'minor': 0}, 'jsonFile': 'toolchains-v1-test.json'}
+    index = {'cmake': {'generator': {'name': 'Ninja Multi-Config', 'multiConfig': True}},
+             'objects': [response], 'reply': {client: {'toolchains-v1': response}}}
+    model = {'kind': 'toolchains', 'version': {'major': 1, 'minor': 0},
+             'toolchains': [{'language': 'CXX', 'compiler': {'path': compiler['path'], 'id': 'MSVC', 'version': '19.44'}}]}
+    planner.write_new(reply / 'index-test.json', index); planner.write_new(reply / response['jsonFile'], model)
+    if cache is not None:
+        (root / build / 'CMakeCache.txt').write_text(''.join(k + ':STRING=' + v + '\n' for k, v in cache.items()), encoding='utf-8')
+    expected_hash = planner.digest(base / 'expected.json')
+    hashes = {'expected_sha256': expected_hash}
+    with mock.patch.object(planner, 'actual_compiler_identity', return_value=compiler), \
+            mock.patch.object(planner, 'verified_source_state'):
+        for phase in ('preflight', 'final'):
+            record = planner.capture_compiler_evidence(root, logical, sha, tree, role, '6.12.0', expected_hash, phase)
+            planner.write_new(base / (phase + '.json'), record)
+            hashes[phase + '_sha256'] = planner.digest(base / (phase + '.json'))
+    return expected, hashes
+
+
+class CompilerEvidenceTests(BuildIdentityCacheTests):
+    def setUp(self):
+        super().setUp()
+        self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
+        self.sha = '123456789abc' + 'a' * 28; self.tree = 'b' * 40
+        self.root = Path(self.temp.name).resolve() / 'n' / self.sha[:12]
+        self.root.mkdir(parents=True)
+        # Exercise the real native-root check on Windows instead of bypassing it.
+        if os.name == 'nt':
+            self.logical = str(self.root)
+        self.expected, self.hashes = seed_compiler_fixture(self.root, self.logical, self.sha, self.tree,
+                                                         'main', self.cache('main'))
+        self.base = self.root / 'b/native-kit/compiler'
+        self.reply = self.root / 'b/.cmake/api/v1/reply'
+
+    def verify(self, live=False, phase='final', role='main'):
+        return planner.verify_compiler_evidence(self.root, self.logical, self.sha, self.tree, role,
+            self.hashes['expected_sha256'], self.hashes[phase + '_sha256'], phase, live=live)
+
+    def inspect(self):
+        return planner.inspect_compiler_reply(self.root, self.logical, self.expected,
+                                              'b/.cmake/api/v1/reply', self.expected['query']['path'])
+
+    def test_fixture_uses_source_bound_physical_root(self):
+        self.assertEqual(self.root.name, self.sha[:12])
+        self.assertEqual(self.root.parent.name, 'n')
+        if os.name == 'nt':
+            self.assertEqual(str(self.root), self.logical)
+        with mock.patch.object(planner.audit, 'check_root', wraps=planner.audit.check_root) as checked:
+            planner.compiler_context(self.root, self.logical, self.sha, self.tree, 'main')
+        checked.assert_called_once_with(self.root, self.logical, require_exact=True)
+
+    def test_native_root_mismatch_remains_rejected(self):
+        wrong = self.logical.replace('123456789abc', '000000000000')
+        with mock.patch.object(planner.audit, 'os', types.SimpleNamespace(name='nt')), \
+                self.assertRaisesRegex(planner.audit.AuditError, 'exact build-time root'):
+            planner.audit.check_root(self.root, wrong, require_exact=True)
+
+    def test_both_roles_retain_minimal_nonce_bound_bytes(self):
+        self.assertEqual(len(self.verify()[1]), 5)
+        other, hashes = seed_compiler_fixture(self.root, self.logical, self.sha, self.tree, 'i18n', self.cache('i18n'))
+        self.assertNotEqual(other['client'], self.expected['client'])
+        self.assertEqual(len(planner.verify_compiler_evidence(self.root, self.logical, self.sha, self.tree, 'i18n',
+                         hashes['expected_sha256'], hashes['final_sha256'], 'final')[1]), 5)
+        with mock.patch.object(planner, 'actual_compiler_identity', return_value=self.expected['compiler']):
+            self.verify(live=True)
+
+    def test_missing_or_relative_cache_compiler_remains_rejected(self):
+        for role in ('main', 'i18n'):
+            for path in ('', 'cl', 'cl.exe', r'bin\cl.exe'):
+                values = self.cache(role); values['CMAKE_CXX_COMPILER'] = path
+                with self.subTest(role=role, path=path), self.assertRaises(planner.PlanError):
+                    planner.validate_build_cache(values, self.logical, role, self.qt_version)
+
+    def test_expectation_hash_and_source_role_are_immutable(self):
+        original = (self.base / 'expected.json').read_bytes()
+        for key, value in (('role', 'i18n'), ('source_sha', '0' * 40), ('source_tree', '0' * 40),
+                           ('client', 'client-native-compiler-main-' + '2' * 32)):
+            record = json.loads(original); record[key] = value
+            (self.base / 'expected.json').write_text(json.dumps(record), encoding='utf-8')
+            with self.subTest(key=key), self.assertRaises(planner.PlanError): self.verify()
+        (self.base / 'expected.json').write_bytes(original)
+        with self.assertRaises(planner.PlanError):
+            planner.verify_compiler_evidence(self.root, self.logical, '123456789abc' + '0' * 28, self.tree, 'main',
+                self.hashes['expected_sha256'], self.hashes['final_sha256'], 'final')
+
+    def test_actual_and_cache_agreeing_on_override_does_not_pass(self):
+        model_path = self.reply / 'toolchains-v1-test.json'
+        model = json.loads(model_path.read_text(encoding='utf-8')); model['toolchains'][0]['compiler']['path'] = r'C:\Other\cl.exe'
+        model_path.write_text(json.dumps(model), encoding='utf-8')
+        values = self.cache('main'); values['CMAKE_CXX_COMPILER'] = r'C:\Other\cl.exe'
+        (self.root / 'b/CMakeCache.txt').write_text(''.join(k + ':STRING=' + v + '\n' for k, v in values.items()), encoding='utf-8')
+        with mock.patch.object(planner, 'actual_compiler_identity', return_value=self.expected['compiler']), \
+                mock.patch.object(planner, 'verified_source_state'), self.assertRaisesRegex(planner.PlanError, 'preconfigure expectation'):
+            planner.capture_compiler_evidence(self.root, self.logical, self.sha, self.tree, 'main', '6.12.0',
+                                             self.hashes['expected_sha256'], 'final')
+        with self.assertRaisesRegex(planner.PlanError, 'preconfigure expectation'): self.inspect()
+
+    def test_malformed_ambiguous_wrong_id_and_wrong_path_fail(self):
+        path = self.reply / 'toolchains-v1-test.json'; original = path.read_bytes()
+        for defect in ('missing', 'duplicate', 'wrong-id', 'relative', 'escape', 'device', 'non-object', 'bad-version'):
+            model = json.loads(original); row = model['toolchains'][0]
+            if defect == 'missing': model['toolchains'] = []
+            elif defect == 'duplicate': model['toolchains'].append(row)
+            elif defect == 'wrong-id': row['compiler']['id'] = 'GNU'
+            elif defect == 'relative': row['compiler']['path'] = 'cl.exe'
+            elif defect == 'escape': row['compiler']['path'] = r'C:\Other\..\VS\bin\cl.exe'
+            elif defect == 'device': row['compiler']['path'] = r'\\?\C:\VS\bin\cl.exe'
+            elif defect == 'non-object': model['toolchains'].append(None)
+            else: model['version']['major'] = 2
+            path.write_text(json.dumps(model), encoding='utf-8')
+            with self.subTest(defect=defect), self.assertRaises(planner.PlanError): self.inspect()
+        path.write_bytes(original)
+
+    def test_stale_ambiguous_escaping_and_unbound_index_fail(self):
+        path = self.reply / 'index-test.json'; original = path.read_bytes()
+        for defect in ('stale', 'duplicate-object', 'unbound', 'escape', 'wrong-generator', 'error'):
+            index = json.loads(original); response = index['reply'][self.expected['client']]['toolchains-v1']
+            if defect == 'stale': index['reply']['client-native-compiler-main-' + '2' * 32] = index['reply'].pop(self.expected['client'])
+            elif defect == 'duplicate-object': index['objects'].append(index['objects'][0])
+            elif defect == 'unbound': index['objects'] = []
+            elif defect == 'escape': response['jsonFile'] = '../toolchains-v1-test.json'; index['objects'] = [response]
+            elif defect == 'wrong-generator': index['cmake']['generator']['name'] = 'Ninja'
+            else: response['error'] = 'unsupported'
+            path.write_text(json.dumps(index), encoding='utf-8')
+            with self.subTest(defect=defect), self.assertRaises(planner.PlanError): self.inspect()
+        path.write_bytes(original)
+        (self.reply / 'index-other.json').write_bytes(original)
+        with self.assertRaisesRegex(planner.PlanError, 'exactly one'): self.inspect()
+
+    def test_duplicate_json_keys_and_nonempty_query_fail(self):
+        path = self.reply / 'index-test.json'; original = path.read_bytes()
+        path.write_text('{"reply": {}, "reply": {}}', encoding='utf-8')
+        with self.assertRaisesRegex(planner.PlanError, 'duplicate'): self.inspect()
+        path.write_bytes(original)
+        (self.root / self.expected['query']['path']).write_bytes(b'changed')
+        with self.assertRaisesRegex(planner.PlanError, 'query changed'): self.inspect()
+
+    def test_retained_and_live_tampering_fail(self):
+        for relative in ('expected.json', 'final.json', 'final/toolchains-v1',
+                         'final/reply/index-test.json', 'final/reply/toolchains-v1-test.json'):
+            path = self.base / relative; original = path.read_bytes(); path.write_bytes(original + b' ')
+            with self.subTest(relative=relative), self.assertRaises(planner.PlanError): self.verify()
+            path.write_bytes(original)
+        with mock.patch.object(planner, 'actual_compiler_identity', return_value={**self.expected['compiler'], 'sha256': 'd' * 64}), \
+                self.assertRaisesRegex(planner.PlanError, 'live compiler evidence changed'):
+            self.verify(live=True)
+        with mock.patch.object(planner, 'actual_compiler_identity', return_value=self.expected['compiler']):
+            (self.root / 'b/CMakeCache.txt').write_text('tampered', encoding='utf-8')
+            with self.assertRaisesRegex(planner.PlanError, 'live compiler evidence changed'): self.verify(live=True)
+
+    @unittest.skipIf(os.name == 'nt', 'symlink fixture uses POSIX creation privileges')
+    def test_linked_reply_and_query_fail(self):
+        for path in (self.reply / 'toolchains-v1-test.json', self.root / self.expected['query']['path']):
+            original = path.read_bytes(); outside = self.root / 'outside'; outside.write_bytes(original)
+            path.unlink(); path.symlink_to(outside)
+            with self.assertRaises(planner.PlanError): self.inspect()
+            path.unlink(); path.write_bytes(original)
+
+    def test_installed_compiler_allows_hardlinks_but_rejects_reparse_or_mid_hash_change(self):
+        path = mock.Mock()
+        path.parent = mock.Mock()
+        path.resolve.return_value = self.expected['compiler']['path']
+        normal = types.SimpleNamespace(st_mode=planner.stat.S_IFREG | 0o755, st_nlink=2,
+                                       st_dev=1, st_ino=2, st_size=10, st_mtime_ns=20, st_file_attributes=0)
+        path.lstat.return_value = normal
+        with mock.patch.object(planner, 'os', types.SimpleNamespace(name='nt')), \
+                mock.patch.object(planner, 'Path', return_value=path), \
+                mock.patch.object(planner.audit, 'check_root'), \
+                mock.patch.object(planner.audit, 'check_no_named_streams'), \
+                mock.patch.object(planner, 'digest', return_value='c' * 64):
+            self.assertEqual(planner.actual_compiler_identity(self.expected['compiler']['path']), self.expected['compiler'])
+            for change in ({'st_file_attributes': 0x400}, {'st_size': 11}, {'st_ino': 3}):
+                changed = types.SimpleNamespace(**{**vars(normal), **change})
+                path.lstat.side_effect = [normal, changed]
+                with self.subTest(change=change), self.assertRaises(planner.PlanError):
+                    planner.actual_compiler_identity(self.expected['compiler']['path'])
+            path.lstat.side_effect = [types.SimpleNamespace(**{**vars(normal), 'st_file_attributes': 0x400})]
+            with self.assertRaisesRegex(planner.PlanError, 'real regular file'):
+                planner.actual_compiler_identity(self.expected['compiler']['path'])
+
+    def test_activated_toolset_rejects_cwd_or_path_shadowing(self):
+        toolset = r'C:\VS\Tools\MSVC\14.44.35207'
+        path = toolset + r'\bin\Hostx64\x64\cl.exe'
+        environment = {'VCToolsInstallDir': toolset + '\\', 'VCToolsVersion': '14.44.35207',
+                       'VSCMD_ARG_TGT_ARCH': 'x64', 'VSCMD_ARG_HOST_ARCH': 'x64'}
+        with mock.patch.dict(os.environ, environment, clear=True):
+            for found in (r'C:\source\cl.exe', r'C:\Other\bin\cl.exe', 'cl.exe', None):
+                with self.subTest(found=found), mock.patch.object(planner.shutil, 'which', return_value=found), \
+                        self.assertRaises(planner.PlanError): planner.activated_compiler_path()
+            with mock.patch.object(planner.shutil, 'which', return_value=path):
+                self.assertEqual(planner.activated_compiler_path(), path)
+                for key, value in (('VCToolsVersion', '14.43.11111'), ('VSCMD_ARG_TGT_ARCH', 'x86'),
+                                   ('VCToolsInstallDir', r'outside\14.44.35207')):
+                    with mock.patch.dict(os.environ, {key: value}), self.assertRaises(planner.PlanError):
+                        planner.activated_compiler_path()
+
+    def test_preparation_refuses_reused_trees_and_resolves_independently(self):
+        with mock.patch.object(planner, 'verified_source_state'), \
+                mock.patch.object(planner, 'activated_compiler_path', return_value=self.expected['compiler']['path']) as activated, \
+                mock.patch.object(planner, 'actual_compiler_identity', return_value=self.expected['compiler']) as actual:
+            with self.assertRaisesRegex(planner.PlanError, 'unconfigured'):
+                planner.prepare_compiler_query(self.root, self.logical, self.sha, self.tree, 'main')
+            record = planner.prepare_compiler_query(self.root, self.logical, self.sha, self.tree, 'i18n')
+            self.assertEqual(record['compiler'], self.expected['compiler'])
+            activated.assert_called_with(); actual.assert_called_with(self.expected['compiler']['path'])
+            self.assertTrue((self.root / record['query']['path']).is_file())
+            self.assertFalse((self.root / 'i/.cmake/api/v1/query/codemodel-v2').exists())
 
 
 if __name__ == '__main__':

@@ -16,6 +16,71 @@ The official registry snapshot and its artifact checksums are frozen in
 The Linux-only ROS distro-specific binaries keep their upstream external-runtime
 contract. The optional GPL retro game payload is not included in this candidate.
 
+## Windows software-renderer notices
+
+The Windows payload retains the original Mesa 11.2.2 and LLVM 3.6.2 notices in
+`share/licenses/Windows-Mesa-llvmpipe`. `windows-mesa-notices.json` binds this
+material to the reviewed `opengl32sw.dll` size and SHA-256, immutable upstream
+source revisions, and the byte count and SHA-256 of each retained source file.
+The original HTML and source-file notices are copied byte for byte, not replaced
+by generic license names or notices from a modern LLVM release. Reference source
+files have a `.txt` suffix so they are not compiled; their contents are unchanged.
+The source set includes directly related VMware Gallium/llvmpipe notices and the
+LLVM Support notices named by its license. This is not a claim of a complete
+linked-object audit or a redistributable SDK/source bundle.
+
+Collection rejects unknown renderer bytes, missing/extra source notices and
+changed notice bytes. Both Windows product formats use the same staged notices;
+the installer staging check and clean-package verifier independently compare the
+actual deployed DLL and notice inventory with the checked-in lock, not merely a
+self-reported package hash manifest. Updating the renderer requires reviewing
+its notices and lock together. Original notice files are exempt from whitespace
+rewriting only; the tests still verify their complete source hashes.
+
+### System D3D compiler proposal and validation boundary
+
+Localized Qt 6.12 Windows products target x64 Windows 10 1809 (build 17763)
+or newer, including Windows 11, matching Qt's supported-platform floor:
+<https://doc.qt.io/qt-6/supported-platforms.html>. They depend on the operating
+system's `d3dcompiler_47.dll` and its `D3DCompile` export. Windows 8.1/10 include
+this DLL; this proposal does not extend support to older systems or promise that
+a stripped/damaged Windows image will work. See Microsoft's redistributable
+package guidance: <https://www.nuget.org/packages/Microsoft.DXSDK.D3DX/9.29.952.7>.
+
+The localized installer uses the official `--no-system-d3d-compiler` option on
+both windeployqt passes (application and plugins), not post-deployment deletion.
+Other installer callers without `ExtraPrefix` retain their previous behavior.
+The shared stage check and clean-package verifier reject any bundled
+`d3dcompiler*.dll`, including nested/case-varied copies. Clean Windows acceptance
+also enforces the OS build floor and resolves `D3DCompile` from compiler 47 with
+`LOAD_LIBRARY_SEARCH_SYSTEM32`; it never falls back to PATH or a local copy.
+The operating system supplies and services this dependency. No new Microsoft
+SDK agreement or restrictive application terms are introduced by this proposal.
+
+Fixed Qt 6.12 source evidence at commit
+`025bdad181de241e81bf853c8a2d7bf3d19261a9`:
+
+- [windeployqt option](https://github.com/qt/qtbase/blob/025bdad181de241e81bf853c8a2d7bf3d19261a9/src/tools/windeployqt/main.cpp)
+- [RHI compiler resolution](https://github.com/qt/qtbase/blob/025bdad181de241e81bf853c8a2d7bf3d19261a9/src/gui/rhi/qrhid3dhelpers.cpp)
+- [QSystemLibrary system-directory default](https://github.com/qt/qtbase/blob/025bdad181de241e81bf853c8a2d7bf3d19261a9/src/corelib/plugin/qsystemlibrary_p.h)
+
+The original ce4 portable ZIP (SHA-256
+`c8525c91a0114c49ba20693aabffa5fbda080b601bdc8fccec9e867675752628`)
+was inspected read-only: 91 PE files, 968 ordinary import descriptors and eight
+delay-import descriptors, with no parse errors and no D3DCompiler imports.
+Compiler-name strings occurred only in Qt6Gui and the compiler DLL itself.
+Combined with Qt's source, this supports preparing the change; static inspection
+is not a substitute for runtime testing of the changed packages.
+
+Application/Qt binary code and the optional standalone native test kit are not
+modified. The new product packages have NOT yet been built or accepted. After
+review and approval, a changed candidate must use the normal source-bound
+package/native/clean-acceptance workflow, including Windows rendering and both
+installer/portable checks. Old accepted binaries cannot be relabelled as a
+new-source build. Existing publication and final visual-approval gates remain
+unchanged. Removing the redistributed compiler from future products does not
+retroactively establish that old ce4 packages met SDK downstream conditions.
+
 ## Linux packaging tool lock
 
 `linux-tools-lock.json` records the official repository, release/asset IDs,
@@ -95,6 +160,20 @@ failure; the verifier never deletes that directory. Relative, nonempty, file,
 root, parent-traversal, symbolic-link and junction paths are rejected. Omitting the option
 keeps the automatically cleaned CI temporary directory.
 Windows capture uses Pillow ImageGrab; it is not an application screenshot CLI.
+Capture selects the launched process's unique main window, not a matching title.
+Windows uses physical per-monitor coordinates, the taskbar-excluding work area,
+and the window's actual minimum size before moving/resizing it. A window that
+cannot fit, changes identity, or remains obscured fails acceptance; capture does
+not change display modes, DPI scale, or application settings. Linux capture is
+limited to the dedicated unmanaged 1920×1080 Xvfb display. It verifies the GUI's
+isolated process session, exact profile argument and packaged executable bytes
+(including an AppImage child PID), then moves the original-size window without
+shrinking it. `xdotool` and `x11-utils` are required in the clean container.
+Both platforms recheck geometry/visibility around the unscaled whole-desktop
+screenshot and retain `gui-<language>.geometry.json` with its PNG hash. Missing
+helpers, ambiguous windows, clipping, or inconsistent image dimensions fail
+closed. These checks establish capture completeness, not full widget usability;
+the original screenshots still require visual review.
 
 `verify_package.py` checks package provenance, CJK font bytes, legal texts, the
 real app `--version`, Python, and every expected plugin/version. It restores

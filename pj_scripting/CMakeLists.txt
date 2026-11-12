@@ -308,17 +308,19 @@ if(PJ_BUILD_TESTS)
     if(WIN32 AND PJ_NATIVE_BUNDLE_MODE)
       # The driver and the embedded Conan interpreter can share a DLL basename.
       # This test checks the actual module and stdlib in a real scripting runner.
+      # Windows CPython builds math into python312.dll; unicodedata is a
+      # separately loaded stdlib extension in the locked package.
       if(NOT _pj_python_home_is_conan OR NOT EXISTS "${_pj_python_home_define}/python312.dll" OR
-         NOT EXISTS "${_pj_python_home_define}/DLLs/math.pyd")
+         NOT EXISTS "${_pj_python_home_define}/DLLs/unicodedata.pyd")
         message(FATAL_ERROR "Native test kit requires its locked Conan CPython runtime")
       endif()
       file(SHA256 "${_pj_python_home_define}/python312.dll" _pj_expected_python_sha256)
-      file(SHA256 "${_pj_python_home_define}/DLLs/math.pyd" _pj_expected_math_sha256)
+      file(SHA256 "${_pj_python_home_define}/DLLs/unicodedata.pyd" _pj_expected_unicodedata_sha256)
       target_sources(pj_scripting_python_tests PRIVATE tests/python_runtime_identity_win_test.cpp)
       target_compile_definitions(pj_scripting_python_tests PRIVATE
         PJ_NATIVE_EXPECTED_PYTHON_HOME="${_pj_python_home_define}"
         PJ_NATIVE_EXPECTED_PYTHON_SHA256="${_pj_expected_python_sha256}"
-        PJ_NATIVE_EXPECTED_MATH_SHA256="${_pj_expected_math_sha256}")
+        PJ_NATIVE_EXPECTED_UNICODEDATA_SHA256="${_pj_expected_unicodedata_sha256}")
       target_link_libraries(pj_scripting_python_tests PRIVATE bcrypt)
     endif()
 

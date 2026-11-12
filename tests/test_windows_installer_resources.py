@@ -78,12 +78,36 @@ class InstallerResourceSmokeTests(unittest.TestCase):
             mpl = b'SYNTHETIC staged MPL\n'
             (payload / 'share/licenses/Qt-LGPL.txt').write_bytes(canonical)
             (meta / 'license_mpl.txt').write_bytes(mpl)
-            script = (f"$ErrorActionPreference='Stop'; $stageData={quote(payload)}; "
-                      f"$stageMeta={quote(meta)}; $pkgSrc={quote(root / 'packages/io.plotjuggler.application')}; "
-                      f"$installerRoot={quote(root)}; $ExtraPrefix=$true;\n" + block)
-            run = subprocess.run([shell, '-NoProfile', '-NonInteractive', '-Command', script],
-                                 capture_output=True, text=True, timeout=30)
-            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            # This deliberately isolated tail runs via -Command, not -File.
+            # Supply the real builder root and mock ONLY its external verifier;
+            # this synthetic payload is not a distributable app/renderer stage.
+            # Verify the exact helper/arguments and propagate its failure before
+            # testing the successful notice-copy/portable path. The verifier's
+            # real byte/manifest checks are covered by test_windows_mesa_notices.
+            setup = (f"$ErrorActionPreference='Stop'; $stageData={quote(payload)}; "
+                     f"$stageMeta={quote(meta)}; $pkgSrc={quote(root / 'packages/io.plotjuggler.application')}; "
+                     f"$installerRoot={quote(root)}; $PSScriptRoot={quote(root)}; $ExtraPrefix=$true;\n"
+                     f"$expectedHelper={quote(ROOT / 'packaging/localization/windows_mesa_notices.py')};\n"
+                     "$script:helperCalls=0;\n"
+                     "function Die([string]$message) { throw $message }\n"
+                     "function python {\n"
+                     "  if ($args.Count -ne 3 -or [IO.Path]::GetFullPath($args[0]) -cne $expectedHelper "
+                     "-or $args[1] -cne '--prefix' -or $args[2] -cne $stageData) "
+                     "{ throw 'Unexpected external verifier invocation' }\n"
+                     "  $script:helperCalls++; Write-Output 'EXACT_MESA_GATE_CALLED';\n"
+                     "  $global:LASTEXITCODE=$helperExit\n"
+                     "}\n")
+            for exit_code in (23, 0):
+                script = (setup + f"$helperExit={exit_code};\n" + block +
+                          "\nif ($helperCalls -ne 1) { throw 'Expected exactly one Mesa gate call' }")
+                run = subprocess.run([shell, '-NoProfile', '-NonInteractive', '-Command', script],
+                                     capture_output=True, text=True, timeout=30)
+                self.assertEqual(run.stdout.count('EXACT_MESA_GATE_CALLED'), 1, run.stdout + run.stderr)
+                if exit_code:
+                    self.assertNotEqual(run.returncode, 0, run.stdout + run.stderr)
+                    self.assertIn('Windows Mesa notice verification failed.', run.stderr)
+                else:
+                    self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
             archive = stage / 'portable.zip'
             command = [shell, '-NoProfile', '-NonInteractive', '-File', str(root / 'build_windows_portable.ps1'),
                        '-StageDir', str(stage), '-OutFile', str(archive)]

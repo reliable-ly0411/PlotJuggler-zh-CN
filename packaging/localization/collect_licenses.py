@@ -8,9 +8,10 @@ import re
 import shutil
 
 from host_versions import read_host_versions
+from windows_mesa_notices import collect_windows_mesa_notices
 
 
-def collect(root, build, qt, licenses, download):
+def collect(root, build, qt, licenses, download, windows=False):
     """Retain full dependency notices; never substitute a license identifier."""
     graph = json.loads((build / 'conan-graph.json').read_text(encoding='utf-8'))['graph']['nodes']
     host = read_host_versions(root)
@@ -22,6 +23,13 @@ def collect(root, build, qt, licenses, download):
     qt_config = (qt / 'mkspecs/qconfig.pri').read_text(encoding='utf-8')
     if re.findall(r'^QT_VERSION\s*=\s*(\S+)\s*$', qt_config, re.MULTILINE) != [host['qt_version']]:
         raise ValueError('Selected Qt SDK differs from versions.env pin')
+    pin = json.loads((root / 'cmake/host-sdk-source.json').read_text(encoding='utf-8'))
+    exact_sdk = [node['ref'].split('%', 1)[0] for node in graph.values()
+                 if node.get('context') != 'build' and (node.get('ref') or '').startswith('plotjuggler_sdk/')]
+    if exact_sdk != [f"plotjuggler_sdk/{pin['version']}#{pin['recipe_revision']}"]:
+        raise ValueError('Resolved host SDK recipe differs from reviewed snapshot')
+    licenses.mkdir(parents=True, exist_ok=True)
+    (licenses / 'host-sdk-source.json').write_text(json.dumps(pin, indent=2) + '\n', encoding='utf-8')
     components = []
     for node in graph.values():
         ref = node.get('ref')
@@ -91,6 +99,8 @@ def collect(root, build, qt, licenses, download):
     # The generic LGPL text is the official unmodified Qt license, not the
     # historical PJ3 installer license with a different attribution header.
     shutil.copy2(qt_dest / 'LGPL-3.0-only.txt', licenses / 'Qt-LGPL.txt')
+    if windows:
+        components.append(collect_windows_mesa_notices(root, qt, licenses))
     files = [{'path': p.relative_to(licenses).as_posix(), 'sha256': hashlib.sha256(p.read_bytes()).hexdigest()}
              for p in sorted(licenses.rglob('*')) if p.is_file()]
     (licenses / 'DEPENDENCIES.json').write_text(json.dumps({'components': components, 'files': files},

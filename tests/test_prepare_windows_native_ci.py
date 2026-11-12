@@ -186,6 +186,13 @@ if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath (Join-Path $env:NEW_REPO '.g
             result = subprocess.run([shell, '-NoProfile', '-NonInteractive', '-File', str(script)], env=env, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_sdk_bootstrap_uses_exact_builder_interpreter(self):
+        call = "Invoke-Checked $builderPython @((Join-Path $source 'scripts/bootstrap_host_sdk.py'))"
+        self.assertIn(call, SCRIPT)
+        self.assertLess(SCRIPT.index("$builderPython = Join-Path $builder 'Scripts/python.exe'"),
+                        SCRIPT.index(call))
+        self.assertNotIn("Invoke-Checked (Get-Command python.exe", SCRIPT)
+
     def test_same_root_and_fail_closed_sequence(self):
         self.assertIn("$base = 'C:\\Users\\Administrator\\PlotJuggler-4.1.0-zh-test-558a\\n'", SCRIPT)
         self.assertIn('$sourcePrefix = $sha.Substring(0, 12)', SCRIPT)
@@ -316,18 +323,18 @@ if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath (Join-Path $env:NEW_REPO '.g
             self.assertIn(arg, SCRIPT)
         self.assertIn("'-DPJ_BUILD_TESTS=ON'", SCRIPT)
         self.assertIn("'-DPJ_PLUGIN_FEEDBACK_ACCEPTANCE=ON'", SCRIPT)
-        self.assertIn("Invoke-Checked $cmake (@('-S', (Join-Path $source 'pj_app/tests/i18n'), '-B', $i18n) + $common)", SCRIPT)
-        self.assertIn('\"-DPJ_CSV_RUNTIME_PLUGIN=$csvPlugin\") + $common', SCRIPT)
+        self.assertIn("Invoke-Checked $cmake (@('-S', (Join-Path $source 'pj_app/tests/i18n'), '-B', $i18n) + $common + $i18nCompiler)", SCRIPT)
+        self.assertIn('\"-DPJ_CSV_RUNTIME_PLUGIN=$csvPlugin\") + $common + $mainCompiler', SCRIPT)
         self.assertIn('$prefetch.WaitForExit(12 * 60 * 1000)', SCRIPT)
         self.assertIn('$prefetch.Kill()', SCRIPT)
 
     def test_codemodel_query_and_original_process_evidence_precede_main_build(self):
-        query = SCRIPT.index("$query = Join-Path $apiDirectory 'codemodel-v2'")
+        query = SCRIPT.index("$mainCompiler = Initialize-CompilerEvidence 'main' $build")
         configure = SCRIPT.index("Invoke-RecordedBuildProcess 'configure' $cmake $mainConfigure")
         build = SCRIPT.index("Invoke-RecordedBuildProcess 'build' $cmake")
         capture = SCRIPT.index("'--capture-codemodel'")
         self.assertLess(query, configure); self.assertLess(configure, build); self.assertLess(build, capture)
-        self.assertIn('[IO.FileMode]::CreateNew', SCRIPT)
+        self.assertIn("'--prepare-compiler', $Role", SCRIPT)
         self.assertIn("'--verify-codemodel'", SCRIPT)
         self.assertIn("@('runtime-catalog-language', 'extension-manager')", SCRIPT)
         self.assertIn("'--select-codemodel-rules'", SCRIPT)
@@ -378,6 +385,28 @@ if ($LASTEXITCODE -ne 0 -or (Test-Path -LiteralPath (Join-Path $env:NEW_REPO '.g
         for value in ('marker-mutation-evidence', "'INCOMPLETE'", 'mutant_runner_sha256',
                       'restored_runner_sha256', 'qt_preflight_sha256', 'mutant.xml', 'original.xml'):
             self.assertIn(value, SCRIPT)
+
+    def test_compiler_expectation_precedes_configure_and_preflight_precedes_each_build(self):
+        for role, tree, configure, build in (
+                ('i18n', '$i18n', "Invoke-Checked $cmake (@('-S', (Join-Path $source 'pj_app/tests/i18n')",
+                 "Invoke-Checked $cmake @('--build', $i18n"),
+                ('main', '$build', "Invoke-RecordedBuildProcess 'configure' $cmake $mainConfigure",
+                 "Invoke-RecordedBuildProcess 'build' $cmake")):
+            prepare = SCRIPT.index("Initialize-CompilerEvidence '" + role + "' " + tree)
+            preflight = SCRIPT.index("Confirm-CompilerEvidence '" + role + "' " + tree)
+            self.assertLess(SCRIPT.index("if ($Phase -eq 'Verify')"), prepare)
+            self.assertLess(prepare, SCRIPT.index(configure))
+            self.assertLess(SCRIPT.index(configure), preflight)
+            self.assertLess(preflight, SCRIPT.index(build))
+        for text in ('-DCMAKE_C_COMPILER:FILEPATH=', '-DCMAKE_CXX_COMPILER:FILEPATH=',
+                     "'--compiler-expectation-sha256', $compilerEvidence[$item.Role].Expected",
+                     "'--compiler-preflight-sha256', $compilerEvidence[$item.Role].Preflight"):
+            self.assertIn(text, SCRIPT)
+        self.assertIn("'--output', $expectedPath) | Out-Host", SCRIPT)
+        self.assertIn('$expected.compiler.sha256 -cne $registryIdentity.compiler_sha256', SCRIPT)
+        self.assertIn('[IO.Path]::GetFullPath($compilerPath)', SCRIPT)
+        self.assertLess(SCRIPT.index("$mainCompiler = Initialize-CompilerEvidence"),
+                        SCRIPT.index("Invoke-Checked $cmake (@('-S', (Join-Path $source 'pj_app/tests/i18n')"))
 
     def test_both_configured_trees_get_distinct_cache_bound_identities(self):
         self.assertIn("@{ Role = 'main'; Tree = $build }", SCRIPT)

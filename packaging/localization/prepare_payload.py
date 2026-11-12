@@ -78,7 +78,7 @@ def stage(build, prefix, config, linux_tools):
              prefix / 'bin/fonts/NotoSansCJKsc-Regular.otf', FONT_SHA)
     download(base + 'LICENSE', licenses / 'NotoSansCJK-OFL.txt', FONT_LICENSE_SHA)
     qt = ROOT / '.qt' / host['qt_version'] / ('gcc_64' if linux_tools else 'msvc2022_64')
-    collect(ROOT, build, qt, licenses, download)
+    collect(ROOT, build, qt, licenses, download, windows=not linux_tools)
     baseline = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
     plugin_manifest = json.loads(manifest.read_text(encoding='utf-8'))
     assert plugin_manifest['license'] == baseline['ardupilot_plugin']['license'] == 'LGPL-3.0-only'
@@ -90,6 +90,7 @@ def stage(build, prefix, config, linux_tools):
               'registry_commit': REGISTRY_REV, 'cjk_font_sha256': FONT_SHA,
               'ifw_package_version': versions(host['version'])['ifw'],
               'debian_version': versions(host['version'])['deb']}
+    record['host_sdk_source'] = json.loads((ROOT / 'cmake/host-sdk-source.json').read_text(encoding='utf-8'))
     locked = json.loads((ROOT / 'packaging/localization/registry-lock.json').read_text(encoding='utf-8'))
     ids = CORE_PLUGINS + (['toolbox-assistant-agent', 'ros2-topic-subscriber'] if linux_tools else [])
     record['expected_plugins'] = [f"{x['id']}={x['version']}" for x in locked['extensions'] if x['id'] in ids]

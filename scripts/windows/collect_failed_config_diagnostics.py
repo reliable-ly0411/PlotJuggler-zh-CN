@@ -20,7 +20,28 @@ CATEGORIES = {
     'invalid-target': r'cannot specify .* for target|target .* was not found',
     'generator-conflict': r'does not match the generator used previously',
     'compiler-check-failed': r'is not able to compile a simple test program',
+    'native-cpython-runtime-missing': r'native test kit requires its locked conan cpython runtime',
+    'cpython-version-mismatch': r'cmake detected wrong cpython version',
+    'cmake-syntax-error': r'syntax error in cmake code|invalid (?:character )?escape',
+    'download-failed': r'each download failed!|download failed',
 }
+
+
+def classify_output(text):
+    """Return fixed hints/counts only; wrapped messages never become output text."""
+    labels = set()
+    errors = unclassified = 0
+    # Separate other CMake diagnostics/progress so a later known warning cannot
+    # give an unrelated, unclassified error a false category.
+    blocks = re.split(r'(?=^CMake (?:Error|Warning|Deprecation Warning)\b|^-- )', text, flags=re.M)
+    for block in blocks:
+        flattened = re.sub(r'\s+', ' ', block)
+        matches = {label for label, pattern in CATEGORIES.items() if re.search(pattern, flattened, re.I)}
+        labels.update(matches)
+        if re.match(r'^CMake Error\b', block):
+            errors += 1
+            unclassified += not matches
+    return sorted(labels), errors, unclassified
 
 
 def read_checked(path):
@@ -41,7 +62,26 @@ def read_checked(path):
     return data
 
 
+def receipt_exit_code(receipt, sha, tree):
+    """Bind each process exit independently; never expose other receipt fields."""
+    if not isinstance(receipt, dict):
+        raise ValueError('invalid process receipt')
+    if receipt.get('source_sha') != sha or receipt.get('source_tree') != tree:
+        raise ValueError('process source identity mismatch')
+    code = receipt.get('exit_code')
+    if type(code) is not int or not -2147483648 <= code <= 2147483647:
+        raise ValueError('invalid process exit code')
+    return code
+
+
+def completed_receipt(receipt):
+    """Only completed producer receipts can establish a phase boundary."""
+    return (isinstance(receipt, dict) and type(receipt.get('schema')) is int and
+            receipt['schema'] == 1 and receipt.get('still_running') is False)
+
+
 def collect(root, output, sha, tree):
+    """Retain configure hints and only the phase boundary proven by receipts."""
     if any(not re.fullmatch('[a-f0-9]{40}', v) for v in (sha, tree)):
         raise ValueError('invalid source identity')
     root, output = Path(root).absolute(), Path(output).absolute()
@@ -50,10 +90,12 @@ def collect(root, output, sha, tree):
         raise ValueError('output already exists')
     report = {'schema': 1, 'status': 'build-failed-not-a-candidate', 'source_sha': sha,
               'source_tree': tree, 'phase': 'configure-not-observed', 'binding': 'unverified', 'files': [], 'diagnostic_categories': [],
-              'limitation': 'No raw text retained. Categories are hints, not a root-cause finding.'}
+              'build_binding': 'unverified', 'phase_boundary': 'not-established',
+              'limitation': 'No raw text retained. Categories are hints, not a root-cause finding. '
+                            'Phase boundaries do not identify a later failing operation or prove kit completion.'}
     process = root / 'b/native-kit/codemodel/process'
     receipt = None
-    for name in ('configure.process.json', 'configure.stdout.bin', 'configure.stderr.bin'):
+    for name in ('configure.process.json', 'configure.stdout.bin', 'configure.stderr.bin', 'build.process.json'):
         path = process / name
         if not path.exists() and not path.is_symlink():
             report['files'].append({'name': name, 'status': 'missing'})
@@ -63,14 +105,17 @@ def collect(root, output, sha, tree):
             report['files'].append({'name': name, 'status': 'over-limit-omitted'})
             continue
         report['files'].append({'name': name, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()})
+        if name == 'build.process.json':
+            build_receipt = json.loads(data)
+            code = receipt_exit_code(build_receipt, sha, tree)
+            if not completed_receipt(build_receipt):
+                raise ValueError('invalid completed build receipt')
+            report['build_exit_code'] = code
+            report['build_binding'] = 'receipt-identity-matched'
+            continue
         if name.endswith('.json'):
             receipt = json.loads(data)
-            if receipt.get('source_sha') != sha or receipt.get('source_tree') != tree:
-                raise ValueError('process source identity mismatch')
-            code = receipt.get('exit_code')
-            if type(code) is not int or not -2147483648 <= code <= 2147483647:
-                raise ValueError('invalid process exit code')
-            report['exit_code'] = code
+            report['exit_code'] = receipt_exit_code(receipt, sha, tree)
             report['binding'] = 'receipt-identity-matched'
             report['phase'] = 'configure-observed'
         else:
@@ -80,11 +125,20 @@ def collect(root, output, sha, tree):
             if receipt.get(key) != hashlib.sha256(data).hexdigest():
                 raise ValueError('stream hash mismatch')
             text = data.decode('utf-8', errors='replace')
-            for label, pattern in CATEGORIES.items():
-                if re.search(pattern, text, re.I):
-                    report['diagnostic_categories'].append(label)
-            report['cmake_error_headers'] = report.get('cmake_error_headers', 0) + len(re.findall(r'^CMake Error', text, re.M))
+            labels, errors, unclassified = classify_output(text)
+            report['diagnostic_categories'].extend(labels)
+            report['cmake_error_headers'] = report.get('cmake_error_headers', 0) + errors
+            report['unclassified_error_count'] = report.get('unclassified_error_count', 0) + unclassified
     report['diagnostic_categories'] = sorted(set(report['diagnostic_categories']))
+    configure_code, build_code = report.get('exit_code'), report.get('build_exit_code')
+    # Missing or contradictory evidence must not imply a later failure stage.
+    if completed_receipt(receipt) and configure_code == 0:
+        if build_code is None:
+            report['phase_boundary'] = 'configure-succeeded-build-not-observed'
+        else:
+            report['phase_boundary'] = 'build-failed' if build_code != 0 else 'after-successful-build'
+    elif completed_receipt(receipt) and configure_code is not None and build_code is None:
+        report['phase_boundary'] = 'configure-failed'
     output.mkdir()
     (output / 'failure-diagnostics.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     return report

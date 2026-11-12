@@ -266,13 +266,24 @@ PlotJuggler 4.1 is a large release. It covers 171 commits since 4.0.0. The main 
 版本映射：应用 `4.1.0+zh.1`、tag `v4.1.0+zh.1`，Debian `4.1.0+zh.1-1`，IFW `4.1.0.1.1.0`。
 `+zh.1` 是不参与 SemVer 优先级的构建元数据；后续正式修复必须递增真实版本，不能只把元数据改为 `+zh.2` 冒充升级。
 
+## 宿主 SDK 修复来源
+
+本汉化构建采用 SDK 0.39.0 基线加 Unicode 路径修复的固定 fork 提交
+[`5f7f1c216cfe10ec50b95ab79c5426d298dc1d21`](https://github.com/reliable-ly0411/plotjuggler_sdk/commit/5f7f1c216cfe10ec50b95ab79c5426d298dc1d21)，
+此快照将上游 [PR #226](https://github.com/PlotJuggler/plotjuggler_sdk/pull/226) 的修复回补到原 SDK 0.39.0 基线。这不是上游正式修复发行；准备时 PR 尚未合并。
+补丁修复 Windows 非 UTF-8 活动代码页下，SDK 处理无效插件或目录时因格式化 Unicode 路径抛出错误 1113 的问题。
+相对于官方 SDK 0.39.0，该补丁不改变 API、ABI 或宿主能力门槛，不引入 SDK 0.40.0 的 MCP endpoint 契约；不能将它解释为所有旧插件均已完成验证。
+来源归档 SHA256、上游基线及 Conan recipe revision 固定在 `cmake/host-sdk-source.json`，并随包写入 `release.json` 和许可目录；保留 Apache-2.0 许可。
+独立重建插件的各自 SDK 来源不变。SDK Linux 全量检查在禁用泄漏检测后 104/104 通过，默认 LeakSanitizer 受沙箱限制；
+这些 SDK 结果不能替代下面要求的本应用 Windows/Linux 构建、原包和 GUI 验收，最终结果以精确候选工件为准。
+
 ## 构建、最终原包验收与溯源
 
 源码提交 `@SOURCE_SHA@`，源码树 `@SOURCE_TREE@`。
 候选构建和最终验收：[GitHub Actions @RUN_ID@](@RUN_URL@)。
 工作流 SHA、源码 SHA、树、run 和 attempt 必须一致；验收完成后提升同一原包，不暗中重建。
 
-- 宿主 Qt 6.12.0、PlotJuggler SDK 0.39.0、C++20，Windows MSVC 194。固定重建插件分别使用自己的 SDK 0.20.0、0.32.0 或 0.34.1，来源保持独立。
+- 宿主 Qt 6.12.0、PlotJuggler SDK 0.39.0 修复快照、C++20，Windows MSVC 194。固定重建插件分别使用自己的 SDK 0.20.0、0.32.0 或 0.34.1，来源保持独立。
 - 两平台完整应用和独立语言/BIN回归；GPU 测试必须执行，不以跳过当通过。
 - 六次最终包验收：Windows 安装器与免安装包各一次，Ubuntu 22.04/24.04 的 AppImage 与 DEB 各一次。
 - 每组检查版本与来源、实际 DSO、Python、中文路径公共 BIN 的 1,940 条数值序列、CSV ASCII/中文路径、曲线有限采样及非默认可见视口；三种语言共 18 张最终截图供文字、字形、截断和曲线审阅。

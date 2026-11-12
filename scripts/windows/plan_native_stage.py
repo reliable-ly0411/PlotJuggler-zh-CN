@@ -19,6 +19,7 @@ import ntpath
 import os
 from pathlib import Path, PurePosixPath
 import re
+import secrets
 import shutil
 import stat
 import subprocess
@@ -1206,7 +1207,241 @@ def validate_build_cache(values, logical_root, role, qt_version):
     return result
 
 
-def capture_build_identity(root, logical_root, source_sha, source_tree, role, qt_version, windows_sdk, msvc):
+def compiler_context(root, logical_root, source_sha, source_tree, role):
+    """Bind compiler evidence to one exact source and independent build role."""
+    root = Path(root).absolute()
+    logical_root = audit.windows_root(logical_root)
+    audit.check_root(root, logical_root, require_exact=True)
+    if (role not in ('main', 'i18n') or not audit.HEX40.fullmatch(source_sha) or
+            not audit.HEX40.fullmatch(source_tree) or source_sha[:12] != logical_root[-12:]):
+        raise PlanError('invalid compiler evidence source or role')
+    build = 'b' if role == 'main' else 'i'
+    return root, {'schema': 1, 'role': role, 'source_sha': source_sha, 'source_tree': source_tree,
+                  'logical_root': logical_root, 'build_tree': build,
+                  'source_dir': 's' if role == 'main' else 's/pj_app/tests/i18n'}
+
+
+def compiler_path_key(value):
+    """Require a local, absolute cl.exe path, never a search name or device path."""
+    if (not isinstance(value, str) or not re.match(r'^[A-Za-z]:[\\/]', value) or
+            ntpath.basename(value).casefold() != 'cl.exe' or
+            any(x in ('', '.', '..') for x in re.split(r'[\\/]', value[3:])) or
+            any(ord(x) < 32 or x in '<>"|?*;' for x in value) or ':' in value[2:]):
+        raise PlanError('compiler must be an absolute local cl.exe path')
+    return ntpath.normcase(ntpath.normpath(value))
+
+
+def actual_compiler_identity(value):
+    """Hash the real activated compiler without executing it or CMake code."""
+    if os.name != 'nt':
+        raise PlanError('compiler identity requires the actual Windows runner')
+    compiler_path_key(value)
+    path = Path(value)
+    audit.check_root(path.parent, str(path.parent))
+    before = path.lstat()
+    if (not stat.S_ISREG(before.st_mode) or stat.S_ISLNK(before.st_mode) or
+            getattr(before, 'st_file_attributes', 0) & 0x400):
+        raise PlanError('compiler is not a real regular file')
+    audit.check_no_named_streams(path, False)
+    canonical = str(path.resolve(strict=True))
+    if compiler_path_key(canonical) != compiler_path_key(value):
+        raise PlanError('compiler path is not canonical')
+    sha256 = digest(path)
+    after = path.lstat()
+    if ((before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) !=
+            (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns) or
+            stat.S_ISLNK(after.st_mode) or getattr(after, 'st_file_attributes', 0) & 0x400):
+        raise PlanError('compiler changed while hashing')
+    return {'path': canonical, 'sha256': sha256}
+
+
+def activated_compiler_path():
+    """Reject PATH/CWD shadowing outside the activated x64 MSVC toolset."""
+    toolset = os.environ.get('VCToolsInstallDir', '')
+    version = os.environ.get('VCToolsVersion', '')
+    host = os.environ.get('VSCMD_ARG_HOST_ARCH', '')
+    if (os.environ.get('VSCMD_ARG_TGT_ARCH') != 'x64' or host not in ('x64', 'x86') or
+            not re.fullmatch(r'14\.4[0-9][0-9.]*', version) or
+            ntpath.basename(toolset.rstrip('\\/')) != version):
+        raise PlanError('activated x64 MSVC toolset identity is missing or inconsistent')
+    expected = ntpath.join(toolset, 'bin', 'Host' + host, 'x64', 'cl.exe')
+    found = shutil.which('cl.exe')
+    if not found or compiler_path_key(found) != compiler_path_key(expected):
+        raise PlanError('cl.exe resolves outside the activated MSVC toolset')
+    return expected
+
+
+def prepare_compiler_query(root, logical_root, source_sha, source_tree, role):
+    """Create a fresh nonce query and freeze the activated compiler before configure."""
+    root, context = compiler_context(root, logical_root, source_sha, source_tree, role)
+    verified_source_state(root, logical_root, source_sha, source_tree, allow_initial_clean=True)
+    identity = actual_compiler_identity(activated_compiler_path())
+    build = context['build_tree']
+    tree = root / build
+    tree.mkdir(exist_ok=True)
+    audit.check_root(tree, logical_root)
+    if (tree / 'CMakeCache.txt').exists() or (tree / '.cmake/api').exists():
+        raise PlanError('compiler query requires a new unconfigured CMake tree')
+    base = tree / 'native-kit/compiler'
+    base.parent.mkdir(exist_ok=True)
+    audit.check_root(base.parent, logical_root)
+    base.mkdir()
+    client = 'client-native-compiler-' + role + '-' + secrets.token_hex(16)
+    query = tree / '.cmake/api/v1/query' / client / 'toolchains-v1'
+    # Check an existing .cmake parent before creating any descendants.
+    if (tree / '.cmake').exists():
+        audit.check_root(tree / '.cmake', logical_root)
+    query.parent.mkdir(parents=True)
+    audit.check_root(query.parent, logical_root)
+    with query.open('xb'):
+        pass
+    if role == 'main':
+        with (query.parent.parent / 'codemodel-v2').open('xb'):
+            pass
+    return {**context, 'compiler': identity, 'client': client,
+            'query': {'path': query.relative_to(root).as_posix(), 'sha256': hashlib.sha256(b'').hexdigest()}}
+
+
+def read_compiler_expectation(root, context, expected_sha256):
+    """Validate the preconfigure record against a digest held by the caller."""
+    base = context['build_tree'] + '/native-kit/compiler'
+    path = regular_under(root, base + '/expected.json')
+    if not audit.HEX64.fullmatch(str(expected_sha256)) or digest(path) != expected_sha256:
+        raise PlanError('preconfigure compiler expectation changed')
+    record = read_codemodel_json(path)
+    if not isinstance(record, dict) or any(record.get(k) != v for k, v in context.items()):
+        raise PlanError('compiler expectation source or role differs')
+    client = record.get('client')
+    if not isinstance(client, str) or not re.fullmatch('client-native-compiler-' + context['role'] + r'-[0-9a-f]{32}', client):
+        raise PlanError('invalid compiler query freshness token')
+    expected_query = {'path': context['build_tree'] + '/.cmake/api/v1/query/' + client + '/toolchains-v1',
+                      'sha256': hashlib.sha256(b'').hexdigest()}
+    compiler = record.get('compiler')
+    if (record.get('query') != expected_query or not isinstance(compiler, dict) or
+            set(compiler) != {'path', 'sha256'} or not audit.HEX64.fullmatch(str(compiler.get('sha256')))):
+        raise PlanError('malformed preconfigure compiler identity or query')
+    compiler_path_key(compiler.get('path'))
+    return record
+
+
+def inspect_compiler_reply(root, logical_root, expectation, reply_relative, query_relative):
+    """Read only nonce-bound toolchains-v1 JSON; never execute generated .cmake."""
+    query = regular_under(root, safe_relative(query_relative, logical_root))
+    if audit.regular_file(query).st_size or digest(query) != expectation['query']['sha256']:
+        raise PlanError('compiler File API query changed')
+    audit.check_no_named_streams(query, False)
+    reply = Path(root) / safe_relative(reply_relative, logical_root)
+    audit.check_root(reply, logical_root)
+    indexes = [p.name for p in reply.iterdir() if p.name.startswith('index-')]
+    if len(indexes) != 1:
+        raise PlanError('compiler File API requires exactly one fresh index')
+    def read_named(name, pattern):
+        if not isinstance(name, str) or not re.fullmatch(pattern, name):
+            raise PlanError('unsafe compiler File API reply filename')
+        relative = safe_relative(reply_relative + '/' + name, logical_root)
+        path = regular_under(root, relative)
+        audit.regular_file(path)
+        audit.check_no_named_streams(path, False)
+        return read_codemodel_json(path), {'path': relative, 'sha256': digest(path)}
+    index, index_file = read_named(indexes[0], r'index-[A-Za-z0-9_.-]+\.json')
+    if not isinstance(index, dict):
+        raise PlanError('malformed compiler File API index')
+    cmake, replies, objects = index.get('cmake'), index.get('reply'), index.get('objects')
+    if (not isinstance(cmake, dict) or cmake.get('generator') != {'name': 'Ninja Multi-Config', 'multiConfig': True} or
+            not isinstance(replies, dict) or not isinstance(objects, list)):
+        raise PlanError('compiler File API generator or index differs')
+    clients = [key for key in replies if key.startswith('client-native-compiler-')]
+    response = replies.get(expectation['client'])
+    if clients != [expectation['client']] or not isinstance(response, dict) or set(response) != {'toolchains-v1'}:
+        raise PlanError('stale or ambiguous compiler File API client')
+    response = response['toolchains-v1']
+    if (not isinstance(response, dict) or set(response) != {'kind', 'version', 'jsonFile'} or
+            response.get('kind') != 'toolchains' or response.get('version') != {'major': 1, 'minor': 0} or
+            [obj for obj in objects if isinstance(obj, dict) and obj.get('kind') == 'toolchains'] != [response]):
+        raise PlanError('compiler toolchains reply is not uniquely bound to its index')
+    model, model_file = read_named(response['jsonFile'], r'toolchains-v1-[A-Za-z0-9_.-]+\.json')
+    if (not isinstance(model, dict) or model.get('kind') != 'toolchains' or
+            model.get('version') != {'major': 1, 'minor': 0} or not isinstance(model.get('toolchains'), list) or
+            any(not isinstance(item, dict) or not isinstance(item.get('language'), str) for item in model['toolchains'])):
+        raise PlanError('malformed compiler toolchains object')
+    cxx = [item for item in model['toolchains'] if item['language'] == 'CXX']
+    if len(cxx) != 1 or not isinstance(cxx[0].get('compiler'), dict) or cxx[0]['compiler'].get('id') != 'MSVC':
+        raise PlanError('toolchains must identify exactly one actual MSVC CXX compiler')
+    if compiler_path_key(cxx[0]['compiler'].get('path')) != compiler_path_key(expectation['compiler']['path']):
+        raise PlanError('actual CXX compiler differs from the preconfigure expectation')
+    return [{'path': query_relative, 'sha256': digest(query)}, index_file, model_file]
+
+
+def capture_compiler_evidence(root, logical_root, source_sha, source_tree, role, qt_version, expected_sha256, phase):
+    """Preflight before build, then snapshot final evidence after all build work."""
+    if phase not in ('preflight', 'final'):
+        raise PlanError('invalid compiler evidence phase')
+    root, context = compiler_context(root, logical_root, source_sha, source_tree, role)
+    verified_source_state(root, logical_root, source_sha, source_tree, allow_initial_clean=phase == 'preflight')
+    expected = read_compiler_expectation(root, context, expected_sha256)
+    if actual_compiler_identity(expected['compiler']['path']) != expected['compiler']:
+        raise PlanError('preconfigure compiler bytes changed')
+    build = context['build_tree']
+    cache = regular_under(root, build + '/CMakeCache.txt')
+    fields = validate_build_cache(cache_values(cache.read_text(encoding='utf-8')), logical_root, role, qt_version)
+    if compiler_path_key(fields['compiler']) != compiler_path_key(expected['compiler']['path']):
+        raise PlanError('cached compiler differs from the preconfigure expectation')
+    original = inspect_compiler_reply(root, logical_root, expected, build + '/.cmake/api/v1/reply', expected['query']['path'])
+    base = build + '/native-kit/compiler/' + phase
+    output = root / base
+    output.mkdir()
+    (output / 'reply').mkdir()
+    files = []
+    for number, row in enumerate(original):
+        destination = base + ('/toolchains-v1' if number == 0 else '/reply/' + Path(row['path']).name)
+        source = regular_under(root, row['path'])
+        target = root / destination
+        with source.open('rb') as src, target.open('xb') as dst:
+            shutil.copyfileobj(src, dst)
+        if digest(source) != row['sha256'] or digest(target) != row['sha256']:
+            raise PlanError('compiler evidence changed while retaining bytes')
+        files.append({'path': destination, 'sha256': row['sha256']})
+    if inspect_compiler_reply(root, logical_root, expected, base + '/reply', base + '/toolchains-v1') != files:
+        raise PlanError('retained compiler evidence differs')
+    return {**context, 'phase': phase, 'expected_sha256': expected_sha256,
+            'cmake_cache_sha256': digest(cache), 'files': files, 'original_files': original}
+
+
+def verify_compiler_evidence(root, logical_root, source_sha, source_tree, role, expected_sha256, receipt_sha256, phase,
+                             live=False):
+    """Revalidate retained bytes; only the producer can also inspect live inputs."""
+    if phase not in ('preflight', 'final'):
+        raise PlanError('invalid compiler evidence phase')
+    root, context = compiler_context(root, logical_root, source_sha, source_tree, role)
+    expected = read_compiler_expectation(root, context, expected_sha256)
+    base = context['build_tree'] + '/native-kit/compiler/' + phase
+    receipt_path = regular_under(root, base + '.json')
+    if not audit.HEX64.fullmatch(str(receipt_sha256)) or digest(receipt_path) != receipt_sha256:
+        raise PlanError('compiler evidence receipt changed')
+    record = read_codemodel_json(receipt_path)
+    if (not isinstance(record, dict) or any(record.get(k) != v for k, v in context.items()) or
+            record.get('phase') != phase or record.get('expected_sha256') != expected_sha256 or
+            not audit.HEX64.fullmatch(str(record.get('cmake_cache_sha256')))):
+        raise PlanError('compiler evidence source, role or phase differs')
+    files = inspect_compiler_reply(root, logical_root, expected, base + '/reply', base + '/toolchains-v1')
+    if record.get('files') != files:
+        raise PlanError('retained compiler evidence hashes differ')
+    original = [{'path': expected['query']['path'], 'sha256': files[0]['sha256']}] + [
+        {'path': context['build_tree'] + '/.cmake/api/v1/reply/' + Path(row['path']).name, 'sha256': row['sha256']}
+        for row in files[1:]]
+    if record.get('original_files') != original:
+        raise PlanError('compiler evidence original paths differ')
+    if live:
+        if (actual_compiler_identity(expected['compiler']['path']) != expected['compiler'] or
+                digest(regular_under(root, context['build_tree'] + '/CMakeCache.txt')) != record['cmake_cache_sha256'] or
+                inspect_compiler_reply(root, logical_root, expected, context['build_tree'] + '/.cmake/api/v1/reply',
+                                       expected['query']['path']) != original):
+            raise PlanError('live compiler evidence changed after capture')
+    return expected, [context['build_tree'] + '/native-kit/compiler/expected.json', base + '.json'] + [x['path'] for x in files]
+
+
+def capture_build_identity(root, logical_root, source_sha, source_tree, role, qt_version, windows_sdk, msvc,
+                           expected_sha256, preflight_sha256):
     """Read and hash real Windows configure inputs, never package CMakeCache."""
     if os.name != 'nt':
         raise PlanError('build identity capture requires the actual Windows runner')
@@ -1241,14 +1476,19 @@ def capture_build_identity(root, logical_root, source_sha, source_tree, role, qt
         if os.path.normcase(os.path.normpath(str(staged))) != os.path.normcase(os.path.normpath(str(plugin))):
             raise PlanError('configured CSV plugin differs from the verified staged DLL')
         tools['csv_plugin'] = {'path': fields['csv_plugin'], 'sha256': digest(plugin)}
-    compiler = Path(fields['compiler'])
-    if not compiler.is_file() or compiler.is_symlink():
-        raise PlanError('configured MSVC compiler is missing or linked')
+    expected, _ = verify_compiler_evidence(root, logical_root, source_sha, source_tree, role,
+                                           expected_sha256, preflight_sha256, 'preflight')
+    final = capture_compiler_evidence(root, logical_root, source_sha, source_tree, role, qt_version,
+                                      expected_sha256, 'final')
+    final_path = root / fields['build_tree'] / 'native-kit/compiler/final.json'
+    write_new(final_path, final)
     return {'schema': 1, 'role': role, 'source_sha': source_sha, 'source_tree': source_tree,
             'configuration': 'RelWithDebInfo', 'source_dir': fields['source_dir'], 'build_tree': fields['build_tree'],
             'native_bundle_mode': True, 'cmake_cache_sha256': cache_digest, 'generator': 'Ninja Multi-Config', 'qt_version': qt_version,
             'windows_sdk': windows_sdk, 'msvc_toolset': msvc,
-            'compiler': {'path': str(compiler), 'sha256': digest(compiler)}, 'tools': tools}
+            'compiler': expected['compiler'], 'tools': tools,
+            'compiler_evidence': {'expected_sha256': expected_sha256, 'preflight_sha256': preflight_sha256,
+                                  'final_sha256': digest(final_path)}}
 
 
 class Candidate:
@@ -2283,6 +2523,7 @@ class Candidate:
                 self.issue('run-plan-missing-input', path)
                 return
         cache_fields = {}
+        role_compiler = None
         for role, build, source_dir in (('main', 'b', 's'), ('i18n', 'i', 's/pj_app/tests/i18n')):
             identity = read_json(regular_under(self.root, build + '/native-kit/build_identity.json'))
             cache = regular_under(self.root, build + '/CMakeCache.txt')
@@ -2293,6 +2534,21 @@ class Candidate:
                 raise PlanError('build identity differs from the actual ' + role + ' CMake cache')
             cache_fields[role] = validate_build_cache(cache_values(cache.read_text(encoding='utf-8')),
                                                        self.logical_root, role, qt_version)
+            if role_compiler is not None and identity.get('compiler') != role_compiler:
+                raise PlanError('main and i18n compiler identities differ')
+            role_compiler = identity.get('compiler')
+            evidence = identity.get('compiler_evidence')
+            if not isinstance(evidence, dict):
+                raise PlanError('build identity lacks independent compiler evidence')
+            for phase in ('preflight', 'final'):
+                expected_compiler, paths = verify_compiler_evidence(
+                    self.root, self.logical_root, self.source_sha, self.source_tree, role,
+                    evidence.get('expected_sha256'), evidence.get(phase + '_sha256'), phase, live=phase == 'final')
+                if (identity.get('compiler') != expected_compiler['compiler'] or
+                        compiler_path_key(cache_fields[role]['compiler']) != compiler_path_key(expected_compiler['compiler']['path'])):
+                    raise PlanError('build identity compiler differs from independent evidence')
+                for path in paths:
+                    self.add('main-build' if role == 'main' else 'i18n-build', path[len(build) + 1:])
         csv_identity = read_json(regular_under(self.root, 'b/native-kit/csv-prebuilt.json'))
         if (csv_identity.get('schema') != 1 or csv_identity.get('source_sha') != self.source_sha or
                 csv_identity.get('source_tree') != self.source_tree or csv_identity.get('configuration') != 'RelWithDebInfo' or
@@ -2477,6 +2733,10 @@ def main():
     parser.add_argument('--declarations', type=Path)
     parser.add_argument('--discovery', action='append', default=[], metavar='SUITE=JSON')
     parser.add_argument('--capture-identity', choices=('main', 'i18n'))
+    parser.add_argument('--prepare-compiler', choices=('main', 'i18n'))
+    parser.add_argument('--check-compiler', choices=('main', 'i18n'))
+    parser.add_argument('--compiler-expectation-sha256')
+    parser.add_argument('--compiler-preflight-sha256')
     parser.add_argument('--capture-codemodel', action='store_true')
     parser.add_argument('--import-generated-media', type=Path)
     parser.add_argument('--check-generated-media', action='store_true')
@@ -2492,6 +2752,29 @@ def main():
     parser.add_argument('--package-receipt', type=Path)
     args = parser.parse_args()
     try:
+        if args.prepare_compiler or args.check_compiler:
+            if (bool(args.prepare_compiler) == bool(args.check_compiler) or args.capture_identity or args.package or
+                    args.capture_codemodel or args.select_codemodel_rules or args.import_generated_media or args.check_generated_media or
+                    args.candidate_plan or args.reviewed_policy or args.report or args.declarations or args.discovery or
+                    args.staging or args.archive or args.package_receipt or args.compiler_preflight_sha256):
+                raise PlanError('compiler preparation/preflight cannot be combined with another mode')
+            role = args.prepare_compiler or args.check_compiler
+            base = Path(args.root).absolute() / ('b' if role == 'main' else 'i') / 'native-kit/compiler'
+            expected_output = base / ('expected.json' if args.prepare_compiler else 'preflight.json')
+            if Path(args.output).absolute() != expected_output or expected_output.exists():
+                raise PlanError('compiler evidence must use its new exact role-specific output')
+            if args.prepare_compiler:
+                if args.compiler_expectation_sha256:
+                    raise PlanError('compiler preparation cannot reuse an expectation')
+                value = prepare_compiler_query(args.root, args.logical_root, args.source_sha, args.source_tree, role)
+            else:
+                value = capture_compiler_evidence(args.root, args.logical_root, args.source_sha, args.source_tree,
+                                                  role, args.qt_version or '', args.compiler_expectation_sha256, 'preflight')
+            write_new(args.output, value)
+            print(json.dumps({'role': role, 'sha256': digest(expected_output)}))
+            return 0
+        if not args.capture_identity and (args.compiler_expectation_sha256 or args.compiler_preflight_sha256):
+            raise PlanError('compiler hashes require compiler preflight or identity capture')
         if args.import_generated_media or args.check_generated_media:
             if (args.package or args.capture_identity or args.capture_codemodel or args.select_codemodel_rules or
                     args.candidate_plan or args.reviewed_policy or args.report or args.declarations or args.discovery or
@@ -2554,7 +2837,8 @@ def main():
             if args.select_codemodel_rules or args.candidate_plan or args.reviewed_policy or args.report or args.declarations or args.discovery or args.staging or args.archive or args.package_receipt:
                 raise PlanError('build identity capture does not accept a candidate report or declarations')
             value = capture_build_identity(args.root, args.logical_root, args.source_sha, args.source_tree,
-                                           args.capture_identity, args.qt_version or '', args.windows_sdk or '', args.msvc or '')
+                                           args.capture_identity, args.qt_version or '', args.windows_sdk or '', args.msvc or '',
+                                           args.compiler_expectation_sha256, args.compiler_preflight_sha256)
             write_new(args.output, value)
             print(json.dumps({'role': value['role'], 'cmake_cache_sha256': value['cmake_cache_sha256']}))
             return 0

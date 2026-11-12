@@ -3,14 +3,9 @@
 // Native-kit-only Windows test: check the actual library and stdlib used by a
 // real pj_scripting test process. It is not a general DLL-sandbox claim.
 
-#include "python_sandbox.h"
-
 #include <gtest/gtest.h>
 #include <pybind11/embed.h>
 #include <pybind11/stl.h>
-
-#include <windows.h>
-#include <bcrypt.h>
 
 #include <array>
 #include <filesystem>
@@ -22,6 +17,14 @@
 #include <string>
 #include <system_error>
 #include <vector>
+
+#include "python_sandbox.h"
+
+// CNG declarations require the Windows types before including bcrypt.h.
+// clang-format off
+#include <windows.h>
+#include <bcrypt.h>
+// clang-format on
 
 namespace py = pybind11;
 
@@ -46,8 +49,9 @@ std::optional<std::string> sha256(const std::filesystem::path& file) {
     return std::nullopt;
   }
   DWORD object_size = 0, written = 0;
-  if (BCryptGetProperty(handles.algorithm, BCRYPT_OBJECT_LENGTH, reinterpret_cast<PUCHAR>(&object_size),
-                        static_cast<ULONG>(sizeof(object_size)), &written, 0) < 0 ||
+  if (BCryptGetProperty(
+          handles.algorithm, BCRYPT_OBJECT_LENGTH, reinterpret_cast<PUCHAR>(&object_size),
+          static_cast<ULONG>(sizeof(object_size)), &written, 0) < 0 ||
       written != static_cast<DWORD>(sizeof(object_size)) || !object_size) {
     return std::nullopt;
   }
@@ -126,13 +130,17 @@ TEST(WindowsPythonRuntimeIdentity, ConanLibraryAndStdlibAreActuallyLoaded) {
   const bool same_prefix = std::filesystem::equivalent(prefix, home, error);
   ASSERT_FALSE(error) << error.message();
   ASSERT_TRUE(same_prefix) << "prefix=" << prefix.string() << " expected=" << home.string();
-  const auto math = std::filesystem::path(py::module_::import("math").attr("__file__").cast<std::wstring>());
-  ASSERT_TRUE(within(math, home)) << "math=" << math.string() << " expected home=" << home.string();
-  const auto math_sha256 = sha256(math);
-  ASSERT_TRUE(math_sha256.has_value());
-  ASSERT_EQ(*math_sha256, PJ_NATIVE_EXPECTED_MATH_SHA256);
+  const auto unicodedata =
+      std::filesystem::path(py::module_::import("unicodedata").attr("__file__").cast<std::wstring>());
+  ASSERT_TRUE(within(unicodedata, home)) << "unicodedata=" << unicodedata.string()
+                                         << " expected home=" << home.string();
+  const bool same_extension = std::filesystem::equivalent(unicodedata, home / "DLLs" / "unicodedata.pyd", error);
+  ASSERT_FALSE(error) << error.message();
+  ASSERT_TRUE(same_extension);
+  const auto unicodedata_sha256 = sha256(unicodedata);
+  ASSERT_TRUE(unicodedata_sha256.has_value());
+  ASSERT_EQ(*unicodedata_sha256, PJ_NATIVE_EXPECTED_UNICODEDATA_SHA256);
   std::cout << "[native-python-binding] compiled=" << compiled << " runtime=" << version
-            << " dll=" << loaded_dll.string() << " dll_sha256=" << *dll_sha256
-            << " prefix=" << prefix.string() << " math=" << math.string() << " math_sha256=" << *math_sha256
-            << std::endl;
+            << " dll=" << loaded_dll.string() << " dll_sha256=" << *dll_sha256 << " prefix=" << prefix.string()
+            << " unicodedata=" << unicodedata.string() << " unicodedata_sha256=" << *unicodedata_sha256 << std::endl;
 }
