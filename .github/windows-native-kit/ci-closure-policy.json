@@ -9,6 +9,16 @@
   "unreviewed_evidence": [
     "s/scripts/windows/plan_native_stage.py"
   ],
+  "qt_archive_aliases": {
+    "qttranslations-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z": "6.12.0-0-202609280346qttranslations-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z",
+    "qttools-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z": "6.12.0-0-202609280346qttools-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z",
+    "qtsvg-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z": "6.12.0-0-202609280346qtsvg-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z",
+    "qtdoc-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z": "6.12.0-0-202609280346qtdoc-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z",
+    "qtdeclarative-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z": "6.12.0-0-202609280346qtdeclarative-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z",
+    "qtbase-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z": "6.12.0-0-202609280346qtbase-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z",
+    "opengl32sw-64-mesa_11_2_2-signed_sha256.7z": "6.12.0-0-202609280346opengl32sw-64-mesa_11_2_2-signed_sha256.7z",
+    "d3dcompiler_47-x64.7z": "6.12.0-0-202609280346d3dcompiler_47-x64.7z"
+  },
   "qt_archives": [
     {
       "file": "6.12.0-0-202609280346qttranslations-Windows-Windows_11_24H2-MSVC2022-Windows-Windows_11_24H2-X86_64.7z",
@@ -3017,7 +3027,7 @@
       }
     }
   ],
-  "verifier_sha256": "02e8e174885393917d27eace834b855438e1a15edb7a837b8ae94a78ea665dcb",
+  "verifier_sha256": "a1f95e34515a9479478cb5cdde5c5bc69adbfbd0e823fa69b16f6dff09212052",
   "reviewed_source_sha256": {
     "s/cmake/PjTests.cmake": "5dbc86dbd40aad8d5ce0fdf34c86293b4802419e129905452b451a4649a0b7dd",
     "s/cmake/test_mains/pj_gpu_test_gate.h": "5f76ca2d4ecf7f5543920d6970f624d3109b32482c2fee7fc2f390149231b5ef",

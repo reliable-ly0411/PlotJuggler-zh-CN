@@ -36,6 +36,17 @@ actual session behavior still require verification; a non-Windows build fails
 closed and cannot validate a Windows token. Do not change SystemTemp, ACLs,
 security settings or accounts to make it pass.
 
+Immediately after aqt installation, the producer authenticates the complete
+retained Qt archive set against the source-reviewed official filenames, sizes,
+SHA-256 values and URLs. `qt_archive_aliases` explicitly maps each of the eight
+aqt basenames to its canonical official filename. All inputs are checked before
+any rename, Qt tool execution or CMake compilation; unknown, missing, colliding,
+linked or non-regular inputs fail closed. Only authenticated files are renamed,
+and the producer log records both names and the pinned identity. Declaration
+preparation and clean replay still require the complete canonical archive set
+and independently compare extracted Qt members. This check does not replace
+full native-kit production and clean-run acceptance.
+
 Record the full source commit, tree, recursive submodule commits, workflow
 commit, configuration, actual compiler/toolset and SDK, Qt version, Conan graph
 package IDs and revisions, exact tool versions, verified source URLs and SHA-256

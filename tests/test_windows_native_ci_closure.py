@@ -782,6 +782,123 @@ class QtArchiveTests(unittest.TestCase):
                 closure.authenticate_qt_archive(self.path, pin)
 
 
+class QtArchiveNormalizationTests(unittest.TestCase):
+    """Exercise all eight real names with synthetic bytes, never replacing official pins."""
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
+        self.directory = Path(self.tmp.name) / 'archives'; self.directory.mkdir()
+        self.policy = json.loads((ROOT / '.github/windows-native-kit/ci-closure-policy.json').read_text(encoding='utf-8'))
+        self.aliases = self.policy['qt_archive_aliases']
+        self.assertEqual(len(self.aliases), 8)
+        for pin in self.policy['qt_archives']:
+            local = next(k for k, v in self.aliases.items() if v == pin['file'])
+            data = ('synthetic:' + local).encode()
+            pin.update(bytes=len(data), sha256=hashlib.sha256(data).hexdigest())
+            (self.directory / local).write_bytes(data)
+        self.local = next(iter(self.aliases))
+
+    def normalize(self):
+        return closure.normalize_qt_archives(self.directory, self.policy)
+
+    def test_all_eight_names_canonicalize_and_remain_strictly_authenticatable(self):
+        receipt = self.normalize()
+        self.assertEqual({x['retained_file'] for x in receipt}, set(self.aliases))
+        self.assertEqual({p.name for p in self.directory.iterdir()}, set(self.aliases.values()))
+        for pin in self.policy['qt_archives']:
+            closure.authenticate_qt_archive(self.directory / pin['file'], pin)
+        self.assertEqual(len(closure.retained_qt_archives(self.directory, self.policy['qt_archives'])), 8)
+        self.assertEqual(len(self.normalize()), 8)  # Safe retry after partial rename.
+
+    def test_bad_inventory_fails_before_any_rename(self):
+        for mutation in ('missing', 'unknown', 'case', 'collision', 'tamper', 'size',
+                         'directory', 'symlink', 'hardlink', 'fifo'):
+            with self.subTest(mutation=mutation):
+                with tempfile.TemporaryDirectory() as tmp:
+                    original = self.directory
+                    self.directory = Path(tmp) / 'archives'
+                    shutil.copytree(original, self.directory)
+                    path = self.directory / self.local
+                    if mutation == 'missing': path.unlink()
+                    elif mutation == 'unknown': (self.directory / 'unknown.7z').write_bytes(b'?')
+                    elif mutation == 'case': path.rename(path.with_name(path.name.upper()))
+                    elif mutation == 'collision': shutil.copyfile(path, self.directory / self.aliases[self.local])
+                    elif mutation == 'tamper': path.write_bytes(b'x' * path.stat().st_size)
+                    elif mutation == 'size': path.write_bytes(b'x')
+                    elif mutation == 'directory': (self.directory / 'ignored').mkdir()
+                    elif mutation == 'symlink': (self.directory / 'link').symlink_to(path)
+                    elif mutation == 'hardlink': os.link(path, self.directory / 'link')
+                    elif mutation == 'fifo':
+                        if not hasattr(os, 'mkfifo'):
+                            self.directory = original
+                            continue
+                        os.mkfifo(self.directory / 'pipe')
+                    before = sorted(p.name for p in self.directory.iterdir())
+                    with self.assertRaises(closure.ClosureError): self.normalize()
+                    self.assertEqual(sorted(p.name for p in self.directory.iterdir()), before)
+                    self.directory = original
+
+    def test_invalid_ambiguous_or_untrusted_policies_fail_without_rename(self):
+        for mutation in ('duplicate-pin', 'case-pin', 'alias-target', 'alias-collision',
+                         'alias-ambiguous', 'alias-missing', 'unsafe-alias', 'url', 'source', 'hash', 'size'):
+            with self.subTest(mutation=mutation):
+                original = self.policy
+                self.policy = copy.deepcopy(original)
+                pins, aliases = self.policy['qt_archives'], self.policy['qt_archive_aliases']
+                if mutation == 'duplicate-pin': pins.append(copy.deepcopy(pins[0]))
+                elif mutation == 'case-pin':
+                    pins.append(copy.deepcopy(pins[0])); pins[-1]['file'] = pins[-1]['file'].upper()
+                elif mutation == 'alias-target': aliases[self.local] = 'absent.7z'
+                elif mutation == 'alias-collision': aliases[self.local.upper()] = aliases[self.local]
+                elif mutation == 'alias-ambiguous': aliases['another.7z'] = aliases[self.local]
+                elif mutation == 'alias-missing': del aliases[self.local]
+                elif mutation == 'unsafe-alias': aliases['../unsafe.7z'] = aliases.pop(self.local)
+                elif mutation == 'url': pins[0]['url'] = 'https://example.org/' + pins[0]['file']
+                elif mutation == 'source': pins[0]['source'] += '?unreviewed'
+                elif mutation == 'hash': pins[0]['sha256'] = 'invalid'
+                elif mutation == 'size': pins[0]['bytes'] = True
+                before = sorted(p.name for p in self.directory.iterdir())
+                with self.assertRaises(closure.ClosureError): self.normalize()
+                self.assertEqual(sorted(p.name for p in self.directory.iterdir()), before)
+                self.policy = original
+
+    def test_canonical_only_consumer_rejects_alias_and_missing_archive(self):
+        with self.assertRaises(closure.ClosureError):
+            closure.retained_qt_archives(self.directory, self.policy['qt_archives'])
+        self.normalize()
+        (self.directory / self.aliases[self.local]).unlink()
+        with self.assertRaises(closure.ClosureError):
+            closure.retained_qt_archives(self.directory, self.policy['qt_archives'])
+
+    def test_cli_checks_policy_identity_and_emits_all_eight_mappings(self):
+        root = Path(self.tmp.name)
+        target = root / 'd/qt-archives'; target.parent.mkdir()
+        self.directory.rename(target); self.directory = target
+        policy_path = root / 's/.github/windows-native-kit/ci-closure-policy.json'
+        policy_path.parent.mkdir(parents=True)
+        self.policy['verifier_sha256'] = '0' * 64
+        policy_path.write_text(json.dumps(self.policy), encoding='utf-8')
+        command = [__import__('sys').executable, '-I', '-B', str(Path(closure.__file__)),
+                   '--normalize-qt-archives', '--root', str(root), '--reviewed-policy', str(policy_path)]
+        bad = subprocess.run(command, capture_output=True, text=True)
+        self.assertEqual(bad.returncode, 1)
+        self.assertIn('exact source-reviewed verifier', bad.stderr)
+        self.assertEqual({p.name for p in target.iterdir()}, set(self.aliases))
+        self.policy['verifier_sha256'] = closure.digest(Path(closure.__file__))
+        policy_path.write_text(json.dumps(self.policy), encoding='utf-8')
+        good = subprocess.run(command, capture_output=True, text=True)
+        self.assertEqual(good.returncode, 0, good.stderr)
+        receipt = json.loads(good.stdout)['qt_archive_identities']
+        self.assertEqual({x['retained_file']: x['file'] for x in receipt}, self.aliases)
+
+    def test_producer_authenticates_before_qt_execution_and_build(self):
+        script = (ROOT / 'scripts/windows/prepare_native_ci.ps1').read_text(encoding='utf-8')
+        check = script.index("'--normalize-qt-archives'")
+        self.assertLess(script.index('--archive-dest $qtArchives'), check)
+        for marker in ("$actualQt =", "@('profile', 'detect'", "Invoke-Checked $cmake @('-S'"):
+            self.assertLess(check, script.index(marker))
+        self.assertIn('Invoke-Checked $builderPython', script[check - 150:check])
+
+
 class HostedPreflightTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)

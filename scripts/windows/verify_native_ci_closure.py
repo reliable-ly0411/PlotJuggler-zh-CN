@@ -476,13 +476,8 @@ def derive_partition(policy, discoveries, source_sha, source_tree, logical_root,
             'unregistered': unregistered}
 
 
-def authenticate_qt_archive(path, pin):
-    """Check one retained archive against its source-reviewed official SHA-256.
-
-    This proves only archive bytes, not the extracted files or a running Qt.
-    The caller must separately map and compare every staged Qt member to this
-    archive using an authenticated extractor, and retain original notices.
-    """
+def validate_qt_archive_pin(pin):
+    """Validate the reviewed official identity without reading downloaded bytes."""
     keys = {'file', 'url', 'sha256', 'bytes', 'source'}
     if not isinstance(pin, dict) or set(pin) != keys:
         raise ClosureError('incomplete official Qt archive pin')
@@ -498,6 +493,87 @@ def authenticate_qt_archive(path, pin):
             not re.fullmatch(r'[0-9a-f]{64}', str(pin['sha256'])) or
             type(pin['bytes']) is not int or not 0 < pin['bytes'] <= 1024**3):
         raise ClosureError('invalid official Qt archive identity')
+
+
+def retained_qt_archives(archive_dir, pins, aliases=None):
+    """Authenticate the complete inventory before any renames or extraction.
+
+    Aliases are exact, source-reviewed aqt basenames, never suffix/hash guesses.
+    Canonical names are accepted too, but two names for one identity fail closed.
+    """
+    if not isinstance(pins, list) or not pins:
+        raise ClosureError('source-reviewed Qt archive pins are required')
+    names = {}
+    for pin in pins:
+        validate_qt_archive_pin(pin)
+        key = pin['file'].casefold()
+        if key in names:
+            raise ClosureError('duplicate Qt archive pin')
+        names[key] = pin
+    aliases = {} if aliases is None else aliases
+    if not isinstance(aliases, dict):
+        raise ClosureError('invalid Qt archive alias map')
+    lookup = {pin['file']: pin for pin in pins}
+    folded = set(names)
+    targets = set()
+    for local, official in aliases.items():
+        if (not isinstance(local, str) or not re.fullmatch(r'[A-Za-z0-9_.-]+\.7z', local) or
+                not isinstance(official, str) or official not in lookup or
+                local.casefold() in folded or official in targets):
+            raise ClosureError('ambiguous or invalid Qt archive alias')
+        folded.add(local.casefold())
+        targets.add(official)
+        lookup[local] = names[official.casefold()]
+    if aliases and targets != {pin['file'] for pin in pins}:
+        raise ClosureError('Qt archive aliases must cover every official pin')
+    directory = Path(archive_dir)
+    if not directory.is_dir() or directory.is_symlink():
+        raise ClosureError('retained Qt archive directory is missing or linked')
+    result, seen = [], set()
+    for path in sorted(directory.iterdir(), key=lambda item: item.name.casefold()):
+        _real_file(path)
+        pin = lookup.get(path.name)
+        if pin is None:
+            raise ClosureError('retained Qt archive has no source-reviewed official pin: ' + path.name)
+        if pin['file'] in seen:
+            raise ClosureError('colliding retained Qt archive identities')
+        seen.add(pin['file'])
+        if path.stat().st_size != pin['bytes'] or digest(path) != pin['sha256']:
+            raise ClosureError('retained Qt archive bytes differ from the official pin: ' + path.name)
+        result.append((path, pin))
+    if seen != {pin['file'] for pin in pins}:
+        raise ClosureError('retained Qt archive set is incomplete')
+    return result
+
+
+def normalize_qt_archives(archive_dir, policy):
+    """Rename only fully authenticated aqt inputs; return an auditable identity map."""
+    if not isinstance(policy, dict) or not policy.get('qt_archive_aliases'):
+        raise ClosureError('source-reviewed Qt archive aliases are required')
+    inventory = retained_qt_archives(archive_dir, policy.get('qt_archives'), policy['qt_archive_aliases'])
+    receipt = []
+    for path, pin in inventory:
+        target = path.with_name(pin['file'])
+        if path != target:
+            # Inventory validation rejects existing destinations, including case collisions.
+            if target.exists():
+                raise ClosureError('Qt canonical archive destination already exists')
+            path.rename(target)
+        authenticate_qt_archive(_real_file(target), pin)
+        receipt.append({'retained_file': path.name, 'file': pin['file'],
+                        'bytes': pin['bytes'], 'sha256': pin['sha256'], 'url': pin['url']})
+    return receipt
+
+
+def authenticate_qt_archive(path, pin):
+    """Check one retained archive against its source-reviewed official SHA-256.
+
+    This proves only archive bytes, not the extracted files or a running Qt.
+    The caller must separately map and compare every staged Qt member to this
+    archive using an authenticated extractor, and retain original notices.
+    """
+    validate_qt_archive_pin(pin)
+    name = pin['file']
     path = Path(path)
     info = path.lstat()
     if (path.name != name or not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode) or
@@ -660,13 +736,7 @@ def prepare_qt_declarations(root, policy, reference_dir, archive_dir=None, tool_
     archive_dir = Path(archive_dir) if archive_dir is not None else root / 'd/qt-archives'
     if not archive_dir.is_dir() or archive_dir.is_symlink():
         raise ClosureError('retained Qt archive directory is missing or linked')
-    archives = sorted((p for p in archive_dir.iterdir() if p.is_file()), key=lambda p: p.name.casefold())
-    if not archives:
-        raise ClosureError('retained Qt release archives are missing')
-    for archive in archives:
-        if archive.name not in pin_map:
-            raise ClosureError('retained Qt archive has no source-reviewed official pin: ' + archive.name)
-        authenticate_qt_archive(_real_file(archive), pin_map[archive.name])
+    archives = [path for path, _ in retained_qt_archives(archive_dir, pins)]
     qt_rel = f'q/{version}/msvc2022_64'
     qt = root.joinpath(*qt_rel.split('/'))
     selected, notices = _qt_selected_files(qt)
@@ -2756,6 +2826,7 @@ def main():
     parser.add_argument('--reviewed-policy', required=True)
     parser.add_argument('--output-dir')
     parser.add_argument('--output')
+    parser.add_argument('--normalize-qt-archives', action='store_true')
     parser.add_argument('--prepare-declarations', action='store_true')
     parser.add_argument('--verify-codemodel', action='store_true')
     parser.add_argument('--codemodel-index')
@@ -2767,6 +2838,21 @@ def main():
     parser.add_argument('--source-tree')
     parser.add_argument('--evidence-receipt')
     args = parser.parse_args()
+    if args.normalize_qt_archives:
+        try:
+            root = Path(args.root).absolute()
+            policy_path = Path(args.reviewed_policy).absolute()
+            if policy_path != root / 's/.github/windows-native-kit/ci-closure-policy.json':
+                raise ClosureError('Qt archive policy must belong to the source tree')
+            policy = json.loads(_real_file(policy_path).read_text(encoding='utf-8'))
+            if policy.get('schema') != 2 or policy.get('verifier_sha256') != digest(Path(__file__)):
+                raise ClosureError('Qt archives require the exact source-reviewed verifier policy')
+            receipt = normalize_qt_archives(root / 'd/qt-archives', policy)
+            print(json.dumps({'qt_archive_identities': receipt}, sort_keys=True))
+            return 0
+        except (ClosureError, OSError, ValueError, KeyError, TypeError) as exc:
+            print('Qt archive normalization failed: ' + str(exc), file=sys.stderr)
+            return 1
     if args.verify_codemodel:
         try:
             if (sys.platform != 'win32' or os.environ.get('GITHUB_ACTIONS') != 'true' or

@@ -488,6 +488,11 @@ for ($attempt = 1; $attempt -le 5; $attempt++) {
   if ($attempt -eq 5) { throw 'Pinned Qt installation failed after five attempts.' }
   Start-Sleep -Seconds (15 * $attempt)
 }
+# aqt retains unprefixed basenames. Authenticate the entire reviewed inventory
+# and canonicalize it before executing Qt tools or starting any compilation.
+Invoke-Checked $builderPython @('-I', '-B', (Join-Path $source 'scripts/windows/verify_native_ci_closure.py'),
+  '--normalize-qt-archives', '--root', $root,
+  '--reviewed-policy', (Join-Path $source '.github/windows-native-kit/ci-closure-policy.json'))
 Assert-RealTree $qtRoot
 foreach ($path in @('bin/qmake.exe', 'bin/lrelease.exe', 'bin/lupdate.exe', 'bin/rcc.exe',
                     'translations/qtbase_zh_CN.qm')) {
