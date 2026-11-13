@@ -109,8 +109,17 @@ struct Session {
     });
   }
 
+  // Validate before constructing AppSession: an empty override selects the
+  // default scan path instead of this fixture's deliberately empty directory.
+  QString checkedExtensionsPath() const {
+    if (!extensions_dir.isValid() || extensions_dir.path().isEmpty()) {
+      qFatal("Cannot create private AppSession test scan directory");
+    }
+    return extensions_dir.path();
+  }
+
   QTemporaryDir extensions_dir;
-  AppSession app{extensions_dir.path()};
+  AppSession app{checkedExtensionsPath()};
   SessionManager& session = app.sessionManager();
   DatasetId dataset = 0;
 };

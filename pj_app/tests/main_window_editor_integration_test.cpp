@@ -31,6 +31,7 @@
 #include "pj_runtime/SessionManager.h"
 #include "pj_scene_common/scene_dock_widget.h"
 #include "pj_widgets/CurveTreeView.h"
+#include "support/isolated_main_window.h"
 #include "ui/CurveListPanel.h"
 
 #ifndef PJ_CUSTOM_TOPICS_EDITOR_FIXTURE_PATH
@@ -85,7 +86,7 @@ TEST(MainWindowEditorIntegrationTest, PlusOpensTheDeclaredEditorAndItsPreviewEmb
   QTemporaryDir extensions_dir;
   stageEditorFixture(extensions_dir);
   ASSERT_FALSE(HasFatalFailure());
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = Peer::session(window);
   ASSERT_EQ(app.extensionCatalog().customTopicsEditorId(), u"custom-topics-editor-fixture"_s)
       << "the editor is the toolbox declaring the capability";
@@ -123,7 +124,7 @@ TEST(MainWindowEditorIntegrationTest, DropOnThePanelDeliversNamesAndDataSources)
   QTemporaryDir extensions_dir;
   stageEditorFixture(extensions_dir);
   ASSERT_FALSE(HasFatalFailure());
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = Peer::session(window);
   // Shown, so the panel is laid out: the drop filter finds its target by geometry.
   window.show();

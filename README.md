@@ -5,7 +5,7 @@
 独立的 ArduPilot DataFlash BIN 加载插件。
 
 - **正式版：** [v4.1.0+zh.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)，提供 Windows 安装器/便携包、Linux AppImage/DEB；已验范围及限制以 Release 为准。
-- **开发线：** `zh-CN-4.x-dev` 当前为 `4.1.0-zh.1.dev.3`，Qt 6.12.0 / SDK 0.39.0，精确上游快照 `1d49adad`。这不是已发布正式版，尚未完成本轮双平台原包验收。
+- **开发线：** `zh-CN-4.x-dev` 当前为 `4.1.0-zh.1.dev.3`，Qt 6.12.0 / SDK 0.40.0（PR #226 Unicode 路径修复快照），精确上游快照 `8b847cb74`。这不是已发布正式版，尚未完成本轮双平台原包验收。
 - **稳定维护线：** `zh-CN-4.x` 保持已发布 4.1 内容；`main` / `main-3.x` 为上游镜像，3.x 汉化线独立维护。
 
 新配置默认简体中文，可在首选项切换语言，下次启动生效。界面语言不改变数值或数据解析规则。

@@ -8,26 +8,31 @@
 // an explicit plugin dir would otherwise scan — and seed into — the real user
 // profile.
 
-#include <QTemporaryDir>
 #include <utility>
 
+#include "../../cmake/test_mains/pj_test_owned_directory.h"
 #include "pj_runtime/ExtensionCatalogService.h"
 
 namespace PJ::test {
 
 struct HermeticCatalog {
-  explicit HermeticCatalog(const QString& install_dir)
-      : service(
-            ExtensionCatalogService::Paths{install_dir, sandbox.path(), sandbox.path() + "/no_bundled"},
-            DiagnosticSink{}, nullptr) {}
+  explicit HermeticCatalog(const QString& install_dir) : service(paths(install_dir), DiagnosticSink{}, nullptr) {}
 
   explicit HermeticCatalog(StaticPluginSet static_plugins, DiagnosticSink sink = {})
-      : service(
-            ExtensionCatalogService::Paths{QString(), sandbox.path(), sandbox.path() + "/no_bundled"}, std::move(sink),
-            std::move(static_plugins), nullptr) {}
+      : service(paths(QString()), std::move(sink), std::move(static_plugins), nullptr) {}
 
-  QTemporaryDir sandbox;  ///< marketplace root; the bundled path under it does not exist, so seeding is a no-op
+  // Parent outlives service. Store siblings (.artifacts/.extraction/.profiles,
+  // .install_stage/.seed_stage) are children of this parent, not its siblings.
+  PjTestOwnedDirectory sandbox;
   ExtensionCatalogService service;
+
+ private:
+  ExtensionCatalogService::Paths paths(const QString& install_dir) {
+    if (!sandbox.ownsTree() || !QDir(sandbox.path()).mkdir(QStringLiteral("marketplace")) || !sandbox.ownsTree()) {
+      qFatal("Cannot prepare owned hermetic catalog before service construction");
+    }
+    return {install_dir, sandbox.path() + "/marketplace", sandbox.path() + "/no_bundled"};
+  }
 };
 
 }  // namespace PJ::test

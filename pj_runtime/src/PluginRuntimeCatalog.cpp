@@ -3,6 +3,7 @@
 
 #include "pj_runtime/PluginRuntimeCatalog.h"
 
+#include <QCoreApplication>
 #include <QLibraryInfo>
 #include <QVersionNumber>
 #include <algorithm>
@@ -710,7 +711,11 @@ bool PluginRuntimeCatalog::loadAndRegisterDataSource(const PluginDescriptor& des
     loaded.file_extensions.push_back(normalizeExtension(ext));
   }
 
-  report(DiagnosticLevel::kInfo, loaded.id, "Loaded DataSource " + loaded.name + " from " + loaded.path);
+  report(
+      DiagnosticLevel::kInfo, loaded.id,
+      QCoreApplication::translate("PJ::PluginRuntimeCatalog", "Loaded DataSource %1 from %2")
+          .arg(QString::fromStdString(loaded.name), QString::fromStdString(loaded.path))
+          .toStdString());
   data_sources_.push_back(std::move(loaded));
   return true;
 }
@@ -732,7 +737,11 @@ bool PluginRuntimeCatalog::loadAndRegisterMessageParser(const PluginDescriptor& 
   loaded.encodings.insert(loaded.encodings.end(), descriptor.encoding.begin(), descriptor.encoding.end());
   loaded.from_authoritative_dir = authoritative_plugin_paths_.contains(loaded.path);
 
-  report(DiagnosticLevel::kInfo, loaded.id, "Loaded MessageParser " + loaded.name + " from " + loaded.path);
+  report(
+      DiagnosticLevel::kInfo, loaded.id,
+      QCoreApplication::translate("PJ::PluginRuntimeCatalog", "Loaded MessageParser %1 from %2")
+          .arg(QString::fromStdString(loaded.name), QString::fromStdString(loaded.path))
+          .toStdString());
   message_parsers_.push_back(std::move(loaded));
   return true;
 }
@@ -775,7 +784,11 @@ bool PluginRuntimeCatalog::loadAndRegisterToolbox(const PluginDescriptor& descri
     }
   }
 
-  report(DiagnosticLevel::kInfo, loaded.id, "Loaded Toolbox " + loaded.name + " from " + loaded.path);
+  report(
+      DiagnosticLevel::kInfo, loaded.id,
+      QCoreApplication::translate("PJ::PluginRuntimeCatalog", "Loaded Toolbox %1 from %2")
+          .arg(QString::fromStdString(loaded.name), QString::fromStdString(loaded.path))
+          .toStdString());
   toolbox_plugins_.push_back(std::move(loaded));
   return true;
 }
@@ -804,11 +817,9 @@ bool PluginRuntimeCatalog::loadAndRegisterWidget(const PluginDescriptor& descrip
   if (std::ranges::any_of(widget_plugins_, [&](const auto& w) { return w.id == descriptor.id || w.path == path; })) {
     return true;  // already loaded; a Widget library is never replaced at runtime
   }
-  auto result = WidgetLibrary::load(descriptor.dso_path.string());
+  auto result = WidgetLibrary::load(descriptor.dso_path);
   if (!result) {
-    report(
-        DiagnosticLevel::kError, descriptor.id,
-        descriptor.dso_path.string() + ": " + readableLoadFailure(result.error()));
+    report(DiagnosticLevel::kError, descriptor.id, path + ": " + readableLoadFailure(result.error()));
     return false;
   }
 
@@ -822,7 +833,11 @@ bool PluginRuntimeCatalog::loadAndRegisterWidget(const PluginDescriptor& descrip
   loaded.widgets = descriptor.widgets;
 
   admitWidgetBuild(loaded, descriptor);
-  report(DiagnosticLevel::kInfo, loaded.id, "Loaded Widget " + loaded.name + " from " + loaded.path);
+  report(
+      DiagnosticLevel::kInfo, loaded.id,
+      QCoreApplication::translate("PJ::PluginRuntimeCatalog", "Loaded Widget %1 from %2")
+          .arg(QString::fromStdString(loaded.name), QString::fromStdString(loaded.path))
+          .toStdString());
   widget_plugins_.push_back(std::move(loaded));
   return true;
 }

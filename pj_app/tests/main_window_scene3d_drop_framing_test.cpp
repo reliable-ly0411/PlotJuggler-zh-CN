@@ -24,6 +24,7 @@
 #include "pj_runtime/CatalogModel.h"
 #include "pj_runtime/SessionManager.h"
 #include "pj_scene3d_widgets/Scene3DDockWidget.h"
+#include "support/isolated_main_window.h"
 
 using namespace Qt::StringLiterals;
 
@@ -70,7 +71,7 @@ class MainWindowScene3dDropFramingTest : public ::testing::Test {
   static void SetUpTestSuite() {
     extensions_ = std::make_unique<QTemporaryDir>();
     ASSERT_TRUE(extensions_->isValid());
-    window_ = std::make_unique<PJ::MainWindow>(extensions_->path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_->path());
   }
   static void TearDownTestSuite() {
     window_.reset();

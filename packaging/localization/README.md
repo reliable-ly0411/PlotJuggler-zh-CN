@@ -3,7 +3,7 @@
 Read the repository's `RELEASING.md` before changing versions or publishing.
 The build-only `zh-4x-packages.yml` uses the normal native CI dependency graph and
 regressions, then packages a fixed source commit with upstream-compatible formats:
-Windows IFW `.exe`, Linux `.AppImage` and `.deb`. It does not create a tag or Release.
+Windows IFW `.exe` and portable `.zip`, Linux `.AppImage` and `.deb`. It does not create a tag or Release.
 The upstream Depot workflows are not used by the Chinese fork.
 
 `prepare_payload.py` obtains the CMake-generated exact BIN plugin path rather than
@@ -15,6 +15,122 @@ The official registry snapshot and its artifact checksums are frozen in
 `registry-lock.json`; admission is checked against the packaged host's SDK/ABI.
 The Linux-only ROS distro-specific binaries keep their upstream external-runtime
 contract. The optional GPL retro game payload is not included in this candidate.
+
+## Windows software-renderer notices
+
+The Windows payload retains the original Mesa 11.2.2 and LLVM 3.6.2 notices in
+`share/licenses/Windows-Mesa-llvmpipe`. `windows-mesa-notices.json` binds this
+material to the reviewed `opengl32sw.dll` size and SHA-256, immutable upstream
+source revisions, and the byte count and SHA-256 of each retained source file.
+The original HTML and source-file notices are copied byte for byte, not replaced
+by generic license names or notices from a modern LLVM release. Reference source
+files have a `.txt` suffix so they are not compiled; their contents are unchanged.
+The source set includes directly related VMware Gallium/llvmpipe notices and the
+LLVM Support notices named by its license. This is not a claim of a complete
+linked-object audit or a redistributable SDK/source bundle.
+
+Collection rejects unknown renderer bytes, missing/extra source notices and
+changed notice bytes. Both Windows product formats use the same staged notices;
+the installer staging check and clean-package verifier independently compare the
+actual deployed DLL and notice inventory with the checked-in lock, not merely a
+self-reported package hash manifest. Updating the renderer requires reviewing
+its notices and lock together. Original notice files are exempt from whitespace
+rewriting only; the tests still verify their complete source hashes.
+
+### System D3D compiler proposal and validation boundary
+
+Localized Qt 6.12 Windows products target x64 Windows 10 1809 (build 17763)
+or newer, including Windows 11, matching Qt's supported-platform floor:
+<https://doc.qt.io/qt-6/supported-platforms.html>. They depend on the operating
+system's `d3dcompiler_47.dll` and its `D3DCompile` export. Windows 8.1/10 include
+this DLL; this proposal does not extend support to older systems or promise that
+a stripped/damaged Windows image will work. See Microsoft's redistributable
+package guidance: <https://www.nuget.org/packages/Microsoft.DXSDK.D3DX/9.29.952.7>.
+
+The localized installer uses the official `--no-system-d3d-compiler` option on
+both windeployqt passes (application and plugins), not post-deployment deletion.
+Other installer callers without `ExtraPrefix` retain their previous behavior.
+The shared stage check and clean-package verifier reject any bundled
+`d3dcompiler*.dll`, including nested/case-varied copies. Clean Windows acceptance
+also enforces the OS build floor and resolves `D3DCompile` from compiler 47 with
+`LOAD_LIBRARY_SEARCH_SYSTEM32`; it never falls back to PATH or a local copy.
+The operating system supplies and services this dependency. No new Microsoft
+SDK agreement or restrictive application terms are introduced by this proposal.
+
+Fixed Qt 6.12 source evidence at commit
+`025bdad181de241e81bf853c8a2d7bf3d19261a9`:
+
+- [windeployqt option](https://github.com/qt/qtbase/blob/025bdad181de241e81bf853c8a2d7bf3d19261a9/src/tools/windeployqt/main.cpp)
+- [RHI compiler resolution](https://github.com/qt/qtbase/blob/025bdad181de241e81bf853c8a2d7bf3d19261a9/src/gui/rhi/qrhid3dhelpers.cpp)
+- [QSystemLibrary system-directory default](https://github.com/qt/qtbase/blob/025bdad181de241e81bf853c8a2d7bf3d19261a9/src/corelib/plugin/qsystemlibrary_p.h)
+
+The original ce4 portable ZIP (SHA-256
+`c8525c91a0114c49ba20693aabffa5fbda080b601bdc8fccec9e867675752628`)
+was inspected read-only: 91 PE files, 968 ordinary import descriptors and eight
+delay-import descriptors, with no parse errors and no D3DCompiler imports.
+Compiler-name strings occurred only in Qt6Gui and the compiler DLL itself.
+Combined with Qt's source, this supports preparing the change; static inspection
+is not a substitute for runtime testing of the changed packages.
+
+Application/Qt binary code and the optional standalone native test kit are not
+modified. The new product packages have NOT yet been built or accepted. After
+review and approval, a changed candidate must use the normal source-bound
+package/native/clean-acceptance workflow, including Windows rendering and both
+installer/portable checks. Old accepted binaries cannot be relabelled as a
+new-source build. Existing publication and final visual-approval gates remain
+unchanged. Removing the redistributed compiler from future products does not
+retroactively establish that old ce4 packages met SDK downstream conditions.
+
+## Linux packaging tool lock
+
+`linux-tools-lock.json` records the official repository, release/asset IDs,
+source commit, byte count and SHA-256 of all three x86_64 packaging tools.
+Downloads use GitHub's numeric asset API with `Accept: application/octet-stream`,
+not the moving `continuous` download URL. Asset IDs identify uploads, not an
+upstream promise of permanent retention: deletion fails closed, with no rolling
+fallback. Source commits describe official release provenance, not a claim of
+reproducible builds from those commits.
+
+The Linux candidate preflight checks official asset metadata and downloads all
+three tools before dependency installation or application compilation. It does
+not execute downloaded content. Payload staging rehashes the same local files
+(including size), fails on tampering rather than replacing it, and records the
+lock in `release.json`. The existing clean-source provenance gate is unchanged.
+The shared `download_retry.py` reader makes at most three attempts for HTTP
+500/502/503/504 or explicit connection/read timeouts, waiting 2 then 4 seconds.
+This applies to both metadata and asset bytes. Other HTTP errors, TLS/permission
+errors, invalid JSON, identity mismatches and size/checksum failures fail closed
+without retries. Each attempt discards any partial response and starts a fresh
+request to the same official URL; validation still precedes writing/chmod.
+The unchanged 180-second urllib timeout applies to blocking socket operations,
+not a strict whole-download deadline. A hard wall-clock limit requires a runner
+step/job timeout; the retry count does not provide one.
+To independently run the network preflight in an empty directory:
+
+```sh
+python3 packaging/localization/linux_tools.py --directory /tmp/pj-linux-tools
+```
+
+The 4.1.0 packaging repair updates two build tools whose rolling uploads no
+longer matched the prior SHA-256 locks. The official releases list did not expose
+an asset with either prior digest; existing historical release/package bytes are
+not changed. The Qt plugin retains its original bytes.
+
+- linuxdeploy: asset `699514588`, source
+  `07333c6e942c7d71782b66be924c5d867f9dfdfc` (Update binutils to latest release).
+- linuxdeploy-plugin-qt: asset `525032210`, source
+  `9b9fca179e7312ae4a433ad6c3183d73c116180b` (Make qmlimportscanner more robust).
+- appimagetool: asset `715388534`, source
+  `11d54c9acc7f246df1398050a4b880314ac76862` (ELF section-header byte-order fix).
+
+All three source SHAs were resolved through the official commit API; they are
+not branch names inferred from `target_commitish`. Each downloaded asset's size
+and SHA-256 matched the official asset metadata. The lock's release tag is audit
+context only and is never used to select bytes. Updating this lock requires
+reviewing the official release/source metadata and independently hashing all
+new downloads; a checksum error is not permission to accept replacement bytes.
+Upstream Docker/AppImage convenience download paths are unchanged; this fork's
+candidate always stages the three checked files before calling the packager.
 
 `version_map.py` owns the platform metadata mapping. Application and tag retain
 SemVer; `4.0.0-zh.1.rc.1` maps to IFW `4.0.0.1.0.1` and Debian
@@ -32,6 +148,32 @@ Qt/Conan directory or system CJK font package is supplied to these containers.
 verifies IFW metadata, checks the installed application with development paths
 removed, then uninstalls it. MSVC CRT DLLs are explicitly supplied app-local;
 the runner's existing VC installation is not used as proof that they shipped.
+
+`verify_package.py` passes an explicit absolute `--profile-dir` beneath its
+work directory (temporary by default) to every application process, including version, Python,
+plugin, CSV, BIN and GUI capture launches. Each case has its own profile; Windows
+registry settings are not isolated by HOME/XDG variables alone. The executor
+controls the temporary-directory location through its normal TMP/TEMP settings.
+For local verification, `--work-dir` selects an empty absolute directory beneath
+an existing parent. It retains inputs, layouts and profiles on both success and
+failure; the verifier never deletes that directory. Relative, nonempty, file,
+root, parent-traversal, symbolic-link and junction paths are rejected. Omitting the option
+keeps the automatically cleaned CI temporary directory.
+Windows capture uses Pillow ImageGrab; it is not an application screenshot CLI.
+Capture selects the launched process's unique main window, not a matching title.
+Windows uses physical per-monitor coordinates, the taskbar-excluding work area,
+and the window's actual minimum size before moving/resizing it. A window that
+cannot fit, changes identity, or remains obscured fails acceptance; capture does
+not change display modes, DPI scale, or application settings. Linux capture is
+limited to the dedicated unmanaged 1920×1080 Xvfb display. It verifies the GUI's
+isolated process session, exact profile argument and packaged executable bytes
+(including an AppImage child PID), then moves the original-size window without
+shrinking it. `xdotool` and `x11-utils` are required in the clean container.
+Both platforms recheck geometry/visibility around the unscaled whole-desktop
+screenshot and retain `gui-<language>.geometry.json` with its PNG hash. Missing
+helpers, ambiguous windows, clipping, or inconsistent image dimensions fail
+closed. These checks establish capture completeness, not full widget usability;
+the original screenshots still require visual review.
 
 `verify_package.py` checks package provenance, CJK font bytes, legal texts, the
 real app `--version`, Python, and every expected plugin/version. It restores
@@ -133,6 +275,10 @@ exactly two isolated inputs with `prepare_feedback_tests.py`: the APBIN binary
 selected by this build's generated path file, and the platform-matching official
 FFT ZIP verified against the locked registry hash. This is test input only;
 FFT is not added to the release's 19/21 bundled-plugin inventory.
+FFT acquisition uses the same bounded retry policy as Linux packaging tools,
+with the existing 120-second socket timeout and 32 MiB archive limit. Archive
+validation and APBIN assembly still occur after compilation. `--fft-archive`
+continues to verify a local archive without network requests or replacement.
 CTest selection must contain all three `PluginFeedbackMainWindow-*` cases plus
 the metadata case. `audit_feedback_results.py` rejects missing cases, JUnit and
 Qt-level skips/errors/blacklists, or absent actual APBIN/host-flow PASS markers.
@@ -157,8 +303,8 @@ become three-language package passes merely by rerunning the report generator.
 Host dependency provenance comes from `host_versions.py`: Qt is read from
 `versions.env`, and the host SDK from the exact `conanfile.txt` requirement.
 Collection checks the selected Qt qconfig and resolved Conan host graph before
-retaining notices. This does not replace the development SDK with the historical
-4.1 Unicode backport, or rewrite independently pinned plugin SDK provenance.
+retaining notices. The retained host SDK source and exact recipe revision must agree with the
+current host version; historical plugin SDK provenance remains independent.
 
 Windows payloads must retain the original Mesa 11.2.2 and LLVM 3.6.2 notices in
 `share/licenses/Windows-Mesa-llvmpipe`. The checked-in lock binds all original
@@ -176,3 +322,46 @@ from system32's d3dcompiler_47.dll only. Other installer callers without
 Windows rendering, installer/portable or final screenshot acceptance.
 
 Historical candidate triggers are preserved unchanged from the development branch. No new development publication is admitted by forward integration; a new package candidate needs explicit version and trigger preparation. Four products require six clean format/OS reports and 18 screenshots; the development snapshot remains unaccepted until rebuilt and tested.
+## Portable release acceptance
+
+Candidate execution requires an explicitly admitted new candidate identity.
+Historical 4.1.0 candidate entries and their evidence are not reusable acceptance
+for this development source.
+Windows packaging uses the upstream portable builder on the same staged payload as IFW, before
+hashing both original assets. The ZIP extracts directly to `bin/`, `lib/` and
+the packaged provenance/license directories.
+
+`windows-portable-clean` is a separate Windows 2022 runner, with no native build
+or IFW installation. `verify_windows.ps1 -Format portable` extracts the downloaded
+original ZIP into a fresh unique directory and runs its PE/embedded-version,
+19-plugin, Python, three-language CSV/BIN and captured GUI acceptance. Runtime
+search paths exclude build Qt/Conan and test fonts. Both Windows assets must have
+unique complete checksum entries matching their actual names and bytes before
+and after acceptance; the tested format's integrity record binds those hashes
+to its report. IFW installation/version/removal acceptance remains independent.
+
+The manifest requires the exact six format/OS report paths: Windows IFW and
+portable, plus AppImage and Debian on each of Ubuntu 22.04 and 24.04. Each report
+has an explicit `platform` and `format` identity; missing, duplicate or extra
+reports fail, even if their plugin counts happen to match. All 18 language
+screenshots and all four original assets with complete unique checksums are
+required. Automated acceptance does not replace visual review of screenshots.
+Run `python3 tests/test_release_manifest.py -v` for offline coverage of these
+gates; successful local tests are not a native package acceptance claim.
+
+Host dependency provenance is read by `host_versions.py`: Qt comes only from
+`PJ_QT_VERSION` in `versions.env`, and the host SDK from the exact
+`plotjuggler_sdk` requirement in `conanfile.txt`. Payload staging records both in
+`release.json`; clean acceptance compares them against the candidate's source.
+License collection checks the selected Qt SDK's `mkspecs/qconfig.pri` and the
+resolved Conan host graph before collecting notices. Its Qt notice directory and
+source URL follow that Qt pin, while the unchanged checksum-locked generic
+license texts retain their own source provenance. Independent plugin source/SDK
+locks and historical BIN dependency notices do not become host-version claims.
+
+## CSV runtime acceptance
+
+Candidate gates include the real CSV ABI/runtime regressions and the
+post-staging FileLoader gate. A new candidate needs all original package checks
+and visual acceptance again; previous candidate evidence does not transfer.
+See [the fixed source patch contract](plugin-patches/README.md#csv-utf-8-paths-and-runtime-display).

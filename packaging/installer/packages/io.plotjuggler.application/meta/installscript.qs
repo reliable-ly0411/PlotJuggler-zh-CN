@@ -51,6 +51,7 @@ Component.prototype.createOperations = function()
 // Custom target-directory page — https://stackoverflow.com/a/46614107
 Component.prototype.installerLoaded = function()
 {
+    retranslateComponentMetadata();
     // Only a fresh GUI install picks a directory or replaces a previous one.
     // The maintenance tool runs this script too, and during an update its
     // TargetDir IS the existing installation: the replace prompt below would
@@ -286,10 +287,20 @@ Component.prototype.languageRestartFailed = function(reason)
         qsTranslate("PlotJugglerInstaller", "Could not restart the installer. Close it and run it with --lang zh_CN or --lang en_US."));
 }
 
+// IFW 4.10 xml:lang metadata uses the OS QLocale, independently of --lang.
+// Use the same SDK-selected translation catalog as the wizard, including in
+// maintenance mode. Only presentation values change, never component identity.
+function retranslateComponentMetadata()
+{
+    component.setValue("DisplayName", qsTranslate("PlotJugglerInstaller", "PlotJuggler 4 zh-CN"));
+    component.setValue("Description", qsTranslate("PlotJugglerInstaller", "Install PlotJuggler 4 zh-CN with its bundled Qt, FFmpeg and Python runtime."));
+}
+
 // IFW calls this reserved hook through QJSValue::call(), without binding the
 // script instance as its receiver. Keep its work independent of `this`.
 function retranslateTargetDirectory()
 {
+    retranslateComponentMetadata();
     if (targetDirectoryPage === null)
         return;
     targetDirectoryPage.windowTitle = qsTranslate("PlotJugglerInstaller", "Choose Installation Directory");

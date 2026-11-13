@@ -23,6 +23,7 @@
 #include "Theme.h"
 #include "TitleBar.h"
 #include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
 
 using namespace Qt::StringLiterals;
 
@@ -56,7 +57,7 @@ void renderMainWindow(const QString& language) {
   EXPECT_EQ(running.catalogLoaded(), language != u"en_US"_s);
   const QTemporaryDir extensions;
   ASSERT_TRUE(extensions.isValid());
-  PJ::MainWindow window(extensions.path());
+  pj_app_test::IsolatedMainWindow window(extensions.path());
   ASSERT_TRUE(window.populateTestData());
   window.resize(1280, 800);
   const QString file_title = window.titleBar()->fileMenu()->title();
@@ -297,6 +298,9 @@ class LanguageSettingsEnvironment : public ::testing::Environment {
   void SetUp() override {
     if (!pj_app_test::isTestSuiteSelected("PreferencesLanguageTest")) {
       return;
+    }
+    if (!settings_dir_.isValid() || settings_dir_.path().isEmpty()) {
+      qFatal("Cannot create private GUI test settings directory");
     }
     QCoreApplication::setOrganizationName(u"PlotJugglerTest"_s);
     QCoreApplication::setApplicationName(u"preferences_language_test"_s);

@@ -49,6 +49,12 @@ class BranchPolicyTest(unittest.TestCase):
         self.assertIn("if: github.repository == 'PlotJuggler/PlotJuggler' && startsWith(github.ref, 'refs/tags/')", conda)
         self.assertIn("if: github.repository == 'PlotJuggler/PlotJuggler' && github.event_name == 'workflow_dispatch'", conda)
 
+        macos = (ROOT / '.github/workflows/macos-release.yml').read_text(encoding='utf-8')
+        self.assertIn("if: github.repository == 'PlotJuggler/PlotJuggler'", macos)
+        self.assertIn('contents: read', macos)
+        for forbidden in ('contents: write', 'gh release', 'action-gh-release'):
+            self.assertNotIn(forbidden, macos)
+
 
 if __name__ == "__main__":
     unittest.main()

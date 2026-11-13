@@ -46,6 +46,7 @@ endif()
 # `nm -D --defined-only` prints "<addr> <type> <name>"; the address column is blank
 # for some weak/unique symbols, so match on the type letter rather than on columns.
 set(_exported "")
+set(_elf_runtime_artifacts "")
 string(REPLACE "\n" ";" _nm_lines "${_nm_output}")
 foreach(_line IN LISTS _nm_lines)
   if(_line MATCHES "^[0-9a-fA-F]* +[A-Za-z] +([^ ]+)$")
@@ -54,6 +55,13 @@ foreach(_line IN LISTS _nm_lines)
       continue()
     endif()
     list(APPEND _exported "${_name}")
+    # glibc csu/init.c supplies the read-only _IO_stdin_used through crt1.o /
+    # Scrt1.o. GNU ld's elf.sc supplies these three data/BSS boundary markers.
+    # They are not archive-library APIs. Match exact unversioned names AND nm
+    # types, not an underscore prefix; keep them in the total export count.
+    if(_line MATCHES "^[0-9a-fA-F]+ +(R _IO_stdin_used|B __bss_start|D _edata|B _end)$")
+      list(APPEND _elf_runtime_artifacts "${_name}")
+    endif()
   endif()
 endforeach()
 list(LENGTH _exported _exported_count)
@@ -62,7 +70,8 @@ list(LENGTH _exported _exported_count)
 #
 # A correctly-linked pj_app exports only compiler/ABI artifacts: Itanium-mangled
 # C++ names (_Z…) — RTTI, vtables, weak template instantiations, COMDAT statics —
-# plus a handful of libc data objects that copy-relocate into the executable.
+# plus a handful of libc data objects that copy-relocate into the executable
+# and the exact CRT/linker data artifacts identified above.
 # Every third-party C library we care about (libpng, zstd, bzip2, lzma, lz4,
 # CPython, …) exports PLAIN C identifiers, which are none of those.
 #
@@ -78,6 +87,9 @@ set(_leaked "")
 foreach(_sym IN LISTS _exported)
   if(_sym MATCHES "^_Z")
     continue()  # Itanium C++ ABI artifact
+  endif()
+  if(_sym IN_LIST _elf_runtime_artifacts)
+    continue()
   endif()
   # Symbols may carry a version suffix, e.g. "stderr@GLIBC_2.2.5".
   string(REGEX REPLACE "@.*$" "" _bare "${_sym}")
@@ -112,4 +124,4 @@ if(_exported_count GREATER _ceiling)
       "--exclude-libs,ALL still reaches this target.")
 endif()
 
-message(STATUS "check_exported_symbols: OK — ${_exported_count} exported symbol(s), all C++ ABI artifacts or allowed libc data")
+message(STATUS "check_exported_symbols: OK — ${_exported_count} exported symbol(s), all C++ ABI artifacts or allowed libc/CRT/linker data")

@@ -8,6 +8,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSettings>
+#ifdef PJ_NATIVE_BUNDLE_MODE
+#include <QRegularExpression>
+#endif
 #include <QTemporaryDir>
 #include <algorithm>
 #include <cstdio>
@@ -35,6 +38,56 @@ void require(bool condition, const QString& message) {
     throw std::runtime_error(message.toStdString());
   }
 }
+
+
+#ifdef PJ_NATIVE_BUNDLE_MODE
+// This root is supplied only by the launcher, but the binary independently
+// checks it against its configured same-root build location before any writes.
+QString nativeBundleFixtureRoot(const QString& argument) {
+#ifdef Q_OS_WIN
+  constexpr Qt::CaseSensitivity sensitivity = Qt::CaseInsensitive;
+#else
+  constexpr Qt::CaseSensitivity sensitivity = Qt::CaseSensitive;
+#endif
+  const auto clean = [](const QString& path) { return QDir::cleanPath(QDir::fromNativeSeparators(path)); };
+  const auto same = [sensitivity, &clean](const QString& left, const QString& right) {
+    return QString::compare(clean(left), clean(right), sensitivity) == 0;
+  };
+  const auto plain = [&clean, &same](const QString& path) {
+    QString current = clean(path);
+    if (!QDir::isAbsolutePath(current)) return false;
+    for (;;) {
+      const QFileInfo info(current);
+      if (!info.isDir() || info.isSymLink() || info.isJunction() || !same(info.canonicalFilePath(), current)) return false;
+      const QString parent = clean(info.dir().absolutePath());
+      if (same(parent, current)) return true;
+      current = parent;
+    }
+  };
+  require(argument == QStringLiteral("--native-bundle-owned"), QStringLiteral("Invalid native fixture argument"));
+  const QString bundle = clean(QStringLiteral(PJ_NATIVE_BUNDLE_ROOT));
+  const QString suite_value = QDir::fromNativeSeparators(qEnvironmentVariable("PJ_NATIVE_OUTPUT_ROOT"));
+  const QString suite = clean(suite_value);
+  require(QString::compare(suite_value, suite, sensitivity) == 0 && QDir::isAbsolutePath(suite) &&
+              plain(bundle) && plain(suite), QStringLiteral("Invalid native fixture root"));
+  const QFileInfo suite_info(suite);
+  const QString suite_name = suite_info.fileName();
+  require(suite_name == QStringLiteral("main") || suite_name == QStringLiteral("i18n"),
+          QStringLiteral("Invalid native fixture suite"));
+  const QString run = clean(suite_info.dir().absolutePath());
+  const QFileInfo run_info(run);
+  const QRegularExpression run_pattern(QStringLiteral("^(?:run|ci)-[0-9a-f]{32}$"));
+  require(run_pattern.match(run_info.fileName()).hasMatch() &&
+              same(run_info.dir().absolutePath(), QDir(bundle).filePath(QStringLiteral("r"))),
+          QStringLiteral("Native fixture root is outside its owned run"));
+  const QString temp = clean(QDir(run).filePath(QStringLiteral("tmp")));
+  require(plain(temp) && same(qEnvironmentVariable("TEMP"), temp) && same(qEnvironmentVariable("TMP"), temp) &&
+              same(QDir::tempPath(), temp), QStringLiteral("Native fixture temporary directory differs from probe"));
+  const QString output = clean(QDir(suite).filePath(QStringLiteral("profile-tests")));
+  require(plain(output), QStringLiteral("Missing or redirected native profile directory"));
+  return output;
+}
+#endif
 
 QString asQString(const std::filesystem::path& path) {
   return QString::fromStdU16String(path.u16string());
@@ -211,8 +264,12 @@ int main(int argc, char* argv[]) {
   }
   const char* stage = "profile initialization";
   try {
+#ifdef PJ_NATIVE_BUNDLE_MODE
+    const QString dedicated = nativeBundleFixtureRoot(app.arguments()[1]);
+#else
     const QString dedicated = app.arguments()[1];
     require(QDir().mkpath(dedicated), QStringLiteral("Cannot prepare dedicated test directory"));
+#endif
     QTemporaryDir run(QDir(dedicated).filePath(QStringLiteral("RuntimeServices-XXXXXX")));
     require(run.isValid(), QStringLiteral("Cannot prepare isolated runtime test"));
     run.setAutoRemove(false);

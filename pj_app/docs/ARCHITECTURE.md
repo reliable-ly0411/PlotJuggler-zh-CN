@@ -665,4 +665,9 @@ The loader suites (`file_loader_test`, `source_promotion_host_test`,
 `pj_app_loader_testlib` object library, so the loader sources compile once while each
 binary keeps its own plugin-path definitions. `ExportedSymbolsGuard` is a script test,
 enabled when the platform and `nm` support inspecting the executable's exported
-symbols.
+symbols. It rejects plain-C library exports and caps the total at 200, allowing
+only C++ ABI names, known libc copy-relocated data, and exact name/type pairs for
+glibc's read-only `_IO_stdin_used` and GNU ld's `__bss_start`, `_edata`, `_end`
+data/BSS markers. The CRT/linker markers still count toward the ceiling.
+`tests/test_exported_symbols_guard.py` exercises the script with synthetic `nm`
+output and a Linux ELF fixture linked both with and without `--exclude-libs,ALL`.

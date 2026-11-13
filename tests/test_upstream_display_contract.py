@@ -18,7 +18,17 @@ class NativeDisplayContractTest(unittest.TestCase):
                 ordinary = next(line for line in lines if 'env -u QT_QPA_PLATFORM ctest' in line)
                 self.assertIn('-LE qrhi -E "$window_suite"', ordinary)
                 native = [line for line in lines if 'QT_QPA_PLATFORM=windows' in line and 'ctest' in line]
-                self.assertEqual(len(native), 3)
+                # Packages additionally rerun the full picker fixture on a native
+                # QPA. This is supplemental evidence, not part of the unique
+                # headless/QRhi/window partition merged into native-tests.xml.
+                self.assertEqual(len(native), 4 if name == 'zh-4x-packages.yml' else 3)
+                if name == 'zh-4x-packages.yml':
+                    self.assertIn("-R '^pj_widgets_tests\\.FileDialogStartFolderTest\\.'", workflow)
+                    self.assertIn('--output-junit "$native_picker_base.xml" || status=1', workflow)
+                    self.assertIn('audit_file_dialog_results.py --junit build/native-file-dialog.xml || status=1', workflow)
+                    merge = next(line for line in lines if 'python scripts/ci/merge_ctest_reports.py' in line)
+                    self.assertNotIn('native-file-dialog', merge)
+                    self.assertIn('            build/native-file-dialog.xml', workflow)
                 self.assertTrue(any('-L qrhi ' in line and 'PJ_REQUIRE_GPU_TESTS=1' in line for line in native))
                 self.assertTrue(any('-LE qrhi -R "$window_suite"' in line and 'PJ_REQUIRE_GPU_TESTS=1' in line
                                     for line in native))

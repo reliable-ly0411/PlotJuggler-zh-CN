@@ -410,6 +410,9 @@ if [[ "$SKIP_CONAN_INSTALL" == "0" ]]; then
     conan_recipe="$SCRIPT_DIR/cmake/msan"
     conan_lock_args=()
   fi
+  if [[ "$MSAN" != "1" ]]; then
+    python3 "$SCRIPT_DIR/scripts/bootstrap_host_sdk.py"
+  fi
   conan install "$conan_recipe" --output-folder="$BUILD_DIR" --build=missing \
     ${conan_lock_args[@]+"${conan_lock_args[@]}"} \
     -s build_type=RelWithDebInfo -s compiler.cppstd=20 \

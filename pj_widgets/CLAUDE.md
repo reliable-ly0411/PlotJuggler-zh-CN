@@ -34,7 +34,7 @@ Dialogs, chrome and feedback:
 |---|---|
 | `Dialog.h` + `Dialog.ui` | Frameless app-styled dialog chrome: title-bar actions, optional side drawer. Base of `FileDialog`, `ProgressDialog`. |
 | `SideDrawer.h` | `makeSideDrawerSplitter`: draggable side column. The same `settings_key` shares the remembered width across presentations (`Dialog::setSideWidget`, `pj_app` toolbox panels). |
-| `FileDialog.h` | `QFileDialog` in `Dialog` chrome; use the static helpers. A start folder that does not answer within 2 s (dead network share) falls back to home with a notice; Qt's shared `QtProject/FileDialog` memory is filtered the same way before construction. `setUseSystemDialog()` hands the helpers (except `getSaveFileNameWithOptions`) to the platform picker, on Windows and macOS only. |
+| `FileDialog.h` | `QFileDialog` in `Dialog` chrome; use the static helpers. A start folder that does not answer within 2 s (dead network share) falls back to home with a notice; Qt's shared `QtProject/FileDialog` memory is filtered the same way before construction. `setUseSystemDialog()` hands the helpers (except `getSaveFileNameWithOptions`) to the platform picker, on Windows and macOS only. Force the widget picker before restoring history/sidebar: the setters do nothing while Qt still uses its native helper. |
 | `MessageBox.h` | Themed `QMessageBox` replacement. `question()` is desktop-only in practice: see Usage notes. |
 | `ProgressDialog.h` | Modal progress with domain-neutral Primary/Secondary stop actions; no close affordance. |
 | `ProgressBar.h` | App-styled `QProgressBar` (`PJ--ProgressBar` QSS class). `Q_OBJECT` is mandatory or the selector never matches. |
@@ -103,8 +103,19 @@ Helpers:
 
 `tests/` holds a focused gtest source per widget whose behavior is non-trivial (e.g. `curve_tree_view_test.cpp`, `messagebox_test.cpp`, `colormap_test.cpp`, `file_dialog_test.cpp`; `framework_tokens_test.cpp` guards drift between `FrameworkTokens` and the QSS palette). Add ordinary cases to the `pj_widgets_tests` runner in `tests/CMakeLists.txt`, using the shared `MAIN gui` QApplication setup instead of defining a `main()` or creating another application in a test. The runner links `pj_widgets`, `pj_resources`, and `Qt6::Test`; `pj_add_test_runner` discovers each case with the `pj_widgets_tests.` prefix and runs it in its own process with a 120-second timeout.
 
+On Windows, shared GUI test runners use a process-local private HKCU before
+QApplication starts, retaining the native QtProject registry backend. This does
+not isolate HKLM reads, child processes or KnownFolder filesystem paths. It refuses existing
+fixture keys and leaves HKCU redirected through static destruction; crashes can
+leave the one uniquely named test key printed at startup.
+
 `raster_stream_view_test` is a separate executable and ctest entry (`RasterStreamView`): it checks the helper process's lifetime and has its own `PJ_STUB_HELPER_PATH`; `raster_stub_helper` is its protocol peer. No test here requires a real GL context.
 
 ## Localized presentation and external links
 
 FileDialog localizes detail columns without changing native file names, paths, roles or sorting. Colormap display names are translated independently of persisted tokens. Toast links use `openExternalUrl()` from `ExternalUrl.h`, restoring the pre-AppRun environment only for HTTP(S) opener children.
+
+`BundledPluginText.h` translates only allowlisted fixed plugin prose with exact
+manifest ID/version matching. CSV 1.0.7 diagnostics accept the exact SDK
+`plugin: ` wrapper while preserving it; unknown prefixes/messages stay raw.
+The standalone `app_language_test` covers all five errors and fallback boundaries.

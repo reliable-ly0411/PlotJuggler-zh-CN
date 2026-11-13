@@ -96,3 +96,30 @@ fixture，读取真实欢迎页控件及 QWizard 默认按钮文字，并通过�
 API 依据为 QtIFW 4.10 的
 [PackageManagerGui](https://github.com/qtproject/installer-framework/blob/4.10/src/libs/installer/packagemanagergui.cpp)
 与 [GuiProxy](https://github.com/qtproject/installer-framework/blob/4.10/src/libs/installer/scriptengine.cpp)。
+
+## Component metadata and Windows license provenance
+
+IFW 4.10.0's valid `DisplayName` / `Description` `xml:lang` entries are
+selected using the OS `QLocale`, independently of the wizard's `--lang` option.
+The component script therefore refreshes only those two presentation values
+using the SDK-selected `PlotJugglerInstaller` catalog on load and in the
+receiver-independent `retranslateUi` hook, including maintenance mode.
+English source and Simplified Chinese strings remain aligned with `package.xml`;
+component ID, ProductUUID, paths and restart argument handling are unchanged.
+The pinned upstream implementation is
+[`UpdatesInfoData::processLocalizedTag`](https://github.com/qtproject/installer-framework/blob/326d161c66eef5b02a54f01867bc593e0c5f41ac/src/libs/kdtools/updatesinfo.cpp)
+and [`Component::setValue` / `updateModelData`](https://github.com/qtproject/installer-framework/blob/326d161c66eef5b02a54f01867bc593e0c5f41ac/src/libs/installer/component.cpp).
+The native synthetic restart probe also checks both component values and
+DesktopDir / StartMenuDir / ProductUUID continuity. This is not a visual review
+of the component-selection page or a full maintenance installation test.
+
+The portable ZIP copies `license_mpl.txt` and `license_lgpl.txt` from the actual
+staged IFW metadata, not the source templates. The localization build's locked
+Qt LGPL text is thus the same root license presentation in both formats.
+Before metadata substitution, the builder separately preserves the historical
+upstream installer LGPL notice (including its copyright header) byte-for-byte
+under `share/licenses/PlotJuggler-installer-history/`, with
+`LICENSE-PROVENANCE.txt`. The independent MPL, Qt LGPL and GPL texts and their
+hash gates remain unchanged. This is packaging/attribution consistency, not a
+legal assurance or relicensing. Any changed source requires freshly built and
+accepted packages; previously verified artifacts must not be edited in place.

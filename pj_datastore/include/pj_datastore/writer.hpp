@@ -184,10 +184,12 @@ class DataWriter {
       PJ::PrimitiveType element_type = PJ::PrimitiveType::kFloat64);
 
   // ---- Flush ----
-  /// Seal and return pending chunks for one topic.
+  /// Seal and return completed rows for one topic, including auto-sealed chunks.
+  /// An in-progress row stays writable and is not returned until finishRow().
   [[nodiscard]] std::vector<TopicChunk> flush(PJ::TopicId topic_id);
 
-  /// Seal and return all pending chunks for all topics.
+  /// Seal and return completed rows for all topics, including auto-sealed chunks.
+  /// In-progress rows stay writable and are not returned until finishRow().
   [[nodiscard]] std::vector<std::pair<PJ::TopicId, TopicChunk>> flushAll();
 
  private:

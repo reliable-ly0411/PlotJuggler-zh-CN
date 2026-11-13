@@ -57,6 +57,7 @@
 #include "pj_runtime/SessionManager.h"
 #include "pj_widgets/VisualizationKind.h"
 #include "support/filepath_echo_source.h"
+#include "support/isolated_main_window.h"
 #include "support/loader_test_support.h"
 #ifdef PJ_WITH_SCENE3D
 #include "pj_scene3d_widgets/Scene3DDockWidget.h"
@@ -299,7 +300,7 @@ QDomElement findByAttribute(
 class LayoutDatasetPathsTest : public ::testing::Test {
  protected:
   QTemporaryDir extensions_dir;
-  PJ::MainWindow window{extensions_dir.path()};
+  pj_app_test::IsolatedMainWindow window{extensions_dir.path()};
   Folders folders;
   std::vector<QString> reported_;  ///< "<diagnostic id>: <message>", in report order
 
@@ -490,7 +491,7 @@ class LayoutRelocatedSourceTest : public ::testing::Test {
  protected:
   QTemporaryDir extensions_dir;
   QTemporaryDir root_dir;
-  PJ::MainWindow window{extensions_dir.path()};
+  pj_app_test::IsolatedMainWindow window{extensions_dir.path()};
 
   void SetUp() override {
     ASSERT_TRUE(root_dir.isValid());

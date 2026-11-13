@@ -1,4 +1,7 @@
 versions.env text eol=lf
+# This verifier is checked against the source-reviewed SHA-256, including in
+# source preflight checkouts that inherit the host's Git line-ending settings.
+scripts/windows/verify_native_ci_closure.py text eol=lf
 # Shell entry points must execute identically in Git Bash and POSIX shells.
 *.sh text eol=lf
 *.bat text eol=crlf
@@ -21,5 +24,28 @@ resources/wasm-presets/** -text
 resources/wasm-presets/*/data.* -diff
 resources/wasm-presets/**/*.png -diff
 
-# Preserve byte-verified original third-party notices.
+# Exact upstream 4.1.0 baseline hashes must survive Windows checkout.
+CLAUDE.md text eol=lf
+build.sh text eol=lf
+docs/BUILDING.md text eol=lf
+docs/QT_NOTES.md text eol=lf
+packaging/README.md text eol=lf
+packaging/appimage/Dockerfile.build text eol=lf
+packaging/appimage/smoke_test.sh text eol=lf
+packaging/conda/README.md text eol=lf
+packaging/deb/README.md text eol=lf
+packaging/deb/smoke_test.sh text eol=lf
+pj_app/src/FileLoader.h text eol=lf
+pj_app/src/ui/DiagnosticsDialog.cpp text eol=lf
+pj_app/src/ui/DiagnosticsDialog.ui text eol=lf
+pj_app/tests/rhi_mixed_dock_test.cpp text eol=lf
+pj_plotting/widget/include/pj_plotting/PlotWidgetBase.h text eol=lf
+pj_plotting/widget/src/PlotWidgetBase.cpp text eol=lf
+pj_scene2D/docs/TECHNICAL_NOTES.md text eol=lf
+pj_widgets/include/pj_widgets/ElidingLabel.h text eol=lf
+pj_widgets/include/pj_widgets/FileDialog.h text eol=lf
+pj_widgets/tests/eliding_label_test.cpp text eol=lf
+resources/feature_catalog.json text eol=lf
+
+# These third-party notice originals are source-hashed without rewriting bytes.
 packaging/localization/windows-mesa-notices/* -text whitespace=-blank-at-eol

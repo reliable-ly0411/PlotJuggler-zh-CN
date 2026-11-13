@@ -1,3 +1,4 @@
+#include "support/isolated_main_window.h"
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
@@ -51,7 +52,7 @@ class MainWindowLayoutExitTest : public ::testing::Test {
     project_dir_ = std::make_unique<QTemporaryDir>();
     ASSERT_TRUE(extensions_dir_->isValid());
     ASSERT_TRUE(project_dir_->isValid());
-    window_ = std::make_unique<PJ::MainWindow>(extensions_dir_->path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_->path());
     ASSERT_TRUE(appSession().extensionCatalog().pluginCatalog().registerStaticToolbox(&fake::kFakeVtable));
   }
 

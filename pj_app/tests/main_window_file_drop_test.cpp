@@ -31,6 +31,7 @@
 #include "pj_widgets/VisualizationPlaceholderWidget.h"
 #include "support/filepath_echo_source.h"
 #include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
 #include "support/loader_test_support.h"
 
 namespace PJ {
@@ -80,7 +81,7 @@ TEST(MainWindowFileDropTest, FileDragOverAnyDropTargetIsTakenAsACopy) {
   file.write("t,x\n0,1\n");
   file.close();
 
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   window.show();
   ASSERT_TRUE(QTest::qWaitForWindowExposed(&window));
 
@@ -125,7 +126,7 @@ class MainWindowFileDropLoadingTest : public ::testing::Test {
   void SetUp() override {
     ASSERT_TRUE(extensions_.isValid());
     ASSERT_TRUE(data_.isValid());
-    window_ = std::make_unique<PJ::MainWindow>(extensions_.path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_.path());
     ASSERT_TRUE(pj_app_test::registerFilepathEcho(DropPeer::session(*window_).extensionCatalog().pluginCatalog()));
     window_->show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(window_.get()));
