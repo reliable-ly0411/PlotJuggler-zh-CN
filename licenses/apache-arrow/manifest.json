@@ -9,6 +9,14 @@
         "NOTICE.txt": "c946470d6b024c77feebdfb686bf92a828402c0ffc27c769bca7d8bef08e1db7"
       }
     },
+    "24.0.0": {
+      "archive_url": "https://archive.apache.org/dist/arrow/arrow-24.0.0/apache-arrow-24.0.0.tar.gz",
+      "archive_sha256": "9a8094d24fa33b90c672ab77fdda253f29300c8b0dd3f0b8e55a29dbd98b82c9",
+      "files": {
+        "LICENSE.txt": "d1c981370f1ffd4edcdd2fb3565c8939cc40c75e24e1f92d581d04e54f0dff81",
+        "NOTICE.txt": "afd895d61a00101f6d5a41cf518c83865d815e8109e956f512a0ce4ea9738c06"
+      }
+    },
     "26.0.1": {
       "archive_url": "https://archive.apache.org/dist/arrow/arrow-26.0.1/apache-arrow-26.0.1.tar.gz",
       "archive_sha256": "1dd1b6701d9de58a4ed82b107539682f46ef6b9e22747e18e03204125c05a987",

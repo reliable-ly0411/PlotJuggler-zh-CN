@@ -403,6 +403,10 @@ if(PJ_BUILD_FORK_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_package_audit_inventory.py)
     add_test(NAME PrivateBuildRoots COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_private_roots.py)
+    if(UNIX)
+      add_test(NAME QtCorePathMapping COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_qt5_core_pathmap.py)
+    endif()
     if(NOT WIN32)
       add_test(NAME LinuxStageElfs COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_linux_stage_elfs.py)

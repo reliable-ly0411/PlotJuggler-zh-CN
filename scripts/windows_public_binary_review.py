@@ -41,6 +41,37 @@ def diagnostic_name(name, records):
     return name
 
 
+def collect_qrc_sources(build):
+    """Fail closed on ambiguous generated sources; disclose counts/hashes, not paths.
+
+    Duplicate wrappers can occur in multi-config builds. Do not pick the first
+    match or normalize source bytes: diagnostics must establish the real cause
+    before independent provenance review can change acceptance.
+    """
+    sources, diagnostics = [], {}
+    for basename in QRC_EXPECTED:
+        paths = list(build.rglob(basename))
+        entry = {"matches": len(paths), "regular_files": 0,
+                 "unreadable_files": 0, "content_sha256": [], "accepted": False}
+        diagnostics[basename] = entry
+        values = []
+        for path in paths:
+            try:
+                if not path.is_file() or path.is_symlink():
+                    continue
+                value = path.read_bytes()
+                entry["regular_files"] += 1
+                values.append(value)
+                entry["content_sha256"].append(sha(value))
+            except OSError:
+                entry["unreadable_files"] += 1
+        entry["content_sha256"].sort()
+        if len(paths) == 1 and len(values) == 1:
+            sources.append((basename, values[0]))
+            entry["accepted"] = True
+    return sources, diagnostics
+
+
 def main():
     global COLLECTION_PHASE
     parser = argparse.ArgumentParser(__doc__)
@@ -81,17 +112,8 @@ def main():
     temporary = copy.deepcopy(records)
     # Resource provenance is relevant only to Toolbox; missing/ambiguous
     # sources must not prevent independent scans of the other selected DLLs.
-    sources = []
-    source_error = False
-    for basename in QRC_EXPECTED:
-        paths = list(build.rglob(basename))
-        if len(paths) != 1:
-            source_error = True
-            continue
-        try:
-            sources.append((basename, paths[0].read_bytes()))
-        except OSError:
-            source_error = True
+    sources, source_diagnostics = collect_qrc_sources(build)
+    source_error = not all(item["accepted"] for item in source_diagnostics.values())
     for name in NAMES:
         COLLECTION_PHASE = "selected DLL review: " + name
         entry = {"status": "failed", "approved_for_release": False,
@@ -128,7 +150,9 @@ def main():
                 entry["existing_production_gate"] = {"passed": True}
             entry["rule"] = "Fingerprint or provenance unsupported; identity not approved"
             if name == "ToolboxMosaico.dll":
+                entry["qrc_source_diagnostics"] = source_diagnostics
                 if source_error:
+                    entry["rule"] = "Generated QRC sources missing, ambiguous or unreadable"
                     continue
                 offsets, provenance = derive_qrc_offsets(data, sources)
                 check_metadata(json.dumps(provenance).encode("utf-8"), "resource-provenance.json", records)

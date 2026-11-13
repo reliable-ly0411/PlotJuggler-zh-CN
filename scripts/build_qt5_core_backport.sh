@@ -5,6 +5,26 @@ set -Eeuo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="${1:?usage: build_qt5_core_backport.sh ABSOLUTE_OUTPUT_DIRECTORY}"
 [[ "$OUT" = /* && "$OUT" != / ]]
+# These flags pass through configure, qmake and make before the compiler.
+# qmake's shell_quote preserves a space/Unicode-containing prefix as one GCC
+# argument. Reject qmake/make expression characters rather than interpolate
+# an untrusted build directory into a project-language expression.
+pathmap_flags() {
+  local path
+  for path in "$OUT" "$ROOT"; do
+    if [[ "$path" == *[\$\(\)\,\#\\\"\'\=]* || "$path" == *$'\n'* || "$path" == *$'\r'* ]]; then
+      echo "Unsupported qmake path-map directory syntax" >&2
+      return 1
+    fi
+  done
+  printf '%s' "\$\$shell_quote(-ffile-prefix-map=$OUT=/usr/src/qt5-core-backport) \$\$shell_quote(-ffile-prefix-map=$ROOT=/usr/src/plotjuggler)"
+}
+PATHMAP_FLAGS="$(pathmap_flags)"
+# A read-only probe for the exact flags; avoids downloading/configuring Qt.
+if [[ "${2:-}" == --print-pathmap-flags ]]; then
+  printf '%s\n' "$PATHMAP_FLAGS"
+  exit 0
+fi
 report_failure() {
   local status=$?
   trap - ERR
@@ -76,8 +96,8 @@ SRC="$OUT/source/qtbase-everywhere-src-5.15.3"
     -nomake tests -nomake examples -system-zlib -system-doubleconversion \
     -system-pcre -glib -icu -no-rpath -no-feature-relocatable \
     -no-mimetype-database -no-strip -no-separate-debug-info -no-use-gold-linker \
-    "QMAKE_CFLAGS=$(dpkg-buildflags --get CFLAGS) $(dpkg-buildflags --get CPPFLAGS) $(getconf LFS_CFLAGS)" \
-    "QMAKE_CXXFLAGS=$(dpkg-buildflags --get CXXFLAGS) $(dpkg-buildflags --get CPPFLAGS) $(getconf LFS_CFLAGS)" \
+    "QMAKE_CFLAGS=$(dpkg-buildflags --get CFLAGS) $(dpkg-buildflags --get CPPFLAGS) $(getconf LFS_CFLAGS) $PATHMAP_FLAGS" \
+    "QMAKE_CXXFLAGS=$(dpkg-buildflags --get CXXFLAGS) $(dpkg-buildflags --get CPPFLAGS) $(getconf LFS_CFLAGS) $PATHMAP_FLAGS" \
     "QMAKE_LFLAGS=$(dpkg-buildflags --get LDFLAGS)" \
     > configure.log 2>&1
   make sub-src-qmake_all > qmake.log 2>&1

@@ -101,6 +101,34 @@ class ResolutionTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'text SHA256 mismatch'): evidence.stage('21.0.0',self.out)
             with self.assertRaises(ValueError): evidence.stage('99.0.0',self.out)
             self.assertFalse(self.out.exists())
+    def test_arrow24_exact_vendored_materials_and_rejections(self):
+        spec=importlib.util.spec_from_file_location('arrow24_fixture',ROOT/'scripts/arrow_source_evidence.py')
+        evidence=importlib.util.module_from_spec(spec); spec.loader.exec_module(evidence)
+        with patch.dict(os.environ,{},clear=True):
+            result=evidence.stage('24.0.0',self.out)
+            self.assertEqual(result['status'],'pinned-vendored-source-texts')
+            self.assertEqual(result['closure_status'],'incomplete')
+            self.assertEqual(result['archive_sha256'],'9a8094d24fa33b90c672ab77fdda253f29300c8b0dd3f0b8e55a29dbd98b82c9')
+            for name in ('LICENSE.txt','NOTICE.txt'):
+                self.assertEqual((self.out/name).read_bytes(),(ROOT/'licenses/apache-arrow/24.0.0'/name).read_bytes())
+            for version in ('24','24.0.1','24.0.0-rc1','99.0.0'):
+                with self.assertRaisesRegex(ValueError,'Unsupported Arrow version'):
+                    evidence.stage(version,self.root/'rejected')
+            self.assertFalse((self.root/'rejected').exists())
+        copy=self.root/'arrow24-vendored'; shutil.copytree(ROOT/'licenses/apache-arrow',copy)
+        with patch.object(evidence,'VENDORED',copy), patch.dict(os.environ,{},clear=True):
+            # A matching manifest alone must never authorize modified source text.
+            (copy/'24.0.0/NOTICE.txt').write_bytes(b'altered')
+            with self.assertRaisesRegex(RuntimeError,'text SHA256 mismatch'):
+                evidence.stage('24.0.0',self.root/'tampered')
+            self.assertFalse((self.root/'tampered').exists())
+            manifest=copy/'manifest.json'; data=json.loads(manifest.read_text())
+            data['releases']['24.0.0']['archive_sha256']='0'*64
+            manifest.write_text(json.dumps(data))
+            with self.assertRaisesRegex(RuntimeError,'manifest mismatch'):
+                evidence.stage('24.0.0',self.root/'bad-manifest')
+            self.assertFalse((self.root/'bad-manifest').exists())
+
     def test_conan_default_stages_source_separately_when_package_notice_missing(self):
         spec=importlib.util.spec_from_file_location('conan_fixture',ROOT/'scripts/conan_license_deployer.py')
         deployer=importlib.util.module_from_spec(spec); spec.loader.exec_module(deployer)

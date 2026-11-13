@@ -12,6 +12,7 @@ import unittest
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
+from windows_public_binary_review import collect_qrc_sources
 from package_privacy import check_metadata as check
 from pe_content_fingerprint import fingerprint, METHOD
 from windows_public_binary_review_helpers import (
@@ -44,6 +45,48 @@ def generated_qrc(file_count):
 
 SOURCES = [("plugins/ToolboxMosaico/qrc_mosaico_resources.cpp", generated_qrc(1)),
            ("thirdparty/QCodeEditor/qrc_qcodeeditor_resources.cpp", generated_qrc(5))]
+
+
+class QrcSourceDiagnostics(unittest.TestCase):
+    def test_exact_sources_are_accepted_without_exporting_paths(self):
+        with tempfile.TemporaryDirectory(prefix="private-user-") as folder:
+            root = Path(folder)
+            for name, data in SOURCES:
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(data)
+            sources, diagnostics = collect_qrc_sources(root)
+            self.assertEqual(len(sources), 2)
+            self.assertTrue(all(item["accepted"] for item in diagnostics.values()))
+            self.assertNotIn(folder, json.dumps(diagnostics))
+            self.assertNotIn("private-user", json.dumps(diagnostics))
+
+    def test_identical_duplicates_still_fail_closed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            for config in ("Debug", "Release"):
+                path = root / config / "qrc_mosaico_resources.cpp"
+                path.parent.mkdir()
+                path.write_bytes(generated_qrc(1))
+            sources, diagnostics = collect_qrc_sources(root)
+            self.assertEqual(sources, [])
+            item = diagnostics["qrc_mosaico_resources.cpp"]
+            self.assertEqual(item["matches"], 2)
+            self.assertEqual(len(set(item["content_sha256"])), 1)
+            self.assertFalse(item["accepted"])
+            self.assertFalse(diagnostics["qrc_qcodeeditor_resources.cpp"]["accepted"])
+
+    def test_symlink_is_not_a_provenance_source(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "raw").write_bytes(generated_qrc(1))
+            try:
+                (root / "qrc_mosaico_resources.cpp").symlink_to(root / "raw")
+            except OSError:
+                self.skipTest("symlink unavailable")
+            sources, diagnostics = collect_qrc_sources(root)
+            self.assertEqual(sources, [])
+            self.assertEqual(diagnostics["qrc_mosaico_resources.cpp"]["regular_files"], 0)
 
 
 class ReviewScope(unittest.TestCase):
