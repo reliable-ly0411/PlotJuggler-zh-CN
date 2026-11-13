@@ -6380,6 +6380,14 @@ for example when the stream is already rectified.</source>
         <source>Layout restore kept the current pinned panels: &apos;%1&apos; has a job still running.</source>
         <translation>恢复布局时保留了当前固定的面板：“%1”仍有任务在运行。</translation>
     </message>
+    <message>
+        <source>%1 is controlling PlotJuggler through MCP. Closing the agent's session or this page stops it.</source>
+        <translation>%1 正通过 MCP 控制 PlotJuggler。关闭该智能体会话或此页面即可停止控制。</translation>
+    </message>
+    <message>
+        <source>Not connecting to the AI agent relay %1: it must be an http address on this computer (127.0.0.1).</source>
+        <translation>未连接到 AI 智能体中继 %1：它必须是本机（127.0.0.1）的 http 地址。</translation>
+    </message>
 </context>
 <context>
     <name>PJ::MarkerTimeline</name>
@@ -11483,6 +11491,25 @@ Details: %1</source>
         <location line="+35"/>
         <source>Opacity:</source>
         <translation>不透明度：</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::PluginRuntimeCatalog</name>
+    <message>
+        <source>Loaded DataSource %1 from %2</source>
+        <translation>已从 %2 加载数据源 %1</translation>
+    </message>
+    <message>
+        <source>Loaded MessageParser %1 from %2</source>
+        <translation>已从 %2 加载消息解析器 %1</translation>
+    </message>
+    <message>
+        <source>Loaded Toolbox %1 from %2</source>
+        <translation>已从 %2 加载工具箱 %1</translation>
+    </message>
+    <message>
+        <source>Loaded Widget %1 from %2</source>
+        <translation>已从 %2 加载控件 %1</translation>
     </message>
 </context>
 </TS>

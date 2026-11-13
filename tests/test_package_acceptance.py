@@ -522,12 +522,27 @@ class X11CaptureTests(unittest.TestCase):
 
     def test_border_pixels_and_malformed_measurement_are_not_ignored(self):
         value = module.x11_window_geometry(self.geometry(-10, 20, 100, 50, border=2))
-        self.assertEqual(value['frame'], (-12, 18, 92, 72))
+        self.assertEqual(value['frame'], (-10, 20, 94, 74))
         with self.assertRaises(ValueError): module.x11_window_geometry('Width: 100\n')
         for old, new in (('IsViewable', 'Unknown'), ('InputOutput', 'Unknown'),
                          ('  Map State: IsViewable\n', ''), ('  Class: InputOutput\n', '')):
             with self.subTest(old=old), self.assertRaises(ValueError):
                 module.x11_window_geometry(self.geometry().replace(old, new))
+
+    def test_xwininfo_outer_origin_and_both_border_edges(self):
+        # xwininfo reports outer origin, whereas Width/Height are client size.
+        # Preserve a constant outer origin and expand the right/bottom edges.
+        for border in (0, 1, 3, 8):
+            with self.subTest(border=border):
+                geometry = module.x11_window_geometry(self.geometry(8, 8, 1569, 941, border))
+                self.assertEqual(geometry['frame'], (8, 8, 1577+2*border, 949+2*border))
+                snapshot = dict(self.snapshot(), frame=geometry['frame'], border=border)
+                module.validate_capture_geometry(snapshot)
+        # The client can fit while the outer right/bottom border does not.
+        for x, y in ((350, 8), (8, 138)):
+            geometry = module.x11_window_geometry(self.geometry(x, y, 1569, 941, 3))
+            with self.subTest(origin=(x, y)), self.assertRaises(ValueError):
+                module.validate_capture_geometry(dict(self.snapshot(), frame=geometry['frame']))
 
     def test_capture_moves_actual_window_and_preserves_full_root_pixels(self):
         from unittest import mock

@@ -33,6 +33,7 @@ def load(name):
 
 fixtures = load('prepare_feedback_tests')
 gate = load('audit_feedback_results')
+picker_gate = load('audit_file_dialog_results')
 payload = load('prepare_payload')
 manifest = load('create_release_manifest')
 
@@ -272,6 +273,8 @@ class WorkflowExecutionTests(unittest.TestCase):
         scripts.mkdir(parents=True)
         shutil.copyfile(ROOT/'packaging/localization/audit_feedback_results.py',
                         scripts/'audit_feedback_results.py')
+        shutil.copyfile(ROOT/'packaging/localization/audit_file_dialog_results.py',
+                        scripts/'audit_file_dialog_results.py')
         ci_scripts = self.root/'scripts/ci'
         ci_scripts.mkdir(parents=True)
         shutil.copyfile(ROOT/'scripts/ci/merge_ctest_reports.py', ci_scripts/'merge_ctest_reports.py')
@@ -299,6 +302,7 @@ class WorkflowExecutionTests(unittest.TestCase):
                         assert qpa is None, qpa
                     else:
                         assert qpa in (None, 'windows'), qpa
+                print('[       OK ] ' + sys.argv[3].removeprefix('pj_widgets_tests.'))
                 print('[  PASSED  ] 1 test.')
                 raise SystemExit(0)
             # Model a Qt process whose console output is absent on Windows.
@@ -341,6 +345,9 @@ class WorkflowExecutionTests(unittest.TestCase):
         # lifecycle cases, then repeats exact portability cases under native QPA.
         from test_ctest_report_merge import gate as native_gate
         extra = {name: 'either' for name in native_gate.NATIVE_CASES}
+        # Full picker audit needs all four real case identities, including
+        # the one already present in the supplemental portability selection.
+        extra.update({name: 'either' for name in picker_gate.CASES})
         extra.update({
             'synthetic_qrhi.d3d11.Frame': 'native',
             'pj_app_gui_tests.MainWindowRhiWindowTest.FirstGpuWidgetKeepsTheNativeWindow': 'native',
@@ -348,7 +355,7 @@ class WorkflowExecutionTests(unittest.TestCase):
             'OrdinaryWidget.Fixture': 'ordinary',
         })
         for name, mode in extra.items():
-            commands.append(f'add_test(NAME {name} COMMAND [==[{python}]==] [==[{runner}]==] --gtest-fixture {mode})')
+            commands.append(f'add_test(NAME {name} COMMAND [==[{python}]==] [==[{runner}]==] --gtest-fixture {mode} {name})')
         commands.append('set_tests_properties(synthetic_qrhi.d3d11.Frame PROPERTIES LABELS qrhi-d3d11)')
         source = self.root/'source'
         source.mkdir()
@@ -430,6 +437,24 @@ class WorkflowExecutionTests(unittest.TestCase):
                                                                'PJ_QT_VERSION': 'fixture'},
                                             capture_output=True, text=True, timeout=30)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    if workflow == 'zh-4x-packages.yml' and platform == 'Windows':
+                        picker_report = self.build/'native-file-dialog.xml'
+                        self.assertEqual(set(picker_gate.audit(picker_report)), picker_gate.CASES)
+                        # CTest produced this report; prove the independent
+                        # auditor rejects incomplete or skipped evidence too.
+                        tree = ET.parse(picker_report)
+                        case = tree.getroot().find('testcase')
+                        tree.getroot().remove(case)
+                        incomplete = self.build/'picker-incomplete.xml'
+                        tree.write(incomplete)
+                        with self.assertRaises(ValueError):
+                            picker_gate.audit(incomplete)
+                        tree = ET.parse(picker_report)
+                        ET.SubElement(tree.getroot().find('testcase'), 'skipped')
+                        skipped = self.build/'picker-skipped.xml'
+                        tree.write(skipped)
+                        with self.assertRaises(ValueError):
+                            picker_gate.audit(skipped)
                     report = json.loads((self.build/'feedback-results.json').read_text(encoding='utf-8'))
                     self.assertEqual(report['required_ctest_cases'], 4)
                     self.assertEqual(len(report['images']), 24)
