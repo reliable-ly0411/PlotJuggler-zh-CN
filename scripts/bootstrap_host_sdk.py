@@ -12,6 +12,19 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def verify_source(source, pin):
+    """Check version and license provenance before executing the Conan recipe."""
+    if (source / 'VERSION').read_text(encoding='utf-8').strip() != pin['version']:
+        raise RuntimeError('Host SDK version mismatch')
+    licenses = pin.get('license_files_sha256', {})
+    if pin.get('license') != 'Apache-2.0' or set(licenses) != {'LICENSE', 'LICENSE-APACHE'}:
+        raise RuntimeError('Host SDK license provenance missing')
+    for name, digest in licenses.items():
+        path = source / name
+        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+            raise RuntimeError(f'Host SDK license mismatch: {name}')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--archive', type=Path, help='Offline copy of the pinned archive')
@@ -47,8 +60,7 @@ def main():
                         target.write_bytes(stream.read())
                 else:
                     raise RuntimeError('Unexpected SDK archive entry type')
-        if (source / 'VERSION').read_text(encoding='utf-8').strip() != pin['version']:
-            raise RuntimeError('Host SDK version mismatch')
+        verify_source(source, pin)
         result = subprocess.run(['conan', 'export', str(source), '--format=json'],
                                 check=True, text=True, capture_output=True)
         actual = json.loads(result.stdout)['reference']

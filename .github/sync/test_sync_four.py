@@ -111,7 +111,7 @@ class SyncTests(unittest.TestCase):
             module.sync(CONFIG)
 
     def test_only_development_mapping_allowed(self):
-        for key, value in [('sync_branch', 'zh-CN-4.x'), ('sync_branch', 'main-4.x'),
+        for key, value in [('sync_branch', 'zh-CN-4.x'), ('sync_branch', 'main'),
                            ('upstream_branch', 'main-4.x'), ('upstream_branch', 'main-3.x'), ('upstream_repository', 'other/repo')]:
             with self.subTest(key=key, value=value), self.assertRaises(ValueError):
                 module.sync(dict(CONFIG, **{key: value}), push=True)

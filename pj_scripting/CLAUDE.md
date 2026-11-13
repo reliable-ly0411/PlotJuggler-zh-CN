@@ -20,8 +20,8 @@ Python-free**: only `pj_scripting` links either runtime. `pj_scripting` never to
 ## Targets
 
 - **`pj_scripting_core`** (`src/luau_engine.cpp`, `src/marker_engine.cpp`) is the Luau engine plus the whole-series
-  marker analysis. It depends only on `pj_base`, `nlohmann_json` (public: `filter_class.h` exposes it), Luau and kissfft
-  (private). It is also packaged on its own for the SDK-only headless runner, which links the same engine so a rule
+  marker analysis. It depends only on `pj_base`, `nlohmann_json` (public: `filter_class.h` exposes it), Luau and the
+  header-only pocketfft (private; `cmake/PjPocketfft.cmake` finds it or fetches the pinned commit). It is also packaged on its own for the SDK-only headless runner, which links the same engine so a rule
   runs identically in the GUI and headless; `marker_engine_test` links only it (plus gtest) and guards that.
 - **`pj_scripting`** adds everything that needs the host: the data-processor adapters (`lua_siso_transform.cpp`,
   `lua_mimo_transform.cpp`), the filter catalogue, the object-script engines (Luau and Python) and `src/native/`. It
@@ -41,7 +41,8 @@ Filters and processors:
 - `filter_class.h`: the `FilterClass` schema + `ParamSpec`; drives the generated ParameterForm and the catalogue. Full
   contract: [`docs/FILTER_CLASS.md`](./docs/FILTER_CLASS.md).
 - `filter_catalogue.h`: `FilterCatalogue`, the Qt-free registry; loads the one bundled multi-class resource via
-  `addBundledSource`, and `makeProcessorFromSource` restores an embedded source.
+  `addBundledSource`, and `makeProcessorFromSource` restores an embedded source; `standaloneClassScript(id)` gives
+  one class as a self-contained Luau module with its parameter defaults filled in (an MCP agent's `add_filter`).
 - `lua_siso_transform.h`, `lua_mimo_transform.h`: a filter class run as a `PJ::proc::DataProcessor` node in the
   `pj_datastore::IncrementalEngine` (SISO via `ProcessorSisoAdapter`; MIMO returns one value per declared output).
 - `marker_engine.h`: `runMarkerScript`, whole-series → markers (Luau); polls the caller's `cancelled` inside the

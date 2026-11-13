@@ -2,8 +2,6 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
-#include "StreamingSourceManager.h"
-
 #include <QLoggingCategory>
 #include <QMetaObject>
 #include <QSet>
@@ -20,6 +18,7 @@
 #include <vector>
 
 #include "DialogPresenter.h"
+#include "StreamingSourceManager.h"
 #include "pj_base/data_source_protocol.h"
 #include "pj_base/dataset.hpp"
 #include "pj_base/span.hpp"
@@ -68,9 +67,9 @@ QString pluginConfigKey(const std::string& plugin_id) {
 // Per-session state. Held by unique_ptr in the manager's map so the worker
 // thread can hold a stable pointer to it across map mutations.
 struct StreamingSourceManager::StreamingSession {
-  std::string plugin_id;    ///< canonical legacy name; never localized
+  std::string plugin_id;        ///< canonical legacy name; never localized
   QString plugin_display_name;  ///< presentation only
-  std::string manifest_id;  ///< the plugin's stable manifest id, for provenance
+  std::string manifest_id;      ///< the plugin's stable manifest id, for provenance
   /// The dataset is "[stream] <label>": the layout record's source_name, else the plugin name.
   QString label;
   /// The layout record this session started from; empty for an interactive start.
@@ -348,8 +347,8 @@ void StreamingSourceManager::flushSecondaryIntoPrimary() {
 std::unique_ptr<StreamingSourceManager::StreamingSession> StreamingSourceManager::createSession(
     const LoadedDataSource& source, const QString& label, QString& error) {
   const QString source_name = QString::fromStdString(source.name);
-  const QString source_display_name = bundledPluginText(
-      QString::fromStdString(source.id), QString::fromStdString(source.version), source_name);
+  const QString source_display_name =
+      bundledPluginText(QString::fromStdString(source.id), QString::fromStdString(source.version), source_name);
 
   DataSourceHandle handle = source.library.createHandle();
   if (!handle.valid()) {
@@ -454,7 +453,8 @@ std::unique_ptr<StreamingSourceManager::StreamingSession> StreamingSourceManager
 
   ServiceRegistryBuilder registry;
   if (auto status = session->runtime_host->registerServices(registry); !status) {
-    error = tr("Plugin '%1': service registration failed: %2").arg(source_display_name, QString::fromStdString(status.error()));
+    error = tr("Plugin '%1': service registration failed: %2")
+                .arg(source_display_name, QString::fromStdString(status.error()));
     session.reset();
     discardDataset(dataset_id);
     return nullptr;
@@ -482,7 +482,8 @@ void StreamingSourceManager::discardDataset(DatasetId dataset_id) {
   session_manager_.removeDataset(dataset_id);
 }
 
-void StreamingSourceManager::startSession(const QString& plugin_id) {
+void StreamingSourceManager::startSession(
+    const QString& plugin_id, const QString& dialog_title_prefix, const std::function<bool()>& still_allowed) {
   const LoadedDataSource* source_ptr = findDataSourceByIdentity(extensions_.streamSources(), {}, plugin_id);
   if (source_ptr == nullptr) {
     qCWarning(lcStream) << "Stream plugin not found:" << plugin_id;
@@ -490,15 +491,32 @@ void StreamingSourceManager::startSession(const QString& plugin_id) {
     return;
   }
   const LoadedDataSource& source = *source_ptr;
-  const QString source_name = QString::fromStdString(source.name);
   QString error;
-  std::unique_ptr<StreamingSession> session = createSession(source, source_name, error);
+  std::unique_ptr<StreamingSession> session = createSession(source, QString::fromStdString(source.name), error);
   if (session == nullptr) {
     emit setupError(error);
     return;
   }
   const DatasetId dataset_id = session->dataset_id;
 
+  if (!configureAndLaunch(source, session, dialog_title_prefix, still_allowed, error)) {
+    // createSession made the dataset before the dialog opened, so any exit that
+    // does not launch must take it back, or an empty dataset lingers and counts in
+    // the catalog's duplicate-label ordinals. The session goes first (as in
+    // startFromLayout) and the dataset is gone before the failure is reported.
+    session.reset();
+    discardDataset(dataset_id);
+    if (!error.isEmpty()) {
+      emit streamError(dataset_id, error);
+    }
+  }
+}
+
+bool StreamingSourceManager::configureAndLaunch(
+    const RuntimeDataSourcePlugin& source, std::unique_ptr<StreamingSession>& session,
+    const QString& dialog_title_prefix, const std::function<bool()>& still_allowed, QString& error) {
+  error.clear();
+  const QString source_name = QString::fromStdString(source.name);
   QSettings persisted_settings;
   const QString config_key = pluginConfigKey(source.name);
   std::string config = persisted_settings.value(config_key, QString()).toString().toStdString();
@@ -529,16 +547,20 @@ void StreamingSourceManager::startSession(const QString& plugin_id) {
       .initial_parser_config = initial_parser_config,
       .section_band_metrics =
           chrome_metrics_provider_ ? std::optional<ChromeMetrics>(chrome_metrics_provider_()) : std::nullopt,
+      .title_prefix = dialog_title_prefix,
   });
   if (dlg.outcome == dialog_presenter::Outcome::kPluginContractViolation) {
-    emit streamError(
-        dataset_id, tr("Plugin contract violation: %1. Reinstall the plugin from the Marketplace.")
-                        .arg(QString::fromStdString(dlg.error)));
-    return;
+    error = tr("Plugin contract violation: %1. Reinstall the plugin from the Marketplace.")
+                .arg(QString::fromStdString(dlg.error));
+    return false;
   }
   if (dlg.outcome == dialog_presenter::Outcome::kRejected) {
     qCInfo(lcStream) << "User cancelled stream dialog for" << source_name;
-    return;
+    return false;
+  }
+  if (still_allowed && !still_allowed()) {
+    qCInfo(lcStream) << "Stream start no longer allowed after its dialog:" << source_name;
+    return false;
   }
   if (dlg.payload.has_value()) {
     config = dlg.payload->saved_config;
@@ -554,18 +576,15 @@ void StreamingSourceManager::startSession(const QString& plugin_id) {
       }
     }
     if (auto status = session->handle.loadConfig(config); !status) {
-      emit streamError(
-          dataset_id, tr("Plugin '%1': loadConfig (post-dialog) failed: %2")
-                          .arg(session->plugin_display_name, QString::fromStdString(status.error())));
-      return;
+      error = tr("Plugin '%1': loadConfig (post-dialog) failed: %2")
+                  .arg(session->plugin_display_name, QString::fromStdString(status.error()));
+      return false;
     }
   }
   persisted_settings.setValue(config_key, QString::fromStdString(config));
   session->config_template = QString::fromStdString(config);
 
-  if (!launchSession(std::move(session), error)) {
-    emit streamError(dataset_id, error);
-  }
+  return launchSession(std::move(session), error);
 }
 
 DatasetId StreamingSourceManager::startFromLayout(
@@ -614,14 +633,17 @@ bool StreamingSourceManager::launchSession(std::unique_ptr<StreamingSession> ses
   applyWriteTargetsForCurrentPauseState(*session->runtime_host);
 
   if (auto status = session->handle.start(); !status) {
-    error = tr("Plugin '%1': start failed: %2")
-                .arg(session->plugin_display_name, QString::fromStdString(status.error()));
+    error =
+        tr("Plugin '%1': start failed: %2").arg(session->plugin_display_name, QString::fromStdString(status.error()));
     return false;
   }
 
   // Only the catalog label is localized; engine/time-domain/recording identities stay raw.
-  catalog_.setDatasetDisplayName(dataset_id, tr("[stream] %1").arg(session->label == QString::fromStdString(session->plugin_id)
-                                               ? session->plugin_display_name : session->label));
+  catalog_.setDatasetDisplayName(
+      dataset_id, tr("[stream] %1")
+                      .arg(
+                          session->label == QString::fromStdString(session->plugin_id) ? session->plugin_display_name
+                                                                                       : session->label));
   session->capabilities = session->handle.capabilities();
   // Record the capability for the UI (CurveListPanel dims a topic as
   // "unsubscribed" only for a dataset that actually supports the pause — a

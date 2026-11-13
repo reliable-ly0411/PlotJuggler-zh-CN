@@ -5,7 +5,9 @@
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 #include <QDateTime>
+#include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QFont>
 #include <QFontDatabase>
 #include <QGuiApplication>
@@ -19,6 +21,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QUrl>
+#include <QUrlQuery>
 #include <Qt>
 #ifndef PJ_TARGET_WASM
 #include <backward.hpp>
@@ -57,6 +60,9 @@
 #include "MainWindow.h"
 #include "Splashscreen.h"
 #include "WidgetTuner.h"
+#ifndef PJ_TARGET_WASM
+#include "mcp/McpProtocol.h"
+#endif
 #include "pj_datastore/data_processor.hpp"
 #include "pj_datastore/processor_detail.hpp"
 #include "pj_plotting/PlotWidgetBase.h"
@@ -78,6 +84,19 @@
 using namespace Qt::StringLiterals;
 
 namespace {
+
+#if defined(Q_OS_MACOS)
+// Both the core-only Python self-test and the GUI resolve the bundled stdlib
+// after constructing their application. An explicit user PYTHONHOME wins.
+void configureBundledPythonHome() {
+  if (qEnvironmentVariableIsEmpty("PYTHONHOME")) {
+    const QString bundled_python = QDir::cleanPath(QCoreApplication::applicationDirPath() + u"/../Resources/python"_s);
+    if (QFileInfo(bundled_python).isDir()) {
+      qputenv("PYTHONHOME", QFile::encodeName(bundled_python));
+    }
+  }
+}
+#endif
 
 #if defined(_WIN32)
 // Ctrl+C / Ctrl+Break in the attached terminal, which the user may press long
@@ -266,7 +285,13 @@ int main(int argc, char* argv[]) {
         std::fprintf(stderr, "[profile-dir] %s\n", qPrintable(profile_error));
         return 64;
       }
+#if defined(Q_OS_MACOS)
+      configureBundledPythonHome();
+#endif
       return selftestPython();
+    }
+    if (std::strcmp(argv[i], "--mcp-bridge") == 0) {  // MCP over stdio for agents, needs no display
+      return PJ::mcp::runBridge(argc, argv, QStringLiteral(PJ_VERSION_STRING));
     }
   }
 #endif
@@ -295,6 +320,9 @@ int main(int argc, char* argv[]) {
   QSurfaceFormat::setDefaultFormat(core_format);
 #endif
   QApplication app(argc, argv);
+#if defined(Q_OS_MACOS)
+  configureBundledPythonHome();
+#endif
   // Fixes (and logs) the graphics API, with its Metal-to-OpenGL fallback, before
   // any QRhiWidget exists: each top-level can pick its API only once.
   (void)PJ::preferredGraphicsApi();
@@ -472,6 +500,20 @@ int main(int argc, char* argv[]) {
       u"Seconds --exit-after-layout waits for settlement before exiting with code 2 (default 300)."_s, u"seconds"_s,
       u"300"_s);
   parser.addOption(exit_after_layout_timeout_option);
+  const QCommandLineOption mcp_option(
+      u"mcp"_s,
+      u"Let AI agents control this window for this run (MCP server on a free 127.0.0.1 port; see --mcp-bridge), "
+      "whatever the Preferences setting."_s);
+  parser.addOption(mcp_option);
+  const QCommandLineOption mcp_relay_option(
+      u"mcp-relay"_s,
+      u"Link this window to an AI agent through the relay at <url>, its secret in the url's key (pj_mcp_relay.py, "
+      "as the browser build's ?mcp=<url> does)."_s,
+      u"url"_s);
+  parser.addOption(mcp_relay_option);
+  // Registered only so --help lists it; handled at the top of main().
+  parser.addOption(QCommandLineOption(
+      u"mcp-bridge"_s, u"Speak MCP over stdio, forwarding to a running PlotJuggler with MCP on (for agents)."_s));
 #endif
   parser.process(app);
 
@@ -614,6 +656,12 @@ int main(int argc, char* argv[]) {
     }
   }
 
+#ifndef PJ_TARGET_WASM
+  // Before show(), so the window maps directly at the saved place and state. An empty
+  // or stale blob is rejected and leaves the default; a screen that is no longer
+  // connected is replaced by one that is.
+  window.restoreGeometry(QSettings().value(u"MainWindow.geometry"_s).toByteArray());
+#endif
   window.show();
 
   if (splash) {
@@ -622,10 +670,23 @@ int main(int argc, char* argv[]) {
   }
 
 #ifndef PJ_TARGET_WASM
+  const bool attended = !isUnattendedRun(parser, exit_after_layout_option, screenshot_option);
+  // Tests and headless runs must not repoint the agent plugin's launcher at a build tree.
+  if (attended) {
+    PJ::mcp::recordExecutable();
+  }
+  // On by default for an attended run; tests and headless runs open it only with --mcp, so they
+  // never show up as an instance an agent could pick.
+  if (parser.isSet(mcp_option) || (attended && QSettings().value(PJ::MainWindow::kMcpServerKey, true).toBool())) {
+    window.openMcpPublicAccess();
+  }
+  if (parser.isSet(mcp_relay_option)) {
+    window.connectMcpRelay(QUrl(parser.value(mcp_relay_option)));
+  }
+
   // Before any layout restore: a previous run that died with Custom Widget plugins live is
   // reported, and an attended run asks whether to disable them.
-  window.reviewUncleanShutdown(
-      /*interactive=*/!isUnattendedRun(parser, exit_after_layout_option, screenshot_option));
+  window.reviewUncleanShutdown(/*interactive=*/attended);
 #endif
 
   // Deferred so the load runs after the event loop starts (the file loads on a
@@ -639,7 +700,7 @@ int main(int argc, char* argv[]) {
 #ifdef PJ_TARGET_WASM
     constexpr bool interactive = false;
 #else
-    const bool interactive = !isUnattendedRun(parser, exit_after_layout_option, screenshot_option);
+    const bool interactive = attended;
 #endif
     QTimer::singleShot(0, &window, [&window, startup_files, layout_path, interactive]() {
       window.loadAtStartup(startup_files, layout_path, interactive);
@@ -650,6 +711,11 @@ int main(int argc, char* argv[]) {
   // The page names its preset index (beside it) and an optional ?preset= deep link.
   const QUrl page_url(QString::fromStdString(emscripten::val::global("location")["href"].as<std::string>()));
   window.setDeploymentPageUrl(page_url);
+  // ?mcp=<relay>: the plotjuggler-agent plugin's relay opened this page for an AI agent (its launch
+  // tool); connectMcpRelay accepts only a loopback http relay.
+  if (const QString relay = QUrlQuery(page_url).queryItemValue(u"mcp"_s, QUrl::FullyDecoded); !relay.isEmpty()) {
+    window.connectMcpRelay(QUrl(relay));
+  }
   QTimer::singleShot(0, &window, [&window, page_url]() { window.startBrowserPresets(page_url); });
 #endif
 

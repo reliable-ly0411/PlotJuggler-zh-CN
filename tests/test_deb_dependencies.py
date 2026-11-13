@@ -52,13 +52,15 @@ class DebDependenciesTest(unittest.TestCase):
             self.assertIn('libunmapped_fixture.so.1', result.stderr)
             self.assertFalse((Path(tmp) / 'out').exists())
 
-    def test_tag_baseline_rejects_unbundled_wayland(self):
-        # Native Wayland packaging belongs to later upstream commits, not 4.1.0.
+    def test_development_maps_unbundled_wayland(self):
+        # Modern upstream intentionally adds native Wayland; test its generated
+        # runtime dependency instead of applying the historical 4.1.0 exclusion.
         with tempfile.TemporaryDirectory() as tmp:
             result = self.build_fixture(tmp, 'libwayland-client.so.0')
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn('libwayland-client.so.0', result.stderr)
-            self.assertFalse((Path(tmp) / 'out').exists())
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            package = next((Path(tmp) / 'out').glob('*.deb'))
+            depends = subprocess.check_output(['dpkg-deb', '-f', str(package), 'Depends'], text=True)
+            self.assertIn('libwayland-client0', [x.strip() for x in depends.split(',')])
 
 
 if __name__ == '__main__':

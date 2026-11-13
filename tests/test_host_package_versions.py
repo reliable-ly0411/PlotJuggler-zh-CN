@@ -64,6 +64,16 @@ class HostPackageVersionsTests(unittest.TestCase):
             (build/'conan-graph.json').write_text(json.dumps(graph), encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'Resolved host SDK recipe'):
                 collect(root, build, qt, licenses, None)
+            pin_path = root / 'cmake/host-sdk-source.json'
+            pin = json.loads(pin_path.read_text(encoding='utf-8'))
+            pin['version'] = '0.39.0'
+            pin_path.write_text(json.dumps(pin), encoding='utf-8')
+            graph['graph']['nodes']['1']['ref'] = 'plotjuggler_sdk/0.40.2#revision'
+            (build/'conan-graph.json').write_text(json.dumps(graph), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'Reviewed host SDK source'):
+                collect(root, build, qt, licenses, None)
+            pin['version'] = '0.40.2'
+            pin_path.write_text(json.dumps(pin), encoding='utf-8')
             graph['graph']['nodes']['1']['ref'] = 'plotjuggler_sdk/0.34.1#old'
             (build/'conan-graph.json').write_text(json.dumps(graph), encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'Resolved host SDK'):

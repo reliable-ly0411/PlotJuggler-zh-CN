@@ -34,7 +34,7 @@ Dialogs, chrome and feedback:
 |---|---|
 | `Dialog.h` + `Dialog.ui` | Frameless app-styled dialog chrome: title-bar actions, optional side drawer. Base of `FileDialog`, `ProgressDialog`. |
 | `SideDrawer.h` | `makeSideDrawerSplitter`: draggable side column. The same `settings_key` shares the remembered width across presentations (`Dialog::setSideWidget`, `pj_app` toolbox panels). |
-| `FileDialog.h` | `QFileDialog` in `Dialog` chrome; use the static helpers. A start folder that does not answer within 2 s (dead network share) falls back to home with a notice; Qt's shared `QtProject/FileDialog` memory is filtered the same way before construction. Force the widget picker before restoring history/sidebar: the setters do nothing while Qt still uses its native helper. |
+| `FileDialog.h` | `QFileDialog` in `Dialog` chrome; use the static helpers. A start folder that does not answer within 2 s (dead network share) falls back to home with a notice; Qt's shared `QtProject/FileDialog` memory is filtered the same way before construction. `setUseSystemDialog()` hands the helpers (except `getSaveFileNameWithOptions`) to the platform picker, on Windows and macOS only. Force the widget picker before restoring history/sidebar: the setters do nothing while Qt still uses its native helper. |
 | `MessageBox.h` | Themed `QMessageBox` replacement. `question()` is desktop-only in practice: see Usage notes. |
 | `ProgressDialog.h` | Modal progress with domain-neutral Primary/Secondary stop actions; no close affordance. |
 | `ProgressBar.h` | App-styled `QProgressBar` (`PJ--ProgressBar` QSS class). `Q_OBJECT` is mandatory or the selector never matches. |
@@ -69,7 +69,7 @@ Views and tables:
 
 | Header | What it is, and the one thing to know |
 |---|---|
-| `CurveTreeView.h` | Curve-catalog tree with caller-driven decorations (demand states, load progress with keep/discard stop affordances, drag opt-out, derived-topic glyphs). The header owns every contract. |
+| `CurveTreeView.h` | Curve-catalog tree with caller-driven decorations (demand states, load progress with keep/discard stop affordances, drag opt-out, derived-topic glyphs, displayed-series marks on rows and their groups). The header owns every contract. |
 | `HeaderResizePolicy.h`, `HeaderDividerHighlight.h` | Splitter-style header resizing and its divider highlight; install once per header, owned by it. |
 | `Scrollbar.h` | Fading pill scrollbar; `attachPillScrollbars` (reserved gutter) is the app-wide default, `kOverlayViewport` only for hosts owning a content-free viewport strip. |
 | `Timeline.h` | Multi-track Source Timeline: `TimelineScene` (Qt-free math) + `Timeline` (view). Runtime-agnostic: the host (`SourceTimelineController` in `pj_app`) converts. |
@@ -82,6 +82,7 @@ Helpers:
 
 | Header | What it is, and the one thing to know |
 |---|---|
+| `TimeFormat.h` | `TimeLabelFormat` + `formatTimeLabel`: seconds or clock-time labels shared by the plot X axis, the playback readout and the Source Timeline's absolute labels so they agree. A clock value below `kMinWallClockSeconds` prints as a duration (`readsAsDuration`). |
 | `CoalescingTrigger.h` | Leading + trailing rate limiter; the one "cap the rate at the origin" primitive. Non-copyable. |
 | `ChromeMetrics.h` | Shared icon/layout metrics broadcast by `MainWindow`. |
 | `Hatch.h` | The one app-wide "no data" hatch, phased to a global grid so every caller is continuous. |

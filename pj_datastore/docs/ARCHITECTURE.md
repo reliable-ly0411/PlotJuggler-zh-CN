@@ -144,7 +144,7 @@ Encoding selection in `TopicChunkBuilder::seal()`:
 - `onSourceCommitted(changed_topics)` — marks directly dependent nodes dirty.
 - `scheduleAll()` — processes all dirty nodes in topological order (incremental path).
 - `scheduleActive(active_nodes)` — processes only specified nodes and their transitive upstream dependencies.
-- `materializeStep(node_id, budget)` — time-sliced catch-up: advances one node over its unprocessed input for about `budget` of wall time, commits the rows, and returns whether it caught up. It shares the per-node step (`runNodeLocked`) with the scheduling passes. A node a step leaves behind is *deferred* — it has a `resume_chunk_id`/`resume_row` inside a chunk; `deferredNodes()` lists them in creation order, and the scheduling passes skip them until a step (or a remove/replace/recompute, or a failure) ends the replay. SISO over time-ordered input resumes mid-chunk; per-chunk feeding then equals the merge cursor's order, so the output matches the synchronous replay. MIMO nodes, overlapping input and nodes flagged `needs_full_recompute` finish in one step. `nodeError(node_id)` is the error of the node's last run by any pass, step or recompute (empty once one succeeds). A whole-series snapshot reader (the toolbox `read_series_arrow` bridge, the shell's marker-generator resolver) first calls `DataEngine::awaitCompleteSeries(topic)`, a main-thread barrier the owner of the replays installs (`setCompleteReadBarrier`) to finish a replay still growing that topic.
+- `materializeStep(node_id, budget)` — time-sliced catch-up: advances one node over its unprocessed input for about `budget` of wall time, commits the rows, and returns whether it caught up. It shares the per-node step (`runNodeLocked`) with the scheduling passes. A node a step leaves behind is *deferred* — it has a `resume_chunk_id`/`resume_row` inside a chunk; `deferredNodes()` lists them in creation order, and the scheduling passes skip them until a step (or a remove/replace/recompute, or a failure) ends the replay. SISO over time-ordered input resumes mid-chunk; per-chunk feeding then equals the merge cursor's order, so the output matches the synchronous replay. MIMO nodes, overlapping input and nodes flagged `needs_full_recompute` finish in one step. `nodeError(node_id)` is the error of the node's last run by any pass, step or recompute (empty once one succeeds). A whole-series snapshot reader (the toolbox `read_series_arrow` bridge and its windowed variant and value scan `readSeriesArrowWindow` / `scanSeriesValues`, the shell's marker-generator resolver) first calls `DataEngine::awaitCompleteSeries(topic)`, a main-thread barrier the owner of the replays installs (`setCompleteReadBarrier`) to finish a replay still growing that topic.
 - `recomputeBatch(node_id)` — resets the transform and replays the node plus its downstream graph. Per node, the current output is detached aside (not cleared) before replay; a successful replay discards the detached data, while any other exit — an error Status *or* an exception out of the transform — restores it from an RAII guard. A failed recompute (including a sticky-failing processor) therefore never leaves a node's output emptier than it was going in.
 - `recomputeBatch(root_node_ids)` — performs one topological replay over the union of several roots' downstream graphs, so a converging node runs once against one generation of its inputs.
 - `inputBindingState()` / `resolvedInputBindingState()` / `restoreInputBindingState()` — capture, validate against the current input schemas, and restore input-column metadata for a host-managed reload transaction without reminting node or output topic ids.
@@ -198,7 +198,7 @@ For the swap to be transparent to plugins that **cache** `TopicHandle`/`FieldHan
 2. Plugin calls `writeHost.ensureField(topic, name, type)` -> host calls `DataWriter::ensureColumn()`
 3. Plugin calls `writeHost.appendRecord(topic, timestamp, fields)` -> host calls `DataWriter::beginRow()`, `set()` per field, `finishRow()`
 4. `finishRow()` pads unset columns with null, updates per-column stats
-5. If builder is full (`rowCount >= max_chunk_rows`): `autoSeal()` seals builder, moves `TopicChunk` to `pending_chunks_`
+5. If builder is full (`rowCount >= max_chunk_rows`): `autoSeal()` seals builder, moves `TopicChunk` to the writer's pending list
 6. Host calls `flushPending()` -> `DataWriter::flushAll()` seals remaining builders -> `DataEngine::commitChunks()` appends to `TopicStorage`
 7. Chunks are now visible to readers and incremental engine
 
@@ -253,7 +253,7 @@ The derived engines' pool workers (`BatchEngine`, `OnDemandService`) keep the on
 touching the `DataEngine`: they work only on copies the GUI thread staged before the run
 (`docs/derived_objects/ARCHITECTURE.md` §11). EVERY engine access — read or
 write, on any thread — holds the lock via `lockEngine()`. `DataWriter` accumulates
-in-memory and is not itself shared; `TopicChunkBuilder::next_chunk_id_` remains a
+in-memory and is not itself shared; the chunk-id counter of `TopicChunkBuilder` remains a
 `std::atomic`.
 
 The mutex is **recursive** so the same thread may re-acquire it without
@@ -343,7 +343,7 @@ The tests in `tests/` are built into these runners (the authoritative live set i
 
 - `pj_datastore_tests`: one gtest runner for the whole module, registered with `gtest_discover_tests`, so ctest
   names are `<runner>.<Suite>.<Case>` and each case runs in its own process. Filter one suite with
-  `ctest --test-dir build -R '^pj_datastore_tests\.ObjectStoreTest\.'`.
+  `./test.sh -R '^pj_datastore_tests\.ObjectStoreTest\.'`.
 - `chunk_test`: a separate executable, because it holds death tests.
 - `engine_concurrency_test`, `engine_thread_safety_test`: separate executables with a 90-second timeout; they are the
   ThreadSanitizer entry points used by `build.sh` and CI.
@@ -359,4 +359,4 @@ and round-trip.
 built (commented out in `CMakeLists.txt`) and have not been rewritten against the v4 Arrow-stream path
 (`read_series_arrow`); `arrow_stream_round_trip_test` covers that path.
 
-Build and run from the PJ4 repo root: `./build.sh`, then `ctest --test-dir build -R '^pj_datastore_tests\.'` (the separate executables run by their own names, e.g. `-R chunk_test`).
+Build and run from the PJ4 repo root: `./build.sh`, then `./test.sh -R '^pj_datastore_tests\.'` (the separate executables run by their own names, e.g. `-R chunk_test`).

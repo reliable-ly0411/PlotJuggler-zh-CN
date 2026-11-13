@@ -274,6 +274,14 @@ def _manifest_evidence(values, files):
     return values
 
 
+def require_reviewed_policy(policy):
+    """Historical pins never authorize a pending modern native-kit closure."""
+    if isinstance(policy, dict) and policy.get('approval_status') is not None:
+        raise ClosureError(
+            'native kit closure paused: pending-modern-native-review; '
+            '4.1.0 historical evidence does not approve the current development sources')
+
+
 def derive_partition(policy, discoveries, source_sha, source_tree, logical_root, candidate_files, coverage):
     """Approve only exact reviewed cases; explicitly partition every other case.
 
@@ -283,6 +291,7 @@ def derive_partition(policy, discoveries, source_sha, source_tree, logical_root,
     not dynamic observation; optional tracing is supplementary. This function
     cannot review a case, manufacture an approval, or execute it.
     """
+    require_reviewed_policy(policy)
     if (not isinstance(policy, dict) or policy.get('schema') != 2 or
             not isinstance(discoveries, dict) or
             not isinstance(policy.get('suite_ids'), list) or
@@ -548,6 +557,7 @@ def retained_qt_archives(archive_dir, pins, aliases=None):
 
 def normalize_qt_archives(archive_dir, policy):
     """Rename only fully authenticated aqt inputs; return an auditable identity map."""
+    require_reviewed_policy(policy)
     if not isinstance(policy, dict) or not policy.get('qt_archive_aliases'):
         raise ClosureError('source-reviewed Qt archive aliases are required')
     inventory = retained_qt_archives(archive_dir, policy.get('qt_archives'), policy['qt_archive_aliases'])
@@ -723,6 +733,7 @@ def prepare_qt_declarations(root, policy, reference_dir, archive_dir=None, tool_
     child of the owned build root and remains as evidence; no existing directory
     is cleared. Staging or independent job verification must repeat the checks.
     """
+    require_reviewed_policy(policy)
     root, reference_dir = Path(root).absolute(), Path(reference_dir).absolute()
     if not reference_dir.is_relative_to(root) or reference_dir.exists() or not reference_dir.parent.is_dir():
         raise ClosureError('Qt comparison output must be a new directory inside the build root')
@@ -825,6 +836,7 @@ def download_fixed_artifact(pin, directory):
 
 def prepare_clean_qt_proof(root, policy, proof_dir):
     """Independently fetch and compare Qt on disposable CI, not on the VM."""
+    require_reviewed_policy(policy)
     root, proof_dir = Path(root).absolute(), Path(proof_dir).absolute()
     if (proof_dir.exists() or not proof_dir.parent.is_dir() or
             not proof_dir.is_relative_to(root / 'r')):
@@ -966,6 +978,7 @@ def verify_clean_tool_payload(root, files, proof_dir):
 
 def derive_dynamic_inventory(policy, ci_policy, candidate_plan, discoveries, logical_root):
     """Bind source-reviewed anticipated dynamic inputs, never observed loads."""
+    require_reviewed_policy(policy)
     if (not isinstance(ci_policy, dict) or ci_policy.get('schema') != 1 or
             not isinstance(candidate_plan, dict) or not isinstance(candidate_plan.get('files'), list)):
         raise ClosureError('invalid CI policy or staging plan for dependency inventory')
@@ -1263,6 +1276,7 @@ def verify_codemodel_dynamic_targets(root, logical_root, files, policy, index_re
     `resolver`, if supplied, maps staged relative paths to candidate source
     files; it does not change the required SHA-256 checks.
     """
+    require_reviewed_policy(policy)
     if (rule_name not in CODEMODEL_RULES or not isinstance(files, list) or
             not isinstance(policy, dict) or
             not re.fullmatch(r'[0-9a-f]{40}', str(source_sha)) or
@@ -2468,6 +2482,7 @@ def verify_staged_inputs(root, manifest, receipt, policy, source_sha, source_tre
     the original producer bootstrap, registry/temp, mutation and real selected
     group evidence. The return value is not an execution authorization.
     """
+    require_reviewed_policy(policy)
     root = Path(root).absolute()
     check_staged_receipt_integrity(root, manifest, receipt, source_sha, source_tree)
     files = manifest['files']
@@ -2578,6 +2593,7 @@ def candidate_provenance(root, policy, source_sha, source_tree, logical_root, ca
     For a local Conan build, the displayed remote identifies the locked recipe,
     while the executable digest identifies the produced CPython DLL.
     """
+    require_reviewed_policy(policy)
     root = Path(root)
     def file(relative):
         return _real_file(root.joinpath(*_safe_relative(relative).split('/')))
@@ -2697,6 +2713,7 @@ def prepare_candidate_receipt(root, candidate_path, report_path, policy_path, ou
             report_path != root / 'b/native-kit/stage-gaps.json' or any(output.iterdir())):
         raise ClosureError('candidate control paths must be exact, new and empty')
     policy, candidate, report = map(_strict_json_file, (policy_path, candidate_path, report_path))
+    require_reviewed_policy(policy)
     if (not isinstance(policy, dict) or policy.get('schema') != 2 or policy.get('verifier_sha256') != digest(Path(__file__)) or
             not isinstance(candidate, dict) or not isinstance(candidate.get('files'), list) or
             not isinstance(candidate.get('origins'), dict) or not isinstance(report, dict)):
@@ -2845,6 +2862,7 @@ def main():
             if policy_path != root / 's/.github/windows-native-kit/ci-closure-policy.json':
                 raise ClosureError('Qt archive policy must belong to the source tree')
             policy = json.loads(_real_file(policy_path).read_text(encoding='utf-8'))
+            require_reviewed_policy(policy)
             if policy.get('schema') != 2 or policy.get('verifier_sha256') != digest(Path(__file__)):
                 raise ClosureError('Qt archives require the exact source-reviewed verifier policy')
             receipt = normalize_qt_archives(root / 'd/qt-archives', policy)
@@ -2945,6 +2963,7 @@ def main():
             verify_generated_media(root, args.source_sha, args.source_tree, os.environ.get('PJ_MEDIA_MANIFEST_SHA256', ''))
             verify_generated_source_status(git('status', '--porcelain=v1', '-z', '--untracked-files=all', '--ignore-submodules=none'))
             policy = json.loads(_real_file(policy_path).read_text(encoding='utf-8'))
+            require_reviewed_policy(policy)
             if policy.get('schema') != 2 or policy.get('verifier_sha256') != digest(Path(__file__)):
                 raise ClosureError('Qt declarations require the exact source-reviewed verifier policy')
             declarations = prepare_qt_declarations(root, policy, root / 'b/native-kit/qt-reference')
@@ -2978,6 +2997,7 @@ def main():
                                   args.source_sha, args.source_tree, 'RelWithDebInfo', allow_owned_runs=True)
             manifest = audit.read_json(manifest_path)
             policy = audit.read_json(policy_path)
+            require_reviewed_policy(policy)
             receipt = audit.read_json(receipt_path)
             if policy.get('schema') != 2 or policy.get('verifier_sha256') != digest(Path(__file__)):
                 raise ClosureError('staged source-reviewed verifier hash differs')

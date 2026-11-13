@@ -175,10 +175,9 @@ jobs:
           prerelease=$(python3 packaging/localization/version_map.py "${RELEASE_TAG#v}" --format prerelease)
           title="PlotJuggler ${RELEASE_TAG#v} · 中文 + ArduPilot BIN"
           if [[ "$prerelease" == true ]]; then title="$title（预发布）"; fi
-          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft \
-            --prerelease="$prerelease" --latest=false --title "$title" \
-            --notes-file release-notes.md
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > draft-created.json
+          python3 packaging/localization/release_by_id.py create \
+            --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --source "$SOURCE_SHA" \
+            --title "$title" --notes release-notes.md
           upload_url=$(python3 - <<'PY'
           import json, os, sys
           sys.path.insert(0, 'packaging/localization')
@@ -203,28 +202,26 @@ jobs:
       - name: Verify actual draft names and bytes before publication
         run: |
           set -euo pipefail
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > draft-release.json
+          python3 packaging/localization/release_by_id.py draft --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --output draft-release.json
           python3 packaging/localization/release_assets.py release-assets draft-release.json \
             --upload-responses upload-responses --tag "$RELEASE_TAG" --state draft --notes release-notes.md
-          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" -D draft-check
+          python3 packaging/localization/release_by_id.py download --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --inventory draft-release.json --output draft-check
           (cd draft-check && sha256sum -c SHA256SUMS.txt)
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > draft-release.json
-          python3 packaging/localization/release_assets.py release-assets draft-release.json \
+          python3 packaging/localization/release_by_id.py draft --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --output draft-rechecked.json
+          python3 packaging/localization/release_assets.py release-assets draft-rechecked.json \
             --upload-responses upload-responses --tag "$RELEASE_TAG" --state draft --notes release-notes.md \
             --downloads draft-check
       - name: Publish only the verified draft
         run: |
           set -euo pipefail
           test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CANDIDATE_RUN" --jq .run_attempt)" = "$CANDIDATE_ATTEMPT"
-          prerelease=$(python3 packaging/localization/version_map.py "${RELEASE_TAG#v}" --format prerelease)
-          latest=$(python3 packaging/localization/version_map.py "${RELEASE_TAG#v}" --format latest)
-          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease="$prerelease" --latest="$latest"
+          python3 packaging/localization/release_by_id.py publish --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --output published-response.json
       - name: Re-download and verify publication without touching older releases
         run: |
           set -euo pipefail
-          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" -D public-check
+          python3 packaging/localization/release_by_id.py published --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --output public-release.json
+          python3 packaging/localization/release_by_id.py download --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --inventory public-release.json --output public-check
           (cd public-check && sha256sum -c SHA256SUMS.txt)
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > public-release.json
           python3 packaging/localization/release_assets.py release-assets public-release.json \
             --upload-responses upload-responses --tag "$RELEASE_TAG" --state published --notes release-notes.md \
             --downloads public-check
@@ -264,5 +261,7 @@ jobs:
             upload-responses/
             draft-created.json
             draft-release.json
+            draft-rechecked.json
+            published-response.json
             public-release.json
           if-no-files-found: ignore

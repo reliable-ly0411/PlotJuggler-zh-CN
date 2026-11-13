@@ -38,6 +38,10 @@ class TestScriptCli(unittest.TestCase):
         setarch = self.bin / "setarch"
         setarch.write_text("#!/bin/sh\nexit 1\n")
         setarch.chmod(0o755)
+        # CLI-only shim: verify virtual-display dispatch without starting X11.
+        xvfb = self.bin / "xvfb-run"
+        xvfb.write_text('#!/bin/sh\n[ "$1" = "-a" ] || exit 9\nshift\nexport CLI_PRIVATE_DISPLAY=1\nexec "$@"\n', encoding='utf-8')
+        xvfb.chmod(0o755)
         self.env = os.environ.copy()
         for key in ("PJ_SANITIZE", "ASAN_OPTIONS", "LSAN_OPTIONS", "UBSAN_OPTIONS",
                     "TSAN_OPTIONS", "MSAN_OPTIONS", "PYTHONMALLOC"):
@@ -129,9 +133,14 @@ class TestScriptCli(unittest.TestCase):
                 self.assertEqual(call["env"]["QT_QPA_PLATFORM"], "offscreen")
                 self.assertEqual(call["env"]["ASAN_OPTIONS"], "")
                 self.assertEqual(call["env"]["MSAN_OPTIONS"], "halt_on_error=1 exitcode=77")
-        result, call = self.run_script("--display", env={"QT_QPA_PLATFORM": "xcb"})
+        result, call = self.run_script("--display", env={"QT_QPA_PLATFORM": "xcb", "WAYLAND_DISPLAY": "user-desktop"})
         self.assertEqual(result.returncode, 0)
-        self.assertEqual(call["env"]["QT_QPA_PLATFORM"], "xcb")
+        if sys.platform == "darwin":
+            self.assertEqual(call["env"]["QT_QPA_PLATFORM"], "cocoa")
+        else:
+            self.assertEqual(call["env"]["QT_QPA_PLATFORM"], "xcb")
+            self.assertEqual(call["env"]["CLI_PRIVATE_DISPLAY"], "1")
+            self.assertNotIn("WAYLAND_DISPLAY", call["env"])
 
 
 if __name__ == "__main__":

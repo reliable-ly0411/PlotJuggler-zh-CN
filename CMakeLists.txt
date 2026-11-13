@@ -58,6 +58,13 @@ if(EMSCRIPTEN)
     add_compile_options(-pthread)
     add_link_options(-pthread)
 
+    # Emscripten compiles catch blocks out of every translation unit built without -fexceptions: a throw still
+    # unwinds, but nothing catches it. The plugin SDK's C-ABI trampolines turn a plugin's exception into an error
+    # only if they can catch it, and any module or dependency may rely on its own catch, so the whole module
+    # catches.
+    add_compile_options(-fexceptions)
+    add_link_options(-fexceptions)
+
     # Conan packages in the desktop graph are native binaries. The wasm build
     # resolves its cross-compiled subset through a pinned FetchContent provider.
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmDependencies.cmake)
@@ -145,7 +152,11 @@ if(EMSCRIPTEN)
     find_package(Qt6 ${PJ_QT_REQUIRED_VERSION} REQUIRED COMPONENTS
         Core Gui GuiPrivate Widgets Concurrent Network Xml Svg SvgWidgets PrintSupport ShaderTools)
 else()
-    set(PJ_QT_REQUIRED_VERSION ${PJ_QT_VERSION})
+    # versions.env pins the Qt kit of the release builds. A distribution that builds
+    # against its own Qt 6 (conda-forge and RoboStack pin qt6-main 6.11) can lower
+    # the floor: -DPJ_QT_MIN_VERSION=6.11.
+    set(PJ_QT_MIN_VERSION "${PJ_QT_VERSION}" CACHE STRING "Oldest Qt 6 release the desktop build accepts")
+    set(PJ_QT_REQUIRED_VERSION ${PJ_QT_MIN_VERSION})
     # OpenGLWidgets: no PJ4 code links it outside the display tests (pj_scene3D's
     # runners take the target from here), but Qt6UiTools (pj_dialog_host) depends
     # on it, so the kit, the app and its packages need it regardless.
@@ -163,7 +174,7 @@ find_package(fmt REQUIRED)
 # Foundation (Level 0): the plotjuggler_sdk SDK (pj_base + pj_plugins), consumed
 # as the `plotjuggler_sdk/<version>` Conan package pinned in conanfile.txt
 # (recipe + binaries on the PlotJuggler JFrog remote). Build paths that do not
-# run Conan (Qt for WebAssembly, pixi) fetch the same fixed fork snapshot from GitHub
+# run Conan (Qt for WebAssembly, pixi) fetch the matching upstream SDK from GitHub
 # and build it in-tree; both expose plotjuggler_sdk::base / ::plugin_sdk /
 # ::plugin_host. pj_datastore (the columnar store) lives in this repo: plugins
 # reach it only through the pj_base C ABI, never by linking it.
@@ -171,14 +182,14 @@ find_package(fmt REQUIRED)
 
 file(STRINGS conanfile.txt _pj_sdk_require REGEX "^plotjuggler_sdk/")
 string(REGEX REPLACE "^plotjuggler_sdk/([0-9][0-9A-Za-z.-]*).*" "\\1" PJ_SDK_VERSION "${_pj_sdk_require}")
-set(_pj_sdk_url https://api.github.com/repos/reliable-ly0411/plotjuggler_sdk/tarball/5f7f1c216cfe10ec50b95ab79c5426d298dc1d21)
+set(_pj_sdk_url https://api.github.com/repos/reliable-ly0411/plotjuggler_sdk/tarball/52cdf329adf6af3513e190fe0f8b86f19f17b051)
 # Pin the source build to bytes, not to a tag name: a tag can be moved, and the
 # sanitizer lanes compile this tarball instead of the Conan package, so an
 # unpinned fetch would make an instrumented build unreproducible. Update this
 # hash in the same commit as any PJ_SDK_VERSION bump in conanfile.txt — a stale
 # hash aborts the download loudly, which is the intended failure mode.
 set(_pj_sdk_url_hash
-    SHA256=01a029f81d0d1bf5c9d516b9375c438de317fd7b910c63c3714435256e3fdc41)  # cmake/host-sdk-source.json
+    SHA256=4576bdb2ea15c4cee9cbdfbbb52121861a459dd4b8d82af097e8f894f4dd7180)  # v0.40.0 + PR226 Unicode path fix (unmerged)
 include(FetchContent)
 # Timestamps on extracted archives. DOWNLOAD_EXTRACT_TIMESTAMP is a CMake 3.24
 # keyword and the sanctioned builder image ships 3.22, where an unrecognised

@@ -298,12 +298,35 @@ remains a refusal. A local feedback tree must not masquerade as its HEAD.
 These changes require new native/package execution; historical reports do not
 become three-language package passes merely by rerunning the report generator.
 
-## 4.1.0 portable release acceptance
+## Forward-development dependency and renderer checks
 
-The first creation of `zh-CN-4.x-ci/release-candidate-4-1-0-zh-1` requests the
-version-specific candidate. The explicit `zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r2`
-entry requests a new candidate after the Linux packaging-tool lock repair,
-preserving the first source/run identity. Ordinary pushes do not rebuild either.
+Host dependency provenance comes from `host_versions.py`: Qt is read from
+`versions.env`, and the host SDK from the exact `conanfile.txt` requirement.
+Collection checks the selected Qt qconfig and resolved Conan host graph before
+retaining notices. The retained host SDK source and exact recipe revision must agree with the
+current host version; historical plugin SDK provenance remains independent.
+
+Windows payloads must retain the original Mesa 11.2.2 and LLVM 3.6.2 notices in
+`share/licenses/Windows-Mesa-llvmpipe`. The checked-in lock binds all original
+notice bytes and the renderer DLL to exact sizes and SHA-256 values. Unknown
+renderer bytes, missing or extra notices, and modified notices fail collection
+and final-stage verification. The reference source files are not a complete
+build-source or linked-object manifest. This forward-development checkout has
+not yet verified the actual Qt 6.12 DLL or accepted a newly built product.
+
+Both localized windeployqt passes use `--no-system-d3d-compiler`; no DLL is
+silently deleted after deployment. Final Windows acceptance rejects bundled
+`d3dcompiler*.dll`, requires Windows 10 1809 or newer, and resolves D3DCompile
+from system32's d3dcompiler_47.dll only. Other installer callers without
+`ExtraPrefix` retain their existing behavior. Offline unit tests do not replace
+Windows rendering, installer/portable or final screenshot acceptance.
+
+Historical candidate triggers are preserved unchanged from the development branch. No new development publication is admitted by forward integration; a new package candidate needs explicit version and trigger preparation. Four products require six clean format/OS reports and 18 screenshots; the development snapshot remains unaccepted until rebuilt and tested.
+## Portable release acceptance
+
+Candidate execution requires an explicitly admitted new candidate identity.
+Historical 4.1.0 candidate entries and their evidence are not reusable acceptance
+for this development source.
 Windows packaging uses the upstream portable builder on the same staged payload as IFW, before
 hashing both original assets. The ZIP extracts directly to `bin/`, `lib/` and
 the packaged provenance/license directories.
@@ -336,10 +359,9 @@ source URL follow that Qt pin, while the unchanged checksum-locked generic
 license texts retain their own source provenance. Independent plugin source/SDK
 locks and historical BIN dependency notices do not become host-version claims.
 
-## CSV runtime repair candidate
+## CSV runtime acceptance
 
-The explicit `zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r3` entry runs the same
-full candidate gates as r2, plus the real CSV ABI/runtime regressions and the
-post-staging FileLoader gate. It does not replace r2 evidence or create a release.
-A new candidate needs all original package checks and visual acceptance again.
+Candidate gates include the real CSV ABI/runtime regressions and the
+post-staging FileLoader gate. A new candidate needs all original package checks
+and visual acceptance again; previous candidate evidence does not transfer.
 See [the fixed source patch contract](plugin-patches/README.md#csv-utf-8-paths-and-runtime-display).

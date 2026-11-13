@@ -3,8 +3,7 @@
 ## Purpose
 
 Qwt-based plotting module: the PJ4 home for time-series plots, dockers, zoomers, trackers, legends, the curve editor,
-the filter editor panel and the GPU plot canvas (`PlotRhiCanvas`). This is the **largest PJ3 wholesale lift** in the
-repo. It also owns the plot-area **State Transitions** family (discrete-series state strips for string / integer /
+the filter editor panel and the GPU plot canvas (`PlotRhiCanvas`). It also owns the plot-area **State Transitions** family (discrete-series state strips for string / integer /
 bool fields and floats holding only whole numbers; not Qwt): the `StateSeriesAdapter` reader in `core/` and the
 `StateTransitionsController`/`StateTransitionsDockWidget` binding in `widget/`, over the reusable
 `StateTransitionsView` from `pj_widgets`.
@@ -27,8 +26,8 @@ pj_plotting  ──►  pj_plotting_core  ──►  pj_runtime + pj_datastore +
 
 | Subdir | Contents |
 |---|---|
-| `core/` | No Qt Widgets. `DatastoreCurveAdapter` (PJ3-style `QwtSeriesData<QPointF>` over `pj_datastore::DataReader`), `FilteredCurveAdapter` (a `proc::DataProcessor`'s output, the Filter Editor preview), `PointSeriesXY`, `StateSeriesAdapter` (discrete-series run-length reader), `RevisionedSeries.h` (the content-revision contract the canvas caches on), `PlotXml.h` (plot-XML vocabulary shared with `pj_app`'s layout passes). |
-| `widget/` | The Qt/Qwt widgets, ported from PJ3's `plotjuggler_app/`: `PlotWidgetBase`, `PlotWidget`, `PlotDocker`, `TabbedPlotWidget`, `PlotZoomer`, `PlotPanner`, `PlotMagnifier`, `CurveTracker`, `PlotLegend`, `PlotCurve`, `PlotMarkersItem`, `PlotFocusOverlay`, `PlotScaleDraw`, `DockWidget`, `DockToolbar`, `CurveEditor`, `XYCurveDialog`, `FilterEditorPanel`, `ParameterForm`, `StateTransitionsController`, `StateTransitionsDockWidget`, `PlotRhiCanvas` (private implementation in `widget/src/PlotRhi*`, shaders in `widget/shaders/`). |
+| `core/` | No Qt Widgets. `DatastoreCurveAdapter` (a `QwtSeriesData<QPointF>` over `pj_datastore::DataReader`), `FilteredCurveAdapter` (a `proc::DataProcessor`'s output, the Filter Editor preview), `PointSeriesXY`, `StateSeriesAdapter` (discrete-series run-length reader), `RevisionedSeries.h` (the content-revision contract the canvas caches on), `PlotXml.h` (plot-XML vocabulary shared with `pj_app`'s layout passes). |
+| `widget/` | The Qt/Qwt widgets: `PlotWidgetBase`, `PlotWidget`, `PlotDocker`, `TabbedPlotWidget`, `PlotZoomer`, `PlotPanner`, `PlotMagnifier`, `CurveTracker`, `PlotLegend`, `PlotCurve`, `PlotMarkersItem`, `PlotFocusOverlay`, `PlotScaleDraw`, `DockWidget`, `DockToolbar`, `CurveEditor`, `XYCurveDialog`, `FilterEditorPanel`, `ParameterForm`, `StateTransitionsController`, `StateTransitionsDockWidget`, `PlotRhiCanvas` (private implementation in `widget/src/PlotRhi*`, shaders in `widget/shaders/`). |
 | `tests/` | gtest runners and the QRhi render harness. |
 | `benchmarks/` | `adapter_streaming_benchmark`, `plot_canvas_benchmark` (built with `PJ_BUILD_DEMOS`). |
 
@@ -38,10 +37,14 @@ Derived series (script outputs) reach this module as ordinary datastore topics, 
 ## Rules and pitfalls
 
 - **Qwt is external and never patched** (`3rdparty/qwt/README.PJ4.md`). PJ-specific Qwt behaviour lives here:
-  `PlotScaleDraw` (fixed-notation tick labels, installed on every axis) and the "Lines and Dots" style
+  `PlotScaleDraw` (fixed-notation tick labels, installed on every axis; with the app's date-time toggle on, a time
+  plot's X axis swaps to `PlotTimeScaleDraw` + `PlotTimeScaleEngine`, a seconds adapter over Qwt's millisecond
+  `QwtDateScaleEngine`, via `PlotWidgetBase::setTimeLabelFormat`) and the "Lines and Dots" style
   (`PlotCurve::drawCurve`: Lines plus one batched, pixel-weeded `drawDots` pass, because per-point QPainter calls are
   pathological; `PlotRhiCanvas` reads `PlotCurve::dotWidth()` and draws the same dots as geometry). Never add patches
   under `3rdparty/qwt/src`.
+- **Curve adapters never decimate.** `DatastoreCurveAdapter` and its siblings hand Qwt every sample; point reduction
+  happens at paint time (Qwt's weeding and `PlotCurve::drawCurve`). Pre-decimating in an adapter breaks zoom.
 - **Keep the `Preferences::use_opengl` gate** ("GPU canvas", plus `--disable-opengl`), which selects the raster
   `QwtPlotCanvas` on desktop: software-raster rendering is CPU-heavy, so do not remove the GPU default without
   measuring. The browser always uses `PlotRhiCanvas`.
@@ -72,16 +75,6 @@ Derived series (script outputs) reach this module as ordinary datastore topics, 
   and toggles its settings sidebar. The host-supplied visibility query chooses the
   label when the menu opens.
 
-## Port strategy (root CLAUDE.md "Porting policy")
-
-This module is the canonical example of the **wholesale lift**:
-
-1. **Lift PJ3 files close to verbatim** from `${PJ3_SOURCE_DIR}/plotjuggler_app/`. Class names map directly (PJ3
-   `PlotWidget` → PJ4 `PlotWidget`).
-2. **Apply plotjuggler_sdk style** on the way in, and **preserve `.ui` `objectName` values verbatim**.
-3. **Rebind data reads only:** PJ3's `PlotDataMapRef` / `TransformsMap` consumption becomes
-   `DatastoreCurveAdapter` over `pj_datastore::DataReader`. Do not rewrite plotting logic from scratch.
-
 ## Cross-module rules
 
 - Sibling of `pj_scene2D/widgets` and `pj_scene3D/widgets`: **they never depend on each other.**
@@ -98,8 +91,9 @@ This module is the canonical example of the **wholesale lift**:
   markers. The transaction and legend-diagnostics suites use file-local environments that apply their setup only
   when those suites are selected.
 - `plot_rhi_render_test`: the canvas against Qwt's own QPainter rendering, registered on every backend of the
-  platform plus `.opengl_dpr2` (`RHI_BACKENDS DPR2`). It needs a real display (xvfb or a Wayland compositor on
-  Linux), skips on `offscreen`, and fails instead under `PJ_REQUIRE_GPU_TESTS=1`. What it pins:
+  platform plus `.opengl_dpr2` (`RHI_BACKENDS DPR2`). It needs a real QPA named in `QT_QPA_PLATFORM`
+  (`./test.sh --display`: a private Xvfb on Linux), skips on `offscreen`, and fails instead under
+  `PJ_REQUIRE_GPU_TESTS=1`. What it pins:
   [docs/ARCHITECTURE.md §4](./docs/ARCHITECTURE.md#4-render-tests-and-benchmarks).
 
 ```bash

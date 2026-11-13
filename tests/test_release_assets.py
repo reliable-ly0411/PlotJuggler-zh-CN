@@ -231,22 +231,40 @@ class ReleaseAssetsTest(unittest.TestCase):
             args = sys.argv[1:]
             state = Path('mock-release.json')
             repo = os.environ['GITHUB_REPOSITORY']
-            if args[:2] == ['release', 'create']:
-                assert '--latest=false' in args, 'A draft cannot be Latest'
-                state.write_text(json.dumps({
-                    'id': 123, 'tag_name': os.environ['RELEASE_TAG'], 'draft': True, 'prerelease': '--prerelease=true' in args,
-                    'body': Path('release-notes.md').read_text(encoding='utf-8'), 'assets': [],
-                    'upload_url': f'https://uploads.github.com/repos/{repo}/releases/123/assets{{?name,label}}'}), encoding='utf-8')
-                Path('server-bytes').mkdir()
-            elif args[:2] == ['release', 'download']:
-                shutil.copytree('server-bytes', args[args.index('-D') + 1])
-            elif args[:2] == ['release', 'edit']:
+            assert args[0] == 'api', 'Tag-based release commands are forbidden'
+            endpoint = next(a for a in args[1:] if a.startswith(('repos/', 'https://')))
+            method = args[args.index('--method') + 1] if '--method' in args else 'GET'
+            assert '/releases/tags/' not in endpoint, 'Draft tag lookup must not be used'
+            if endpoint == f'repos/{repo}/releases' and method == 'POST':
+                payload = json.load(sys.stdin)
                 stable = '+zh.' in os.environ['RELEASE_TAG']
-                assert ('--prerelease=false' if stable else '--prerelease=true') in args
-                assert ('--latest=true' if stable else '--latest=false') in args
+                assert payload['draft'] is True and payload['make_latest'] == 'false'
+                assert payload['tag_name'] == os.environ['RELEASE_TAG']
+                assert payload['target_commitish'] == os.environ['SOURCE_SHA']
+                assert payload['prerelease'] is (not stable)
+                release = dict(payload, id=123, assets=[],
+                               upload_url=f'https://uploads.github.com/repos/{repo}/releases/123/assets{{?name,label}}')
+                state.write_text(json.dumps(release), encoding='utf-8')
+                Path('server-bytes').mkdir()
+                print(json.dumps(release))
+            elif endpoint == f'repos/{repo}/releases/123' and method == 'PATCH':
+                payload = json.load(sys.stdin)
+                stable = '+zh.' in os.environ['RELEASE_TAG']
+                assert payload == {'draft': False, 'prerelease': not stable, 'make_latest': str(stable).lower()}
+                assert Path('draft-rechecked.json').is_file()
+                assert len(list(Path('draft-check').iterdir())) == 5
+                r = json.loads(state.read_text(encoding='utf-8'))
+                r.update(payload)
+                state.write_text(json.dumps(r), encoding='utf-8')
                 Path('published').write_text('yes', encoding='utf-8')
+                print(json.dumps(r))
+            elif endpoint.startswith(f'repos/{repo}/releases/assets/') and method == 'GET':
+                assert 'Accept: application/octet-stream' in args
+                r = json.loads(state.read_text(encoding='utf-8'))
+                asset = next(a for a in r['assets'] if a['id'] == int(endpoint.rsplit('/', 1)[1]))
+                sys.stdout.buffer.write((Path('server-bytes') / asset['name']).read_bytes())
             elif args[0] == 'api':
-                if any('/actions/runs/' in a for a in args):
+                if '/actions/runs/' in endpoint:
                     print(os.environ['CANDIDATE_ATTEMPT'])
                 elif '--input' in args:
                     path = Path(args[args.index('--input') + 1])
@@ -264,10 +282,12 @@ class ReleaseAssetsTest(unittest.TestCase):
                     state.write_text(json.dumps(r), encoding='utf-8')
                     (Path('server-bytes') / name).write_bytes(body)
                     print(json.dumps(asset))
-                elif '--method' in args:
+                elif endpoint == f'repos/{repo}/git/refs' and method == 'POST':
                     print('{}')
-                else:
+                elif endpoint == f'repos/{repo}/releases/123' and method == 'GET':
                     print(state.read_text(encoding='utf-8'))
+                else:
+                    raise SystemExit('Unexpected API endpoint/method: ' + str(args))
             else:
                 raise SystemExit('Unexpected mock gh call: ' + str(args))
             '''), encoding='utf-8')
@@ -276,6 +296,10 @@ class ReleaseAssetsTest(unittest.TestCase):
             'Create immutable tag and upload the accepted bytes to a draft',
             'Verify actual draft names and bytes before publication',
             'Publish only the verified draft'])
+        # Exercise the actual public snapshot/download/hash blocks as well.
+        script += '\n' + self.workflow_run(
+            'Re-download and verify publication without touching older releases').split(
+                'git ls-remote --tags --refs origin', 1)[0]
         env = dict(os.environ, PATH=str(mock_bin) + os.pathsep + os.environ['PATH'],
                    GITHUB_REPOSITORY='reliable-ly0411/PlotJuggler-zh-CN', RELEASE_TAG=tag,
                    SOURCE_SHA='a' * 40, CANDIDATE_RUN='12345', CANDIDATE_ATTEMPT='1')
@@ -284,7 +308,17 @@ class ReleaseAssetsTest(unittest.TestCase):
         result = subprocess.run(['bash', '-c', script], cwd=self.work, env=env, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertTrue((self.work / 'published').exists())
-        for directory in ['upload-responses', 'server-bytes', 'draft-check']:
+        self.assertFalse(json.loads((self.work / 'public-release.json').read_text(encoding='utf-8'))['draft'])
+        self.assertEqual({p.name: p.read_bytes() for p in (self.work / 'public-check').iterdir()},
+                         {p.name: p.read_bytes() for p in self.target.iterdir()})
+        # Each following case is an independent synthetic publication attempt.
+        # Production never overwrites these retained receipts.
+        def clear_mock_receipts():
+            for name in ['draft-created.json', 'draft-release.json', 'draft-rechecked.json',
+                         'published-response.json', 'public-release.json']:
+                (self.work / name).unlink(missing_ok=True)
+        clear_mock_receipts()
+        for directory in ['upload-responses', 'server-bytes', 'draft-check', 'public-check']:
             shutil.rmtree(self.work / directory)
         (self.work / 'published').unlink()
         if stable:
@@ -303,6 +337,7 @@ class ReleaseAssetsTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((self.work / 'published').exists())
         self.assertIn('public-safe asset', result.stderr)
+        clear_mock_receipts()
         for directory in ['upload-responses', 'server-bytes']:
             shutil.rmtree(self.work / directory)
         (self.target / DEB).rename(self.target / PUBLIC_DEB)
@@ -370,8 +405,8 @@ class ReleaseAssetsTest(unittest.TestCase):
 
     def test_workflow_does_not_bypass_or_reorder_the_draft_gate(self):
         workflow = (ROOT / '.github/workflows/zh-4x-publish.yml').read_text(encoding='utf-8')
-        self.assertEqual(workflow.count('--draft=false'), 1)
-        self.assertLess(workflow.index('--downloads draft-check'), workflow.index('--draft=false'))
+        self.assertEqual(workflow.count('release_by_id.py publish '), 1)
+        self.assertLess(workflow.index('--downloads draft-check'), workflow.index('release_by_id.py publish '))
         self.assertNotIn('continue-on-error:', workflow)
         self.assertNotIn('--clobber', workflow)
         preparation = self.workflow_run('Download and verify the original accepted packages')

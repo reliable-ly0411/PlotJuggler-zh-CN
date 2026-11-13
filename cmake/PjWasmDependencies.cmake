@@ -127,8 +127,8 @@ if(PJ_WASM_WITH_CSV OR PJ_WASM_WITH_MCAP OR PJ_WASM_WITH_ROS OR PJ_WASM_WITH_PRO
     # targets. Pin the reviewed upstream integration commit by immutable archive
     # and hash so PJ4 consumes the official sources without a local patch layer.
     FetchContent_Declare(pj_official_plugins
-        URL https://codeload.github.com/PlotJuggler/pj-official-plugins/tar.gz/37e1bde18b8a425b9b64d7fe54c165464942b5eb
-        URL_HASH SHA256=d5fcbc1e9a5a837e36fa2c1c64fa02908d74579671f413409ca86622a3aa5e04
+        URL https://codeload.github.com/PlotJuggler/pj-official-plugins/tar.gz/dc410e1a75396037cc38979f60cd594f357d9b6a
+        URL_HASH SHA256=6d92211693e1b3dcf23b3d436f566deed9d65faa85e8b2f1b8c8477a35cf8990
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         SOURCE_SUBDIR _pj_source_only_no_cmakelists)
     FetchContent_MakeAvailable(pj_official_plugins)
@@ -169,8 +169,8 @@ if(PJ_WASM_WITH_ROS)
     set(ROSX_PYTHON_BINDINGS OFF CACHE BOOL "" FORCE)
     set(BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(rosx_introspection
-        URL https://github.com/facontidavide/rosx_introspection/archive/refs/tags/3.1.2.zip
-        URL_HASH SHA256=0ffecc3b21e8cbe01097292e3e5f7bab67777f9fc4f943ae68006c8939dbc23b
+        URL https://github.com/facontidavide/rosx_introspection/archive/refs/tags/3.1.3.zip
+        URL_HASH SHA256=d12637fc579164c302067f0f6f6beca0c5739a89983c91317eb3f7be5d67a599
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         OVERRIDE_FIND_PACKAGE
         SYSTEM)
@@ -188,8 +188,8 @@ if(PJ_WASM_WITH_ROS OR PJ_WASM_WITH_DATA_TAMER)
     # Header-only DataTamer schema/snapshot parser: parser_ros embeds it for its
     # DataTamer specialization, parser_data_tamer is built on it.
     FetchContent_Declare(data_tamer
-        URL https://github.com/PickNikRobotics/data_tamer/archive/refs/tags/1.0.3.zip
-        URL_HASH SHA256=0636b7a597be03977fcca6b070ca6190708fb9afbe5b102db12c3145e1489697
+        URL https://github.com/facontidavide/data_tamer/archive/refs/tags/2.0.0.zip
+        URL_HASH SHA256=0a8caef329d641b2cc72fa68211af37a36759614807add4bdba2ed2bf2fc8963
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         SOURCE_SUBDIR _pj_source_only_no_cmakelists
         SYSTEM)
@@ -281,30 +281,4 @@ endif()
 
 if(PJ_WASM_WITH_PYTHON)
     include(${CMAKE_CURRENT_LIST_DIR}/PjWasmPython.cmake)
-endif()
-
-if(PJ_WASM_WITH_LUAU OR PJ_WASM_WITH_FFT)
-    # kissfft — pj_scripting's marker engine uses it for the bandPower primitive,
-    # and the FFT toolbox for its spectrum. Pure C
-    # with no OS calls, so it cross-compiles unchanged; it simply had no provider
-    # here, because the wasm build resolves nothing through Conan or pixi.
-    # Options mirror the Conan package and recipes/kissfft: static, float datatype.
-    set(KISSFFT_STATIC ON CACHE BOOL "" FORCE)
-    set(KISSFFT_DATATYPE "float" CACHE STRING "" FORCE)
-    set(KISSFFT_TEST OFF CACHE BOOL "" FORCE)
-    set(KISSFFT_TOOLS OFF CACHE BOOL "" FORCE)
-    set(KISSFFT_PKGCONFIG OFF CACHE BOOL "" FORCE)
-    # The source tree lands in a directory named kissfft so its parent also
-    # serves the installed-package include layout (<kissfft/kiss_fftr.h>).
-    FetchContent_Declare(kissfft
-        GIT_REPOSITORY https://github.com/mborgerding/kissfft.git
-        GIT_TAG 131.1.0
-        GIT_SHALLOW TRUE
-        SOURCE_DIR "${FETCHCONTENT_BASE_DIR}/kissfft-root/kissfft"
-        OVERRIDE_FIND_PACKAGE
-        SYSTEM)
-    FetchContent_MakeAvailable(kissfft)
-    get_filename_component(PJ_WASM_KISSFFT_PREFIXED_INCLUDE_DIR "${kissfft_SOURCE_DIR}" DIRECTORY)
-    # Upstream already aliases kissfft::kissfft and kissfft::kissfft-<datatype>,
-    # so pj_scripting's own non-Conan bridge finds its target and no-ops.
 endif()

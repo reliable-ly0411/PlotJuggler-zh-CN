@@ -59,10 +59,6 @@ The first display language stays fixed even when the environment changes later.
 After plugin staging, `run_csv_runtime_acceptance.py` validates the source lock
 and DSO hash, enables `PJ_CSV_RUNTIME_PLUGIN`, freshly builds the real FileLoader
 test target and requires all three language suites with `--no-tests=error`.
-On Windows, both CTest discovery and execution receive the configured Qt kit's
-`bin` and plugin paths plus this build's recorded FFmpeg/CPython DLL directories.
-This native gate does not rely on PATH changes from an earlier CI step or on the
-not-yet-deployed package runtime; clean original-package acceptance is separate.
 The resulting JUnit must contain three unique executed passes, each with all
 seven exact GTest cases and the complete pass summary; disabled, skipped,
 filtered, missing or truncated results fail staging even if CTest returns zero.

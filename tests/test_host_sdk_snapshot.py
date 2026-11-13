@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
 """Keep package and source SDK paths on the same reviewed snapshot."""
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -25,9 +26,38 @@ class HostSdkSnapshotTests(unittest.TestCase):
         self.assertIn('SHA256=' + pin['archive_sha256'], cmake)
         self.assertIn(pin['commit'], pin['archive_url'])
         self.assertEqual(pin['license'], 'Apache-2.0')
-        self.assertEqual(pin['version'], '0.39.0')
-        self.assertEqual(pin['host_contract_version'], '0.39.0')
-        self.assertEqual(pin['upstream_base'], 'cc83815a1a8124d5947ed567790c3393a6cf0a5c')
+        self.assertEqual(pin['version'], '0.40.0')
+        self.assertEqual(pin['host_contract_version'], '0.40.0')
+        self.assertEqual(pin['upstream_base'], '9fc42b1a81867da812d7f1880bf67b1c74f3f813')
+
+    def test_source_version_and_license_bytes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary)
+            content = b'license fixture'
+            pin = {'version': '0.40.0', 'license': 'Apache-2.0',
+                   'license_files_sha256': {name: hashlib.sha256(content).hexdigest()
+                       for name in ('LICENSE', 'LICENSE-APACHE')}}
+            (source / 'VERSION').write_text(pin['version'], encoding='utf-8')
+            for name in pin['license_files_sha256']:
+                (source / name).write_bytes(content)
+            bootstrap.verify_source(source, pin)
+            (source / 'LICENSE').write_bytes(b'changed')
+            with self.assertRaisesRegex(RuntimeError, 'license mismatch'):
+                bootstrap.verify_source(source, pin)
+            (source / 'VERSION').write_text('0.39.0', encoding='utf-8')
+            with self.assertRaisesRegex(RuntimeError, 'version mismatch'):
+                bootstrap.verify_source(source, pin)
+
+    def test_license_provenance_is_required(self):
+        pin = json.loads((ROOT / 'cmake/host-sdk-source.json').read_text(encoding="utf-8"))
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary)
+            (source / 'VERSION').write_text(pin['version'], encoding='utf-8')
+            with self.assertRaisesRegex(RuntimeError, 'license mismatch'):
+                bootstrap.verify_source(source, pin)
+            pin['license_files_sha256'] = {}
+            with self.assertRaisesRegex(RuntimeError, 'provenance missing'):
+                bootstrap.verify_source(source, pin)
 
     def test_corrupt_archive_is_rejected_before_export(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -395,6 +395,8 @@ def package_candidate(root, logical_root, source_sha, source_tree, candidate_pat
             raise PlanError('closure input must be tracked by the exact source commit: s/' + relative) from exc
     reviewed_path, verifier_path = source / policy_rel, source / verifier_rel
     reviewed = read_json(reviewed_path)
+    if isinstance(reviewed, dict) and reviewed.get("approval_status") is not None:
+        raise PlanError("native kit closure paused: pending-modern-native-review; historical 4.1.0 evidence is not development approval")
     if (not isinstance(reviewed, dict) or reviewed.get('schema') != 2 or
             not audit.HEX64.fullmatch(str(reviewed.get('verifier_sha256', ''))) or
             digest(verifier_path) != reviewed['verifier_sha256']):

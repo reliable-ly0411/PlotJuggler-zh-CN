@@ -6,8 +6,9 @@
 
 - **正式版：** [v4.1.0+zh.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)，2026-11-12 发布，提供 Windows 安装器/便携包、Linux AppImage/DEB。
   支持简体中文、繁體中文（台灣）与 English，Qt 6.12.0 / SDK 0.39.0；已验范围和限制以 Release 为准。
-- **稳定维护线：** `zh-CN-4.x`，产品基线锁定上游正式 `4.1.0`；发布标签及原包不随文档更新而改变。
-- **后续开发：** `zh-CN-4.x-dev` 独立集成较晚上游功能和修复。源码检查不等于原生构建或成品验收，未发布开发源码不替换正式版。
+- **开发源码：** `zh-CN-4.x-dev` 当前为 `4.1.0-zh.1.dev.3`，Qt 6.12.0 / SDK 0.40.0（PR #226 非官方 Unicode 修复快照），精确上游提交 `8b847cb74`。
+  这是上游 4.1.0 之后的源码，尚未完成本轮双平台原包验收；[定向原生验证记录](docs/localization/VALIDATION-4X-20261113.md)区分通过、失败与未覆盖。
+- **稳定维护线：** `zh-CN-4.x` 仍保留已发布 4.1 内容。本主题分支保存待验的源码合并提案，尚未晋级稳定线，也不改变正式标签、原包或 Latest。
 - **3.x 汉化计划：** 3.18.1 正在独立候选线上增加翻译修订、繁体中文和启动器，尚未发布；进度与未解决项见 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44) 和[草稿 PR #51](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/51)。它基于官方 Qt5 3.17.2，不是上游官方 3.18.1。
 - **上游镜像：** `main` / `main-3.x`，不混入汉化改动；3.x 的 `zh-CN` / `zh-CN-dev` 与 4.x 独立维护。
 
@@ -104,6 +105,8 @@ Need a custom integration? Build a loader, streamer, parser or toolbox with the
 | Windows x64 便携包 | `PlotJuggler-4.1.0+zh.1-Windows-x64-portable-zh-CN.zip` | 完整解压后运行，不与旧目录混装 |
 | Linux x86_64 | `PlotJuggler-4.1.0+zh.1-x86_64-zh-CN.AppImage` | 赋予执行权限后运行 |
 | Ubuntu / Debian amd64 | `plotjuggler4_4.1.0+zh.1-1_amd64-zh-CN.deb` | 用 `sudo apt install ./下载的文件名.deb` 安装，运行 `plotjuggler4` |
+
+下列系统和插件边界描述上方 `4.1.0+zh.1` 正式包，不是当前维护源码的成品验收结论。
 
 Linux 包的实际验收环境为 Ubuntu 22.04 / 24.04，普通组件要求 glibc 2.35 或更新版本；
 不据此承诺所有 Linux 发行版。AppImage 缺少 FUSE 时可用 `APPIMAGE_EXTRACT_AND_RUN=1` 运行。

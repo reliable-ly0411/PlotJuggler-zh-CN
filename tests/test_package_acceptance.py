@@ -35,13 +35,15 @@ class CleanAcceptanceTests(unittest.TestCase):
         self.assertLess(appimage, script.index('verify_package.py'))
         for kind in ('deb', 'appimage'):
             smoke = (root / 'packaging' / kind / 'smoke_test.sh').read_text(encoding='utf-8')
-            self.assertIn('render_check.sh', smoke)
-            self.assertNotIn('wayland_check.sh', smoke)
+            self.assertIn('wayland_check.sh', smoke)
 
-    def test_tag_locked_ci_keeps_gpu_requirement(self):
+    def test_window_lifetime_ci_selects_real_platforms(self):
         workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/zh-4x-ci.yml').read_text(encoding='utf-8')
-        self.assertIn('PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest', workflow)
-        self.assertNotIn('MainWindowRhiWindowTest', workflow)
+        step = workflow.split('- name: Verify native window lifetime on X11 and Wayland', 1)[1].split('- name:', 1)[0]
+        self.assertIn('MainWindowRhiWindowTest', step)
+        self.assertIn('QT_QPA_PLATFORM=xcb xvfb-run', step)
+        self.assertIn('env -u DISPLAY QT_QPA_PLATFORM=wayland ctest', step)
+        self.assertEqual(step.count('--no-tests=error'), 2)
 
     def test_acceptance_forces_qt_logs_to_stderr(self):
         for inherited in [{}, {'QT_FORCE_STDERR_LOGGING': '0', 'QT_LOGGING_RULES': '*.info=false'}]:
@@ -298,7 +300,6 @@ class CsvPlotStateTests(unittest.TestCase):
             self.assertEqual(inputs[0], b'sample_index,synthetic_signal\n0,-2\n1,3.5\n2,0\n')
 
 
-
 class CaptureGeometryTests(unittest.TestCase):
     def snapshot(self, **changes):
         value = {'backend': 'test', 'window_id': 123, 'pid': 456, 'frame': (8, 8, 1016, 720),
@@ -521,12 +522,27 @@ class X11CaptureTests(unittest.TestCase):
 
     def test_border_pixels_and_malformed_measurement_are_not_ignored(self):
         value = module.x11_window_geometry(self.geometry(-10, 20, 100, 50, border=2))
-        self.assertEqual(value['frame'], (-12, 18, 92, 72))
+        self.assertEqual(value['frame'], (-10, 20, 94, 74))
         with self.assertRaises(ValueError): module.x11_window_geometry('Width: 100\n')
         for old, new in (('IsViewable', 'Unknown'), ('InputOutput', 'Unknown'),
                          ('  Map State: IsViewable\n', ''), ('  Class: InputOutput\n', '')):
             with self.subTest(old=old), self.assertRaises(ValueError):
                 module.x11_window_geometry(self.geometry().replace(old, new))
+
+    def test_xwininfo_outer_origin_and_both_border_edges(self):
+        # xwininfo reports outer origin, whereas Width/Height are client size.
+        # Preserve a constant outer origin and expand the right/bottom edges.
+        for border in (0, 1, 3, 8):
+            with self.subTest(border=border):
+                geometry = module.x11_window_geometry(self.geometry(8, 8, 1569, 941, border))
+                self.assertEqual(geometry['frame'], (8, 8, 1577+2*border, 949+2*border))
+                snapshot = dict(self.snapshot(), frame=geometry['frame'], border=border)
+                module.validate_capture_geometry(snapshot)
+        # The client can fit while the outer right/bottom border does not.
+        for x, y in ((350, 8), (8, 138)):
+            geometry = module.x11_window_geometry(self.geometry(x, y, 1569, 941, 3))
+            with self.subTest(origin=(x, y)), self.assertRaises(ValueError):
+                module.validate_capture_geometry(dict(self.snapshot(), frame=geometry['frame']))
 
     def test_capture_moves_actual_window_and_preserves_full_root_pixels(self):
         from unittest import mock
@@ -559,7 +575,6 @@ class X11CaptureTests(unittest.TestCase):
                  mock.patch.object(module, 'x11_call'), mock.patch.object(module.time, 'sleep'):
                 with self.assertRaises(ValueError):
                     module.capture_linux_gui(self.process, Path('/prefix'), Path('/profile'), Path('/unused.png'))
-
 
 
 class WindowsCaptureIdentityTests(unittest.TestCase):
@@ -639,12 +654,12 @@ class CapturePlatformContractTests(unittest.TestCase):
             self.assertNotIn(forbidden, source)
 
 
-
-@unittest.skipUnless(os.name == 'posix' and all(shutil.which(name) for name in
-                     ('Xvfb', 'xdotool', 'xprop', 'xwininfo', 'import')), 'actual Xvfb capture requires all X11 helpers')
+@unittest.skipUnless(os.name == 'posix' and Path('/proc').is_dir(), 'Linux X11 capture integration')
 class ActualXvfbCaptureTests(unittest.TestCase):
     def test_offscreen_real_window_is_moved_and_whole_desktop_captured(self):
         """A synthetic Xlib window checks capture mechanics, not final-package UI."""
+        for tool in ('Xvfb', 'xdotool', 'xprop', 'xwininfo', 'import'):
+            self.assertIsNotNone(shutil.which(tool), f'Required Linux capture test dependency missing: {tool}')
         import select
         import signal
         import subprocess

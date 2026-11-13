@@ -275,6 +275,9 @@ class WorkflowExecutionTests(unittest.TestCase):
                         scripts/'audit_feedback_results.py')
         shutil.copyfile(ROOT/'packaging/localization/audit_file_dialog_results.py',
                         scripts/'audit_file_dialog_results.py')
+        ci_scripts = self.root/'scripts/ci'
+        ci_scripts.mkdir(parents=True)
+        shutil.copyfile(ROOT/'scripts/ci/merge_ctest_reports.py', ci_scripts/'merge_ctest_reports.py')
         for dependency in ('ffmpeg', 'python'):
             (self.build/f'pj_{dependency}_bin_dirs.txt').write_text(
                 f'fixture-runtime-{dependency}\n', encoding='utf-8')
@@ -288,6 +291,19 @@ class WorkflowExecutionTests(unittest.TestCase):
                     if 'fixture-runtime-' + dependency not in os.environ['PATH']:
                         raise SystemExit('Missing simulated runtime path: ' + dependency)
             if sys.argv[1] == '--discover':
+                raise SystemExit(0)
+            if sys.argv[1] == '--gtest-fixture':
+                if os.environ.get('RUNNER_OS') == 'Windows':
+                    qpa = os.environ.get('QT_QPA_PLATFORM')
+                    if sys.argv[2] == 'native':
+                        assert qpa == 'windows', qpa
+                        assert os.environ.get('PJ_REQUIRE_GPU_TESTS') == '1'
+                    elif sys.argv[2] == 'ordinary':
+                        assert qpa is None, qpa
+                    else:
+                        assert qpa in (None, 'windows'), qpa
+                print('[       OK ] ' + sys.argv[3].removeprefix('pj_widgets_tests.'))
+                print('[  PASSED  ] 1 test.')
                 raise SystemExit(0)
             # Model a Qt process whose console output is absent on Windows.
             # Only its explicit file logger makes the result observable.
@@ -325,6 +341,22 @@ class WorkflowExecutionTests(unittest.TestCase):
                       else 'PluginFeedbackTest::mainWindowFlow()')
             commands.append(f'pj_add_logged_qt_test({name} synthetic_qt TIMEOUT 15 '
                             f'ARGS [==[{runner}]==] "{marker}")')
+        # The actual Windows step now partitions QRhi and unlabelled window
+        # lifecycle cases, then repeats exact portability cases under native QPA.
+        from test_ctest_report_merge import gate as native_gate
+        extra = {name: 'either' for name in native_gate.NATIVE_CASES}
+        # Full picker audit needs all four real case identities, including
+        # the one already present in the supplemental portability selection.
+        extra.update({name: 'either' for name in picker_gate.CASES})
+        extra.update({
+            'synthetic_qrhi.d3d11.Frame': 'native',
+            'pj_app_gui_tests.MainWindowRhiWindowTest.FirstGpuWidgetKeepsTheNativeWindow': 'native',
+            'pj_app_gui_tests.MainWindowRhiWindowTest.WithoutTheGpuCanvasQtRecreatesTheNativeWindow': 'native',
+            'OrdinaryWidget.Fixture': 'ordinary',
+        })
+        for name, mode in extra.items():
+            commands.append(f'add_test(NAME {name} COMMAND [==[{python}]==] [==[{runner}]==] --gtest-fixture {mode} {name})')
+        commands.append('set_tests_properties(synthetic_qrhi.d3d11.Frame PROPERTIES LABELS qrhi-d3d11)')
         source = self.root/'source'
         source.mkdir()
         (source/'CMakeLists.txt').write_text('\n'.join(commands)+'\n', encoding='utf-8')
@@ -350,7 +382,7 @@ class WorkflowExecutionTests(unittest.TestCase):
                                 env={**os.environ, 'RUNNER_OS': 'Linux'},
                                 capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(len(gate.audit_cases(ET.parse(report).getroot())), 4)
+        self.assertEqual(len(gate.audit_cases(ET.parse(report).getroot(), allow_other_cases=True)), 4)
 
     def ctest(self, *args, runner_os='Linux'):
         return subprocess.run([shutil.which('ctest'), '--test-dir', str(self.build), *args],
@@ -362,7 +394,7 @@ class WorkflowExecutionTests(unittest.TestCase):
         result = self.ctest('--test-output-size-passed', '1024', '--output-junit', str(report))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         with self.assertRaisesRegex(ValueError, 'truncated CTest output'):
-            gate.audit_cases(ET.parse(report).getroot())
+            gate.audit_cases(ET.parse(report).getroot(), allow_other_cases=True)
 
     def test_discovery_without_runtime_environment_fails(self):
         result = self.ctest('--show-only=json-v1', runner_os='Windows')
@@ -381,29 +413,9 @@ class WorkflowExecutionTests(unittest.TestCase):
         result = self.ctest('--output-junit', str(report))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         with self.assertRaisesRegex(ValueError, 'missing or ambiguous Qt result summary'):
-            gate.audit_cases(ET.parse(report).getroot())
+            gate.audit_cases(ET.parse(report).getroot(), allow_other_cases=True)
 
     def test_workflows_preserve_runtime_and_complete_evidence(self):
-        # The package workflow also requires four native-platform picker cases.
-        # Model their protocol only; this fixture does not exercise a real GUI.
-        picker_runner = self.root/'synthetic_picker.py'
-        picker_runner.write_text(textwrap.dedent("""\
-            import os
-            import sys
-            print('QPA_PLATFORM=' + os.environ.get('QT_QPA_PLATFORM', '<unset>'))
-            print('[       OK ] ' + sys.argv[1] + ' (1 ms)')
-            print('[  PASSED  ] 1 test.')
-            """), encoding='utf-8')
-        registration = []
-        for name in sorted(picker_gate.CASES):
-            registration.append(
-                f'add_test(NAME {name} COMMAND [==[{Path(sys.executable).as_posix()}]==] '
-                f'[==[{picker_runner.as_posix()}]==] "{name.removeprefix("pj_widgets_tests.")}")')
-        with (self.root/'source/CMakeLists.txt').open('a', encoding='utf-8') as output:
-            output.write('\n'.join(registration) + '\n')
-        configured = subprocess.run([shutil.which('cmake'), '-S', str(self.root/'source'),
-                                     '-B', str(self.build)], capture_output=True, text=True, timeout=30)
-        self.assertEqual(configured.returncode, 0, configured.stdout + configured.stderr)
         for workflow in ('zh-4x-ci.yml', 'zh-4x-packages.yml'):
             content = (ROOT/'.github/workflows'/workflow).read_text(encoding='utf-8')
             marker = '      - name: Run native tests\n        run: |\n'
@@ -425,16 +437,54 @@ class WorkflowExecutionTests(unittest.TestCase):
                                                                'PJ_QT_VERSION': 'fixture'},
                                             capture_output=True, text=True, timeout=30)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    if workflow == 'zh-4x-packages.yml' and platform == 'Windows':
+                        picker_report = self.build/'native-file-dialog.xml'
+                        self.assertEqual(set(picker_gate.audit(picker_report)), picker_gate.CASES)
+                        # CTest produced this report; prove the independent
+                        # auditor rejects incomplete or skipped evidence too.
+                        tree = ET.parse(picker_report)
+                        case = tree.getroot().find('testcase')
+                        tree.getroot().remove(case)
+                        incomplete = self.build/'picker-incomplete.xml'
+                        tree.write(incomplete)
+                        with self.assertRaises(ValueError):
+                            picker_gate.audit(incomplete)
+                        tree = ET.parse(picker_report)
+                        ET.SubElement(tree.getroot().find('testcase'), 'skipped')
+                        skipped = self.build/'picker-skipped.xml'
+                        tree.write(skipped)
+                        with self.assertRaises(ValueError):
+                            picker_gate.audit(skipped)
                     report = json.loads((self.build/'feedback-results.json').read_text(encoding='utf-8'))
                     self.assertEqual(report['required_ctest_cases'], 4)
                     self.assertEqual(len(report['images']), 24)
                     for case in report['cases']:
                         self.assertEqual(case['qt_passed_including_init_cleanup'], 3)
-                    if workflow == 'zh-4x-packages.yml' and platform == 'Windows':
-                        native = self.build/'native-file-dialog.xml'
-                        self.assertEqual(set(picker_gate.audit(native)), picker_gate.CASES)
-                        for case in ET.parse(native).getroot().iter('testcase'):
-                            self.assertIn('QPA_PLATFORM=windows', case.findtext('system-out'))
+
+
+    def test_nonzero_ctest_exit_cannot_hide_behind_passing_xml(self):
+        content = (ROOT/'.github/workflows/zh-4x-ci.yml').read_text(encoding='utf-8')
+        marker = '      - name: Run native tests\n        run: |\n'
+        body = textwrap.dedent(content.split(marker)[1].split('\n      - ', 1)[0])
+        body = body.replace('${{ matrix.qt_arch }}', 'fixture')
+        ctest = shlex.quote(shutil.which('ctest'))
+        wrapper = (
+            'set -euo pipefail\n'
+            f'python() {{ command {shlex.quote(Path(sys.executable).as_posix())} "$@"; }}\n'
+            'cygpath() { printf "%s\\n" "$2"; }\n'
+            f'ctest() {{ command {ctest} "$@"; result=$?; '
+            'if [[ " $* " == *" --output-junit "* ]]; then return 42; fi; return "$result"; }\n'
+            'export -f ctest\n'
+        )
+        result = subprocess.run([shutil.which('bash'), '-c', wrapper + body], cwd=self.root,
+                                env={**os.environ, 'RUNNER_OS': 'Windows', 'PJ_QT_VERSION': 'fixture'},
+                                capture_output=True, text=True, timeout=30)
+        self.assertNotEqual(result.returncode, 0)
+        # env -u invokes the actual ordinary ctest; the native commands are
+        # wrapped and report nonzero after their real all-passing XML exists.
+        report = ET.parse(self.build/'native-tests.xml').getroot()
+        self.assertEqual(report.get('failures'), '0')
+        self.assertFalse((self.build/'feedback-results.json').exists())
 
 
 class VulkanWorkflowSetupTests(unittest.TestCase):
