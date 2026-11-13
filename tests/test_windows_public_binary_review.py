@@ -422,10 +422,41 @@ class CollectorIntegration(unittest.TestCase):
             info_bytes = (root / "payload/BUILD-INFO.json").read_bytes()
             self.assertEqual(report["build_info"]["sha256"], sha(info_bytes))
             self.assertNotIn("version", report["build_info"])
-            self.assertEqual(sorted(path.name for path in (root / "review").iterdir()),
+            self.assertEqual(sorted(path.name for path in (root / "review").iterdir() if not path.name.startswith("qrc-")),
                              ["DataLoadParquet.dll", "ProtobufParser.dll", "ToolboxMosaico.dll", "review-manifest.json"])
             self.assertEqual((root / "tests/data/public-build-records.json").read_text(encoding="utf-8"),
                              json.dumps(FIXTURE_RECORDS))
+
+    def test_unresolved_provenance_exports_only_privacy_scanned_raw_evidence(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            _, command = self.setup_fixture(root)
+            # Safe but structurally invalid source must not approve the DLL.
+            (root / "build/qrc_mosaico_resources.cpp").write_bytes(b"// incomplete public source")
+            result = subprocess.run(command, text=True, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            report = json.loads((root / "review/review-manifest.json").read_text())
+            entry = report["selected"]["ToolboxMosaico.dll"]
+            self.assertEqual(entry["status"], "failed")
+            self.assertFalse(entry["approved_for_release"])
+            self.assertEqual(entry["rule"], "Generated QRC structure or PE location rejected")
+            self.assertTrue((root / "review/ToolboxMosaico.dll").exists())
+            self.assertTrue(entry["raw_exported_for_diagnosis"])
+            self.assertTrue(all(item["exported"] for item in report["generated_sources_for_review"]))
+
+    def test_private_generated_source_is_not_exported(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            _, command = self.setup_fixture(root)
+            secret = b"// C:\\Users\\AnotherUser\\private.bin"
+            (root / "build/qrc_mosaico_resources.cpp").write_bytes(secret)
+            result = subprocess.run(command, text=True, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            report = json.loads((root / "review/review-manifest.json").read_text())
+            item = next(x for x in report["generated_sources_for_review"] if x["basename"] == "qrc_mosaico_resources.cpp")
+            self.assertFalse(item["exported"])
+            for path in (root / "review").iterdir():
+                self.assertNotIn(secret, path.read_bytes())
 
     def test_private_path_does_not_export_any_dll_or_matched_content(self):
         with tempfile.TemporaryDirectory(prefix="pj-review-prototype-") as temp:

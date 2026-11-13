@@ -5,6 +5,8 @@ The destination is intentionally newly created; never overwrite a profile used
 by another build. This script does not assert that recipes consumed these flags.
 """
 import argparse
+import importlib.util
+import json
 import ntpath
 import re
 from pathlib import Path
@@ -20,7 +22,7 @@ def validate_root(root):
     return normalized
 
 
-def render(source, cache, base_profile="default"):
+def render(source, cache, base_profile="default", experimental_refs=None):
     source, cache = map(validate_root, (source, cache))
     if base_profile != 'default' and not re.fullmatch(r'[A-Za-z0-9_./:\-]+', base_profile):
         raise ValueError('base profile path contains unsupported characters')
@@ -35,10 +37,21 @@ def render(source, cache, base_profile="default"):
     flags = [flag.replace('\\', '/') for flag in flags]
     # Profile conf syntax supports Python list literals; backslashes must be escaped.
     encoded = repr(flags)
+    extra = ""
+    confs = ["tools.build:cflags", "tools.build:cxxflags"]
+    if experimental_refs is not None:
+        if not isinstance(experimental_refs, list) or not experimental_refs or any(not isinstance(r, str) for r in experimental_refs) or len(set(experimental_refs)) != len(experimental_refs):
+            raise ValueError("experimental refs must be a nonempty unique string list")
+        hook_path = Path(__file__).with_name("hook_windows_conan_pathmap.py")
+        spec = importlib.util.spec_from_file_location("pj_pathmap_hook", hook_path)
+        hook = importlib.util.module_from_spec(spec); spec.loader.exec_module(hook)
+        extra = (f"{hook.POLICY_CONF}={hook.policy_digest(experimental_refs)}\n"
+                 f"{hook.REFS_CONF}={experimental_refs!r}\n")
+        confs += [hook.POLICY_CONF, hook.REFS_CONF]
     return (f'include({base_profile})\n\n[conf]\n'
             f'tools.build:cflags={encoded}\n'
             f'tools.build:cxxflags={encoded}\n'
-            "tools.info.package_id:confs=['tools.build:cflags', 'tools.build:cxxflags']\n")
+            f"tools.info.package_id:confs={confs!r}\n" + extra)
 
 
 def main():
@@ -47,6 +60,7 @@ def main():
     parser.add_argument('--cache', required=True)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--base-profile', type=Path, help='existing host profile file; default: Conan default profile')
+    parser.add_argument('--experimental-hook-refs', type=Path, help='probe only: JSON exact recipe reference list; does not install hook')
     args = parser.parse_args()
     try:
         base = 'default'
@@ -55,7 +69,8 @@ def main():
             if not resolved.is_file():
                 raise ValueError('base profile must be an existing regular file')
             base = resolved.as_posix()
-        profile = render(args.source, args.cache, base)
+        refs = json.loads(args.experimental_hook_refs.read_text()) if args.experimental_hook_refs else None
+        profile = render(args.source, args.cache, base, experimental_refs=refs)
         with args.output.open('x', encoding='utf-8', newline='\n') as f:
             f.write(profile)
     except (ValueError, OSError) as exc:

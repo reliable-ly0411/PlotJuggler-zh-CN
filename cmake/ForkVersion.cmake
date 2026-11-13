@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # Downstream maintenance target requested in #44; Qt5 plugin/configuration contracts are retained.
 set(PJ_UPSTREAM_VERSION "3.17.2")
-set(PJ_FORK_PRERELEASE "rc.14")
+set(PJ_FORK_PRERELEASE "rc.15")
 set(PJ_UPSTREAM_SHA "df5cbaad9bb087413470e818fa5cdb88d6357ce5")
 set(PJ_DOWNSTREAM_START "cbc7b7287884208b5a9042de45bcab4b5dcd79c0")
 set(PJ_ARDUPILOT_REVISION "1")

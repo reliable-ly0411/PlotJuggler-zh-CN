@@ -109,6 +109,8 @@ jobs:
         $checks['pillow'] = $LASTEXITCODE
         git fetch --no-tags --depth=1 https://github.com/reliable-ly0411/PlotJuggler-zh-CN.git 3117288ce8d710bde4f7a86ca5ed5240ebb1c301
         $checks['reference'] = $LASTEXITCODE
+        python scripts/stage_meme_references.py --out "$env:GITHUB_WORKSPACE/reference-memes"
+        $checks['reference_stage'] = $LASTEXITCODE
         $env:PJ_MEME_REFERENCE_DIR = "$env:GITHUB_WORKSPACE/reference-memes"
         $env:PJ_MEME_AUDIT_DIR = "$env:GITHUB_WORKSPACE/acceptance/image-variants"
         python tests/check_translations.py --fresh

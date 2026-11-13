@@ -51,20 +51,40 @@ for directory, dirnames, filenames in os.walk(root, topdown=True, onerror=reject
     entries.extend(Path(directory) / name for name in dirnames + filenames)
 for path in sorted(entries):
     if path.is_symlink():
+        reason = "readlink-failed"
+        link_data = b""
         try:
             link_data = os.readlink(path).encode("utf-8")
-            resolved = path.resolve(strict=True)
+            reason = "target-metadata-rejected"
             check_metadata(link_data, "payload-symlink", {}, private_roots)
+            reason = "target-missing-or-loop"
+            resolved = path.resolve(strict=True)
+            reason = "target-outside-payload"
             if not resolved.is_relative_to(root_absolute):
                 raise ValueError()
+            reason = "target-not-file-or-directory"
             if resolved.is_file():
                 linked_files.append(resolved)
             elif resolved.is_dir():
                 linked_dirs.append(resolved)
             else:
                 raise ValueError()
-        except (OSError, ValueError):
-            raise SystemExit("Unsafe or unscanned payload symlink") from None
+        except (OSError, ValueError, RuntimeError):
+            relative = path.relative_to(root).as_posix()
+            try:
+                check_metadata(relative.encode(), "symlink-name", {}, private_roots)
+                safe_name = relative
+            except ValueError:
+                safe_name = "sha256:" + hashlib.sha256(relative.encode()).hexdigest()
+            failure = {"status": "failed", "rule": "unsafe-payload-symlink",
+                       "path": safe_name, "reason": reason,
+                       "target_sha256": hashlib.sha256(link_data).hexdigest()}
+            # Never print an absolute link target or the private-root manifest.
+            diagnostic = Path(a.out + ".failure.json")
+            with diagnostic.open("x", encoding="utf-8") as stream:
+                json.dump(failure, stream, indent=2)
+            raise SystemExit("Unsafe or unscanned payload symlink: " +
+                             json.dumps(failure)) from None
         continue
     if not path.is_file():
         if not path.is_dir():

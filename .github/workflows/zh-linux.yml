@@ -164,6 +164,7 @@ jobs:
           checks+=("$check_name:$check_exit")
         }
         collect_check reference git fetch --no-tags --depth=1 https://github.com/reliable-ly0411/PlotJuggler-zh-CN.git 3117288ce8d710bde4f7a86ca5ed5240ebb1c301
+        collect_check reference_stage python3 scripts/stage_meme_references.py --out "$PWD/reference-memes"
         export PJ_MEME_REFERENCE_DIR="$PWD/reference-memes"
         export PJ_MEME_AUDIT_DIR="$PWD/acceptance/image-variants"
         collect_check translations python3 tests/check_translations.py --fresh

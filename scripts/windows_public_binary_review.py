@@ -108,12 +108,24 @@ def main():
     COLLECTION_PHASE = "BUILD-INFO privacy scan"
     info_bytes = info_paths[0].read_bytes()
     check_metadata(info_bytes, "BUILD-INFO.json", records)
-    selected, selected_bytes = {}, {}
+    selected, selected_bytes, source_exports = {}, {}, {}
     temporary = copy.deepcopy(records)
     # Resource provenance is relevant only to Toolbox; missing/ambiguous
     # sources must not prevent independent scans of the other selected DLLs.
     sources, source_diagnostics = collect_qrc_sources(build)
     source_error = not all(item["accepted"] for item in source_diagnostics.values())
+    source_export_report = []
+    for basename, source_data in sources:
+        record = {"basename": basename, "sha256": sha(source_data), "exported": False}
+        try:
+            check_metadata(source_data, "generated-qrc-source", records)
+        except ValueError:
+            record["rule"] = "Generated source privacy scan rejected content"
+        else:
+            filename = "qrc-" + record["sha256"] + ".cpp"
+            source_exports[filename] = source_data
+            record.update(exported=True, file=filename)
+        source_export_report.append(record)
     for name in NAMES:
         COLLECTION_PHASE = "selected DLL review: " + name
         entry = {"status": "failed", "approved_for_release": False,
@@ -139,6 +151,11 @@ def main():
                 entry["rule"] = privacy_rule(error)
                 continue
             entry["privacy_scan"] = "passed for quarantine only"
+            # Preserve raw privacy-scanned bytes for independent diagnosis even
+            # when provenance/fingerprinting below is unresolved. This is never
+            # production approval; unresolved entries still fail collection.
+            selected_bytes[name] = data
+            entry["raw_exported_for_diagnosis"] = True
             temporary["public_ci_source_records"][name] = scan_policy["public_ci_source_records"][name]
             try:
                 if name not in records.get("public_ci_source_records", {}):
@@ -154,10 +171,12 @@ def main():
                 if source_error:
                     entry["rule"] = "Generated QRC sources missing, ambiguous or unreadable"
                     continue
+                entry["rule"] = "Generated QRC structure or PE location rejected"
                 offsets, provenance = derive_qrc_offsets(data, sources)
                 check_metadata(json.dumps(provenance).encode("utf-8"), "resource-provenance.json", records)
             else:
                 offsets, provenance = [], []
+            entry["rule"] = "PE content fingerprint rejected"
             content = {"method": METHOD, "file_bytes": len(data), "qt_rcc_mtime_offsets": offsets}
             content["sha256"] = fingerprint(data, content)
             if not content["sha256"]:
@@ -199,6 +218,7 @@ def main():
                        "repository": expected_repo, "sha256": sha(info_bytes)},
         "production_gate_unchanged": True,
         "selected": selected,
+        "generated_sources_for_review": source_export_report,
         "whole_payload_privacy_diagnostic": {"approved_for_release": False,
                                               "files": inventory, "errors": errors},
         "not_executed": ["Independent binary review", "14 real-DLL counterexamples against any new approved identity",
@@ -211,6 +231,10 @@ def main():
         if sha((out / name).read_bytes()) != selected[name]["sha256"]:
             (out / name).unlink(missing_ok=True)
             raise ValueError("Review copy verification failed")
+    for name, data in source_exports.items():
+        (out / name).write_bytes(data)
+        if sha((out / name).read_bytes()) != sha(data):
+            raise ValueError("Review source copy verification failed")
     # A completed atomic manifest is the only signal that upload is safe.
     temp_manifest = out / "review-manifest.json.tmp"
     temp_manifest.write_text(json.dumps(report, indent=2), encoding="utf-8")
@@ -222,7 +246,7 @@ def main():
     if output:
         with open(output, "a", encoding="utf-8", newline="\n") as stream:
             stream.write("manifest-ready=true\n")
-    if len(selected_bytes) != len(NAMES):
+    if any(entry["status"] != "safe for independent review only" for entry in selected.values()):
         raise SystemExit(1)
 
 

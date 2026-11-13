@@ -28,6 +28,20 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(flags, ['/experimental:deterministic', '/pathmap:D:/work/project=Z:/pj-source', '/pathmap:C:/runner/conan=Z:/pj-conan'])
         self.assertTrue(all('\\' not in flag for flag in flags))
 
+    def test_opt_in_policy_digest_is_in_package_identity(self):
+        refs = ['fixture/1.0#' + 'a'*32]
+        text = m.render(r'D:\work\project', r'C:\runner\conan', experimental_refs=refs)
+        lines = dict(line.split('=', 1) for line in text.splitlines() if '=' in line)
+        self.assertEqual(ast.literal_eval(lines['user.plotjuggler:pathmap_refs']), refs)
+        self.assertEqual(len(lines['user.plotjuggler:pathmap_policy']), 64)
+        confs = ast.literal_eval(lines['tools.info.package_id:confs'])
+        self.assertIn('user.plotjuggler:pathmap_policy', confs)
+        self.assertIn('user.plotjuggler:pathmap_refs', confs)
+        self.assertNotIn('user.plotjuggler', m.render(r'D:\work\project', r'C:\runner\conan'))
+        for invalid in ([], [refs[0], refs[0]], [None], 'not-a-list'):
+            with self.assertRaises(ValueError):
+                m.render(r'D:\work\project', r'C:\runner\conan', experimental_refs=invalid)
+
     def test_unsafe_roots_rejected(self):
         for source, cache in [(r'D:\work\..\bad', r'C:\cache'), (r'D:\work with space', r'C:\cache'), (r'D:\work', r'd:\WORK\cache'), ('D:relative', r'C:\cache'), (r'D:\work', r'C:\cache&bad'), (r'D:\work', r'D:\WORK')]:
             with self.subTest(source=source, cache=cache), self.assertRaises(ValueError):

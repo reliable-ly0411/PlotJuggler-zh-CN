@@ -6,6 +6,7 @@ Verifies the default launcher path, child forwarding, and isolated settings.
 Main-window language menu behavior is covered by the separate UI acceptance.
 """
 import argparse
+from contextlib import contextmanager
 import configparser
 import hashlib
 import json
@@ -79,6 +80,41 @@ def run_owned(args, cwd, timeout, item):
     return process.returncode
 
 
+@contextmanager
+def prepare_launcher(launcher, root, timeout):
+    """Use an owned extracted AppDir for deterministic bundle identity checks.
+
+    Outer AppImage runtime behavior remains a separate packaged GUI check.
+    No arbitrary /tmp/appimage_* path is accepted as proof of provenance.
+    """
+    if launcher.suffix.lower() != '.appimage':
+        yield launcher, launcher.parent / ('plotjuggler.exe' if os.name == 'nt' else 'plotjuggler'), None
+        return
+    # Payload bytes must never enter the acceptance artifact tree.
+    with tempfile.TemporaryDirectory(prefix='pj-appimage-acceptance-') as directory:
+        owned = Path(directory).resolve()
+        require(not owned.is_relative_to(root.parent.resolve()),
+                'temporary payload directory overlaps acceptance output')
+        subprocess.run([str(launcher), '--appimage-extract'], cwd=owned, check=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=timeout)
+        bundle = owned / 'squashfs-root'
+        entry = bundle / 'AppRun'
+        child = bundle / 'usr/bin/plotjuggler'
+        for path in (entry, child):
+            require(path.resolve(strict=True).is_relative_to(bundle.resolve(strict=True)),
+                    'AppImage entry or child escapes extracted bundle')
+            require(path.is_file(), 'AppImage entry or child missing')
+        yield entry, child, digest(launcher)
+
+
+def verify_child(program, expected, expected_digest):
+    actual = Path(program)
+    require(actual.is_absolute(), 'child program must be absolute')
+    require(actual.resolve(strict=True) == expected.resolve(strict=True),
+            'child is not bundled sibling')
+    require(digest(actual) == expected_digest, 'bundled child changed during acceptance')
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--launcher', required=True, type=Path)
@@ -90,58 +126,63 @@ def main():
     launcher = a.launcher.resolve(strict=True)
     base = a.out_base.resolve(strict=True)
     root = Path(tempfile.mkdtemp(prefix='launcher GUI 验收 ', dir=base))
-    nonce = secrets.token_hex(32)
-    config = root / 'config'
-    ini = config / INI
-    ini.parent.mkdir(parents=True)
-    external = root / 'external-sentinel.ini'
-    external.write_text('external sentinel\n', encoding='utf-8')
-    external_hash = digest(external)
-    results = []
-    for initial in ('en_US', 'zh_CN', 'zh_TW'):
-        # Every case uses a fresh, isolated synthetic configuration.
-        ini.write_text('[General]\nPreferences%3A%3Alanguage=' + initial +
-                       '\nAcceptanceSentinel=keep-this-value\n', encoding='utf-8')
-        case = root / ('case-' + initial)
-        before = digest(ini)
-        marker = {'schema': 1, 'purpose': 'launcher-gui-acceptance', 'nonce': nonce,
-                  'ini': INI.as_posix(), 'before_sha256': before}
-        (root / 'launcher-acceptance.json').write_text(json.dumps(marker), encoding='utf-8')
-        forwarded = ['--config-dir', str(config), '--help', '--language=zh_Hant_HK',
-                     '--', '中文 文件 sample', '--self-test-launcher-ui=payload', '--launcher-test-scenario']
-        args = [str(launcher), '--config-dir', str(config), '--self-test-launcher-ui', str(case),
-                '--launcher-test-scenario', 'start', '--launcher-test-nonce', nonce, *forwarded[2:]]
-        item = {'initial': initial, 'scenario': 'start', 'output': str(case)}
-        try:
-            code = run_owned(args, root, a.timeout, item)
-            require(code == 0, 'launcher exit code ' + str(code))
-            child_info = json.loads((case / 'child-started.json').read_text(encoding='utf-8'))
-            require(Path(child_info['cwd']) == root, 'child cwd mismatch')
-            require(child_info['arguments'] == forwarded, 'child arguments mismatch')
-            require(Path(child_info['program']).parent == launcher.parent, 'child is not bundled sibling')
-            if a.expected_version is not None:
-                require(child_info['version'] == a.expected_version, 'version mismatch')
-            if a.expected_platform is not None:
-                require(child_info['platform'] == a.expected_platform, 'platform mismatch')
-            values = read_ini(ini)
-            require(values['Preferences%3A%3Alanguage'] == initial, 'session language was saved')
-            require(values['AcceptanceSentinel'] == 'keep-this-value', 'sentinel changed')
-            require(digest(ini) == before, 'startup changed settings')
-            require(digest(external) == external_hash, 'external sentinel changed')
-            item.update(child=child_info, passed=True)
-        except (AssertionError, OSError, ValueError, KeyError, subprocess.TimeoutExpired) as exc:
-            item.update(passed=False, error=str(exc))
-        results.append(item)
-    summary = {'runroot': str(root), 'launcher': str(launcher), 'results': results,
-               'passed': all(x['passed'] for x in results), 'scope': __doc__,
-               'expected_version': a.expected_version, 'expected_platform': a.expected_platform,
-               'version_checked': a.expected_version is not None, 'platform_checked': a.expected_platform is not None}
-    temp = root / 'summary.tmp'
-    temp.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding='utf-8')
-    temp.replace(root / 'summary.json')
-    # Console encoding varies by platform; JSON escapes keep output ASCII-safe.
-    print(json.dumps(summary, ensure_ascii=True, indent=2))
-    return 0 if summary['passed'] else 1
+    with prepare_launcher(launcher, root, a.timeout) as (entry, expected_child, appimage_sha256):
+        child_digest = digest(expected_child)
+        require(child_digest != 'missing', 'bundled child missing')
+        nonce = secrets.token_hex(32)
+        config = root / 'config'
+        ini = config / INI
+        ini.parent.mkdir(parents=True)
+        external = root / 'external-sentinel.ini'
+        external.write_text('external sentinel\n', encoding='utf-8')
+        external_hash = digest(external)
+        results = []
+        for initial in ('en_US', 'zh_CN', 'zh_TW'):
+            # Every case uses a fresh, isolated synthetic configuration.
+            ini.write_text('[General]\nPreferences%3A%3Alanguage=' + initial +
+                           '\nAcceptanceSentinel=keep-this-value\n', encoding='utf-8')
+            case = root / ('case-' + initial)
+            before = digest(ini)
+            marker = {'schema': 1, 'purpose': 'launcher-gui-acceptance', 'nonce': nonce,
+                      'ini': INI.as_posix(), 'before_sha256': before}
+            (root / 'launcher-acceptance.json').write_text(json.dumps(marker), encoding='utf-8')
+            forwarded = ['--config-dir', str(config), '--help', '--language=zh_Hant_HK',
+                         '--', '中文 文件 sample', '--self-test-launcher-ui=payload', '--launcher-test-scenario']
+            args = [str(entry), '--config-dir', str(config), '--self-test-launcher-ui', str(case),
+                    '--launcher-test-scenario', 'start', '--launcher-test-nonce', nonce, *forwarded[2:]]
+            item = {'initial': initial, 'scenario': 'start', 'output': str(case)}
+            try:
+                code = run_owned(args, root, a.timeout, item)
+                require(code == 0, 'launcher exit code ' + str(code))
+                child_info = json.loads((case / 'child-started.json').read_text(encoding='utf-8'))
+                require(Path(child_info['cwd']) == root, 'child cwd mismatch')
+                require(child_info['arguments'] == forwarded, 'child arguments mismatch')
+                verify_child(child_info['program'], expected_child, child_digest)
+                if a.expected_version is not None:
+                    require(child_info['version'] == a.expected_version, 'version mismatch')
+                if a.expected_platform is not None:
+                    require(child_info['platform'] == a.expected_platform, 'platform mismatch')
+                values = read_ini(ini)
+                require(values['Preferences%3A%3Alanguage'] == initial, 'session language was saved')
+                require(values['AcceptanceSentinel'] == 'keep-this-value', 'sentinel changed')
+                require(digest(ini) == before, 'startup changed settings')
+                require(digest(external) == external_hash, 'external sentinel changed')
+                item.update(child=child_info, passed=True)
+            except (AssertionError, OSError, ValueError, KeyError, subprocess.TimeoutExpired) as exc:
+                item.update(passed=False, error=str(exc))
+            results.append(item)
+        summary = {'appimage_sha256': appimage_sha256, 'tested_entry': str(entry),
+                   'bundle_mode': 'owned-extracted-AppRun' if appimage_sha256 else 'native-sibling',
+                   'runroot': str(root), 'launcher': str(launcher), 'results': results,
+                   'passed': all(x['passed'] for x in results), 'scope': __doc__,
+                   'expected_version': a.expected_version, 'expected_platform': a.expected_platform,
+                   'version_checked': a.expected_version is not None, 'platform_checked': a.expected_platform is not None}
+        temp = root / 'summary.tmp'
+        temp.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding='utf-8')
+        temp.replace(root / 'summary.json')
+        # Console encoding varies by platform; JSON escapes keep output ASCII-safe.
+        print(json.dumps(summary, ensure_ascii=True, indent=2))
+        return 0 if summary['passed'] else 1
 
 if __name__ == '__main__':
     raise SystemExit(main())
