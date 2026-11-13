@@ -2396,27 +2396,7 @@ p, li { white-space: pre-wrap; }
     </context>
     <context>
         <name>Launcher</name>
-        <message>
-            <location filename="../launcher.cpp" line="29" />
-            <source>PlotJuggler 3 launcher</source>
-            <translation>PlotJuggler 3 啟動器</translation>
-        </message>
-        <message>
-            <location filename="../launcher.cpp" line="41" />
-            <source>Interface language:</source>
-            <translation>介面語言：</translation>
-        </message>
-        <message>
-            <location filename="../launcher.cpp" line="42" />
-            <source>The selected language is saved when you click Start. Files and command-line options are passed to PlotJuggler.</source>
-            <translation>點選“啟動”時儲存所選語言。檔案和命令列選項會傳遞給 PlotJuggler。</translation>
-        </message>
-        <message>
-            <location filename="../launcher.cpp" line="48" />
-            <source>Start</source>
-            <translation>啟動</translation>
-        </message>
-        <message>
+                        <message>
             <location filename="../launcher.cpp" line="59" />
             <source>Unable to start PlotJuggler:
 %1
@@ -2435,19 +2415,7 @@ p, li { white-space: pre-wrap; }
             <source>PlotJuggler exited with code %1.</source>
             <translation>PlotJuggler 已結束，結束代碼為 %1。</translation>
         </message>
-        <message>
-            <location filename="../launcher.cpp" line="116" />
-            <source>Language</source>
-            <translation>語言</translation>
-        </message>
-        <message>
-            <location filename="../launcher.cpp" line="117" />
-            <source>Unable to save the language preference:
-%1</source>
-            <translation>無法儲存語言設定：
-%1</translation>
-        </message>
-        <message>
+                <message>
             <location filename="../launcher.cpp" line="143" />
             <source>Launch failed</source>
             <translation>啟動失敗</translation>
