@@ -3,14 +3,17 @@
 """Cross-platform unit checks, not the Windows integration result."""
 import base64
 import gzip
-import re
+import hashlib
 import shutil
 import subprocess
+import zipfile
+import re
 import importlib.util
 from pathlib import Path
 import struct
 import tempfile
 import unittest
+from unittest import mock
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -72,6 +75,168 @@ class InstallerResourceSmokeTests(unittest.TestCase):
                     self.assertIn('Windows Mesa notice verification failed.', run.stderr)
                 else:
                     self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+    def test_license_sources_and_historical_notice_are_preserved(self):
+        root = ROOT / 'packaging/installer'
+        original = root / 'packages/io.plotjuggler.application/meta/license_lgpl.txt'
+        # Git LF and Windows CRLF checkouts contain the same unedited notice.
+        self.assertEqual(hashlib.sha256(original.read_bytes().replace(b'\r\n', b'\n')).hexdigest(),
+                         '0a81c0c611ee9d06f6c247045ae7fa79316cf220431acdf5330e195abbac78c5')
+        builder = (root / 'build_windows_installer.ps1').read_text(encoding='utf-8')
+        self.assertIn('Copy-Item (Join-Path $pkgSrc "meta/license_lgpl.txt") (Join-Path $historyDir "license_lgpl.txt")', builder)
+        self.assertLess(builder.index('$historyDir ='), builder.index('Copy-Item (Join-Path $stageData "share/licenses/Qt-LGPL.txt")'))
+        portable = (root / 'build_windows_portable.ps1').read_text(encoding='utf-8')
+        self.assertIn('$metadata = Join-Path $StageDir "packages/io.plotjuggler.application/meta"', portable)
+        self.assertIn('Copy-Item -LiteralPath (Join-Path $metadata $name)', portable)
+        self.assertNotIn('Join-Path $PSScriptRoot', portable)
+
+    @unittest.skipUnless(shutil.which('pwsh') or shutil.which('powershell'), 'PowerShell runtime unavailable')
+    def test_portable_uses_staged_bytes_and_keeps_history(self):
+        # Execute the actual builder's notice-copy block and portable entry point
+        # against a tiny synthetic stage. No binary is launched or downloaded.
+        shell = shutil.which('pwsh') or shutil.which('powershell')
+        root = ROOT / 'packaging/installer'
+        builder = (root / 'build_windows_installer.ps1').read_text(encoding='utf-8')
+        block = builder[builder.index('$historyDir ='):builder.index('# --- build the installer')]
+        quote = lambda path: "'" + str(path).replace("'", "''") + "'"
+        with tempfile.TemporaryDirectory(prefix="license 中文 stage's ") as directory:
+            stage = Path(directory)
+            payload = stage / 'packages/io.plotjuggler.application/data'
+            meta = payload.parent / 'meta'
+            meta.mkdir(parents=True)
+            (payload / 'bin').mkdir(parents=True)
+            (payload / 'bin/PlotJuggler4.exe').write_bytes(b'not executable')
+            (payload / 'share/licenses').mkdir(parents=True)
+            canonical = b'SYNTHETIC pinned Qt LGPL\n'
+            mpl = b'SYNTHETIC staged MPL\n'
+            (payload / 'share/licenses/Qt-LGPL.txt').write_bytes(canonical)
+            (meta / 'license_mpl.txt').write_bytes(mpl)
+            # This deliberately isolated tail runs via -Command, not -File.
+            # Supply the real builder root and mock ONLY its external verifier;
+            # this synthetic payload is not a distributable app/renderer stage.
+            # Verify the exact helper/arguments and propagate its failure before
+            # testing the successful notice-copy/portable path. The verifier's
+            # real byte/manifest checks are covered by test_windows_mesa_notices.
+            setup = (f"$ErrorActionPreference='Stop'; $stageData={quote(payload)}; "
+                     f"$stageMeta={quote(meta)}; $pkgSrc={quote(root / 'packages/io.plotjuggler.application')}; "
+                     f"$installerRoot={quote(root)}; $PSScriptRoot={quote(root)}; $ExtraPrefix=$true;\n"
+                     f"$expectedHelper={quote(ROOT / 'packaging/localization/windows_mesa_notices.py')};\n"
+                     "$script:helperCalls=0;\n"
+                     "function Die([string]$message) { throw $message }\n"
+                     "function python {\n"
+                     "  if ($args.Count -ne 3 -or [IO.Path]::GetFullPath($args[0]) -cne $expectedHelper "
+                     "-or $args[1] -cne '--prefix' -or $args[2] -cne $stageData) "
+                     "{ throw 'Unexpected external verifier invocation' }\n"
+                     "  $script:helperCalls++; Write-Output 'EXACT_MESA_GATE_CALLED';\n"
+                     "  $global:LASTEXITCODE=$helperExit\n"
+                     "}\n")
+            for exit_code in (23, 0):
+                script = (setup + f"$helperExit={exit_code};\n" + block +
+                          "\nif ($helperCalls -ne 1) { throw 'Expected exactly one Mesa gate call' }")
+                run = subprocess.run([shell, '-NoProfile', '-NonInteractive', '-Command', script],
+                                     capture_output=True, text=True, timeout=30)
+                self.assertEqual(run.stdout.count('EXACT_MESA_GATE_CALLED'), 1, run.stdout + run.stderr)
+                if exit_code:
+                    self.assertNotEqual(run.returncode, 0, run.stdout + run.stderr)
+                    self.assertIn('Windows Mesa notice verification failed.', run.stderr)
+                else:
+                    self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            archive = stage / 'portable.zip'
+            command = [shell, '-NoProfile', '-NonInteractive', '-File', str(root / 'build_windows_portable.ps1'),
+                       '-StageDir', str(stage), '-OutFile', str(archive)]
+            run = subprocess.run(command, capture_output=True, text=True, timeout=30)
+            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            original = (root / 'packages/io.plotjuggler.application/meta/license_lgpl.txt').read_bytes()
+            with zipfile.ZipFile(archive) as package:
+                self.assertEqual(package.read('licenses/license_lgpl.txt'), canonical)
+                self.assertEqual(package.read('licenses/license_mpl.txt'), mpl)
+                self.assertEqual(package.read('share/licenses/PlotJuggler-installer-history/license_lgpl.txt'), original)
+                self.assertEqual(package.read('share/licenses/PlotJuggler-installer-history/LICENSE-PROVENANCE.txt'),
+                                 (root / 'LICENSE-PROVENANCE.txt').read_bytes())
+            # Missing staged license must fail, never silently fall back to source.
+            (meta / 'license_lgpl.txt').unlink()
+            command[-1] = str(stage / 'must-not-exist.zip')
+            run = subprocess.run(command, capture_output=True, text=True, timeout=30)
+            self.assertNotEqual(run.returncode, 0)
+            self.assertFalse((stage / 'must-not-exist.zip').exists())
+
+    def test_offline_pin_matches_the_existing_installer_helper(self):
+        helper = (ROOT / 'packaging/installer/install_ifw.ps1').read_text(encoding='utf-8')
+        expected = re.search(r"\$expected = '([0-9a-f]{64})'", helper)
+        self.assertIsNotNone(expected)
+        self.assertEqual(smoke.IFW_ARCHIVE_SHA256, expected.group(1))
+
+    def test_offline_extraction_checks_both_hashes_before_running_7z(self):
+        with tempfile.TemporaryDirectory(prefix='ifw offline space ') as directory:
+            root = Path(directory).resolve()
+            archive, extractor, destination = root / 'ifw.7z', root / '7z.exe', root / 'ifw tools'
+            archive.write_bytes(b'fake official archive')
+            extractor.write_bytes(b'fake verified extractor')
+            archive_hash = hashlib.sha256(archive.read_bytes()).hexdigest()
+            extractor_hash = hashlib.sha256(extractor.read_bytes()).hexdigest()
+            def fake_run(command):
+                self.assertEqual(command, [extractor, 'x', archive, '-o' + str(destination), '-y'])
+                (destination / 'bin').mkdir(parents=True)
+                for name in ('binarycreator.exe', 'installerbase.exe', 'repogen.exe'):
+                    (destination / 'bin' / name).write_bytes(b'synthetic')
+                return ''
+            with mock.patch.object(smoke, 'IFW_ARCHIVE_SHA256', archive_hash), \
+                 mock.patch.object(smoke, 'run', side_effect=fake_run) as run:
+                smoke.extract_pinned_ifw(archive, extractor, extractor_hash, destination)
+                self.assertEqual(run.call_count, 1)
+                with self.assertRaisesRegex(ValueError, 'existing IFW destination'):
+                    smoke.extract_pinned_ifw(archive, extractor, extractor_hash, destination)
+
+    def test_offline_bad_hash_or_partial_tools_fail_without_execution(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive, extractor = root / 'ifw.7z', root / '7z.exe'
+            archive.write_bytes(b'archive'); extractor.write_bytes(b'extractor')
+            archive_hash = hashlib.sha256(archive.read_bytes()).hexdigest()
+            extractor_hash = hashlib.sha256(extractor.read_bytes()).hexdigest()
+            with mock.patch.object(smoke, 'IFW_ARCHIVE_SHA256', archive_hash), mock.patch.object(smoke, 'run') as run:
+                with self.assertRaisesRegex(ValueError, 'Extractor SHA-256 mismatch'):
+                    smoke.extract_pinned_ifw(archive, extractor, '0' * 64, root / 'tools')
+                with self.assertRaisesRegex(ValueError, '64 lower-case'):
+                    smoke.extract_pinned_ifw(archive, extractor, 'X' * 64, root / 'tools')
+                archive.write_bytes(b'tampered')
+                with self.assertRaisesRegex(ValueError, 'IFW archive SHA-256 mismatch'):
+                    smoke.extract_pinned_ifw(archive, extractor, extractor_hash, root / 'tools')
+                run.assert_not_called()
+            archive.write_bytes(b'archive')
+            with mock.patch.object(smoke, 'IFW_ARCHIVE_SHA256', archive_hash), mock.patch.object(smoke, 'run'):
+                with self.assertRaisesRegex(ValueError, 'missing tool'):
+                    smoke.extract_pinned_ifw(archive, extractor, extractor_hash, root / 'tools')
+
+    @unittest.skipUnless(shutil.which('cmake'), 'CMake is not installed in this source-only environment')
+    def test_cmake_offline_inputs_are_all_or_none_and_fail_closed(self):
+        cmake = shutil.which('cmake')
+        with tempfile.TemporaryDirectory(prefix='ifw cmake options ') as directory:
+            root = Path(directory)
+            archive, extractor = root / 'ifw.7z', root / '7z.exe'
+            archive.write_bytes(b'archive'); extractor.write_bytes(b'extractor')
+            output = root / 'arguments.txt'; script = root / 'check.cmake'
+            module = (ROOT / 'cmake/PjIfwTestOptions.cmake').as_posix()
+            script.write_text(f'include("{module}")\nfile(WRITE "{output.as_posix()}" "${{PJ_IFW_TEST_ARGS}}")\n', encoding='utf-8')
+            def call(*args):
+                return subprocess.run([cmake, *args, '-P', str(script)], capture_output=True, text=True)
+            self.assertEqual(call().returncode, 0)
+            self.assertEqual(output.read_text(encoding='utf-8'), '')
+            archive_arg = '-DPJ_IFW_TEST_ARCHIVE=' + str(archive)
+            extractor_arg = '-DPJ_IFW_TEST_EXTRACTOR=' + str(extractor)
+            digest_arg = '-DPJ_IFW_TEST_EXTRACTOR_SHA256=' + 'A' * 64
+            valid = call(archive_arg, extractor_arg, digest_arg)
+            self.assertEqual(valid.returncode, 0, valid.stderr)
+            self.assertIn('--extractor-sha256;' + 'a' * 64, output.read_text(encoding='utf-8'))
+            partial = call(archive_arg)
+            self.assertNotEqual(partial.returncode, 0)
+            self.assertIn('require archive, extractor and extractor SHA-256 together', partial.stderr)
+            self.assertNotEqual(call(archive_arg, extractor_arg, '-DPJ_IFW_TEST_EXTRACTOR_SHA256=wrong').returncode, 0)
+            self.assertNotEqual(call('-DPJ_IFW_TEST_ARCHIVE=' + str(root / 'missing'), extractor_arg, digest_arg).returncode, 0)
+            for key in ('ARCHIVE', 'EXTRACTOR', 'EXTRACTOR_SHA256'):
+                for value in ('0', 'OFF', 'NO', 'FALSE', 'a-NOTFOUND'):
+                    with self.subTest(key=key, value=value):
+                        result = call(f'-DPJ_IFW_TEST_{key}={value}')
+                        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_missing_embedded_resource_fails(self):
         with tempfile.TemporaryDirectory() as directory:

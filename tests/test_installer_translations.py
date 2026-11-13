@@ -30,6 +30,17 @@ class InstallerTranslationsTest(unittest.TestCase):
             self.assertEqual(re.findall(r'%[1-9]', message.findtext('source')),
                              re.findall(r'%[1-9]', translation.text))
 
+    def test_component_display_catalog_matches_package_metadata(self):
+        package = ET.parse(META / 'package.xml').getroot()
+        catalog = ET.parse(META / 'zh_CN.ts').getroot()
+        translations = {m.findtext('source'): m.findtext('translation') for m in
+                        catalog.find("context[name='PlotJugglerInstaller']").findall('message')}
+        for field in ('DisplayName', 'Description'):
+            values = package.findall(field)
+            self.assertEqual(len(values), 2)
+            self.assertEqual(values[1].get('{http://www.w3.org/XML/1998/namespace}lang'), 'zh_CN')
+            self.assertEqual(translations[values[0].text], values[1].text)
+
     def test_catalog_is_built_and_registered(self):
         package = ET.parse(META / 'package.xml').getroot()
         self.assertIsNone(package.find('Translations'))  # OS locale must not override --lang.

@@ -11,6 +11,7 @@
 
 #include "MainWindow.h"
 #include "pj_runtime/CatalogModel.h"
+#include "support/isolated_main_window.h"
 #include "support/loader_test_support.h"
 #include "support/preset_test_support.h"
 
@@ -27,7 +28,7 @@ class MainWindowStartupTest : public ::testing::Test {
     ASSERT_TRUE(data_.isValid());
     const QString plugin = QString::fromUtf8(PJ_MOCK_FILE_SOURCE_PLUGIN_PATH);
     ASSERT_TRUE(QFile::copy(plugin, extensions_.filePath(QFileInfo(plugin).fileName())));
-    window_ = std::make_unique<PJ::MainWindow>(extensions_.path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_.path());
     QObject::connect(window_.get(), &PJ::MainWindow::layoutRestoreSettled, window_.get(), [this](bool ok) {
       settles_.push_back(ok);
     });

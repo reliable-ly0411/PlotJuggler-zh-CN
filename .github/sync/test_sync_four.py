@@ -67,6 +67,9 @@ class SyncTests(unittest.TestCase):
     def test_noop(self):
         self.upstream = self.base
         self.assertFalse(module.sync(CONFIG)['changed'])
+        self.assertIn(('fetch', '--no-recurse-submodules', '--no-tags',
+                       'https://github.com/PlotJuggler/PlotJuggler.git', 'refs/heads/main'),
+                      self.commands)
         self.assertFalse(any(c[0] == 'push' for c in self.commands))
 
     def test_dry_run_preserves_policy_and_ancestry(self):
@@ -125,7 +128,9 @@ class WorkflowTests(unittest.TestCase):
             self.assertNotIn(forbidden, text)
         self.assertIn('group: zh-upstream-sync', text)
         self.assertIn('cancel-in-progress: false', text)
-        self.assertIn('--validate', text)
+        self.assertIn('--upstream-ref main-3.x --validate', text)
+        config = json.loads((ROOT / '.github/sync/pj4-sync.json').read_text())
+        self.assertEqual(config, CONFIG)
 
 if __name__ == '__main__':
     unittest.main()

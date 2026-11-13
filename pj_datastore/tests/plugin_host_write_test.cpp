@@ -5,48 +5,32 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <string_view>
 #include <vector>
 
 #include "nanoarrow/nanoarrow.h"
 #include "nanoarrow/nanoarrow.hpp"
-#include "nanoarrow/nanoarrow_ipc.h"
 #include "pj_base/sdk/plugin_data_api.hpp"
 #include "pj_datastore/engine.hpp"
 #include "pj_datastore/object_store.hpp"
 #include "pj_datastore/plugin_data_host.hpp"
+#include "plugin_host_test_helpers.hpp"
 
 namespace PJ {
 namespace {
 
 using namespace PJ::sdk;
+using test::ArrowSeries;
+using test::expectNullRows;
 
-std::vector<uint8_t> serializeToIpc(ArrowSchema* schema, ArrowArray* array) {
-  ArrowBuffer out_buf;
-  ArrowBufferInit(&out_buf);
-
-  ArrowIpcOutputStream out_stream;
-  EXPECT_EQ(ArrowIpcOutputStreamInitBuffer(&out_stream, &out_buf), NANOARROW_OK);
-
-  ArrowIpcWriter writer;
-  EXPECT_EQ(ArrowIpcWriterInit(&writer, &out_stream), NANOARROW_OK);
-
-  ArrowError error;
-  EXPECT_EQ(ArrowIpcWriterWriteSchema(&writer, schema, &error), NANOARROW_OK) << error.message;
-
-  nanoarrow::UniqueArrayView view;
-  EXPECT_EQ(ArrowArrayViewInitFromSchema(view.get(), schema, nullptr), NANOARROW_OK);
-  EXPECT_EQ(ArrowArrayViewSetArray(view.get(), array, nullptr), NANOARROW_OK);
-  EXPECT_EQ(ArrowIpcWriterWriteArrayView(&writer, view.get(), &error), NANOARROW_OK) << error.message;
-  EXPECT_EQ(ArrowIpcWriterWriteArrayView(&writer, nullptr, &error), NANOARROW_OK);
-
-  ArrowIpcWriterReset(&writer);
-
-  std::vector<uint8_t> result(static_cast<std::size_t>(out_buf.size_bytes));
-  std::memcpy(result.data(), out_buf.data, result.size());
-  ArrowBufferReset(&out_buf);
-  return result;
+/// A one-batch stream owns the schema and array until the host accepts it.
+Expected<ArrowStreamHolder> makeStream(ArrowSchema* schema, ArrowArray* array) {
+  ArrowStreamHolder stream;
+  if (ArrowBasicArrayStreamInit(stream.out(), schema, 1) != NANOARROW_OK) {
+    return unexpected("Could not allocate a one-batch Arrow stream");
+  }
+  ArrowBasicArrayStreamSetArray(stream.get(), 0, array);
+  return stream;
 }
 
 struct Fixture {
@@ -77,10 +61,10 @@ TEST(PluginDataHostWriteTest, SourceHostWritesWithinBoundDataSource) {
   ASSERT_EQ(series.type(), PrimitiveType::kFloat32);
   ASSERT_EQ(series.timestamps().size(), 1U);
   EXPECT_EQ(series.timestamps()[0], 10);
-  EXPECT_FLOAT_EQ(series.raw().values.as_float32[0], 1.25F);
+  EXPECT_FLOAT_EQ(series.valuesAsFloat32()[0], 1.25F);
 }
 
-TEST(PluginDataHostWriteTest, AppendRecordRejectsTypeMismatch) {
+TEST(PluginDataHostWriteTest, AppendRecordConvertsExactNumericValuesAndNullsInexactValues) {
   Fixture f;
   const auto source = *f.toolbox.createDataSource("sensor");
 
@@ -88,11 +72,20 @@ TEST(PluginDataHostWriteTest, AppendRecordRejectsTypeMismatch) {
   SourceWriteHostView writer(source_impl.raw());
 
   const auto topic = *writer.ensureTopic("imu");
-  ASSERT_TRUE(writer.ensureField(topic, "ax", PrimitiveType::kInt32).has_value());
-
-  const std::vector<NamedFieldValue> fields = {{.name = "ax", .value = int16_t{7}}};
-  const auto status = writer.appendRecord(topic, 1, fields);
-  EXPECT_FALSE(status.has_value());
+  const auto field = *writer.ensureField(topic, "ax", PrimitiveType::kInt32);
+  const std::vector<NamedFieldValue> exact = {{.name = "ax", .value = int16_t{7}}};
+  const std::vector<NamedFieldValue> inexact = {{.name = "ax", .value = 7.5}};
+  ASSERT_TRUE(writer.appendRecord(topic, 1, exact).has_value());
+  ASSERT_TRUE(writer.appendRecord(topic, 2, inexact).has_value());
+  source_impl.flushPending();
+  auto series_or = f.toolbox.readSeries(field);
+  ASSERT_TRUE(series_or.has_value());
+  ASSERT_EQ(series_or->type(), PrimitiveType::kInt32);
+  ASSERT_EQ(series_or->timestamps().size(), 2U);
+  EXPECT_EQ(series_or->timestamps()[0], 1);
+  EXPECT_EQ(series_or->timestamps()[1], 2);
+  EXPECT_EQ(series_or->valuesAsInt32()[0], 7);
+  expectNullRows(f.toolbox, field, {false, true});
 }
 
 TEST(PluginDataHostWriteTest, AppendRecordFastRejectsUnknownFieldHandle) {
@@ -134,7 +127,9 @@ TEST(PluginDataHostWriteTest, ParserHostIsBoundToSingleTopic) {
   ASSERT_TRUE(series_or.has_value());
   auto series = std::move(series_or.value());
   ASSERT_EQ(series.timestamps().size(), 1U);
-  EXPECT_EQ(series.raw().values.as_int32[0], 42);
+  EXPECT_EQ(series.timestamps()[0], 100);
+  ASSERT_EQ(series.type(), PrimitiveType::kInt32);
+  EXPECT_EQ(series.valuesAsInt32()[0], 42);
 }
 
 TEST(PluginDataHostWriteTest, ToolboxCanWriteIntoExistingDataSource) {
@@ -151,12 +146,16 @@ TEST(PluginDataHostWriteTest, ToolboxCanWriteIntoExistingDataSource) {
   ASSERT_TRUE(series_or.has_value());
   auto series = std::move(series_or.value());
   ASSERT_EQ(series.type(), PrimitiveType::kString);
-  ASSERT_EQ(series.raw().values.as_string.offset_count, 2U);
-  const auto bytes = std::string_view(series.raw().values.as_string.bytes, series.raw().values.as_string.byte_count);
-  EXPECT_EQ(bytes, "hello");
+  ASSERT_EQ(series.timestamps().size(), 1U);
+  EXPECT_EQ(series.timestamps()[0], 5);
+  ArrowSeries arrow;
+  ASSERT_TRUE(arrow.read(f.toolbox, field).has_value());
+  EXPECT_EQ(arrow.format(), "u");
+  EXPECT_FALSE(ArrowArrayViewIsNull(arrow.values(), 0));
+  EXPECT_EQ(arrow.stringAt(0), "hello");
 }
 
-TEST(PluginDataHostWriteTest, ArrowIpcPreservesExactNarrowPrimitiveTypes) {
+TEST(PluginDataHostWriteTest, ArrowStreamPreservesExactNarrowPrimitiveTypes) {
   Fixture f;
   const auto source = *f.toolbox.createDataSource("sensor");
 
@@ -193,8 +192,10 @@ TEST(PluginDataHostWriteTest, ArrowIpcPreservesExactNarrowPrimitiveTypes) {
   }
   ASSERT_EQ(ArrowArrayFinishBuildingDefault(array.get(), nullptr), NANOARROW_OK);
 
-  const auto ipc = serializeToIpc(schema.get(), array.get());
-  ASSERT_TRUE(writer.appendArrowIpc(topic, ipc).has_value());
+  auto stream_or = makeStream(schema.get(), array.get());
+  ASSERT_TRUE(stream_or.has_value());
+  auto stream = std::move(*stream_or);
+  ASSERT_TRUE(writer.appendArrowStream(topic, std::move(stream), "_timestamp").has_value());
   source_impl.flushPending();
 
   auto snapshot_or = f.toolbox.catalogSnapshot();
@@ -214,9 +215,29 @@ TEST(PluginDataHostWriteTest, ArrowIpcPreservesExactNarrowPrimitiveTypes) {
     }
   }
 
-  EXPECT_EQ(i8_type, PrimitiveType::kInt8);
-  EXPECT_EQ(u16_type, PrimitiveType::kUint16);
-  EXPECT_EQ(u32_type, PrimitiveType::kUint32);
+  ASSERT_EQ(i8_type, PrimitiveType::kInt8);
+  ASSERT_EQ(u16_type, PrimitiveType::kUint16);
+  ASSERT_EQ(u32_type, PrimitiveType::kUint32);
+  ASSERT_EQ(snapshot.fields().size(), 3U);
+  for (const auto& field : snapshot.fields()) {
+    EXPECT_EQ(field.handle.topic.id, topic.id);
+    auto series_or = f.toolbox.readSeries(field.handle);
+    ASSERT_TRUE(series_or.has_value());
+    ASSERT_EQ(series_or->type(), fromAbiType(field.type));
+    ASSERT_EQ(series_or->rowCount(), 3U);
+    for (int64_t row = 0; row < 3; ++row) {
+      EXPECT_EQ(series_or->timestamps()[row], 100 + row);
+      if (toStringView(field.name) == "i8") {
+        EXPECT_EQ(series_or->valuesAsInt8()[row], -5 + row);
+      } else if (toStringView(field.name) == "u16") {
+        EXPECT_EQ(series_or->valuesAsUint16()[row], 1000 + row);
+      } else {
+        ASSERT_EQ(toStringView(field.name), "u32");
+        EXPECT_EQ(series_or->valuesAsUint32()[row], 70000 + row);
+      }
+    }
+    expectNullRows(f.toolbox, field.handle, {false, false, false});
+  }
 }
 
 TEST(PluginDataHostWriteTest, CreateDataSourceReturnsDistinctHandles) {
@@ -285,7 +306,7 @@ TEST(PluginDataHostWriteTest, AppendRecordRejectsDuplicateFieldNames) {
   SourceWriteHostView writer(source_impl.raw());
 
   const auto topic = *writer.ensureTopic("imu");
-  ASSERT_TRUE(writer.ensureField(topic, "x", PrimitiveType::kInt32).has_value());
+  const auto x = *writer.ensureField(topic, "x", PrimitiveType::kInt32);
 
   const std::vector<NamedFieldValue> fields = {
       {.name = "x", .value = int32_t{1}},
@@ -293,6 +314,15 @@ TEST(PluginDataHostWriteTest, AppendRecordRejectsDuplicateFieldNames) {
   };
   const auto status = writer.appendRecord(topic, 1, fields);
   EXPECT_FALSE(status.has_value());
+  const std::vector<NamedFieldValue> aliases = {
+      {.name = "nested/x", .value = 1.0},
+      {.name = "nested//x", .value = 2.0},
+  };
+  EXPECT_FALSE(writer.appendRecord(topic, 2, aliases).has_value());
+  source_impl.flushPending();
+  auto series_or = f.toolbox.readSeries(x);
+  ASSERT_TRUE(series_or.has_value());
+  EXPECT_EQ(series_or->rowCount(), 0U);
 }
 
 TEST(PluginDataHostWriteTest, AppendRecordRejectsInvalidTopicHandle) {
@@ -324,16 +354,21 @@ TEST(PluginDataHostWriteTest, AppendRecordSparseFieldsProduceNullsForMissingColu
   ASSERT_TRUE(writer.appendRecord(topic, 100, fields).has_value());
   source_impl.flushPending();
 
-  auto series_b = std::move(*f.toolbox.readSeries(field_b));
+  auto series_b_or = f.toolbox.readSeries(field_b);
+  ASSERT_TRUE(series_b_or.has_value());
+  auto series_b = std::move(*series_b_or);
   ASSERT_EQ(series_b.timestamps().size(), 1U);
-  // Validity bit for row 0 should be cleared (null).
-  ASSERT_GE(series_b.validityBits().size(), 1U);
-  EXPECT_EQ(series_b.validityBits()[0] & 0x01, 0) << "Expected null for missing field b";
+  EXPECT_EQ(series_b.timestamps()[0], 100);
+  expectNullRows(f.toolbox, field_b, {true});
 
   // Field "a" should have valid data.
-  auto series_a = std::move(*f.toolbox.readSeries(field_a));
+  auto series_a_or = f.toolbox.readSeries(field_a);
+  ASSERT_TRUE(series_a_or.has_value());
+  auto series_a = std::move(*series_a_or);
   ASSERT_EQ(series_a.timestamps().size(), 1U);
-  EXPECT_DOUBLE_EQ(series_a.raw().values.as_float64[0], 3.14);
+  ASSERT_EQ(series_a.type(), PrimitiveType::kFloat64);
+  EXPECT_DOUBLE_EQ(series_a.valuesAsFloat64()[0], 3.14);
+  expectNullRows(f.toolbox, field_a, {false});
 }
 
 TEST(PluginDataHostWriteTest, AppendRecordTimestampOnlyRow) {
@@ -364,10 +399,13 @@ TEST(PluginDataHostWriteTest, AppendRecordFastHappyPath) {
   ASSERT_TRUE(writer.appendBoundRecord(topic, 10, fields).has_value());
   source_impl.flushPending();
 
-  auto series = std::move(*f.toolbox.readSeries(field));
+  auto series_or = f.toolbox.readSeries(field);
+  ASSERT_TRUE(series_or.has_value());
+  auto series = std::move(*series_or);
   ASSERT_EQ(series.timestamps().size(), 1U);
   EXPECT_EQ(series.timestamps()[0], 10);
-  EXPECT_DOUBLE_EQ(series.raw().values.as_float64[0], 2.5);
+  ASSERT_EQ(series.type(), PrimitiveType::kFloat64);
+  EXPECT_DOUBLE_EQ(series.valuesAsFloat64()[0], 2.5);
 }
 
 TEST(PluginDataHostWriteTest, AppendRecordFastRejectsWrongTopic) {
@@ -405,7 +443,7 @@ TEST(PluginDataHostWriteTest, AppendRecordFastRejectsDuplicateFieldIds) {
   EXPECT_FALSE(status.has_value());
 }
 
-TEST(PluginDataHostWriteTest, AppendRecordFastRejectsValueTypeMismatch) {
+TEST(PluginDataHostWriteTest, AppendBoundRecordConvertsExactNumericValuesAndNullsInexactValues) {
   Fixture f;
   const auto source = *f.toolbox.createDataSource("sensor");
 
@@ -415,10 +453,19 @@ TEST(PluginDataHostWriteTest, AppendRecordFastRejectsValueTypeMismatch) {
   const auto topic = *writer.ensureTopic("imu");
   const auto field = *writer.ensureField(topic, "ax", PrimitiveType::kFloat64);
 
-  // Pass int32_t value for a kFloat64 field.
-  const std::vector<BoundFieldValue> fields = {{.field = field, .value = int32_t{42}}};
-  const auto status = writer.appendBoundRecord(topic, 1, fields);
-  EXPECT_FALSE(status.has_value());
+  const std::vector<BoundFieldValue> exact = {{.field = field, .value = int32_t{42}}};
+  const std::vector<BoundFieldValue> inexact = {{.field = field, .value = (int64_t{1} << 53) + 1}};
+  ASSERT_TRUE(writer.appendBoundRecord(topic, 1, exact).has_value());
+  ASSERT_TRUE(writer.appendBoundRecord(topic, 2, inexact).has_value());
+  source_impl.flushPending();
+  auto series_or = f.toolbox.readSeries(field);
+  ASSERT_TRUE(series_or.has_value());
+  ASSERT_EQ(series_or->type(), PrimitiveType::kFloat64);
+  ASSERT_EQ(series_or->timestamps().size(), 2U);
+  EXPECT_EQ(series_or->timestamps()[0], 1);
+  EXPECT_EQ(series_or->timestamps()[1], 2);
+  EXPECT_DOUBLE_EQ(series_or->valuesAsFloat64()[0], 42.0);
+  expectNullRows(f.toolbox, field, {false, true});
 }
 
 TEST(PluginDataHostWriteTest, AppendRecordNullValueViaIsNull) {
@@ -435,10 +482,12 @@ TEST(PluginDataHostWriteTest, AppendRecordNullValueViaIsNull) {
   ASSERT_TRUE(writer.appendRecord(topic, 10, fields).has_value());
   source_impl.flushPending();
 
-  auto series = std::move(*f.toolbox.readSeries(field));
+  auto series_or = f.toolbox.readSeries(field);
+  ASSERT_TRUE(series_or.has_value());
+  auto series = std::move(*series_or);
   ASSERT_EQ(series.timestamps().size(), 1U);
-  ASSERT_GE(series.validityBits().size(), 1U);
-  EXPECT_EQ(series.validityBits()[0] & 0x01, 0) << "Expected null for NullValue field";
+  EXPECT_EQ(series.timestamps()[0], 10);
+  expectNullRows(f.toolbox, field, {true});
 }
 
 TEST(PluginDataHostWriteTest, AppendRecordFastNullValue) {
@@ -455,13 +504,15 @@ TEST(PluginDataHostWriteTest, AppendRecordFastNullValue) {
   ASSERT_TRUE(writer.appendBoundRecord(topic, 10, fields).has_value());
   source_impl.flushPending();
 
-  auto series = std::move(*f.toolbox.readSeries(field));
+  auto series_or = f.toolbox.readSeries(field);
+  ASSERT_TRUE(series_or.has_value());
+  auto series = std::move(*series_or);
   ASSERT_EQ(series.timestamps().size(), 1U);
-  ASSERT_GE(series.validityBits().size(), 1U);
-  EXPECT_EQ(series.validityBits()[0] & 0x01, 0) << "Expected null for NullValue field via fast path";
+  EXPECT_EQ(series.timestamps()[0], 10);
+  expectNullRows(f.toolbox, field, {true});
 }
 
-TEST(PluginDataHostWriteTest, ArrowIpcFloat64RoundTrip) {
+TEST(PluginDataHostWriteTest, ArrowStreamFloat64RoundTrip) {
   Fixture f;
   const auto source = *f.toolbox.createDataSource("sensor");
 
@@ -493,12 +544,16 @@ TEST(PluginDataHostWriteTest, ArrowIpcFloat64RoundTrip) {
   }
   ASSERT_EQ(ArrowArrayFinishBuildingDefault(array.get(), nullptr), NANOARROW_OK);
 
-  const auto ipc = serializeToIpc(schema.get(), array.get());
-  ASSERT_TRUE(writer.appendArrowIpc(topic, Span<const uint8_t>(ipc.data(), ipc.size())).has_value());
+  auto stream_or = makeStream(schema.get(), array.get());
+  ASSERT_TRUE(stream_or.has_value());
+  auto stream = std::move(*stream_or);
+  ASSERT_TRUE(writer.appendArrowStream(topic, std::move(stream), "_timestamp").has_value());
   source_impl.flushPending();
 
   // Find the "value" field handle via catalog snapshot.
-  auto snapshot = std::move(*f.toolbox.catalogSnapshot());
+  auto snapshot_or = f.toolbox.catalogSnapshot();
+  ASSERT_TRUE(snapshot_or.has_value());
+  auto snapshot = std::move(*snapshot_or);
   FieldHandle value_field{};
   bool found = false;
   for (const auto& fi : snapshot.fields()) {
@@ -510,16 +565,18 @@ TEST(PluginDataHostWriteTest, ArrowIpcFloat64RoundTrip) {
   }
   ASSERT_TRUE(found) << "Field 'value' not found in catalog";
 
-  auto series = std::move(*f.toolbox.readSeries(value_field));
+  auto series_or = f.toolbox.readSeries(value_field);
+  ASSERT_TRUE(series_or.has_value());
+  auto series = std::move(*series_or);
   ASSERT_EQ(series.type(), PrimitiveType::kFloat64);
   ASSERT_EQ(series.timestamps().size(), 3U);
   for (int i = 0; i < 3; ++i) {
     EXPECT_EQ(series.timestamps()[static_cast<size_t>(i)], timestamps[i]);
-    EXPECT_DOUBLE_EQ(series.raw().values.as_float64[i], values[i]);
+    EXPECT_DOUBLE_EQ(series.valuesAsFloat64()[i], values[i]);
   }
 }
 
-TEST(PluginDataHostWriteTest, ArrowIpcCustomTimestampColumnName) {
+TEST(PluginDataHostWriteTest, ArrowStreamCustomTimestampColumnName) {
   Fixture f;
   const auto source = *f.toolbox.createDataSource("sensor");
 
@@ -550,12 +607,16 @@ TEST(PluginDataHostWriteTest, ArrowIpcCustomTimestampColumnName) {
   ASSERT_EQ(ArrowArrayFinishElement(array.get()), NANOARROW_OK);
   ASSERT_EQ(ArrowArrayFinishBuildingDefault(array.get(), nullptr), NANOARROW_OK);
 
-  const auto ipc = serializeToIpc(schema.get(), array.get());
-  ASSERT_TRUE(writer.appendArrowIpc(topic, Span<const uint8_t>(ipc.data(), ipc.size()), "ts").has_value());
+  auto stream_or = makeStream(schema.get(), array.get());
+  ASSERT_TRUE(stream_or.has_value());
+  auto stream = std::move(*stream_or);
+  ASSERT_TRUE(writer.appendArrowStream(topic, std::move(stream), "ts").has_value());
   source_impl.flushPending();
 
   // Find the "val" field handle via catalog snapshot.
-  auto snapshot = std::move(*f.toolbox.catalogSnapshot());
+  auto snapshot_or = f.toolbox.catalogSnapshot();
+  ASSERT_TRUE(snapshot_or.has_value());
+  auto snapshot = std::move(*snapshot_or);
   FieldHandle val_field{};
   bool found = false;
   for (const auto& fi : snapshot.fields()) {
@@ -567,16 +628,18 @@ TEST(PluginDataHostWriteTest, ArrowIpcCustomTimestampColumnName) {
   }
   ASSERT_TRUE(found) << "Field 'val' not found in catalog";
 
-  auto series = std::move(*f.toolbox.readSeries(val_field));
+  auto series_or = f.toolbox.readSeries(val_field);
+  ASSERT_TRUE(series_or.has_value());
+  auto series = std::move(*series_or);
   ASSERT_EQ(series.type(), PrimitiveType::kFloat32);
   ASSERT_EQ(series.timestamps().size(), 2U);
   EXPECT_EQ(series.timestamps()[0], 10);
   EXPECT_EQ(series.timestamps()[1], 20);
-  EXPECT_FLOAT_EQ(series.raw().values.as_float32[0], 1.0F);
-  EXPECT_FLOAT_EQ(series.raw().values.as_float32[1], 2.0F);
+  EXPECT_FLOAT_EQ(series.valuesAsFloat32()[0], 1.0F);
+  EXPECT_FLOAT_EQ(series.valuesAsFloat32()[1], 2.0F);
 }
 
-TEST(PluginDataHostWriteTest, ArrowIpcRejectsMissingTimestampColumn) {
+TEST(PluginDataHostWriteTest, ArrowStreamRejectsExplicitMissingTimestampAndRetainsOwnership) {
   Fixture f;
   const auto source = *f.toolbox.createDataSource("sensor");
 
@@ -599,9 +662,37 @@ TEST(PluginDataHostWriteTest, ArrowIpcRejectsMissingTimestampColumn) {
   ASSERT_EQ(ArrowArrayFinishElement(array.get()), NANOARROW_OK);
   ASSERT_EQ(ArrowArrayFinishBuildingDefault(array.get(), nullptr), NANOARROW_OK);
 
-  const auto ipc = serializeToIpc(schema.get(), array.get());
-  const auto status = writer.appendArrowIpc(topic, Span<const uint8_t>(ipc.data(), ipc.size()));
-  EXPECT_FALSE(status.has_value()) << "Expected error when timestamp column is missing";
+  auto stream_or = makeStream(schema.get(), array.get());
+  ASSERT_TRUE(stream_or.has_value());
+  auto stream = std::move(*stream_or);
+  auto* owned_stream = stream.get();
+  ASSERT_NE(owned_stream->release, nullptr);
+  const auto status = writer.appendArrowStream(topic, owned_stream, "missing_ts");
+  ASSERT_FALSE(status.has_value());
+  EXPECT_NE(status.error().find("timestamp column 'missing_ts' not found"), std::string::npos);
+  EXPECT_NE(owned_stream->release, nullptr);
+  source_impl.flushPending();
+  auto field_or = writer.ensureField(topic, "data", PrimitiveType::kInt32);
+  ASSERT_TRUE(field_or.has_value());
+  auto empty_or = f.toolbox.readSeries(*field_or);
+  ASSERT_TRUE(empty_or.has_value());
+  EXPECT_EQ(empty_or->rowCount(), 0U);
+
+  // The SDK wrapper defaults to an explicit "timestamp" column selection.
+  const auto default_status = writer.appendArrowStream(topic, owned_stream);
+  ASSERT_FALSE(default_status.has_value());
+  EXPECT_NE(default_status.error().find("timestamp column 'timestamp' not found"), std::string::npos);
+  EXPECT_NE(owned_stream->release, nullptr);
+
+  // With no selected timestamp column, this same retained stream uses synthetic time.
+  ASSERT_TRUE(writer.appendArrowStream(topic, owned_stream, "").has_value());
+  EXPECT_EQ(owned_stream->release, nullptr);
+  source_impl.flushPending();
+  auto series_or = f.toolbox.readSeries(*field_or);
+  ASSERT_TRUE(series_or.has_value());
+  ASSERT_EQ(series_or->rowCount(), 1U);
+  EXPECT_EQ(series_or->timestamps()[0], 0);
+  EXPECT_EQ(series_or->valuesAsInt32()[0], 42);
 }
 
 // ---------------------------------------------------------------------------
@@ -629,7 +720,9 @@ TEST(PluginDataHostWriteTest, LateColumnAddition) {
   source_impl.flushPending();
 
   // Find field handles via catalog
-  auto snapshot = std::move(*f.toolbox.catalogSnapshot());
+  auto snapshot_or = f.toolbox.catalogSnapshot();
+  ASSERT_TRUE(snapshot_or.has_value());
+  auto snapshot = std::move(*snapshot_or);
   FieldHandle x_field{}, y_field{};
   for (const auto& fi : snapshot.fields()) {
     auto name = std::string_view(fi.name.data, fi.name.size);
@@ -642,16 +735,24 @@ TEST(PluginDataHostWriteTest, LateColumnAddition) {
   }
 
   // x should have 2 rows across 2 chunks
-  auto x_series = std::move(*f.toolbox.readSeries(x_field));
+  auto x_series_or = f.toolbox.readSeries(x_field);
+  ASSERT_TRUE(x_series_or.has_value());
+  auto x_series = std::move(*x_series_or);
   ASSERT_EQ(x_series.timestamps().size(), 2U);
-  EXPECT_DOUBLE_EQ(x_series.raw().values.as_float64[0], 1.0);
-  EXPECT_DOUBLE_EQ(x_series.raw().values.as_float64[1], 2.0);
+  EXPECT_EQ(x_series.timestamps()[0], 10);
+  EXPECT_EQ(x_series.timestamps()[1], 20);
+  ASSERT_EQ(x_series.type(), PrimitiveType::kFloat64);
+  EXPECT_DOUBLE_EQ(x_series.valuesAsFloat64()[0], 1.0);
+  EXPECT_DOUBLE_EQ(x_series.valuesAsFloat64()[1], 2.0);
 
   // y should have 1 row (only in chunk 2)
-  auto y_series = std::move(*f.toolbox.readSeries(y_field));
+  auto y_series_or = f.toolbox.readSeries(y_field);
+  ASSERT_TRUE(y_series_or.has_value());
+  auto y_series = std::move(*y_series_or);
   ASSERT_EQ(y_series.timestamps().size(), 1U);
   EXPECT_EQ(y_series.timestamps()[0], 20);
-  EXPECT_DOUBLE_EQ(y_series.raw().values.as_float64[0], 3.0);
+  ASSERT_EQ(y_series.type(), PrimitiveType::kFloat64);
+  EXPECT_DOUBLE_EQ(y_series.valuesAsFloat64()[0], 3.0);
 }
 
 TEST(PluginDataHostWriteTest, UntypedNullForUnknownFieldIsSkipped) {
@@ -671,7 +772,9 @@ TEST(PluginDataHostWriteTest, UntypedNullForUnknownFieldIsSkipped) {
   source_impl.flushPending();
 
   // Only field "x" should exist
-  auto snapshot = std::move(*f.toolbox.catalogSnapshot());
+  auto snapshot_or = f.toolbox.catalogSnapshot();
+  ASSERT_TRUE(snapshot_or.has_value());
+  auto snapshot = std::move(*snapshot_or);
   int field_count = 0;
   for (const auto& fi : snapshot.fields()) {
     auto name = std::string_view(fi.name.data, fi.name.size);
@@ -698,7 +801,9 @@ TEST(PluginDataHostWriteTest, TypedNullForUnknownFieldCreatesColumn) {
   source_impl.flushPending();
 
   // Both fields should exist
-  auto snapshot = std::move(*f.toolbox.catalogSnapshot());
+  auto snapshot_or = f.toolbox.catalogSnapshot();
+  ASSERT_TRUE(snapshot_or.has_value());
+  auto snapshot = std::move(*snapshot_or);
   FieldHandle x_field{}, y_field{};
   int field_count = 0;
   for (const auto& fi : snapshot.fields()) {
@@ -714,10 +819,13 @@ TEST(PluginDataHostWriteTest, TypedNullForUnknownFieldCreatesColumn) {
   EXPECT_EQ(field_count, 2);
 
   // y should have 1 row with null value
-  auto y_series = std::move(*f.toolbox.readSeries(y_field));
+  auto y_series_or = f.toolbox.readSeries(y_field);
+  ASSERT_TRUE(y_series_or.has_value());
+  auto y_series = std::move(*y_series_or);
   ASSERT_EQ(y_series.timestamps().size(), 1U);
-  ASSERT_GE(y_series.validityBits().size(), 1U);
-  EXPECT_EQ(y_series.validityBits()[0] & 0x01, 0) << "Expected null for TypedNull field";
+  EXPECT_EQ(y_series.type(), PrimitiveType::kFloat64);
+  EXPECT_EQ(y_series.timestamps()[0], 10);
+  expectNullRows(f.toolbox, y_field, {true});
 }
 
 TEST(PluginDataHostWriteTest, VariableLengthArraySimulation) {
@@ -746,29 +854,61 @@ TEST(PluginDataHostWriteTest, VariableLengthArraySimulation) {
   source_impl.flushPending();
 
   // Find field handles
-  auto snapshot = std::move(*f.toolbox.catalogSnapshot());
-  FieldHandle d0{}, d2{};
+  auto snapshot_or = f.toolbox.catalogSnapshot();
+  ASSERT_TRUE(snapshot_or.has_value());
+  auto snapshot = std::move(*snapshot_or);
+  ASSERT_EQ(snapshot.fields().size(), 4U);
+  FieldHandle d0{}, d1{}, d2{}, d3{};
   for (const auto& fi : snapshot.fields()) {
     auto name = std::string_view(fi.name.data, fi.name.size);
     if (name == "data[0]") {
       d0 = fi.handle;
     }
+    if (name == "data[1]") {
+      d1 = fi.handle;
+    }
     if (name == "data[2]") {
       d2 = fi.handle;
+    }
+    if (name == "data[3]") {
+      d3 = fi.handle;
     }
   }
 
   // data[0] should have 2 rows across 2 chunks
-  auto s0 = std::move(*f.toolbox.readSeries(d0));
+  auto s0_or = f.toolbox.readSeries(d0);
+  ASSERT_TRUE(s0_or.has_value());
+  auto s0 = std::move(*s0_or);
   ASSERT_EQ(s0.timestamps().size(), 2U);
-  EXPECT_DOUBLE_EQ(s0.raw().values.as_float64[0], 10.0);
-  EXPECT_DOUBLE_EQ(s0.raw().values.as_float64[1], 11.0);
+  EXPECT_EQ(s0.timestamps()[0], 100);
+  EXPECT_EQ(s0.timestamps()[1], 200);
+  ASSERT_EQ(s0.type(), PrimitiveType::kFloat64);
+  EXPECT_DOUBLE_EQ(s0.valuesAsFloat64()[0], 10.0);
+  EXPECT_DOUBLE_EQ(s0.valuesAsFloat64()[1], 11.0);
 
   // data[2] should have 1 row (only in chunk 2)
-  auto s2 = std::move(*f.toolbox.readSeries(d2));
+  auto s2_or = f.toolbox.readSeries(d2);
+  ASSERT_TRUE(s2_or.has_value());
+  auto s2 = std::move(*s2_or);
   ASSERT_EQ(s2.timestamps().size(), 1U);
   EXPECT_EQ(s2.timestamps()[0], 200);
-  EXPECT_DOUBLE_EQ(s2.raw().values.as_float64[0], 31.0);
+  ASSERT_EQ(s2.type(), PrimitiveType::kFloat64);
+  EXPECT_DOUBLE_EQ(s2.valuesAsFloat64()[0], 31.0);
+
+  auto s1_or = f.toolbox.readSeries(d1);
+  ASSERT_TRUE(s1_or.has_value());
+  ASSERT_EQ(s1_or->type(), PrimitiveType::kFloat64);
+  ASSERT_EQ(s1_or->rowCount(), 2U);
+  EXPECT_EQ(s1_or->timestamps()[0], 100);
+  EXPECT_EQ(s1_or->timestamps()[1], 200);
+  EXPECT_DOUBLE_EQ(s1_or->valuesAsFloat64()[0], 20.0);
+  EXPECT_DOUBLE_EQ(s1_or->valuesAsFloat64()[1], 21.0);
+  auto s3_or = f.toolbox.readSeries(d3);
+  ASSERT_TRUE(s3_or.has_value());
+  ASSERT_EQ(s3_or->type(), PrimitiveType::kFloat64);
+  ASSERT_EQ(s3_or->rowCount(), 1U);
+  EXPECT_EQ(s3_or->timestamps()[0], 200);
+  EXPECT_DOUBLE_EQ(s3_or->valuesAsFloat64()[0], 41.0);
 }
 
 }  // namespace

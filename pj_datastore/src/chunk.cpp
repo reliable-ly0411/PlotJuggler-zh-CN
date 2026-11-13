@@ -599,6 +599,109 @@ void TopicChunkBuilder::sortRowsByTimestamp() {
   }
 }
 
+TopicChunk TopicChunkBuilder::sealCompletedRows() {
+  PJ_ASSERT(row_in_progress_, "sealCompletedRows requires an active row");
+  PJ_ASSERT(rowCount() > 0, "sealCompletedRows requires completed rows");
+
+  // set() appends directly to the column buffers and updates their stats.
+  // Rebuild only on this mid-row flush path so the unfinished values cannot
+  // affect the sealed chunk's encodings, statistics, or validity bitmaps.
+  const auto copy_row = [this](TopicChunkBuilder& target, std::size_t row) {
+    for (std::size_t col = 0; col < columns_.size(); ++col) {
+      const auto& source = columns_[col];
+      if (source.rowCount() <= row) {
+        continue;  // an unset active-row column must remain writable
+      }
+      if (!source.isValid(row)) {
+        target.setNull(col);
+        continue;
+      }
+      switch (storageKindOf(column_descriptors_[col].logical_type)) {
+        case StorageKind::kFloat32:
+          target.set(col, source.readFloat32(row));
+          break;
+        case StorageKind::kFloat64:
+          target.set(col, source.readFloat64(row));
+          break;
+        case StorageKind::kInt32:
+          target.set(col, source.readInt32(row));
+          break;
+        case StorageKind::kInt64:
+          target.set(col, source.readInt64(row));
+          break;
+        case StorageKind::kUint64:
+          target.set(col, source.readUint64(row));
+          break;
+        case StorageKind::kBool:
+          target.set(col, source.readBool(row));
+          break;
+        case StorageKind::kString:
+          target.set(col, source.readString(row));
+          break;
+      }
+    }
+  };
+
+  TopicChunkBuilder completed(topic_id_, schema_id_, column_descriptors_, max_rows_);
+  for (std::size_t row = 0; row < rowCount(); ++row) {
+    completed.beginRow(timestamps_[row]);
+    copy_row(completed, row);
+    completed.finishRow();
+  }
+  for (std::size_t col = 0; col < columns_.size(); ++col) {
+    auto& cs = completed.stats_.column_stats[col];
+    if (columns_[col].rowCount() == rowCount()) {
+      cs = stats_.column_stats[col];  // untouched by the active row
+      continue;
+    }
+
+    // Row and bulk appends track null-separated runs differently. Reconstruct
+    // only contaminated columns from their completed buffers, skipping nulls.
+    cs = {};
+    const auto kind = storageKindOf(column_descriptors_[col].logical_type);
+    if (kind == StorageKind::kString) {
+      completed.computeBulkStringStats(col, 0, rowCount());
+    } else {
+      completed.computeBulkNumericStats(col, kind, 0, rowCount());
+      // Finite sentinels cannot represent extrema of all-infinite columns.
+      // NaNs have no ordered extrema; an all-null/NaN prefix leaves them absent.
+      cs.min_value.reset();
+      cs.max_value.reset();
+      for (std::size_t row = 0; row < rowCount(); ++row) {
+        const auto& buffer = completed.columns_[col];
+        if (!buffer.isValid(row)) {
+          continue;
+        }
+        const double value = buffer.readAsDouble(row);
+        if (!std::isnan(value)) {
+          if (!cs.min_value || value < *cs.min_value) {
+            cs.min_value = value;
+          }
+          if (!cs.max_value || value > *cs.max_value) {
+            cs.max_value = value;
+          }
+        }
+      }
+    }
+  }
+
+  TopicChunkBuilder pending(topic_id_, schema_id_, column_descriptors_, max_rows_);
+  pending.beginRow(current_timestamp_);
+  copy_row(pending, rowCount());
+
+  auto chunk = completed.seal();
+  for (std::size_t col = 0; col < columns_.size(); ++col) {
+    const auto kind = storageKindOf(column_descriptors_[col].logical_type);
+    auto& cs = chunk.stats.column_stats[col];
+    if ((kind == StorageKind::kFloat32 || kind == StorageKind::kFloat64) && !cs.min_value &&
+        cs.null_count < chunk.stats.row_count) {
+      cs.all_integral = false;  // valid NaNs are not an all-null constant
+    }
+  }
+  *this = std::move(pending);
+  return chunk;
+}
+
 TopicChunk TopicChunkBuilder::seal() {
   sortRowsByTimestamp();
   TopicChunk chunk;

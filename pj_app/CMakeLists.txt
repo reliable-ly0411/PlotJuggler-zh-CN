@@ -353,8 +353,7 @@ endif()
 # build failure instead of a silent regression.
 if(DEFINED PJ_WARNING_FLAGS)
     target_compile_options(pj_app_shell PRIVATE ${PJ_WARNING_FLAGS})
-    # CXX only: pj_app also compiles plotjuggler.rc on Windows, and rc.exe rejects
-    # MSVC warning options such as /W4.
+    # Resource compilation must not receive C++ compiler warning options.
     target_compile_options(pj_app PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${PJ_WARNING_FLAGS}>")
 endif()
 
@@ -421,13 +420,47 @@ if(PJ_BUILD_TESTS)
         set_tests_properties(WindowsApplicationContract PROPERTIES TIMEOUT 120)
         # Compile a synthetic offline installer with the real pinned IFW tools.
         # Dedicated synthetic payloads only; this does not install the application.
+        include("${CMAKE_SOURCE_DIR}/cmake/PjIfwTestOptions.cmake")
         add_test(NAME WindowsInstallerResourceContract
             COMMAND "${PJ_TEST_PYTHON}" "${CMAKE_SOURCE_DIR}/scripts/verify_windows_installer_resources.py"
-                    --lrelease $<TARGET_FILE:Qt6::lrelease>)
+                    --lrelease $<TARGET_FILE:Qt6::lrelease> ${PJ_IFW_TEST_ARGS})
         set_tests_properties(WindowsInstallerResourceContract PROPERTIES TIMEOUT 900)
     endif()
     find_package(GTest REQUIRED)
     pj_add_app_language_test()
+    if(NOT EMSCRIPTEN)
+        # Real runtime loading, with the same embedded translators as app startup.
+        add_library(catalog_language_widget_plugin SHARED ../pj_runtime/tests/runtime_widget_plugin.cpp)
+        target_link_libraries(catalog_language_widget_plugin PRIVATE plotjuggler_sdk::plugin_sdk)
+        string(TOLOWER "${CMAKE_CXX_COMPILER_ID}" catalog_compiler_family)
+        if(catalog_compiler_family STREQUAL "gnu")
+            set(catalog_compiler_family gcc)
+        elseif(catalog_compiler_family STREQUAL "appleclang")
+            set(catalog_compiler_family clang)
+        endif()
+        target_compile_definitions(catalog_language_widget_plugin PRIVATE
+            PJ_TEST_WIDGET_ID="test-language-widgets"
+            PJ_TEST_WIDGET_LANGUAGE_FIXTURE
+            PJ_TEST_WIDGET_QT_MAJOR=${Qt6_VERSION_MAJOR}
+            PJ_TEST_WIDGET_QT_MINOR=${Qt6_VERSION_MINOR}
+            PJ_TEST_WIDGET_COMPILER="${catalog_compiler_family}")
+        add_executable(runtime_catalog_language_test tests/runtime_catalog_language_test.cpp)
+        set_target_properties(runtime_catalog_language_test PROPERTIES AUTOMOC ON)
+        target_link_libraries(runtime_catalog_language_test PRIVATE pj_runtime pj_app_language Qt6::Test)
+        target_compile_options(runtime_catalog_language_test PRIVATE ${PJ_WARNING_FLAGS})
+        if(MSVC)
+            target_compile_options(catalog_language_widget_plugin PRIVATE /utf-8)
+            target_compile_options(runtime_catalog_language_test PRIVATE /utf-8)
+        endif()
+        target_compile_definitions(runtime_catalog_language_test PRIVATE
+            PJ_LANGUAGE_SOURCE_PATH="$<TARGET_FILE:mock_data_source_plugin>"
+            PJ_LANGUAGE_PARSER_PATH="$<TARGET_FILE:runtime_host_object_parser_plugin>"
+            PJ_LANGUAGE_TOOLBOX_PATH="$<TARGET_FILE:mock_toolbox_plugin>"
+            PJ_LANGUAGE_WIDGET_PATH="$<TARGET_FILE:catalog_language_widget_plugin>")
+        add_dependencies(runtime_catalog_language_test mock_data_source_plugin
+            runtime_host_object_parser_plugin mock_toolbox_plugin catalog_language_widget_plugin)
+        add_test(NAME RuntimeCatalogLanguageTest COMMAND runtime_catalog_language_test)
+    endif()
     if(NOT EMSCRIPTEN)
         add_subdirectory(tests/profile)
         add_subdirectory(tests/installer_script)
@@ -754,6 +787,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(main_window_layout_import_alive_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME MainWindowLayoutImportAliveTest COMMAND main_window_layout_import_alive_test)
+    if(WIN32)
+        target_link_libraries(main_window_layout_import_alive_test PRIVATE advapi32)
+    endif()
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/main_window_layout_import_policy_test.cpp)
     list(APPEND PJ_APP_GUI_TEST_SOURCES
@@ -765,6 +801,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(main_window_layout_import_cancel_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME MainWindowLayoutImportCancelTest COMMAND main_window_layout_import_cancel_test)
+    if(WIN32)
+        target_link_libraries(main_window_layout_import_cancel_test PRIVATE advapi32)
+    endif()
     #   lifecycle — Codex r1 F2/F3/F4/F6: explicit progressive policy on a
     #              mixed automated restore, apply-failure diagnostics, full
     #              supersession by a sync-path load, and automated plain-source
@@ -778,6 +817,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(main_window_layout_import_lifecycle_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME MainWindowLayoutImportLifecycleTest COMMAND main_window_layout_import_lifecycle_test)
+    if(WIN32)
+        target_link_libraries(main_window_layout_import_lifecycle_test PRIVATE advapi32)
+    endif()
     target_compile_definitions(main_window_layout_import_lifecycle_test PRIVATE
         PJ_MOCK_FILE_SOURCE_PLUGIN_PATH="$<TARGET_FILE:mock_file_source_plugin>"
     )
@@ -797,6 +839,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(main_window_layout_import_binder_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME MainWindowLayoutImportBinderTest COMMAND main_window_layout_import_binder_test)
+    if(WIN32)
+        target_link_libraries(main_window_layout_import_binder_test PRIVATE advapi32)
+    endif()
     target_compile_definitions(main_window_layout_import_binder_test PRIVATE
         PJ_MOCK_FILE_SOURCE_PLUGIN_PATH="$<TARGET_FILE:mock_file_source_plugin>"
     )
@@ -818,6 +863,9 @@ if(PJ_BUILD_TESTS)
     add_executable(main_window_layout_import_e2e_test tests/main_window_layout_import_e2e_test.cpp)
     target_include_directories(main_window_layout_import_e2e_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(main_window_layout_import_e2e_test PRIVATE pj_app_shell pj_resources GTest::gtest)
+    if(WIN32)
+        target_link_libraries(main_window_layout_import_e2e_test PRIVATE advapi32)
+    endif()
     if(DEFINED PJ_WARNING_FLAGS)
         target_compile_options(main_window_layout_import_e2e_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
@@ -832,6 +880,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(main_window_layout_exit_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME MainWindowLayoutExitTest COMMAND main_window_layout_exit_test)
+    if(WIN32)
+        target_link_libraries(main_window_layout_exit_test PRIVATE advapi32)
+    endif()
 
     # --dump-diagnostics collector (stage-5 E2): full-run accumulation from the
     # queued bridge (incl. pre-attach records), the stable five-field JSON
@@ -977,9 +1028,13 @@ if(PJ_BUILD_TESTS)
         target_compile_options(file_loader_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME FileLoaderTest COMMAND file_loader_test)
+    if(WIN32)
+        target_link_libraries(file_loader_test PRIVATE advapi32)
+    endif()
 
     # Explicit opt-in: requires the checksum-verified, rebuilt fixed CSV DSO.
     # No mock substitutes and no silent skip when a requested path is missing.
+    option(PJ_NATIVE_BUNDLE_MODE "Use launcher-owned native test output directories" OFF)
     set(PJ_CSV_RUNTIME_PLUGIN "" CACHE FILEPATH "Fixed CSV DSO for runtime localization acceptance")
     if(PJ_CSV_RUNTIME_PLUGIN)
         if(NOT EXISTS "${PJ_CSV_RUNTIME_PLUGIN}")
@@ -991,15 +1046,28 @@ if(PJ_BUILD_TESTS)
         target_compile_definitions(csv_runtime_file_loader_test PRIVATE PJ_CSV_RUNTIME_PLUGIN="${PJ_CSV_RUNTIME_PLUGIN}")
         target_link_libraries(csv_runtime_file_loader_test PRIVATE pj_app_loader_testlib pj_app_language pj_plotting pj_resources)
         target_compile_options(csv_runtime_file_loader_test PRIVATE ${PJ_WARNING_FLAGS})
+        if(WIN32)
+            target_include_directories(csv_runtime_file_loader_test PRIVATE "${PROJECT_SOURCE_DIR}/cmake/test_mains")
+            target_link_libraries(csv_runtime_file_loader_test PRIVATE advapi32)
+        endif()
         if(MSVC)
             target_compile_options(csv_runtime_file_loader_test PRIVATE /utf-8)
         endif()
         foreach(language IN ITEMS zh_CN zh_TW en_US)
             add_test(NAME CsvRuntimeFileLoader_${language} COMMAND csv_runtime_file_loader_test)
+            if(PJ_NATIVE_BUNDLE_MODE)
+                # The launcher supplies a fresh suite-owned diagnostic directory.
+                set(csv_test_environment "PLOTJUGGLER_UI_LANGUAGE=${language};QT_QPA_PLATFORM=offscreen")
+            else()
+                set(csv_test_environment "PLOTJUGGLER_UI_LANGUAGE=${language};QT_QPA_PLATFORM=offscreen;PJ_CSV_DIAGNOSTIC_DIR=${CMAKE_BINARY_DIR}/csv-runtime-diagnostics")
+            endif()
             set_tests_properties(CsvRuntimeFileLoader_${language} PROPERTIES
-                TIMEOUT 120 ENVIRONMENT "PLOTJUGGLER_UI_LANGUAGE=${language};QT_QPA_PLATFORM=offscreen;PJ_CSV_DIAGNOSTIC_DIR=${CMAKE_BINARY_DIR}/csv-runtime-diagnostics")
+                TIMEOUT 120 ENVIRONMENT "${csv_test_environment}")
         endforeach()
     endif()
+
+    # Explicit opt-in: requires the checksum-verified, rebuilt fixed CSV DSO.
+    # No mock substitutes and no silent skip when a requested path is missing.
 
     # Host side of the SDK's "pj.source_promotion.v1" service: drives the real
     # FileLoader replace pipeline through the C ABI. Same standalone shape and
@@ -1019,6 +1087,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(source_promotion_host_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME SourcePromotionHostTest COMMAND source_promotion_host_test)
+    if(WIN32)
+        target_link_libraries(source_promotion_host_test PRIVATE advapi32)
+    endif()
 
     # Headless per-batch owner of ONE descriptor-import provider toolbox
     # instance (T5b): manifest-id resolution, bind, extension view, promotion
@@ -1034,6 +1105,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(headless_descriptor_provider_session_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME HeadlessDescriptorProviderSessionTest COMMAND headless_descriptor_provider_session_test)
+    if(WIN32)
+        target_link_libraries(headless_descriptor_provider_session_test PRIVATE advapi32)
+    endif()
 
     # The §6.2 rewrite-then-classify restore coordinator (T6): classify
     # matrix, trust gate, guard-3 ceiling, provider-absent fallback,
@@ -1065,6 +1139,9 @@ if(PJ_BUILD_TESTS)
             target_compile_options(layout_import_batch_test PRIVATE ${PJ_WARNING_FLAGS})
         endif()
         add_test(NAME LayoutImportBatchTest COMMAND layout_import_batch_test)
+    if(WIN32)
+        target_link_libraries(layout_import_batch_test PRIVATE advapi32)
+    endif()
     endif()
 
     # Binds the Source Timeline widget to the runtime; the regression test pins that
@@ -1098,7 +1175,7 @@ if(PJ_BUILD_TESTS)
             COMPILE_DEFINITIONS PJ_FEATURE_CATALOG_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
     endif()
 
-    pj_add_test_runner(pj_app_gui_tests
+    pj_add_test_runner(pj_app_gui_tests MANAGED_PROFILE
         MAIN gui WARNINGS
         SOURCES ${PJ_APP_GUI_TEST_SOURCES} tests/support/gui_test_env.cpp
         # Qt6::Test: QTest::qWaitForWindowExposed, for the drawer-splitter cases in
@@ -1106,6 +1183,9 @@ if(PJ_BUILD_TESTS)
         LIBS pj_app_shell pj_resources plotjuggler_sdk::plugin_sdk Qt6::Test
     )
     set_target_properties(pj_app_gui_tests PROPERTIES AUTOMOC ON)
+    if(NOT EMSCRIPTEN)
+        target_sources(pj_app_gui_tests PRIVATE tests/managed_profile_test.cpp)
+    endif()
 
     # Real installed-plugin acceptance is opt-in and never downloads plugins.
     option(PJ_PLUGIN_FEEDBACK_ACCEPTANCE "Build full-shell APBIN/FFT acceptance" OFF)

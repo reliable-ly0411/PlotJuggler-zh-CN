@@ -4,6 +4,14 @@
     <context>
         <name>PlotJugglerInstaller</name>
         <message>
+            <source>PlotJuggler 4 zh-CN</source>
+            <translation>PlotJuggler 4 简体中文版</translation>
+        </message>
+        <message>
+            <source>Install PlotJuggler 4 zh-CN with its bundled Qt, FFmpeg and Python runtime.</source>
+            <translation>安装 PlotJuggler 4 简体中文版及随附的 Qt、FFmpeg 和 Python 运行库。</translation>
+        </message>
+        <message>
             <source>Launch PlotJuggler 4</source>
             <translation>启动 PlotJuggler 4</translation>
         </message>

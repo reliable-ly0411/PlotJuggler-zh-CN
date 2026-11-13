@@ -61,7 +61,7 @@ std::string markerPerSample(const std::string& series_name) {
 // through) holding one file dataset with a five-sample /imu series.
 class Session {
  public:
-  Session() : app_(extensions_dir_.path()) {
+  Session() : app_(checkedExtensionsPath()) {
     SessionManager& session = app_.sessionManager();
     auto catalogue = std::make_shared<scripting::FilterCatalogue>(scripting::makeLuauEngine());
     EXPECT_TRUE(catalogue->addBundledSource(kAbsoluteSrc, "bundled").has_value());
@@ -118,6 +118,15 @@ class Session {
   }
 
  private:
+  // Validate before constructing AppSession: an empty override selects the
+  // default scan path instead of this fixture's deliberately empty directory.
+  QString checkedExtensionsPath() const {
+    if (!extensions_dir_.isValid() || extensions_dir_.path().isEmpty()) {
+      qFatal("Cannot create private AppSession test scan directory");
+    }
+    return extensions_dir_.path();
+  }
+
   QTemporaryDir extensions_dir_;
   AppSession app_;
   DatasetId dataset_ = 0;

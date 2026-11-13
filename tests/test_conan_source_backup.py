@@ -7,14 +7,16 @@ import sys
 import tempfile
 import textwrap
 import unittest
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / '.github/workflows/zh-4x-ci.yml'
+GLM_SHA = '1c0a0fced9b0d87c7b7bc94e40be490cff6d4c83c25db8488d8f33754e7fdeb2'
 FFMPEG_SHA = 'cf38e0e28c7e5605942c4a77755349b0145804a397af37eb1fb4c77cb237f635'
 
 
-def seed_script():
-    workflow = WORKFLOW.read_text(encoding='utf-8')
+def seed_script(path=WORKFLOW):
+    workflow = path.read_text(encoding='utf-8')
     marker = 'python - "$conan_home/global.conf" "$cache_dir" <<\'PY\'\n'
     script = workflow.split(marker, 1)[1].split('\n          PY\n', 1)[0]
     return textwrap.dedent(script)
@@ -79,6 +81,27 @@ class ConanSourceBackupTests(unittest.TestCase):
     def test_empty_references_are_rejected_before_copy(self):
         self.sidecar.write_text('{"references": {}}', encoding='utf-8')
         self.assert_rejected('metadata missing references')
+
+    def test_package_and_development_seed_blocks_are_identical(self):
+        self.assertEqual(seed_script(), seed_script(ROOT / '.github/workflows/zh-4x-packages.yml'))
+
+    def test_glm_seed_matches_official_archive_and_original_url(self):
+        path = ROOT / '.github/conan/source-backup' / GLM_SHA
+        self.assertEqual(path.stat().st_size, 6112835)
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), GLM_SHA)
+        metadata = json.loads(path.with_suffix('.json').read_text(encoding='utf-8'))
+        self.assertEqual(metadata['references'], {'glm/1.0.3': [
+            'https://github.com/g-truc/glm/releases/download/1.0.3/glm-1.0.3.zip']})
+        with zipfile.ZipFile(path) as archive:
+            self.assertIsNone(archive.testzip())
+            self.assertIn('glm/glm/glm.hpp', archive.namelist())
+            self.assertIn(b'MIT License', archive.read('glm/copying.txt'))
+            for member in archive.infolist():
+                self.assertTrue(member.filename.startswith('glm/'))
+                self.assertNotIn('..', member.filename.split('/'))
+                self.assertNotIn('\\', member.filename)
+                self.assertNotIn(':', member.filename)
+                self.assertNotEqual((member.external_attr >> 16) & 0o170000, 0o120000)
 
     def test_ffmpeg_seed_matches_exact_locked_recipe(self):
         path = ROOT / '.github/conan/source-backup' / FFMPEG_SHA

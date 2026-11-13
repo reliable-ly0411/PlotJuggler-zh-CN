@@ -737,7 +737,14 @@ of the module: its files keep their own SPDX and copyright lines.
   `httpGetWithLimit` and in the browser over `BrowserFetch.h`; returns a `CancelFetch`.
   Used by `pj_app`'s `PresetController` and Scene3D's `UrlFetcher`.
 - `BrowserFetch.h` (browser only): downloads that bypass Qt's network backend ([why](./TECHNICAL_NOTES.md)).
-- `UpdateChecker` asks the install's channel (`PJ_INSTALLATION`): `deb` runs
+- Localized `-zh.N[.rc.N]`, `-zh.N.dev.N` and stable `+zh.N` builds use only
+  this fork's GitHub release list and manual download route, never upstream
+  APT or IFW update services. Stable installs accept only stable same-major
+  localized releases whose tag and GitHub prerelease flag agree. Build metadata
+  does not increase version precedence; published package fixes require a real
+  version increment. Candidate installs may discover the corresponding stable
+  release. Historical binaries retain their historical update parser.
+- For non-localized builds, `UpdateChecker` asks the install's channel (`PJ_INSTALLATION`): `deb` runs
   `apt-cache policy plotjuggler4`, `windows` runs `maintenancetool check-updates`, anything
   else (and a fallback) asks GitHub's latest release; probes need `QT_CONFIG(process)`.
   It emits at most one result signal and routes every failure to `checkFailed`, so the

@@ -18,7 +18,7 @@ set(PJ_TEST_MAINS_DIR "${CMAKE_CURRENT_LIST_DIR}/test_mains")
 # target, so CI builds every one with `--target pj_qrhi_tests` and picks their
 # passes with `-L qrhi-<backend>` (every pass: `-L qrhi`; none: `-LE qrhi`).
 function(pj_add_test_runner target)
-    set(options WARNINGS RHI_BACKENDS DPR2)
+    set(options WARNINGS RHI_BACKENDS DPR2 MANAGED_PROFILE PRIVATE_HKCU)
     set(oneValueArgs MAIN PREFIX TIMEOUT WORKING_DIRECTORY DPR2_FILTER)
     # PROPERTIES: extra ctest properties for every discovered case (DISABLED, ENVIRONMENT, ...).
     set(multiValueArgs SOURCES LIBS DEFINES PROPERTIES)
@@ -50,11 +50,30 @@ function(pj_add_test_runner target)
         # pj_gpu_test_gate.h: PJ_SKIP_WITHOUT_GPU and the display-test helpers.
         target_include_directories(${target} PRIVATE "${PJ_TEST_MAINS_DIR}")
         target_link_libraries(${target} PRIVATE Qt6::Widgets plotjuggler_sdk::base)
+        if(WIN32)
+            # Native QSettings::clear() and QtProject writes must stay private.
+            # This does not redirect HKLM reads, KnownFolder paths or children.
+            target_compile_definitions(${target} PRIVATE PJ_TEST_PRIVATE_HKCU)
+            target_link_libraries(${target} PRIVATE advapi32)
+        endif()
         # Every case of a gui runner shares one test-mode config dir (named after
         # the runner), which the main clears and the extension store locks with a
         # non-waiting lease: under `ctest -j` they must not overlap. Cases of
         # different runners still run in parallel.
         set(lock RESOURCE_LOCK ${target})
+    endif()
+    if(R_PRIVATE_HKCU AND WIN32)
+        target_compile_definitions(${target} PRIVATE PJ_TEST_PRIVATE_HKCU)
+        target_include_directories(${target} PRIVATE "${PJ_TEST_MAINS_DIR}")
+        target_link_libraries(${target} PRIVATE advapi32)
+    endif()
+    if(R_MANAGED_PROFILE AND NOT EMSCRIPTEN)
+        target_compile_definitions(${target} PRIVATE PJ_TEST_MANAGED_PROFILE)
+        target_include_directories(${target} PRIVATE "${PJ_TEST_MAINS_DIR}")
+        target_link_libraries(${target} PRIVATE pj_marketplace)
+        if(WIN32)
+            target_link_libraries(${target} PRIVATE advapi32)
+        endif()
     endif()
     if(R_DEFINES)
         target_compile_definitions(${target} PRIVATE ${R_DEFINES})

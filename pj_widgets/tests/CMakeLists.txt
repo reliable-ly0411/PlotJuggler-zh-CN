@@ -8,6 +8,7 @@ pj_add_test_runner(pj_widgets_tests
         curve_tree_view_test.cpp
         svg_button_test.cpp
         file_dialog_test.cpp
+        owned_directory_test.cpp
         credentials_editor_test.cpp
         raster_frame_test.cpp
         layer_list_view_test.cpp
@@ -54,6 +55,9 @@ pj_add_test_runner(pj_widgets_tests
     LIBS pj_widgets pj_resources Qt6::Test Qt6::GuiPrivate
 )
 set_target_properties(pj_widgets_tests PROPERTIES AUTOMOC ON)
+if(WIN32)
+    target_compile_definitions(pj_widgets_tests PRIVATE PJ_TEST_CHECK_SYSTEM_FILE_DIALOG)
+endif()
 
 # Protocol peer for the stream-view test: publishes one frame, no engine.
 add_executable(raster_stub_helper raster_stub_helper.cpp)

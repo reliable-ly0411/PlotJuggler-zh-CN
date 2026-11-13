@@ -4,6 +4,10 @@
 // Each ctest case runs in its own process, so this runs once per case.
 #include <gtest/gtest.h>
 
+#ifdef PJ_TEST_MANAGED_PROFILE
+#include "pj_test_managed_profile.h"
+#endif
+
 #include <QApplication>
 #include <QElapsedTimer>
 #include <QFileInfo>
@@ -12,6 +16,10 @@
 #include <QSurfaceFormat>
 #include <QWidget>
 #include <QWindow>
+
+#if defined(Q_OS_WIN) && defined(PJ_TEST_PRIVATE_HKCU)
+#include "pj_test_windows_registry.h"
+#endif
 
 namespace {
 
@@ -56,12 +64,29 @@ int main(int argc, char** argv) {
   if (::testing::GTEST_FLAG(list_tests)) {
     return RUN_ALL_TESTS();
   }
+#if defined(Q_OS_WIN) && defined(PJ_TEST_PRIVATE_HKCU)
+#ifdef PJ_TEST_CHECK_SYSTEM_FILE_DIALOG
+  if (!pjTestSystemFileDialogMemoryAbsent()) {
+    return EXIT_FAILURE;
+  }
+#endif
+  PjTestWindowsRegistry registry;
+  if (!registry.initialize()) {
+    return EXIT_FAILURE;
+  }
+#endif
 #ifdef Q_OS_MACOS
   // As pj_app's main(): an OpenGL QRhi on macOS needs a core-profile context.
   QSurfaceFormat core_format = QSurfaceFormat::defaultFormat();
   core_format.setVersion(4, 1);
   core_format.setProfile(QSurfaceFormat::CoreProfile);
   QSurfaceFormat::setDefaultFormat(core_format);
+#endif
+#ifdef PJ_TEST_MANAGED_PROFILE
+  PjTestManagedProfile managed_profile;
+  if (!managed_profile.initialize()) {
+    return EXIT_FAILURE;
+  }
 #endif
   QApplication app(argc, argv);
   QCoreApplication::setOrganizationName(QStringLiteral("PlotJugglerTest"));

@@ -21,6 +21,13 @@
 #error "PJ_TEST_WIDGET_COMPILER must be defined"
 #endif
 
+#ifdef PJ_TEST_WIDGET_LANGUAGE_FIXTURE
+// Fixed UTF-8 bytes avoid passing localized text through compiler command lines or source code pages.
+#define PJ_TEST_WIDGET_NAME "Unicode \xE5\x85\x83\xE4\xBB\xB6 from %2"
+#else
+#define PJ_TEST_WIDGET_NAME "Test Widgets"
+#endif
+
 namespace {
 
 const PJ_widget_build_info_t* buildInfo() noexcept {
@@ -35,7 +42,7 @@ extern "C" PJ_WIDGET_EXPORT const uint32_t pj_plugin_abi_version = PJ_ABI_VERSIO
 
 extern "C" PJ_WIDGET_EXPORT const PJ_widget_vtable_t* PJ_get_widget_vtable() noexcept {
   static const PJ_widget_vtable_t vt = pj_mock::makeMockWidgetVtable(
-      R"({"id":")" PJ_TEST_WIDGET_ID R"(","name":"Test Widgets","version":"1.2.3",)"
+      R"({"id":")" PJ_TEST_WIDGET_ID R"(","name":")" PJ_TEST_WIDGET_NAME R"(","version":"1.2.3",)"
       R"("qt_modules":["Core","Gui","Widgets","Qt3DCore"],"widgets":[)"
       R"({"type":"gauge","name":"Gauge","icon":"<svg/>","settings":[{"key":"min","type":"number","default":0}]},)"
       R"({"type":"table","name":"Table"}]})",

@@ -3,6 +3,7 @@
 import importlib.util
 from pathlib import Path
 import struct
+import subprocess
 import tempfile
 import unittest
 from unittest import mock
@@ -72,6 +73,50 @@ class WindowsApplicationTest(unittest.TestCase):
         resource = (ROOT / 'pj_app/plotjuggler.rc.in').read_text(encoding='utf-8')
         for key in ('FileVersion', 'ProductVersion'):
             self.assertIn(f'VALUE "{key}", "@PJ_VERSION@"', resource)
+
+    def test_runtime_cli_uses_separate_private_profiles(self):
+        with tempfile.TemporaryDirectory(prefix='windows app test with spaces ') as directory:
+            exe = Path(directory) / 'app.exe'
+            exe.write_bytes(self.fixture())
+            calls = []
+            def run(command, **kwargs):
+                calls.append((command, kwargs))
+                stdout = b'PlotJuggler4 4.1.0' if command[-1] == '--version' else b'Usage: --language'
+                return subprocess.CompletedProcess(command, 0, stdout=stdout, stderr=b'')
+            with mock.patch.object(pe.subprocess, 'run', side_effect=run):
+                pe.verify(exe, runtime=True)
+            self.assertEqual(len(calls), 2)
+            profiles = []
+            for (command, kwargs), option in zip(calls, ('--version', '--help')):
+                self.assertEqual(command[0], str(exe.resolve()))
+                self.assertEqual(command[1], '--profile-dir')
+                profile = Path(command[2])
+                self.assertTrue(profile.is_absolute())
+                self.assertEqual(profile.name, option[2:])
+                self.assertEqual(command[3], option)
+                self.assertEqual(kwargs, {'capture_output': True, 'timeout': 60})
+                profiles.append(profile)
+            self.assertEqual(len(set(profiles)), 2)
+            self.assertEqual(profiles[0].parent, profiles[1].parent)
+
+    def test_runtime_cli_failure_stops_immediately(self):
+        with tempfile.TemporaryDirectory() as directory:
+            exe = Path(directory) / 'app.exe'
+            exe.write_bytes(self.fixture())
+            with mock.patch.object(pe.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1, stdout=b'', stderr=b'error')) as run:
+                with self.assertRaises(AssertionError):
+                    pe.verify(exe, runtime=True)
+            self.assertEqual(run.call_count, 1)
+
+    def test_both_cli_calls_use_per_launch_guard_entry(self):
+        with tempfile.TemporaryDirectory() as directory:
+            exe = Path(directory) / 'app.exe'; exe.write_bytes(self.fixture())
+            def run(command, **kwargs):
+                output = b'PlotJuggler4 4.1.0' if command[-1] == '--version' else b'Usage: --language'
+                return subprocess.CompletedProcess(command, 0, stdout=output, stderr=b'')
+            with mock.patch.object(pe, 'launch_app', side_effect=run) as launch:
+                pe.verify(exe, runtime=True)
+            self.assertEqual([call.args[0][-1] for call in launch.call_args_list], ['--version', '--help'])
 
     def test_console_handler_preserves_core_only_runs(self):
         source = (ROOT / 'pj_app/src/main.cpp').read_text(encoding='utf-8')

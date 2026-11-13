@@ -20,6 +20,7 @@
 #include <string>
 #include <thread>
 
+#include "../../cmake/test_mains/pj_test_owned_directory.h"
 #include "pj_runtime/SourceCacheStore.h"
 #include "recording_test_utils.h"
 using namespace Qt::StringLiterals;
@@ -64,15 +65,12 @@ void writeMagicSandwich(const fs::path& file, std::size_t junk_bytes) {
 class SourceCacheStoreTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    // A per-process random token instead of getpid(): keeps parallel test
-    // processes apart without POSIX-only calls (MSVC rejects ::getpid).
-    static const unsigned process_token = std::random_device{}();
-    root_ = fs::temp_directory_path() / ("source_cache_store_test-" + std::to_string(process_token) + "-" +
-                                         ::testing::UnitTest::GetInstance()->current_test_info()->name());
-    fs::remove_all(root_);
+    ASSERT_TRUE(owner_.ownsTree());
+    // Preserve the originally absent cache root, inside a proven fresh parent.
+    root_ = fs::path((owner_.path() + "/cache").toStdU16String());
   }
   void TearDown() override {
-    fs::remove_all(root_);
+    ASSERT_TRUE(owner_.removeChildTree(QString::fromStdU16String(root_.u16string())));
   }
 
   // Publish a validator-approved artifact for `identity` and drop the pin.
@@ -85,6 +83,7 @@ class SourceCacheStoreTest : public ::testing::Test {
     return pinned->path;  // pin released here — Pinned is discarded
   }
 
+  PjTestOwnedDirectory owner_;
   fs::path root_;
 };
 

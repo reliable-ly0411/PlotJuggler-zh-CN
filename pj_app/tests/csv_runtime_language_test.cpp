@@ -8,6 +8,10 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 
+#ifdef Q_OS_WIN
+#include "pj_test_windows_registry.h"
+#endif
+
 #include "AppLanguage.h"
 #include "DiagnosticDump.h"
 #include "pj_marketplace/platform_utils.hpp"
@@ -229,6 +233,14 @@ TEST_F(CsvRuntimeFileLoader, LongWarningClose) {
 int main(int argc, char** argv) {
   qputenv("QT_QPA_PLATFORM", "offscreen");
   ::testing::InitGoogleTest(&argc, argv);
+#ifdef Q_OS_WIN
+  // Install before Qt starts; destroy after QApplication, retaining the HKCU
+  // mapping through late static teardown. This does not isolate child processes.
+  PjTestWindowsRegistry registry;
+  if (!registry.initialize()) {
+    return EXIT_FAILURE;
+  }
+#endif
   QApplication app(argc, argv);
   QCoreApplication::setOrganizationName(u"PJ4Tests"_s);
   QCoreApplication::setApplicationName(u"CsvRuntimeFileLoader"_s);

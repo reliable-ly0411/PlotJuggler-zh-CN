@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include <QScopeGuard>
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
@@ -11,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "../../cmake/test_mains/pj_test_owned_directory.h"
 #include "mock_data_source_vtable.h"
 #include "mock_message_parser_vtable.h"
 #include "mock_toolbox_vtable.h"
@@ -78,17 +80,12 @@ const PJ_dialog_vtable_t kStaticDialogVtable = {
 class PluginCatalogTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    dir_ = std::filesystem::temp_directory_path() /
-           ("pj_catalog_test_" +
-            std::to_string(static_cast<std::uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count())));
-    std::filesystem::create_directories(dir_);
+    ASSERT_TRUE(owner_.ownsTree());
+    dir_ = std::filesystem::path((owner_.path() + "/catalog").toStdU16String());
+    ASSERT_TRUE(std::filesystem::create_directory(dir_));
   }
 
-  void TearDown() override {
-    std::error_code ec;
-    std::filesystem::remove_all(dir_, ec);
-  }
-
+  PjTestOwnedDirectory owner_;
   std::filesystem::path dir_;
 };
 
@@ -370,6 +367,14 @@ TEST_F(PluginCatalogTest, RuntimeCatalogAuthoritativeFolderMayBeASymlink) {
   if (ec) {
     GTEST_SKIP() << "filesystem does not support directory symlinks: " << ec.message();
   }
+  // We own exactly the link whose creation just succeeded. Unlink it after
+  // catalog destruction, before the parent rejects any remaining links.
+  const auto remove_created_link = qScopeGuard([&] {
+    std::error_code cleanup_error;
+    if (!std::filesystem::remove(link_dir, cleanup_error) || cleanup_error) {
+      qFatal("Cannot unlink this test's directory symlink");
+    }
+  });
 
   PluginRuntimeCatalog catalog;
   catalog.setPluginDirs({{link_dir, true}, {dir_b}});

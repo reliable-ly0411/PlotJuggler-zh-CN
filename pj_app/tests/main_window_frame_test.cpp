@@ -20,6 +20,7 @@
 #include "pj_widgets/SvgUtil.h"
 #include "pj_widgets/ToggleSwitch.h"
 #include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
 
 using namespace Qt::StringLiterals;
 
@@ -96,7 +97,7 @@ TEST(WindowFrameTest, SystemFrameDoubleClickLeavesMaximizeToTheWindowManager) {
 }
 
 TEST(WindowFrameTest, MainWindowDefaultsToTheSystemFrame) {
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   EXPECT_FALSE(window.windowFlags().testFlag(Qt::FramelessWindowHint));
   EXPECT_TRUE(frameWidgetsHidden(*window.titleBar(), /*expect_hidden=*/true));
 }
@@ -106,7 +107,7 @@ TEST(WindowFrameTest, MainWindowGoesFramelessWhenTheUserOptsIn) {
   GTEST_SKIP() << "macOS always keeps the system frame";
 #endif
   QSettings().setValue(PJ::MainWindow::kCustomTitleBarKey, true);
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   EXPECT_TRUE(window.windowFlags().testFlag(Qt::FramelessWindowHint));
   EXPECT_TRUE(frameWidgetsHidden(*window.titleBar(), /*expect_hidden=*/false));
 }
@@ -155,6 +156,9 @@ class SettingsEnvironment : public ::testing::Environment {
   void SetUp() override {
     if (!pj_app_test::isTestSuiteSelected("WindowFrameTest")) {
       return;
+    }
+    if (!settings_dir_.isValid() || settings_dir_.path().isEmpty()) {
+      qFatal("Cannot create private GUI test settings directory");
     }
     QCoreApplication::setOrganizationName(u"PlotJugglerTest"_s);
     QCoreApplication::setApplicationName(u"main_window_frame_test"_s);

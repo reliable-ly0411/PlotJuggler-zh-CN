@@ -202,6 +202,7 @@ if(PJ_BUILD_TESTS)
     tests/incremental_engine_test.cpp
     tests/array_expansion_test.cpp
     tests/regression_test.cpp
+    tests/writer_flush_test.cpp
     tests/sequential_uid_test.cpp
     tests/merge_test.cpp
     tests/ordered_entries_test.cpp
@@ -219,8 +220,8 @@ if(PJ_BUILD_TESTS)
     tests/sample_test.cpp
     tests/data_processor_test.cpp
     tests/processor_siso_adapter_test.cpp
-    # tests/plugin_host_read_test.cpp  # disabled until Phase 1b lands
-    #   (exercises v3 toolbox read path; rewrite for read_series_arrow)
+    tests/plugin_host_read_test.cpp
+    tests/plugin_host_write_test.cpp
 
     # plugin_parser_object_write_test uses MessageParserPluginBase, so it needs
     # the plugin SDK for message_parser_plugin_base.hpp and builtin object types.
@@ -234,7 +235,7 @@ if(PJ_BUILD_TESTS)
   )
 
   # Share the dependency closure while ctest still runs each case in its own process.
-  # no WARNINGS: 29 of 29 merged tests never compiled with -Werror
+  # no WARNINGS: the merged test sources are not uniformly -Werror-clean
   # plain: not one of this module's test sources references Qt, and
   # pj_datastore links none either. See cmake/PjTests.cmake.
   pj_add_test_runner(pj_datastore_tests
@@ -306,17 +307,6 @@ if(PJ_BUILD_TESTS)
       TIMEOUT 30
     )
   endif()
-
-  # Plugin host write test — DISABLED for v4 ABI migration.
-  # Exercises v3 appendArrowIpc/readSeries; rewrite in Phase 1b when the
-  # Arrow-stream write path and read_series_arrow are implemented.
-  # add_executable(plugin_host_write_test tests/plugin_host_write_test.cpp)
-  # target_link_libraries(plugin_host_write_test PRIVATE
-  #   pj_datastore
-  #   ${PJ_NANOARROW_TARGET}
-  #   ${PJ_NANOARROW_IPC_TARGET}
-  #   GTest::gtest_main)
-  # add_test(NAME plugin_host_write_test COMMAND plugin_host_write_test)
 
   # ---------------------------------------------------------------------------
   # Benchmarks

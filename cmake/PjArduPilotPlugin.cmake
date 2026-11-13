@@ -46,6 +46,9 @@ endif()
 if(PJ_BUILD_TESTS AND TARGET pj_app_loader_testlib)
     add_executable(ardupilot_import_test "${CMAKE_SOURCE_DIR}/pj_app/tests/ardupilot_import_test.cpp")
     target_link_libraries(ardupilot_import_test PRIVATE pj_app_loader_testlib pj_app_language)
+    if(WIN32)
+        target_link_libraries(ardupilot_import_test PRIVATE advapi32)
+    endif()
     target_compile_definitions(ardupilot_import_test PRIVATE
         PJ_ARDUPILOT_PLUGIN_PATH="$<TARGET_FILE:ardupilot_source_plugin>"
         PJ_ARDUPILOT_FIXTURES="${_pj_apbin_dir}/sdk4/tests"

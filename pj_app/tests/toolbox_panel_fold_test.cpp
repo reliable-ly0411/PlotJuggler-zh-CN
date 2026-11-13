@@ -60,6 +60,7 @@
 #include "pj_runtime/DerivedRuntimeHosts.h"
 #include "pj_runtime/OnDemandService.h"
 #include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
 
 using namespace Qt::StringLiterals;
 
@@ -315,7 +316,7 @@ class ToolboxPanelFoldTest : public ::testing::Test {
   static void SetUpTestSuite() {
     extensions_dir_ = std::make_unique<QTemporaryDir>();
     ASSERT_TRUE(extensions_dir_->isValid());
-    window_ = std::make_unique<PJ::MainWindow>(extensions_dir_->path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_->path());
     window_->resize(1600, 900);
     window_->show();
   }

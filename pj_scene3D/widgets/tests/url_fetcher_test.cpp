@@ -28,6 +28,7 @@
 #include <memory>
 
 #include "mock_parser_support.h"
+#include "owned_model_cache.h"
 
 using namespace Qt::StringLiterals;
 
@@ -223,12 +224,6 @@ TEST(UrlFetcherTest, ResponseBeyondSizeCapIsAborted) {
 
 namespace {
 
-// Wipe the on-disk model cache (PJ_MODEL_CACHE_DIR, pointed at a throwaway dir in
-// main) so each cache test starts cold. QNetworkDiskCache recreates it on demand.
-void clearModelCache() {
-  QDir(qEnvironmentVariable("PJ_MODEL_CACHE_DIR")).removeRecursively();
-}
-
 // A one-shot HTTP responder: serves `body` with the given Cache-Control on each
 // accepted connection and counts connections. Lives as long as the test wants it.
 struct CountingHttpServer {
@@ -274,7 +269,7 @@ pj::scene3d::FetchResult fetchSync(pj::scene3d::UrlFetcher& fetcher, const QUrl&
 // sessions) WITHOUT any network: a new fetcher serves the model from disk even
 // after the origin server is gone. This is the "don't re-download the car" win.
 TEST(UrlFetcherTest, FreshEntryServedCrossSessionWithoutNetwork) {
-  clearModelCache();
+  ASSERT_TRUE(pj_scene3d_test::clearModelCache());
   const QByteArray body("MESHBYTES");
   auto server = std::make_unique<CountingHttpServer>(body, "max-age=3600");
   const QUrl url(u"http://127.0.0.1:%1/lexus.glb"_s.arg(server->port()));
@@ -299,7 +294,7 @@ TEST(UrlFetcherTest, FreshEntryServedCrossSessionWithoutNetwork) {
 // rendered last session still shows up offline instead of regressing to the grey
 // cube. Without the on-error AlwaysCache fallback, the stale revalidation fails.
 TEST(UrlFetcherTest, StaleEntryServedFromCacheWhenOffline) {
-  clearModelCache();
+  ASSERT_TRUE(pj_scene3d_test::clearModelCache());
   const QByteArray body("MESHBYTES");
   auto server = std::make_unique<CountingHttpServer>(body, "max-age=0");  // cacheable but immediately stale
   const QUrl url(u"http://127.0.0.1:%1/lexus.glb"_s.arg(server->port()));
@@ -319,7 +314,7 @@ TEST(UrlFetcherTest, StaleEntryServedFromCacheWhenOffline) {
 // A redirected response reports where it was finally served, so a URDF's
 // relative meshes and package roots anchor at that location.
 TEST(UrlFetcherTest, FinalUrlFollowsRedirect) {
-  clearModelCache();
+  ASSERT_TRUE(pj_scene3d_test::clearModelCache());
   QTcpServer server;
   ASSERT_TRUE(server.listen(QHostAddress::LocalHost, 0));
   QObject::connect(&server, &QTcpServer::newConnection, &server, [&server]() {
@@ -348,7 +343,7 @@ TEST(UrlFetcherTest, FinalUrlFollowsRedirect) {
 // A size-capped (aborted) response must not leave a usable cache entry: a later
 // fetch re-hits the network rather than being served truncated bytes as success.
 TEST(UrlFetcherTest, SizeCappedResponseDoesNotPoisonCache) {
-  clearModelCache();
+  ASSERT_TRUE(pj_scene3d_test::clearModelCache());
   QTcpServer server;
   ASSERT_TRUE(server.listen(QHostAddress::LocalHost, 0));
   int connections = 0;
@@ -386,8 +381,7 @@ namespace {
 class UrlFetcherEnvironment : public ::testing::Environment {
  public:
   void SetUp() override {
-    static QTemporaryDir model_cache_dir;
-    qputenv("PJ_MODEL_CACHE_DIR", (model_cache_dir.path() + u"/models"_s).toUtf8());
+    pj_scene3d_test::installModelCache();
   }
 };
 

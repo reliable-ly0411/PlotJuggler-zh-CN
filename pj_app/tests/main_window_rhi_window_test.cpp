@@ -17,6 +17,7 @@
 #include "pj_plotting/PlotWidgetBase.h"
 #include "pj_widgets/GraphicsApi.h"
 #include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
 
 namespace {
 
@@ -25,7 +26,7 @@ namespace {
 // then inserted), and reports whether the native window survived.
 [[nodiscard]] bool nativeWindowSurvivesFirstGpuWidget(bool gpu_canvas) {
   PJ::PlotWidgetBase::setGpuCanvasDisabledOverride(!gpu_canvas);
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   // GuiTestEnvironment disables the GPU canvas for every other case.
   PJ::PlotWidgetBase::setGpuCanvasDisabledOverride(true);
   window.show();

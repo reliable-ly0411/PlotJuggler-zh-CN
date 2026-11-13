@@ -80,7 +80,7 @@ if(PJ_BUILD_TESTS)
     )
     set_target_properties(pj_dialog_host_tests PROPERTIES AUTOMOC ON)
 
-    pj_add_test_runner(pj_dialog_host_panel_tests MAIN gui WARNINGS
+    pj_add_test_runner(pj_dialog_host_panel_tests MANAGED_PROFILE MAIN gui WARNINGS
         SOURCES
             tests/panel_engine_test.cpp
             tests/mock_panel_plugin.cpp

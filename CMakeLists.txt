@@ -22,7 +22,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Packaging channel stamped into the anonymous telemetry ping. A channel token
 # (like gcc_64/msvc2022_64), not a version — deliberately NOT in versions.env.
-set(PJ_INSTALLATION "source" CACHE STRING "Packaging channel: source, appimage, deb, windows, macos, or conda")
+set(PJ_INSTALLATION "source" CACHE STRING "Packaging channel: source, appimage, deb, windows, or conda")
 
 configure_file(cmake/pj_version.h.in ${CMAKE_BINARY_DIR}/generated/pj_version.h @ONLY)
 
@@ -174,7 +174,7 @@ find_package(fmt REQUIRED)
 # Foundation (Level 0): the plotjuggler_sdk SDK (pj_base + pj_plugins), consumed
 # as the `plotjuggler_sdk/<version>` Conan package pinned in conanfile.txt
 # (recipe + binaries on the PlotJuggler JFrog remote). Build paths that do not
-# run Conan (Qt for WebAssembly, pixi) fetch the same release tag from GitHub
+# run Conan (Qt for WebAssembly, pixi) fetch the matching upstream SDK from GitHub
 # and build it in-tree; both expose plotjuggler_sdk::base / ::plugin_sdk /
 # ::plugin_host. pj_datastore (the columnar store) lives in this repo: plugins
 # reach it only through the pj_base C ABI, never by linking it.
@@ -182,14 +182,14 @@ find_package(fmt REQUIRED)
 
 file(STRINGS conanfile.txt _pj_sdk_require REGEX "^plotjuggler_sdk/")
 string(REGEX REPLACE "^plotjuggler_sdk/([0-9][0-9A-Za-z.-]*).*" "\\1" PJ_SDK_VERSION "${_pj_sdk_require}")
-set(_pj_sdk_url https://github.com/PlotJuggler/plotjuggler_sdk/archive/refs/tags/v${PJ_SDK_VERSION}.tar.gz)
+set(_pj_sdk_url https://api.github.com/repos/reliable-ly0411/plotjuggler_sdk/tarball/52cdf329adf6af3513e190fe0f8b86f19f17b051)
 # Pin the source build to bytes, not to a tag name: a tag can be moved, and the
 # sanitizer lanes compile this tarball instead of the Conan package, so an
 # unpinned fetch would make an instrumented build unreproducible. Update this
 # hash in the same commit as any PJ_SDK_VERSION bump in conanfile.txt — a stale
 # hash aborts the download loudly, which is the intended failure mode.
 set(_pj_sdk_url_hash
-    SHA256=ba063722321816d7f52fae82b8b1454082813537f3888f1619e97d7b429af69e)  # v0.40.0
+    SHA256=4576bdb2ea15c4cee9cbdfbbb52121861a459dd4b8d82af097e8f894f4dd7180)  # v0.40.0 + PR226 Unicode path fix (unmerged)
 include(FetchContent)
 # Timestamps on extracted archives. DOWNLOAD_EXTRACT_TIMESTAMP is a CMake 3.24
 # keyword and the sanctioned builder image ships 3.22, where an unrecognised

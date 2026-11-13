@@ -28,6 +28,7 @@
 #include "pj_runtime/CatalogModel.h"
 #include "pj_runtime/MarkerTopics.h"
 #include "pj_runtime/SessionManager.h"
+#include "support/isolated_main_window.h"
 
 using namespace Qt::StringLiterals;
 
@@ -110,7 +111,7 @@ std::optional<PJ::sdk::PlotMarkers> publishedMarkers(PJ::AppSession& app, PJ::Da
 TEST(MainWindowMarkerGeneratorRestoreTest, RestoresGeneratorWithoutLaunchingAToolbox) {
   QTemporaryDir extensions_dir;
   ASSERT_TRUE(extensions_dir.isValid());
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = PJ::MainWindowMarkerGeneratorTestPeer::session(window);
 
   const PJ::DatasetId dataset = pj_test::createDataset(app, "run.csv");
@@ -139,7 +140,7 @@ TEST(MainWindowMarkerGeneratorRestoreTest, RestoresGeneratorWithoutLaunchingAToo
 TEST(MainWindowMarkerGeneratorRestoreTest, UnresolvableGeneratorDoesNotFailTheRestore) {
   QTemporaryDir extensions_dir;
   ASSERT_TRUE(extensions_dir.isValid());
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = PJ::MainWindowMarkerGeneratorTestPeer::session(window);
 
   const PJ::DatasetId dataset = pj_test::createDataset(app, "run.csv");
@@ -164,7 +165,7 @@ TEST(MainWindowMarkerGeneratorRestoreTest, UnresolvableGeneratorDoesNotFailTheRe
 TEST(MainWindowMarkerGeneratorRestoreTest, RestoresGeneratorBySourceWhenIdsSwap) {
   QTemporaryDir extensions_dir;
   ASSERT_TRUE(extensions_dir.isValid());
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = PJ::MainWindowMarkerGeneratorTestPeer::session(window);
 
   // Saved session: "a" then "b", generator on "b". Reopened session: "b" then "a",
@@ -195,7 +196,7 @@ TEST(MainWindowMarkerGeneratorRestoreTest, RestoresGeneratorBySourceWhenIdsSwap)
 TEST(MainWindowMarkerGeneratorRestoreTest, ReplayAnnouncesMarkersChangedOnce) {
   QTemporaryDir extensions_dir;
   ASSERT_TRUE(extensions_dir.isValid());
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = PJ::MainWindowMarkerGeneratorTestPeer::session(window);
   const PJ::DatasetId dataset = pj_test::createDataset(app, "run.csv");
   ASSERT_NE(dataset, 0U);
@@ -216,7 +217,7 @@ TEST(MainWindowMarkerGeneratorRestoreTest, GeneratorReplaysUnderTheSnapshotsDisp
   constexpr PJ::Timestamp kSecond = 1'000'000'000LL;
   QTemporaryDir extensions_dir;
   ASSERT_TRUE(extensions_dir.isValid());
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = PJ::MainWindowMarkerGeneratorTestPeer::session(window);
   const PJ::DatasetId dataset_a = pj_test::createDataset(app, "a", /*own_time_domain=*/true);
   const PJ::DatasetId dataset_b = pj_test::createDataset(app, "b", /*own_time_domain=*/true);
@@ -270,7 +271,7 @@ TEST(MainWindowMarkerGeneratorRestoreTest, GeneratorReplaysUnderTheSnapshotsDisp
 TEST(MainWindowMarkerGeneratorRestoreTest, WindowRoundTripsThroughLayoutRestore) {
   QTemporaryDir extensions_dir;
   ASSERT_TRUE(extensions_dir.isValid());
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = PJ::MainWindowMarkerGeneratorTestPeer::session(window);
 
   const PJ::DatasetId dataset = pj_test::createDataset(app, "run.csv");
