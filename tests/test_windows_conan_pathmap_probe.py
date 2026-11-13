@@ -53,6 +53,8 @@ class FixtureTests(unittest.TestCase):
         self.assertIn('PRIVATE /Zi /Zf',probe.CMAKE)
         self.assertIn('PRIVATE /Z7',probe.CMAKE)
         self.assertIn('PRIVATE /Brepro',probe.CMAKE)
+        self.assertIn('target_link_options(probe PRIVATE /Brepro)',probe.CMAKE)
+        self.assertIn('target_link_options(probe_driver PRIVATE /Brepro)',probe.CMAKE)
         self.assertIn('=Z:/pj-probe-objects/main.obj',probe.CMAKE)
         self.assertIn('Unknown diagnostic mode',probe.CMAKE)
         self.assertNotIn('/DEBUG:NONE',probe.CMAKE)

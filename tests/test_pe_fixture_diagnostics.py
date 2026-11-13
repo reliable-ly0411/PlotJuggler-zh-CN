@@ -25,6 +25,22 @@ class PETests(unittest.TestCase):
         self.assertEqual(result['object_names_found'],['D:\\cache\\a.obj'])
     def test_absent_object_name_is_not_claim_of_debug_removal(self):
         self.assertEqual(pe.inspect_pe(fixture(),object_names=['x.obj'])['object_names_found'],[])
+    def test_export_and_debug_timestamps_are_read_without_masking(self):
+        raw=bytearray(640);raw[:2]=b'MZ';struct.pack_into('<I',raw,60,64)
+        raw[64:68]=b'PE\0\0';struct.pack_into('<HHIIIHH',raw,68,0x8664,1,123,0,0,240,0x2000)
+        struct.pack_into('<H',raw,88,0x20b);struct.pack_into('<I',raw,196,16)
+        struct.pack_into('<II',raw,200,0x1000,40)
+        struct.pack_into('<II',raw,248,0x1080,28)
+        raw[328:336]=b'.rdata\0\0';struct.pack_into('<IIII',raw,336,256,0x1000,256,384)
+        struct.pack_into('<I',raw,408,1);struct.pack_into('<I',raw,416,0x1040)
+        struct.pack_into('<I',raw,448,0x1050);raw[464:479]=b'exported_paths\0'
+        struct.pack_into('<I',raw,516,456);struct.pack_into('<I',raw,524,13)
+        before=bytes(raw);result=pe.inspect_pe(raw)
+        self.assertEqual(result['exports'],['exported_paths'])
+        self.assertEqual(result['debug_directory'],[{'timestamp':456,'timestamp_offset':516,'type':13}])
+        self.assertEqual(result['timestamp'],123)
+        self.assertEqual(bytes(raw),before)
+
     def test_malformed_rejected(self):
         for raw in (b'',b'MZ',fixture()[:-1]):
             with self.assertRaises(ValueError):pe.inspect_pe(raw)

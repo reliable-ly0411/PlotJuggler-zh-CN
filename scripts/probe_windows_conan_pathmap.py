@@ -81,7 +81,10 @@ target_link_libraries(probe_driver PRIVATE probe)
 target_include_directories(probe PRIVATE "${DEP_INCLUDE}" "${CMAKE_CURRENT_BINARY_DIR}/generated files")
 target_compile_options(probe PRIVATE /FC /utf-8)
 set_target_properties(probe PROPERTIES CXX_STANDARD 17)
-if(PROBE_MODE STREQUAL "brepro")
+if(PROBE_MODE STREQUAL "link-brepro")
+  target_link_options(probe PRIVATE /Brepro)
+  target_link_options(probe_driver PRIVATE /Brepro)
+elseif(PROBE_MODE STREQUAL "brepro")
   target_compile_options(probe PRIVATE /Brepro)
 elseif(PROBE_MODE STREQUAL "z7")
   target_compile_options(probe PRIVATE /Z7)
@@ -209,7 +212,7 @@ def one(label, base, dep, probe, enable, mode="baseline"):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--work',type=Path,required=True)
-    p.add_argument('--mode',choices=('baseline','brepro','z7','zi-zf','object-pathmap'),default='baseline')
+    p.add_argument('--mode',choices=('baseline','brepro','z7','zi-zf','object-pathmap','link-brepro'),default='baseline')
     args=p.parse_args()
     if sys.platform!='win32':p.error('requires native Windows MSVC runner')
     base=args.work.resolve();base.mkdir(exist_ok=False)
@@ -242,6 +245,7 @@ def main():
         report['raw_objects_equal']=a['objects']==b['objects']
         # Evaluate and retain the negative control even when byte equality fails.
         report['negative_control_rejected']=negative['output']!=a['output'] and not all(x.replace(chr(92),'/').startswith('Z:/pj-conan-exact/') for x in negative['output'])
+        report['dll_export_verified']=all('exported_paths' in x['pe_inspections']['probe.dll'].get('exports',[]) for x in (a,b,negative))
         report['raw_pe_equal']=a['binaries']==b['binaries']
         report['pe_privacy_clean']=not any(v['forbidden_paths_found'] for v in a['pe_inspections'].values()) and not any(v['forbidden_paths_found'] for v in b['pe_inspections'].values())
         report['pe_object_names_retained']={label:{name:v['object_names_found'] for name,v in item['pe_inspections'].items()} for label,item in (('cache-a',a),('cache-b',b),('root-only',negative))}
@@ -251,7 +255,7 @@ def main():
         if a['objects']!=b['objects']:raise RuntimeError('raw C/C++ object SHA256 differs across caches; see coff-comparison.json')
         if negative['output']==a['output'] or all(x.replace('\\','/').startswith('Z:/pj-conan-exact/') for x in negative['output']):
             raise RuntimeError('negative control did not detect disabled exact mappings')
-        if not report['raw_pe_equal'] or not report['pe_privacy_clean']:raise RuntimeError('linked PE equality/privacy failed')
+        if not report['raw_pe_equal'] or not report['pe_privacy_clean'] or not report['dll_export_verified']:raise RuntimeError('linked PE equality/privacy failed')
         report.update(status='passed',refs=a['refs'],objects=a['objects'],runtime_paths=a['output'],
                       different_cache_suffixes=True,negative_control_rejected=True)
     except Exception as exc:

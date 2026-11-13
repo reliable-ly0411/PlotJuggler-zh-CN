@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [baseline, brepro, z7, zi-zf, object-pathmap]
+        mode: [baseline, link-brepro]
     runs-on: windows-2022
     timeout-minutes: 20
     steps:
