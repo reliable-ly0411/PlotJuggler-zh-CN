@@ -1,0 +1,73 @@
+name: Diagnostic actual locked Windows dependency paths
+on:
+  push:
+    branches: [zh-CN-diag/44-pathmap-coff]
+    paths:
+      - .github/workflows/zh-windows-locked-pathmap-probe.yml
+      - scripts/probe_windows_locked_dependencies.py
+      - scripts/windows_conan_mapping_refs.json
+      - scripts/hook_windows_conan_pathmap.py
+      - scripts/windows_conan_pathmap.py
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dependencies:
+    strategy:
+      fail-fast: false
+      matrix:
+        cache: [a, b]
+    runs-on: windows-2022
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Pinned tooling and unit checks
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check conan==2.34.0
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python tests/test_windows_conan_pathmap_hook.py -v
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python tests/test_windows_conan_pathmap.py -v
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python tests/test_windows_locked_dependencies.py -v
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Actual locked host graph from source, isolated cache
+        shell: pwsh
+        run: |
+          python scripts/probe_windows_locked_dependencies.py --work "$env:RUNNER_TEMP/pj-locked-${{ matrix.cache }}-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ReviewOnly-locked-dependency-${{ matrix.cache }}
+          path: |
+            ${{ runner.temp }}/pj-locked-${{ matrix.cache }}-${{ github.run_id }}-${{ github.run_attempt }}/*.json
+            ${{ runner.temp }}/pj-locked-${{ matrix.cache }}-${{ github.run_id }}-${{ github.run_attempt }}/*.log
+          retention-days: 14
+          if-no-files-found: error
+  compare:
+    needs: dependencies
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ReviewOnly-locked-dependency-*
+          path: evidence
+      - name: Compare all actual dependency DLL raw hashes
+        run: python3 scripts/probe_windows_locked_dependencies.py --compare evidence/ReviewOnly-locked-dependency-a/summary.json evidence/ReviewOnly-locked-dependency-b/summary.json --output comparison.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ReviewOnly-locked-dependency-comparison
+          path: comparison.json
+          if-no-files-found: warn

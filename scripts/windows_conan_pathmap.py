@@ -22,7 +22,7 @@ def validate_root(root):
     return normalized
 
 
-def render(source, cache, base_profile="default", experimental_refs=None):
+def render(source, cache, base_profile="default", experimental_refs=None, experimental_link_brepro=False):
     source, cache = map(validate_root, (source, cache))
     if base_profile != 'default' and not re.fullmatch(r'[A-Za-z0-9_./:\-]+', base_profile):
         raise ValueError('base profile path contains unsupported characters')
@@ -48,6 +48,10 @@ def render(source, cache, base_profile="default", experimental_refs=None):
         extra = (f"{hook.POLICY_CONF}={hook.policy_digest(experimental_refs)}\n"
                  f"{hook.REFS_CONF}={experimental_refs!r}\n")
         confs += [hook.POLICY_CONF, hook.REFS_CONF]
+    if experimental_link_brepro:
+        if experimental_refs is None: raise ValueError('link experiment requires explicit hook refs')
+        confs += ['tools.build:sharedlinkflags', 'tools.build:exelinkflags']
+        extra += "tools.build:sharedlinkflags=['/Brepro']\ntools.build:exelinkflags=['/Brepro']\n"
     return (f'include({base_profile})\n\n[conf]\n'
             f'tools.build:cflags={encoded}\n'
             f'tools.build:cxxflags={encoded}\n'
@@ -61,6 +65,7 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--base-profile', type=Path, help='existing host profile file; default: Conan default profile')
     parser.add_argument('--experimental-hook-refs', type=Path, help='probe only: JSON exact recipe reference list; does not install hook')
+    parser.add_argument('--experimental-link-brepro', action='store_true')
     args = parser.parse_args()
     try:
         base = 'default'
@@ -70,7 +75,7 @@ def main():
                 raise ValueError('base profile must be an existing regular file')
             base = resolved.as_posix()
         refs = json.loads(args.experimental_hook_refs.read_text()) if args.experimental_hook_refs else None
-        profile = render(args.source, args.cache, base, experimental_refs=refs)
+        profile = render(args.source, args.cache, base, experimental_refs=refs, experimental_link_brepro=args.experimental_link_brepro)
         with args.output.open('x', encoding='utf-8', newline='\n') as f:
             f.write(profile)
     except (ValueError, OSError) as exc:
