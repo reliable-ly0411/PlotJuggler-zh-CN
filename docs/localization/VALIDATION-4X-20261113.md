@@ -91,3 +91,35 @@ Windows 失败原始输出、两次先行配置错误、CMakeCache、环境范�
 `windows-sdk-stop-handoff-evidence.zip`，SHA256：
 `c4beb87e8f79c3ce81f46f312c83fa2c3b9d66977d83c716b00261aebcf904ab`。
 证据归档与源码历史分开保留，不向 Git 或正式 Release 添加编译树和私人系统资料。
+
+## 云端交接后的 Windows 定向补验
+
+Ubuntu 本机与 Windows VM 已停止本任务，之后没有再使用它们。以下结果来自
+GitHub 的 `windows-2022` runner，不能改写上节原始失败记录。
+
+- SDK 测试修正分支：[`fix/windows-unicode-build-fixture`](https://github.com/reliable-ly0411/plotjuggler_sdk/tree/fix/windows-unicode-build-fixture)，
+  固定提交 `2727244d1dcad7207604921de5c86bba5058af8c`，祖先为宿主所用的
+  `52cdf329adf6af3513e190fe0f8b86f19f17b051`。
+- 原测试将 CMake 生成的 UTF-8 DLL 源路径窄字符串直接转换成 Windows
+  `std::filesystem::path`，由系统 ANSI code page 解释；中文构建根因此可能在
+  `copy_file` 阶段失真。修正仅将此已知 UTF-8 来源显式构造成 C++20 UTF-8 路径，
+  并增加源文件存在断言。Unicode DLL 目标路径、两种真实 loader 调用及其断言保持不变。
+  没有修改 SDK 产品代码、宿主依赖固定快照、系统 ACP 或旧 native-kit 门禁。
+- [Windows 实跑 43413669745](https://github.com/reliable-ly0411/plotjuggler_sdk/actions/runs/43413669745)
+  成功，artifact `14030637614` 的 `gtest.xml` 经下载核验：原两项用例均
+  `status=run, result=completed`，**2 通过、0 失败、0 跳过**；CTest 容器 1/1 通过。
+  实测 ACP 为 `1252`，编译根仍为中文与空格路径，MSVC x64、RelWithDebInfo、
+  `/utf-8 /EHsc` 和 warnings-as-errors 保留。
+- GoogleTest 1.17 的 XML 输出存在独立的窄路径/locale 转换边界。报告被写入
+  独立 ASCII 证据目录；这只隔离报告序列化，不把待测构建根或 DLL 路径改成 ASCII。
+  本轮不声称修复 GoogleTest 的中文 XML 输出能力。
+- 通过证据 ZIP 的 SHA256：
+  `fd259a0094876c52f463c6e1894860d056c2b610ad64cbd00df693b0eea87a00`。
+  首轮云控制器因 Python cp1252 控制台输出中文失败，发生在 SDK 测试之前；
+  run `43413298379` 原始记录保留。追加提交修复控制器输出，不计作产品失败或通过。
+
+这消除了本轮两项 Unicode loader 定向验证的阻塞，支持将原失败归因于测试路径准备，
+而不是据此宣称产品加载器损坏。Qt6 Windows 应用、完整成品、GPU/Wayland 等此前未覆盖项
+仍未覆盖，旧 native-kit 仍未批准。本报告不自动提升稳定线、不发布或移动标签。
+主仓交接提交 `89f1ff8a6efec3fff433b14a10d58f44aae0656d` 的 Linux/Windows 源码检查
+run `43411989542` 均成功，native jobs 为 skipped，不能计入原生通过数。
