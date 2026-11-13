@@ -19,6 +19,9 @@
 仓库默认分支为独立的 `zh-CN-4.x`；4.x 的 [v4.1.0+zh.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)
 使用 Qt6/PJ4 SDK，两代插件不能混用。下方官方徽章、功能和下载源不代表本候选已完成交付验收。
 
+本轮按用户要求仅测试新增功能及可能回归的部分，先完成选定测试再集中修补和构建。
+七个同源软件包及必要的身份、隐私、许可和源码材料仍须通过发布核对；旧候选的成绩不转记。
+
 - [汉化分支命名、开发流程与发布规则](docs/BRANCHING.zh-CN.md)
 - [使用、解析范围、许可和同步说明](docs/zh-CN.md)
 - [本轮实施与验收状态](docs/localization/3.18.1-validation.md)
