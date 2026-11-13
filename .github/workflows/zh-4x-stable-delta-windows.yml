@@ -5,12 +5,16 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   windows-targeted:
     runs-on: windows-2022
     timeout-minutes: 90
     env:
       PJ_BUILD_JOBS: '2'
+      CMAKE_BUILD_PARALLEL_LEVEL: '2'
       PYTHONIOENCODING: utf-8
       QT_QPA_PLATFORM: windows
       QSG_RHI_PREFER_SOFTWARE_RENDERER: '1'
@@ -22,6 +26,14 @@ jobs:
         with:
           submodules: recursive
           persist-credentials: false
+      - uses: actions/cache@v5
+        with:
+          path: .qt
+          key: stable-delta-qt-windows-${{ hashFiles('versions.env') }}
+      - uses: actions/cache/restore@v5
+        with:
+          path: ~/.conan2
+          key: stable-delta-conan-windows-${{ hashFiles('conan.lock', 'cmake/host-sdk-source.json') }}
       - name: Prepare evidence and official source-build tools
         shell: pwsh
         run: |
@@ -52,6 +64,10 @@ jobs:
           foreach ($file in @('build/pj_ffmpeg_bin_dirs.txt','build/pj_python_bin_dirs.txt')) {
             if (Test-Path $file) { Get-Content $file | Where-Object { $_ } | Add-Content $env:GITHUB_PATH }
           }
+      - uses: actions/cache/save@v5
+        with:
+          path: ~/.conan2
+          key: stable-delta-conan-windows-${{ hashFiles('conan.lock', 'cmake/host-sdk-source.json') }}
       - name: Run explicit changed-surface tests without accepting skips
         shell: pwsh
         run: |
@@ -59,10 +75,13 @@ jobs:
           $e=Join-Path $env:RUNNER_TEMP 'stable-delta-windows-evidence'
           python scripts/validation/select_stable_delta_tests.py build $e
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          ctest --test-dir build -C RelWithDebInfo --tests-from-file "$e/test-names.txt" --output-on-failure --timeout 120 --parallel 1 --no-tests=error --output-junit "$e/ctest.xml" 2>&1 | Tee-Object "$e/ctest.log"
+          ctest --test-dir build -C RelWithDebInfo --tests-from-file "$e/test-names.txt" --verbose --output-on-failure --timeout 120 --parallel 1 --no-tests=error --output-junit "$e/ctest.xml" 2>&1 | Tee-Object "$e/ctest.log"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          python -c "import sys,xml.etree.ElementTree as E;c=E.parse(sys.argv[1]).getroot().findall('.//testcase');assert c;assert all(not any(x.find(k) is not None for k in ('failure','error','skipped')) for x in c), 'Failed or skipped tests';print('Targeted passed:',len(c))" "$e/ctest.xml"
+          python -c "import sys,xml.etree.ElementTree as E;from pathlib import Path;c=E.parse(sys.argv[1]).getroot().findall('.//testcase');expected=set(Path(sys.argv[1]).with_name('test-names.txt').read_text().splitlines());assert len(c)==len(expected) and {x.get('name') for x in c}==expected;assert all(not any(x.find(k) is not None for k in ('failure','error','skipped')) for x in c), 'Failed or skipped tests';print('Targeted passed:',len(c))" "$e/ctest.xml"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Verify actual D3D11 software renderer evidence
+        shell: bash
+        run: bash scripts/ci/check_qrhi_backend.sh "$RUNNER_TEMP/stable-delta-windows-evidence/ctest.log" 'D3D11, .*deviceType=Cpu\)' D3D11
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
