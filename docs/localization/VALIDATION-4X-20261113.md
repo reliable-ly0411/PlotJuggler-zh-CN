@@ -123,3 +123,33 @@ GitHub 的 `windows-2022` runner，不能改写上节原始失败记录。
 仍未覆盖，旧 native-kit 仍未批准。本报告不自动提升稳定线、不发布或移动标签。
 主仓交接提交 `89f1ff8a6efec3fff433b14a10d58f44aae0656d` 的 Linux/Windows 源码检查
 run `43411989542` 均成功，native jobs 为 skipped，不能计入原生通过数。
+
+
+## 稳定维护线晋级前的云端定向补验（2026-11-13）
+
+本节补充而不覆盖以上历史结果。完整源码差异为稳定基线
+`5ef98a97a5e08ab32482d9049bb45df102c99d05` 到开发快照
+`0b4b4c29354f471d26e1b6321d72cc62e06ccebe`。产品代码、锁文件和子模块
+在两次通过运行与本次晋级中一致；差异只有验证工作流、选择器和说明文档。
+
+- Linux: 源码 `f0d03fc215f8d061b2ffffc10e467b4fcf9b7d00`，
+  [run 43431492387](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/43431492387)，
+  应用与所需目标编译成功，**130/130 通过，0 失败、0 跳过**。
+  artifact `14044871778` SHA256 `2f71a6ea04517aa6bf86f2e0282395ff2066492cd89d0eb2e30307a3c577a689`。
+- Windows: 源码 `b0990fbfe5bfddb4a15b378223de162086bf282f`，
+  [run 43431521380](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/43431521380)，
+  应用与所需目标编译成功，**127/127 通过，0 失败、0 跳过**。
+  实际后端检查确认 D3D11 / Microsoft Basic Render Driver / Cpu (WARP)。
+  artifact `14042859304` SHA256 `49946702df8b8dde520713e5fd67d8c96814092360b76b57780d88331764bb38`。
+- 覆盖 MCP 协议/服务/生命周期、Linux stdio bridge、文件选择/加载/拖入、ArduPilot
+  导入、主窗口 RHI、曲线/时间线、图例/标签、混合 dock、3D 模型缓存与需求变更 benchmark。
+  这是按用户要求的新增功能及潜在回归定向测试，不是全量测试。
+- 两端跨屏不同 DPI 用例因 runner 单屏未执行，单独保存在
+  `unverified-multi-screen-dpi.json`，不计入通过数。实体 GPU、Wayland、多屏和
+  新安装器/便携包/AppImage/DEB 的最终成品验收未覆盖。旧 native-kit 门禁不变。
+- 先前控制器问题记录保留：RHI 用例名称匹配错误、漏建独立 loader 测试目标、
+  benchmark 环境变量未开启。均在最终运行补齐，未通过删除断言或容忍失败解决。
+  Linux 依赖源 xz 5.4.5 下载超时/备用源401通过官方 GitHub 同版源预取解决，
+  SHA256 `da9dec6c12cf2ecf269c31ab65b5de18e8e52b96f35d5bcd08c12b43e6878803`，锁未变。
+- 本次仅正常合并稳定维护分支并保留历史，不创建发布、不改既有标签/资产/Latest，
+  不把源码版本标识改为新的正式版。SDK 测试夹具修复仍在独立 SDK 分支，宿主固定源不变。
