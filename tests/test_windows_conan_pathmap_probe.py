@@ -81,7 +81,7 @@ class FixtureTests(unittest.TestCase):
             folder=base/'fixture-objects'/label;folder.mkdir(parents=True)
             raw=obj(1 if label=='cache-a' else 2)
             for name in ('main.obj','source.obj'):(folder/name).write_bytes(raw)
-            return {'refs':['fixture/1.0#'+'a'*32],
+            return {'binaries':{'probe.dll':'same','probe.exe':'same'},'pe_inspections':{'probe.dll':{'forbidden_paths_found':[],'object_names_found':[]}},'refs':['fixture/1.0#'+'a'*32],
                     'output':['Z:/pj-conan-exact/path']*4 if enable else ['Z:/pj-conan/random']*4,
                     'objects':{name:probe.digest(folder/Path(name).name) for name in ('probe.dir/main.obj','probe.dir/source.obj')},
                     'build_folder':'D:/'+label+'/conan/p/b/'+label+'/b'}
@@ -96,6 +96,9 @@ class FixtureTests(unittest.TestCase):
             self.assertTrue(summary['different_cache_suffixes'])
             self.assertTrue(summary['negative_control_rejected'])
             self.assertFalse(summary['raw_objects_equal'])
+            self.assertTrue(summary['raw_pe_equal'])
+            self.assertTrue(summary['pe_privacy_clean'])
+            self.assertTrue((base/'pe-comparison.json').is_file())
             self.assertEqual(set(summary['completed']),set(calls))
             comparison=json.loads((base/'coff-comparison.json').read_text())
             self.assertFalse(comparison['probe.dir/main.obj']['equal'])

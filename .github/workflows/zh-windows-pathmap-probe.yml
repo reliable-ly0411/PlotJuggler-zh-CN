@@ -8,6 +8,8 @@ on:
       - scripts/hook_windows_conan_pathmap.py
       - scripts/probe_windows_conan_pathmap.py
       - scripts/coff_object_diagnostics.py
+      - scripts/pe_fixture_diagnostics.py
+      - tests/test_pe_fixture_diagnostics.py
       - tests/test_coff_object_diagnostics.py
       - tests/test_windows_conan_pathmap*.py
   workflow_dispatch:
@@ -42,6 +44,8 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           python tests/test_windows_conan_pathmap_hook.py -v
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python tests/test_pe_fixture_diagnostics.py -v
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           python tests/test_coff_object_diagnostics.py -v
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           python tests/test_windows_conan_pathmap_probe.py -v
@@ -61,5 +65,7 @@ jobs:
             ${{ runner.temp }}/pj-pathmap-probe-${{ github.run_id }}-${{ github.run_attempt }}/*.log
             ${{ runner.temp }}/pj-pathmap-probe-${{ github.run_id }}-${{ github.run_attempt }}/coff-comparison.json
             ${{ runner.temp }}/pj-pathmap-probe-${{ github.run_id }}-${{ github.run_attempt }}/fixture-objects/
+            ${{ runner.temp }}/pj-pathmap-probe-${{ github.run_id }}-${{ github.run_attempt }}/fixture-pe/
+            ${{ runner.temp }}/pj-pathmap-probe-${{ github.run_id }}-${{ github.run_attempt }}/pe-comparison.json
           if-no-files-found: warn
           retention-days: 14

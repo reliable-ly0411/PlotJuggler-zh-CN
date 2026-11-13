@@ -24,6 +24,7 @@ import shutil
 import subprocess
 import sys
 from coff_object_diagnostics import inspect_object, compare_objects
+from pe_fixture_diagnostics import inspect_pe
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -59,12 +60,14 @@ class Probe(ConanFile):
         Path(self.build_folder, "probe-flags.json").write_text(json.dumps(flags), encoding="utf-8")
     def build(self):
         cmake = CMake(self); cmake.configure(); cmake.build()
-        exes = list(Path(self.build_folder).glob("Release/probe.exe"))
+        exes = list(Path(self.build_folder).glob("Release/probe_driver.exe"))
         if len(exes) != 1: raise RuntimeError("missing unique probe executable")
         result = subprocess.run([str(exes[0])], capture_output=True, check=True)
         Path(self.build_folder, "probe-output.txt").write_bytes(result.stdout)
     def package(self):
         copy(self, "*.obj", self.build_folder, self.package_folder + "/objects")
+        copy(self, "*.dll", self.build_folder + "/Release", self.package_folder + "/pe")
+        copy(self, "*.exe", self.build_folder + "/Release", self.package_folder + "/pe")
         copy(self, "probe-output.txt", self.build_folder, self.package_folder)
         copy(self, "probe-flags.json", self.build_folder, self.package_folder)
 '''
@@ -72,7 +75,9 @@ CMAKE = '''cmake_minimum_required(VERSION 3.20)
 project(PJPathmapProbe LANGUAGES C CXX)
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated files")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/generated files/generated.h" "static const char* generated_path() { return __FILE__; }\\n")
-add_executable(probe "source files/main.cpp" "source files/源.c")
+add_library(probe SHARED "source files/main.cpp" "source files/源.c")
+add_executable(probe_driver "source files/driver.cpp")
+target_link_libraries(probe_driver PRIVATE probe)
 target_include_directories(probe PRIVATE "${DEP_INCLUDE}" "${CMAKE_CURRENT_BINARY_DIR}/generated files")
 target_compile_options(probe PRIVATE /FC /utf-8)
 set_target_properties(probe PROPERTIES CXX_STANDARD 17)
@@ -94,7 +99,7 @@ CPP = '''#include <cstdio>
 #include "dep.h"
 #include "generated.h"
 extern "C" const char* c_path(void);
-int main() {
+extern "C" __declspec(dllexport) void exported_paths() {
   std::puts(__FILE__); std::puts(c_path());
   std::puts(dep_path()); std::puts(generated_path());
 }
@@ -173,7 +178,31 @@ def one(label, base, dep, probe, enable, mode="baseline"):
     for language in ('tools.build:cflags','tools.build:cxxflags'):
         if enable and not any(x.startswith('/pathmap:') and '=Z:/pj-conan-exact/' in x for x in flags[language]):
             raise RuntimeError('hook flags missing in recipe generate()')
-    return {'refs':refs,'output':output,'objects':objects,
+    pe_evidence=base/'fixture-pe'/label
+    pe_evidence.mkdir(parents=True)
+    binaries={}
+    inspections={}
+    object_names=[]
+    for obj in evidence.glob('*.obj.json'):
+        # Exact S_OBJNAME strings are extracted without changing the object.
+        info=json.loads(obj.read_text(encoding='utf-8'))
+        def names(value):
+            if isinstance(value,dict):
+                for k,v in value.items():
+                    if k=='object_name' and isinstance(v,str) and v.lower().endswith('.obj'): object_names.append(v)
+                    else: names(v)
+            elif isinstance(value,list):
+                for v in value: names(v)
+        names(info)
+    if len(object_names)!=2: raise RuntimeError('missing two S_OBJNAME records for PE retention inspection')
+    for name in ('probe.dll','probe_driver.exe'):
+        path=package/'pe'/name
+        raw=path.read_bytes()
+        (pe_evidence/name).write_bytes(raw)
+        inspections[name]=inspect_pe(raw,forbidden=(str(base),str(cache),node['build_folder']),object_names=object_names)
+        binaries[name]=digest(path)
+    (pe_evidence/'manifest.json').write_text(json.dumps(inspections,indent=2),encoding='utf-8')
+    return {'binaries':binaries,'pe_inspections':inspections,'refs':refs,'output':output,'objects':objects,
             'package_id':node['package_id'],'build_folder':node['build_folder'],
             'flags':flags}
 
@@ -192,6 +221,7 @@ def main():
         (probe/'CMakeLists.txt').write_text(CMAKE, encoding='utf-8')
         source=probe/'source files';source.mkdir()
         (source/'main.cpp').write_text(CPP, encoding='utf-8')
+        (source/'driver.cpp').write_text('extern "C" __declspec(dllimport) void exported_paths();\nint main() { exported_paths(); }\n', encoding='utf-8')
         (source/'源.c').write_text('const char* c_path(void) { return __FILE__; }\n',encoding='utf-8')
         report['completed']={}
         a=one('cache-a',base,dep,probe,True,args.mode);report['completed']['cache-a']={'refs':a['refs'],'output':a['output'],'objects':a['objects']}
@@ -212,9 +242,16 @@ def main():
         report['raw_objects_equal']=a['objects']==b['objects']
         # Evaluate and retain the negative control even when byte equality fails.
         report['negative_control_rejected']=negative['output']!=a['output'] and not all(x.replace(chr(92),'/').startswith('Z:/pj-conan-exact/') for x in negative['output'])
+        report['raw_pe_equal']=a['binaries']==b['binaries']
+        report['pe_privacy_clean']=not any(v['forbidden_paths_found'] for v in a['pe_inspections'].values()) and not any(v['forbidden_paths_found'] for v in b['pe_inspections'].values())
+        report['pe_object_names_retained']={label:{name:v['object_names_found'] for name,v in item['pe_inspections'].items()} for label,item in (('cache-a',a),('cache-b',b),('root-only',negative))}
+        report['pe_section_equality']={name:{section['name']:section['sha256']==next((s['sha256'] for s in b['pe_inspections'][name].get('sections',[]) if s['name']==section['name']),None) for section in info.get('sections',[])} for name,info in a['pe_inspections'].items()}
+        (base/'pe-comparison.json').write_text(json.dumps({'cache-a':a['pe_inspections'],'cache-b':b['pe_inspections'],'root-only':negative['pe_inspections'],'raw_equal':report['raw_pe_equal']},indent=2),encoding='utf-8')
+        # Object mismatch remains a failure even if linked PE happens to match.
         if a['objects']!=b['objects']:raise RuntimeError('raw C/C++ object SHA256 differs across caches; see coff-comparison.json')
         if negative['output']==a['output'] or all(x.replace('\\','/').startswith('Z:/pj-conan-exact/') for x in negative['output']):
             raise RuntimeError('negative control did not detect disabled exact mappings')
+        if not report['raw_pe_equal'] or not report['pe_privacy_clean']:raise RuntimeError('linked PE equality/privacy failed')
         report.update(status='passed',refs=a['refs'],objects=a['objects'],runtime_paths=a['output'],
                       different_cache_suffixes=True,negative_control_rejected=True)
     except Exception as exc:
