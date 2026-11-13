@@ -15,6 +15,10 @@ permissions:
   contents: read
 jobs:
   isolated-probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [baseline, brepro, z7, zi-zf, object-pathmap]
     runs-on: windows-2022
     timeout-minutes: 20
     steps:
@@ -45,13 +49,13 @@ jobs:
       - name: Real MSVC dual-cache and negative-control probe
         shell: pwsh
         run: |
-          python scripts/probe_windows_conan_pathmap.py --work "$env:RUNNER_TEMP/pj-pathmap-probe-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          python scripts/probe_windows_conan_pathmap.py --mode "${{ matrix.mode }}" --work "$env:RUNNER_TEMP/pj-pathmap-probe-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Upload review-only fixture evidence, no product binaries
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: review-only-windows-pathmap-fixture-evidence
+          name: review-only-windows-pathmap-fixture-evidence-${{ matrix.mode }}
           path: |
             ${{ runner.temp }}/pj-pathmap-probe-${{ github.run_id }}-${{ github.run_attempt }}/summary.json
             ${{ runner.temp }}/pj-pathmap-probe-${{ github.run_id }}-${{ github.run_attempt }}/*.log

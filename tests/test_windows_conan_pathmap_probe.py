@@ -42,6 +42,22 @@ def generated_include(package_folder, build_folder):
 
 
 class FixtureTests(unittest.TestCase):
+    def test_ignored_compiler_option_invalidates_experiment(self):
+        with tempfile.TemporaryDirectory() as td:
+            result=SimpleNamespace(returncode=0,stdout=b'cl : warning D9002: ignoring unknown option',stderr=b'')
+            with patch.object(probe.subprocess,'run',return_value=result):
+                with self.assertRaisesRegex(RuntimeError,'ignored an unknown option'):
+                    probe.run(['cl','/unsupported'],{},Path(td),Path(td)/'log')
+
+    def test_diagnostic_modes_do_not_suppress_sections(self):
+        self.assertIn('PRIVATE /Zi /Zf',probe.CMAKE)
+        self.assertIn('PRIVATE /Z7',probe.CMAKE)
+        self.assertIn('PRIVATE /Brepro',probe.CMAKE)
+        self.assertIn('=Z:/pj-probe-objects/main.obj',probe.CMAKE)
+        self.assertIn('Unknown diagnostic mode',probe.CMAKE)
+        self.assertNotIn('/DEBUG:NONE',probe.CMAKE)
+        self.assertNotIn('objcopy',probe.CMAKE)
+
     def test_windows_backslashes_normalized_in_exported_recipe(self):
         with tempfile.TemporaryDirectory() as td:
             actual=generated_include(r'D:\a\_temp\cache\p\b\package\p',Path(td))
@@ -60,7 +76,7 @@ class FixtureTests(unittest.TestCase):
             section=b'.text\0\0\0'+struct.pack('<IIIIIIHHI',0,0,3,60,0,0,0,0,0x60000020)
             return header+section+b'abc'
         calls=[]
-        def fake_one(label,base,dep,recipe,enable):
+        def fake_one(label,base,dep,recipe,enable,mode):
             calls.append(label)
             folder=base/'fixture-objects'/label;folder.mkdir(parents=True)
             raw=obj(1 if label=='cache-a' else 2)

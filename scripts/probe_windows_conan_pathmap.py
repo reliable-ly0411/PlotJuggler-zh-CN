@@ -3,6 +3,17 @@
 
 Two positive cache roots plus a root-only negative control. Fail closed on any
 missing path, flag, object, runtime output, or repeatability evidence.
+
+Option boundaries (reviewed 2026-11-13):
+- /Zf is documented for PDB throughput and requires /Zi or /ZI, NOT a path
+  normalization contract: https://learn.microsoft.com/en-us/cpp/build/reference/zf
+- /Z7 and /Zi select debug storage, not object-name normalization:
+  https://learn.microsoft.com/en-us/cpp/build/reference/z7-zi-zi-debug-information-format
+- /Fo controls the actual output file; documentation does not promise remapping
+  S_OBJNAME: https://learn.microsoft.com/en-us/cpp/build/reference/fo-object-file-name
+- /Brepro and explicit object /pathmap are empirical boundary probes here, not
+  claims of documented MSVC S_OBJNAME support. Unknown-option warnings fail.
+No variant deletes sections, changes acceptance masks, or authorizes production.
 """
 import argparse
 import hashlib
@@ -42,6 +53,7 @@ class Probe(ConanFile):
         tc = CMakeToolchain(self)
         # CMake quoted strings interpret backslash escapes in Windows paths.
         tc.variables["DEP_INCLUDE"] = self.dependencies["pjpathmapdep"].package_folder.replace(chr(92), "/") + "/include"
+        tc.variables["PROBE_MODE"] = os.environ.get("PJ_PATHMAP_PROBE_MODE", "baseline")
         tc.generate()
         flags = {k: self.conf.get(k, check_type=list) for k in ("tools.build:cflags", "tools.build:cxxflags")}
         Path(self.build_folder, "probe-flags.json").write_text(json.dumps(flags), encoding="utf-8")
@@ -64,6 +76,19 @@ add_executable(probe "source files/main.cpp" "source files/源.c")
 target_include_directories(probe PRIVATE "${DEP_INCLUDE}" "${CMAKE_CURRENT_BINARY_DIR}/generated files")
 target_compile_options(probe PRIVATE /FC /utf-8)
 set_target_properties(probe PROPERTIES CXX_STANDARD 17)
+if(PROBE_MODE STREQUAL "brepro")
+  target_compile_options(probe PRIVATE /Brepro)
+elseif(PROBE_MODE STREQUAL "z7")
+  target_compile_options(probe PRIVATE /Z7)
+elseif(PROBE_MODE STREQUAL "zi-zf")
+  target_compile_options(probe PRIVATE /Zi /Zf)
+elseif(PROBE_MODE STREQUAL "object-pathmap")
+  target_compile_options(probe PRIVATE
+    "/pathmap:${CMAKE_CURRENT_BINARY_DIR}/probe.dir/Release/main.obj=Z:/pj-probe-objects/main.obj"
+    "/pathmap:${CMAKE_CURRENT_BINARY_DIR}/probe.dir/Release/源.obj=Z:/pj-probe-objects/source.obj")
+elseif(NOT PROBE_MODE STREQUAL "baseline")
+  message(FATAL_ERROR "Unknown diagnostic mode")
+endif()
 '''
 CPP = '''#include <cstdio>
 #include "dep.h"
@@ -84,6 +109,8 @@ def run(args, env, cwd, log):
     with log.open('ab') as f:
         f.write(('$ ' + ' '.join(str(a) for a in args) + '\n').encode('utf-8'))
         f.write(result.stdout); f.write(result.stderr)
+    if b'D9002' in result.stdout + result.stderr:
+        raise RuntimeError('MSVC ignored an unknown option; experiment is not valid')
     if result.returncode:
         raise RuntimeError(f'{args[0]} exited {result.returncode}; inspect {log.name}')
     return result.stdout
@@ -96,10 +123,11 @@ def export_ref(recipe, env, root, log):
     return ref
 
 
-def one(label, base, dep, probe, enable):
+def one(label, base, dep, probe, enable, mode="baseline"):
     folder=base/label;folder.mkdir()
     cache=folder/'conan';cache.mkdir()
     env=os.environ.copy();env['CONAN_HOME']=str(cache)
+    env['PJ_PATHMAP_PROBE_MODE']=mode
     log=base/f'{label}.log'
     run(['conan','profile','detect'],env,base,log)
     refs=[export_ref(dep,env,base,log),export_ref(probe,env,base,log)]
@@ -151,10 +179,12 @@ def one(label, base, dep, probe, enable):
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--work',type=Path,required=True);args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--work',type=Path,required=True)
+    p.add_argument('--mode',choices=('baseline','brepro','z7','zi-zf','object-pathmap'),default='baseline')
+    args=p.parse_args()
     if sys.platform!='win32':p.error('requires native Windows MSVC runner')
     base=args.work.resolve();base.mkdir(exist_ok=False)
-    report={'status':'failed','scope':'experimental fixture only; NOT product approval'}
+    report={'status':'failed','mode':args.mode,'scope':'experimental fixture only; NOT product approval'}
     try:
         dep=base/'dep';dep.mkdir();(dep/'conanfile.py').write_text(DEP_RECIPE, encoding='utf-8')
         (dep/'dep.h').write_text('static const char* dep_path() { return __FILE__; }\n', encoding='utf-8')
@@ -164,9 +194,9 @@ def main():
         (source/'main.cpp').write_text(CPP, encoding='utf-8')
         (source/'源.c').write_text('const char* c_path(void) { return __FILE__; }\n',encoding='utf-8')
         report['completed']={}
-        a=one('cache-a',base,dep,probe,True);report['completed']['cache-a']={'refs':a['refs'],'output':a['output'],'objects':a['objects']}
-        b=one('cache-b',base,dep,probe,True);report['completed']['cache-b']={'refs':b['refs'],'output':b['output'],'objects':b['objects']}
-        negative=one('root-only',base,dep,probe,False);report['completed']['root-only']={'refs':negative['refs'],'output':negative['output'],'objects':negative['objects']}
+        a=one('cache-a',base,dep,probe,True,args.mode);report['completed']['cache-a']={'refs':a['refs'],'output':a['output'],'objects':a['objects']}
+        b=one('cache-b',base,dep,probe,True,args.mode);report['completed']['cache-b']={'refs':b['refs'],'output':b['output'],'objects':b['objects']}
+        negative=one('root-only',base,dep,probe,False,args.mode);report['completed']['root-only']={'refs':negative['refs'],'output':negative['output'],'objects':negative['objects']}
         if a['refs']!=b['refs']:raise RuntimeError('fixture recipe revisions differ')
         # Comparing cache-relative folders proves more than using two root names.
         cache_suffix=lambda x: x['build_folder'].replace('\\','/').split('/conan/',1)[1]
