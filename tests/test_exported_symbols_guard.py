@@ -64,7 +64,8 @@ class ExportedSymbolsGuardTest(unittest.TestCase):
                 result = self.run_guard()
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn(name, result.stderr)
-                self.assertIn('exports non-C++ symbol(s)', result.stderr)
+                # CMake wraps diagnostics according to terminal/version formatting.
+                self.assertIn('exports non-C++ symbol(s)', ' '.join(result.stderr.split()))
 
     def test_crt_names_require_exact_data_types_and_no_suffix(self):
         for kind, name in CRT_SYMBOLS:

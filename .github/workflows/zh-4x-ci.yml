@@ -445,6 +445,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - name: Linux capture test dependencies
+        run: sudo apt-get update && sudo apt-get install -y xvfb xdotool x11-utils imagemagick
       - name: Branch, version, and translation guards
         env:
           SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
@@ -744,13 +746,46 @@ jobs:
           # Keep trailing Qt summaries in JUnit; CTest's 1 KiB default truncates
           # successful cases. The result gate still rejects truncated evidence.
           if [[ "$RUNNER_OS" == Windows ]]; then
-            # Widget runners choose offscreen themselves; leave GL runners on
-            # the native platform, matching upstream Windows CI.
-            ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
+            # Ordinary widget tests retain upstream's offscreen contract. The
+            # unlabelled main-window QRhi lifecycle suite needs its own real QPA.
+            window_suite='^pj_app_gui_tests\.MainWindowRhiWindowTest\.'
+            ctest --test-dir build --build-config RelWithDebInfo --show-only=json-v1 > build/native-test-list.json
+            status=0
+            env -u QT_QPA_PLATFORM ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 -LE qrhi -E "$window_suite" --output-junit "$PWD/build/native-headless.xml" || status=1
+            QT_QPA_PLATFORM=windows QSG_RHI_PREFER_SOFTWARE_RENDERER=1 PJ_REQUIRE_GPU_TESTS=1 ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 -L qrhi --output-junit "$PWD/build/native-qrhi.xml" || status=1
+            QT_QPA_PLATFORM=windows QSG_RHI_PREFER_SOFTWARE_RENDERER=1 PJ_REQUIRE_GPU_TESTS=1 ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 -LE qrhi -R "$window_suite" --output-junit "$PWD/build/native-window.xml" || status=1
+            # Supplemental native-platform regressions are separate from the
+            # unique full-suite count: both prior failures and all seven drops.
+            native_regressions='^(pj_dialog_host_tests\.WidgetBindingMarkdown\.RendersGitHubMarkdownUnicodeAndBlocksEmbeddedResources|pj_widgets_tests\.FileDialogStartFolderTest\.PersistedQtMemoryDropsLastVisitedAndDeadShortcuts|pj_app_gui_tests\.MainWindowFileDrop(Loading)?Test\..*)$'
+            QT_QPA_PLATFORM=windows ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 -R "$native_regressions" --output-junit "$PWD/build/native-widget-regressions.xml" || status=1
+            python scripts/ci/merge_ctest_reports.py --ctest-list build/native-test-list.json --output "$native_report" --native-regressions build/native-widget-regressions.xml build/native-headless.xml build/native-qrhi.xml build/native-window.xml || status=1
+            test "$status" -eq 0
           else
-            PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
+            QT_QPA_PLATFORM=xcb PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
           fi
           python -X utf8 packaging/localization/audit_feedback_results.py --junit "$native_report" --screenshots "$PJ_GUI_ACCEPTANCE_DIR" --allow-other-cases --output build/feedback-results.json
+      - name: Verify native window lifetime on X11 and Wayland
+        if: runner.os == 'Linux'
+        run: |
+          export PATH="$PWD/.qt/$PJ_QT_VERSION/gcc_64/bin:$PATH"
+          export PJ_REQUIRE_GPU_TESTS=1 PJ_GRAPHICS_API=opengl
+          suite='^pj_app_gui_tests\.MainWindowRhiWindowTest\.'
+          QT_QPA_PLATFORM=xcb xvfb-run -a ctest --test-dir build -R "$suite" \
+            --no-tests=error --output-on-failure --timeout 120 --output-junit "$PWD/build/rhi-window-xcb.xml"
+          export XDG_RUNTIME_DIR="$(mktemp -d)" WAYLAND_DISPLAY=pj4-window-tests
+          weston --backend=headless-backend.so --use-gl --shell=kiosk-shell.so \
+            --socket="$WAYLAND_DISPLAY" --idle-time=0 --no-config --width=1280 --height=800 \
+            >build/wayland-compositor.log 2>&1 &
+          weston_pid=$!
+          trap 'kill "$weston_pid" 2>/dev/null || true; wait "$weston_pid" 2>/dev/null || true; rm -rf "$XDG_RUNTIME_DIR"' EXIT
+          for attempt in $(seq 1 100); do
+            [[ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]] && break
+            kill -0 "$weston_pid" 2>/dev/null || { cat build/wayland-compositor.log; exit 1; }
+            sleep 0.1
+          done
+          [[ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]] || { cat build/wayland-compositor.log; exit 1; }
+          env -u DISPLAY QT_QPA_PLATFORM=wayland ctest --test-dir build -R "$suite" \
+            --no-tests=error --output-on-failure --timeout 120 --output-junit "$PWD/build/rhi-window-wayland.xml"
       - name: Retain test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -760,6 +795,13 @@ jobs:
             build-i18n/Testing/Temporary/
             build/Testing/Temporary/
             build/native-tests.xml
+            build/native-headless.xml
+            build/native-qrhi.xml
+            build/native-window.xml
+            build/native-widget-regressions.xml
+            build/native-test-list.json
+            build/rhi-window-*.xml
+            build/wayland-compositor.log
             build/rhi-window-*.xml
             build/feedback-tests.json
             build/feedback-selection.json

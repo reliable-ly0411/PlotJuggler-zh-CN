@@ -38,7 +38,7 @@ class BranchPolicyTest(unittest.TestCase):
 
 
     def test_new_upstream_workflows_do_not_enable_fork_publication(self):
-        for workflow in ['conda-release.yml', 'macos-ci.yml']:
+        for workflow in ['conda-release.yml', 'macos-ci.yml', 'macos-release.yml']:
             text = (ROOT / '.github/workflows' / workflow).read_text(encoding='utf-8')
             events = text.split('\non:', 1)[1].split('\n\n', 1)[0]
             self.assertIn('  workflow_dispatch:', events)
@@ -47,8 +47,13 @@ class BranchPolicyTest(unittest.TestCase):
             self.assertNotIn('  schedule:', events)
         conda = (ROOT / '.github/workflows/conda-release.yml').read_text(encoding='utf-8')
         self.assertIn("if: github.repository == 'PlotJuggler/PlotJuggler' && startsWith(github.ref, 'refs/tags/')", conda)
-        self.assertNotIn("publish-existing:", conda)
-        self.assertFalse((ROOT / ".github/workflows/macos-release.yml").exists())
+        self.assertIn("if: github.repository == 'PlotJuggler/PlotJuggler' && github.event_name == 'workflow_dispatch'", conda)
+
+        macos = (ROOT / '.github/workflows/macos-release.yml').read_text(encoding='utf-8')
+        self.assertIn("if: github.repository == 'PlotJuggler/PlotJuggler'", macos)
+        self.assertIn('contents: read', macos)
+        for forbidden in ('contents: write', 'gh release', 'action-gh-release'):
+            self.assertNotIn(forbidden, macos)
 
 
 if __name__ == "__main__":

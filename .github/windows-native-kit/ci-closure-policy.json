@@ -3027,7 +3027,7 @@
       }
     }
   ],
-  "verifier_sha256": "a1f95e34515a9479478cb5cdde5c5bc69adbfbd0e823fa69b16f6dff09212052",
+  "verifier_sha256": "5b6a4cee61446960d786b08319525ec9ebf9c61f17bb24a551a0b35f63172c8e",
   "reviewed_source_sha256": {
     "s/cmake/PjTests.cmake": "5dbc86dbd40aad8d5ce0fdf34c86293b4802419e129905452b451a4649a0b7dd",
     "s/cmake/test_mains/pj_gpu_test_gate.h": "5f76ca2d4ecf7f5543920d6970f624d3109b32482c2fee7fc2f390149231b5ef",
@@ -3640,5 +3640,7 @@
     "ucrtbase.dll": "https://learn.microsoft.com/en-us/cpp/windows/universal-crt-deployment",
     "user32.dll": "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowmodulefilenamew",
     "ws2_32.dll": "https://learn.microsoft.com/en-us/windows/win32/winsock/initializing-winsock"
-  }
+  },
+  "approval_status": "pending-modern-native-review",
+  "approval_scope_note": "Historical 4.1.0 release source pins and case reviews are retained only as reference. They do not authorize the Qt 6.12 / SDK 0.40 development tree. Native closure packaging and receipts remain blocked until independent source, dependency, native execution and license evidence are reviewed. Ordinary candidate compilation/tests are not acceptance evidence."
 }

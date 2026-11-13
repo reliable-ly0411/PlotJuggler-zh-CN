@@ -24,6 +24,8 @@ def collect(root, build, qt, licenses, download, windows=False):
     if re.findall(r'^QT_VERSION\s*=\s*(\S+)\s*$', qt_config, re.MULTILINE) != [host['qt_version']]:
         raise ValueError('Selected Qt SDK differs from versions.env pin')
     pin = json.loads((root / 'cmake/host-sdk-source.json').read_text(encoding='utf-8'))
+    if pin['version'] != host['sdk_version']:
+        raise ValueError('Reviewed host SDK source differs from conanfile pin')
     exact_sdk = [node['ref'].split('%', 1)[0] for node in graph.values()
                  if node.get('context') != 'build' and (node.get('ref') or '').startswith('plotjuggler_sdk/')]
     if exact_sdk != [f"plotjuggler_sdk/{pin['version']}#{pin['recipe_revision']}"]:

@@ -657,6 +657,14 @@ class CandidateReceiptTests(unittest.TestCase):
             self.execute()
         self.assertFalse((self.output / 'receipt.json').exists())
 
+    def test_pending_modern_policy_cannot_write_candidate_receipt(self):
+        policy = json.loads(self.policy_path.read_text(encoding="utf-8"))
+        policy['approval_status'] = 'pending-modern-native-review'
+        self.policy_path.write_text(json.dumps(policy), encoding="utf-8")
+        with self.assertRaisesRegex(closure.ClosureError, 'pending-modern-native-review'):
+            self.execute()
+        self.assertFalse((self.output / 'receipt.json').exists())
+
     def test_wrong_producer_root_does_not_write_receipt(self):
         report = json.loads(self.report.read_text(encoding='utf-8'))
         report['logical_root'] = self.logical.replace('\\n\\', '\\other\\n\\')
@@ -788,6 +796,9 @@ class QtArchiveNormalizationTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
         self.directory = Path(self.tmp.name) / 'archives'; self.directory.mkdir()
         self.policy = json.loads((ROOT / '.github/windows-native-kit/ci-closure-policy.json').read_text(encoding='utf-8'))
+        # This class tests the historical normalization mechanism using synthetic bytes,
+        # not the repository's pending development acceptance policy.
+        self.policy.pop('approval_status', None)
         self.aliases = self.policy['qt_archive_aliases']
         self.assertEqual(len(self.aliases), 8)
         for pin in self.policy['qt_archives']:
@@ -1624,6 +1635,35 @@ class QtExtractionTests(unittest.TestCase):
             with self.assertRaisesRegex(closure.ClosureError, 'license'): other.prepare()
         finally:
             other.doCleanups()
+
+
+class PendingModernPolicyTests(unittest.TestCase):
+    def test_repository_policy_is_pending_and_all_policy_apis_fail_before_work(self):
+        import inspect
+        policy = json.loads((ROOT / '.github/windows-native-kit/ci-closure-policy.json').read_text(encoding="utf-8"))
+        self.assertEqual(policy['approval_status'], 'pending-modern-native-review')
+        checked = []
+        for name, function in vars(closure).items():
+            if not inspect.isfunction(function) or function.__module__ != closure.__name__:
+                continue
+            signature = inspect.signature(function)
+            if 'policy' not in signature.parameters:
+                continue
+            arguments = {key: policy if key == 'policy' else None
+                         for key, parameter in signature.parameters.items()
+                         if parameter.default is inspect.Parameter.empty or key == 'policy'}
+            with self.subTest(entry=name), self.assertRaisesRegex(closure.ClosureError, 'pending-modern-native-review'):
+                function(**arguments)
+            checked.append(name)
+        self.assertIn('derive_partition', checked)
+        self.assertIn('verify_staged_inputs', checked)
+        self.assertIn('candidate_provenance', checked)
+        self.assertIn('prepare_qt_declarations', checked)
+
+    def test_unknown_approval_label_cannot_enable_the_policy(self):
+        for label in ('approved', 'reviewed', '', False):
+            with self.subTest(label=label), self.assertRaises(closure.ClosureError):
+                closure.require_reviewed_policy({'approval_status': label})
 
 
 if __name__ == '__main__': unittest.main()

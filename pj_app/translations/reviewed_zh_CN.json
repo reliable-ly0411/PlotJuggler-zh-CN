@@ -1,0 +1,835 @@
+{
+  "schema": 1,
+  "source_commit": "0113492d7a7f96e486de1f9adcde6e43893ab630",
+  "language": "zh_CN",
+  "entries": [
+    {
+      "context": "CurveListPanel",
+      "source": "Add custom topic",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "添加自定义话题"
+      ]
+    },
+    {
+      "context": "CurveListPanel",
+      "source": "Custom Topics",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "自定义话题"
+      ]
+    },
+    {
+      "context": "CurveListPanel",
+      "source": "Custom topics options",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "自定义话题选项"
+      ]
+    },
+    {
+      "context": "CurveListPanel",
+      "source": "Edit the selected custom topic",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "编辑选中的自定义话题"
+      ]
+    },
+    {
+      "context": "CustomWidgetConfigPanel",
+      "source": "Double-click a series to wire it.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "双击序列即可将其接入此输入。"
+      ]
+    },
+    {
+      "context": "DatasetMergeActions",
+      "source": "These object topics share a name but have incompatible types, formats or marker descriptions, so the datasets cannot be merged:",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "这些对象话题名称相同，但类型、格式或标记描述不兼容，因此无法合并数据集："
+      ]
+    },
+    {
+      "context": "DatasetMergeActions",
+      "source": "canonical %1",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "%1（规范格式）"
+      ]
+    },
+    {
+      "context": "LayoutXml",
+      "source": "Data source '%1' is a file on a local machine, which a web layout cannot open.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "数据源“%1”是本机文件，网络托管的布局无法打开。"
+      ]
+    },
+    {
+      "context": "LayoutXml",
+      "source": "The layout records its streaming sources more than once.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "布局中的流式数据源列表出现了多次。"
+      ]
+    },
+    {
+      "context": "LeftPanel",
+      "source": "Open cloud browser",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "浏览云端文件"
+      ]
+    },
+    {
+      "context": "LeftPanel",
+      "source": "Pause streaming",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "暂停接收数据流"
+      ]
+    },
+    {
+      "context": "LeftPanel",
+      "source": "Start streaming",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "开始接收数据流"
+      ]
+    },
+    {
+      "context": "LeftPanel",
+      "source": "Stream",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "数据流"
+      ]
+    },
+    {
+      "context": "LeftPanel",
+      "source": "Streaming buffer (seconds)",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "数据流缓冲（秒）"
+      ]
+    },
+    {
+      "context": "LeftPanel",
+      "source": "Streaming buffer length (seconds)",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "数据流缓冲时长（秒）"
+      ]
+    },
+    {
+      "context": "MarketplaceWindow",
+      "source": "Data Streamers",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "流数据插件"
+      ]
+    },
+    {
+      "context": "MarketplaceWindow",
+      "source": "Extensions that stream data continuously",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "用于持续接收数据流的扩展"
+      ]
+    },
+    {
+      "context": "PJ::CurveListPanel",
+      "source": "Edit the selected custom topic",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "编辑选中的自定义话题"
+      ]
+    },
+    {
+      "context": "PJ::CurveListPanel",
+      "source": "Force topic streaming",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "强制接收话题数据流"
+      ]
+    },
+    {
+      "context": "PJ::CurveListPanel",
+      "source": "Not subscribed. Drop it into a view to start streaming.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "尚未订阅。拖入视图即可开始接收数据流。"
+      ]
+    },
+    {
+      "context": "PJ::CurveListPanel",
+      "source": "Refresh derived",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "刷新派生标记"
+      ]
+    },
+    {
+      "context": "PJ::CurveListPanel",
+      "source": "Stop forced streaming",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "停止强制接收数据流"
+      ]
+    },
+    {
+      "context": "PJ::CustomWidgetConfigPanel",
+      "source": "Double-click a series to wire it.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "双击序列即可将其接入此输入。"
+      ]
+    },
+    {
+      "context": "PJ::DatasetInfoDialog",
+      "source": "Descriptor",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "描述符"
+      ]
+    },
+    {
+      "context": "PJ::DockWidget",
+      "source": "\"%1\" cannot be displayed on its own, but a plugin panel can read it.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "“%1”无法单独显示，但插件面板可以读取它。"
+      ]
+    },
+    {
+      "context": "PJ::DockWidget",
+      "source": "%1 topics cannot be displayed on their own, but a plugin panel can read them.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "%1 个话题无法单独显示，但插件面板可以读取它们。"
+      ]
+    },
+    {
+      "context": "PJ::ExtensionManager",
+      "source": "Not available for this platform (%1)",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "不适用于此平台（%1）"
+      ]
+    },
+    {
+      "context": "PJ::FileLoader",
+      "source": "Could not load '%1': %2",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "无法加载“%1”：%2"
+      ]
+    },
+    {
+      "context": "PJ::FileLoader",
+      "source": "Import discarded",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "已放弃导入"
+      ]
+    },
+    {
+      "context": "PJ::FileLoader",
+      "source": "Plugin '%1': the saved configuration is not a JSON object and cannot be replayed.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "插件“%1”：已保存的配置不是 JSON 对象，无法重新应用。"
+      ]
+    },
+    {
+      "context": "PJ::ImageLayer",
+      "source": "Undistort the image using its matching CameraInfo. Turn off to show the raw image,\nfor example when the stream is already rectified.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "使用匹配的 CameraInfo 对图像进行畸变校正。关闭此选项可显示原始图像，\n例如当数据流已经过校正时。"
+      ]
+    },
+    {
+      "context": "PJ::LayoutImportBatch",
+      "source": "Provider '%1' refused the import descriptor for '%2'%3",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "提供方“%1”拒绝了“%2”的导入描述符%3"
+      ]
+    },
+    {
+      "context": "PJ::LayoutImportBatch",
+      "source": "descriptor refused by provider",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "提供方拒绝了描述符"
+      ]
+    },
+    {
+      "context": "PJ::LeftPanel",
+      "source": "Pause streaming",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "暂停接收数据流"
+      ]
+    },
+    {
+      "context": "PJ::LeftPanel",
+      "source": "Resume streaming",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "恢复接收数据流"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "%n scene layer(s) could not be rebound and were omitted.",
+      "comment": "",
+      "numerus": true,
+      "translations": [
+        "%n 个场景图层无法重新绑定，已跳过。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "%n source(s) write decoded samples directly and are not recorded: %1",
+      "comment": "",
+      "numerus": true,
+      "translations": [
+        "%n 个数据源直接写入解码后的样本，未参与录制：%1"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "'%1' cannot be deleted: '%2' of %3 reads its output",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "无法删除“%1”：%3 的“%2”正在读取其输出"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "'%1' cannot be deleted: the protected '%2' reads its output",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "无法删除“%1”：受保护的“%2”正在读取其输出"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "'%1' cannot be loaded: %2",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "无法加载“%1”：%2"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "'%1' could not be downloaded: %2",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "无法下载“%1”：%2"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "'%1' has no owner and cannot be deleted from here",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "“%1”没有所有者，无法在此删除"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "'%1' was created by %2 and cannot be deleted from here",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "“%1”由 %2 创建，无法在此删除"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Data source '%1' could not be downloaded: %2",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "无法下载数据源“%1”：%2"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Data source '%1' is not the file its layout was saved with (its content fingerprint differs).",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "数据源“%1”不是保存布局时所用的文件（内容指纹不同）。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Data source '%1' records a malformed content fingerprint.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "数据源“%1”记录的内容指纹格式错误。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Delete derived topic?",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "删除派生话题？"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Failed to publish the source-promotion service for '%1': %2",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "无法为“%1”发布数据源转换服务：%2"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Layout '%1' records %n streaming source(s); the desktop loader does not start them.",
+      "comment": "",
+      "numerus": true,
+      "translations": [
+        "布局“%1”包含 %n 个流式数据源；桌面加载器不会启动它们。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Nothing to record: %n active source(s) write decoded samples directly, which cannot be recorded.",
+      "comment": "",
+      "numerus": true,
+      "translations": [
+        "没有可录制的内容：%n 个活动数据源直接写入解码后的样本，无法录制。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Nothing to record: start a streaming source first.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "没有可录制的内容：请先启动一个流式数据源。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Select '%1' to replay this layout (selected '%2').",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "请选择“%1”以重新载入此布局（当前选择的是“%2”）。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Show point in plot",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "显示光标处数据点的数值"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Start Streaming",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "开始接收数据流"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Sticks",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "针状线"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Stream '%1' cannot start: %2",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "数据流“%1”无法启动：%2"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Stream '%1' could not start: %2",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "数据流“%1”未能启动：%2"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Streaming",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "数据流"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "The layout's data sources exceed the %1 MiB a downloaded layout may load.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "布局的数据源总大小超过了下载布局允许加载的上限（%1 MiB）。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "These derived topics read what you are deleting. They stay, but report a missing input:\n\n• %1",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "以下派生话题读取了将要删除的内容。它们会保留，但会报告缺少输入：\n\n• %1"
+      ]
+    },
+    {
+      "context": "PJ::PlotWidget",
+      "source": "%1 vs %2",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "%1 vs %2"
+      ]
+    },
+    {
+      "context": "PJ::PreferencesDialog",
+      "source": "per plot",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "按图表"
+      ]
+    },
+    {
+      "context": "PJ::PresetController",
+      "source": "Preset '%1' cannot be opened: this page's preset list is invalid.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "无法打开预设“%1”：此页面的预设列表无效。"
+      ]
+    },
+    {
+      "context": "PJ::PresetController",
+      "source": "This page has no preset named '%1'.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "此页面没有名为“%1”的预设。"
+      ]
+    },
+    {
+      "context": "PJ::Scene3DConfigPanel",
+      "source": "Line grid",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "线条网格"
+      ]
+    },
+    {
+      "context": "PJ::Scene3DConfigPanel",
+      "source": "Meshes opacity",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "模型网格不透明度"
+      ]
+    },
+    {
+      "context": "PJ::Scene3DConfigPanel",
+      "source": "Show/hide visual meshes",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "显示或隐藏外观模型网格"
+      ]
+    },
+    {
+      "context": "PJ::Scene3DConfigPanel",
+      "source": "Topic",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "话题"
+      ]
+    },
+    {
+      "context": "PJ::Scene3DConfigPanel",
+      "source": "Topics",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "话题"
+      ]
+    },
+    {
+      "context": "PJ::Scene3DDockWidget",
+      "source": "Only depth-encoded images can be displayed in a 3D view. Use a 2D view for colour images.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "三维视图只能显示深度编码图像。彩色图像请使用二维视图。"
+      ]
+    },
+    {
+      "context": "PJ::SceneDockWidget",
+      "source": "This view shows dataset %1; a topic from dataset %2 cannot be added to it.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "此视图显示数据集 %1；无法向其中添加数据集 %2 的话题。"
+      ]
+    },
+    {
+      "context": "PJ::SourcePromotionHost",
+      "source": "promoted",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "已转为文件数据源"
+      ]
+    },
+    {
+      "context": "PJ::StreamingSourceManager",
+      "source": "No stream source selected.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "未选择流式数据源。"
+      ]
+    },
+    {
+      "context": "PJ::StreamingSourceManager",
+      "source": "Plugin '%1' refused the saved configuration: %2",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "插件“%1”拒绝了已保存的配置：%2"
+      ]
+    },
+    {
+      "context": "PJ::StreamingSourceManager",
+      "source": "Stream plugin '%1' is not installed.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "未安装流数据插件“%1”。"
+      ]
+    },
+    {
+      "context": "PJ::Timeline",
+      "source": "Streaming: pause playback to interact with the timeline",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "正在接收数据流：暂停回放后可操作时间轴"
+      ]
+    },
+    {
+      "context": "PJ::VisualizationPlaceholderWidget",
+      "source": "State Transitions",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "状态转换"
+      ]
+    },
+    {
+      "context": "PreferencesContent",
+      "source": "Automatic re-runs a changed marker rule on its own, at the reload rate below. Manual only flags it as needing a refresh, reachable from the dataset's \"Refresh derived\" action.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "自动模式按下方的重新加载频率自动重新运行已更改的标记规则。手动模式仅将其标记为需要刷新，可通过数据集的“刷新派生标记”操作进行刷新。"
+      ]
+    },
+    {
+      "context": "PreferencesContent",
+      "source": "Every Record press creates one folder here holding one standard MCAP file per recorded source. Recordings capture the raw messages of the topics each stream is subscribed to; sources that write decoded samples directly (no message format) are not recorded.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "每次点击录制都会在此创建一个文件夹，为每个参与录制的数据源保存一个标准 MCAP 文件。录制内容为各数据流已订阅话题的原始消息；直接写入解码后样本的数据源（无消息格式）不会参与录制。"
+      ]
+    },
+    {
+      "context": "PreferencesContent",
+      "source": "Rescale a plot's vertical axis to fit its curves whenever a curve is added or removed (the shared time axis is left unchanged).",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "添加或移除曲线时，自动调整图表纵轴以适应曲线范围（共享时间轴保持不变）。"
+      ]
+    },
+    {
+      "context": "QObject",
+      "source": "Camera calibration topic, used automatically by 2D and 3D views. It cannot be displayed on its own, but a plugin panel can read it.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "相机标定话题，由二维和三维视图自动使用。无法单独显示，但插件面板可以读取。"
+      ]
+    },
+    {
+      "context": "QObject",
+      "source": "SceneEntities conversion failed: %1",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "SceneEntities 转换失败：%1"
+      ]
+    },
+    {
+      "context": "QObject",
+      "source": "SceneEntities decode received no snapshot",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "SceneEntities 解码未收到快照"
+      ]
+    },
+    {
+      "context": "QObject",
+      "source": "computed at %1 s",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "在 %1 秒处计算"
+      ]
+    },
+    {
+      "context": "QObject",
+      "source": "start",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "起始"
+      ]
+    },
+    {
+      "context": "SourceConfigVariables",
+      "source": "The source configuration uses %1, which is not a deployment variable this PlotJuggler knows.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "数据源配置使用了 %1，但当前版本的 PlotJuggler 无法识别该部署变量。"
+      ]
+    },
+    {
+      "context": "pj::scene3d::OccupancyGridLayer",
+      "source": "Occupancy updates in this seek window exceed the %1 MiB limit",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "此跳转时间窗口内的占据栅格更新超出 %1 MiB 上限"
+      ]
+    },
+    {
+      "context": "pj::scene3d::PosesInFrameLayer",
+      "source": "Override color:",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "自定义颜色："
+      ]
+    },
+    {
+      "context": "pj::scene3d::RobotModelLayer",
+      "source": "Topic",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "话题"
+      ]
+    },
+    {
+      "context": "pj::scene3d::RobotModelLayer",
+      "source": "Visual",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "视觉模型"
+      ]
+    },
+    {
+      "context": "pj::scene3d::SceneEntitiesLayer",
+      "source": "Override color:",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "自定义颜色："
+      ]
+    },
+    {
+      "context": "pj::scene3d::SceneViewWidget",
+      "source": "A scene pipeline has no HDR variant on this GPU",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "此 GPU 上某个场景管线没有 HDR 变体"
+      ]
+    }
+  ]
+}

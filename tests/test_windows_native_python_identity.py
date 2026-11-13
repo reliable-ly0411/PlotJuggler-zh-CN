@@ -81,11 +81,20 @@ class PythonIdentityTests(unittest.TestCase):
             {'selector': 'locked-cpython', 'artifact': 'stdlib-encodings', 'role': 'data'},
             {'selector': 'locked-cpython', 'artifact': 'stdlib-os', 'role': 'data'},
         ])
+        pending = policy.get('approval_status') == 'pending-modern-native-review'
+        if pending:
+            spec = importlib.util.spec_from_file_location('identity_closure', ROOT / 'scripts/windows/verify_native_ci_closure.py')
+            closure = importlib.util.module_from_spec(spec); spec.loader.exec_module(closure)
+            with self.assertRaisesRegex(closure.ClosureError, 'pending-modern-native-review'):
+                closure.require_reviewed_policy(policy)
         for source in ('pj_scripting/CMakeLists.txt', 'pj_scripting/tests/python_runtime_identity_win_test.cpp'):
             self.assertIn('s/' + source, rule['source_files'])
             # Git checkouts may use CRLF, but reviewed pins describe repository bytes.
             content = (ROOT / source).read_bytes().replace(b'\r\n', b'\n')
-            self.assertEqual(policy['reviewed_source_sha256']['s/' + source], hashlib.sha256(content).hexdigest())
+            if not pending:
+                self.assertEqual(policy['reviewed_source_sha256']['s/' + source], hashlib.sha256(content).hexdigest())
+            else:
+                self.assertRegex(policy['reviewed_source_sha256']['s/' + source], r'^[0-9a-f]{64}$')
 
     def test_driver_receipt_rejects_wrong_pid_version_modules_or_manifest(self):
         with tempfile.TemporaryDirectory() as directory:

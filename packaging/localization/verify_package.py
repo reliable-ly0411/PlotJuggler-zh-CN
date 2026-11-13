@@ -495,7 +495,12 @@ def x11_call(tools, name, *args, empty_ok=False):
 
 
 def x11_window_geometry(text):
-    """Parse measured X11 client bounds, including its real border pixels."""
+    """Parse xwininfo outer origin and client size, retaining all border pixels.
+
+    xwininfo translates (-border_width, -border_width) to root coordinates
+    before printing Absolute upper-left. Do not subtract the border again.
+    Width/Height still exclude the border on both sides.
+    """
     def number(label):
         found = re.findall(r'^\s*' + re.escape(label) + r':\s*(-?\d+)\s*$', text, re.M)
         if len(found) != 1:
@@ -510,7 +515,7 @@ def x11_window_geometry(text):
     if (len(states) != 1 or states[0] not in {'IsViewable', 'IsUnMapped', 'IsUnviewable'} or
             len(classes) != 1 or classes[0] not in {'InputOutput', 'InputOnly'}):
         raise ValueError('unknown X11 visibility or window class')
-    return {'frame': checked_rectangle((x-border, y-border, x+width+border, y+height+border)),
+    return {'frame': checked_rectangle((x, y, x+width+2*border, y+height+2*border)),
             'visible': states[0] == 'IsViewable', 'input_output': classes[0] == 'InputOutput', 'border': border}
 
 

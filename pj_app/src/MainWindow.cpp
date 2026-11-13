@@ -15,6 +15,10 @@
 #include <QCloseEvent>
 #include <QColor>
 #include <QCoreApplication>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
+#include <QMimeData>
 
 #include "MainWindow.h"
 #include "pj_widgets/ExternalUrl.h"
@@ -42,6 +46,7 @@
 #include <QPointer>
 #include <QPushButton>
 #include <QResizeEvent>
+#include <QRhiWidget>
 #include <QSaveFile>
 #include <QScopedValueRollback>
 #include <QScreen>
@@ -125,6 +130,8 @@
 #include "TitleBar.h"
 #include "ToolboxHostWiring.h"
 #include "TopicDemandController.h"
+#include "mcp/McpBrowserLink.h"
+#include "mcp/McpServer.h"
 #ifdef PJ_TARGET_WASM
 #include "WelcomePresetsDialog.h"
 #endif
@@ -158,6 +165,7 @@
 #endif
 #include "pj_plotting/PlotMarkersItem.h"
 #include "pj_plotting/PlotWidget.h"
+#include "pj_plotting/PlotWidgetBase.h"
 #include "pj_plotting/StateTransitionsDockWidget.h"
 #ifdef PJ_WASM_ENABLE_INGRESS_PROBE
 #include "pj_plotting/XYCurveDialog.h"
@@ -220,6 +228,7 @@
 #include "pj_widgets/FileDialog.h"
 #include "pj_widgets/FlowLayout.h"
 #include "pj_widgets/FrameworkTokens.h"
+#include "pj_widgets/GraphicsApi.h"
 #include "pj_widgets/IngestProgressWidget.h"
 #include "pj_widgets/MessageBox.h"
 #ifndef PJ_TARGET_WASM
@@ -690,6 +699,23 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
   }
 #endif
 #endif
+  // Composite through QRhi from the first show. Otherwise the first plot's
+  // QRhiWidget switches the window from raster, and Qt destroys and recreates
+  // its native window (on Wayland the window flashes). Hidden, it never
+  // renders. Not in the browser: a WebGL context created before the first file
+  // pick can be lost across the picker round trip
+  // (pj_scene2D/docs/TECHNICAL_NOTES.md).
+#ifndef PJ_TARGET_WASM
+  if (PlotWidgetBase::gpuCanvasEnabled()) {
+    auto* rhi_compositing_anchor = new QRhiWidget(this);
+    rhi_compositing_anchor->setApi(preferredGraphicsApi());
+    rhi_compositing_anchor->hide();
+  }
+  // Files dropped anywhere load like a Load Data pick (dragEnterEvent). Not in
+  // the browser, whose drops carry no local paths.
+  setAcceptDrops(true);
+#endif
+  FileDialog::setUseSystemDialog(QSettings().value(kSystemFileDialogKey, false).toBool());
   // Pull saved icon metrics before setupUi so the literals we feed into
   // build*Toolbar() pick up the correct values on first paint. Widgets
   // that auto-construct from the .ui still draw at their default sizes
@@ -1058,6 +1084,8 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
   ui_->curveListPanel->setCatalog(&session_->catalogModel());
   ui_->curveListPanel->setTopicDemandTracker(&session_->topicDemandTracker());
   ui_->curveListPanel->setTopicDemandController(topic_demand_controller_.get());
+  // The curve list marks what the selected widget shows; onDockFocused re-schedules it.
+  ui_->curveListPanel->setDisplayedScope([this]() -> const QWidget* { return activeFocusedDock(); });
 
   // Wire the progressive ingest controller to the SessionManager and curve list
   // panel through the one shared seam (IngestProgressWiring).
@@ -1743,18 +1771,16 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
             .workspace = capturePortableWorkspace(replaced_id, incoming), .path = incoming, .ticket = ticket};
       });
   connect(file_loader_.get(), &FileLoader::fileLoaded, this, &MainWindow::onFileLoaded);
-  // A reload disables the Reload button until completion (reloadSource); only
-  // onFileLoaded re-enables it, so a FAILED load would leave it stuck disabled.
-  connect(file_loader_.get(), &FileLoader::fileLoadFailed, this, [this](const QString&, const QString&) {
-    ui_->leftPanel->setReloadEnabled(session_->sessionManager().lastLoadedSource().has_value());
-  });
+  // loadFinished is the one terminal every accepted request reaches, including
+  // the exits fileLoadFailed stays silent on (a rejected config dialog, a queued
+  // cancel, shutdown), so a reload can never leave the Reload button disabled.
+  // It is queued, so onFileLoaded has already recorded a successful load.
+  connect(file_loader_.get(), &FileLoader::loadFinished, this, &MainWindow::refreshReloadEnabled);
   // Disarm a replacement snapshot whose load did not commit. Bound to
-  // loadFinished, not the legacy signals: it is the one terminal every accepted
-  // request reaches, including the exits fileLoadFailed stays silent on (a
-  // rejected config dialog, a queued cancel, shutdown). The snapshot describes
-  // the datasets that are still loaded — the load rolled back — so leaving it
-  // armed would let a LATER successful load of the same path rebind the
-  // workspace onto an obsolete picture of it. Ticket equality, NOT a path
+  // loadFinished, not the legacy signals, for the same reason. The snapshot
+  // describes the datasets that are still loaded — the load rolled back — so
+  // leaving it armed would let a LATER successful load of the same path rebind
+  // the workspace onto an obsolete picture of it. Ticket equality, NOT a path
   // match: loadFinished is queued, so a stale same-path terminal from another
   // load (a cancelled queued duplicate, a failed predecessor) could otherwise
   // disarm a live load's capture and silently skip its workspace rebind.
@@ -2009,12 +2035,26 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
   // function-pointer connect rejects a slot whose arity exceeds the signal's.
   connect(ui_->tabbedPlotWidget, &TabbedPlotWidget::undoableChange, this, [this] { onUndoableChange(); });
 
-  // Apply the persisted "align starts" frame before the toolbar is built so its
-  // button seeds from the live SessionManager state. Default OFF: datasets show at
-  // their natural relative times so the Source Timeline reveals their offsets and
-  // the user aligns them (manually, or via this toggle). No data yet, so this is a
-  // no-op at startup; toggling it later bulk-writes each dataset's offset.
+  // Apply the persisted "align starts" frame, then seed its toggle (bottom-left of
+  // the playback strip, buttonTimeOffset) from the live SessionManager state.
+  // Default OFF: datasets show at their natural relative times so the Source
+  // Timeline reveals their offsets and the user aligns them (manually, or via this
+  // toggle). No data yet, so this is a no-op at startup; toggling it later
+  // bulk-writes each dataset's offset.
   session_->sessionManager().setUseTimeOffset(QSettings().value(u"MainWindow.useTimeOffset"_s, false).toBool());
+  ui_->timelineWidget->setUseTimeOffset(session_->sessionManager().useTimeOffset());
+  connect(ui_->timelineWidget, &TimelineWidget::useTimeOffsetToggled, this, [this](bool checked) {
+    QSettings().setValue(u"MainWindow.useTimeOffset"_s, checked);
+    onUseTimeOffsetToggled(checked);
+  });
+
+  // Date-time toggle (bottom-left of the playback strip).
+  ui_->timelineWidget->setUseDateTime(QSettings().value(kDateTimeDisplayKey, false).toBool());
+  connect(ui_->timelineWidget, &TimelineWidget::useDateTimeToggled, this, [this](bool checked) {
+    QSettings().setValue(kDateTimeDisplayKey, checked);
+    applyTimeLabelFormat();
+  });
+  applyTimeLabelFormat();
 
   // Global column on the right of the plot area — Chart + Legend icons,
   // pinned at 24 px wide, never collapses. Always visible regardless of
@@ -2402,6 +2442,9 @@ MainWindow::~MainWindow() {
   // and engines are all still alive: a floating window is a QObject child,
   // and left to the base-class child sweep it would die after the members.
   teardownAllToolboxes();
+  // The MCP server goes right after the toolboxes, whose endpoints revoked their tokens as they
+  // went: no plugin is left to start it again, and its agent sessions point into the services below.
+  mcp_server_.reset();
   // Whatever takeover remains is not a toolbox (marketplace, filter editor),
   // but its PanelEngine is a QObject child of this window — the base-class
   // child sweep would destroy it only AFTER the members (incl. session_) are
@@ -2428,6 +2471,10 @@ MainWindow::~MainWindow() {
   // the engine — guarantees no late signal dereferences a dead pointer.
   ui_->timelineWidget->setPlaybackEngine(nullptr);
   ui_->curveListPanel->setCatalog(nullptr);
+  // The loader is a member, so it dies after this body, and its destructor
+  // delivers queued terminals synchronously (loadFinished); the slots behind
+  // them touch the widgets, so stop listening before the widgets go.
+  file_loader_->disconnect(this);
   delete ui_;
 }
 
@@ -2618,8 +2665,13 @@ std::optional<QDomDocument> MainWindow::browserSourceLayoutDocument(QString& err
       error = tr("A browser source has no usable filename.");
       return std::nullopt;
     }
-    if (record.content_sha256.isEmpty()) {
-      error = tr("A browser source no longer has its staged content fingerprint.");
+    // The live fingerprint, not the record's (taken when the load finished): a picked file is fingerprinted while it
+    // loads, and loses its fingerprint when a read of it fails.
+    const QString content_sha256 = file_loader_->browserContentSha256(source.identity);
+    if (content_sha256.isEmpty()) {
+      error = tr("'%1' has no content fingerprint yet: it is still being computed, or the file changed since it was "
+                 "picked. Save the layout again in a moment, or open the file again.")
+                  .arg(basename);
       return std::nullopt;
     }
     // Preserve W9c.2's compact one-source document. Multi-source documents use
@@ -2632,7 +2684,7 @@ std::optional<QDomDocument> MainWindow::browserSourceLayoutDocument(QString& err
     QDomElement file_info = doc.createElement(u"fileInfo"_s);
     file_info.setAttribute(u"filename"_s, logical_path);
     file_info.setAttribute(u"prefix"_s, record.prefix);
-    file_info.setAttribute(u"content_sha256"_s, record.content_sha256);
+    file_info.setAttribute(u"content_sha256"_s, content_sha256);
     for (std::size_t dataset_index = 0; dataset_index < record.datasets.size(); ++dataset_index) {
       const BrowserLayoutRuntime::DatasetShape& shape = record.datasets[dataset_index];
       logical_path_for_dataset.insert(shape.dataset_id, logical_path);
@@ -3012,7 +3064,7 @@ void MainWindow::onOpenMarketplace() {
       PreferencesDialog prefs(*theme_, this);
       prefs.setChromeMetrics(chrome_metrics_);
       bindRecordingPreferences(prefs);
-      bindDerivedBatchPreferences(prefs);
+      bindPlottingPreferences(prefs);
       prefs.showPage(PreferencesDialog::kPluginsPage);
       prefs.exec();
     });
@@ -3089,23 +3141,43 @@ void MainWindow::onReloadDataRequested() {
   reloadSource(src->path, src->plugin_id, src->plugin_config_json);
 }
 
-void MainWindow::reloadSource(const QString& path, const QString& plugin_id, const QString& plugin_config_json) {
-  // Prevent re-entry; success re-enables via onFileLoaded.
+LoadRequestId MainWindow::reloadSource(
+    const QString& path, const QString& plugin_id, const QString& plugin_config_json,
+    std::optional<DialogPolicy> policy, std::function<bool()> still_allowed) {
+  // Prevent re-entry; every terminal re-enables via loadFinished.
   ui_->leftPanel->setReloadEnabled(false);
   LoadHints hints{
       .expected_manifest_id = QString(),  // interactive reload: the display name is the recorded identity
       .expected_plugin_id = plugin_id,
       .preset_config_json = plugin_config_json,
-      .dialog_policy = !plugin_id.isEmpty() && !plugin_config_json.isEmpty() ? DialogPolicy::kPreferPreset
-                                                                             : DialogPolicy::kInteractive,
+      .dialog_policy = policy.value_or(
+          !plugin_id.isEmpty() && !plugin_config_json.isEmpty() ? DialogPolicy::kPreferPreset
+                                                                : DialogPolicy::kInteractive),
+      .still_allowed = std::move(still_allowed),
   };
-  file_loader_->loadFile(path, this, hints);
+  const LoadRequestId request = file_loader_->loadFileTicketed(LoadInput::fromNativePath(path), this, hints);
+  if (request == 0) {
+    refreshReloadEnabled();  // refused outright: no ticket, so no loadFinished
+  }
+  return request;
+}
+
+void MainWindow::refreshReloadEnabled() {
+  // Browser uploads deliberately are not recorded as reloadable paths: their
+  // logical identity is not a host path and the browser must grant a fresh file
+  // selection gesture. Do not leave a button enabled that can only no-op.
+  ui_->leftPanel->setReloadEnabled(session_->sessionManager().lastLoadedSource().has_value());
 }
 
 void MainWindow::onReloadDatasetRequested(DatasetId dataset_id) {
+  reloadDataset(dataset_id);
+}
+
+LoadRequestId MainWindow::reloadDataset(
+    DatasetId dataset_id, std::optional<DialogPolicy> policy, std::function<bool()> still_allowed) {
   const QString path = file_loader_->sourcePathForDataset(dataset_id);
   if (path.isEmpty()) {
-    return;  // not file-backed; the menu item should have been disabled
+    return 0;  // not file-backed; the menu item should have been disabled
   }
   // Recover the plugin + config recorded when THIS path was loaded (not just the
   // most recent load) so a multi-file session reloads each source with its own
@@ -3115,10 +3187,10 @@ void MainWindow::onReloadDatasetRequested(DatasetId dataset_id) {
     return FileLoader::sameSourceIdentity(src.path, path);
   });
   if (recorded != sources.end()) {
-    reloadSource(recorded->path, recorded->plugin_id, recorded->plugin_config_json);
-  } else {
-    reloadSource(path, QString(), QString());
+    return reloadSource(
+        recorded->path, recorded->plugin_id, recorded->plugin_config_json, policy, std::move(still_allowed));
   }
+  return reloadSource(path, QString(), QString(), policy, std::move(still_allowed));
 }
 
 void MainWindow::onReplaceDatasetRequested(DatasetId dataset_id) {
@@ -3308,17 +3380,14 @@ void MainWindow::onFileLoaded(
   // already was (e.g. 0) would otherwise leave the value column blank until the
   // first scrub. Mirrors PJ3's update2ndColumnValues-after-load.
   broadcastTrackerTime(toAxisDouble(session_->playbackEngine().currentTime()));
-  // Browser uploads deliberately are not recorded as reloadable paths: their
-  // logical identity is not a host path and the browser must grant a fresh file
-  // selection gesture. Do not leave a button enabled that can only no-op.
-  ui_->leftPanel->setReloadEnabled(session_->sessionManager().lastLoadedSource().has_value());
 #ifdef PJ_TARGET_WASM
   updateBrowserLayoutActions();
 #endif
 }
 
 void MainWindow::confirmAndRemoveDependentTransforms(
-    const std::vector<TopicId>& removed_topics, std::function<void()> proceed, std::function<bool()> still_allowed) {
+    const std::vector<TopicId>& removed_topics, std::function<void()> proceed, std::function<bool()> still_allowed,
+    std::function<void()> cancelled) {
   auto& dp = session_->sessionManager().dataProcessorService();
   const std::vector<TopicId> outputs = dp.dependentProcessorOutputs(removed_topics);
   if (outputs.empty()) {
@@ -3349,11 +3418,12 @@ void MainWindow::confirmAndRemoveDependentTransforms(
           .arg(names.join(u"\n• "_s)),
       {{tr("Delete"), MessageBox::kDestructiveRole}, {tr("Cancel"), MessageBox::kCancelRole}},
       [this, removed_topics, dependent_curve_keys, proceed = std::move(proceed),
-       still_allowed = std::move(still_allowed)](int choice, bool) {
-        if (choice != 0) {
-          return;  // user cancelled — leave everything intact
-        }
-        if (still_allowed && !still_allowed()) {
+       still_allowed = std::move(still_allowed), cancelled = std::move(cancelled)](int choice, bool) {
+        // Cancelled by the user, or its caller lost the right to act: leave everything intact.
+        if (choice != 0 || (still_allowed && !still_allowed())) {
+          if (cancelled) {
+            cancelled();
+          }
           return;
         }
         for (const QString& key : dependent_curve_keys) {
@@ -3364,6 +3434,9 @@ void MainWindow::confirmAndRemoveDependentTransforms(
           emitDiagnostic(
               DiagnosticLevel::kError, "Processors", "dependent-remove-failed",
               QString::fromStdString(removed.error()));
+          if (cancelled) {
+            cancelled();
+          }
           return;
         }
         session_->catalogModel().rebuildFromDatastore();
@@ -3531,21 +3604,23 @@ void MainWindow::onRemoveDatasetsRequested(const QList<DatasetId>& dataset_ids) 
           const std::vector<TopicId> dataset_topics = session_->sessionManager().dataEngine().listTopics(dataset_id);
           removed_topics.insert(removed_topics.end(), dataset_topics.begin(), dataset_topics.end());
         }
-        confirmAndRemoveDependentTransforms(removed_topics, [this, dataset_ids]() {
-          for (const DatasetId id : dataset_ids) {
-            removeDatasetData(id);
-          }
-          // A confirmed removal changes the data universe under the playhead, so
-          // halt playback and shrink the range to the survivors (or reset to empty
-          // when none remain) — unless a live stream is active, where the slider
-          // stays scoped to the tip and follow-live keeps running. Reset undo once.
-          if (active_streaming_dataset_id_ == 0) {
-            session_->playbackEngine().pause();
-            session_->seedPlaybackFromSession();
-          }
-          resetUndoHistory();
-        });
+        confirmAndRemoveDependentTransforms(removed_topics, [this, dataset_ids]() { removeDatasets(dataset_ids); });
       });
+}
+
+void MainWindow::removeDatasets(const QList<DatasetId>& dataset_ids) {
+  for (const DatasetId id : dataset_ids) {
+    removeDatasetData(id);
+  }
+  // A removal changes the data universe under the playhead, so halt playback and
+  // shrink the range to the survivors (or reset to empty when none remain) —
+  // unless a live stream is active, where the slider stays scoped to the tip and
+  // follow-live keeps running. Reset undo once.
+  if (active_streaming_dataset_id_ == 0) {
+    session_->playbackEngine().pause();
+    session_->seedPlaybackFromSession();
+  }
+  resetUndoHistory();
 }
 
 void MainWindow::onMergeDatasetsRequested(const QList<DatasetId>& dataset_ids) {
@@ -3579,13 +3654,13 @@ void MainWindow::onShowPreferencesDialog() {
   dlg->setAttribute(Qt::WA_DeleteOnClose);
   dlg->setChromeMetrics(chrome_metrics_);
   bindRecordingPreferences(*dlg);
-  bindDerivedBatchPreferences(*dlg);
+  bindPlottingPreferences(*dlg);
   dlg->open();
 #else
   PreferencesDialog dlg(*theme_, this);
   dlg.setChromeMetrics(chrome_metrics_);
   bindRecordingPreferences(dlg);
-  bindDerivedBatchPreferences(dlg);
+  bindPlottingPreferences(dlg);
   dlg.exec();
 #endif
 }
@@ -3720,8 +3795,9 @@ void MainWindow::pushSeriesStatus(PlotWidget* only) {
   }
 }
 
-void MainWindow::bindDerivedBatchPreferences(PreferencesDialog& dialog) {
+void MainWindow::bindPlottingPreferences(PreferencesDialog& dialog) {
   connect(&dialog, &PreferencesDialog::derivedBatchSettingsChanged, this, &MainWindow::applyDerivedBatchPreferences);
+  connect(&dialog, &PreferencesDialog::timeLabelSettingsChanged, this, &MainWindow::applyTimeLabelFormat);
 }
 
 void MainWindow::onShowAboutDialog() {
@@ -3873,6 +3949,44 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
   if (toast_manager_) {
     toast_manager_->updatePosition();
   }
+}
+
+// Copy must be offered: Qt falls back to Move if asked to select an unavailable Copy.
+void MainWindow::dragEnterEvent(QDragEnterEvent* event) {
+  if (!event->possibleActions().testFlag(Qt::CopyAction) || event->mimeData() == nullptr ||
+      FileLoader::droppedFilePaths(*event->mimeData()).isEmpty()) {
+    event->ignore();
+    return;
+  }
+  event->setDropAction(Qt::CopyAction);
+  event->accept();
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent* event) {
+  if (!event->possibleActions().testFlag(Qt::CopyAction) || event->mimeData() == nullptr ||
+      FileLoader::droppedFilePaths(*event->mimeData()).isEmpty()) {
+    event->ignore();
+    return;
+  }
+  event->setDropAction(Qt::CopyAction);
+  event->accept();
+}
+
+void MainWindow::dropEvent(QDropEvent* event) {
+  if (!event->possibleActions().testFlag(Qt::CopyAction) || event->mimeData() == nullptr) {
+    event->ignore();
+    return;
+  }
+  const QStringList paths = FileLoader::droppedFilePaths(*event->mimeData());
+  if (paths.isEmpty()) {
+    event->ignore();
+    return;
+  }
+  event->setDropAction(Qt::CopyAction);
+  event->accept();
+  // Load after the drop returns: the file manager waits inside the OS drag
+  // loop until then, and a load can open dialogs.
+  QTimer::singleShot(0, this, [this, paths] { file_loader_->loadFiles(paths, this); });
 }
 
 void MainWindow::paintEvent(QPaintEvent* event) {
@@ -4347,6 +4461,7 @@ void MainWindow::applyGlobalToggles(PlotWidget* plot) {
   plot->setKeepRatioXY(keep_ratio_);
   applyLegendStatus(plot);
   plot->setTrackerParameter(tracker_info_);
+  plot->setTimeLabelFormat(time_label_format_);
 }
 
 void MainWindow::applyShowPointsToDock(DockWidget* dock) {
@@ -4514,6 +4629,17 @@ void MainWindow::broadcastReferenceLine() {
   forEachPlot([ref_sec](PlotWidget* plot) { plot->setReferenceLine(ref_sec); });
   if (source_timeline_controller_ != nullptr) {
     source_timeline_controller_->setReferenceLine(ref_sec);
+  }
+}
+
+void MainWindow::applyTimeLabelFormat() {
+  const QSettings settings;
+  time_label_format_ =
+      clockFormatFor(settings.value(kDateTimeDisplayKey, false).toBool(), settings.value(kClockUtcKey, false).toBool());
+  forEachPlot([this](PlotWidget* plot) { plot->setTimeLabelFormat(time_label_format_); });
+  ui_->timelineWidget->setTimeLabelFormat(time_label_format_);
+  if (source_timeline_ != nullptr) {
+    source_timeline_->setAbsoluteClockFormat(time_label_format_);
   }
 }
 
@@ -4952,6 +5078,13 @@ void MainWindow::closeEvent(QCloseEvent* event) {
   // Remember the left-panel width (the whole splitter layout) so the next launch
   // restores it instead of falling back to the narrow .ui default.
   settings.setValue(u"MainWindow.mainSplitterState"_s, ui_->mainSplitter->saveState());
+#ifndef PJ_TARGET_WASM
+  // Restored by main() before the first show. The blob records the screen, so the
+  // window reopens on the monitor it closed on where the platform lets an app place
+  // its windows; a Wayland compositor picks the screen itself and only the size and
+  // maximized state come back.
+  settings.setValue(u"MainWindow.geometry"_s, saveGeometry());
+#endif
   QMainWindow::closeEvent(event);
 }
 
@@ -6653,6 +6786,11 @@ void MainWindow::startBrowserPresets(const QUrl& page_url) {
         connect(this, &MainWindow::layoutUrlLoadFinished, presets_dialog_, &WelcomePresetsDialog::layoutLoadFinished);
         connect(this, &MainWindow::layoutUrlLoadProgress, presets_dialog_, &WelcomePresetsDialog::layoutLoadProgress);
         ui_->actionPresets->setVisible(true);
+        // A page an agent opened (?mcp=) is the agent's to set up: an application-modal welcome
+        // would hold every mutating tool until the user closed it. File → Presets still opens it.
+        if (mcp_relay_link_ != nullptr && deep_link.isEmpty() && deep_link_error.isEmpty()) {
+          return;
+        }
         presets_dialog_->show();
         if (!deep_link_error.isEmpty()) {
           presets_dialog_->showError(deep_link_error);
@@ -9305,6 +9443,7 @@ DockWidget* MainWindow::activeFocusedDock() const {
 
 void MainWindow::onDockFocused(DockWidget* dock) {
   bindEditorToPlot(dock != nullptr ? dock->plotWidget() : nullptr);
+  ui_->curveListPanel->scheduleDisplayedKeysRefresh();
 
   // Placeholder docks (3-icon picker) and unknown widget kinds fall
   // through to the empty page — "nothing to configure" is the honest
@@ -9462,11 +9601,6 @@ void MainWindow::buildGlobalToolbar() {
   button_reference_point_ = add_button(
       "buttonReferencePoint", ":/resources/svg/reference_line.svg",
       QT_TR_NOOP("Drop a blue reference line at the playback position; values render as delta from there"));
-  button_t0_ = add_button(
-      "buttonTimeOffset", ":/resources/svg/t0.svg",
-      QT_TR_NOOP(
-          "Use time offset: show time relative to each dataset's start (axis begins at 0) instead of "
-          "absolute time"));
   auto make_checkable = [](QToolButton* btn, bool initial_checked) {
     btn->setCheckable(true);
     btn->setChecked(initial_checked);
@@ -9477,9 +9611,6 @@ void MainWindow::buildGlobalToolbar() {
   make_checkable(button_ratio_, keep_ratio_);
   make_checkable(button_dots_, dots_);
   make_checkable(button_reference_point_, false);
-  // Mirrors the frame the SessionManager already holds (applied from QSettings
-  // at startup, before this runs).
-  make_checkable(button_t0_, session_->sessionManager().useTimeOffset());
   // buttonZoomOut is a one-shot action, not a toggle — no make_checkable.
   connect(button_zoom_out_, &QToolButton::clicked, this, [this]() {
     linkedZoomOut();
@@ -9542,13 +9673,6 @@ void MainWindow::buildGlobalToolbar() {
     // Push to the plots and mirror it onto the Source Timeline's blue reference
     // needle (the controller bridges the playback frame into the Timeline frame).
     broadcastReferenceLine();
-  });
-  connect(button_t0_, &QToolButton::toggled, this, [this](bool checked) {
-    if (applying_state_) {
-      return;
-    }
-    QSettings().setValue(u"MainWindow.useTimeOffset"_s, checked);
-    onUseTimeOffsetToggled(checked);
   });
 
   // Trailing stretch pins the icon stack at the top of the column.
@@ -10200,6 +10324,9 @@ struct ToolboxPanelSession {
   std::unique_ptr<PlaybackControlHost> playback_host;
   std::unique_ptr<ViewportRuntimeHost> viewport_host;
   std::unique_ptr<PlotTabsRuntimeHost> plot_tabs_host;
+#ifndef PJ_TARGET_WASM
+  std::unique_ptr<McpEndpointHost> mcp_endpoint;
+#endif
   std::shared_ptr<ToolboxHandle> handle;
 
   // Teardown order is load-bearing, so make it explicit here rather than relying
@@ -10224,6 +10351,11 @@ struct ToolboxPanelSession {
       promotion_host->shutdown();
     }
     handle.reset();
+#ifndef PJ_TARGET_WASM
+    // Revokes the plugin's MCP token, held or not (the plugin may have released it from its
+    // destructor just now): its queued tool results point into the services below.
+    mcp_endpoint.reset();
+#endif
     promotion_host.reset();
     builder.reset();        // drops the service views into host + the routed bridges first
     derived_hosts.reset();  // ends this plugin's previews; its persistent recipes live on in the engines
@@ -10531,8 +10663,99 @@ std::shared_ptr<ToolboxPanelSession> MainWindow::buildToolboxPanelSession(
   // What this PlotJuggler offers ("pj.feature_catalog.v1"): one window-wide,
   // read-only host shared by every session; optional, so a failure only warns.
   registerOptionalService<sdk::FeatureCatalogService>(*session->builder, feature_catalog_->view());
+  // A private endpoint on this window's MCP server ("pj.mcp_endpoint.v1") for an agent the plugin
+  // launches: its tools run as this plugin, against these services.
+  session->mcp_endpoint =
+      std::make_unique<McpEndpointHost>([this] { return ensureMcpServer(); }, session->builder->view(), plugin_id);
+  registerOptionalService<sdk::McpEndpointHostService>(*session->builder, session->mcp_endpoint->raw());
 #endif
   return session;
+}
+
+std::shared_ptr<ToolboxPanelSession> MainWindow::buildAgentSession(const QString& owner, const QString& label) {
+  RuntimeToolboxPlugin stand_in;  // no library: nothing is loaded, only the services are built
+  stand_in.id = owner.toStdString();
+  stand_in.name = label.toStdString();
+  return buildToolboxPanelSession(stand_in, owner, label, [this](const QString&, const QString& error) {
+    emitDiagnostic(DiagnosticLevel::kError, "MCP", "agent-services", error);
+  });
+}
+
+PJ_service_registry_t MainWindow::toolboxSessionServices(ToolboxPanelSession& session) {
+  return session.builder->view();
+}
+
+McpServer* MainWindow::ensureMcpServer() {
+  if (mcp_server_ != nullptr) {
+    return mcp_server_.get();
+  }
+  auto server = std::make_unique<McpServer>(*this);
+#ifndef PJ_TARGET_WASM
+  if (!server->listening()) {
+    // Every acquire retries (one per Assistant turn): one report until a start succeeds.
+    if (!std::exchange(mcp_listen_failure_reported_, true)) {
+      emitDiagnostic(
+          DiagnosticLevel::kError, "MCP", "listen-failed",
+          tr("The MCP server could not listen on 127.0.0.1, so AI agents cannot reach PlotJuggler."));
+    }
+    return nullptr;
+  }
+#endif
+  mcp_listen_failure_reported_ = false;
+  connect(server.get(), &McpServer::activeClientChanged, this, [this](const QString& client) {
+    if (mcp_client_label_ == nullptr) {
+      mcp_client_label_ = new QLabel(this);
+      mcp_client_label_->setTextFormat(Qt::PlainText);
+      statusBar()->addPermanentWidget(mcp_client_label_);
+    }
+    mcp_client_label_->setText(tr("AI agent: %1").arg(client));
+#ifdef PJ_TARGET_WASM
+    mcp_client_label_->setToolTip(
+        tr("%1 is controlling PlotJuggler through MCP. Closing the agent's session or this page stops it.")
+            .arg(client));
+#else
+    mcp_client_label_->setToolTip(
+        tr("%1 is controlling PlotJuggler through MCP. Turn this off in Preferences → Appearance.").arg(client));
+#endif
+    // Only the label: the bar also carries other messages (undo failures).
+    mcp_client_label_->setVisible(!client.isEmpty());
+  });
+  mcp_server_ = std::move(server);
+  return mcp_server_.get();
+}
+
+void MainWindow::openMcpPublicAccess() {
+  if (McpServer* server = ensureMcpServer(); server != nullptr) {
+    server->openPublicAccess();
+  }
+}
+
+void MainWindow::closeMcpPublicAccess() {
+  if (mcp_server_ != nullptr) {
+    mcp_server_->closePublicAccess();
+  }
+}
+
+bool MainWindow::mcpPublicAccess() const {
+  return mcp_server_ != nullptr && mcp_server_->publicAccess();
+}
+
+bool MainWindow::connectMcpRelay(const QUrl& relay) {
+  if (!McpBrowserLink::acceptableRelay(relay)) {
+    emitDiagnostic(
+        DiagnosticLevel::kError, "MCP", "relay-refused",
+        tr("Not connecting to the AI agent relay %1: it must be an http address on this computer (127.0.0.1).")
+            .arg(relay.toDisplayString(QUrl::RemoveQuery)));
+    return false;
+  }
+  McpServer* server = ensureMcpServer();
+  if (server == nullptr) {
+    return false;
+  }
+  server->openPublicAccess();
+  delete mcp_relay_link_.data();
+  mcp_relay_link_ = new McpBrowserLink(*server, relay, windowTitle(), server);
+  return true;
 }
 
 void MainWindow::launchToolbox(

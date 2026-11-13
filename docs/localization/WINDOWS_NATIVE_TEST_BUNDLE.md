@@ -7,6 +7,25 @@ should publish or transfer a test kit until those gates have been implemented
 and checked against the exact new source tree. Existing release assets and
 release permissions are not changed.
 
+## Development-line review status
+
+The active closure policy is **pending-modern-native-review**. The imported
+4.1.0 source hashes and case reviews are historical references, not approval of
+the Qt 6.12 / SDK 0.40 development sources. Do not refresh those hashes merely to
+make a source-contract test pass. The verifier rejects pending policies before
+closure derivation, Qt proof preparation or candidate/acceptance receipts; the
+stage packager also refuses them. Historical case entries remain non-executable
+review references while this status is present.
+
+Ordinary application compilation and test runners remain available. Dedicated
+native-kit preparation stops at the policy gate and therefore cannot claim a
+complete native closure or produce an approved distributable test kit. Passing
+Python unit tests of this refusal is not a Windows test result. Re-enabling the
+kit requires explicit review of modern source/dependency/fixture changes,
+fresh Linux and Windows execution evidence, and complete license provenance;
+changing the status label to an approval-looking word is deliberately rejected.
+Historical releases and their policies are not rewritten.
+
 ## Build and identity
 
 Build on a Windows MSVC runner at the exact absolute path that will later be

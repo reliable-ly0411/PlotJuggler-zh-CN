@@ -60,7 +60,7 @@
     {
       "id": "datasets_tree",
       "name": "Datasets panel",
-      "summary": "Every loaded file or stream is a dataset, listed with its topics and fields as a tree. The filter box searches by name, three buttons show or hide plot series, 2D image topics and 3D scene topics, and right-clicking a dataset offers Info, Merge, Reload, Replace and Remove.",
+      "summary": "Every loaded file or stream is a dataset, listed with its topics and fields as a tree. The filter box searches by name, three buttons show or hide plot series, 2D image topics and 3D scene topics, and right-clicking a dataset offers Info, Merge, Reload, Replace and Remove. The series and topics the selected plot or view shows are written in semi-bold italic, together with the groups that contain them.",
       "entry_point": "Datasets panel → Filter... box; right-click a dataset for its options",
       "evidence": "pj_app/src/ui/CurveListPanel.ui#labelTimeseries; pj_widgets/src/Search.cpp#tr(\"Filter...\"); pj_app/src/ui/CurveListPanel.cpp#tr(\"Info\")",
       "verified": "2026-10-21 in-app on release-4.1 e275111c: the Filter... box, the three show/hide buttons and the dataset right-click menu"
@@ -98,6 +98,14 @@
       "verified": "2026-10-21 in-app on release-4.1 e275111c: Start/Stop player, Loop, Rate and Step size in the bottom bar"
     },
     {
+      "id": "clock_time",
+      "name": "Clock time display",
+      "summary": "Show times as a clock instead of seconds. Plot time axes show the time of day (HH:mm:ss, no date) with ticks on whole seconds, minutes or hours; the playback readout adds the date; the source timeline labels follow. Times relative to a start (the time-offset button beside it, or datasets aligned to 0) read as elapsed time from 0:00:00, without the date. Clock times use the local time zone, or UTC when chosen in Preferences.",
+      "entry_point": "Bottom bar: the clock button left of the time readout (Show time as clock time (HH:mm:ss) instead of seconds); File → Preferences... → Plotting → Clock time zone:",
+      "evidence": "pj_app/src/ui/TimelineWidget.ui#buttonUseDateTime; pj_app/src/PreferencesDialog.ui#Clock time zone:; pj_plotting/widget/src/PlotScaleDraw.cpp#PlotTimeScaleEngine::divideScale",
+      "verified": "PlotScaleDrawTest (clock-aligned ticks, axis swap, XY fallback) and TimeFormat tests"
+    },
+    {
       "id": "source_timeline",
       "name": "Source timeline: align and merge datasets",
       "summary": "Shows each dataset as a bar on a shared time axis. Dragging a bar shifts that dataset in time, Align lines up the starts of all datasets, and merging combines the selected datasets into one.",
@@ -124,10 +132,10 @@
     {
       "id": "plot_tabs",
       "name": "Plot tabs, splits and XY plots",
-      "summary": "Organise plots in tabs and split a plot area into several. Drag series from the Datasets panel onto a plot to show them. An XY plot draws one series against another.",
-      "entry_point": "+ on the tab bar adds a tab; plot area toolbar (shown when you hover the top edge of a plot): Split horizontally / Split vertically / Fullscreen; XY plot: drag two series from the Datasets panel with the right mouse button onto an empty plot",
-      "evidence": "pj_plotting/widget/src/TabbedPlotWidget.cpp#onAddTabButtonPressed; pj_plotting/widget/src/DockToolbar.ui#Split horizontally; pj_plotting/widget/src/DockWidget.cpp#onCatalogItemsXyRequested",
-      "verified": "2026-10-21 in-app on release-4.1 e275111c: the + tab button and the hover toolbar; the XY right-drag not automated"
+      "summary": "Organise plots in tabs and split a plot area into several. Drag series from the Datasets panel onto a plot to show them. An XY plot draws one series against another. Right-click a tab to duplicate it, with its layout, curves and styles; duplicating a tab an AI agent or extension drew makes a copy that is yours, which the agent can no longer change.",
+      "entry_point": "+ on the tab bar adds a tab; right-click a tab: Duplicate tab; plot area toolbar (shown when you hover the top edge of a plot): Split horizontally / Split vertically / Fullscreen; XY plot: drag two series from the Datasets panel with the right mouse button onto an empty plot",
+      "evidence": "pj_plotting/widget/src/TabbedPlotWidget.cpp#onAddTabButtonPressed; pj_plotting/widget/src/TabbedPlotWidget.cpp#Duplicate tab; pj_plotting/widget/src/DockToolbar.ui#Split horizontally; pj_plotting/widget/src/DockWidget.cpp#onCatalogItemsXyRequested",
+      "verified": "2026-10-21 in-app on release-4.1 e275111c: the + tab button and the hover toolbar; the XY right-drag not automated. 2026-11-09 in-app (Xvfb) on feat/duplicate-tab: Duplicate tab, its undo and redo"
     },
     {
       "id": "preferences",
@@ -152,6 +160,14 @@
       "entry_point": "Help → Check for Updates...; startup check: File → Preferences... → Appearance → Check for updates on startup:",
       "evidence": "pj_app/src/MainWindow.cpp#tr(\"Check for Updates...\"); pj_app/src/PreferencesDialog.ui#Check for updates on startup:; pj_app/src/TitleBar.ui#UPDATE; pj_app/src/main.cpp#Preferences::check_updates_on_startup",
       "verified": "2026-10-21 in-app on release-4.1 e275111c: Help → Check for Updates... and the startup check on the Appearance page"
+    },
+    {
+      "id": "mcp_server",
+      "name": "AI agent control (MCP server)",
+      "summary": "Let AI agents such as Claude Code or Codex control PlotJuggler over the Model Context Protocol: open files, read and export series, create derived series and markers, and draw in their own tabs, never the user's. On by default and can be turned off in Preferences; it serves this computer only, behind a secret token. Agents connect through plotjuggler4 --mcp-bridge (stdio). The status bar names an agent while it is active.",
+      "entry_point": "File → Preferences... → Appearance → Let AI agents control PlotJuggler (MCP server):; for one run: plotjuggler4 --mcp",
+      "evidence": "pj_app/src/PreferencesDialog.ui#Let AI agents control PlotJuggler (MCP server):; pj_app/src/main.cpp#mcp_option; pj_app/src/mcp/McpBridge.cpp#int runBridge",
+      "verified": "McpBridgeTest (stdio bridge against an offscreen instance) and McpServerTest; in-app check pending"
     },
     {
       "id": "axis_wheel_zoom",

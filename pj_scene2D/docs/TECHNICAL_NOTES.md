@@ -113,13 +113,18 @@ each backend of the platform (and at the OpenGL 3.3 floor in Linux CI). A genera
 A top-level first shown with no `QRhiWidget` gets a raster backing store. When a
 `QRhiWidget` joins it later (a media or Scene3D dock added to a window whose
 plots use the raster canvas), Qt switches the window to QRhi composition (found on 6.11.1, confirmed on 6.12.0),
-on desktop and in the browser; no zero-size bootstrap widget is needed. Qt only
-does this when the `QRhiWidget` is reparented into the window
+on desktop and in the browser, by destroying and recreating the window's native
+window. Qt only does this when the `QRhiWidget` is reparented into the window
 (`QWidgetPrivate::setParent`), and a `QRhiWidget` constructed with its parent is
 not one yet when `QWidget`'s constructor sets that parent, so the window stays
 raster (`QRhiWidget: No QRhi`). Every `QRhiWidget` is therefore constructed
 parentless and then inserted (`MediaViewerWidget`, `PlotRhiCanvas`,
-`SceneViewWidget`). `rhi_mixed_dock_test` covers both paths:
+`SceneViewWidget`). On desktop `MainWindow` avoids the recreation (a visible
+flash on Wayland) by owning a hidden `QRhiWidget` from construction, so the
+window composites through QRhi from its first show; that one may take its parent
+at construction, because the first show picks the composition from the widgets
+already in the hierarchy. The browser build has none (see below).
+`rhi_mixed_dock_test` covers both paths:
 `RhiMixedLateDockFixture` (GPU docks added after a raster-only first show) and
 `RhiScene2DInPlaceTest` (a Scene2D dock built in place inside the shown window,
 as the app's dock factory does, with no other GPU widget to switch it).
@@ -295,7 +300,7 @@ presentation order (PTS)**, and the pipeline must keep the two straight:
 - **Feed in DTS order, serve by PTS**: `serveForward` feeds packets in store
   (DTS) order but sets `pkt->pts` to the real PTS, so `AVFrame::pts` comes back in
   presentation order. `StreamingVideoDecoder` keeps a **presentation index**
-  (`pts_to_dts_`, built during the keyframe scan); `decodeAt(T)` resolves the
+  (built during the keyframe scan); `decodeAt(T)` resolves the
   frame to show as the greatest PTS ≤ T, then seeks/feeds in decode order. Serving
   is in PTS space (`ready_frames_`, `last_served_ts_`).
 - Without this, B-frame video plays back in decode order — frames jitter ("vibrate")
@@ -561,7 +566,7 @@ stuttering. Solution: cache `last_frame_` and return it immediately when
 **Forward decode must survive keyframe eviction.** In live mode, the
 original keyframe gets evicted while the decoder continues forward.
 The decoder state is still valid — it just needs new packets. The forward
-path must not require the keyframe index (`keyframe_timestamps_` may be
+path must not require the keyframe index (it may be
 empty) or the original keyframe entry (may be evicted). Only backward
 seeks require a keyframe still in the store.
 
@@ -587,10 +592,12 @@ more packets on subsequent calls.
 containers with B-frames, use DTS (always monotonic) as the ObjectStore
 timestamp, not PTS (non-monotonic). FFmpeg's decoder expects packets in decode
 order and handles reordering internally — `AVFrame::pts` on the output gives
-the correct presentation timestamp. For production streaming (per VideoFrame
-spec), B-frames are disallowed, so PTS == DTS and this is a non-issue.
+the correct presentation timestamp. The same holds for every VideoFrame
+producer, not only MP4: the VideoFrame spec allows B-frames, the store key is
+the DTS and `VideoFrame.timestamp_ns` is the PTS (see "B-Frame Support").
+Without B-frames PTS == DTS.
 
-**ObjectStore indices shift after eviction.** A cached `last_decoded_index_`
+**ObjectStore indices shift after eviction.** A cached entry index
 becomes stale after eviction removes entries from the front. Always
 re-derive the index via `indexAt(last_decoded_ts_)` instead of caching it.
 
@@ -764,10 +771,9 @@ metadata deferral.
 ## 10. MediaSource Pattern
 
 The `MediaSource` interface is the uniform frame-delivery contract
-between decoder backends and `MediaViewerWidget`. It replaces the
-originally-planned `PlaybackController` (which would have been a
-monolithic orchestrator conflicting with the streaming decode path's
-self-contained threading).
+between decoder backends and `MediaViewerWidget`. A single
+monolithic orchestrator was rejected because it conflicts with the
+streaming decode path's self-contained threading.
 
 **Interface:**
 ```cpp

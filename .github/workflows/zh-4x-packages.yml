@@ -3,7 +3,7 @@ name: Chinese 4.x candidate packages
 on:
   push:
     # Explicit candidate entries; only branch creation runs native jobs.
-    branches: ['zh-CN-4.x-ci/release-candidate-4-1-0-zh-1', 'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r2', 'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r3', 'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r4', 'zh-CN-4.x-ci/release-candidate-4-1-0-zh-1-r5']
+    branches: ['zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/release-candidate-rc2-final8', 'zh-CN-4.x-ci/release-candidate-rc3-final1']
   workflow_dispatch:
 
 permissions:
@@ -54,9 +54,6 @@ jobs:
           python -m unittest discover -s .github/release_policy -p 'test_*.py' -v
           python tests/check_translations_4x.py --catalog-only
           python tests/check_localization_provenance.py
-      - name: Verify locked Linux packaging assets before dependencies
-        if: runner.os == 'Linux'
-        run: python packaging/localization/linux_tools.py --directory packaging/appimage
       - name: Windows native path and PowerShell preflight
         if: runner.os == 'Windows'
         shell: pwsh
@@ -70,6 +67,9 @@ jobs:
           echo "PJ_VERSION=$PJ_APP_VERSION" >> "$GITHUB_ENV"
           echo "PJ_QT_VERSION=$PJ_QT_VERSION" >> "$GITHUB_ENV"
           echo "qt_version=$PJ_QT_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Verify locked Linux packaging assets before dependencies
+        if: runner.os == 'Linux'
+        run: python packaging/localization/linux_tools.py --directory packaging/appimage
       - name: Build tools
         run: python -m pip install 'conan>=2,<3' 'cmake>=3.28,<4' 'ninja!=1.13.0' 'aqtinstall>=3.3'
       - name: Linux build dependencies
@@ -81,7 +81,7 @@ jobs:
             libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
             libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 \
             libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 libva-dev libdrm-dev \
-            xvfb zstd pkg-config ccache fonts-noto-cjk patchelf file unzip wget libfuse2 imagemagick
+            xvfb weston libegl-mesa0 zstd pkg-config ccache fonts-noto-cjk patchelf file unzip wget libfuse2 imagemagick
           # Resolve the installed software Vulkan driver before configuring or testing.
           VK_ICD_FILENAMES="$(ls /usr/share/vulkan/icd.d/lvp_icd*.json | head -n1)"
           test -f "${VK_ICD_FILENAMES}"
@@ -292,22 +292,54 @@ jobs:
           # Keep trailing Qt summaries in JUnit; CTest's 1 KiB default truncates
           # successful cases. The result gate still rejects truncated evidence.
           if [[ "$RUNNER_OS" == Windows ]]; then
-            # Widget runners choose offscreen themselves; leave GL runners on
-            # the native platform, matching upstream Windows CI.
-            ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
+            # Ordinary widget tests retain upstream's offscreen contract. The
+            # unlabelled main-window QRhi lifecycle suite needs its own real QPA.
+            window_suite='^pj_app_gui_tests\.MainWindowRhiWindowTest\.'
+            ctest --test-dir build --build-config RelWithDebInfo --show-only=json-v1 > build/native-test-list.json
+            status=0
+            env -u QT_QPA_PLATFORM ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 -LE qrhi -E "$window_suite" --output-junit "$PWD/build/native-headless.xml" || status=1
+            QT_QPA_PLATFORM=windows QSG_RHI_PREFER_SOFTWARE_RENDERER=1 PJ_REQUIRE_GPU_TESTS=1 ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 -L qrhi --output-junit "$PWD/build/native-qrhi.xml" || status=1
+            QT_QPA_PLATFORM=windows QSG_RHI_PREFER_SOFTWARE_RENDERER=1 PJ_REQUIRE_GPU_TESTS=1 ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 -LE qrhi -R "$window_suite" --output-junit "$PWD/build/native-window.xml" || status=1
+            # Supplemental native-platform regressions are separate from the
+            # unique full-suite count: both prior failures and all seven drops.
+            native_regressions='^(pj_dialog_host_tests\.WidgetBindingMarkdown\.RendersGitHubMarkdownUnicodeAndBlocksEmbeddedResources|pj_widgets_tests\.FileDialogStartFolderTest\.PersistedQtMemoryDropsLastVisitedAndDeadShortcuts|pj_app_gui_tests\.MainWindowFileDrop(Loading)?Test\..*)$'
+            QT_QPA_PLATFORM=windows ctest --test-dir build --build-config RelWithDebInfo --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 -R "$native_regressions" --output-junit "$PWD/build/native-widget-regressions.xml" || status=1
+            python scripts/ci/merge_ctest_reports.py --ctest-list build/native-test-list.json --output "$native_report" --native-regressions build/native-widget-regressions.xml build/native-headless.xml build/native-qrhi.xml build/native-window.xml || status=1
             # A native-capable platform is required to exercise Qt's picker
             # initialization; the ordinary widget suite remains offscreen.
-            cp build/Testing/Temporary/LastTest.log build/native-tests.log
             native_picker_base="$(python -c 'import os; print(os.path.abspath("build/native-file-dialog").replace(chr(92), "/"))')"
             QT_QPA_PLATFORM=windows ctest --test-dir build --build-config RelWithDebInfo \
               --output-on-failure --timeout 120 --no-tests=error --test-output-size-passed 262144 \
               -R '^pj_widgets_tests\.FileDialogStartFolderTest\.' \
-              --output-log "$native_picker_base.log" --output-junit "$native_picker_base.xml"
-            python -X utf8 packaging/localization/audit_file_dialog_results.py --junit build/native-file-dialog.xml
+              --output-log "$native_picker_base.log" --output-junit "$native_picker_base.xml" || status=1
+            python -X utf8 packaging/localization/audit_file_dialog_results.py --junit build/native-file-dialog.xml || status=1
+            test "$status" -eq 0
           else
-            PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
+            QT_QPA_PLATFORM=xcb PJ_REQUIRE_GPU_TESTS=1 xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --test-output-size-passed 262144 --output-junit "$native_report"
           fi
           python -X utf8 packaging/localization/audit_feedback_results.py --junit "$native_report" --screenshots "$PJ_GUI_ACCEPTANCE_DIR" --allow-other-cases --output build/feedback-results.json
+      - name: Verify native window lifetime on X11 and Wayland
+        if: runner.os == 'Linux'
+        run: |
+          export PATH="$PWD/.qt/$PJ_QT_VERSION/gcc_64/bin:$PATH"
+          export PJ_REQUIRE_GPU_TESTS=1 PJ_GRAPHICS_API=opengl
+          suite='^pj_app_gui_tests\.MainWindowRhiWindowTest\.'
+          QT_QPA_PLATFORM=xcb xvfb-run -a ctest --test-dir build -R "$suite" \
+            --no-tests=error --output-on-failure --timeout 120 --output-junit "$PWD/build/rhi-window-xcb.xml"
+          export XDG_RUNTIME_DIR="$(mktemp -d)" WAYLAND_DISPLAY=pj4-window-tests
+          weston --backend=headless-backend.so --use-gl --shell=kiosk-shell.so \
+            --socket="$WAYLAND_DISPLAY" --idle-time=0 --no-config --width=1280 --height=800 \
+            >build/wayland-compositor.log 2>&1 &
+          weston_pid=$!
+          trap 'kill "$weston_pid" 2>/dev/null || true; wait "$weston_pid" 2>/dev/null || true; rm -rf "$XDG_RUNTIME_DIR"' EXIT
+          for attempt in $(seq 1 100); do
+            [[ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]] && break
+            kill -0 "$weston_pid" 2>/dev/null || { cat build/wayland-compositor.log; exit 1; }
+            sleep 0.1
+          done
+          [[ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]] || { cat build/wayland-compositor.log; exit 1; }
+          env -u DISPLAY QT_QPA_PLATFORM=wayland ctest --test-dir build -R "$suite" \
+            --no-tests=error --output-on-failure --timeout 120 --output-junit "$PWD/build/rhi-window-wayland.xml"
       - name: Validate release identity
         run: |
           python tests/check_localization_provenance.py
@@ -397,9 +429,15 @@ jobs:
           path: |
             build/Testing/Temporary/
             build/native-tests.xml
-            build/native-tests.log
+            build/native-headless.xml
+            build/native-qrhi.xml
+            build/native-window.xml
+            build/native-widget-regressions.xml
+            build/native-test-list.json
             build/native-file-dialog.xml
             build/native-file-dialog.log
+            build/rhi-window-*.xml
+            build/wayland-compositor.log
             build/feedback-tests.json
             build/feedback-selection.json
             build/feedback-results.json

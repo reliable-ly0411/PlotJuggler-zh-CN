@@ -1,0 +1,219 @@
+{
+  "scope": "Historical v4.1.0+zh.1 source contract only; never a constraint on current development features or evidence of current binary acceptance.",
+  "source_commit": "0113492d7a7f96e486de1f9adcde6e43893ab630",
+  "version": "4.1.0+zh.1",
+  "baseline": {
+    "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
+    "upstream_branch": "main-4.x",
+    "upstream_commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
+    "upstream_version_file": "versions.env",
+    "baseline_recorded_utc": "2026-11-08",
+    "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
+    "localization_source_branch": "zh-CN",
+    "localization_source_commit": "766a88d8e689c7803f32acb315ac872a0a67a57b",
+    "port_strategy": "Module-level port, preserving English source strings and independent plugin licensing; no merge of PJ3 history.",
+    "stable_branch": "zh-CN-4.x",
+    "development_branch": "zh-CN-4.x-dev",
+    "status": "release",
+    "ardupilot_plugin": {
+      "upstream_repository": "https://github.com/ArduPilot/plotjuggler-apbin-plugins",
+      "upstream_branch": "main",
+      "upstream_commit": "3e2f9253adc2d41e17b2f0fec74f4b2487c42fb0",
+      "repository": "https://github.com/reliable-ly0411/plotjuggler-apbin-plugins",
+      "branch": "plotjuggler-4.x-sdk",
+      "commit": "0cc7cc10a25af3cb2ab122861b9be4fc01c99da5",
+      "path": "3rdparty/plotjuggler-apbin-plugins",
+      "sdk_version": "0.34.1",
+      "sdk_source_commit": "4d59e7de81455afe73a77051075e8fb4b9f6b0fd",
+      "license": "LGPL-3.0-only",
+      "linkage": "Separate native shared library; no static embedding in the application.",
+      "version": "1.2.0-pj4.rc.1",
+      "release_tag": "v1.2.0-pj4.rc.1"
+    },
+    "upstream_release": {
+      "tag": "4.1.0",
+      "commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
+      "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.1.0",
+      "relationship": "Application baseline is locked to the official 4.1.0 tag, plus the documented localization and distribution patches; later upstream application features are excluded.",
+      "body_sha256_lf": "a14b3197a9064d986e4a1a0e511bb8af6d99915ecd20ccc6ecbed65a316b6bbb"
+    },
+    "csv_path_fix": {
+      "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
+      "commit": "ba6ee417d91a01aae778a0ec3a4443a024671123",
+      "tag": "data_load_csv/v1.0.7",
+      "module": "data_load_csv",
+      "sdk_version": "0.34.1",
+      "patch": "packaging/localization/plugin-patches/csv-loader.patch",
+      "patch_sha256": "0f0b6ceaca36e914d8beb458156aeb6c07e87ebe5668d517b1f8d1e69597a442",
+      "scope": "UTF-8 preview/import paths and source-local three-language runtime display; canonical warnings, config, parser/data/ABI unchanged; synthetic real-plugin and FileLoader diagnostics/UI regressions"
+    },
+    "fft_display_mapping": {
+      "repository": "https://github.com/PlotJuggler/pj-official-plugins",
+      "release_tag": "toolbox_fft/v1.0.1",
+      "commit": "2bc991cae2dba7f9f1468dbf8dd72d89797699bc",
+      "ui_path": "toolbox_fft/fft_dialog.ui",
+      "ui_sha256_lf": "f7d484492d4b2033fc141c9ea3a9f83e9a976049947ba9dd90079df2d19099c0",
+      "license": "MIT",
+      "strategy": "Host display mapping for the unchanged official binary; no plugin rebuild or SDK change."
+    },
+    "host_sdk_version": "0.39.0",
+    "qt_version": "6.12.0",
+    "previous_upstream_commit": "349c74e3b0ada0081b7d0006e729de66e8e3b6e5",
+    "integration_parents": {
+      "development": "5544b1cbfc87f73c2060af031544081bc29e7f3c",
+      "stable": "1f42375cb861e529a2e04d56f11cdee14e4638b7"
+    },
+    "published_localization_release": {
+      "version": "4.0.0-zh.1.rc.4",
+      "qt_version": "6.11.1",
+      "host_sdk_version": "0.34.1",
+      "note": "Historical released package scope; not an acceptance claim for the new development snapshot."
+    },
+    "upstream_tag": "4.1.0",
+    "upstream_tag_object": "da079f6670d3a1873ed1011dedc15556e6f838de",
+    "publication_status": "pending_final_package_acceptance",
+    "release_source": {
+      "development_parent": "82a787414217e32638f257e02fdb03d8d08d477a",
+      "development_upstream": "349c74e3b0ada0081b7d0006e729de66e8e3b6e5",
+      "strategy": "Preserve published ancestry while excluding the post-tag upstream delta on an isolated release branch. The ongoing development branch is unchanged.",
+      "distribution_backports": [
+        "Windows GUI subsystem and redirected CLI preserve the pre-existing fork distribution contract; the version resource and core-only console handling retain verified distribution fixes."
+      ],
+      "post_tag_commits_reviewed": [
+        "e2e22ce3ae0abe88523e716985c42afa61c20777",
+        "73f5e3d01facd11a6caa462c9f212abf8dbd811d",
+        "a8a8a70b7c8019debf5c75f59555067c407a225c",
+        "7daeb6ec67931b48193ceff2e053280a670bd0b8",
+        "f7950d205ac123c2269c886ab32aa3a591fa2cd5",
+        "4a56ada7f790ae61f0bf831cb42cc45fc19b0673",
+        "361cdf9064adb9fc0946da9c38c0b1902be3f4f1",
+        "b428b6d58972bff94d6ac48d05d6795b926ed7af",
+        "53983e3795d8c7650bc9ee0a2a0bede46aa46a5d",
+        "721516434404d6d7c659b00c23a5edce79b961da",
+        "a3640d63d820f1ab1df2b01dbd9ac06142119545",
+        "fda4e555dfbb0278a85041107a81148f792fddb2",
+        "4b7ec5f04199b818058982642c32c8c0eba39158",
+        "349c74e3b0ada0081b7d0006e729de66e8e3b6e5"
+      ],
+      "release_repairs": [
+        {
+          "path": "pj_widgets/src/FileDialog.cpp",
+          "scope": "Set DontUseNativeDialog immediately after constructing the embedded picker, before restoring reachable history and sidebar entries. No system-dialog option or file-drop feature is added.",
+          "evidence": "Qt 6.12 native-capable initialization makes setHistory/setSidebarUrls ineffective until widgets exist; the existing four FileDialogStartFolderTest cases are required on Windows QPA in the candidate workflow."
+        }
+      ]
+    }
+  },
+  "rebuilt_plugins": [
+    {
+      "id": "protobuf-parser",
+      "module": "parser_protobuf",
+      "version": "1.2.0",
+      "tag": "parser_protobuf/v1.2.0",
+      "commit": "c843cb210af16cb5832cef85c125513c94f65d50",
+      "sdk": "0.32.0",
+      "target": "parser_protobuf_plugin",
+      "platforms": [
+        "Linux",
+        "Windows"
+      ],
+      "patch_sha256": "26049732d9c4d61e1a6a4b2a91496433796b7e1cf59985e356af86bfdf2ab15c",
+      "tag_object": "b2f8a6469d19ecd431d06ee3a7d717ebd374179e"
+    },
+    {
+      "id": "toolbox-assistant-agent",
+      "module": "toolbox_assistant_agent",
+      "version": "0.2.0",
+      "tag": "toolbox_assistant_agent/v0.2.0",
+      "commit": "ba245df89fb26e7905890654173fe289794410a1",
+      "sdk": "0.34.1",
+      "target": "toolbox_assistant_agent_plugin",
+      "platforms": [
+        "Linux"
+      ],
+      "patch_sha256": "fd002cd4775369212507c13b987f023d1986b25fdcbfea80685807669908bd59",
+      "tag_object": "44e9a37dd061624e1e8bb662e6905fd41cd4ac3f"
+    },
+    {
+      "id": "toolbox-transform-editor",
+      "module": "toolbox_transform_editor",
+      "version": "1.0.4",
+      "tag": "toolbox_transform_editor/v1.0.4",
+      "commit": "2bc991cae2dba7f9f1468dbf8dd72d89797699bc",
+      "sdk": "0.20.0",
+      "target": "toolbox_transform_editor_plugin",
+      "platforms": [
+        "Linux",
+        "Windows"
+      ],
+      "patch_sha256": "09f0334bb952016842c793e310ce0e562040753b97993b13a9e80ca00ae2a27c",
+      "tag_object": "89baa764a37828f648691d955a5e5d20cd80f557"
+    },
+    {
+      "id": "webrtc-client",
+      "module": "data_stream_webrtc",
+      "version": "1.0.1",
+      "tag": "data_stream_webrtc/v1.0.1",
+      "commit": "2bc991cae2dba7f9f1468dbf8dd72d89797699bc",
+      "sdk": "0.20.0",
+      "target": "webrtc_source_plugin",
+      "platforms": [
+        "Linux",
+        "Windows"
+      ],
+      "patch_sha256": "d058138356e5010bf3d42ee5fba5e3c805c31dcbae5b21fc08c82304cf41bf3b",
+      "tag_object": "be930b717926649fe4e4748d6af5b099a3b4ea80"
+    },
+    {
+      "id": "mcap-loader",
+      "module": "data_load_mcap",
+      "version": "1.3.0",
+      "tag": "data_load_mcap/v1.3.0",
+      "commit": "ffa967324aa03b7d076f91e2bf93aff92ebfbda0",
+      "sdk": "0.34.1",
+      "target": "mcap_source_plugin",
+      "platforms": [
+        "Linux",
+        "Windows"
+      ],
+      "tag_object": "a7772e412b9cb344a40d8a1791d19fede11ce684",
+      "patch_sha256": "61b20166c3de71e588103f331389ceb80c1de81b869e6a6ef20753c47fc2d0a1"
+    },
+    {
+      "id": "csv-loader",
+      "module": "data_load_csv",
+      "version": "1.0.7",
+      "tag": "data_load_csv/v1.0.7",
+      "commit": "ba6ee417d91a01aae778a0ec3a4443a024671123",
+      "sdk": "0.34.1",
+      "target": "csv_source_plugin",
+      "platforms": [
+        "Linux",
+        "Windows"
+      ],
+      "patch_sha256": "0f0b6ceaca36e914d8beb458156aeb6c07e87ebe5668d517b1f8d1e69597a442",
+      "tag_object": "f6e50746f80b6c34450e12a443914135f07ebf3f"
+    }
+  ],
+  "core_plugins": [
+    "mcap-loader",
+    "csv-loader",
+    "parquet-loader",
+    "ulog-loader",
+    "mp4-loader",
+    "pointcloud-3d-loader",
+    "dummy-streamer",
+    "foxglove-bridge",
+    "plotjuggler-bridge",
+    "webrtc-client",
+    "ros-parser",
+    "protobuf-parser",
+    "json-parser",
+    "data-tamer-parser",
+    "toolbox-quaternion",
+    "toolbox-transform-editor",
+    "toolbox-mosaico",
+    "arrow-parser"
+  ],
+  "bin_numeric_series": 1940
+}
