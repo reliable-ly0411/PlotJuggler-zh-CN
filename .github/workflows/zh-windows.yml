@@ -21,7 +21,7 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 180
     env:
-      PJ_TARGETED_CTEST_REGEX: '^(ApplicationLanguages|LauncherGuiAcceptanceBoundary|LauncherGuiAcceptance|TranslationCatalogs|AcceptanceStageCollection|PackagePrivacy|PackageAuditInventory|PrivateBuildRoots|ReleaseAssets|WindowsIfwPayload|NoticeInventory|WindowsRuntimeNotices|DownloadedSourceResolution|WindowsPublicBinaryReview|ParquetCompatibility|ReleaseLineSelection|SemanticVersioning|ArduPilotDataFlash|ParseCsvData\.BasicNumeric|ParseCsvData\.WindowsLineEndings)$'
+      PJ_CTEST_REGEX: '.*'
       CXXFLAGS: /MP
       PJ_PYTHON_EMBED_VERSION: 3.12.7
     steps:
@@ -117,7 +117,7 @@ jobs:
         $checks['memes'] = $LASTEXITCODE
         python tests/check_version.py
         $checks['version'] = $LASTEXITCODE
-        ctest --test-dir build -C Release -R "$env:PJ_TARGETED_CTEST_REGEX" --output-on-failure --no-tests=error
+        ctest --test-dir build -C Release -R "$env:PJ_CTEST_REGEX" --output-on-failure --no-tests=error
         $checks['ctest'] = $LASTEXITCODE
         $checks | ConvertTo-Json | Set-Content -Encoding utf8 acceptance/native-step-results.json
         if (@($checks.Values | Where-Object { $_ -ne 0 }).Count) { exit 1 }
@@ -206,7 +206,7 @@ jobs:
       if: always() && steps.stage-python.outcome == 'success' && steps.stage-runtime.outcome == 'success'
       shell: pwsh
       run: |
-        python scripts/zh_acceptance.py --ui-only --app installer/io.plotjuggler.application/data/plotjuggler.exe --plugin installer/io.plotjuggler.application/data/DataAPBin.dll --out acceptance
+        python scripts/zh_acceptance.py --app installer/io.plotjuggler.application/data/plotjuggler.exe --plugin installer/io.plotjuggler.application/data/DataAPBin.dll --out acceptance
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         Compress-Archive -Path installer/io.plotjuggler.application/data/* -DestinationPath PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip
     - name: Validate packaged launcher Qt interaction and persistence
