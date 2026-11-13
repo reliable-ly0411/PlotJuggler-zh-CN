@@ -5,6 +5,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   linux-targeted:
     runs-on: ubuntu-24.04
@@ -31,6 +34,14 @@ jobs:
           python3 -m venv "$RUNNER_TEMP/pj-tools"
           "$RUNNER_TEMP/pj-tools/bin/pip" install conan==2.22.2 aqtinstall==3.3.0 cmake==3.31.10 ninja
           echo "$RUNNER_TEMP/pj-tools/bin" >> "$GITHUB_PATH"
+      - uses: actions/cache@v5
+        with:
+          path: .qt
+          key: stable-delta-qt-linux-${{ hashFiles('versions.env') }}
+      - uses: actions/cache/restore@v5
+        with:
+          path: ~/.conan2
+          key: stable-delta-conan-linux-${{ hashFiles('conan.lock', 'cmake/host-sdk-source.json') }}
       - name: Acquire pinned Qt and resolve locked dependencies
         shell: bash
         run: |
@@ -43,6 +54,10 @@ jobs:
           find .github/conan/source-backup -maxdepth 1 -type f ! -name README.md -exec cp {} "$RUNNER_TEMP/conan-source-cache/s/" \;
           printf 'core.sources:download_cache=%s\n' "$RUNNER_TEMP/conan-source-cache" >> "$(conan config home)/global.conf"
           conan install . --output-folder=build --build=missing -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial -s build_type=RelWithDebInfo -s compiler.cppstd=20 2>&1 | tee "$RUNNER_TEMP/stable-delta-evidence/conan.log"
+      - uses: actions/cache/save@v5
+        with:
+          path: ~/.conan2
+          key: stable-delta-conan-linux-${{ hashFiles('conan.lock', 'cmake/host-sdk-source.json') }}
       - name: Build only application and changed-surface test targets
         shell: bash
         run: |
@@ -59,7 +74,9 @@ jobs:
           python3 - "$evidence/ctest.xml" <<'PY'
           import sys, xml.etree.ElementTree as E
           cases=E.parse(sys.argv[1]).getroot().findall('.//testcase')
-          assert cases, 'No test cases'
+          from pathlib import Path
+          expected=set(Path(sys.argv[1]).with_name('test-names.txt').read_text().splitlines())
+          assert len(cases)==len(expected) and {c.get('name') for c in cases}==expected, 'Missing or extra cases'
           assert all(not any(c.find(k) is not None for k in ('failure','error','skipped')) for c in cases), 'Failed or skipped coverage; review evidence'
           print('Targeted cases passed:',len(cases))
           PY
