@@ -137,6 +137,11 @@ class ResolutionTests(unittest.TestCase):
         (self.build/'dependency-notices/Conan/manifest.json').write_text('{}')
         shutil.copyfile(ROOT/'scripts/arrow_source_evidence.py',repo/'scripts/arrow_source_evidence.py')
         shutil.copytree(ROOT/'licenses/apache-arrow',repo/'licenses/apache-arrow')
+        for name in ('windows-runtime-notices', 'ifw'):
+            shutil.copytree(ROOT/'licenses'/name, repo/'licenses'/name)
+        metadata = Path('installer/io.plotjuggler.application/meta/license_ifw.txt')
+        (repo/metadata).parent.mkdir(parents=True)
+        shutil.copyfile(ROOT/metadata, repo/metadata)
         argv=['stage',str(self.out),'--build-dir',str(self.build),'--arrow-source-version','26.0.1']
         with patch.object(module,'__file__',str(repo/'scripts/stage_fork_notices.py')), patch.object(sys,'argv',argv), patch.object(module.subprocess,'check_output',return_value='abcdef\n'), patch.object(module,'stage_distro_notices'), patch.dict(os.environ, {}, clear=True), contextlib.redirect_stdout(io.StringIO()):
             module.main()
@@ -158,5 +163,16 @@ class ResolutionTests(unittest.TestCase):
         source=json.loads((auto/'Licenses/ArrowSource/evidence.json').read_text())
         self.assertEqual(source['status'],'pinned-vendored-source-texts')
         self.assertEqual(source['version_origin'],'cmake-package-version')
+        if os.name == 'nt':
+            for output in (self.out, auto):
+                module.validate_windows_runtime_materials(output/'Licenses', repo/metadata)
+                for name in ('windows-runtime-notices', 'ifw'):
+                    original = repo/'licenses'/name
+                    staged = output/'Licenses'/name
+                    self.assertEqual({p.relative_to(original) for p in original.rglob('*') if p.is_file()},
+                                     {p.relative_to(staged) for p in staged.rglob('*') if p.is_file()})
+                    for path in original.rglob('*'):
+                        if path.is_file():
+                            self.assertEqual(path.read_bytes(), (staged/path.relative_to(original)).read_bytes())
 
 if __name__=='__main__': unittest.main()

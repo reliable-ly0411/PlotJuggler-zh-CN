@@ -27,9 +27,9 @@ class AcceptanceBoundary(unittest.TestCase):
             output.mkdir()
             for index, variation in enumerate(('existing', 'launch', 'duplicate', 'missing', 'invalid', 'nonce', 'unknown', 'equals', 'hash')):
                 candidate = output if variation == 'existing' else root / ('case-' + str(index))
-                args = ['--config-dir', str(config), '--self-test-launcher-ui', str(candidate), '--launcher-test-scenario', 'cancel', '--launcher-test-nonce', nonce]
+                args = ['--config-dir', str(config), '--self-test-launcher-ui', str(candidate), '--launcher-test-scenario', 'start', '--launcher-test-nonce', nonce]
                 if variation == 'launch': args += ['--launch']
-                if variation == 'duplicate': args += ['--launcher-test-scenario', 'cancel']
+                if variation == 'duplicate': args += ['--launcher-test-scenario', 'start']
                 if variation == 'missing': args.pop()
                 if variation == 'invalid': args[5] = 'invalid'
                 if variation == 'nonce': args[-1] = 'Z' * 64

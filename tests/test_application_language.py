@@ -22,9 +22,12 @@ class ApplicationLanguage(unittest.TestCase):
     def tearDown(self):
         self.temporary.cleanup()
 
-    def probe(self, *arguments):
+    def probe(self, *arguments, locale=None):
+        env = os.environ.copy()
+        if locale is not None:
+            env.update(LC_ALL=locale, LANG=locale, LANGUAGE=locale)
         return json.loads(subprocess.check_output(
-            [str(PROBE), "--config-dir", str(self.config), *arguments], text=True, encoding="utf-8"))
+            [str(PROBE), "--config-dir", str(self.config), *arguments], text=True, encoding="utf-8", env=env))
 
     def test_languages_and_qt_dialogs(self):
         for language, menu, close in (("en_US", "App", "Close"), ("zh_CN", "应用", "关闭"),
@@ -39,7 +42,11 @@ class ApplicationLanguage(unittest.TestCase):
                     self.assertNotEqual(result["qt_file_name"], "File &name:")
 
     def test_default_and_restart_persistence(self):
-        self.assertEqual(self.probe()["language"], "zh_CN")
+        if os.name != "nt":
+            for locale, expected in (("en_US.UTF-8", "en_US"), ("zh_CN.UTF-8", "zh_CN"),
+                                     ("zh_TW.UTF-8", "zh_TW"), ("zh_HK.UTF-8", "zh_TW")):
+                with self.subTest(locale=locale):
+                    self.assertEqual(self.probe(locale=locale)["language"], expected)
         for language in ("en_US", "zh_CN", "zh_TW"):
             subprocess.check_call([str(PROBE), "--config-dir", str(self.config),
                                    "--set-language", language])
@@ -50,7 +57,14 @@ class ApplicationLanguage(unittest.TestCase):
     def test_alias_and_unknown_fallback(self):
         self.assertEqual(self.probe("--language=zh-TW")["language"], "zh_TW")
         self.assertEqual(self.probe("--language=zh-Hant")["language"], "zh_TW")
-        self.assertEqual(self.probe("--language=unknown")["language"], "en_US")
+        for alias, expected in (("zh-Hant-HK", "zh_TW"), ("zh-Hans-TW", "zh_CN"),
+                                ("ZH_hant_CN", "zh_TW"), ("zh_MO.UTF-8", "zh_TW"),
+                                ("zh_SG", "zh_CN"), ("zh", "zh_CN"), ("unknown", "en_US")):
+            with self.subTest(alias=alias):
+                self.assertEqual(self.probe("--language=" + alias)["language"], expected)
+        self.assertEqual(self.probe("--language=zh_TW", "--language", "--other")["language"], "zh_TW")
+        self.assertEqual(self.probe("--language=zh_TW", "--", "--language=zh_CN")["language"], "zh_TW")
+        self.assertEqual(self.probe("--language=zh_TW", "--language=zh_CN")["language"], "zh_CN")
 
     def test_settings_identity_and_directory(self):
         result = self.probe()
@@ -77,12 +91,13 @@ class ApplicationLanguage(unittest.TestCase):
         arguments = ["--config-dir", str(self.config), "--language", "zh_TW", "--probe-output",
                      str(output), "-d", "相對資料 sample.csv", "--layout=版面 layout.xml",
                      "--", "--launch", "--help-launcher"]
-        subprocess.check_call([str(launcher), "--launch", *arguments], cwd=self.root)
-        result = json.loads(output.read_text(encoding="utf-8"))
-        self.assertEqual(result["arguments"], arguments)
-        self.assertEqual(Path(result["directory"]), self.root)
-        self.assertEqual(result["language"], "zh_TW")
-        self.assertFalse(self.config.exists(), "session override must not save preferences")
+        for prefix in ([], ["--launch"]):
+            subprocess.check_call([str(launcher), *prefix, *arguments], cwd=self.root)
+            result = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(result["arguments"], arguments)
+            self.assertEqual(Path(result["directory"]), self.root)
+            self.assertEqual(result["language"], "zh_TW")
+            self.assertFalse(self.config.exists(), "session override must not save preferences")
 
     def test_launcher_child_exit_status(self):
         launcher = self.stage()

@@ -55,9 +55,11 @@ def check_metadata(data, relative_name, records, private_roots=None):
     qt = {key.casefold(): value for key, value in records.get("qt_records", {}).items()}.get(name.casefold())
     qt = qt if qt and qt["sha256"] == digest else None
     ci = records.get("public_ci_source_records", {}).get(name, {})
-    if name.rsplit("/", 1)[-1].casefold() in REVIEWED_WINDOWS_MODULES and not ci:
+    local = records.get("local_reviewed_exact_sha256", {}).get(name, {})
+    local_exact = (local.get("sha256") == digest and local.get("bytes") == len(data))
+    if name.rsplit("/", 1)[-1].casefold() in REVIEWED_WINDOWS_MODULES and not (ci or local_exact):
         raise ValueError("Unapproved public-source binary content in " + name)
-    if ci:
+    if ci and not local_exact:
         content = ci.get("content_fingerprint", {})
         exact = digest == ci.get("observed_plugin_sha256")
         equivalent = bool(content.get("sha256") and pe_fingerprint(data, content) == content["sha256"])
@@ -72,7 +74,11 @@ def check_metadata(data, relative_name, records, private_roots=None):
         approved_keys = set()
     example = records.get("cpython_venv_example", {})
     python_example = bool(PYTHON_EXAMPLE_FILE.search(name) and digest == example.get("sha256"))
-    markers = []
+    markers = ([{"path": name, "kind": "local reviewed exact SHA256", "file_sha256": digest}]
+               if local_exact else [])
+    # A local identity grants no public CI path exemptions.
+    if local_exact:
+        ci = {}
     linux_spans = reviewed_spans(data, name)
     representations = (data.decode("latin1"), data.decode("utf-16le", errors="ignore"),
                        data[1:].decode("utf-16le", errors="ignore"))

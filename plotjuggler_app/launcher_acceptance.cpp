@@ -72,7 +72,7 @@ bool parseLauncherAcceptance(const QStringList& args, LauncherAcceptance& test, 
   test.enabled = outputs || scenarios || nonces;
   if (!test.enabled) return true;
   if (outputs != 1 || scenarios != 1 || nonces != 1 || configs != 1 || launch || (nonce.size() != 64 || !QRegularExpression("^[0-9a-f]{64}$").match(nonce).hasMatch()) ||
-      (test.scenario != "start-en_US" && test.scenario != "start-zh_CN" && test.scenario != "start-zh_TW" && test.scenario != "cancel")) return false;
+      test.scenario != "start") return false;
   const QFileInfo ci(config), oi(test.output);
   if (!ci.isAbsolute() || !oi.isAbsolute() || !ci.isDir() || ci.fileName() != "config" ||
       oi.exists() || !plainPath(config) || !plainPath(test.output) || ci.dir().absolutePath() != oi.dir().absolutePath() ||
@@ -92,51 +92,5 @@ bool parseLauncherAcceptance(const QStringList& args, LauncherAcceptance& test, 
       m.value("nonce").toString() != nonce || m.value("ini").toString() != ini ||
       !plainPath(inipath) || hashFile(inipath).isEmpty() || hashFile(inipath) != m.value("before_sha256").toString()) return false;
   if (!QDir().mkdir(test.output)) return false;
-  if (test.scenario.startsWith("start-")) test.target = test.scenario.mid(6);
   return true;
-}
-static void key(QWidget* widget, int k) {
-  QKeyEvent press(QEvent::KeyPress, k, Qt::NoModifier), release(QEvent::KeyRelease, k, Qt::NoModifier);
-  QApplication::sendEvent(widget, &press); QApplication::sendEvent(widget, &release);
-}
-static void click(QWidget* widget) {
-  QPoint p = widget->rect().center();
-  QMouseEvent press(QEvent::MouseButtonPress, p, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-  QMouseEvent release(QEvent::MouseButtonRelease, p, Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
-  QApplication::sendEvent(widget, &press); QApplication::sendEvent(widget, &release);
-}
-void driveLauncherAcceptance(QDialog* dialog, const LauncherAcceptance& test) {
-  QTimer::singleShot(150, dialog, [dialog, test] {
-    auto combos = dialog->findChildren<QComboBox*>("launcherLanguage");
-    auto starts = dialog->findChildren<QPushButton*>("launcherStart");
-    auto boxes = dialog->findChildren<QDialogButtonBox*>();
-    auto fail = [] { qCritical() << "launcher acceptance failed"; qApp->exit(3); };
-    if (!dialog->isVisible() || combos.size() != 1 || starts.size() != 1 || boxes.size() != 1) { fail(); return; }
-    auto combo = combos.first(); auto start = starts.first(); auto cancel = boxes.first()->button(QDialogButtonBox::Cancel);
-    if (!cancel || !combo->isVisible() || !combo->isEnabled() || !start->isVisible() || !start->isEnabled() || !cancel->isVisible() || !cancel->isEnabled()) { fail(); return; }
-    QJsonArray labels, options;
-    for (auto label : dialog->findChildren<QLabel*>()) labels.append(label->text());
-    for (int i=0; i<combo->count(); ++i) options.append(combo->itemText(i));
-    QJsonObject report{{"title",dialog->windowTitle()}, {"labels",labels}, {"options",options},
-      {"start",start->text()}, {"cancel",cancel->text()}, {"initial",combo->currentData().toString()},
-      {"width",dialog->width()}, {"height",dialog->height()}, {"dpr",dialog->devicePixelRatioF()},
-      {"platform",QGuiApplication::platformName()}, {"qt",qVersion()}};
-    if (!dialog->grab().save(QDir(test.output).filePath("before.png"))) { fail(); return; }
-    if (!test.target.isEmpty()) {
-      const int target = combo->findData(test.target);
-      if (target < 0 || target == combo->currentIndex()) { fail(); return; }
-      int changes = 0;
-      const auto connection = QObject::connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged), dialog, [&changes](int){ ++changes; });
-      for (int n = 0; n < combo->count() && combo->currentIndex() != target; ++n)
-        key(combo, combo->currentIndex() < target ? Qt::Key_Down : Qt::Key_Up);
-      QObject::disconnect(connection);
-      if (!changes || combo->currentData().toString() != test.target) { fail(); return; }
-    }
-    report.insert("selected",combo->currentData().toString());
-    if (!dialog->grab().save(QDir(test.output).filePath("after.png"))) { fail(); return; }
-    QSaveFile file(QDir(test.output).filePath("report.json"));
-    const auto bytes = QJsonDocument(report).toJson();
-    if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size() || !file.commit()) { fail(); return; }
-    click(test.scenario == "cancel" ? cancel : start);
-  });
 }

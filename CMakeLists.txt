@@ -6,6 +6,7 @@ project(
   VERSION 3.18.1)
 
 include(cmake/ForkVersion.cmake)
+include(cmake/ForkBuildPaths.cmake)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

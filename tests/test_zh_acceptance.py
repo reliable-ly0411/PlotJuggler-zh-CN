@@ -32,7 +32,7 @@ class AcceptanceStages(unittest.TestCase):
         self.args = SimpleNamespace(app=str(self.root / "plotjuggler.exe"),
                                     plugin=str(self.root / "plugin.dll"),
                                     out=str(self.root / "out"), window_size="1100x700",
-                                    original_images=False)
+                                    original_images=False, version_file=None, ui_only=False)
         self.calls = []
         self.fault = None
         self.skip_settings = False
@@ -67,6 +67,13 @@ class AcceptanceStages(unittest.TestCase):
                 ini.parent.mkdir(parents=True, exist_ok=True)
                 ini.write_text("[General]\nPreferences%3A%3Alanguage=" + language + "\n",
                                encoding="utf-8")
+        if stage in ("ui", "memes"):
+            self.assertIn("--language", command)
+            self.assertEqual(command[command.index("--language") + 1], language)
+        if stage in ("restart", "memes"):
+            self.assertIn("--config-dir", command)
+            self.assertEqual(Path(command[command.index("--config-dir") + 1]),
+                             Path(self.args.out).resolve() / language / "settings")
         self.calls.append((language, stage))
         if self.mutate and (language, stage) == self.mutate[:2]:
             self.mutate[2](report)
@@ -96,12 +103,65 @@ class AcceptanceStages(unittest.TestCase):
         code, summary, result = self.run_checks()
         self.assertEqual(code, 0)
         self.assertEqual(len(self.calls), 9)
-        self.assertEqual(result["counts"], {"passed": 9, "failed": 0, "not-executed": 0})
+        self.assertEqual(result["counts"], {"passed": 9, "failed": 0, "not-executed": 0, "not-selected": 0})
         for row in summary:
             self.assertEqual(row["version"], self.version)
             self.assertEqual(row["meme_images"], 107)
             self.assertEqual(row["platform"], "fixture")
             self.assertNotIn("acceptance_status", row)
+
+    def test_external_version_file_and_failure_modes(self):
+        external = self.root / "independent-build/FORK-VERSION.json"
+        self.write(external, {"version": self.version})
+        self.args.version_file = str(external)
+        (self.root / "build/FORK-VERSION.json").unlink()
+        code, _, result = self.run_checks()
+        self.assertEqual(code, 0)
+        self.assertEqual(result["counts"]["passed"], 9)
+        for mode in ("missing", "invalid", "mismatch"):
+            with self.subTest(mode=mode):
+                self.args.out = str(self.root / ("version-" + mode))
+                if mode == "missing":
+                    external.unlink()
+                elif mode == "invalid":
+                    external.write_text("not json", encoding="utf-8")
+                else:
+                    self.write(external, {"version": "different"})
+                code, _, result = self.run_checks()
+                self.assertEqual(code, 1)
+                if mode in ("missing", "invalid"):
+                    self.assertIn("expected-version-unavailable", result["preflight"]["reasons"])
+                for stage in result["stages"]:
+                    if stage["stage"] in ("ui", "restart"):
+                        self.assertIn("version-gate-failed", stage["reasons"])
+
+    def test_version_file_cli_option(self):
+        args = acceptance.parse_args(["--app", "app", "--plugin", "plugin", "--out", "out",
+                                      "--version-file", "external/FORK-VERSION.json"])
+        self.assertEqual(args.version_file, "external/FORK-VERSION.json")
+
+    def test_ui_only_skips_image_export_and_catalog(self):
+        self.args.ui_only = True
+        (self.root / "plotjuggler_app/resources/memes/zh_CN.json").unlink()
+        code, summary, result = self.run_checks()
+        self.assertEqual(code, 0)
+        self.assertEqual(result["scope"], "ui-only")
+        self.assertEqual(result["selected_stage_count"], 6)
+        self.assertEqual(result["counts"], {"passed": 6, "failed": 0, "not-executed": 0,
+                                           "not-selected": 3})
+        self.assertEqual(len(self.calls), 6)
+        self.assertTrue(all(stage != "memes" for _, stage in self.calls))
+        self.assertTrue(all("meme_images" not in row for row in summary))
+
+    def test_ui_only_does_not_hide_selected_failure(self):
+        self.args.ui_only = True
+        self.fault = ("zh_CN", "ui", "nonzero")
+        code, summary, result = self.run_checks()
+        self.assertEqual(code, 1)
+        self.assertEqual(result["counts"]["failed"], 1)
+        self.assertEqual(result["counts"]["not-selected"], 3)
+        self.assertEqual(summary[0]["failed_stages"], ["ui"])
+        self.assertEqual(len(self.calls), 6)
 
     def test_first_language_failure_keeps_others_and_exports(self):
         self.fault = ("zh_CN", "ui", "nonzero")

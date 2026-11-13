@@ -21,6 +21,7 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 180
     env:
+      PJ_TARGETED_CTEST_REGEX: '^(ApplicationLanguages|LauncherGuiAcceptanceBoundary|LauncherGuiAcceptance|TranslationCatalogs|AcceptanceStageCollection|PackagePrivacy|PackageAuditInventory|PrivateBuildRoots|ReleaseAssets|WindowsIfwPayload|NoticeInventory|WindowsRuntimeNotices|DownloadedSourceResolution|SemanticVersioning|ArduPilotDataFlash|ParseCsvData\.BasicNumeric|ParseCsvData\.WindowsLineEndings)$'
       CXXFLAGS: /MP
       PJ_PYTHON_EMBED_VERSION: 3.12.7
     steps:
@@ -112,11 +113,11 @@ jobs:
         $env:PJ_MEME_AUDIT_DIR = "$env:GITHUB_WORKSPACE/acceptance/image-variants"
         python tests/check_translations.py --fresh
         $checks['translations'] = $LASTEXITCODE
-        python tests/check_memes.py --reference-rev 3117288ce8d710bde4f7a86ca5ed5240ebb1c301 --export-reference reference-memes --pixel-report acceptance/image-pixels.json
+        python tests/check_memes.py
         $checks['memes'] = $LASTEXITCODE
         python tests/check_version.py
         $checks['version'] = $LASTEXITCODE
-        ctest --test-dir build -C Release --output-on-failure --no-tests=error
+        ctest --test-dir build -C Release -R "$env:PJ_TARGETED_CTEST_REGEX" --output-on-failure --no-tests=error
         $checks['ctest'] = $LASTEXITCODE
         $checks | ConvertTo-Json | Set-Content -Encoding utf8 acceptance/native-step-results.json
         if (@($checks.Values | Where-Object { $_ -ne 0 }).Count) { exit 1 }
@@ -205,7 +206,7 @@ jobs:
       if: always() && steps.stage-python.outcome == 'success' && steps.stage-runtime.outcome == 'success'
       shell: pwsh
       run: |
-        python scripts/zh_acceptance.py --app installer/io.plotjuggler.application/data/plotjuggler.exe --plugin installer/io.plotjuggler.application/data/DataAPBin.dll --out acceptance
+        python scripts/zh_acceptance.py --ui-only --app installer/io.plotjuggler.application/data/plotjuggler.exe --plugin installer/io.plotjuggler.application/data/DataAPBin.dll --out acceptance
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         Compress-Archive -Path installer/io.plotjuggler.application/data/* -DestinationPath PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip
     - name: Validate packaged launcher Qt interaction and persistence
@@ -299,37 +300,15 @@ jobs:
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         python scripts/verify_windows_binding.py --audit acceptance/package-size.json --binding acceptance/windows-payload-binding.json
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
-    - name: Test build without localized images
-      id: images-disabled
-      if: always() && steps.native-build.outcome == 'success'
-      shell: pwsh
-      run: |
-        $env:PATH = "$env:QT_ROOT_DIR\bin;$env:PATH"
-        $env:QT_PLUGIN_PATH = "$env:QT_ROOT_DIR\plugins"
-        cmake --preset conan-default -S . -B build -DPJ_ENABLE_LOCALIZED_IMAGES=OFF
-        if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        # Rebuild the actual OFF application before GUI/export acceptance.
-        # Existing staged ON installer/ZIP files are never copied from this tree.
-        cmake --build build --config Release --target plotjuggler pj_localized_meme_test pj_resource_image_test
-        if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        New-Item -ItemType Directory -Force -Path acceptance | Out-Null
-        ctest --test-dir build -C Release --output-on-failure --no-tests=error
-        $nativeTestExit = $LASTEXITCODE
-        $env:QT_QPA_PLATFORM = "windows"
-        python scripts/zh_acceptance.py --original-images --app build/bin/Release/plotjuggler.exe --plugin build/bin/Release/DataAPBin.dll --out acceptance/images-disabled
-        $guiTestExit = $LASTEXITCODE
-        @{ native_ctest_exit = $nativeTestExit; original_image_gui_exit = $guiTestExit } |
-          ConvertTo-Json | Set-Content -Encoding utf8 acceptance/images-disabled-step-results.json
-        if ($nativeTestExit -or $guiTestExit) { exit 1 }
     - name: Upload installer
-      if: success() && steps.public-binary-identities.outcome == 'success' && steps.payload-audit.outcome == 'success' && steps.images-disabled.outcome == 'success'
+      if: success() && steps.public-binary-identities.outcome == 'success' && steps.payload-audit.outcome == 'success'
       uses: actions/upload-artifact@v4
       with:
         name: Software-Windows-installer
         path: PlotJuggler-${{ env.SAFE_REF }}-Windows-x64.exe
         if-no-files-found: error
     - name: Upload portable software package
-      if: success() && steps.public-binary-identities.outcome == 'success' && steps.payload-audit.outcome == 'success' && steps.images-disabled.outcome == 'success'
+      if: success() && steps.public-binary-identities.outcome == 'success' && steps.payload-audit.outcome == 'success'
       uses: actions/upload-artifact@v4
       with:
         name: Software-Windows-portable

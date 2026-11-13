@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 """Run opt-in Qt launcher acceptance against a real launcher and sibling.
 
-This injects Qt events, not OS input; screenshots need human review and do not
-establish window-manager focus, input-method or native-dialog behavior.
+Verifies the default launcher path, child forwarding, and isolated settings.
+Main-window language menu behavior is covered by the separate UI acceptance.
 """
 import argparse
 import configparser
@@ -12,20 +12,11 @@ import json
 import os
 from pathlib import Path
 import secrets
-import re
 import signal
 import subprocess
-import struct
 import tempfile
 
 INI = Path('PlotJuggler/io.plotjuggler.PlotJuggler.zh-CN.ini')
-EXPECTED = {
-'en_US': ('PlotJuggler 3 launcher', 'Interface language:', 'The selected language is saved when you click Start. Files and command-line options are passed to PlotJuggler.', 'Start', 'Cancel'),
-'zh_CN': ('PlotJuggler 3 启动器', '界面语言：', '点击“启动”时保存所选语言。文件和命令行选项会传递给 PlotJuggler。', '启动', '取消'),
-'zh_TW': ('PlotJuggler 3 啟動器', '介面語言：', '點選“啟動”時儲存所選語言。檔案和命令列選項會傳遞給 PlotJuggler。', '啟動', '取消'),
-}
-OPTIONS = ['English', '简体中文', '繁體中文']
-
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else 'missing'
 
@@ -38,12 +29,6 @@ def read_ini(path):
 def require(condition, message):
     if not condition:
         raise AssertionError(message)
-
-
-def normalized_cancel(text):
-    # Qt standard buttons may add a mnemonic, including a trailing "(&C)".
-    text = re.sub(r"\s*\(&?[A-Za-z]\)$", "", text)
-    return text.replace('&', '')
 
 
 def run_owned(args, cwd, timeout, item):
@@ -113,64 +98,40 @@ def main():
     external.write_text('external sentinel\n', encoding='utf-8')
     external_hash = digest(external)
     results = []
-    for initial, target in [('en_US', 'zh_CN'), ('zh_CN', 'zh_TW'), ('zh_TW', 'en_US')]:
-        # Every pair starts with a synthetic file created exclusively inside our fresh root.
-        ini.write_text('[General]\nPreferences%3A%3Alanguage=' + initial + '\nAcceptanceSentinel=keep-this-value\n', encoding='utf-8')
-        for scenario in ('start-' + target, 'cancel'):
-            case = root / ('case-' + initial + '-' + scenario)
-            before = digest(ini)
-            marker = {'schema': 1, 'purpose': 'launcher-gui-acceptance', 'nonce': nonce,
-                      'ini': INI.as_posix(), 'before_sha256': before}
-            (root / 'launcher-acceptance.json').write_text(json.dumps(marker), encoding='utf-8')
-            args = [str(launcher), '--config-dir', str(config), '--self-test-launcher-ui', str(case),
-                    '--launcher-test-scenario', scenario, '--launcher-test-nonce', nonce]
-            if scenario != 'cancel':
-                args += ['--help', '--', '中文 文件 sample', '--self-test-launcher-ui=payload', '--launcher-test-scenario']
-            item = {'initial': initial, 'scenario': scenario, 'output': str(case)}
-            try:
-                code = run_owned(args, root, a.timeout, item)
-                require(code == 0, 'launcher exit code ' + str(code))
-                report = json.loads((case / 'report.json').read_text(encoding='utf-8'))
-                shown = initial if scenario != 'cancel' else target
-                expected = EXPECTED[shown]
-                require(report['initial'] == shown, 'initial locale mismatch')
-                require(report['title'] == expected[0], 'title mismatch')
-                require(expected[1] in report['labels'] and expected[2] in report['labels'], 'label mismatch')
-                require(report['start'] == expected[3], 'Start text mismatch')
-                require(normalized_cancel(report['cancel']) == expected[4], 'Cancel text mismatch')
-                require(report['options'] == OPTIONS, 'language options mismatch')
-                require(report['selected'] == target, 'selected locale mismatch')
-                require(report['width'] > 0 and report['height'] > 0 and report['dpr'] > 0, 'invalid dimensions or DPR')
-                if a.expected_version is not None:
-                    require('PlotJuggler ' + a.expected_version in report['labels'], 'version label mismatch')
-                if a.expected_platform is not None:
-                    require(report['platform'] == a.expected_platform, 'platform mismatch')
-                for name in ('before.png', 'after.png'):
-                    png = (case / name).read_bytes()
-                    require(len(png) > 24 and png[:8] == b'\x89PNG\r\n\x1a\n', 'invalid PNG ' + name)
-                    width, height = struct.unpack('>II', png[16:24])
-                    require(width > 0 and height > 0, 'empty PNG ' + name)
-                child = case / 'child-started.json'
-                if scenario == 'cancel':
-                    require(not child.exists(), 'Cancel started a child')
-                else:
-                    child_info = json.loads(child.read_text(encoding='utf-8'))
-                    require(Path(child_info['cwd']) == root, 'child cwd mismatch')
-                    expected_args = ['--config-dir', str(config), '--help', '--language=' + target,
-                                     '--', '中文 文件 sample', '--self-test-launcher-ui=payload', '--launcher-test-scenario']
-                    require(child_info['arguments'] == expected_args, 'child arguments mismatch')
-                    item['child'] = child_info
-                values = read_ini(ini)
-                require(values['Preferences%3A%3Alanguage'] == target, 'saved language mismatch')
-                require(values['AcceptanceSentinel'] == 'keep-this-value', 'sentinel changed')
-                if scenario == 'cancel':
-                    require(digest(ini) == before, 'Cancel changed settings')
-                require(digest(external) == external_hash, 'external sentinel changed')
-                item['report'] = report
-                item['passed'] = True
-            except (AssertionError, OSError, ValueError, KeyError, subprocess.TimeoutExpired) as exc:
-                item.update(passed=False, error=str(exc))
-            results.append(item)
+    for initial in ('en_US', 'zh_CN', 'zh_TW'):
+        # Every case uses a fresh, isolated synthetic configuration.
+        ini.write_text('[General]\nPreferences%3A%3Alanguage=' + initial +
+                       '\nAcceptanceSentinel=keep-this-value\n', encoding='utf-8')
+        case = root / ('case-' + initial)
+        before = digest(ini)
+        marker = {'schema': 1, 'purpose': 'launcher-gui-acceptance', 'nonce': nonce,
+                  'ini': INI.as_posix(), 'before_sha256': before}
+        (root / 'launcher-acceptance.json').write_text(json.dumps(marker), encoding='utf-8')
+        forwarded = ['--config-dir', str(config), '--help', '--language=zh_Hant_HK',
+                     '--', '中文 文件 sample', '--self-test-launcher-ui=payload', '--launcher-test-scenario']
+        args = [str(launcher), '--config-dir', str(config), '--self-test-launcher-ui', str(case),
+                '--launcher-test-scenario', 'start', '--launcher-test-nonce', nonce, *forwarded[2:]]
+        item = {'initial': initial, 'scenario': 'start', 'output': str(case)}
+        try:
+            code = run_owned(args, root, a.timeout, item)
+            require(code == 0, 'launcher exit code ' + str(code))
+            child_info = json.loads((case / 'child-started.json').read_text(encoding='utf-8'))
+            require(Path(child_info['cwd']) == root, 'child cwd mismatch')
+            require(child_info['arguments'] == forwarded, 'child arguments mismatch')
+            require(Path(child_info['program']).parent == launcher.parent, 'child is not bundled sibling')
+            if a.expected_version is not None:
+                require(child_info['version'] == a.expected_version, 'version mismatch')
+            if a.expected_platform is not None:
+                require(child_info['platform'] == a.expected_platform, 'platform mismatch')
+            values = read_ini(ini)
+            require(values['Preferences%3A%3Alanguage'] == initial, 'session language was saved')
+            require(values['AcceptanceSentinel'] == 'keep-this-value', 'sentinel changed')
+            require(digest(ini) == before, 'startup changed settings')
+            require(digest(external) == external_hash, 'external sentinel changed')
+            item.update(child=child_info, passed=True)
+        except (AssertionError, OSError, ValueError, KeyError, subprocess.TimeoutExpired) as exc:
+            item.update(passed=False, error=str(exc))
+        results.append(item)
     summary = {'runroot': str(root), 'launcher': str(launcher), 'results': results,
                'passed': all(x['passed'] for x in results), 'scope': __doc__,
                'expected_version': a.expected_version, 'expected_platform': a.expected_platform,

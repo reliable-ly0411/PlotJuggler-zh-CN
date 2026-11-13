@@ -89,6 +89,25 @@ class PackagePrivacy(unittest.TestCase):
                 self.rejected(b"content without paths", name)
         self.assertEqual(check_metadata(b"content without paths", "other.dll", self.records), [])
 
+    def test_local_reviewed_identity_is_exact_and_masks_nothing(self):
+        name = "DataLoadParquet.dll"
+        data = b"local sealed content"
+        local = {"sha256": self.sha(data), "bytes": len(data)}
+        literal = r"C:\Users\runneradmin\.conan2\p\b\arrow\b\src\file.cc"
+        records = {"local_reviewed_exact_sha256": {name: local},
+                   "public_ci_source_records": {name: {"observed_plugin_sha256": "0" * 64,
+                                                        "nul_terminated_literals": [literal]}}}
+        self.assertEqual(check_metadata(data, name, records)[0]["kind"], "local reviewed exact SHA256")
+        self.rejected(data + b"changed", name, records)
+        self.rejected(data, "plugins/" + name, records)
+        local["bytes"] += 1
+        self.rejected(data, name, records)
+        for leaked in ((literal + "\0").encode(),
+                       ("gh" + "p_" + "x" * 36).encode(),
+                       b"C:\\Users\\PrivateUser\\secret.bin"):
+            local.update(sha256=self.sha(leaked), bytes=len(leaked))
+            self.rejected(leaked, name, records)
+
     def test_contacts_remain_blocked(self):
         for encoding in ("ascii", "utf-16le"):
             self.rejected(("synthetic" + "@" + "qq.com").encode(encoding))

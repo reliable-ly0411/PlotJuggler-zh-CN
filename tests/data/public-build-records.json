@@ -151,6 +151,29 @@
     "attributes_source": "https://github.com/python/cpython/blob/v3.10.12/.gitattributes",
     "literal": "C:\\Users\\MyUser\\Common\\.venv"
   },
+  "local_reviewed_exact_sha256": {
+    "DataLoadParquet.dll": {
+      "sha256": "264aafc5a049011ca715db3f80cc0bb1cc59b736528e32415518fde8e7f44ed6",
+      "bytes": 8571904,
+      "source_commit": "f4d777a14e08fc2be17e68ebc43a88fa73ad1357",
+      "build": "local Windows ON seal, app nonce 1d34635903fb423f95d72d55de5510db",
+      "review": "Exact bytes only; no CI identity or path exemption. Raw privacy scan and sealed hashes reviewed; no release or license approval."
+    },
+    "ProtobufParser.dll": {
+      "sha256": "f9eb3dcfb2a3029b4403eab9c85a9a99849aa34e7e8c09bb47690886586660a8",
+      "bytes": 1191936,
+      "source_commit": "f4d777a14e08fc2be17e68ebc43a88fa73ad1357",
+      "build": "local Windows ON seal, app nonce 1d34635903fb423f95d72d55de5510db",
+      "review": "Exact bytes only; no CI identity or path exemption. Raw privacy scan and sealed hashes reviewed; no release or license approval."
+    },
+    "ToolboxMosaico.dll": {
+      "sha256": "be4804134d13cb8e557586480d3df0597707ed027fd28ab97d3e8ee24c6a82bd",
+      "bytes": 18475008,
+      "source_commit": "f4d777a14e08fc2be17e68ebc43a88fa73ad1357",
+      "build": "local Windows ON seal, app nonce 1d34635903fb423f95d72d55de5510db",
+      "review": "Exact bytes only; no CI identity or path exemption. Raw privacy scan and sealed hashes reviewed; no release or license approval."
+    }
+  },
   "public_ci_source_records": {
     "DataLoadParquet.dll": {
       "observed_commit": "32fe24c7e3c3d4599aad05bb7e9e730eb1a62adb",

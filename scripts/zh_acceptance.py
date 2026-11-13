@@ -16,6 +16,9 @@ def parse_args(argv=None):
     parser.add_argument("--plugin", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--window-size", default="1100x700")
+    parser.add_argument("--version-file", help="Build FORK-VERSION.json containing the expected version")
+    parser.add_argument("--ui-only", action="store_true",
+                        help="Run UI and restart stages only; do not export images")
     parser.add_argument("--original-images", action="store_true",
                         help="Expect a build with localized image resources disabled")
     return parser.parse_args(argv)
@@ -152,19 +155,21 @@ def run_acceptance(args, *, root=None, runner=None):
             preflight["reasons"].append(reason)
     version, localized_count = None, None
     try:
-        version = json.loads((root / "build/FORK-VERSION.json").read_text(encoding="utf-8"))["version"]
+        version_file = Path(args.version_file) if args.version_file else root / "build/FORK-VERSION.json"
+        version = json.loads(version_file.read_text(encoding="utf-8"))["version"]
         if not isinstance(version, str) or not version:
             raise ValueError
     except (OSError, UnicodeError, ValueError, KeyError, TypeError):
         preflight["reasons"].append("expected-version-unavailable")
         version = None
-    try:
-        catalog = json.loads((root / "plotjuggler_app/resources/memes/zh_CN.json").read_text(encoding="utf-8"))
-        localized_count = sum(bool(item.get("variant")) for item in catalog["images"])
-        if args.original_images:
-            localized_count = 0
-    except (OSError, UnicodeError, ValueError, KeyError, TypeError, AttributeError):
-        preflight["reasons"].append("image-catalog-unavailable")
+    if not args.ui_only:
+        try:
+            catalog = json.loads((root / "plotjuggler_app/resources/memes/zh_CN.json").read_text(encoding="utf-8"))
+            localized_count = sum(bool(item.get("variant")) for item in catalog["images"])
+            if args.original_images:
+                localized_count = 0
+        except (OSError, UnicodeError, ValueError, KeyError, TypeError, AttributeError):
+            preflight["reasons"].append("image-catalog-unavailable")
     if preflight["reasons"]:
         preflight["status"] = "failed"
     stages, reports = [], []
@@ -172,9 +177,7 @@ def run_acceptance(args, *, root=None, runner=None):
         out = output / language
         before = settings_signature(settings_file(out))
         command = [str(app), *launcher, "-n", "--disable_opengl", "--self-test-ui", str(out),
-                   "--self-test-size", args.window_size, "-d", str(fixture)]
-        if language != "zh_CN":
-            command += ["--language", language]
+                   "--self-test-size", args.window_size, "-d", str(fixture), "--language", language]
         stage, report = run_stage(language, "ui", command, out / "ui.json", out / "process.log",
                                   lambda value: validate_ui(value, language, version), output, runner)
         stages.append(stage)
@@ -191,21 +194,29 @@ def run_acceptance(args, *, root=None, runner=None):
             stage, _ = run_stage(language, "restart", command, restarted / "ui.json", out / "restart.log",
                                  lambda value: validate_ui(value, language, version), output, runner)
             stages.append(stage)
-        meme_out = out / "memes"
-        command = [str(app), *launcher, "--language", language, "--export-memes", str(meme_out)]
-        stage, memes = run_stage(language, "memes", command, meme_out / "memes.json", out / "memes.log",
-                                 lambda value: validate_memes(value, language, localized_count), output, runner)
-        stages.append(stage)
-        if memes is not None:
-            summary["meme_images"] = len(memes)
-        failed = [item["stage"] for item in stages if item["language"] == language and item["status"] != "passed"]
+        if args.ui_only:
+            stages.append({"language": language, "stage": "memes", "status": "not-selected",
+                           "reasons": []})
+        else:
+            meme_out = out / "memes"
+            command = [str(app), *launcher, "--language", language, "--config-dir", str(out / "settings"),
+                       "--export-memes", str(meme_out)]
+            stage, memes = run_stage(language, "memes", command, meme_out / "memes.json", out / "memes.log",
+                                     lambda value: validate_memes(value, language, localized_count), output, runner)
+            stages.append(stage)
+            if memes is not None:
+                summary["meme_images"] = len(memes)
+        failed = [item["stage"] for item in stages if item["language"] == language and item["status"] not in ("passed", "not-selected")]
         if failed:
             summary.update(acceptance_status="failed", failed_stages=failed)
         reports.append(summary)
     counts = {status: sum(item["status"] == status for item in stages)
-              for status in ("passed", "failed", "not-executed")}
-    passed = preflight["status"] == "passed" and counts["passed"] == 9
-    result = {"passed": passed, "preflight": preflight, "counts": counts, "stages": stages}
+              for status in ("passed", "failed", "not-executed", "not-selected")}
+    selected_count = 6 if args.ui_only else 9
+    passed = preflight["status"] == "passed" and counts["passed"] == selected_count
+    result = {"passed": passed, "scope": "ui-only" if args.ui_only else "full",
+              "selected_stage_count": selected_count, "preflight": preflight,
+              "counts": counts, "stages": stages}
     (output / "summary.json").write_text(json.dumps(reports, ensure_ascii=False, indent=2), encoding="utf-8")
     (output / "stage-results.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     return 0 if passed else 1
@@ -218,8 +229,12 @@ def main(argv=None):
     except OSError:
         print("FAIL: acceptance report directory is unavailable")
         return 1
-    print("PASS: three language catalogs, UI window captures, bundled synthetic DataFlash loader"
-          if not code else "FAIL: acceptance stages incomplete; see stage-results.json")
+    if code:
+        print("FAIL: acceptance stages incomplete; see stage-results.json")
+    elif args.ui_only:
+        print("PASS: six selected UI and restart stages; image export not selected")
+    else:
+        print("PASS: three language catalogs, UI window captures, bundled synthetic DataFlash loader")
     return code
 
 

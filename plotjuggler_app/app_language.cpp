@@ -10,21 +10,41 @@
 
 QString normalizedApplicationLanguage(QString language)
 {
+  language = language.trimmed().section('.', 0, 0).section('@', 0, 0);
   language.replace('-', '_');
-  if (language == "zh_CN" || language == "zh_Hans") return "zh_CN";
-  if (language == "zh_TW" || language == "zh_Hant") return "zh_TW";
-  return "en_US";
+  const QStringList parts = language.split('_', Qt::SkipEmptyParts);
+  if (parts.isEmpty() || parts.first().compare("zh", Qt::CaseInsensitive) != 0) return "en_US";
+  // Explicit script takes precedence over region, irrespective of casing.
+  for (const auto& part : parts.mid(1))
+  {
+    if (part.compare("Hans", Qt::CaseInsensitive) == 0) return "zh_CN";
+    if (part.compare("Hant", Qt::CaseInsensitive) == 0) return "zh_TW";
+  }
+  for (const auto& part : parts.mid(1))
+  {
+    if (part.compare("TW", Qt::CaseInsensitive) == 0 ||
+        part.compare("HK", Qt::CaseInsensitive) == 0 ||
+        part.compare("MO", Qt::CaseInsensitive) == 0) return "zh_TW";
+    if (part.compare("CN", Qt::CaseInsensitive) == 0 ||
+        part.compare("SG", Qt::CaseInsensitive) == 0) return "zh_CN";
+  }
+  return "zh_CN"; // A bare Chinese locale uses Simplified Chinese.
 }
 
 QString selectedApplicationLanguage(const QApplication& app)
 {
-  QString language = QSettings().value("Preferences::language", "zh_CN").toString();
+  QSettings settings;
+  const QStringList system_languages = QLocale::system().uiLanguages();
+  QString language = settings.contains("Preferences::language")
+      ? settings.value("Preferences::language").toString()
+      : (system_languages.isEmpty() ? QStringLiteral("en_US") : system_languages.first());
   const auto arguments = app.arguments();
   for (int i = 1; i < arguments.size(); ++i)
   {
     if (arguments[i] == "--") break;
     if (arguments[i].startsWith("--language=")) language = arguments[i].mid(11);
-    else if (arguments[i] == "--language" && i + 1 < arguments.size()) language = arguments[++i];
+    else if (arguments[i] == "--language" && i + 1 < arguments.size() &&
+             !arguments[i + 1].startsWith("--")) language = arguments[++i];
   }
   return normalizedApplicationLanguage(language);
 }
