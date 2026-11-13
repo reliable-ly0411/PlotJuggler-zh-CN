@@ -29,9 +29,13 @@ if os.name == 'nt':
     patterns.pop('mcp_bridge')  # CMake defines this end-to-end target on Linux only.
     patterns['mixed_rhi'] = r'^rhi_mixed_dock_test\.d3d11\.'
     patterns['model_cache'] = r'^scene3d_rhi_model_cache_test\.d3d11\.'
+# Hosted runners expose one screen: retain this explicit unverified hardware risk.
+unverified = [n for n in names if n.endswith('.FloatingDocksMovedToAScreenWithAnotherPixelRatio')]
+names = [n for n in names if n not in unverified]
 selected = {group: [n for n in names if re.search(pattern, n)]
             for group, pattern in patterns.items()}
 output.mkdir(exist_ok=True)
+(output / 'unverified-multi-screen-dpi.json').write_text(json.dumps(unverified, indent=2) + '\n')
 (output / 'selection.json').write_text(json.dumps(selected, indent=2) + '\n')
 missing = [g for g, ns in selected.items() if not ns]
 if missing:
