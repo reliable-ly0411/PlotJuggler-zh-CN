@@ -5,6 +5,7 @@ from pathlib import Path
 import platform
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -54,5 +55,34 @@ class ConfigLinks(unittest.TestCase):
             subprocess.run(['cc','-shared','-fPIC',str(source),'-Wl,-soname,'+m.LIBRARY,'-o',str(library)],check=True)
             m.verify_elf(library,machine)
             with self.assertRaises(ValueError):m.verify_elf(library,183 if machine==62 else 62)
+
+class HostCustomization(unittest.TestCase):
+    def test_both_architectures_and_unknown_inputs(self):
+        sys.path.insert(0,str(ROOT/'scripts'))
+        import omit_host_sitecustomize as hook
+        content = (b'# install the apport exception handler if available\ntry:\n'
+                   b'    import apport_python_hook\nexcept ImportError:\n    pass\n'
+                   b'else:\n    apport_python_hook.install()\n')
+        self.assertEqual(hook.hashlib.sha256(content).hexdigest(),hook.CONTENT_SHA256)
+        for triple in m.LAYOUTS:
+            for mode in ['known','changed','unknown-target','source-symlink','not-link']:
+                with self.subTest(triple=triple,mode=mode),tempfile.TemporaryDirectory() as tmp:
+                    base=Path(tmp);root=base/'payload';parent=root/'usr/lib/python3.10';parent.mkdir(parents=True)
+                    config=parent/('config-3.10-'+triple);config.mkdir();(config/'Makefile').write_text('keep')
+                    link=parent/'sitecustomize.py'
+                    link.symlink_to(hook.TARGET if mode!='unknown-target' else '/etc/unknown.py')
+                    source=base/'official.py';source.write_bytes(content+(b'#changed' if mode=='changed' else b''))
+                    if mode=='source-symlink':
+                        source.unlink();source.symlink_to('/etc/passwd')
+                    if mode=='not-link':link.unlink();link.write_bytes(content)
+                    with patch.object(hook,'Path',side_effect=lambda value: source if value==hook.TARGET else Path(value)):
+                        if mode=='known':
+                            result=hook.omit(root);self.assertEqual(result['action'],'omitted-host-apport-hook')
+                            self.assertFalse(link.is_symlink());self.assertFalse(link.exists())
+                        else:
+                            with self.assertRaises(ValueError):hook.omit(root)
+                            self.assertTrue(link.is_symlink() or link.exists())
+                    self.assertEqual((config/'Makefile').read_text(),'keep')
+        sys.path.pop(0)
 
 if __name__=='__main__':unittest.main()
