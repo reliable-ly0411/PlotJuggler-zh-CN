@@ -1,5 +1,7 @@
 """Regression checks for fixture generation, not proof of MSVC repeatability."""
 import importlib.util
+import json
+import struct
 from pathlib import Path
 import shutil
 import subprocess
@@ -11,7 +13,9 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('pathmap_probe', ROOT/'scripts/probe_windows_conan_pathmap.py')
-probe = importlib.util.module_from_spec(spec); spec.loader.exec_module(probe)
+probe = importlib.util.module_from_spec(spec)
+with patch.object(sys, 'path', [str(ROOT/'scripts')] + sys.path):
+    spec.loader.exec_module(probe)
 
 
 def generated_include(package_folder, build_folder):
@@ -49,6 +53,37 @@ class FixtureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             actual=generated_include('D:/a/space 源/package',Path(td))
             self.assertEqual(actual,'D:/a/space 源/package/include')
+
+    def test_partial_success_and_raw_objects_survive_byte_mismatch(self):
+        def obj(timestamp):
+            header=struct.pack('<HHIIIHH',0x8664,1,timestamp,0,0,0,0)
+            section=b'.text\0\0\0'+struct.pack('<IIIIIIHHI',0,0,3,60,0,0,0,0,0x60000020)
+            return header+section+b'abc'
+        calls=[]
+        def fake_one(label,base,dep,recipe,enable):
+            calls.append(label)
+            folder=base/'fixture-objects'/label;folder.mkdir(parents=True)
+            raw=obj(1 if label=='cache-a' else 2)
+            for name in ('main.obj','source.obj'):(folder/name).write_bytes(raw)
+            return {'refs':['fixture/1.0#'+'a'*32],
+                    'output':['Z:/pj-conan-exact/path']*4 if enable else ['Z:/pj-conan/random']*4,
+                    'objects':{name:probe.digest(folder/Path(name).name) for name in ('probe.dir/main.obj','probe.dir/source.obj')},
+                    'build_folder':'D:/'+label+'/conan/p/b/'+label+'/b'}
+        with tempfile.TemporaryDirectory() as td:
+            base=Path(td)/'experiment'
+            with patch.object(probe.sys,'platform','win32'), patch.object(probe.sys,'argv',['probe','--work',str(base)]), patch.object(probe,'one',side_effect=fake_one):
+                with self.assertRaisesRegex(RuntimeError,'raw C/C[+]'):probe.main()
+            summary=json.loads((base/'summary.json').read_text())
+            self.assertEqual(calls,['cache-a','cache-b','root-only'])
+            self.assertEqual(summary['status'],'failed')
+            self.assertTrue(summary['runtime_paths_equal'])
+            self.assertTrue(summary['different_cache_suffixes'])
+            self.assertTrue(summary['negative_control_rejected'])
+            self.assertFalse(summary['raw_objects_equal'])
+            self.assertEqual(set(summary['completed']),set(calls))
+            comparison=json.loads((base/'coff-comparison.json').read_text())
+            self.assertFalse(comparison['probe.dir/main.obj']['equal'])
+            self.assertEqual((base/'fixture-objects/cache-a/main.obj').read_bytes(),obj(1))
 
     def test_real_cmake_config_accepts_fixed_fixture_rejects_original(self):
         self.assertIsNotNone(shutil.which("cmake"), "real CMake parser required")
