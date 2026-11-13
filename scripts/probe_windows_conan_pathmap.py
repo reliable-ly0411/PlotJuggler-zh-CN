@@ -39,7 +39,8 @@ class Probe(ConanFile):
     exports_sources = "CMakeLists.txt", "source files/*"
     def generate(self):
         tc = CMakeToolchain(self)
-        tc.variables["DEP_INCLUDE"] = self.dependencies["pjpathmapdep"].package_folder + "/include"
+        # CMake quoted strings interpret backslash escapes in Windows paths.
+        tc.variables["DEP_INCLUDE"] = self.dependencies["pjpathmapdep"].package_folder.replace(chr(92), "/") + "/include"
         tc.generate()
         flags = {k: self.conf.get(k, check_type=list) for k in ("tools.build:cflags", "tools.build:cxxflags")}
         Path(self.build_folder, "probe-flags.json").write_text(json.dumps(flags), encoding="utf-8")

@@ -28,6 +28,8 @@ jobs:
         RELEASE_MANIFEST: ${{ inputs.release_manifest }}
       run: python3 .github/release_policy/policy.py materialize
     - run: |
+        python3 tests/check_version.py --source-only
+        python3 tests/test_version_preflight.py -v
         python3 tests/check_package_privacy.py -v
         python3 tests/check_release_assets.py -v
   windows:

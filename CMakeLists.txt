@@ -401,11 +401,15 @@ if(PJ_BUILD_FORK_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_public_binary_review.py)
     add_test(NAME AcceptanceStageCollection COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_zh_acceptance.py)
+    add_test(NAME VersionPreflight COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_version_preflight.py)
     add_test(NAME PackageAuditInventory COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_package_audit_inventory.py)
     add_test(NAME PrivateBuildRoots COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_private_roots.py)
     if(UNIX)
+      add_test(NAME PythonConfigLink COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_python_config_link.py)
       add_test(NAME AppImageAcceptancePaths COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_appimage_acceptance_paths.py)
       add_test(NAME QtCorePathMapping COMMAND ${Python3_EXECUTABLE}

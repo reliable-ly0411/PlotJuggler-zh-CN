@@ -270,11 +270,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ReviewOnly-Windows-public-binaries-${{ steps.native-build.outputs.source-sha }}
-        path: |
-          review-only/public-binaries/DataLoadParquet.dll
-          review-only/public-binaries/ToolboxMosaico.dll
-          review-only/public-binaries/ProtobufParser.dll
-          review-only/public-binaries/review-manifest.json
+        path: review-only/public-binaries/
         if-no-files-found: error
         retention-days: 14
     - name: Verify real public DLL identities and mutation rejection

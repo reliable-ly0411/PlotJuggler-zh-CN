@@ -36,6 +36,8 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           python tests/test_windows_conan_pathmap_hook.py -v
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python tests/test_windows_conan_pathmap_probe.py -v
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Real MSVC dual-cache and negative-control probe
         shell: pwsh
         run: |
