@@ -18,8 +18,16 @@ import unittest
 
 PATCHES = Path(__file__).resolve().parent
 LITERAL = r'"(?:[^"\\]|\\.)*"'
-CALL = re.compile(r'pj_zh_localization::text\((' + LITERAL + r'), (' +
-                  LITERAL + r'), (' + LITERAL + r')\)')
+LITERALS = LITERAL + r'(?:\s*' + LITERAL + r')*'
+CALL = re.compile(r'pj_zh_localization::text\(\s*(' + LITERALS + r')\s*,\s*(' +
+                  LITERALS + r')\s*,\s*(' + LITERALS + r')\s*\)')
+
+
+def literal_value(expression):
+    """Decode adjacent fixed C++ literals without interpreting user parameters."""
+    return ''.join(json.loads(value) for value in re.findall(LITERAL, expression))
+
+
 PLACEHOLDER = re.compile(r'\{[^{}]*\}|%\d+')
 LANGUAGES = [
     ('zh_CN', 'zh_CN', 1),
@@ -52,7 +60,7 @@ class DisplayLanguageDataTest(unittest.TestCase):
         calls = list(prose_calls())
         self.assertTrue(calls, 'no display prose found')
         for patch, literals in calls:
-            values = [json.loads(literal) for literal in literals]
+            values = [literal_value(literal) for literal in literals]
             for translated in values[1:]:
                 with self.subTest(patch=patch, english=values[0], translated=translated):
                     self.assertTrue(translated)
@@ -64,7 +72,7 @@ class DisplayLanguageDataTest(unittest.TestCase):
                   'metadata.yaml', 'ros2 bag convert', 'storage_id: mcap',
                   'MCAP', 'arrow-ipc', 'JSON']
         for patch, literals in prose_calls():
-            values = [json.loads(literal) for literal in literals]
+            values = [literal_value(literal) for literal in literals]
             for token in tokens:
                 if token in values[0]:
                     with self.subTest(patch=patch, english=values[0], token=token):

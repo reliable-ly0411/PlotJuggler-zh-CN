@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "component": "Mesa llvmpipe Windows software renderer",
+  "mesa_version": "11.2.2",
+  "llvm_version": "3.6.2",
+  "binary": {
+    "path": "bin/opengl32sw.dll",
+    "bytes": 20639888,
+    "sha256": "b04de4541863bc7d8879040a78889c4849c1b1da2784c4630f734c146c2998ce"
+  },
+  "source_context": {
+    "url": "https://wiki.qt.io/index.php?title=MesaLlvmpipe&oldid=28758&action=raw",
+    "bytes": 4122,
+    "sha256": "c4d5d8e4cd24de46262f541fe6d838fa37909b6dd1ab61809c4f581ec3ae42a7"
+  },
+  "scope": "Original upstream notices retained for the bundled renderer. The complete llvmpipe, Gallivm, Windows GDI and LLVM Support source files retain their unmodified notices. These reference files are not a complete build-source or linked-object manifest.",
+  "files": [
+    {
+      "file": "Mesa-license.html",
+      "url": "https://gitlab.freedesktop.org/mesa/mesa/-/raw/3a9f6283f435f90ca1a2901be39ec9d629c95bb6/docs/license.html",
+      "bytes": 3763,
+      "sha256": "288ddfae338be168ef2492c21de42ee2f5c8ebc5a734b4e58b37007141bc2d6d"
+    },
+    {
+      "file": "LLVM-LICENSE.TXT",
+      "url": "https://raw.githubusercontent.com/llvm/llvm-project/ee46064b83e7acd5a215ea5bb1c9708d75de6164/llvm/LICENSE.TXT",
+      "bytes": 3281,
+      "sha256": "e3bc36440fc927c62d5cc24efeefe225a14d4e34ffeb0c92e430625cce9ee444"
+    },
+    {
+      "file": "LLVM-COPYRIGHT.regex",
+      "url": "https://raw.githubusercontent.com/llvm/llvm-project/ee46064b83e7acd5a215ea5bb1c9708d75de6164/llvm/lib/Support/COPYRIGHT.regex",
+      "bytes": 2718,
+      "sha256": "0424e57d4303164dc59a8509c20dae0518b853692e5c2b0e98b11816fdbc97c7"
+    },
+    {
+      "file": "LLVM-MD5.cpp.txt",
+      "url": "https://raw.githubusercontent.com/llvm/llvm-project/ee46064b83e7acd5a215ea5bb1c9708d75de6164/llvm/lib/Support/MD5.cpp",
+      "bytes": 9148,
+      "sha256": "19edb938505f839ba5d2d96c26d5db454542cc9d22d277652f5085c62d0ac792"
+    },
+    {
+      "file": "LLVM-MD5.h.txt",
+      "url": "https://raw.githubusercontent.com/llvm/llvm-project/ee46064b83e7acd5a215ea5bb1c9708d75de6164/llvm/include/llvm/Support/MD5.h",
+      "bytes": 1975,
+      "sha256": "f7db858aba5c9ee861b8a8e8b80f4c943f712ca4c15fad4bc2bd002a589bb1d4"
+    },
+    {
+      "file": "Mesa-lp_context.c.txt",
+      "url": "https://gitlab.freedesktop.org/mesa/mesa/-/raw/3a9f6283f435f90ca1a2901be39ec9d629c95bb6/src/gallium/drivers/llvmpipe/lp_context.c",
+      "bytes": 6971,
+      "sha256": "a3d06bd48eab5ab72e32b0056749d6ee1fd33a932e6049ea2ee8db4ec2e4bdef"
+    },
+    {
+      "file": "Mesa-lp_bld_init.c.txt",
+      "url": "https://gitlab.freedesktop.org/mesa/mesa/-/raw/3a9f6283f435f90ca1a2901be39ec9d629c95bb6/src/gallium/auxiliary/gallivm/lp_bld_init.c",
+      "bytes": 18235,
+      "sha256": "1b3ca879446601a22d371e260498f54bc685ada501a8c17ab9333234f1cf8a0e"
+    },
+    {
+      "file": "Mesa-libgl_gdi.c.txt",
+      "url": "https://gitlab.freedesktop.org/mesa/mesa/-/raw/3a9f6283f435f90ca1a2901be39ec9d629c95bb6/src/gallium/targets/libgl-gdi/libgl_gdi.c",
+      "bytes": 5018,
+      "sha256": "9f2e40aa40e8eea0124e60eb9e28bde0887c1812b5909ccf443e3517c53ff82f"
+    }
+  ]
+}

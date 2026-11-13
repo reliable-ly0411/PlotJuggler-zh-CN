@@ -4,6 +4,8 @@
 import base64
 import gzip
 import re
+import shutil
+import subprocess
 import importlib.util
 from pathlib import Path
 import struct
@@ -37,6 +39,39 @@ class InstallerResourceSmokeTests(unittest.TestCase):
             group = ET.parse(qrc).getroot().find('qresource')
             self.assertEqual(group.attrib['prefix'], '/translations_new')
             self.assertEqual([e.text for e in group], ['ifw_zh_CN.qm', 'qt_zh_CN.qm', smoke.MARKER])
+
+    def test_mesa_stage_gate_invocation_and_failure_propagation(self):
+        """Exercise only the external gate, never treat a synthetic stage as accepted."""
+        shell = shutil.which('pwsh') or shutil.which('powershell')
+        if not shell:
+            self.skipTest('PowerShell unavailable; real Windows stage not exercised')
+        builder = (ROOT / 'packaging/installer/build_windows_installer.ps1').read_text(encoding='utf-8')
+        start = builder.index('# Check the actual deployed helper DLL')
+        block = builder[start:builder.index('# --- build the installer', start)]
+        quote = lambda path: "'" + str(path).replace("'", "''") + "'"
+        with tempfile.TemporaryDirectory() as directory:
+            setup = ("$ErrorActionPreference='Stop'; $ExtraPrefix=$true; "
+                     f"$stageData={quote(directory)}; $PSScriptRoot={quote(ROOT / 'packaging/installer')}; "
+                     f"$expectedHelper={quote(ROOT / 'packaging/localization/windows_mesa_notices.py')}; "
+                     "$script:helperCalls=0; "
+                     "function Die([string]$message) { throw $message }; "
+                     "function python { if ($args.Count -ne 3 -or "
+                     "[IO.Path]::GetFullPath($args[0]) -cne $expectedHelper -or "
+                     "$args[1] -cne '--prefix' -or $args[2] -cne $stageData) "
+                     "{ throw 'Unexpected verifier invocation' }; "
+                     "$script:helperCalls++; Write-Output 'EXACT_MESA_GATE_CALLED'; "
+                     "$global:LASTEXITCODE=$helperExit }; ")
+            for code in (23, 0):
+                script = setup + f"$helperExit={code};\n" + block
+                script += "\nif ($helperCalls -ne 1) { throw 'Expected one gate call' }"
+                run = subprocess.run([shell, '-NoProfile', '-NonInteractive', '-Command', script],
+                                     capture_output=True, text=True, timeout=30)
+                self.assertEqual(run.stdout.count('EXACT_MESA_GATE_CALLED'), 1, run.stdout + run.stderr)
+                if code:
+                    self.assertNotEqual(run.returncode, 0)
+                    self.assertIn('Windows Mesa notice verification failed.', run.stderr)
+                else:
+                    self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
 
     def test_missing_embedded_resource_fails(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -67,6 +67,9 @@ jobs:
           echo "PJ_VERSION=$PJ_APP_VERSION" >> "$GITHUB_ENV"
           echo "PJ_QT_VERSION=$PJ_QT_VERSION" >> "$GITHUB_ENV"
           echo "qt_version=$PJ_QT_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Verify locked Linux packaging assets before dependencies
+        if: runner.os == 'Linux'
+        run: python packaging/localization/linux_tools.py --directory packaging/appimage
       - name: Build tools
         run: python -m pip install 'conan>=2,<3' 'cmake>=3.28,<4' 'ninja!=1.13.0' 'aqtinstall>=3.3'
       - name: Linux build dependencies
@@ -305,6 +308,8 @@ jobs:
         id: localized-plugins
         shell: pwsh
         run: python packaging/localization/build_localized_plugins.py --work build/localized-plugins --prefix build/fork-prefix
+      - name: Validate rebuilt CSV through real FileLoader
+        run: python packaging/localization/run_csv_runtime_acceptance.py --build build --prefix build/fork-prefix
       - name: Retain completed localized plugin dependencies
         if: always() && steps.localized-plugins.outcome != 'skipped'
         uses: actions/cache/save@v5
@@ -317,6 +322,8 @@ jobs:
         with:
           name: localized-plugin-build-${{ runner.os }}
           path: |
+            build/csv-runtime.xml
+            build/csv-runtime-diagnostics/*.json
             build/localized-plugins/completed.json
             build/localized-plugins/*/build/conan-graph.json
             build/localized-plugins/*/build/conan.lock
@@ -347,8 +354,10 @@ jobs:
           ./packaging/installer/build_windows_installer.ps1 `
             -QtDir ".qt/$env:PJ_QT_VERSION/msvc2022_64" `
             -Version $env:PJ_VERSION -PackageVersion $packageVersion `
-            -ExtraPrefix build/fork-prefix -NameSuffix '-zh-CN' -CleanReleaseName -OutDir dist `
+            -ExtraPrefix build/fork-prefix -NameSuffix '-zh-CN' -CleanReleaseName -OutDir dist -StageDir build/windows-stage `
             -PluginRegistryUrl "packaging/localization/registry-lock.json"
+          ./packaging/installer/build_windows_portable.ps1 -StageDir build/windows-stage `
+            -OutFile "dist/PlotJuggler-$env:PJ_VERSION-Windows-x64-portable-zh-CN.zip"
       - name: Record original package hashes
         run: |
           python packaging/localization/hash_packages.py dist --output "SHA256SUMS-${RUNNER_OS}.txt"
@@ -442,8 +451,36 @@ jobs:
           path: reports/
           if-no-files-found: error
 
+  windows-portable-clean:
+    needs: native
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: zh4-candidate-Windows
+          path: pkg
+      - name: Install screenshot helper
+        run: python -m pip install 'Pillow>=11,<12'
+      - name: Extract and verify the original portable ZIP
+        shell: pwsh
+        run: ./packaging/localization/verify_windows.ps1 -Packages pkg -Output reports -Format portable
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zh4-final-Windows-portable
+          path: reports/
+          if-no-files-found: error
+
   release-manifest:
-    needs: [native, linux-clean, windows-clean]
+    needs: [native, linux-clean, windows-clean, windows-portable-clean]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:

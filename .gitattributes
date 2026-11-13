@@ -20,3 +20,6 @@ packaging/installer/translations/ifw_zh_CN.ts text eol=lf whitespace=-blank-at-e
 resources/wasm-presets/** -text
 resources/wasm-presets/*/data.* -diff
 resources/wasm-presets/**/*.png -diff
+
+# Preserve byte-verified original third-party notices.
+packaging/localization/windows-mesa-notices/* -text whitespace=-blank-at-eol

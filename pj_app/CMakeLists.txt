@@ -376,6 +376,19 @@ if(EMSCRIPTEN)
     target_link_options(pj_app PRIVATE -sALLOW_MEMORY_GROWTH=1
         "--js-library=${CMAKE_CURRENT_SOURCE_DIR}/src/browser_picked_file.js")
     set_property(TARGET pj_app APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/browser_picked_file.js")
+    # Link-time patch of two Qt 6.12.0 backing-store flush functions: without it, playback at HiDPI uploads
+    # nearly the whole window as a texture every frame. See the file's header; remove it once Qt has the fix.
+    option(PJ_WASM_QT_FLUSH_OVERRIDE "Link-time patch of Qt 6.12 paintAndFlush/toTexture (HiDPI playback)" ON)
+    if(PJ_WASM_QT_FLUSH_OVERRIDE)
+        find_package(Qt6 REQUIRED COMPONENTS GuiPrivate WidgetsPrivate)
+        target_sources(pj_app PRIVATE src/wasm/qt612_rhi_flush_override.cpp)
+        # Verbatim Qt code: keep the project's -Werror set off it.
+        set_source_files_properties(src/wasm/qt612_rhi_flush_override.cpp PROPERTIES COMPILE_OPTIONS "-w")
+        target_link_libraries(pj_app PRIVATE Qt6::GuiPrivate Qt6::WidgetsPrivate)
+        # ponytail: applies to the whole pj_app link, so it also silences any other duplicate symbol;
+        # it goes away with this file.
+        target_link_options(pj_app PRIVATE "LINKER:--allow-multiple-definition")
+    endif()
     if(PJ_WASM_WITH_PYTHON)
         # Three more pre-spawned workers: the Python helper, its watchdog and a script lane. A worker created while
         # the main thread waits on it never starts.
@@ -964,6 +977,29 @@ if(PJ_BUILD_TESTS)
         target_compile_options(file_loader_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME FileLoaderTest COMMAND file_loader_test)
+
+    # Explicit opt-in: requires the checksum-verified, rebuilt fixed CSV DSO.
+    # No mock substitutes and no silent skip when a requested path is missing.
+    set(PJ_CSV_RUNTIME_PLUGIN "" CACHE FILEPATH "Fixed CSV DSO for runtime localization acceptance")
+    if(PJ_CSV_RUNTIME_PLUGIN)
+        if(NOT EXISTS "${PJ_CSV_RUNTIME_PLUGIN}")
+            message(FATAL_ERROR "PJ_CSV_RUNTIME_PLUGIN does not exist: ${PJ_CSV_RUNTIME_PLUGIN}")
+        endif()
+        add_executable(csv_runtime_file_loader_test tests/csv_runtime_language_test.cpp
+            src/DiagnosticDump.cpp src/DiagnosticDump.h)
+        set_target_properties(csv_runtime_file_loader_test PROPERTIES AUTOMOC ON)
+        target_compile_definitions(csv_runtime_file_loader_test PRIVATE PJ_CSV_RUNTIME_PLUGIN="${PJ_CSV_RUNTIME_PLUGIN}")
+        target_link_libraries(csv_runtime_file_loader_test PRIVATE pj_app_loader_testlib pj_app_language pj_plotting pj_resources)
+        target_compile_options(csv_runtime_file_loader_test PRIVATE ${PJ_WARNING_FLAGS})
+        if(MSVC)
+            target_compile_options(csv_runtime_file_loader_test PRIVATE /utf-8)
+        endif()
+        foreach(language IN ITEMS zh_CN zh_TW en_US)
+            add_test(NAME CsvRuntimeFileLoader_${language} COMMAND csv_runtime_file_loader_test)
+            set_tests_properties(CsvRuntimeFileLoader_${language} PROPERTIES
+                TIMEOUT 120 ENVIRONMENT "PLOTJUGGLER_UI_LANGUAGE=${language};QT_QPA_PLATFORM=offscreen;PJ_CSV_DIAGNOSTIC_DIR=${CMAKE_BINARY_DIR}/csv-runtime-diagnostics")
+        endforeach()
+    endif()
 
     # Host side of the SDK's "pj.source_promotion.v1" service: drives the real
     # FileLoader replace pipeline through the C ABI. Same standalone shape and

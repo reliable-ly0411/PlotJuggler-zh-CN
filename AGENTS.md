@@ -6,7 +6,7 @@ licensing, portability, and test conventions remain applicable.
 
 ## Branches and history
 
-- `main-4.x` is an exact upstream mirror, never a localization integration branch.
+- `main` (PJ4) and `main-3.x` (PJ3) are exact upstream mirrors, never localization integration branches.
 - `zh-CN-4.x` is the stable 4.x localization line. An initialized upstream-only
   branch does not imply an accepted Chinese release.
 - `zh-CN-4.x-dev` is the development integration line.
