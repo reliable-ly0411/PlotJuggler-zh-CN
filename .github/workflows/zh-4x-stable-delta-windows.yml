@@ -14,6 +14,7 @@ jobs:
     timeout-minutes: 90
     env:
       PJ_BUILD_JOBS: '2'
+      PJ_BENCH: '1'
       CMAKE_BUILD_PARALLEL_LEVEL: '2'
       PYTHONIOENCODING: utf-8
       QT_QPA_PLATFORM: windows
@@ -55,7 +56,7 @@ jobs:
           # No old native-kit is loaded or silently re-approved.
           & ./scripts/windows/build.ps1 --no-demos --no-widget-demos --no-marketplace-app --target pj_app 2>&1 | Tee-Object "$e/app-build.log"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          foreach ($target in @('pj_app_unit_tests','pj_app_gui_tests','pj_plotting_widget_tests','rhi_mixed_dock_test','scene3d_rhi_model_cache_test')) {
+          foreach ($target in @('pj_app_unit_tests','pj_app_gui_tests','pj_plotting_widget_tests','rhi_mixed_dock_test','scene3d_rhi_model_cache_test','file_loader_test','ardupilot_import_test')) {
             & ./scripts/windows/build.ps1 --skip-conan-install --no-demos --no-widget-demos --no-marketplace-app --target $target 2>&1 | Tee-Object -Append "$e/test-build.log"
             if ($LASTEXITCODE) { exit $LASTEXITCODE }
           }
