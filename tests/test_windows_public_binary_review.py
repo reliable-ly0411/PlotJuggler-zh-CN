@@ -105,6 +105,47 @@ class QrcSourceDiagnostics(unittest.TestCase):
             self.assertEqual(diag[wrapper.name]["resolution_chain"][1]["sha256"], sha(generated_qrc(5)))
             self.assertNotIn(folder, json.dumps(diag))
 
+    def test_cmake_public_wrapper_release_layouts(self):
+        for suffix in ("", "_Release"):
+            with tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                autogen = root / "QCodeEditor_autogen"
+                wrapper = autogen / ("3YJK5W5UP7" + suffix) / "qrc_qcodeeditor_resources.cpp"
+                actual = autogen / "include_Release/3YJK5W5UP7/qrc_qcodeeditor_resources_CMAKE_.cpp"
+                wrapper.parent.mkdir(parents=True)
+                actual.parent.mkdir(parents=True)
+                wrapper.write_bytes(b'#include <3YJK5W5UP7/qrc_qcodeeditor_resources_CMAKE_.cpp>')
+                actual.write_bytes(generated_qrc(5))
+                sources, diagnostics = collect_qrc_sources(root)
+                self.assertEqual(sources, [(wrapper.name, generated_qrc(5))])
+                self.assertEqual(diagnostics[wrapper.name]["include_resolution"][0]["present_layouts"],
+                                 ["cmake-release-include"])
+                # Two candidates fail even if identical: no picking the first.
+                duplicate = wrapper.parent / "3YJK5W5UP7/qrc_qcodeeditor_resources_CMAKE_.cpp"
+                duplicate.parent.mkdir()
+                duplicate.write_bytes(actual.read_bytes())
+                with self.assertRaises(ValueError): read_qrc_chain(root, wrapper)
+
+    def test_cmake_wrong_config_and_foreign_target_not_searched(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            wrapper = root / "QCodeEditor_autogen/3YJK5W5UP7/qrc_qcodeeditor_resources.cpp"
+            wrapper.parent.mkdir(parents=True)
+            raw = b'#include <3YJK5W5UP7/qrc_qcodeeditor_resources_CMAKE_.cpp>'
+            wrapper.write_bytes(raw)
+            for prefix in ("QCodeEditor_autogen/include_Debug", "Other_autogen/include_Release"):
+                target = root / prefix / "3YJK5W5UP7/qrc_qcodeeditor_resources_CMAKE_.cpp"
+                target.parent.mkdir(parents=True)
+                target.write_bytes(generated_qrc(5))
+            evidence = []
+            sources, diagnostics = collect_qrc_sources(root, evidence)
+            self.assertEqual(sources, [])
+            self.assertEqual(evidence[0][3], raw)
+            self.assertEqual(diagnostics[wrapper.name]["include_resolution"][0]["present_layouts"], [])
+            self.assertNotIn(folder, json.dumps(diagnostics))
+            wrapper.write_bytes(b'#include <AAAAAAAAAA/qrc_qcodeeditor_resources_CMAKE_.cpp>')
+            with self.assertRaises(ValueError): read_qrc_chain(root, wrapper)
+
     def test_wrapper_escape_ambiguity_cycle_and_limits_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

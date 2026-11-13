@@ -46,15 +46,39 @@ QRC_MAX_CHAIN_BYTES = 8 * 1024 * 1024
 QRC_MAX_WRAPPERS = 4
 
 
-def read_qrc_chain(build, path):
-    """Resolve only a sole relative include, never compiler search paths.
+def qrc_include_target(wrapper, target, diagnostics):
+    """Recognize CMake's public/checksum wrapper and Release include directory.
+
+    cmQtAutoRcc::InitFromInfo puts public wrappers in <autogen>/<checksum>
+    (or <checksum>_Release), while MultiConfigOutput is relative to
+    <autogen>/include_Release. Never search other targets/configurations.
+    """
+    candidates = [("wrapper-relative", wrapper.parent / target)]
+    parts = target.split("/")
+    if (len(parts) == 2 and re.fullmatch(r"[A-Z0-9]{10}", parts[0]) and
+            wrapper.parent.name in (parts[0], parts[0] + "_Release") and
+            wrapper.parent.parent.name.endswith("_autogen") and
+            parts[1] == wrapper.stem + "_CMAKE_.cpp"):
+        candidates.append(("cmake-release-include", wrapper.parent.parent / "include_Release" / target))
+    present = [(kind, path) for kind, path in candidates if path.exists() or path.is_symlink()]
+    diagnostics.append({"candidate_layouts": [kind for kind, _ in candidates],
+                        "present_layouts": [kind for kind, _ in present]})
+    if len(present) != 1:
+        raise ValueError("QRC include candidate count must be one")
+    return present[0][1]
+
+
+def read_qrc_chain(build, path, evidence_chain=None, resolutions=None):
+    """Resolve only a sole include in bounded known CMake layouts.
 
     Every component must be a non-symlink within the supplied build root. No
     preprocessor execution, global basename search, or duplicate selection.
     Original bytes are retained for hash-based quarantine provenance.
     """
     build = build.resolve()
-    chain, visited, total = [], set(), 0
+    chain = evidence_chain if evidence_chain is not None else []
+    resolutions = resolutions if resolutions is not None else []
+    visited, total = set(), 0
     for depth in range(QRC_MAX_WRAPPERS + 1):
         relative = path.absolute().relative_to(build)
         current = build
@@ -87,7 +111,7 @@ def read_qrc_chain(build, path):
         if target.startswith("/") or any(part in ("", ".", "..") for part in target.split("/")) or not target.endswith(".cpp"):
             raise ValueError("Unsafe QRC wrapper include")
         chain.append(("wrapper", data))
-        path = resolved.parent / target
+        path = qrc_include_target(resolved, target, resolutions)
     raise ValueError("QRC wrapper depth exceeded")
 
 
@@ -119,13 +143,15 @@ def collect_qrc_sources(build, evidence=None):
         entry["content_sha256"].sort()
         if len(paths) != 1 or entry["regular_files"] != 1:
             continue
+        chain, resolutions = [], []
         try:
-            actual, chain = read_qrc_chain(build, paths[0])
+            actual, _ = read_qrc_chain(build, paths[0], chain, resolutions)
         except (ValueError, OSError, UnicodeError):
             entry["rule"] = "QRC wrapper resolution rejected"
-            continue
-        sources.append((basename, actual))
-        entry["accepted"] = True
+        else:
+            sources.append((basename, actual))
+            entry["accepted"] = True
+        entry["include_resolution"] = resolutions
         entry["resolution_chain"] = [{"role": role, "sha256": sha(data), "file_bytes": len(data)}
                                      for role, data in chain]
         if evidence is not None:
