@@ -7,6 +7,37 @@ import struct
 def sha(data): return hashlib.sha256(data).hexdigest()
 
 
+def codeview_objects(payload, base_offset):
+    """Decode C13 S_OBJNAME records, retaining original offsets and names."""
+    if len(payload)<4 or struct.unpack_from('<I',payload)[0]!=4:
+        raise ValueError('unsupported CodeView signature')
+    result=[];offset=4
+    while offset<len(payload):
+        if offset+8>len(payload):raise ValueError('truncated CodeView subsection')
+        kind,size=struct.unpack_from('<II',payload,offset)
+        start=offset+8;end=start+size
+        if end>len(payload):raise ValueError('truncated CodeView subsection body')
+        if kind==0xf1:
+            record=start
+            while record<end:
+                if record+4>end:raise ValueError('truncated CodeView symbol')
+                length,typ=struct.unpack_from('<HH',payload,record)
+                stop=record+2+length
+                if length<2 or stop>end:raise ValueError('invalid CodeView symbol length')
+                if typ==0x1101:
+                    if length<7:raise ValueError('invalid S_OBJNAME')
+                    name=payload[record+8:stop]
+                    if b'\0' not in name:raise ValueError('unterminated S_OBJNAME')
+                    name=name.split(b'\0',1)[0]
+                    result.append({'record_offset':base_offset+record,
+                                   'name_offset':base_offset+record+8,
+                                   'object_name':name.decode('utf-8',errors='backslashreplace'),
+                                   'sha256':sha(name)})
+                record=stop
+        offset=(end+3)&~3
+    return result
+
+
 def inspect_object(data):
     def take(offset, size):
         if offset < 0 or size < 0 or offset + size > len(data):
@@ -39,7 +70,7 @@ def inspect_object(data):
     result={'format':kind,'bytes':len(data),'sha256':sha(data),'machine':hex(machine),
             'timestamp':timestamp,'header_bytes':header_size,'header_sha256':sha(data[:header_size]),
             'symbol_count':symcount,'symbol_offset':symptr,'symbols_sha256':sha(symbols),
-            'strings_sha256':sha(strings),'sections':[]}
+            'strings_sha256':sha(strings),'sections':[],'codeview_object_names':[]}
     for i in range(sections):
         offset=header_size+i*40
         name_raw=data[offset:offset+8].split(b'\0',1)[0]
@@ -51,6 +82,8 @@ def inspect_object(data):
         name=name_raw.decode('ascii',errors='backslashreplace')
         size,pointer,reloc,line,nreloc,nline,characteristics=struct.unpack_from('<IIIIHHI',data,offset+16)
         payload=take(pointer,size) if pointer else b''
+        if name=='.debug$S':
+            result['codeview_object_names'].extend(codeview_objects(payload,pointer))
         # Overflow relocation count is recorded separately; first relocation is the count.
         actual_reloc=nreloc
         if nreloc==65535 and characteristics & 0x01000000:

@@ -17,6 +17,18 @@ def fixture(payload=b'abc',timestamp=1,big=False):
 
 
 class CoffTests(unittest.TestCase):
+    def test_codeview_object_name_precise_record(self):
+        name=b'D:/runner/cache-a/main.obj\0'
+        symbol=struct.pack('<HHI',6+len(name),0x1101,0)+name
+        body=struct.pack('<III',4,0xf1,len(symbol))+symbol
+        body+=b'\0'*((-len(body))%4)
+        info=c.codeview_objects(body,100)
+        self.assertEqual(info[0]['record_offset'],112)
+        self.assertEqual(info[0]['name_offset'],120)
+        self.assertEqual(info[0]['object_name'],'D:/runner/cache-a/main.obj')
+        malformed=body[:12]+struct.pack('<H',65535)+body[14:]
+        with self.assertRaises(ValueError):c.codeview_objects(malformed,100)
+
     def test_standard_and_bigobj(self):
         for big in (False,True):
             raw=fixture(big=big);d=c.inspect_object(raw)
