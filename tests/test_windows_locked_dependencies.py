@@ -24,6 +24,11 @@ class LockedTests(unittest.TestCase):
         b['status']='failed'
         with self.assertRaises(ValueError):compare_reports(a,b)
     def test_exact_contexts(self):self.assertEqual(len(check_graph(graph())),33)
+    def test_real_txt_consumer_is_not_a_dependency(self):
+        g=graph();g['graph']['nodes'].append({'id':'0','recipe':'Consumer','context':'host','ref':'conanfile'})
+        self.assertEqual(len(check_graph(g)),34)
+        g['graph']['nodes'][-1]['id']='99'
+        with self.assertRaisesRegex(ValueError,'host mapping'):check_graph(g)
     def test_unknown_build_context_fails(self):
         g=graph();g['graph']['nodes'].append({'ref':'unknown/1#'+'a'*32,'context':'build'})
         with self.assertRaisesRegex(ValueError,'build-context'):check_graph(g)

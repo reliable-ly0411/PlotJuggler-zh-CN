@@ -23,7 +23,8 @@ def check_graph(data):
     host=set()
     for n in nodes:
         ref=n.get('ref')
-        if not ref:continue
+        if n.get('id')=='0' and n.get('recipe')=='Consumer' and n.get('context')=='host' and ref=='conanfile':continue
+        if not ref:raise ValueError('unidentified non-consumer node')
         context=n.get('context')
         if context=='host':
             if ref not in mapping:raise ValueError('unknown host mapping ref')
@@ -73,7 +74,7 @@ def main():
         if export['reference'] not in json.loads((ROOT/'scripts/windows_conan_host_refs.json').read_text()):raise ValueError('overlay revision mismatch')
         flags=build_arguments()+['--lockfile','cmake/conan/windows-msvc194.lock','-pr:h',profile,'-pr:h','cmake/conan/openssl-overlay.profile','-pr:b','default','-s','build_type=Release','-s','compiler.cppstd=17']
         plan=json.loads(run(['conan','graph','info','.']+flags+['--format=json']))
-        check_graph(plan);(base/'graph-plan.json').write_text(json.dumps(plan),encoding='utf-8')
+        (base/'graph-plan.json').write_text(json.dumps(plan),encoding='utf-8');check_graph(plan)
         result=json.loads(run(['conan','install','.','-of',base/'build']+flags+['--format=json']))
         nodes=check_graph(result);(base/'graph-result.json').write_text(json.dumps(result),encoding='utf-8')
         forbidden=[str(ROOT),str(base),str(cache),'Z:/pj-conan/p/b','Z:/pj-conan/p/']
