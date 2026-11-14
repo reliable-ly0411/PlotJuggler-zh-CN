@@ -556,7 +556,7 @@ void FunctionEditorWidget::reloadFunctionsLibraryTable()
 
   t->clear();
   t->setColumnCount(1);
-  t->setHorizontalHeaderLabels({ "Name" });
+  t->setHorizontalHeaderLabels({ tr("Name") });
   t->setRowCount((int)_snipped_saved.size());
 
   t->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -985,7 +985,8 @@ void FunctionEditorWidget::on_buttonLoadFunctions_clicked()
 
   if (!file.open(QIODevice::ReadOnly))
   {
-    QMessageBox::critical(this, QObject::tr("Error"), QString("Failed to open the file [%1]").arg(fileName));
+    QMessageBox::critical(this, QObject::tr("Error"),
+                          tr("Failed to open the file [%1]").arg(fileName));
     return;
   }
 
@@ -1016,7 +1017,8 @@ void FunctionEditorWidget::on_buttonSaveFunctions_clicked()
   QFile file(fileName);
   if (!file.open(QIODevice::WriteOnly))
   {
-    QMessageBox::critical(this, QObject::tr("Error"), QString("Failed to open the file [%1]").arg(fileName));
+    QMessageBox::critical(this, QObject::tr("Error"),
+                          tr("Failed to open the file [%1]").arg(fileName));
     return;
   }
   auto data = exportSnippets();
@@ -1281,14 +1283,14 @@ void FunctionEditorWidget::onUpdatePreview()
     if (_linked_source.toStdString() == new_plot_name ||
         !ui->listAdditionalSources->findItems(new_name, Qt::MatchExactly).isEmpty())
     {
-      errors += "- The name of the new timeseries is the same of one of its "
-                "dependencies.\n";
+      errors += tr("- The name of the new timeseries is the same of one of its "
+                   "dependencies.\n");
     }
   }
 
   if (new_plot_name.empty())
   {
-    errors += "- Missing name of the new time series.\n";
+    errors += tr("- Missing name of the new time series.\n");
   }
   else
   {
@@ -1296,13 +1298,13 @@ void FunctionEditorWidget::onUpdatePreview()
     if (_plot_map_data.numeric.count(new_plot_name) != 0 &&
         _transform_maps.count(new_plot_name) == 0)
     {
-      errors += "- Plot name already exists and can't be modified.\n";
+      errors += tr("- Plot name already exists and can't be modified.\n");
     }
   }
 
   if (_linked_source.isEmpty())
   {
-    errors += "- Missing source time series.\n";
+    errors += tr("- Missing source time series.\n");
   }
 
   SnippetData snippet;
@@ -1325,7 +1327,7 @@ void FunctionEditorWidget::onUpdatePreview()
   catch (std::runtime_error& err)
   {
     const QString lang = (currentLang() == ScriptLang::Python) ? "Python" : "Lua";
-    errors += QString("- Error in %1 script: %2").arg(lang).arg(err.what());
+    errors += tr("- Error in %1 script: %2").arg(lang).arg(err.what());
     ui->buttonSaveCurrent->setEnabled(false);
   }
 
@@ -1348,7 +1350,7 @@ void FunctionEditorWidget::onUpdatePreview()
     catch (std::runtime_error& err)
     {
       const QString lang = (currentLang() == ScriptLang::Python) ? "Python" : "Lua";
-      errors += QString("- Error in %1 script: %2").arg(lang).arg(err.what());
+      errors += tr("- Error in %1 script: %2").arg(lang).arg(err.what());
     }
   }
 
@@ -1390,12 +1392,12 @@ void FunctionEditorWidget::onUpdatePreviewBatch()
 
   if (ui->suffixLineEdit->text().isEmpty())
   {
-    errors += "- Missing prefix/suffix.\n";
+    errors += tr("- Missing prefix/suffix.\n");
   }
 
   if (ui->listBatchSources->count() == 0)
   {
-    errors += "- No input series.\n";
+    errors += tr("- No input series.\n");
   }
 
   SnippetData snippet;
@@ -1416,7 +1418,7 @@ void FunctionEditorWidget::onUpdatePreviewBatch()
   catch (std::runtime_error& err)
   {
     const QString lang = (currentLangBatch() == ScriptLang::Python) ? "Python" : "Lua";
-    errors += QString("- Error in %1 script: %2").arg(lang).arg(err.what());
+    errors += tr("- Error in %1 script: %2").arg(lang).arg(err.what());
   }
 
   if (custom_function && ui->listBatchSources->count() > 0)
@@ -1434,7 +1436,7 @@ void FunctionEditorWidget::onUpdatePreviewBatch()
     catch (std::runtime_error& err)
     {
       const QString lang = (currentLangBatch() == ScriptLang::Python) ? "Python" : "Lua";
-      errors += QString("- Error in %1 script: %2").arg(lang).arg(err.what());
+      errors += tr("- Error in %1 script: %2").arg(lang).arg(err.what());
     }
   }
 

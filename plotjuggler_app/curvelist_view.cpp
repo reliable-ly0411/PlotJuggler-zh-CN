@@ -5,6 +5,7 @@
  */
 
 #include "curvelist_view.h"
+#include <QCoreApplication>
 #include <QApplication>
 #include <QDrag>
 #include <QMessageBox>
@@ -278,10 +279,12 @@ bool CurvesView::eventFilterBase(QObject* object, QEvent* event)
         {
           if (selected_names.size() >= 1)
           {
-            QMessageBox::warning(table_widget, "New in version 2.3+",
-                                 "To create a new XY curve, you must select two "
-                                 "timeseries and "
-                                 "drag&drop them using the RIGHT mouse button.",
+            QMessageBox::warning(table_widget,
+                                 QCoreApplication::translate("QObject", "New in version 2.3+"),
+                                 QCoreApplication::translate(
+                                     "QObject", "To create a new XY curve, you must select two "
+                                                "timeseries and "
+                                                "drag and drop them using the RIGHT mouse button."),
                                  QMessageBox::Ok);
           }
           return true;

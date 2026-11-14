@@ -1,4 +1,5 @@
 #include "websocket_dialog.h"
+#include <QCoreApplication>
 
 #include <QRegularExpressionValidator>
 #include <QScrollBar>
@@ -231,7 +232,9 @@ void WebsocketDialog::setConnected(bool connected)
 {
   ui->buttonConnect->blockSignals(true);
   ui->buttonConnect->setChecked(connected);
-  ui->buttonConnect->setText(connected ? "Connected" : "Connect");
+  ui->buttonConnect->setText(connected ?
+                                 QCoreApplication::translate("WebSocketDialog", "Connected") :
+                                 QCoreApplication::translate("WebSocketDialog", "Connect"));
   ui->buttonConnect->blockSignals(false);
 
   ui->lineEditURL->setEnabled(!connected);

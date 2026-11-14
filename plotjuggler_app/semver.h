@@ -5,18 +5,25 @@
 #include <array>
 
 namespace PJ {
-/// Compare complete SemVer 2.0.0 values; build metadata never changes precedence.
-inline bool isNewerSemVer(QString candidate, QString installed)
+/// Strict parse shared by precedence and release-channel selection.
+inline QRegularExpressionMatch parseSemVer(QString value)
 {
   static const QRegularExpression syntax(
       R"(^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$)");
+  if (value.startsWith('v')) value.remove(0, 1);
+  auto result = syntax.match(value);
   static const QRegularExpression digits("^[0-9]+$");
-  auto parse = [&](QString value) {
-    if (value.startsWith('v')) value.remove(0, 1);
-    return syntax.match(value);
-  };
-  const auto left = parse(candidate);
-  const auto right = parse(installed);
+  for (const auto& part : result.captured(4).split('.', Qt::SkipEmptyParts))
+    if (digits.match(part).hasMatch() && part.size() > 1 && part.startsWith('0'))
+      return QRegularExpressionMatch();
+  return result;
+}
+/// Compare complete SemVer 2.0.0 values; build metadata never changes precedence.
+inline bool isNewerSemVer(QString candidate, QString installed)
+{
+  static const QRegularExpression digits("^[0-9]+$");
+  const auto left = parseSemVer(candidate);
+  const auto right = parseSemVer(installed);
   if (!left.hasMatch() || !right.hasMatch()) return false;
   const auto left_pre = left.captured(4).split('.', Qt::SkipEmptyParts);
   const auto right_pre = right.captured(4).split('.', Qt::SkipEmptyParts);

@@ -15,7 +15,7 @@ StatisticsDialog::StatisticsDialog(PlotWidget* parent)
 {
   ui->setupUi(this);
 
-  setWindowTitle(QString("Statistics | %1").arg(_parent->windowTitle()));
+  setWindowTitle(tr("Statistics | %1").arg(_parent->windowTitle()));
   setWindowFlag(Qt::Tool);
 
   ui->tableWidget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
@@ -146,7 +146,7 @@ void StatisticsDialog::setTitle(QString title)
   {
     title = "";
   }
-  setWindowTitle(QString("Statistics | %1").arg(title));
+  setWindowTitle(tr("Statistics | %1").arg(title));
 }
 
 void StatisticsDialog::closeEvent(QCloseEvent* event)

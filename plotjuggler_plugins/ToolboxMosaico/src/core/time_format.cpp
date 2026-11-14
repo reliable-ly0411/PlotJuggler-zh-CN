@@ -52,7 +52,7 @@ UtcTime utcFromUnixSeconds(int64_t secs)
 
 UtcTime utcFromNanoseconds(int64_t ts_ns)
 {
-  constexpr int64_t ns_per_second = 1'000'000'000LL;
+  constexpr int64_t ns_per_second = 1000000000LL;
   return utcFromUnixSeconds(floorDiv(ts_ns, ns_per_second));
 }
 }  // namespace
@@ -73,7 +73,7 @@ std::string formatTimestamp(int64_t ts_ns, bool long_format)
 
 std::string formatDuration(int64_t duration_ns)
 {
-  const int64_t total_secs = duration_ns / 1'000'000'000LL;
+  const int64_t total_secs = duration_ns / 1000000000LL;
   if (total_secs < 60)
   {
     return std::to_string(total_secs) + "s";
@@ -103,5 +103,5 @@ std::string formatDuration(int64_t duration_ns)
 
 bool needsLongFormat(int64_t span_ns)
 {
-  return span_ns > 24LL * 3600 * 1'000'000'000;
+  return span_ns > 24LL * 3600 * 1000000000;
 }

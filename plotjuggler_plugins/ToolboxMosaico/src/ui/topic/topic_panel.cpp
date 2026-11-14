@@ -130,14 +130,14 @@ void TopicPanel::populateTopics(const std::vector<TopicInfo>& infos)
   }
   else
   {
-    header_->setText(QString("Topics (%1)").arg(sorted.size()));
+    header_->setText(QObject::tr("Topics (%1)").arg(sorted.size()));
   }
   applyFilter();
 }
 
 void TopicPanel::setLoading(bool loading)
 {
-  header_->setText(loading ? "Topics (loading…)" : "Topics");
+  header_->setText(loading ? QObject::tr("Topics (loading…)") : QObject::tr("Topics"));
   table_->setEnabled(!loading);
 }
 

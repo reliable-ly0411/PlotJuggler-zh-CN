@@ -32,6 +32,14 @@ log += (fmt(141, "PARM", "QNf", "TimeUS,Name,Value") +
         record(141, "Q16sf", 1500000, b"TEST_PARAM", 7.5))
 (root / "synthetic.BIN").write_bytes(log)
 
+# A separate GUI sample draws real line segments without changing the parser's
+# original single-sample/instance fixture or its assertions.
+curves = log
+for timestamp, offset in ((4000000, 100), (5000000, 50)):
+    for instance, value in ((0, 123), (1, 234), (200, 345)):
+        curves += record(140, "QBh", timestamp, instance, value + offset)
+(root / "curves.BIN").write_bytes(curves)
+
 gps = log + fmt(142, "GPS", "QBIHB", "TimeUS,I,GMS,GWk,NSats")
 gps += record(131, "QBd", 0, ord("C"), 0.001)
 gps += record(129, "QB16s16s", 0, 142, b"s#s--", b"F-C--")

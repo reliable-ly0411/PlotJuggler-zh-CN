@@ -123,7 +123,7 @@ bool ToolboxCSV::serializeTable(const ExportTable& table, const QString& path, b
 #if TOOLBOXCSV_WITH_PARQUET
   return serializeParquet(table, path);
 #else
-  QMessageBox::warning(_ui.widget(), "Arrow/Parquet", "Can't load Arrow/Parquet");
+  QMessageBox::warning(_ui.widget(), tr("Arrow/Parquet"), tr("Can't load Arrow/Parquet"));
   return false;
 #endif
 }
@@ -135,29 +135,29 @@ void ToolboxCSV::onExportSingleFile(bool is_csv, QString filename)
   std::vector<std::string> selected_topics = _ui.getSelectedTopics();
   if (selected_topics.empty())
   {
-    QMessageBox::warning(_ui.widget(), "Export", "No topics selected.");
+    QMessageBox::warning(_ui.widget(), tr("Export"), tr("No topics selected."));
     return;
   }
 
   ExportTable table = buildExportTable(selected_topics, t_start, t_end);
   if (table.time.empty())
   {
-    QMessageBox::warning(_ui.widget(), "Export", "No samples found in the selected time range.");
+    QMessageBox::warning(_ui.widget(), tr("Export"),
+                         tr("No samples found in the selected time range."));
     return;
   }
 
   if (!serializeTable(table, filename, is_csv))
   {
-    QMessageBox::warning(_ui.widget(), "Export", "Failed to write the output file.");
+    QMessageBox::warning(_ui.widget(), tr("Export"), tr("Failed to write the output file."));
     return;
   }
 
   const QString folder = QFileInfo(filename).absolutePath();
   const QString fname = QFileInfo(filename).fileName();
-  QMessageBox::information(
-      _ui.widget(), "Export",
-      QString("<b>File saved in folder:</b><br>%1<br><br><b>File name:</b><br>%2")
-          .arg(folder.toHtmlEscaped(), fname.toHtmlEscaped()));
+  QMessageBox::information(_ui.widget(), tr("Export"),
+                           tr("<b>File saved in folder:</b><br>%1<br><br><b>File name:</b><br>%2")
+                               .arg(folder.toHtmlEscaped(), fname.toHtmlEscaped()));
   emit closed();
 }
 
@@ -168,7 +168,7 @@ void ToolboxCSV::onExportMultipleFiles(bool is_csv, QDir dir, QString prefix)
   std::vector<std::string> selected_topics = _ui.getSelectedTopics();
   if (selected_topics.empty())
   {
-    QMessageBox::warning(_ui.widget(), "Export", "No topics selected.");
+    QMessageBox::warning(_ui.widget(), tr("Export"), tr("No topics selected."));
     return;
   }
 
@@ -246,8 +246,8 @@ void ToolboxCSV::onExportMultipleFiles(bool is_csv, QDir dir, QString prefix)
 
     if (!serializeTable(table, filename, is_csv))
     {
-      QMessageBox::warning(_ui.widget(), "Export",
-                           QString("Failed to write file: %1").arg(filename));
+      QMessageBox::warning(_ui.widget(), tr("Export"),
+                           tr("Failed to write file: %1").arg(filename));
       return;
     }
 
@@ -256,7 +256,8 @@ void ToolboxCSV::onExportMultipleFiles(bool is_csv, QDir dir, QString prefix)
 
   if (saved_files.isEmpty())
   {
-    QMessageBox::warning(_ui.widget(), "Export", "No samples found in the selected time range.");
+    QMessageBox::warning(_ui.widget(), tr("Export"),
+                         tr("No samples found in the selected time range."));
     return;
   }
 
@@ -265,10 +266,10 @@ void ToolboxCSV::onExportMultipleFiles(bool is_csv, QDir dir, QString prefix)
   {
     file_names.append(QFileInfo(f).fileName().toHtmlEscaped());
   }
-  const QString names_label = (saved_files.size() == 1) ? "File name:" : "File names:";
+  const QString names_label = (saved_files.size() == 1) ? tr("File name:") : tr("File names:");
   QMessageBox::information(
-      _ui.widget(), "Export",
-      QString("<b>Files saved in folder:</b><br>%1<br><br><b>%2</b><br>%3")
+      _ui.widget(), tr("Export"),
+      tr("<b>Files saved in folder:</b><br>%1<br><br><b>%2</b><br>%3")
           .arg(dir.absolutePath().toHtmlEscaped(), names_label, file_names.join("<br>")));
   emit closed();
 }

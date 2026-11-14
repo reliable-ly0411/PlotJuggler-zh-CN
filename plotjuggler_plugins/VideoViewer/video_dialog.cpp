@@ -66,8 +66,7 @@ VideoDialog::VideoDialog(QWidget* parent) : QDialog(parent), ui(new Ui::VideoDia
 
   if (!_video_output->widget())
   {
-    QMessageBox::warning(this, QString::fromLatin1("QtAV error"),
-                         tr("Can not create video renderer"));
+    QMessageBox::warning(this, tr("QtAV error"), tr("Can not create video renderer"));
     return;
   }
   _media_player->setRenderer(_video_output);

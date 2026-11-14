@@ -1,0 +1,274 @@
+{
+  "schema": "windows-quarantine-protobuf-catalog/v1",
+  "purpose": "Review-only complete source paths; not production identity or provenance approval. Exact historical Conan RREV archive and cache layout are not verified.",
+  "official": {
+    "repository": "https://github.com/protocolbuffers/protobuf",
+    "tag": "v21.12",
+    "commit": "f0dc78d7e6e331b8c6bb2d5283e06aa26883ca7c",
+    "tree": "279ae3a7ce3cac503885a3dceb4d9c957a265e27"
+  },
+  "rc7": {
+    "source_commit": "32fe24c7e3c3d4599aad05bb7e9e730eb1a62adb",
+    "run": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/43078119058",
+    "run_attempt": 1,
+    "artifact_id": "13884995968",
+    "artifact_sha256": "1fbb272362aee04b9011e35e83d63f0c79cfc92e36833848faf14bd72f2f5456",
+    "dll_sha256": {
+      "ProtobufParser.dll": "3557657217e7493e791be90df19f5a96a7f2a3e2dd95f80fad6f36960a16f19c",
+      "ToolboxMosaico.dll": "987afdfe0ad0df1f583e140efb187c8acf6c27db806aea73de4455aef6118750"
+    }
+  },
+  "method": "sha256-ascii-lower-slash-cache-token-v1",
+  "entries": [
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/arena.cc",
+      "official_relative_path": "src/google/protobuf/arena.cc",
+      "git_blob_sha": "6ba508a5f0f3436d52ccc326cc932ceed3cd79fa",
+      "diagnostic_sha256": "e8186d30de638eaf81bb76b65a8f6538dc5f6e3b56907719203a1beded064fe5"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/compiler/parser.cc",
+      "official_relative_path": "src/google/protobuf/compiler/parser.cc",
+      "git_blob_sha": "5bd37d147bc449444f875f89367a208a32a9146e",
+      "diagnostic_sha256": "f2c13198a565aaaddbcafc54a5f6165c71682f731e11a22fe82d0fa41041e690"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/descriptor.cc",
+      "official_relative_path": "src/google/protobuf/descriptor.cc",
+      "git_blob_sha": "5f3427dc72497b618c4dea3ec6985eeb39139349",
+      "diagnostic_sha256": "6d610d0689764a9be2816b09f7bb11a11409d12b037e1db3bf18a1dfc66a24c4"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/descriptor.h",
+      "official_relative_path": "src/google/protobuf/descriptor.h",
+      "git_blob_sha": "6e536e5705f8df4f7c13638d50c114cbfb92fb4a",
+      "diagnostic_sha256": "c60cbdd5b0cf312e372ed92cca4f033a816bc1baef42edccb870734315875a09"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/descriptor_database.cc",
+      "official_relative_path": "src/google/protobuf/descriptor_database.cc",
+      "git_blob_sha": "203000d67d0beaaff4239da4edb53ae2d5c07210",
+      "diagnostic_sha256": "b5724d09b9bfd3874f6e0f5c56c1cc1ac89f3ee920e3b465ae07d2eb08fd07f0"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/dynamic_message.cc",
+      "official_relative_path": "src/google/protobuf/dynamic_message.cc",
+      "git_blob_sha": "1c96ca20807347238d660f588047b5517c2c7b86",
+      "diagnostic_sha256": "61472937e4d1465521fd11209c35ea338cf40c8e3dc1b02ea4b5f6da47e52e3a"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/dynamic_message.h",
+      "official_relative_path": "src/google/protobuf/dynamic_message.h",
+      "git_blob_sha": "6fa64259eea908d1ae597aa8addab8a2675e771a",
+      "diagnostic_sha256": "932b47ab7e74c21a054834a66b7ce2c52c201ad5416890fa95120027af8f49e5"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/extension_set.cc",
+      "official_relative_path": "src/google/protobuf/extension_set.cc",
+      "git_blob_sha": "fada4f5a987011b1c25a50de06112ee03e37a1f7",
+      "diagnostic_sha256": "2879eec9771331d7c1babb9bba1e7df1d09c728d5fc2f8de8fae1aba6464aa1d"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/extension_set_heavy.cc",
+      "official_relative_path": "src/google/protobuf/extension_set_heavy.cc",
+      "git_blob_sha": "a4bb94860cc9f581f91a003199d902185c06adbe",
+      "diagnostic_sha256": "1be77192c4c31c228382c636fcd362c524acf8407f4ea43a090ade1470b21c2c"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/extension_set_inl.h",
+      "official_relative_path": "src/google/protobuf/extension_set_inl.h",
+      "git_blob_sha": "e4e711721d4d8690e1e87fc8e31df1b5836d4fd7",
+      "diagnostic_sha256": "3d7e429b3e0392b1cf4594af3bd5c63723bf1c9f52f4017f04d6c1a9ae17f6f0"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/generated_message_reflection.cc",
+      "official_relative_path": "src/google/protobuf/generated_message_reflection.cc",
+      "git_blob_sha": "2a807e066bb748f214e008971309ef15473344b5",
+      "diagnostic_sha256": "e649c65d40d01ead1e199ff20287efa8fa52f7ed4b9f402401664220ab3773af"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/io/coded_stream.cc",
+      "official_relative_path": "src/google/protobuf/io/coded_stream.cc",
+      "git_blob_sha": "487e1b8a379b86bfa3097d68a64ee0a727d36cab",
+      "diagnostic_sha256": "99ff65520cd92737baf1d3a30f19bd19fe928992cde292782aa5c88c6e0a8b05"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/io/tokenizer.cc",
+      "official_relative_path": "src/google/protobuf/io/tokenizer.cc",
+      "git_blob_sha": "f9e07763e7362bd37267619336db841d0ae9df25",
+      "diagnostic_sha256": "0c4d7cd67784d4706416bf3d07233dc5f0f8519a947f6851b3b8c6cc8191dee1"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/io/zero_copy_stream.cc",
+      "official_relative_path": "src/google/protobuf/io/zero_copy_stream.cc",
+      "git_blob_sha": "f81555e5549554b78f29f77e9359e6c2b30d4d16",
+      "diagnostic_sha256": "f303948f79f8c3726d4aaf3ef2ba3c1a9bfe655d1e2d02dd02110001d651a7f3"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/io/zero_copy_stream_impl.cc",
+      "official_relative_path": "src/google/protobuf/io/zero_copy_stream_impl.cc",
+      "git_blob_sha": "c66bc862a70cee218b7baf550db5b36a0ce454fd",
+      "diagnostic_sha256": "3165ff67d0c2db065c6c44cf73091283f51b8fb08707516399884ad6f7d1dc31"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/io/zero_copy_stream_impl_lite.cc",
+      "official_relative_path": "src/google/protobuf/io/zero_copy_stream_impl_lite.cc",
+      "git_blob_sha": "b3dfd84c7fa140d41c732a71f51dd61a47155c39",
+      "diagnostic_sha256": "49c3cdc9ced974ee1e3e4bb5dfa8040d2a4d32afff9ae7b285ad1205f0cabdc8"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/map_field.cc",
+      "official_relative_path": "src/google/protobuf/map_field.cc",
+      "git_blob_sha": "ed662dfc439a0fadac327547e7db6012fd11bf55",
+      "diagnostic_sha256": "90ff9cfb6cfbbca327bddf08d808080d2ef5a472c9afde9febb3e73befa08f3f"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/map_field.h",
+      "official_relative_path": "src/google/protobuf/map_field.h",
+      "git_blob_sha": "287d58f3127dde0dbebc93ad2e6f9ed026e78ba5",
+      "diagnostic_sha256": "9e7a58eae59321cb530936a2c641f3ea142415a6d8d683f84961a2f65caf1844"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/map_field_inl.h",
+      "official_relative_path": "src/google/protobuf/map_field_inl.h",
+      "git_blob_sha": "7c4c2323c41169a17983df37b67e318a3151d424",
+      "diagnostic_sha256": "aaac2a69b1573b005235b5f425484d2460ef7db2a981dfb2c1999c622ee9bf89"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/message.cc",
+      "official_relative_path": "src/google/protobuf/message.cc",
+      "git_blob_sha": "6cdc6c83930216587829859a8b3ff9b1eea5d5e3",
+      "diagnostic_sha256": "45dcda5c89d8d29de5039675ce7d2beb31d0eee0a7250d8871d6506cee966960"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/message_lite.cc",
+      "official_relative_path": "src/google/protobuf/message_lite.cc",
+      "git_blob_sha": "da66c1965b4c42f261a5b5f031a1b60e8aefd1e6",
+      "diagnostic_sha256": "99c4c50a8e6ee7dbb37b163a9efb025cc978985a13198edaef5a6c81675cdab3"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/parse_context.h",
+      "official_relative_path": "src/google/protobuf/parse_context.h",
+      "git_blob_sha": "7aea50cdc385f0ed01b3989e12276494bf574939",
+      "diagnostic_sha256": "65701999d6b7cb0247b61c803af5b5fe5a13979113883eeb99a4304de4004aa6"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/reflection_internal.h",
+      "official_relative_path": "src/google/protobuf/reflection_internal.h",
+      "git_blob_sha": "f749c3eb11baff6c75f582b700663e7c39b1ddac",
+      "diagnostic_sha256": "078beb78db45a8e3ee0a327e25b7c9c32e0ce79be455b0ea98e6ac43f65c1f97"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/reflection_ops.cc",
+      "official_relative_path": "src/google/protobuf/reflection_ops.cc",
+      "git_blob_sha": "3a1972e2743b4ef5bec30863bf513f1792042046",
+      "diagnostic_sha256": "d2d0958b074d4b8d4711a924e4e23669a0b643a748073c5c1902af694d4441d4"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/stubs/strutil.cc",
+      "official_relative_path": "src/google/protobuf/stubs/strutil.cc",
+      "git_blob_sha": "594c8eac6a6ebff6d8bc8cc8518e3fd521f24da1",
+      "diagnostic_sha256": "0a0d9e094c71318e1006c55131ada45bbcd2460521d49e3f79f0d7ba83f87bab"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/stubs/substitute.cc",
+      "official_relative_path": "src/google/protobuf/stubs/substitute.cc",
+      "git_blob_sha": "d301682ee3377760430839bc5d6530621333e48d",
+      "diagnostic_sha256": "13563884501db0af53bcabe6f89adf2d6bc09e93b9143e355ea8835519597804"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/text_format.cc",
+      "official_relative_path": "src/google/protobuf/text_format.cc",
+      "git_blob_sha": "05987d3b135bbabac5aa05557b22074be4c48812",
+      "diagnostic_sha256": "87b615c1c510f170816f1c52a7f15c05fff8e88f12450f5c1c3fdc089fb89f88"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/wire_format.cc",
+      "official_relative_path": "src/google/protobuf/wire_format.cc",
+      "git_blob_sha": "6fe63c86cebb046fbefa2430d656b8f84318ced9",
+      "diagnostic_sha256": "ffe11fe124728034d3ce39e1a7f25ca857865f5e90b94fb812c050bc31e62ef9"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/b/src/src/google/protobuf/wire_format_lite.cc",
+      "official_relative_path": "src/google/protobuf/wire_format_lite.cc",
+      "git_blob_sha": "5ab1ca16c61a685d30e37796583e0f7db85a990f",
+      "diagnostic_sha256": "9f242d9e3f5b527956b9a437e5c1e672cbb01e59797667bbb85783f09544ac60"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/p/include/google/protobuf/map_field.h",
+      "official_relative_path": "src/google/protobuf/map_field.h",
+      "git_blob_sha": "287d58f3127dde0dbebc93ad2e6f9ed026e78ba5",
+      "diagnostic_sha256": "69e4b3d956ad3c8c20d31c694cc48c97a5a339fdf9934fb0021fa77399993665"
+    },
+    {
+      "canonical_path": "c:/users/runneradmin/.conan2/p/b/proto{cache}/p/include/google/protobuf/map_field_inl.h",
+      "official_relative_path": "src/google/protobuf/map_field_inl.h",
+      "git_blob_sha": "7c4c2323c41169a17983df37b67e318a3151d424",
+      "diagnostic_sha256": "f5f5956c0cbe3019d6989b733a4d03375d89de0d58b69e8563def118932d92d7"
+    }
+  ],
+  "dll_entries": {
+    "ProtobufParser.dll": [
+      "078beb78db45a8e3ee0a327e25b7c9c32e0ce79be455b0ea98e6ac43f65c1f97",
+      "0a0d9e094c71318e1006c55131ada45bbcd2460521d49e3f79f0d7ba83f87bab",
+      "0c4d7cd67784d4706416bf3d07233dc5f0f8519a947f6851b3b8c6cc8191dee1",
+      "13563884501db0af53bcabe6f89adf2d6bc09e93b9143e355ea8835519597804",
+      "1be77192c4c31c228382c636fcd362c524acf8407f4ea43a090ade1470b21c2c",
+      "2879eec9771331d7c1babb9bba1e7df1d09c728d5fc2f8de8fae1aba6464aa1d",
+      "3165ff67d0c2db065c6c44cf73091283f51b8fb08707516399884ad6f7d1dc31",
+      "3d7e429b3e0392b1cf4594af3bd5c63723bf1c9f52f4017f04d6c1a9ae17f6f0",
+      "45dcda5c89d8d29de5039675ce7d2beb31d0eee0a7250d8871d6506cee966960",
+      "49c3cdc9ced974ee1e3e4bb5dfa8040d2a4d32afff9ae7b285ad1205f0cabdc8",
+      "61472937e4d1465521fd11209c35ea338cf40c8e3dc1b02ea4b5f6da47e52e3a",
+      "65701999d6b7cb0247b61c803af5b5fe5a13979113883eeb99a4304de4004aa6",
+      "6d610d0689764a9be2816b09f7bb11a11409d12b037e1db3bf18a1dfc66a24c4",
+      "87b615c1c510f170816f1c52a7f15c05fff8e88f12450f5c1c3fdc089fb89f88",
+      "90ff9cfb6cfbbca327bddf08d808080d2ef5a472c9afde9febb3e73befa08f3f",
+      "932b47ab7e74c21a054834a66b7ce2c52c201ad5416890fa95120027af8f49e5",
+      "99c4c50a8e6ee7dbb37b163a9efb025cc978985a13198edaef5a6c81675cdab3",
+      "99ff65520cd92737baf1d3a30f19bd19fe928992cde292782aa5c88c6e0a8b05",
+      "9e7a58eae59321cb530936a2c641f3ea142415a6d8d683f84961a2f65caf1844",
+      "9f242d9e3f5b527956b9a437e5c1e672cbb01e59797667bbb85783f09544ac60",
+      "aaac2a69b1573b005235b5f425484d2460ef7db2a981dfb2c1999c622ee9bf89",
+      "b5724d09b9bfd3874f6e0f5c56c1cc1ac89f3ee920e3b465ae07d2eb08fd07f0",
+      "c60cbdd5b0cf312e372ed92cca4f033a816bc1baef42edccb870734315875a09",
+      "d2d0958b074d4b8d4711a924e4e23669a0b643a748073c5c1902af694d4441d4",
+      "e649c65d40d01ead1e199ff20287efa8fa52f7ed4b9f402401664220ab3773af",
+      "e8186d30de638eaf81bb76b65a8f6538dc5f6e3b56907719203a1beded064fe5",
+      "f2c13198a565aaaddbcafc54a5f6165c71682f731e11a22fe82d0fa41041e690",
+      "f303948f79f8c3726d4aaf3ef2ba3c1a9bfe655d1e2d02dd02110001d651a7f3",
+      "ffe11fe124728034d3ce39e1a7f25ca857865f5e90b94fb812c050bc31e62ef9"
+    ],
+    "ToolboxMosaico.dll": [
+      "078beb78db45a8e3ee0a327e25b7c9c32e0ce79be455b0ea98e6ac43f65c1f97",
+      "0a0d9e094c71318e1006c55131ada45bbcd2460521d49e3f79f0d7ba83f87bab",
+      "0c4d7cd67784d4706416bf3d07233dc5f0f8519a947f6851b3b8c6cc8191dee1",
+      "13563884501db0af53bcabe6f89adf2d6bc09e93b9143e355ea8835519597804",
+      "1be77192c4c31c228382c636fcd362c524acf8407f4ea43a090ade1470b21c2c",
+      "2879eec9771331d7c1babb9bba1e7df1d09c728d5fc2f8de8fae1aba6464aa1d",
+      "3d7e429b3e0392b1cf4594af3bd5c63723bf1c9f52f4017f04d6c1a9ae17f6f0",
+      "45dcda5c89d8d29de5039675ce7d2beb31d0eee0a7250d8871d6506cee966960",
+      "49c3cdc9ced974ee1e3e4bb5dfa8040d2a4d32afff9ae7b285ad1205f0cabdc8",
+      "61472937e4d1465521fd11209c35ea338cf40c8e3dc1b02ea4b5f6da47e52e3a",
+      "65701999d6b7cb0247b61c803af5b5fe5a13979113883eeb99a4304de4004aa6",
+      "69e4b3d956ad3c8c20d31c694cc48c97a5a339fdf9934fb0021fa77399993665",
+      "6d610d0689764a9be2816b09f7bb11a11409d12b037e1db3bf18a1dfc66a24c4",
+      "87b615c1c510f170816f1c52a7f15c05fff8e88f12450f5c1c3fdc089fb89f88",
+      "90ff9cfb6cfbbca327bddf08d808080d2ef5a472c9afde9febb3e73befa08f3f",
+      "932b47ab7e74c21a054834a66b7ce2c52c201ad5416890fa95120027af8f49e5",
+      "99c4c50a8e6ee7dbb37b163a9efb025cc978985a13198edaef5a6c81675cdab3",
+      "99ff65520cd92737baf1d3a30f19bd19fe928992cde292782aa5c88c6e0a8b05",
+      "9e7a58eae59321cb530936a2c641f3ea142415a6d8d683f84961a2f65caf1844",
+      "9f242d9e3f5b527956b9a437e5c1e672cbb01e59797667bbb85783f09544ac60",
+      "aaac2a69b1573b005235b5f425484d2460ef7db2a981dfb2c1999c622ee9bf89",
+      "b5724d09b9bfd3874f6e0f5c56c1cc1ac89f3ee920e3b465ae07d2eb08fd07f0",
+      "c60cbdd5b0cf312e372ed92cca4f033a816bc1baef42edccb870734315875a09",
+      "d2d0958b074d4b8d4711a924e4e23669a0b643a748073c5c1902af694d4441d4",
+      "e649c65d40d01ead1e199ff20287efa8fa52f7ed4b9f402401664220ab3773af",
+      "e8186d30de638eaf81bb76b65a8f6538dc5f6e3b56907719203a1beded064fe5",
+      "f303948f79f8c3726d4aaf3ef2ba3c1a9bfe655d1e2d02dd02110001d651a7f3",
+      "f5f5956c0cbe3019d6989b733a4d03375d89de0d58b69e8563def118932d92d7",
+      "ffe11fe124728034d3ce39e1a7f25ca857865f5e90b94fb812c050bc31e62ef9"
+    ]
+  }
+}

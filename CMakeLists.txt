@@ -3,9 +3,10 @@ cmake_minimum_required(VERSION 3.16)
 project(
   plotjuggler
   LANGUAGES C CXX
-  VERSION 3.18.0)
+  VERSION 3.18.1)
 
 include(cmake/ForkVersion.cmake)
+include(cmake/ForkBuildPaths.cmake)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -342,6 +343,21 @@ add_subdirectory(plotjuggler_app)
 add_subdirectory(plotjuggler_plugins)
 
 if(PJ_BUILD_FORK_TESTS)
+  add_executable(pj_frame_fit_test tests/frame_fit_test.cpp)
+  target_include_directories(pj_frame_fit_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(pj_frame_fit_test PRIVATE Qt5::Widgets)
+  set_target_properties(pj_frame_fit_test PROPERTIES
+    WIN32_EXECUTABLE FALSE RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests_bin")
+  add_test(NAME FrameFitMath COMMAND pj_frame_fit_test)
+  set_tests_properties(FrameFitMath PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+  foreach(_pj_test_target test_csv_parser test_nlohmann_layout mosaico_unit_tests
+      ToolboxMosaico_tests test_ros_field test_cdr_alignment)
+    if(TARGET ${_pj_test_target})
+      set_target_properties(${_pj_test_target} PROPERTIES
+        WIN32_EXECUTABLE FALSE RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests_bin")
+    endif()
+  endforeach()
   add_executable(pj_localized_meme_test tests/localized_meme_test.cpp
     plotjuggler_app/localized_meme.cpp ${PJ_APP_RESOURCES})
   target_include_directories(pj_localized_meme_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -361,7 +377,10 @@ if(PJ_BUILD_FORK_TESTS)
   add_dependencies(pj_time_picker_test pj_translations)
   add_test(NAME LocalizedTimePicker COMMAND pj_time_picker_test
     ${CMAKE_CURRENT_BINARY_DIR}/plotjuggler_app/plotjuggler_zh_CN.qm)
+  add_test(NAME TraditionalTimePicker COMMAND pj_time_picker_test
+    ${CMAKE_CURRENT_BINARY_DIR}/plotjuggler_app/plotjuggler_zh_TW.qm)
   set_tests_properties(LocalizedTimePicker PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+  set_tests_properties(TraditionalTimePicker PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
   add_executable(pj_resource_image_test tests/resource_image_test.cpp)
   target_link_libraries(pj_resource_image_test PRIVATE Qt5::Gui pj_resource_images)
@@ -370,8 +389,56 @@ if(PJ_BUILD_FORK_TESTS)
 
   find_package(Python3 COMPONENTS Interpreter QUIET)
   if(Python3_Interpreter_FOUND)
+    add_test(NAME MemeReferenceStaging COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_meme_reference_staging.py)
     add_test(NAME PackagePrivacy COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_package_privacy.py)
+    add_test(NAME VisibleStrings COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_raw_ui.py)
+    add_test(NAME VisibleStringsUnit COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_raw_ui.py --self-test)
+    add_test(NAME WindowsPublicBinaryReview COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_public_binary_review.py)
+    add_test(NAME AcceptanceStageCollection COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_zh_acceptance.py)
+    add_test(NAME VersionPreflight COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_version_preflight.py)
+    add_test(NAME PackageAuditInventory COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_package_audit_inventory.py)
+    add_test(NAME PrivateBuildRoots COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_private_roots.py)
+    if(UNIX)
+      add_test(NAME PythonConfigLink COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_python_config_link.py)
+      add_test(NAME AppImageAcceptancePaths COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_appimage_acceptance_paths.py)
+      add_test(NAME QtCorePathMapping COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_qt5_core_pathmap.py)
+    endif()
+    if(NOT WIN32)
+      add_test(NAME LinuxStageElfs COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_linux_stage_elfs.py)
+    endif()
+    add_test(NAME ReleaseAssets COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_release_assets.py)
+    add_test(NAME WindowsIfwPayload COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_ifw_payload.py)
+    add_test(NAME NoticeInventory COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_notice_inventory.py)
+    add_test(NAME WindowsRuntimeNotices COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_runtime_notices.py)
+    add_test(NAME DownloadedSourceResolution COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_downloaded_source_resolution.py)
+    add_test(NAME LinuxPublicElf COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_linux_public_elf.py)
+    add_test(NAME WindowsConanPathmapHook COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_conan_pathmap_hook.py)
+    add_test(NAME WindowsConanPathmap COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_conan_pathmap.py)
+    add_test(NAME WindowsConanBuildCheck COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_conan_build_check.py)
+    add_test(NAME OpenSSLOverlay COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_openssl_overlay.py)
   endif()
 
   # Keep regression executables outside bin: packaging stages that entire directory.

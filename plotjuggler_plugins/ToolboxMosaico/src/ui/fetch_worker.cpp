@@ -58,7 +58,7 @@ void FetchWorker::fetchSequences()
   {
     if (!client_)
     {
-      emit errorOccurred("Not connected");
+      emit errorOccurred(QObject::tr("Not connected"));
       return;
     }
     QElapsedTimer timer;
@@ -85,7 +85,7 @@ void FetchWorker::fetchSequences()
   }
   catch (...)
   {
-    emit errorOccurred("listSequences failed: unknown error");
+    emit errorOccurred(QObject::tr("listSequences failed: unknown error"));
   }
 }
 
@@ -95,7 +95,7 @@ void FetchWorker::fetchTopics(const QString& sequence_name)
   {
     if (!client_)
     {
-      emit errorOccurred("Not connected");
+      emit errorOccurred(QObject::tr("Not connected"));
       return;
     }
     QElapsedTimer timer;
@@ -129,7 +129,7 @@ void FetchWorker::fetchTopics(const QString& sequence_name)
   }
   catch (...)
   {
-    emit errorOccurred("listTopics failed: unknown error");
+    emit errorOccurred(QObject::tr("listTopics failed: unknown error"));
   }
 }
 

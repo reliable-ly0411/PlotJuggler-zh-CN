@@ -235,7 +235,7 @@ void MQTT_Dialog::onSelectionChanged()
 void MQTT_Dialog::changeConnectionState(bool connected)
 {
   ui->connectionFrame->setEnabled(!connected);
-  ui->buttonConnect->setText(connected ? "Disconnect" : "Connect");
+  ui->buttonConnect->setText(connected ? tr("Disconnect") : tr("Connect"));
   ui->lineEditTopicFilter->setEnabled(!connected);
   ui->listWidget->setEnabled(connected);
 }

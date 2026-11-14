@@ -168,10 +168,10 @@ void PlotWidget::buildActions()
     }
   });
 
-  _action_split_horizontal = new QAction(QObject::tr("&Split Horizontally"), this);
+  _action_split_horizontal = new QAction(QObject::tr("Split &Horizontally"), this);
   connect(_action_split_horizontal, &QAction::triggered, this, &PlotWidget::splitHorizontal);
 
-  _action_split_vertical = new QAction(QObject::tr("&Split Vertically"), this);
+  _action_split_vertical = new QAction(QObject::tr("Split &Vertically"), this);
   connect(_action_split_vertical, &QAction::triggered, this, &PlotWidget::splitVertical);
 
   _action_removeAllCurves = new QAction(QObject::tr("&Remove ALL curves"), this);
@@ -185,14 +185,14 @@ void PlotWidget::buildActions()
     emit undoableChange();
   });
 
-  _action_zoomOutHorizontally = new QAction(QObject::tr("&Zoom Out Horizontally"), this);
+  _action_zoomOutHorizontally = new QAction(QObject::tr("Zoom Out Horizontally"), this);
   connect(_action_zoomOutHorizontally, &QAction::triggered, this, [this]() {
     on_zoomOutHorizontal_triggered(true);
     replot();
     emit undoableChange();
   });
 
-  _action_zoomOutVertically = new QAction(QObject::tr("&Zoom Out Vertically"), this);
+  _action_zoomOutVertically = new QAction(QObject::tr("Zoom Out Vertically"), this);
   connect(_action_zoomOutVertically, &QAction::triggered, this, [this]() {
     on_zoomOutVertical_triggered(true);
     replot();
@@ -211,18 +211,18 @@ void PlotWidget::buildActions()
   _action_paste = new QAction(QObject::tr("&Paste"), this);
   connect(_action_paste, &QAction::triggered, this, &PlotWidget::on_pasteAction_triggered);
 
-  _action_image_to_clipboard = new QAction(QObject::tr("&Copy image to clipboard"), this);
+  _action_image_to_clipboard = new QAction(QObject::tr("Copy &image to clipboard"), this);
   connect(_action_image_to_clipboard, &QAction::triggered, this, &PlotWidget::on_copyToClipboard);
 
-  _flip_x = new QAction(QObject::tr("&Flip Horizontal Axis"), this);
+  _flip_x = new QAction(QObject::tr("F&lip Horizontal Axis"), this);
   _flip_x->setCheckable(true);
   connect(_flip_x, &QAction::changed, this, &PlotWidget::onFlipAxis);
 
-  _flip_y = new QAction(QObject::tr("&Flip Vertical Axis"), this);
+  _flip_y = new QAction(QObject::tr("Flip Ver&tical Axis"), this);
   _flip_y->setCheckable(true);
   connect(_flip_y, &QAction::changed, this, &PlotWidget::onFlipAxis);
 
-  _action_data_statistics = new QAction(QObject::tr("&Show data statistics"), this);
+  _action_data_statistics = new QAction(QObject::tr("Show &data statistics"), this);
   connect(_action_data_statistics, &QAction::triggered, this, &PlotWidget::onShowDataStatistics);
 }
 
@@ -316,9 +316,9 @@ PlotWidget::CurveInfo* PlotWidget::addCurveXY(std::string name_x, std::string na
     if (name.empty() || curve_it)
     {
       int ret =
-          QMessageBox::warning(qwtPlot(), "Missing name",
-                               "The name of the curve is missing or exist already. "
-                               "Try again or abort.",
+          QMessageBox::warning(qwtPlot(), tr("Missing name"),
+                               tr("The name of the curve is missing or exist already. "
+                                  "Try again or abort."),
                                QMessageBox::Abort | QMessageBox::Retry, QMessageBox::NoButton);
       if (ret == QMessageBox::Abort || ret == QMessageBox::NoButton)
       {
@@ -361,7 +361,7 @@ PlotWidget::CurveInfo* PlotWidget::addCurveXY(std::string name_x, std::string na
   }
   catch (std::exception& ex)
   {
-    QMessageBox::warning(qwtPlot(), "Exception!", ex.what());
+    QMessageBox::warning(qwtPlot(), tr("Exception!"), ex.what());
     return nullptr;
   }
 
@@ -549,9 +549,9 @@ void PlotWidget::onDropEvent(QDropEvent*)
     {
       _dragging.mode = DragInfo::NONE;
       _dragging.curves.clear();
-      QMessageBox::warning(qwtPlot(), "Warning",
-                           "You can not drag XY (scatter) data and timeseries into the "
-                           "same plot");
+      QMessageBox::warning(qwtPlot(), tr("Warning"),
+                           tr("You can not drag XY (scatter) data and timeseries into the "
+                              "same plot"));
       return;
     }
 
@@ -563,14 +563,14 @@ void PlotWidget::onDropEvent(QDropEvent*)
 
     if (isXYPlot() && !scatter_curves)
     {
-      QMessageBox::warning(qwtPlot(), "Warning",
+      QMessageBox::warning(qwtPlot(), tr("Warning"),
                            tr("This is a [XY plot], you can not drop a timeseries here.\n"
                               "To convert this widget into a [timeseries plot], "
                               "you must first remove all its curves."));
     }
     if (!isXYPlot() && scatter_curves)
     {
-      QMessageBox::warning(qwtPlot(), "Warning",
+      QMessageBox::warning(qwtPlot(), tr("Warning"),
                            tr("This is a [timeseries plot], you can not "
                               "drop XY scatter data here.\n"
                               "To convert this widget into a [XY plot], "
@@ -596,7 +596,7 @@ void PlotWidget::onDropEvent(QDropEvent*)
     {
       _dragging.mode = DragInfo::NONE;
       _dragging.curves.clear();
-      QMessageBox::warning(qwtPlot(), "Warning",
+      QMessageBox::warning(qwtPlot(), tr("Warning"),
                            tr("This is a [timeseries plot], you can not "
                               "drop XY scatter data here.\n"
                               "To convert this widget into a [XY plot], "
@@ -839,7 +839,7 @@ bool PlotWidget::xmlLoadState(QDomElement& plot_widget, bool autozoom)
           if (!ts->setTransform(transform_el.attribute("name")) || !ts->transform())
           {
             QMessageBox::warning(
-                qwtPlot(), "Warning",
+                qwtPlot(), tr("Warning"),
                 tr("Can't restore the transform for curve [%1].\n"
                    "Transform [%2] not found.\nAre you using an old configuration file?")
                     .arg(curve_name, transform_el.attribute("name")));
@@ -880,7 +880,7 @@ bool PlotWidget::xmlLoadState(QDomElement& plot_widget, bool autozoom)
 
   if (missing_curves.size() > 0 && !warning_message_shown)
   {
-    QMessageBox::warning(qwtPlot(), "Warning",
+    QMessageBox::warning(qwtPlot(), tr("Warning"),
                          tr("Can't find one or more curves.\n"
                             "This message will be shown only once.\n%1")
                              .arg(missing_curves.join(",\n")));
@@ -945,7 +945,7 @@ bool PlotWidget::xmlLoadState(QDomElement& plot_widget, bool autozoom)
     auto plot_it = datamap().numeric.find(bg_data.toStdString());
     if (plot_it == datamap().numeric.end())
     {
-      QMessageBox::warning(qwtPlot(), "Warning",
+      QMessageBox::warning(qwtPlot(), tr("Warning"),
                            tr("Can't restore the background color.\n"
                               "Series [%1] not found.")
                                .arg(bg_data));
@@ -955,7 +955,7 @@ bool PlotWidget::xmlLoadState(QDomElement& plot_widget, bool autozoom)
       auto color_it = ColorMapLibrary().find(bg_colormap);
       if (color_it == ColorMapLibrary().end())
       {
-        QMessageBox::warning(qwtPlot(), "Warning",
+        QMessageBox::warning(qwtPlot(), tr("Warning"),
                              tr("Can't restore the background color.\n"
                                 "ColorMap [%1] not found.")
                                  .arg(bg_colormap));
@@ -1618,7 +1618,7 @@ void PlotWidget::showPointValues(QPoint point)
         _show_point_marker->setValue(maybe_point.value());
         marker_point = maybe_point.value();
 
-        text = QString("<font color=%1>name: %2<br>time:%3<br>value: %4</font>")
+        text = tr("<font color=%1>name: %2<br>time:%3<br>value: %4</font>")
                    .arg(curve->pen().color().name())
                    .arg(curve->title().text())
                    .arg(QString::number(maybe_point->x(), 'f', prec))
@@ -1843,7 +1843,7 @@ QwtSeriesWrapper* PlotWidget::createCurveXY(const PlotData* data_x, const PlotDa
       msgBox.setText(tr("The creation of the XY plot failed with the following "
                         "message:\n %1")
                          .arg(ex.what()));
-      msgBox.addButton("Continue", QMessageBox::AcceptRole);
+      msgBox.addButton(tr("Continue"), QMessageBox::AcceptRole);
       msgBox.exec();
     }
     throw std::runtime_error("Creation of XY plot failed");

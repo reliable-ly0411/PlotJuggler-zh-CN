@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Installer>
   <Name>PlotJuggler zh-CN</Name>
-  <Version>3.18.0-4</Version>
+  <Version>3.18.1-17</Version>
   <Title>PlotJuggler zh-CN installer</Title>
   <Publisher>Davide Faconti</Publisher>
   <StartMenuDir>PlotJuggler zh-CN</StartMenuDir>
   <TargetDir>@ApplicationsDirX64@/PlotJuggler-zh-CN</TargetDir>
+  <AllowNonAsciiCharacters>true</AllowNonAsciiCharacters>
   <DependsOnLocalInstallerBinary>true</DependsOnLocalInstallerBinary>
-  <RunProgram>@TargetDir@/plotjuggler.exe</RunProgram>
+  <RunProgram>@TargetDir@/plotjuggler-launcher.exe</RunProgram>
 </Installer>

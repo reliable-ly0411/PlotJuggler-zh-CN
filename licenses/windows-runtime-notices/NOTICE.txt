@@ -1,0 +1,9 @@
+Windows Qt 5.15.2 runtime notices
+
+This software is based in part on the work of the Independent JPEG Group.
+Portions of this software are based in part on the work of the FreeType Team.
+
+The accompanying license and attribution files describe third-party components
+in the Qt 5.15.2 Windows runtime and software renderer. See the file names and
+upstream-text-manifest.json for origin and hashes. Presence of a notice does
+not imply that every optional feature or component is used by this application.

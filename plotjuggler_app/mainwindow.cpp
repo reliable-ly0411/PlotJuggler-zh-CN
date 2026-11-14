@@ -31,6 +31,10 @@
 #include <QKeySequence>
 #include <QLabel>
 #include <QScrollBar>
+#include <QScreen>
+#include <QShowEvent>
+#include <QTimer>
+#include "window_geometry_helpers.h"
 #include <QSettings>
 #include <QStringListModel>
 #include <QStringRef>
@@ -208,10 +212,13 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
   auto* language_menu = ui->menuHelp->addMenu(tr("Language"));
   auto* language_group = new QActionGroup(this);
   const QString selected_language = qApp->property("interfaceLanguage").toString();
-  for (const auto& entry : {qMakePair(QStringLiteral("zh_CN"), tr("Simplified Chinese")),
+  language_menu->setObjectName("menuLanguage");
+  for (const auto& entry : {qMakePair(QStringLiteral("zh_CN"), QString::fromUtf8("简体中文")),
+                           qMakePair(QStringLiteral("zh_TW"), QString::fromUtf8("繁體中文")),
                            qMakePair(QStringLiteral("en_US"), QStringLiteral("English"))})
   {
     QAction* action = language_menu->addAction(entry.second);
+    action->setObjectName("language:" + entry.first);
     action->setCheckable(true);
     action->setChecked(selected_language == entry.first);
     language_group->addAction(action);
@@ -958,6 +965,69 @@ void MainWindow::on_splitterMoved(int size, int index)
     const bool collapsed = (sizes[0] == 0);
     ui->centralWidget->layout()->setContentsMargins(collapsed ? 8 : 0, 0, 0, 0);
   }
+}
+
+void MainWindow::scheduleScreenFit()
+{
+  QTimer::singleShot(0, this, [this]() { fitNormalWindowToScreen(); });
+}
+
+void MainWindow::fitNormalWindowToScreen()
+{
+  if (!isVisible() || isMinimized() || isMaximized() || isFullScreen() || !windowHandle())
+    return;
+  if (layout())
+    layout()->activate();
+  const QRect frame = frameGeometry();
+  const auto screens = QGuiApplication::screens();
+  QVector<QRect> available;
+  for (auto* screen : screens)
+    available.push_back(screen->availableGeometry());
+  const int screenIndex = chooseScreen(frame, available);
+  if (screenIndex < 0)
+    return;
+  if (!available.at(screenIndex).isValid())
+    return;
+  const QMargins margins = windowHandle()->frameMargins();
+  const QRect fitted = fitWindowFrame(frame, available.at(screenIndex), margins);
+  if (fitted == frame)
+    return;
+  resize(std::max(1, fitted.width() - margins.left() - margins.right()),
+         std::max(1, fitted.height() - margins.top() - margins.bottom()));
+  move(fitted.topLeft());
+}
+
+void MainWindow::showEvent(QShowEvent* event)
+{
+  QMainWindow::showEvent(event);
+  if (!_geometry_connections_initialized && windowHandle())
+  {
+    _geometry_connections_initialized = true;
+    auto watchScreen = [this](QScreen* screen) {
+      connect(screen, &QScreen::availableGeometryChanged, this,
+              [this](const QRect&) { scheduleScreenFit(); });
+    };
+    for (auto* screen : QGuiApplication::screens())
+      watchScreen(screen);
+    connect(qGuiApp, &QGuiApplication::screenAdded, this, [this, watchScreen](QScreen* screen) {
+      watchScreen(screen);
+      scheduleScreenFit();
+    });
+    connect(qGuiApp, &QGuiApplication::screenRemoved, this,
+            [this](QScreen*) { scheduleScreenFit(); });
+    connect(windowHandle(), &QWindow::screenChanged, this,
+            [this](QScreen*) { scheduleScreenFit(); });
+  }
+  scheduleScreenFit();
+  // Give asynchronous window managers another opportunity to publish margins.
+  QTimer::singleShot(250, this, [this]() { fitNormalWindowToScreen(); });
+}
+
+void MainWindow::changeEvent(QEvent* event)
+{
+  QMainWindow::changeEvent(event);
+  if (event->type() == QEvent::WindowStateChange)
+    scheduleScreenFit();
 }
 
 void MainWindow::resizeEvent(QResizeEvent*)
@@ -2900,10 +2970,8 @@ void MainWindow::on_streamingNotificationsChanged(int active_count)
   {
     enableStreamingNotificationsButton(true);
 
-    QString tooltipText = QString("%1 has %2 outstanding notification%3")
-                              .arg(_active_streamer_plugin->name())
-                              .arg(active_count)
-                              .arg(active_count > 1 ? "s" : "");
+    const QString tooltipText = tr("Outstanding notifications from %1: %n", nullptr, active_count)
+                                    .arg(_active_streamer_plugin->name());
     ui->buttonStreamingNotifications->setToolTip(tooltipText);
   }
   else
@@ -3151,7 +3219,7 @@ void MainWindow::on_actionAbout_triggered()
   auto ui = new Ui::AboutDialog();
   ui->setupUi(dialog);
 
-  ui->label_version->setText(QString::fromUtf8("版本 / Version: %1").arg(QApplication::applicationVersion()));
+  ui->label_version->setText(tr("Version: %1").arg(QApplication::applicationVersion()));
   ui->label_version->setWordWrap(true);
   dialog->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -3161,11 +3229,21 @@ void MainWindow::on_actionAbout_triggered()
     ui->titleTextBrowser->setHtml(fileTitle.readAll());
   }
 
-  QFile fileBody(":/resources/skin/about_window_body.html");
-  if (fileBody.open(QIODevice::ReadOnly))
-  {
-    ui->bodyTextBrowser->setHtml(fileBody.readAll());
-  }
+  ui->bodyTextBrowser->setHtml(tr(
+      "<html><body>"
+      "<p><b>PlotJuggler</b><br/>Built with love by <b>Davide Faconti</b></p>"
+      "<p><a href=\"https://www.plotjuggler.io\">Official website</a> · "
+      "<a href=\"https://github.com/PlotJuggler/PlotJuggler\">Official upstream</a></p>"
+      "<p>Chinese localization and ArduPilot integration:<br/>"
+      "<a href=\"https://github.com/reliable-ly0411/PlotJuggler-zh-CN\">"
+      "reliable-ly0411/PlotJuggler-zh-CN</a><br/>"
+      "<a href=\"https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/new?template=translation.yml\">"
+      "Report a translation issue</a></p>"
+      "<p>Original copyright and MPL-2.0 license retained.<br/>"
+      "ArduPilot DataFlash plugin: LGPL-3.0.</p>"
+      "<p>For commercial support and custom development, contact the original author:<br/>"
+      "<a href=\"mailto:davide.faconti@gmail.com\">davide.faconti@gmail.com</a></p>"
+      "</body></html>"));
 
   dialog->setAttribute(Qt::WA_DeleteOnClose);
   dialog->exec();
@@ -3294,8 +3372,8 @@ void MainWindow::on_buttonLoadDatafile_clicked()
     }
     extensions.push_back(filter_by_loader.trimmed() + ")");
   }
-  extensions.push_front(QString("All Supported Files (%1)").arg(single_line_extensions.trimmed()));
-  extensions.push_back(QString("All Files (*)"));
+  extensions.push_front(tr("All Supported Files (%1)").arg(single_line_extensions.trimmed()));
+  extensions.push_back(tr("All Files (*)"));
 
   QString directory_path =
       settings.value("MainWindow.lastDatafileDirectory", QDir::currentPath()).toString();

@@ -6,13 +6,15 @@
 
 #include "mainwindow.h"
 #include "app_language.h"
+#include "app_settings.h"
 #include "localized_meme.h"
 #include "localization_checks.h"
 #include <QTableWidget>
 #include <QTextBrowser>
 #include <QDialogButtonBox>
 #include <QLabel>
-#include "semver.h"
+#include "release_line.h"
+#include <memory>
 #include <iostream>
 #include <QApplication>
 #include <QSplashScreen>
@@ -38,6 +40,7 @@
 #include <QMenu>
 #include <QJsonArray>
 #include <QFile>
+#include <QScreen>
 
 #include "PlotJuggler/transform_function.h"
 #include "transforms/binary_filter.h"
@@ -215,17 +218,7 @@ int main(int argc, char* argv[])
 
   //-------------------------
 
-  QCoreApplication::setOrganizationName("PlotJuggler");
-  QCoreApplication::setApplicationName("io.plotjuggler.PlotJuggler.zh-CN");
-  QSettings::setDefaultFormat(QSettings::IniFormat);
-  const QStringList startup_arguments = app.arguments();
-  const int test_argument = startup_arguments.indexOf("--self-test-ui");
-  if (test_argument >= 0 && test_argument + 1 < startup_arguments.size())
-  {
-    const QString settings_path = startup_arguments[test_argument + 1] + "/settings";
-    QDir().mkpath(settings_path);
-    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings_path);
-  }
+  if (!configureApplicationSettings(app)) return 2;
 
   installApplicationLanguage(app);
 
@@ -258,11 +251,14 @@ int main(int argc, char* argv[])
   QCommandLineParser parser;
   parser.setApplicationDescription("PlotJuggler: the time series visualization"
                                    " tool that you deserve ");
-  parser.addOption(QCommandLineOption("language", QObject::tr("Interface language: zh_CN or en_US"), "locale"));
+  parser.addOption(QCommandLineOption("language", QObject::tr("Interface language: en_US, zh_CN or zh_TW (this session only)"), "locale"));
+  parser.addOption(QCommandLineOption("config-dir", QObject::tr("Use an independent configuration directory"), "directory"));
   parser.addVersionOption();
   parser.addHelpOption();
   const QCommandLineOption ui_test_option("self-test-ui", "Write UI acceptance evidence, then exit", "directory");
   parser.addOption(ui_test_option);
+  const QCommandLineOption ui_size_option("self-test-size", "Window size for UI acceptance (WIDTHxHEIGHT)", "size");
+  parser.addOption(ui_size_option);
   const QCommandLineOption meme_export_option("export-memes", "Export all startup images in the selected language", "directory");
   parser.addOption(meme_export_option);
 
@@ -435,6 +431,11 @@ int main(int argc, char* argv[])
 
     splash.show();
     app.processEvents();
+    if (parser.isSet(ui_test_option))
+    {
+      QDir().mkpath(parser.value(ui_test_option));
+      if (!splash.grab().save(parser.value(ui_test_option) + "/splash.png")) return 23;
+    }
 
     auto deadline = QDateTime::currentDateTime().addMSecs(500);
     while (QDateTime::currentDateTime() < deadline)
@@ -456,6 +457,19 @@ int main(int argc, char* argv[])
     window = new MainWindow(parser);
   }
 
+  if (parser.isSet(ui_test_option) && parser.isSet(ui_size_option))
+  {
+    const QStringList dimensions = parser.value(ui_size_option).split('x');
+    bool width_ok = false, height_ok = false;
+    const int width = dimensions.value(0).toInt(&width_ok);
+    const int height = dimensions.value(1).toInt(&height_ok);
+    if (dimensions.size() != 2 || !width_ok || !height_ok || width < 1 || height < 1)
+    {
+      delete window;
+      return 2;
+    }
+    window->resize(width, height);
+  }
   window->show();
   if (parser.isSet(ui_test_option))
   {
@@ -465,8 +479,13 @@ int main(int argc, char* argv[])
       auto* menu = window->findChild<QMenu*>("menuFile");
       const QString expected = QCoreApplication::translate("MainWindow", "App");
       const bool menu_ok = menu && menu->title() == expected;
-      const bool chinese = app.property("interfaceLanguage").toString() == "zh_CN";
-      const bool language_ok = chinese ? expected == QString::fromUtf8("\xE5\xBA\x94\xE7\x94\xA8") : expected == "App";
+      const QString language = app.property("interfaceLanguage").toString();
+      const bool chinese = language.startsWith("zh_");
+      const QString expected_title = language == "zh_CN" ? QString::fromUtf8("应用") :
+                                     language == "zh_TW" ? QString::fromUtf8("應用") : QString("App");
+      const bool language_ok = expected == expected_title;
+      const QJsonObject regression = window->checkAcceptanceRoundTrip(output);
+      const bool regression_ok = regression.value("ok").toBool();
       const bool image_ok = window->grab().save(output + "/main-window.png");
       const auto details = checkLocalizedUi(window, output, chinese);
       const bool details_ok = details.value("ok").toBool();
@@ -475,19 +494,27 @@ int main(int argc, char* argv[])
       QJsonObject result;
       result["menu_title"] = menu ? menu->title() : QString();
       result["language_ok"] = language_ok;
+      result["language"] = language;
       result["menu_ok"] = menu_ok;
       result["screenshot_ok"] = image_ok;
       result["data_ok"] = data_ok;
       result["numeric_series"] = static_cast<int>(numeric_series);
       result["version"] = app.applicationVersion();
+      result["qt_version"] = qVersion();
+      result["platform"] = QGuiApplication::platformName();
+      result["window_width"] = window->width();
+      result["window_height"] = window->height();
+      result["device_pixel_ratio"] = window->devicePixelRatioF();
+      result["logical_dpi"] = window->screen()->logicalDotsPerInch();
       result["localization"] = details;
+      result["regression"] = regression;
       QFile report(output + "/ui.json");
       const bool report_ok = report.open(QIODevice::WriteOnly);
       if (report_ok) report.write(QJsonDocument(result).toJson());
       // Follow the same closeEvent path as a user closing the app, including
       // stopping timers and releasing plugins while QApplication is alive.
       window->close();
-      app.exit(menu_ok && language_ok && image_ok && data_ok && details_ok && report_ok ? 0 : 20);
+      app.exit(menu_ok && language_ok && image_ok && data_ok && details_ok && regression_ok && report_ok ? 0 : 20);
     });
   }
 
@@ -531,39 +558,48 @@ int main(int argc, char* argv[])
   }
 
   // Check for new releases on GitHub
-  QNetworkAccessManager* manager_new_release = new QNetworkAccessManager(&app);
-  QObject::connect(
-      manager_new_release, &QNetworkAccessManager::finished, window, [window](QNetworkReply* reply) {
-        if (reply->error())
-        {
-          qDebug() << "GitHub release check error:" << reply->error() << reply->errorString();
-          return;
-        }
-
-        QString answer = reply->readAll();
-        QJsonDocument document = QJsonDocument::fromJson(answer.toUtf8());
-        QJsonObject data = document.object();
-        QString url = data["html_url"].toString();
-        QString name = data["name"].toString();
-        QString tag_name = data["tag_name"].toString();
-
-        qDebug() << "Current version:" << VERSION_STRING << ". Latest release version:" << tag_name;
-
-        if (PJ::isNewerSemVer(tag_name, VERSION_STRING))
-        {
-          QString message = QObject::tr("New release available: <b>%1</b><br>"
-                                        "<a href=\"%2\">View on GitHub</a>")
-                                .arg(name, url);
-          QPixmap icon(":/resources/success_kid.png");
-          window->showToast(message, icon);
-        }
-      });
-
-  QNetworkRequest request_new_release;
-  request_new_release.setUrl(
-      QUrl("https://api.github.com/repos/reliable-ly0411/PlotJuggler-zh-CN/releases/latest"));
-
-  manager_new_release->get(request_new_release);
+  auto* manager_new_release = new QNetworkAccessManager(&app);
+  auto selection = std::make_shared<PJ::ReleaseLineSelection>(VERSION_STRING);
+  const auto request_page = [manager_new_release](int page) {
+    QNetworkRequest request(QUrl(QString(
+        "https://api.github.com/repos/reliable-ly0411/PlotJuggler-zh-CN/releases?per_page=100&page=%1")
+                                    .arg(page)));
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                         QNetworkRequest::ManualRedirectPolicy);
+    auto* reply = manager_new_release->get(request);
+    // Qt 5.12-compatible timeout. The reply context cancels the timer on deletion.
+    QTimer::singleShot(15000, reply, [reply]() { if (reply->isRunning()) reply->abort(); });
+    QObject::connect(reply, &QNetworkReply::readyRead, reply, [reply]() {
+      if (reply->bytesAvailable() > 2 * 1024 * 1024) reply->abort();
+    });
+  };
+  QObject::connect(manager_new_release, &QNetworkAccessManager::finished, window,
+                   [window, selection, request_page](QNetworkReply* reply) {
+    reply->deleteLater();
+    if (reply->error() || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 200 ||
+        reply->bytesAvailable() > 2 * 1024 * 1024)
+    {
+      qDebug() << "GitHub maintenance-line release check failed";
+      return;
+    }
+    QJsonParseError error;
+    const auto document = QJsonDocument::fromJson(reply->readAll(), &error);
+    if (error.error != QJsonParseError::NoError || !document.isArray()) return;
+    const auto result = selection->consume(document.array());
+    if (result == PJ::ReleaseLineSelection::More)
+    {
+      request_page(selection->pages + 1);
+      return;
+    }
+    // Fail closed on incomplete pagination or invalid responses, even when an
+    // earlier page contained a candidate. Never advertise a cross-major build.
+    if (result != PJ::ReleaseLineSelection::Complete || selection->tag.isEmpty()) return;
+    const QString message = QObject::tr("New release available: <b>%1</b><br>"
+                                       "<a href=\"%2\">View on GitHub</a>")
+                                .arg(selection->name.toHtmlEscaped(), selection->url.toHtmlEscaped());
+    window->showToast(message, QPixmap(":/resources/success_kid.png"));
+  });
+  request_page(1);
 
   // This fork does not send machine identifiers or usage telemetry.
 

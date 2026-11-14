@@ -4,6 +4,7 @@
 #include <qwt_plot.h>
 #include <qwt_plot_renderer.h>
 
+#include <QCoreApplication>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFont>
@@ -35,7 +36,8 @@ PlotSaveHelper::PlotSaveHelper(QSize dims, QWidget* parent)
 
   QString selected_filter;
   _save_filename =
-      save_dialog.getSaveFileName(parent, "Save plot", "", filters.join(";;"), &selected_filter);
+      save_dialog.getSaveFileName(parent, QCoreApplication::translate("QObject", "Save plot"), "",
+                                  filters.join(";;"), &selected_filter);
   if (_save_filename.isEmpty())
   {
     return;

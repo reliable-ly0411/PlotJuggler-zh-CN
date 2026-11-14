@@ -516,15 +516,15 @@ void CurveListPanel::onCustomSelectionChanged(const QItemSelection&, const QItem
 
   bool enabled = (selected.size() == 1);
   ui->buttonEditCustom->setEnabled(enabled);
-  ui->buttonEditCustom->setToolTip(enabled ? "Edit the selected custom timeserie" :
-                                             "Select a single custom Timeserie to Edit "
-                                             "it");
+  ui->buttonEditCustom->setToolTip(enabled ? tr("Edit the selected custom timeserie") :
+                                             tr("Select a single custom Timeserie to Edit "
+                                                "it"));
 
   enabled = (selected.size() > 0);
   ui->buttonDeleteCustom->setEnabled(enabled);
-  ui->buttonDeleteCustom->setToolTip(enabled ? "Delete the selected custom timeseries" :
-                                               "Select one or more custom timeseries to"
-                                               " delete them");
+  ui->buttonDeleteCustom->setToolTip(enabled ? tr("Delete the selected custom timeseries") :
+                                               tr("Select one or more custom timeseries to"
+                                                  " delete them"));
 }
 
 void CurveListPanel::on_buttonEditCustom_clicked()

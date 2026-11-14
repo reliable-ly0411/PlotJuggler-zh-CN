@@ -6,6 +6,8 @@ DataFlash, not MAVLink telemetry.
 
 synthetic.BIN: FMT, FMTU, UNIT, MULT, three byte instances (0, 1, 200),
 TimeUS in microseconds, and a 0.01 field multiplier.
+curves.BIN: keeps synthetic.BIN intact and adds two samples per instance for
+native GUI curve/XY rendering and layout save/restore. It contains no real data.
 second.BIN: reuses the same message ID with a different schema and no FMTU.
 invalid.BIN: truncated input, which must fail without producing samples.
 

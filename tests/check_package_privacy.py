@@ -56,6 +56,58 @@ class PackagePrivacy(unittest.TestCase):
                     with self.subTest(encoding=encoding, prefix=prefix):
                         self.rejected(prefix + text.encode(encoding))
 
+    def test_non_users_build_roots_are_not_exempted_by_identity(self):
+        paths = (r"D:\PJ3181-20261111-1235\task\file.cc",
+                 r"X:\conan\p\b\absei123456789abcd\b\src\file.cc",
+                 r"X:\custom\conan-cache\p\b\absei123456789abcd\b\src\file.cc",
+                 r"X:/custom/.conan2/p/package123456789abcd/include/file.h")
+        for path in paths:
+            for encoding in ("ascii", "utf-16le"):
+                for prefix in (b"", b"x"):
+                    data = prefix + path.encode(encoding) + b"\0\0"
+                    records = {"public_ci_source_records": {"ProtobufParser.dll": {
+                        "observed_plugin_sha256": self.sha(data), "nul_terminated_literals": []}}}
+                    with self.subTest(path=path, encoding=encoding, prefix=prefix):
+                        self.rejected(data, "ProtobufParser.dll", records)
+
+    def test_precise_build_literal_requires_identity_and_does_not_hide_other_paths(self):
+        literal = r"X:\ci\conan\p\b\arrow123456789abcd\b\src\file.cc"
+        data = (literal + "\0").encode()
+        record = {"observed_plugin_sha256": self.sha(data), "nul_terminated_literals": [literal]}
+        records = {"public_ci_source_records": {"ProtobufParser.dll": record}}
+        self.assertTrue(check_metadata(data, "ProtobufParser.dll", records))
+        self.rejected(data + b"changed", "ProtobufParser.dll", records)
+        extra = data + b"D:\\PJ3181-20261111-1235\\private\\file.cc\0"
+        record["observed_plugin_sha256"] = self.sha(extra)
+        self.rejected(extra, "ProtobufParser.dll", records)
+        self.assertEqual(check_metadata(b"C:\\vendor\\manual\\example.txt\0", "readme.bin", records), [])
+
+    def test_selected_windows_modules_require_record(self):
+        for name in ("DataLoadParquet.dll", "ToolboxMosaico.dll", "ProtobufParser.dll",
+                     "plugins/protobufparser.dll"):
+            with self.subTest(name=name):
+                self.rejected(b"content without paths", name)
+        self.assertEqual(check_metadata(b"content without paths", "other.dll", self.records), [])
+
+    def test_local_reviewed_identity_is_exact_and_masks_nothing(self):
+        name = "DataLoadParquet.dll"
+        data = b"local sealed content"
+        local = {"sha256": self.sha(data), "bytes": len(data)}
+        literal = r"C:\Users\runneradmin\.conan2\p\b\arrow\b\src\file.cc"
+        records = {"local_reviewed_exact_sha256": {name: local},
+                   "public_ci_source_records": {name: {"observed_plugin_sha256": "0" * 64,
+                                                        "nul_terminated_literals": [literal]}}}
+        self.assertEqual(check_metadata(data, name, records)[0]["kind"], "local reviewed exact SHA256")
+        self.rejected(data + b"changed", name, records)
+        self.rejected(data, "plugins/" + name, records)
+        local["bytes"] += 1
+        self.rejected(data, name, records)
+        for leaked in ((literal + "\0").encode(),
+                       ("gh" + "p_" + "x" * 36).encode(),
+                       b"C:\\Users\\PrivateUser\\secret.bin"):
+            local.update(sha256=self.sha(leaked), bytes=len(leaked))
+            self.rejected(leaked, name, records)
+
     def test_contacts_remain_blocked(self):
         for encoding in ("ascii", "utf-16le"):
             self.rejected(("synthetic" + "@" + "qq.com").encode(encoding))

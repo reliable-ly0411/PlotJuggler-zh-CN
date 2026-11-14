@@ -19,6 +19,12 @@ concurrency:
 jobs:
   linux:
     runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.image }}
+    env:
+      PJ_CTEST_REGEX: '.*'
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 120
     strategy:
       fail-fast: false
@@ -51,9 +57,30 @@ jobs:
           target: trixie
     steps:
     - name: Install build dependencies
+      id: bootstrap
       run: |
-        apt-get update
-        DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential cmake git sudo tar gzip zstd ninja-build python3 python3-dev python3-pil qtbase5-dev qttools5-dev-tools qttools5-dev libqt5svg5-dev libqt5websockets5-dev libqt5opengl5-dev libqt5x11extras5-dev libqt5serialport5-dev libprotoc-dev ccache libmosquitto-dev ca-certificates lsb-release wget libcurl4-openssl-dev libzmq3-dev libprotobuf-dev protobuf-compiler libgrpc++-dev pkg-config xvfb xauth fonts-noto-cjk dpkg-dev
+        bootstrap_log="$RUNNER_TEMP/pj3-apt-update.log"
+        update_exit=0
+        apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any update > "$bootstrap_log" 2>&1 || update_exit=$?
+        cat "$bootstrap_log"
+        if test "$update_exit" -ne 0; then
+          mkdir -p acceptance
+          cp "$bootstrap_log" acceptance/bootstrap-apt-update.log
+          {
+            date -u
+            echo "Expected workflow source: $GITHUB_SHA"
+            cat /etc/os-release
+            awk '$1 == "nameserver" {print $0}' /etc/resolv.conf
+            for apt_host in archive.ubuntu.com security.ubuntu.com ports.ubuntu.com deb.debian.org; do
+              echo "Resolver query: $apt_host"
+              getent ahosts "$apt_host" || true
+            done
+          } > acceptance/bootstrap-resolver-observation.log 2>&1
+          # Never install against missing/stale indexes, change the resolver,
+          # disable signatures/TLS, or silently switch to an unverified mirror.
+          exit "$update_exit"
+        fi
+        DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential cmake git sudo tar gzip zstd ninja-build python3 python3-dev python3-pil qtbase5-dev qttools5-dev-tools qttools5-dev qttranslations5-l10n libqt5svg5-dev libqt5websockets5-dev libqt5opengl5-dev libqt5x11extras5-dev libqt5serialport5-dev libprotoc-dev ccache libmosquitto-dev ca-certificates lsb-release wget libcurl4-openssl-dev libzmq3-dev libprotobuf-dev protobuf-compiler libgrpc++-dev libgtest-dev pkg-config xvfb xauth fonts-noto-cjk dpkg-dev
         test "$(uname -m)" = "${{ matrix.arch }}"
     - name: Sync repository
       uses: actions/checkout@v6
@@ -98,6 +125,7 @@ jobs:
         key: pj3-ccache-${{ matrix.id }}-v1-${{ github.run_id }}-${{ github.run_attempt }}
         restore-keys: pj3-ccache-${{ matrix.id }}-v1-
     - name: Build Plotjuggler
+      id: native-build
       shell: bash
       working-directory: ${{ github.workspace }}
       env:
@@ -105,12 +133,20 @@ jobs:
       run: |
         cmake . -B build -DCMAKE_BUILD_TYPE=Release -DPJ_INSTALLATION="${{ matrix.target }}" \
               -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-              -DPJ_PLUGINS_DIRECTORY="bin" -DBUILD_TESTING=OFF
+              -DPJ_PLUGINS_DIRECTORY="bin" -DBUILD_TESTING=ON
         grep -R "PJ_HAS_PYTHON" build/CMakeCache.txt build/plotjuggler_app/CMakeFiles  || true
         python3 -c 'import json,subprocess; v=json.load(open("build/FORK-VERSION.json")); s=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip(); assert v["source_revision"]==s[:12], v'
         cmake --build build --parallel 2
 
         python3 -c 'import json,os; v=json.load(open("build/FORK-VERSION.json"))["version"]; open(os.environ["GITHUB_ENV"],"a").write("PJ_SEMVER="+v+"\n")'
+    - name: Collect private build roots
+      if: steps.native-build.outcome == 'success'
+      run: |
+        roots="$RUNNER_TEMP/pj-private-roots-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.json"
+        sdk_args=()
+        if [ -n "${PJ_QT5_CORE_BACKPORT:-}" ]; then sdk_args+=(--sdk "$RUNNER_TEMP/qt5-core-backport"); fi
+        python3 scripts/collect_private_build_roots.py --source "$GITHUB_WORKSPACE" --build "$GITHUB_WORKSPACE/build" --cache "$RUNNER_TEMP/ccache" --cmake-cache "$GITHUB_WORKSPACE/build/CMakeCache.txt" "${sdk_args[@]}" --out "$roots"
+        echo "PJ_PRIVATE_BUILD_ROOTS=$roots" >> "$GITHUB_ENV"
     - name: Preserve compiler cache
       if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
       uses: actions/cache/save@v4
@@ -119,16 +155,28 @@ jobs:
         key: pj3-ccache-${{ matrix.id }}-v1-${{ github.run_id }}-${{ github.run_attempt }}
     - name: Test DataFlash and translations
       run: |
-        git fetch --no-tags --depth=1 https://github.com/reliable-ly0411/PlotJuggler-zh-CN.git 3117288ce8d710bde4f7a86ca5ed5240ebb1c301
+        mkdir -p acceptance
+        checks=()
+        collect_check() {
+          local check_name="$1" check_exit=0
+          shift
+          "$@" || check_exit=$?
+          checks+=("$check_name:$check_exit")
+        }
+        collect_check reference git fetch --no-tags --depth=1 https://github.com/reliable-ly0411/PlotJuggler-zh-CN.git 3117288ce8d710bde4f7a86ca5ed5240ebb1c301
+        collect_check reference_stage python3 scripts/stage_meme_references.py --out "$PWD/reference-memes"
         export PJ_MEME_REFERENCE_DIR="$PWD/reference-memes"
         export PJ_MEME_AUDIT_DIR="$PWD/acceptance/image-variants"
-        python3 tests/check_translations.py --fresh
-        python3 tests/check_memes.py --reference-rev 3117288ce8d710bde4f7a86ca5ed5240ebb1c301 --export-reference reference-memes --pixel-report acceptance/image-pixels.json
-        python3 tests/check_version.py
-        ctest --test-dir build --output-on-failure --no-tests=error
-        xvfb-run -a python3 scripts/zh_acceptance.py --app build/bin/plotjuggler --plugin build/bin/libDataAPBin.so --out acceptance
+        collect_check translations python3 tests/check_translations.py --fresh
+        collect_check image_inventory python3 tests/check_memes.py
+        collect_check version python3 tests/check_version.py
+        collect_check elf_stage python3 tests/test_linux_stage_elfs.py
+        collect_check full_ctest ctest --test-dir build -R "$PJ_CTEST_REGEX" --output-on-failure --no-tests=error
+        collect_check gui xvfb-run -a python3 scripts/zh_acceptance.py --app build/bin/plotjuggler --plugin build/bin/libDataAPBin.so --out acceptance
+        python3 -c 'import json,sys; from pathlib import Path; r={k:int(v) for k,v in (x.split(":",1) for x in sys.argv[1:])}; Path("acceptance/native-step-results.json").write_text(json.dumps(r,indent=2)); sys.exit(int(any(r.values())))' "${checks[@]}"
     - name: Build AppImage
-      if: matrix.target == 'appimage'
+      id: appimage-package
+      if: always() && steps.native-build.outcome == 'success' && matrix.target == 'appimage'
       working-directory: ${{ github.workspace }}
       env:
         ARCH: ${{ matrix.arch }}
@@ -144,7 +192,7 @@ jobs:
         mv PlotJuggler-${{ matrix.arch }}.AppImage "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage"
         echo "SAFE_REF=$SAFE_REF" >> "$GITHUB_ENV"
     - name: Validate packaged AppImage
-      if: matrix.target == 'appimage'
+      if: always() && steps.appimage-package.outcome == 'success' && matrix.target == 'appimage'
       env:
         APPIMAGE_EXTRACT_AND_RUN: '1'
       run: |
@@ -152,23 +200,45 @@ jobs:
         extracted="$(mktemp -d)"
         appimage="$PWD/PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage"
         (cd "$extracted"; env -u LD_LIBRARY_PATH "$appimage" --appimage-extract >/dev/null)
-        python3 scripts/check_qt5_core_backport.py "$PJ_QT5_CORE_BACKPORT/lib/libQt5Core.so.5" "$extracted/squashfs-root/usr/lib/libQt5Core.so.5"
-        env -u LD_LIBRARY_PATH xvfb-run -a python3 scripts/zh_acceptance.py --app "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --plugin AppDir/usr/bin/libDataAPBin.so --out acceptance/packaged
-        python3 scripts/package_size_audit.py --payload AppDir --package "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --out acceptance/package-size.json
+        elf_exit=0
+        python3 scripts/linux_stage_elfs.py audit --root "$extracted/squashfs-root" \
+          --private-root "$GITHUB_WORKSPACE" --private-root "$RUNNER_TEMP" \
+          --report acceptance/linux-appimage-extracted-private-paths.json || elf_exit=$?
+        core_exit=0
+        python3 scripts/check_qt5_core_backport.py "$PJ_QT5_CORE_BACKPORT/lib/libQt5Core.so.5" "$extracted/squashfs-root/usr/lib/libQt5Core.so.5" || core_exit=$?
+        gui_exit=0
+        env -u LD_LIBRARY_PATH xvfb-run -a python3 scripts/zh_acceptance.py --app "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --plugin AppDir/usr/bin/libDataAPBin.so --out acceptance/packaged || gui_exit=$?
+        audit_exit=0
+        python3 scripts/package_size_audit.py --payload AppDir --package "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --private-build-roots "$PJ_PRIVATE_BUILD_ROOTS" --out acceptance/package-size.json || audit_exit=$?
+        extracted_audit_exit=0
+        python3 scripts/package_size_audit.py --payload "$extracted/squashfs-root" --package "$appimage" --private-build-roots "$PJ_PRIVATE_BUILD_ROOTS" --out acceptance/appimage-extracted-size.json || extracted_audit_exit=$?
+        if [ "$extracted_audit_exit" -ne 0 ]; then audit_exit=1; fi
+        python3 -c 'import json,sys; from pathlib import Path; r=dict(zip(("elf_path_exit","qtcore_identity_exit","packaged_gui_exit","package_audit_exit"),map(int,sys.argv[1:]))); Path("acceptance/packaged-step-results.json").write_text(json.dumps(r,indent=2)); sys.exit(int(any(r.values())))' "$elf_exit" "$core_exit" "$gui_exit" "$audit_exit"
+    - name: Validate packaged AppImage launcher Qt interaction
+      if: always() && steps.appimage-package.outcome == 'success' && matrix.target == 'appimage'
+      env:
+        APPIMAGE_EXTRACT_AND_RUN: '1'
+        QT_QPA_PLATFORM: xcb
+      run: |
+        mkdir -p acceptance/launcher-packaged
+        env -u LD_LIBRARY_PATH xvfb-run -a python3 scripts/launcher_acceptance.py --launcher "PlotJuggler-${SAFE_REF}-${{ matrix.arch }}.AppImage" --out-base acceptance/launcher-packaged --expected-version "$PJ_SEMVER" --expected-platform xcb
     - name: Build and validate native Debian or Ubuntu package
-      if: matrix.target != 'appimage'
+      id: native-package
+      if: always() && steps.native-build.outcome == 'success' && matrix.target != 'appimage'
       run: |
         bash scripts/build_native_deb.sh
         sudo apt-get install -y "$PWD"/output/*.deb
+        echo "launcher-ready=true" >> "$GITHUB_OUTPUT"
         xvfb-run -a python3 scripts/zh_acceptance.py --app /usr/bin/plotjuggler --plugin /usr/lib/plotjuggler/libDataAPBin.so --out acceptance/packaged
       env:
         PJ_DEB_DISTRO: ${{ matrix.target }}
-    - name: Test build without localized images
+    - name: Validate installed native launcher Qt interaction
+      if: always() && steps.native-package.outputs.launcher-ready == 'true' && matrix.target != 'appimage'
+      env:
+        QT_QPA_PLATFORM: xcb
       run: |
-        cmake -S . -B build -DPJ_ENABLE_LOCALIZED_IMAGES=OFF
-        cmake --build build --parallel 2 --target pj_localized_meme_test pj_resource_image_test plotjuggler
-        ctest --test-dir build -R 'LocalizedMemes|ResourceImageVariants' --output-on-failure --no-tests=error
-        xvfb-run -a python3 scripts/zh_acceptance.py --original-images --app build/bin/plotjuggler --plugin build/bin/libDataAPBin.so --out acceptance/images-disabled
+        mkdir -p acceptance/launcher-packaged
+        xvfb-run -a python3 scripts/launcher_acceptance.py --launcher /usr/bin/plotjuggler-launcher --out-base acceptance/launcher-packaged --expected-version "$PJ_SEMVER" --expected-platform xcb
     - name: Upload AppImage
       if: matrix.target == 'appimage'
       uses: actions/upload-artifact@v4
@@ -184,7 +254,7 @@ jobs:
         path: output/*.deb
         if-no-files-found: error
     - name: Upload package identity and audit metadata
-      if: always()
+      if: always() && steps.native-build.outcome == 'success'
       uses: actions/upload-artifact@v4
       with:
         name: Metadata-linux-${{ matrix.id }}
@@ -198,7 +268,3 @@ jobs:
         path: acceptance/
         if-no-files-found: warn
         retention-days: 14
-    container: ${{ matrix.image }}
-    defaults:
-      run:
-        shell: bash

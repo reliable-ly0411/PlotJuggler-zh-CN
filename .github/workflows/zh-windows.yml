@@ -21,6 +21,7 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 180
     env:
+      PJ_CTEST_REGEX: '.*'
       CXXFLAGS: /MP
       PJ_PYTHON_EMBED_VERSION: 3.12.7
     steps:
@@ -41,87 +42,109 @@ jobs:
         arch: win64_msvc2019_64
         dir: ${{ github.workspace }}/qt_installation/
         cache: true
-        tools: tools_ifw
+        tools: tools_ifw,qt.tools.ifw.47
         add-tools-to-path: 'true'
     - name: Select the bundled Python ABI after Qt setup
       uses: actions/setup-python@v6
       with:
         python-version: '3.12'
-    - name: Install Conan
-      uses: conan-io/setup-conan@v1
-      with:
-        cache_packages: false
-    - name: Restore complete Conan archive
-      uses: actions/cache/restore@v4
-      with:
-        path: ${{ runner.temp }}/pj-conan-cache.tgz
-        key: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt
-          }}
-        restore-keys: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-
-    - name: Import cached Conan packages
+    - name: Create isolated Conan home and pathmap profile
       shell: pwsh
       run: |
-        $archive = Join-Path $env:RUNNER_TEMP 'pj-conan-cache.tgz'
-        if (Test-Path -LiteralPath $archive) {
-          conan cache restore $archive
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          conan cache check-integrity "*"
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        }
-    - name: Conan install
-      shell: pwsh
-      run: |
-        conan install . -of build --build=missing -pr:b=default -s build_type=Release -s compiler.cppstd=17
-    - name: Export complete Conan packages
-      if: github.event_name != 'pull_request'
-      shell: pwsh
-      run: |
-        # Save only after a successful install; interrupted downloads are never cached.
-        conan cache save "*:*" --no-source --file "$env:RUNNER_TEMP/pj-conan-cache.tgz"
+        $homePath = Join-Path $env:RUNNER_TEMP "pj-conan-pathmap-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+        if (Test-Path -LiteralPath $homePath) { throw "Conan home already exists: $homePath" }
+        New-Item -ItemType Directory -Path $homePath | Out-Null
+        "CONAN_HOME=$homePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+        python -m pip install --disable-pip-version-check conan==2.34.0 cmake==3.31.10
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
-    - name: Preserve complete Conan archive
-      if: github.event_name != 'pull_request'
-      uses: actions/cache/save@v4
-      with:
-        path: ${{ runner.temp }}/pj-conan-cache.tgz
-        key: pj3-conan-win194-native-v2-${{ hashFiles('conanfile.txt') }}-${{ github.run_id }}-${{ github.run_attempt
-          }}
-    - name: Build Plotjuggler
+        $env:CONAN_HOME = $homePath
+        $epoch = git show -s --format=%ct HEAD
+        if ($LASTEXITCODE -or $epoch -notmatch '^[1-9][0-9]*$') { throw "Invalid source commit epoch" }
+        "SOURCE_DATE_EPOCH=$epoch" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "QT_RCC_SOURCE_DATE_OVERRIDE=$epoch" | Out-File -FilePath $env:GITHUB_ENV -Append
+        $hooks = Join-Path $homePath "extensions/hooks"
+        New-Item -ItemType Directory -Force -Path $hooks | Out-Null
+        Copy-Item scripts/hook_windows_conan_pathmap.py $hooks
+        conan profile detect
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        python scripts/windows_conan_pathmap.py --source "$env:GITHUB_WORKSPACE" --cache "$homePath" --output "$env:RUNNER_TEMP/pj-pathmap.profile" --experimental-hook-refs scripts/windows_conan_mapping_refs.json --experimental-link-brepro
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+    - name: Conan install from source with path mapping
       shell: pwsh
       run: |
-        cmake --preset conan-default -S . -B build -DCMAKE_BUILD_TYPE=Release -DPJ_INSTALLATION="windows" -DPJ_PLUGINS_DIRECTORY="bin" -DBUILD_TESTING=OFF
+        $buildArgs = @(python scripts/windows_conan_build_check.py arguments)
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        $profile = "$env:RUNNER_TEMP/pj-pathmap.profile"
+        $overlayProfile = "cmake/conan/openssl-overlay.profile"
+        $export = "$env:RUNNER_TEMP/pj-openssl-overlay-export.json"
+        conan export cmake/conan/openssl-overlay --name=openssl --version=3.6.5 --user=plotjuggler --channel=stable --format=json --out-file "$export"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        $actual = (Get-Content -LiteralPath $export -Raw | ConvertFrom-Json).reference
+        $expected = @((Get-Content scripts/windows_conan_host_refs.json -Raw | ConvertFrom-Json) | Where-Object { $_ -match '^openssl/3\.6\.5@plotjuggler/stable#[0-9a-f]{32}$' })
+        if ($expected.Count -ne 1 -or $actual -cne $expected[0]) { throw "OpenSSL overlay export revision mismatch" }
+        $plan = "$env:RUNNER_TEMP/pj-conan-plan.json"
+        $result = "$env:RUNNER_TEMP/pj-conan-install.json"
+        conan graph info . @buildArgs --lockfile cmake/conan/windows-msvc194.lock -pr:h "$profile" -pr:h "$overlayProfile" -pr:b=default -s build_type=Release -s compiler.cppstd=17 --format=json --out-file "$plan"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        python scripts/windows_conan_build_check.py verify "$plan"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        conan install . -of build @buildArgs --lockfile cmake/conan/windows-msvc194.lock -pr:h "$profile" -pr:h "$overlayProfile" -pr:b=default -s build_type=Release -s compiler.cppstd=17 --deployer=./scripts/conan_license_deployer.py --deployer-folder=build/dependency-notices --format=json --out-file "$result"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        python scripts/windows_conan_build_check.py verify "$result"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+    - name: Build Plotjuggler
+      id: native-build
+      shell: pwsh
+      run: |
+        cmake --preset conan-default -S . -B build -DCMAKE_BUILD_TYPE=Release -DPJ_INSTALLATION="windows" -DPJ_PLUGINS_DIRECTORY="bin" -DBUILD_TESTING=ON
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
         cmake --build build --config Release
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
         $version = (Get-Content build/FORK-VERSION.json -Raw | ConvertFrom-Json).version
         "PJ_SEMVER=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+        $sourceSha = git rev-parse HEAD
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        "source-sha=$sourceSha" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
     - name: Test DataFlash and translations
       shell: pwsh
       run: |
+        New-Item -ItemType Directory -Force -Path acceptance | Out-Null
+        $checks = [ordered]@{}
         $env:PATH = "$env:QT_ROOT_DIR\bin;$env:PATH"
         python -m pip install --disable-pip-version-check Pillow==11.3.0
-        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        $checks['pillow'] = $LASTEXITCODE
         git fetch --no-tags --depth=1 https://github.com/reliable-ly0411/PlotJuggler-zh-CN.git 3117288ce8d710bde4f7a86ca5ed5240ebb1c301
-        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        $checks['reference'] = $LASTEXITCODE
+        python scripts/stage_meme_references.py --out "$env:GITHUB_WORKSPACE/reference-memes"
+        $checks['reference_stage'] = $LASTEXITCODE
         $env:PJ_MEME_REFERENCE_DIR = "$env:GITHUB_WORKSPACE/reference-memes"
         $env:PJ_MEME_AUDIT_DIR = "$env:GITHUB_WORKSPACE/acceptance/image-variants"
         python tests/check_translations.py --fresh
-        if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        python tests/check_memes.py --reference-rev 3117288ce8d710bde4f7a86ca5ed5240ebb1c301 --export-reference reference-memes --pixel-report acceptance/image-pixels.json
-        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        $checks['translations'] = $LASTEXITCODE
+        python tests/check_memes.py
+        $checks['memes'] = $LASTEXITCODE
         python tests/check_version.py
-        if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        ctest --test-dir build -C Release --output-on-failure --no-tests=error
-        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        $checks['version'] = $LASTEXITCODE
+        ctest --test-dir build -C Release -R "$env:PJ_CTEST_REGEX" --output-on-failure --no-tests=error
+        $checks['ctest'] = $LASTEXITCODE
+        $checks | ConvertTo-Json | Set-Content -Encoding utf8 acceptance/native-step-results.json
+        if (@($checks.Values | Where-Object { $_ -ne 0 }).Count) { exit 1 }
     - name: Prepare installer directory
+      id: stage-installer
+      if: always() && steps.native-build.outcome == 'success'
       shell: pwsh
       run: |
         New-Item -ItemType Directory -Force -Path installer\io.plotjuggler.application\data
         Copy-Item -Path build\bin\Release\*.* -Destination installer\io.plotjuggler.application\data -Recurse -Force
         cmd /c installer\windeploy_pj.bat
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
         python scripts/stage_fork_notices.py installer/io.plotjuggler.application/data
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Bundle embeddable Python
+      id: stage-python
+      if: always() && steps.stage-installer.outcome == 'success'
       shell: pwsh
       run: "# Ship a self-contained Python next to plotjuggler.exe so the app\n# works on any Windows host, regardless\
         \ of whether (or which) Python\n# the user has installed. This mirrors what the Linux AppImage does\n# by bundling\
@@ -145,6 +168,8 @@ jobs:
         \ what we shipped (Python files only)\nWrite-Host \"Bundled Python contents in $dataDir :\"\nGet-ChildItem $dataDir\
         \ |\n  Where-Object { $_.Name -match '^(python|vcruntime|_)|_pth$' } |\n  Format-Table Name, Length\n"
     - name: Bundle MSVC C++ runtime
+      id: stage-runtime
+      if: always() && steps.stage-installer.outcome == 'success'
       shell: pwsh
       run: |
         # plotjuggler.exe and the plugin DLLs are built with MSVC and link
@@ -186,12 +211,25 @@ jobs:
           $_.Name -match '^(msvcp|vcruntime|concrt)\d+'
         } | Format-Table Name, Length
     - name: Validate and archive portable application
+      id: portable-archive
+      if: always() && steps.stage-python.outcome == 'success' && steps.stage-runtime.outcome == 'success'
       shell: pwsh
       run: |
         python scripts/zh_acceptance.py --app installer/io.plotjuggler.application/data/plotjuggler.exe --plugin installer/io.plotjuggler.application/data/DataAPBin.dll --out acceptance
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         Compress-Archive -Path installer/io.plotjuggler.application/data/* -DestinationPath PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip
+    - name: Validate packaged launcher Qt interaction and persistence
+      id: launcher-gui
+      if: always() && steps.stage-python.outcome == 'success' && steps.stage-runtime.outcome == 'success'
+      shell: pwsh
+      run: |
+        $env:QT_QPA_PLATFORM = "windows"
+        New-Item -ItemType Directory -Force -Path acceptance/launcher-packaged | Out-Null
+        python scripts/launcher_acceptance.py --launcher installer/io.plotjuggler.application/data/plotjuggler-launcher.exe --out-base acceptance/launcher-packaged --expected-version "$env:PJ_SEMVER" --expected-platform windows
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Create installer using QT Installation Framework
+      id: installer-package
+      if: always() && steps.stage-python.outcome == 'success' && steps.stage-runtime.outcome == 'success'
       shell: pwsh
       run: |
         # Sanitize ref_name to replace / with - for valid Windows filename.
@@ -209,9 +247,13 @@ jobs:
         }
         $binarycreator_path = Join-Path "${{ github.workspace }}\qt_installation" $binarycreator
 
-        # Create installer using existing configuration files
+        # A single outer archive makes IFW extract python312.zip as a file,
+        # rather than treating it as a separate component archive.
+        $ifwPackages = Join-Path $env:RUNNER_TEMP "pj-ifw-packages-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+        python scripts/windows_ifw_payload.py --component installer/io.plotjuggler.application --output "$ifwPackages"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
         Write-Host "Creating installer: $installer_name"
-        & "$binarycreator_path" --offline-only -c installer\config.xml -p installer $installer_name
+        & "$binarycreator_path" --offline-only -c installer\config.xml -p "$ifwPackages" $installer_name
 
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Failed to create installer"
@@ -219,33 +261,59 @@ jobs:
         }
 
         Write-Host "Installer created successfully: $installer_name"
+    - name: Collect isolated public DLL evidence for independent review
+      id: public-binary-review
+      if: always() && steps.native-build.outcome == 'success' && steps.stage-runtime.outcome == 'success'
+      shell: pwsh
+      env:
+        REVIEW_SOURCE_SHA: ${{ steps.native-build.outputs.source-sha }}
+      run: |
+        # This tool only authorizes a privacy-scanned ReviewOnly artifact.
+        # It never changes approved identities or approves release payloads.
+        python scripts/windows_public_binary_review.py --repo . --build build --payload installer/io.plotjuggler.application/data --out review-only/public-binaries --commit "$env:REVIEW_SOURCE_SHA" --run "$env:GITHUB_RUN_ID" --run-attempt "$env:GITHUB_RUN_ATTEMPT"
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+    - name: Upload isolated DLL review evidence
+      if: always() && steps.public-binary-review.outputs.manifest-ready == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ReviewOnly-Windows-public-binaries-${{ steps.native-build.outputs.source-sha }}
+        path: review-only/public-binaries/
+        if-no-files-found: error
+        retention-days: 14
     - name: Verify real public DLL identities and mutation rejection
+      id: public-binary-identities
+      if: always() && steps.native-build.outcome == 'success' && steps.stage-runtime.outcome == 'success'
       shell: pwsh
       run: |
         python scripts/verify_public_binary_records.py --payload installer/io.plotjuggler.application/data --out acceptance/public-binary-regressions.json
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Audit packaged payload and sizes
+      id: payload-audit
+      if: always() && steps.portable-archive.outcome == 'success' && steps.installer-package.outcome == 'success'
       shell: pwsh
       run: |
-        python scripts/package_size_audit.py --payload installer/io.plotjuggler.application/data --package "PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip" --package "PlotJuggler-$env:PJ_SEMVER-Windows-x64.exe" --out acceptance/package-size.json
+        $roots = Join-Path $env:RUNNER_TEMP "pj-private-roots-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT.json"
+        python scripts/collect_private_build_roots.py --source "$env:GITHUB_WORKSPACE" --build "$env:GITHUB_WORKSPACE/build" --cache "$env:CONAN_HOME" --sdk "$env:QT_ROOT_DIR" --cmake-cache "$env:GITHUB_WORKSPACE/build/CMakeCache.txt" --out "$roots"
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
-    - name: Test build without localized images
-      shell: pwsh
-      run: |
-        $env:PATH = "$env:QT_ROOT_DIR\bin;$env:PATH"
-        cmake --preset conan-default -S . -B build -DPJ_ENABLE_LOCALIZED_IMAGES=OFF
+        $exe = "PlotJuggler-$env:PJ_SEMVER-Windows-x64.exe"
+        $exeHash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
+        $devtools = @(Get-ChildItem -Path "$env:GITHUB_WORKSPACE/qt_installation" -Recurse -File -Filter devtool.exe)
+        if ($devtools.Count -ne 1) { throw "Expected exactly one IFW devtool" }
+        python scripts/verify_windows_archives.py --stage installer/io.plotjuggler.application/data --portable "PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip" --exe "$exe" --installer-sha "$exeHash" --devtool "$($devtools[0].FullName)" --private-build-roots "$roots" --out acceptance/windows-payload-binding.json
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        cmake --build build --config Release --target pj_localized_meme_test pj_resource_image_test
+        python scripts/package_size_audit.py --payload installer/io.plotjuggler.application/data --package "PlotJuggler-$env:PJ_SEMVER-Windows-x64.zip" --package "$exe" --private-build-roots "$roots" --out acceptance/package-size.json
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        ctest --test-dir build -C Release -R "LocalizedMemes|ResourceImageVariants" --output-on-failure --no-tests=error
+        python scripts/verify_windows_binding.py --audit acceptance/package-size.json --binding acceptance/windows-payload-binding.json
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Upload installer
+      if: success() && steps.public-binary-identities.outcome == 'success' && steps.payload-audit.outcome == 'success'
       uses: actions/upload-artifact@v4
       with:
         name: Software-Windows-installer
         path: PlotJuggler-${{ env.SAFE_REF }}-Windows-x64.exe
         if-no-files-found: error
     - name: Upload portable software package
+      if: success() && steps.public-binary-identities.outcome == 'success' && steps.payload-audit.outcome == 'success'
       uses: actions/upload-artifact@v4
       with:
         name: Software-Windows-portable
