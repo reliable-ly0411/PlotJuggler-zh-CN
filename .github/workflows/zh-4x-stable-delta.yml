@@ -1,7 +1,7 @@
 name: 4.x stable delta targeted native checks
 on:
   push:
-    branches: [zh-CN-4.x-ci/stable-delta-linux-20261113]
+    branches: [zh-CN-4.x-feat/upstream-sync-20261114]
   workflow_dispatch:
 permissions:
   contents: read
@@ -31,7 +31,9 @@ jobs:
           git rev-parse HEAD > "$RUNNER_TEMP/stable-delta-evidence/commit.txt"
           git submodule status --recursive > "$RUNNER_TEMP/stable-delta-evidence/submodules.txt"
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 libva-dev libdrm-dev xvfb ccache zstd mesa-vulkan-drivers libvulkan-dev libset-scalar-perl
+          sudo apt-get install -y --no-install-recommends libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 libva-dev libdrm-dev xvfb ccache zstd mesa-vulkan-drivers libvulkan-dev libset-scalar-perl locales
+          sudo locale-gen de_DE.UTF-8
+          locale -a | grep -qi de_DE.utf8
           python3 -m venv "$RUNNER_TEMP/pj-tools"
           "$RUNNER_TEMP/pj-tools/bin/pip" install conan==2.22.2 aqtinstall==3.3.0 cmake==3.31.10 ninja
           echo "$RUNNER_TEMP/pj-tools/bin" >> "$GITHUB_PATH"
@@ -82,14 +84,14 @@ jobs:
         run: |
           set -euo pipefail
           ./build.sh --skip-conan-install --no-demos --no-widget-demos --no-marketplace-app --target pj_app 2>&1 | tee "$RUNNER_TEMP/stable-delta-evidence/app-build.log"
-          cmake --build build --parallel 2 --target pj_app_unit_tests pj_app_gui_tests pj_plotting_widget_tests mcp_bridge_test rhi_mixed_dock_test scene3d_rhi_model_cache_test file_loader_test ardupilot_import_test 2>&1 | tee "$RUNNER_TEMP/stable-delta-evidence/test-build.log"
+          cmake --build build --parallel 2 --target mcp_bridge_test file_loader_test 2>&1 | tee "$RUNNER_TEMP/stable-delta-evidence/test-build.log"
       - name: Select and run changed-surface tests only
         shell: bash
         run: |
           set -euo pipefail
           evidence="$RUNNER_TEMP/stable-delta-evidence"
-          python3 scripts/validation/select_stable_delta_tests.py build "$evidence"
-          xvfb-run -a ctest --test-dir build --tests-from-file "$evidence/test-names.txt" --output-on-failure --timeout 120 --parallel 1 --no-tests=error --output-junit "$evidence/ctest.xml" 2>&1 | tee "$evidence/ctest.log"
+          python3 scripts/validation/select_upstream_sync_tests.py build "$evidence"
+          xvfb-run -a ctest --test-dir build --tests-from-file "$evidence/test-names.txt" --verbose --output-on-failure --timeout 120 --parallel 1 --no-tests=error --output-junit "$evidence/ctest.xml" 2>&1 | tee "$evidence/ctest.log"
           python3 - "$evidence/ctest.xml" <<'PY'
           import sys, xml.etree.ElementTree as E
           cases=E.parse(sys.argv[1]).getroot().findall('.//testcase')
