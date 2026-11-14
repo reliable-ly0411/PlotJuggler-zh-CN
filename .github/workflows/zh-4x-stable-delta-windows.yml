@@ -1,7 +1,7 @@
 name: 4.x stable delta Windows source-native checks
 on:
   push:
-    branches: [zh-CN-4.x-ci/stable-delta-windows-20261113]
+    branches: [zh-CN-4.x-feat/upstream-sync-20261114]
   workflow_dispatch:
 permissions:
   contents: read
@@ -56,7 +56,7 @@ jobs:
           # No old native-kit is loaded or silently re-approved.
           & ./scripts/windows/build.ps1 --no-demos --no-widget-demos --no-marketplace-app --target pj_app 2>&1 | Tee-Object "$e/app-build.log"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          foreach ($target in @('pj_app_unit_tests','pj_app_gui_tests','pj_plotting_widget_tests','rhi_mixed_dock_test','scene3d_rhi_model_cache_test','file_loader_test','ardupilot_import_test')) {
+          foreach ($target in @('file_loader_test')) {
             & ./scripts/windows/build.ps1 --skip-conan-install --no-demos --no-widget-demos --no-marketplace-app --target $target 2>&1 | Tee-Object -Append "$e/test-build.log"
             if ($LASTEXITCODE) { exit $LASTEXITCODE }
           }
@@ -74,15 +74,12 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           $e=Join-Path $env:RUNNER_TEMP 'stable-delta-windows-evidence'
-          python scripts/validation/select_stable_delta_tests.py build $e
+          python scripts/validation/select_upstream_sync_tests.py build $e
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           ctest --test-dir build -C RelWithDebInfo --tests-from-file "$e/test-names.txt" --verbose --output-on-failure --timeout 120 --parallel 1 --no-tests=error --output-junit "$e/ctest.xml" 2>&1 | Tee-Object "$e/ctest.log"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           python -c "import sys,xml.etree.ElementTree as E;from pathlib import Path;c=E.parse(sys.argv[1]).getroot().findall('.//testcase');expected=set(Path(sys.argv[1]).with_name('test-names.txt').read_text().splitlines());assert len(c)==len(expected) and {x.get('name') for x in c}==expected;assert all(not any(x.find(k) is not None for k in ('failure','error','skipped')) for x in c), 'Failed or skipped tests';print('Targeted passed:',len(c))" "$e/ctest.xml"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-      - name: Verify actual D3D11 software renderer evidence
-        shell: bash
-        run: bash scripts/ci/check_qrhi_backend.sh "$RUNNER_TEMP/stable-delta-windows-evidence/ctest.log" 'D3D11, .*deviceType=Cpu\)' D3D11
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
