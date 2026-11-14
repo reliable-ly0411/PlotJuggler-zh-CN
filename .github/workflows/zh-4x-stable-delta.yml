@@ -15,6 +15,8 @@ jobs:
     env:
       PJ_BUILD_JOBS: '2'
       PJ_BENCH: '1'
+      # The parent regression invokes this subprocess-only entry with an explicit filter.
+      GTEST_FILTER: '-FileLoaderShutdownProgressChild.*'
       PJ_REQUIRE_GPU_TESTS: '1'
       QT_QPA_PLATFORM: xcb
       LIBGL_ALWAYS_SOFTWARE: '1'

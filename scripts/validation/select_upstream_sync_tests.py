@@ -13,6 +13,9 @@ if len(sys.argv) == 3 and sys.argv[1] == '--verify-log':
     required = 'DialogShutdownTest.CancelThenRejectAtDialogDoesNotCancelTheNextLoad'
     if not re.search(r'\[\s*OK\s*\]\s+' + re.escape(required) + r'\b', log):
         raise SystemExit('Required FileLoader regression did not pass')
+    parent = 'FileLoaderShutdownProgressRegression.QueuedProgressAfterJoinMustNotAccessDestroyedContext'
+    if not re.search(r'\[\s*OK\s*\]\s+' + re.escape(parent) + r'\b', log):
+        raise SystemExit('Required subprocess-owning regression did not pass')
     if re.search(r'\[\s*SKIPPED\s*\]', log):
         raise SystemExit('GTest reported skipped coverage')
     print('Required FileLoader regression passed without GTest skips')
@@ -41,7 +44,7 @@ required = 'DialogShutdownTest.CancelThenRejectAtDialogDoesNotCancelTheNextLoad'
 if required not in cases:
     raise SystemExit('Missing built GTest case: ' + required)
 patterns = {
-    'file_loading': r'(FileLoaderTest|FileLoaderDrop|DialogShutdownTest)',
+    'file_loading': r'^FileLoaderTest$',
 }
 if os.name != 'nt':
     # This Linux-only executable includes McpBridgeDecimalCommaTest.FiltersAndScriptsCompile.

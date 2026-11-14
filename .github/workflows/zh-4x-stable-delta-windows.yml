@@ -15,6 +15,8 @@ jobs:
     env:
       PJ_BUILD_JOBS: '2'
       PJ_BENCH: '1'
+      # The parent regression invokes this subprocess-only entry with an explicit filter.
+      GTEST_FILTER: '-FileLoaderShutdownProgressChild.*'
       CMAKE_BUILD_PARALLEL_LEVEL: '2'
       PYTHONIOENCODING: utf-8
       QT_QPA_PLATFORM: windows
