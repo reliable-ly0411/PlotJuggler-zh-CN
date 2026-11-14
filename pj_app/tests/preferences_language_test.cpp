@@ -3,6 +3,7 @@
 
 #include <QApplication>
 #include <QFontInfo>
+#include <QDebug>
 #include <QLabel>
 #include <QScrollArea>
 #include <QSettings>
@@ -181,6 +182,12 @@ TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReacha
     ASSERT_NE(combo, nullptr);
     ASSERT_NE(notice, nullptr);
     ASSERT_NE(last_control, nullptr);
+    for (auto* widget : scroll->widget()->findChildren<QWidget*>()) {
+      qInfo() << "layout-diagnostic" << requested << widget->objectName()
+              << "geometry" << widget->geometry() << "minimum" << widget->minimumSize()
+              << "minimumHint" << widget->minimumSizeHint() << "hint" << widget->sizeHint()
+              << "policy" << widget->sizePolicy();
+    }
     EXPECT_GE(combo->width(), combo->minimumSizeHint().width());
     EXPECT_GE(notice->height(), notice->heightForWidth(notice->width()));
     for (QWidget* control : {static_cast<QWidget*>(combo), static_cast<QWidget*>(notice), last_control}) {

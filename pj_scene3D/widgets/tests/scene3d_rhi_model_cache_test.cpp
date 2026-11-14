@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 
 #include <QBuffer>
+#include <QDebug>
 #include <QFile>
 #include <QSysInfo>
 #include <QTemporaryDir>
@@ -604,7 +605,7 @@ TEST_F(Scene3dRhiModelCacheTest, SceneEntitiesContributeMarkersAndModelsInOneSlo
 
 // The frames of a scene with meshes, a texture, translucency, TF motion,
 // wireframe and shadow changes, with or without the caches.
-std::vector<QImage> renderSteps(bool caches) {
+std::vector<QImage> renderSteps(bool caches, bool stable = false) {
   std::vector<QImage> images;
   FakeModelLayer plain{kLink};
   FakeModelLayer textured_layer{kLink};
@@ -632,7 +633,7 @@ std::vector<QImage> renderSteps(bool caches) {
   };
   for (const auto& step : steps) {
     step();
-    images.push_back(grab(scene.view()));
+    images.push_back(stable ? pj::scene3d::test::grabStable(scene.view()) : grab(scene.view()));
   }
   return images;
 }
@@ -661,6 +662,19 @@ TEST_F(Scene3dRhiModelCacheTest, CachedFramesMatchUncachedPixelForPixel) {
     }
   }
   EXPECT_GT(pj::scene3d::test::differingPixels(cached[1], cached[2], 60), 200) << "the TF step moved nothing";
+  // Diagnostic only: keep the original first-frame assertions above intact.
+  const auto stable_cached = renderSteps(true, true);
+  const auto stable_uncached = renderSteps(false, true);
+  ASSERT_EQ(stable_cached.size(), cached.size());
+  ASSERT_EQ(stable_uncached.size(), uncached.size());
+  for (std::size_t i = 0; i < stable_cached.size(); ++i) {
+    ASSERT_FALSE(stable_cached[i].isNull() || stable_uncached[i].isNull());
+    qInfo() << "stable-frame-diagnostic step" << i << "raw-diff"
+            << pj::scene3d::test::differingPixels(cached[i], uncached[i], 60)
+            << "stable-diff"
+            << pj::scene3d::test::differingPixels(stable_cached[i], stable_uncached[i], 60);
+  }
+
 }
 
 }  // namespace
