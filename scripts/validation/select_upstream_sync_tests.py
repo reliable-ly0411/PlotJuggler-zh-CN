@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""Select file-loading and numeric-locale regressions for the November 14 sync."""
+"""Select changed-surface regressions for the SDK dev2 / mesh-map sync."""
 import json
 import os
 from pathlib import Path
@@ -45,6 +45,10 @@ if required not in cases:
     raise SystemExit('Missing built GTest case: ' + required)
 patterns = {
     'file_loading': r'^FileLoaderTest$',
+    'mesh_core': r'^pj_scene3d_core_tests[.]MeshMap',
+    'mesh_grid_ui': r'^pj_scene3d_widget_tests[.](MeshMap|GridMap)',
+    'process_isolation': r'^pj_app_gui_tests[.]TestProcessIsolationTest[.]',
+    'preferences_languages': r'^pj_app_gui_tests[.]PreferencesLanguageTest[.]',
 }
 if os.name != 'nt':
     # This Linux-only executable includes McpBridgeDecimalCommaTest.FiltersAndScriptsCompile.

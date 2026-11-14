@@ -1,7 +1,7 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
   "upstream_branch": "main",
-  "upstream_commit": "5a8f2583b0ae336930910c84307bde1a65c31fd3",
+  "upstream_commit": "ea8bb4c721049e9cf6bd7ed36b6eff210f40cdbd",
   "upstream_version_file": "versions.env",
   "baseline_recorded_utc": "2026-11-14",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
@@ -17,10 +17,10 @@
     "upstream_commit": "3e2f9253adc2d41e17b2f0fec74f4b2487c42fb0",
     "repository": "https://github.com/reliable-ly0411/plotjuggler-apbin-plugins",
     "branch": "plotjuggler-4.x-sdk",
-    "commit": "0cc7cc10a25af3cb2ab122861b9be4fc01c99da5",
+    "commit": "fc6065fd64305479946552a757d78e6afdd2c506",
     "path": "3rdparty/plotjuggler-apbin-plugins",
-    "sdk_version": "0.34.1",
-    "sdk_source_commit": "4d59e7de81455afe73a77051075e8fb4b9f6b0fd",
+    "sdk_version": "1.0.0-dev.2",
+    "sdk_source_commit": "5dae1ecf5af4307e1e025b7f1a8dde9e8f67e065",
     "license": "LGPL-3.0-only",
     "linkage": "Separate native shared library; no static embedding in the application.",
     "version": "1.2.0-pj4.rc.1",
@@ -31,7 +31,7 @@
     "tag_object": "da079f6670d3a1873ed1011dedc15556e6f838de",
     "commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
     "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.1.0",
-    "relationship": "Development snapshot with 60 upstream commits after official 4.1.0; not unchanged release or accepted localization package."
+    "relationship": "Development snapshot with 68 upstream commits after official 4.1.0."
   },
   "csv_path_fix": {
     "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
@@ -52,12 +52,12 @@
     "license": "MIT",
     "strategy": "Host display mapping for the unchanged official binary; no plugin rebuild or SDK change."
   },
-  "host_sdk_version": "0.40.0",
+  "host_sdk_version": "1.0.0-dev.2",
   "qt_version": "6.12.0",
-  "previous_upstream_commit": "0345ec513bde7f05ad3148548ac30401f2b6f7a7",
+  "previous_upstream_commit": "5a8f2583b0ae336930910c84307bde1a65c31fd3",
   "integration_parents": {
-    "development": "86133d418f5d2909c1d9c99720c88cab0a3ba3fc",
-    "upstream": "8b847cb74fa7938dcfb3b2385b1c7b8db3f69bc0"
+    "development": "add1a6df9731826642555fb733334c7547432232",
+    "upstream": "ea8bb4c721049e9cf6bd7ed36b6eff210f40cdbd"
   },
   "published_localization_release": {
     "version": "4.0.0-zh.1.rc.4",
@@ -66,16 +66,26 @@
     "note": "Historical released package scope; not an acceptance claim for the new development snapshot."
   },
   "latest_sync": {
-    "previous_upstream_commit": "8b847cb74fa7938dcfb3b2385b1c7b8db3f69bc0",
-    "development_parent": "cbb4d23f1579e4f93dc5ff1310a8be170ae61291",
+    "previous_upstream_commit": "5a8f2583b0ae336930910c84307bde1a65c31fd3",
+    "development_parent": "add1a6df9731826642555fb733334c7547432232",
     "upstream_commits": [
-      "b9136ebd13b1f916db1af481ab739563710e8184",
-      "720fd800b501aa7b647736b897f4fe134fe1ec5b",
-      "1d456dbb715cbb5c6476aff99d13f910d3b24f5d",
-      "5a8f2583b0ae336930910c84307bde1a65c31fd3"
+      "c2e97fbf8ed287d53f6dcaa97984db27b418ae2c",
+      "3773bd145ff931ba4cb59469e48b7e218a65f299",
+      "cc2dfed3543e6a2e1e34b307e59a955465b2c1dc",
+      "1f5347e415ef980b1859141d63ff1e344fb0487f",
+      "515858a7650a52a9f1866897d0c1633f2c6f845f",
+      "766d6c6acd230d6a9f8dac533eac826aa228bacb",
+      "2a54395cb4d07112b13074c07897b2288579a02d",
+      "ea8bb4c721049e9cf6bd7ed36b6eff210f40cdbd"
     ],
-    "upstream_commits_after_release": 60,
-    "package_status": "Source synchronization only; published tags and packages unchanged; new native package acceptance pending."
+    "upstream_commits_after_release": 68,
+    "package_status": "Targeted source and native validation; published tags and packages unchanged."
   },
-  "forward_port_source": "0113492d7a7f96e486de1f9adcde6e43893ab630"
+  "forward_port_source": "0113492d7a7f96e486de1f9adcde6e43893ab630",
+  "official_plugin_source_sync": {
+    "repository": "https://github.com/reliable-ly0411/pj-official-plugins",
+    "commit": "7f089a2271600c632f24c6f082dabec2d8295704",
+    "upstream_commit": "7ed9067d003fdf8f15decf5995651488d8bb937f",
+    "status": "Source translations synchronized; existing binary registry and legacy rebuild locks unchanged pending per-plugin package acceptance."
+  }
 }

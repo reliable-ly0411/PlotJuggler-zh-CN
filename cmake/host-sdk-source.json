@@ -1,31 +1,19 @@
 {
-  "version": "0.40.0",
+  "version": "1.0.0-dev.2",
   "repository": "https://github.com/reliable-ly0411/plotjuggler_sdk",
-  "commit": "52cdf329adf6af3513e190fe0f8b86f19f17b051",
+  "commit": "5dae1ecf5af4307e1e025b7f1a8dde9e8f67e065",
   "upstream_repository": "https://github.com/PlotJuggler/plotjuggler_sdk",
-  "upstream_base": "9fc42b1a81867da812d7f1880bf67b1c74f3f813",
+  "upstream_base": "b396484e5399d59f430bdde31c0a77e167f6acf2",
   "upstream_pull_request": "https://github.com/PlotJuggler/plotjuggler_sdk/pull/226",
-  "archive_url": "https://api.github.com/repos/reliable-ly0411/plotjuggler_sdk/tarball/52cdf329adf6af3513e190fe0f8b86f19f17b051",
-  "archive_sha256": "4576bdb2ea15c4cee9cbdfbbb52121861a459dd4b8d82af097e8f894f4dd7180",
-  "recipe_revision": "f4ab4dcfecac3b1f8397bb5fc6ae2832",
+  "archive_url": "https://api.github.com/repos/reliable-ly0411/plotjuggler_sdk/tarball/5dae1ecf5af4307e1e025b7f1a8dde9e8f67e065",
+  "archive_sha256": "1da72a30663a74acbf10bd2749abf6205a6d76ac4086a58fe6fbe5ee45a7bb6e",
+  "recipe_revision": "dc63822eeb4da6649fb71a6a61ffca7f",
   "license": "Apache-2.0",
-  "distribution": "Non-official PR #226 snapshot on SDK 0.40.0. Includes Unicode catalog diagnostics fix and upstream VideoFrame PTS/DTS documentation clarifications; no additional host contract or schema fields.",
-  "host_contract_version": "0.40.0",
-  "upstream_release_commit": "854d1f45ac4400b239a2140d9888bf89a97bc9e3",
+  "distribution": "SDK dev.2 with the complete Unicode path fixes from upstream PR #226.",
+  "host_contract_version": "1.0.0-dev.2",
+  "upstream_release_commit": "b396484e5399d59f430bdde31c0a77e167f6acf2",
   "license_files_sha256": {
     "LICENSE": "d982c2f8dce28e500f42757cdaf17640e3b0e2c1b8f16a1c5814b890c863e55f",
     "LICENSE-APACHE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
-  },
-  "comparison_to_official_0_40_0": {
-    "archive_sha256": "ba063722321816d7f52fae82b8b1454082813537f3888f1619e97d7b429af69e",
-    "changed_files": [
-      "CHANGELOG.md",
-      "docs/builtin_type.md",
-      "pj_base/include/pj_base/builtin/video_frame.hpp",
-      "pj_base/proto/pj/VideoFrame.proto",
-      "pj_plugins/src/plugin_catalog.cpp",
-      "pj_plugins/tests/plugin_catalog_test.cpp"
-    ],
-    "contract_verification": "VERSION, feature-floor and host-surface snapshots unchanged; VideoFrame header/proto differences are comments only; Conan recipe and license files identical. PR #226 is not merged as of 2026-11-13."
   }
 }

@@ -842,11 +842,20 @@
     },
     {
       "context": "PJ::MainWindow",
-      "source": "%1 is controlling PlotJuggler through MCP. Closing the agent's session or this page stops it.",
+      "source": "An AI agent is controlling PlotJuggler through MCP. Click to see what it is running and stop it; closing this page stops it too.",
       "comment": "",
       "numerus": false,
       "translations": [
-        "%1 正通过 MCP 控制 PlotJuggler。关闭该智能体的会话或此页面即可停止控制。"
+        "AI 智能体正在通过 MCP 控制 PlotJuggler。点击可查看并停止其任务；关闭此页面也会停止任务。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "An AI agent is controlling PlotJuggler through MCP. Click to see what it is running and stop it. Turn this off in Preferences → Appearance.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "AI 智能体正在通过 MCP 控制 PlotJuggler。点击可查看并停止其任务。可在“偏好设置 → 外观”中关闭此功能。"
       ]
     },
     {

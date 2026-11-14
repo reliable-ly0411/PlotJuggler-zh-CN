@@ -86,7 +86,7 @@ jobs:
         run: |
           set -euo pipefail
           ./build.sh --skip-conan-install --no-demos --no-widget-demos --no-marketplace-app --target pj_app 2>&1 | tee "$RUNNER_TEMP/stable-delta-evidence/app-build.log"
-          cmake --build build --parallel 2 --target mcp_bridge_test file_loader_test 2>&1 | tee "$RUNNER_TEMP/stable-delta-evidence/test-build.log"
+          cmake --build build --parallel 2 --target mcp_bridge_test file_loader_test pj_app_gui_tests pj_scene3d_core_tests pj_scene3d_widget_tests 2>&1 | tee "$RUNNER_TEMP/stable-delta-evidence/test-build.log"
       - name: Select and run changed-surface tests only
         shell: bash
         run: |
