@@ -157,6 +157,7 @@ TEST(PreferencesLanguageTest, LanguageSelectorHonorsBothSizeHintsAcrossFonts) {
 
 TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReachable) {
   for (const QString& requested : {u"en_US"_s, u"zh_CN"_s, u"zh_TW"_s}) {
+    SCOPED_TRACE(requested.toStdString());
     const PJ::AppLanguage running(*qApp, requested);
     PJ::Theme theme;
     PJ::PreferencesDialog dialog(theme);
@@ -186,7 +187,12 @@ TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReacha
       scroll->ensureWidgetVisible(control, 0, 0);
       QCoreApplication::processEvents();
       const QRect visible_rect(control->mapTo(scroll->viewport(), QPoint(0, 0)), control->size());
-      EXPECT_TRUE(scroll->viewport()->rect().contains(visible_rect));
+      SCOPED_TRACE(control->objectName().toStdString());
+      const QRect viewport_rect = scroll->viewport()->rect();
+      EXPECT_TRUE(viewport_rect.contains(visible_rect))
+          << "control=" << visible_rect.x() << "," << visible_rect.y() << "," << visible_rect.width() << ","
+          << visible_rect.height() << "; viewport=" << viewport_rect.width() << "," << viewport_rect.height()
+          << "; dialog=" << dialog.width() << "," << dialog.height();
     }
     dialog.reject();
   }

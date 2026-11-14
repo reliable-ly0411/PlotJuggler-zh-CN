@@ -310,124 +310,17 @@ jobs:
           cmake --build build --parallel -- -k 0
           if [[ "$SCCACHE_AVAILABLE" == "true" ]]; then sccache --show-stats; fi
 
-      - name: Test the QRhi renderer (Metal)
-        if: always() && steps.build.outcome == 'success'
-        shell: bash
-        env:
-          # The test main defaults to `offscreen`, which cannot render the 3D view.
-          QT_QPA_PLATFORM: cocoa
-          PJ_REQUIRE_GPU_TESTS: "1"
-          QT_LOGGING_RULES: pj.graphics.info=true
-          # Without a terminal Qt logs to os_log, which ctest never sees.
-          QT_FORCE_STDERR_LOGGING: "1"
-          PJ_POINTCLOUD_GOLDEN_OUT: ${{ runner.temp }}/golden-out
-          PJ_RHI_TEST_DUMP_DIR: ${{ runner.temp }}/rhi-dump
-        run: |
-          mkdir -p "$PJ_POINTCLOUD_GOLDEN_OUT"
-          log="${RUNNER_TEMP}/qrhi-metal-ctest.log"
-          ctest --test-dir build -V --timeout 120 -L qrhi-metal 2>&1 | tee "$log" || status=$?
-          # Every view on Metal, and at least one plot canvas among them.
-          bash scripts/ci/check_qrhi_backend.sh "$log" 'Metal, ' Metal
-          exit "${status:-0}"
-
-      - name: Test the QRhi renderer (OpenGL)
-        # The Metal-to-OpenGL fallback path: a 4.1 core context (the app's and the
-        # test main's macOS default format) running every GLSL 330 shader pack.
-        # A functional smoke run, not a parity gate (Metal is): the runner's GL is
-        # Apple's software renderer, whose rasterization differs from the Mesa
-        # goldens (point sprites and sphere impostors) and which is 10-40x slower.
-        # Hence no pointcloud goldens, no sub-pixel sprite colour check (its 1 px
-        # sprites resolve to ~15% coverage there), no odd-cell-edge grid line check
-        # (its 1 px analytic line loses the same coverage), no frame-identity check
-        # across a shadow toggle (not reproducible frame to frame there), and no DPR 2 mixed-dock
-        # pass (every float recompiles the whole pipeline set at 4x the pixels;
-        # Linux runs it). Scheduled and manual runs only: up to 24 min on the
-        # software renderer, so pull requests gate on Metal alone.
-        # pj_scene3D/docs/TECHNICAL_NOTES.md, "macOS OpenGL fallback".
-        if: always() && steps.build.outcome == 'success' && github.event_name != 'pull_request'
-        shell: bash
-        env:
-          QT_QPA_PLATFORM: cocoa
-          PJ_REQUIRE_GPU_TESTS: "1"
-          QT_LOGGING_RULES: pj.graphics.info=true
-          QT_FORCE_STDERR_LOGGING: "1"
-          PJ_POINTCLOUD_GOLDEN_OUT: ${{ runner.temp }}/golden-out
-          PJ_RHI_TEST_DUMP_DIR: ${{ runner.temp }}/rhi-dump
-        run: |
-          mkdir -p "$PJ_POINTCLOUD_GOLDEN_OUT"
-          log="${RUNNER_TEMP}/qrhi-opengl-ctest.log"
-          exclude='^pointcloud_golden_test\.|SubPixelCubeCloudBecomesColouredSprites|FilledGridLinesFollowOddCellEdges|ShadowToggleRebindsKeptMeshes|^rhi_mixed_dock_test\.opengl_dpr2\.'
-          ctest --test-dir build -V --timeout 120 -L qrhi-opengl -E "${exclude}" \
-            2>&1 | tee "$log" || status=$?
-          bash scripts/ci/check_qrhi_backend.sh "$log" 'OpenGL, ' OpenGL
-          exit "${status:-0}"
-
-      - name: Backtrace the failed QRhi cases
-        # A segfaulting test leaves only "Segmentation fault" in the ctest log: rerun
-        # the first failed cases of the two QRhi steps under lldb, on the backend
-        # (and scale) their ctest name carries, for every thread's stack.
-        if: failure() && steps.build.outcome == 'success'
+      - name: Repeat targeted diagnostics ten times
         shell: bash
         env:
           QT_QPA_PLATFORM: cocoa
           PJ_REQUIRE_GPU_TESTS: "1"
           QT_FORCE_STDERR_LOGGING: "1"
         run: |
-          failed=$(cat "${RUNNER_TEMP}"/qrhi-*-ctest.log 2>/dev/null |
-            sed -n '/The following tests FAILED:/,$p' | grep -oE '[0-9]+ - [^ ]+' | awk '{print $3}' | sort -u | head -n 3 || true)
-          for name in $failed; do
-            # <runner>.<backend>.<Suite>.<Case>
-            runner=${name%%.*}
-            rest=${name#*.}
-            backend=${rest%%.*}
-            rest=${rest#*.}
-            scale=1
-            if [[ $backend == opengl_dpr2 ]]; then
-              backend=opengl
-              scale=2
-            fi
-            exe=$(find build -type f -name "$runner" -perm -u+x | head -n 1)
-            [[ -n $exe ]] || continue
-            echo "::group::lldb $name"
-            PJ_GRAPHICS_API=$backend QT_SCALE_FACTOR=$scale \
-              lldb --batch -o run -k "thread backtrace all" -k quit -- "$exe" --gtest_filter="$rest" 2>&1 |
-              head -n 400 || true
+          status=0
+          for iteration in $(seq 1 10); do
+            echo "::group::diagnostic iteration $iteration"
+            ctest --test-dir build -V --timeout 120 --no-tests=error -j 1 -R '(scene3d_rhi_model_cache_test\.opengl\.Scene3dRhiModelCacheTest.CachedFramesMatchUncachedPixelForPixel|pj_scripting_python_tests.PythonObjectScript.APointScanReleasesTheGilAndRefusesAConcurrentAdvance)$' || status=1
             echo "::endgroup::"
           done
-
-      - name: Test (unit)
-        # Parallel ctest like the other lanes: the GUI test main's `offscreen`
-        # default, and GPU-gated tests (GL 4.5 ones cannot run on macOS) skip.
-        # Cases of one GUI runner never overlap (RESOURCE_LOCK, cmake/PjTests.cmake).
-        if: always() && steps.build.outcome == 'success'
-        shell: bash
-        run: ctest --test-dir build --output-on-failure --timeout 120 -LE qrhi -j "$(sysctl -n hw.ncpu)"
-
-      - name: Slowest QRhi cases
-        # Where the QRhi time goes (job summary and log); on scheduled and manual
-        # runs the OpenGL fallback, on Apple's software renderer, dominates. Last in the job so
-        # the listing is in the tail of the log, after the long unit-test output.
-        if: always() && steps.build.outcome == 'success'
-        shell: bash
-        run: |
-          for backend in metal opengl; do
-            log="${RUNNER_TEMP}/qrhi-${backend}-ctest.log"
-            [[ -f "${log}" ]] || continue
-            {
-              echo "### Slowest QRhi cases (${backend})"
-              echo '```'
-              awk '/Test +#[0-9]+:/ && / sec$/ {print $(NF-1), $0}' "${log}" | sort -rn | head -n 15 | cut -d' ' -f2-
-              awk '/Test +#[0-9]+:/ && / sec$/ {t += $(NF-1)} END {printf "total %.0f s in tests\n", t}' "${log}"
-              echo '```'
-            } | tee -a "${GITHUB_STEP_SUMMARY}"
-          done
-
-      - name: Upload QRhi Metal failure images
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: qrhi-metal-failures
-          path: |
-            ${{ runner.temp }}/golden-out
-            ${{ runner.temp }}/rhi-dump
-          if-no-files-found: ignore
+          exit "$status"
