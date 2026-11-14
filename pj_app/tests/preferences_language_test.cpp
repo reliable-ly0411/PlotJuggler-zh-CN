@@ -182,14 +182,17 @@ TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReacha
     ASSERT_NE(combo, nullptr);
     ASSERT_NE(notice, nullptr);
     ASSERT_NE(last_control, nullptr);
+    QString layout_diagnostic;
+    QDebug layout_debug(&layout_diagnostic);
     for (auto* widget : scroll->widget()->findChildren<QWidget*>()) {
-      qInfo() << "layout-diagnostic" << requested << widget->objectName()
+      layout_debug << "layout-diagnostic" << requested << widget->objectName()
               << "geometry" << widget->geometry() << "minimum" << widget->minimumSize()
               << "minimumHint" << widget->minimumSizeHint() << "hint" << widget->sizeHint()
               << "policy" << widget->sizePolicy();
     }
     EXPECT_GE(combo->width(), combo->minimumSizeHint().width());
     EXPECT_GE(notice->height(), notice->heightForWidth(notice->width()));
+    SCOPED_TRACE(layout_diagnostic.toStdString());
     for (QWidget* control : {static_cast<QWidget*>(combo), static_cast<QWidget*>(notice), last_control}) {
       scroll->ensureWidgetVisible(control, 0, 0);
       QCoreApplication::processEvents();
