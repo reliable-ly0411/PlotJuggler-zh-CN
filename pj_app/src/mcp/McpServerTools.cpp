@@ -110,25 +110,6 @@ QString agentDialogTitlePrefix() {
   return QCoreApplication::translate("PJ::McpServer", "An AI agent asked you to choose: ");
 }
 
-/// The value column's rows [begin, end) as doubles; empty for a column type that is not numeric.
-std::vector<double> valuesAsDouble(const sdk::MaterializedSeriesView& series, std::size_t begin, std::size_t end) {
-  std::vector<double> out(end - begin);
-  const auto copy = [&](const auto* values) {
-    if (values == nullptr) {
-      return false;
-    }
-    std::transform(values + begin, values + end, out.begin(), [](auto v) { return static_cast<double>(v); });
-    return true;
-  };
-  if (copy(series.valuesAsFloat64()) || copy(series.valuesAsFloat32()) || copy(series.valuesAsInt64()) ||
-      copy(series.valuesAsInt32()) || copy(series.valuesAsInt16()) || copy(series.valuesAsInt8()) ||
-      copy(series.valuesAsUint64()) || copy(series.valuesAsUint32()) || copy(series.valuesAsUint16()) ||
-      copy(series.valuesAsUint8())) {
-    return out;
-  }
-  return {};
-}
-
 /// One resolved series (or its windowed slice).
 struct Column {
   std::string path;       ///< the canonical path, dataset-qualified when several datasets are loaded
@@ -188,7 +169,7 @@ Expected<std::vector<Column>> readColumns(
           "series '" + want + "' has more than " + std::to_string(kMaxExportRows) +
           " samples in the window: narrow t0/t1");
     }
-    column.values = valuesAsDouble(*view, begin, end);
+    column.values = agent_tools::seriesValuesAsDoubles(*view, begin, end);
     if (column.values.size() != end - begin) {
       return unexpected("series '" + want + "' is not numeric");
     }

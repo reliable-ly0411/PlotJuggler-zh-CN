@@ -1,7 +1,7 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
   "upstream_branch": "main",
-  "upstream_commit": "ea8bb4c721049e9cf6bd7ed36b6eff210f40cdbd",
+  "upstream_commit": "904c48bfbb5371033ecc104e48e11bb442aa61a9",
   "upstream_version_file": "versions.env",
   "baseline_recorded_utc": "2026-11-14",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
@@ -31,7 +31,7 @@
     "tag_object": "da079f6670d3a1873ed1011dedc15556e6f838de",
     "commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
     "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.1.0",
-    "relationship": "Development snapshot with 68 upstream commits after official 4.1.0."
+    "relationship": "Development snapshot with 70 upstream commits after official 4.1.0."
   },
   "csv_path_fix": {
     "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
@@ -54,10 +54,10 @@
   },
   "host_sdk_version": "1.0.0-dev.2",
   "qt_version": "6.12.0",
-  "previous_upstream_commit": "5a8f2583b0ae336930910c84307bde1a65c31fd3",
+  "previous_upstream_commit": "ea8bb4c721049e9cf6bd7ed36b6eff210f40cdbd",
   "integration_parents": {
-    "development": "add1a6df9731826642555fb733334c7547432232",
-    "upstream": "ea8bb4c721049e9cf6bd7ed36b6eff210f40cdbd"
+    "development": "7c7f591ea43e60131566aa3fe842d231adda11a4",
+    "upstream": "904c48bfbb5371033ecc104e48e11bb442aa61a9"
   },
   "published_localization_release": {
     "version": "4.0.0-zh.1.rc.4",
@@ -76,9 +76,11 @@
       "515858a7650a52a9f1866897d0c1633f2c6f845f",
       "766d6c6acd230d6a9f8dac533eac826aa228bacb",
       "2a54395cb4d07112b13074c07897b2288579a02d",
-      "ea8bb4c721049e9cf6bd7ed36b6eff210f40cdbd"
+      "ea8bb4c721049e9cf6bd7ed36b6eff210f40cdbd",
+      "694ff471a7a8c867f9caa808e2fc50be742f005c",
+      "904c48bfbb5371033ecc104e48e11bb442aa61a9"
     ],
-    "upstream_commits_after_release": 68,
+    "upstream_commits_after_release": 70,
     "package_status": "Targeted source and native validation; published tags and packages unchanged."
   },
   "forward_port_source": "0113492d7a7f96e486de1f9adcde6e43893ab630",

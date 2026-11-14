@@ -45,6 +45,8 @@ if required not in cases:
     raise SystemExit('Missing built GTest case: ' + required)
 patterns = {
     'file_loading': r'^FileLoaderTest$',
+    'mcp_null_samples': r'^pj_app_gui_tests[.]McpServerTest[.]ANullSampleIsNotReadAsZero$',
+    'mcp_export': r'^pj_app_gui_tests[.]McpServerTest[.]Export',
     'mesh_core': r'^pj_scene3d_core_tests[.]MeshMap',
     'mesh_grid_ui': r'^pj_scene3d_widget_tests[.](MeshMap|GridMap)',
     'process_isolation': r'^pj_app_gui_tests[.]TestProcessIsolationTest[.]',
