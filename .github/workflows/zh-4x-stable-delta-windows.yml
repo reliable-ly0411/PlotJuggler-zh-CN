@@ -58,7 +58,7 @@ jobs:
           # No old native-kit is loaded or silently re-approved.
           & ./scripts/windows/build.ps1 --no-demos --no-widget-demos --no-marketplace-app --target pj_app 2>&1 | Tee-Object "$e/app-build.log"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          foreach ($target in @('file_loader_test')) {
+          foreach ($target in @('file_loader_test', 'pj_app_gui_tests', 'pj_scene3d_core_tests', 'pj_scene3d_widget_tests')) {
             & ./scripts/windows/build.ps1 --skip-conan-install --no-demos --no-widget-demos --no-marketplace-app --target $target 2>&1 | Tee-Object -Append "$e/test-build.log"
             if ($LASTEXITCODE) { exit $LASTEXITCODE }
           }
