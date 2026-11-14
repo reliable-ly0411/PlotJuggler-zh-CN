@@ -55,12 +55,19 @@ jobs:
         if (Test-Path -LiteralPath $homePath) { throw "Conan home already exists: $homePath" }
         New-Item -ItemType Directory -Path $homePath | Out-Null
         "CONAN_HOME=$homePath" | Out-File -FilePath $env:GITHUB_ENV -Append
-        python -m pip install --disable-pip-version-check conan==2.34.0
+        python -m pip install --disable-pip-version-check conan==2.34.0 cmake==3.31.10
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
         $env:CONAN_HOME = $homePath
+        $epoch = git show -s --format=%ct HEAD
+        if ($LASTEXITCODE -or $epoch -notmatch '^[1-9][0-9]*$') { throw "Invalid source commit epoch" }
+        "SOURCE_DATE_EPOCH=$epoch" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "QT_RCC_SOURCE_DATE_OVERRIDE=$epoch" | Out-File -FilePath $env:GITHUB_ENV -Append
+        $hooks = Join-Path $homePath "extensions/hooks"
+        New-Item -ItemType Directory -Force -Path $hooks | Out-Null
+        Copy-Item scripts/hook_windows_conan_pathmap.py $hooks
         conan profile detect
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
-        python scripts/windows_conan_pathmap.py --source "$env:GITHUB_WORKSPACE" --cache "$homePath" --output "$env:RUNNER_TEMP/pj-pathmap.profile"
+        python scripts/windows_conan_pathmap.py --source "$env:GITHUB_WORKSPACE" --cache "$homePath" --output "$env:RUNNER_TEMP/pj-pathmap.profile" --experimental-hook-refs scripts/windows_conan_mapping_refs.json --experimental-link-brepro
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Conan install from source with path mapping
       shell: pwsh

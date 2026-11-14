@@ -20,6 +20,13 @@ It does not create that system directory or change user/global OpenSSL settings.
 Runtime configuration, explicit CA use and affected TLS connections require
 validation after rebuilding the actual static-library consumers.
 
+The Windows/MSVC toolchain also clears the environment `LDFLAGS` override.
+Extra link flags remain additive through the generated Conan target's `lflags`;
+OpenSSL's inherited `/nologo /debug` defaults therefore remain active. This fixes
+missing provider PDBs during `install_sw` when `/Brepro` is supplied. FIPS and
+PDB installation are not disabled. The isolated two-cache build still has to
+establish actual DLL reproducibility and path privacy.
+
 The proposed recipe revision was obtained by an isolated Conan 2.33 export.
 The Windows workflow uses Conan 2.34 and must reproduce the exact locked export
 reference before graph resolution or compilation. A mismatch stops the build.

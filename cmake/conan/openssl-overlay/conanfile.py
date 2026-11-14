@@ -442,6 +442,12 @@ class OpenSSLConan(ConanFile):
     def generate(self):
         tc = AutotoolsToolchain(self)
         env = tc.environment()
+        if self.settings.os == "Windows" and self.settings.compiler == "msvc":
+            # Configure treats environment LDFLAGS as a replacement for the
+            # VC target defaults (/nologo /debug). Keep those defaults so the
+            # provider PDBs required by install_sw are generated. Additional
+            # linker flags still enter via _create_targets' additive lflags.
+            env.unset("LDFLAGS")
         env.define_path("PERL", self._perl)
         if self.settings.compiler == "apple-clang":
             xcrun = XCRun(self)

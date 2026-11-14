@@ -2,6 +2,7 @@ import importlib.util
 from pathlib import Path
 from types import SimpleNamespace as NS
 import unittest
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('hook', ROOT/'scripts/hook_windows_conan_pathmap.py')
@@ -21,7 +22,7 @@ class Conf(dict):
     def define(self, name, value): self[name] = value
 
 def item(cache=r'C:\cache-a', token='abcdefgh', name='fixture'):
-    return NS(ref=NS(name=name,version='1.0',user=None,channel=None,revision='a'*32),
+    return NS(context='host',ref=NS(name=name,version='1.0',user=None,channel=None,revision='a'*32),
               settings=Values(),options=Values(''),source_folder=cache+'\\p\\b\\'+token+'\\s',
               build_folder=cache+'\\p\\b\\'+token+'\\b',package_folder=cache+'\\p\\'+token+'\\p')
 
@@ -29,12 +30,30 @@ def setup():
     c=item(); d=item(name='dep'); c.dependencies=NS(host={'dep':d})
     refs=[h.exact_ref(c.ref),h.exact_ref(d.ref)]
     c.conf=Conf({h.POLICY_CONF:h.policy_digest(refs),h.REFS_CONF:refs,
-      'tools.info.package_id:confs':[h.POLICY_CONF,h.REFS_CONF],
+      'tools.info.package_id:confs':[h.POLICY_CONF,h.REFS_CONF,'tools.build:sharedlinkflags','tools.build:exelinkflags'],
+      'tools.build:sharedlinkflags':['/Brepro'],'tools.build:exelinkflags':['/Brepro'],
       'tools.build:cflags':['/experimental:deterministic','/pathmap:C:/cache-a=Z:/pj-conan'],
       'tools.build:cxxflags':['/experimental:deterministic','/pathmap:C:/cache-a=Z:/pj-conan']})
     return c
 
 class HookTests(unittest.TestCase):
+    def test_root_consumer_maps_dependencies(self):
+        c=setup();c.ref=None;h.pre_generate(c)
+        self.assertEqual(len(c.conf['tools.build:cflags']),3)
+        self.assertIn('/package',c.conf['tools.build:cflags'][0])
+    def test_build_context_rejected(self):
+        c=setup();c.context='build'
+        with self.assertRaisesRegex(ValueError,'build-context'):h.pre_generate(c)
+    def test_link_policy_not_optional(self):
+        c=setup();c.conf['tools.build:sharedlinkflags']=[]
+        with self.assertRaisesRegex(ValueError,'linker'):h.pre_generate(c)
+    def test_mapping_refs_cover_exact_lock_host_set(self):
+        import json
+        refs=json.loads((ROOT/'scripts/windows_conan_mapping_refs.json').read_text())
+        lock=json.loads((ROOT/'cmake/conan/windows-msvc194.lock').read_text())
+        self.assertEqual(len(refs),24);self.assertEqual(set(refs),set(lock['requires']))
+        compiled=json.loads((ROOT/'scripts/windows_conan_host_refs.json').read_text())
+        self.assertEqual(len(compiled),22);self.assertTrue(set(compiled)<set(refs))
     def test_inactive(self):
         c=NS(conf=Conf()); h.pre_generate(c)
     def test_version_object_and_pinned_revision(self):
@@ -78,5 +97,21 @@ class HookTests(unittest.TestCase):
         c=setup();before=list(c.conf['tools.build:cflags']);c.conf['tools.build:cxxflags']=[]
         with self.assertRaises(ValueError):h.pre_generate(c)
         self.assertEqual(before,c.conf['tools.build:cflags'])
+
+class SourceTimeTests(unittest.TestCase):
+    def test_banner_replacement_is_exact_and_precompile(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/'options.c'
+            path.write_text('banner, __DATE__, __TIME__);')
+            h.stable_mimalloc_banner(path)
+            self.assertEqual(path.read_text(),'banner, "reproducible build", "time not recorded");')
+            with self.assertRaises(ValueError):h.stable_mimalloc_banner(path)
+    def test_product_workflow_enables_validated_policy_and_full_suite(self):
+        text=(ROOT/'.github/workflows/zh-windows.yml').read_text()
+        for value in ['SOURCE_DATE_EPOCH=$epoch','QT_RCC_SOURCE_DATE_OVERRIDE=$epoch',
+                      'Copy-Item scripts/hook_windows_conan_pathmap.py',
+                      '--experimental-hook-refs scripts/windows_conan_mapping_refs.json',
+                      '--experimental-link-brepro',"PJ_CTEST_REGEX: '.*'"]:
+            self.assertIn(value,text)
 
 if __name__=='__main__':unittest.main()

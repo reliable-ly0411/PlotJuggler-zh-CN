@@ -73,13 +73,14 @@ def mapping_flags(conanfile, allowed):
             raise ValueError('ambiguous package identity at distinct roots')
         entries[key] = (source, target)
         destinations[target] = key
-    own = identity(conanfile, allowed)
-    source, build = root(conanfile.source_folder), root(conanfile.build_folder)
-    if source.casefold() == build.casefold():
-        add(source, own + '/source-build')
-    else:
-        add(source, own + '/source')
-        add(build, own + '/build')
+    if getattr(conanfile, 'ref', None) is not None:
+        own = identity(conanfile, allowed)
+        source, build = root(conanfile.source_folder), root(conanfile.build_folder)
+        if source.casefold() == build.casefold():
+            add(source, own + '/source-build')
+        else:
+            add(source, own + '/source')
+            add(build, own + '/build')
     for dep in conanfile.dependencies.host.values():
         # No binaries or headers are expected from a dependency without a package
         # folder. Require evidence instead of silently omitting it.
@@ -94,10 +95,9 @@ def pre_generate(conanfile):
     policy = conanfile.conf.get(POLICY_CONF, default=None)
     if policy is None:
         return
-    # Root consumer keeps its existing project/root fallback mappings; there is
-    # no immutable recipe revision for it. Dependencies are handled individually.
-    if getattr(conanfile, 'ref', None) is None:
-        return
+    # Root consumer keeps project fallback but still maps dependency headers.
+    if conanfile.context != 'host':
+        raise ValueError('experimental mapping does not authorize build-context recipes')
     if str(conanfile.settings.get_safe('os')) != 'Windows' or str(conanfile.settings.get_safe('compiler')) != 'msvc':
         return
     refs = conanfile.conf.get(REFS_CONF, check_type=list)
@@ -117,5 +117,33 @@ def pre_generate(conanfile):
         if '/experimental:deterministic' not in existing or not any(flag.startswith('/pathmap:') and flag.endswith('=Z:/pj-conan') for flag in existing):
             raise ValueError('required root fallback or deterministic flag missing')
         updates[field] = exact + existing
+    for field in ('tools.build:sharedlinkflags', 'tools.build:exelinkflags'):
+        existing = conanfile.conf.get(field, default=None)
+        if existing is None: continue
+        if existing != ['/Brepro'] or field not in confs:
+            raise ValueError('reviewed linker flags must participate in package identity')
     for field, value in updates.items():
         conanfile.conf.define(field, value)
+
+def stable_mimalloc_banner(path):
+    """Remove volatile diagnostic-banner macros before compilation, not in DLLs."""
+    original = ', __DATE__, __TIME__);'
+    replacement = ', "reproducible build", "time not recorded");'
+    text = path.read_text(encoding='utf-8')
+    if text.count(original) != 1:
+        raise ValueError('unexpected pinned mimalloc options.c banner')
+    path.write_text(text.replace(original, replacement), encoding='utf-8')
+
+
+def pre_build(conanfile):
+    policy = conanfile.conf.get(POLICY_CONF, default=None)
+    if policy is None:
+        return
+    if conanfile.context != 'host' or str(conanfile.settings.get_safe('os')) != 'Windows':
+        return
+    if exact_ref(conanfile.ref) != 'mimalloc/2.2.4#dd236e6e0a2a1ef80cbc193d6f7f7090':
+        return
+    refs = conanfile.conf.get(REFS_CONF, check_type=list)
+    if policy != policy_digest(refs) or exact_ref(conanfile.ref) not in refs:
+        raise ValueError('unreviewed mimalloc banner policy')
+    stable_mimalloc_banner(Path(conanfile.source_folder) / 'src' / 'options.c')
