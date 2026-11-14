@@ -8,7 +8,8 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 KEYS = {
     'PJ::MainWindow': [
-        "%1 is controlling PlotJuggler through MCP. Closing the agent's session or this page stops it.",
+        "An AI agent is controlling PlotJuggler through MCP. Click to see what it is running and stop it; closing this page stops it too.",
+        "An AI agent is controlling PlotJuggler through MCP. Click to see what it is running and stop it. Turn this off in Preferences → Appearance.",
         'Not connecting to the AI agent relay %1: it must be an http address on this computer (127.0.0.1).',
     ],
     'PJ::PluginRuntimeCatalog': [
@@ -18,7 +19,7 @@ KEYS = {
 
 
 class MergedTranslationSourcesTest(unittest.TestCase):
-    def test_six_merge_keys_are_translated_in_both_catalogs(self):
+    def test_merge_keys_are_translated_in_both_catalogs(self):
         for language in ('zh_CN', 'zh_TW'):
             root = ET.parse(ROOT / f'pj_app/translations/plotjuggler4_{language}.ts').getroot()
             for context, sources in KEYS.items():

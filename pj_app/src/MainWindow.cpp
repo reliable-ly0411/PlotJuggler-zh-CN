@@ -248,6 +248,7 @@
 #include "ui/DatasetInfoDialog.h"
 #include "ui/DiagnosticsDialog.h"
 #include "ui/LeftPanel.h"
+#include "ui/McpJobsDialog.h"
 #ifdef PJ_WITH_SCENE2D
 #include "ui/Scene2DConfigPanel.h"
 #endif
@@ -1210,7 +1211,8 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
       &session_->sessionManager(), qOverload<DatasetId>(&SessionManager::displayOffsetChanged), this,
       &MainWindow::scheduleCustomTopicsSync);
   connect(ui_->curveListPanel, &CurveListPanel::clearAllCurvesRequested, this, [this]() {
-    if (streaming_manager_ != nullptr && streaming_manager_->hasActiveSession()) {
+    if (streaming_manager_ != nullptr &&
+        (streaming_manager_->hasActiveSession() || streaming_manager_->hasPendingStart())) {
       streaming_manager_->stopAllAndWait(tr("dataset removed"));
       active_streaming_dataset_id_ = 0;
       streaming_playback_seeded_ = false;
@@ -2431,6 +2433,11 @@ MainWindow::~MainWindow() {
   if (recording_service_ != nullptr) {
     recording_service_->stop();
   }
+  // A stream start still at its dialog discards its dataset when withdrawn, which the catalog
+  // announces to slots that touch the widgets: before they go, not from the member's destructor.
+  if (streaming_manager_ != nullptr) {
+    streaming_manager_->cancelPendingStarts();
+  }
   // Dtor-without-closeEvent path (same precedent as teardownAllToolboxes
   // below): a still-running batch's host teardown fires on_ingest_finished ->
   // endIngest -> the still-connected observer, so the D1 teardown must run
@@ -3387,7 +3394,7 @@ void MainWindow::onFileLoaded(
 
 void MainWindow::confirmAndRemoveDependentTransforms(
     const std::vector<TopicId>& removed_topics, std::function<void()> proceed, std::function<bool()> still_allowed,
-    std::function<void()> cancelled) {
+    std::function<void()> cancelled, dialog_presenter::DialogWatch on_dialog) {
   auto& dp = session_->sessionManager().dataProcessorService();
   const std::vector<TopicId> outputs = dp.dependentProcessorOutputs(removed_topics);
   if (outputs.empty()) {
@@ -3418,7 +3425,10 @@ void MainWindow::confirmAndRemoveDependentTransforms(
           .arg(names.join(u"\n• "_s)),
       {{tr("Delete"), MessageBox::kDestructiveRole}, {tr("Cancel"), MessageBox::kCancelRole}},
       [this, removed_topics, dependent_curve_keys, proceed = std::move(proceed),
-       still_allowed = std::move(still_allowed), cancelled = std::move(cancelled)](int choice, bool) {
+       still_allowed = std::move(still_allowed), cancelled = std::move(cancelled), on_dialog](int choice, bool) {
+        if (on_dialog) {
+          on_dialog({});
+        }
         // Cancelled by the user, or its caller lost the right to act: leave everything intact.
         if (choice != 0 || (still_allowed && !still_allowed())) {
           if (cancelled) {
@@ -3441,13 +3451,24 @@ void MainWindow::confirmAndRemoveDependentTransforms(
         }
         session_->catalogModel().rebuildFromDatastore();
         proceed();
+      },
+      /*show_dont_show_again=*/false,
+      [on_dialog](QDialog& prompt) {
+        if (on_dialog) {
+          on_dialog([prompt = QPointer<QDialog>(&prompt)] {
+            if (prompt != nullptr) {
+              prompt->reject();
+            }
+          });
+        }
       });
 }
 
 void MainWindow::onCatalogTrashRequested(QStringList keys, bool covers_all) {
   CatalogModel& catalog = session_->catalogModel();
   if (covers_all) {
-    if (streaming_manager_ != nullptr && streaming_manager_->hasActiveSession()) {
+    if (streaming_manager_ != nullptr &&
+        (streaming_manager_->hasActiveSession() || streaming_manager_->hasPendingStart())) {
       streaming_manager_->stopAllAndWait(tr("dataset removed"));
       active_streaming_dataset_id_ = 0;
       streaming_playback_seeded_ = false;
@@ -3536,6 +3557,8 @@ void MainWindow::removeDatasetData(DatasetId dataset_id) {
   // the dataset's storage is erased below.
   if (streaming_manager_ != nullptr) {
     static_cast<void>(streaming_manager_->stopDatasetAndWait(dataset_id, tr("dataset removed")));
+    // A stream that ended on its own had no session to stop, and may have left paused rows.
+    streaming_manager_->removeSecondaryDataset(dataset_id);
   }
   if (dataset_id == active_streaming_dataset_id_) {
     active_streaming_dataset_id_ = 0;
@@ -5067,7 +5090,8 @@ void MainWindow::closeEvent(QCloseEvent* event) {
   // user-facing File -> Quit action is the terminal boundary, so cooperatively
   // stop and join every live source before accepting it. Desktop keeps its
   // existing destructor-driven shutdown behavior unchanged.
-  if (streaming_manager_ != nullptr && streaming_manager_->hasActiveSession()) {
+  if (streaming_manager_ != nullptr &&
+      (streaming_manager_->hasActiveSession() || streaming_manager_->hasPendingStart())) {
     streaming_manager_->stopAllAndWait(tr("application shutdown"));
     active_streaming_dataset_id_ = 0;
     streaming_playback_seeded_ = false;
@@ -10685,6 +10709,69 @@ PJ_service_registry_t MainWindow::toolboxSessionServices(ToolboxPanelSession& se
   return session.builder->view();
 }
 
+void MainWindow::refreshMcpIndicator() {
+  const std::vector<McpServer::JobInfo> jobs =
+      mcp_server_ != nullptr ? mcp_server_->unfinishedJobs() : std::vector<McpServer::JobInfo>();
+  if (mcp_jobs_dialog_ != nullptr && mcp_jobs_dialog_->isVisible()) {
+    std::vector<McpJobsDialog::Job> rows;
+    for (const McpServer::JobInfo& job : jobs) {
+      rows.push_back(
+          {.id = job.id, .client = job.client, .what = job.summary, .state = job.state, .elapsed_s = job.elapsed_s});
+    }
+    mcp_jobs_dialog_->setJobs(rows);
+  }
+  if (mcp_agent_button_ == nullptr) {
+    if (mcp_active_client_.isEmpty() && jobs.empty()) {
+      return;
+    }
+    mcp_agent_button_ = new QToolButton(this);
+    mcp_agent_button_->setObjectName(u"mcpAgentButton"_s);
+    mcp_agent_button_->setAutoRaise(true);
+#ifdef PJ_TARGET_WASM
+    mcp_agent_button_->setToolTip(
+        tr("An AI agent is controlling PlotJuggler through MCP. Click to see what it is running and stop it; closing "
+           "this page stops it too."));
+#else
+    mcp_agent_button_->setToolTip(
+        tr("An AI agent is controlling PlotJuggler through MCP. Click to see what it is running and stop it. Turn "
+           "this off in Preferences → Appearance."));
+#endif
+    statusBar()->addPermanentWidget(mcp_agent_button_);
+    connect(mcp_agent_button_, &QToolButton::clicked, this, &MainWindow::showMcpJobs);
+  }
+  const QString who = mcp_active_client_.isEmpty() ? tr("AI agents") : tr("AI agent: %1").arg(mcp_active_client_);
+  mcp_agent_button_->setText(
+      jobs.empty() ? who : tr("%1 · %n running", nullptr, static_cast<int>(jobs.size())).arg(who));
+  // Only the button: the bar also carries other messages (undo failures). It stays while anything runs.
+  mcp_agent_button_->setVisible(!mcp_active_client_.isEmpty() || !jobs.empty());
+}
+
+void MainWindow::showMcpJobs() {
+  if (mcp_jobs_dialog_ == nullptr) {
+    mcp_jobs_dialog_ = new McpJobsDialog(this);
+    connect(mcp_jobs_dialog_, &McpJobsDialog::stopRequested, this, [this](quint64 id) {
+      if (mcp_server_ != nullptr) {
+        mcp_server_->stopJob(id);
+      }
+    });
+    // Elapsed times and states move while it is open, and only then.
+    auto* refresh = new QTimer(mcp_jobs_dialog_);
+    refresh->setInterval(1000);
+    connect(refresh, &QTimer::timeout, this, [this, refresh] {
+      if (mcp_jobs_dialog_->isVisible()) {
+        refreshMcpIndicator();
+      } else {
+        refresh->stop();
+      }
+    });
+    mcp_jobs_refresh_ = refresh;
+  }
+  mcp_jobs_dialog_->show();
+  mcp_jobs_dialog_->raise();
+  mcp_jobs_refresh_->start();
+  refreshMcpIndicator();
+}
+
 McpServer* MainWindow::ensureMcpServer() {
   if (mcp_server_ != nullptr) {
     return mcp_server_.get();
@@ -10703,23 +10790,10 @@ McpServer* MainWindow::ensureMcpServer() {
 #endif
   mcp_listen_failure_reported_ = false;
   connect(server.get(), &McpServer::activeClientChanged, this, [this](const QString& client) {
-    if (mcp_client_label_ == nullptr) {
-      mcp_client_label_ = new QLabel(this);
-      mcp_client_label_->setTextFormat(Qt::PlainText);
-      statusBar()->addPermanentWidget(mcp_client_label_);
-    }
-    mcp_client_label_->setText(tr("AI agent: %1").arg(client));
-#ifdef PJ_TARGET_WASM
-    mcp_client_label_->setToolTip(
-        tr("%1 is controlling PlotJuggler through MCP. Closing the agent's session or this page stops it.")
-            .arg(client));
-#else
-    mcp_client_label_->setToolTip(
-        tr("%1 is controlling PlotJuggler through MCP. Turn this off in Preferences → Appearance.").arg(client));
-#endif
-    // Only the label: the bar also carries other messages (undo failures).
-    mcp_client_label_->setVisible(!client.isEmpty());
+    mcp_active_client_ = client;
+    refreshMcpIndicator();
   });
+  connect(server.get(), &McpServer::jobsChanged, this, &MainWindow::refreshMcpIndicator);
   mcp_server_ = std::move(server);
   return mcp_server_.get();
 }
