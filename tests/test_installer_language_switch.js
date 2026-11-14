@@ -111,16 +111,37 @@ for (const command of ['', 'x', 'xy', 'xyz', '中文 😀', '$x=@(); $json=@{arg
 console.log('IFW variable-substitution transport regression checks passed');
 // Optional real PowerShell parse/control-flow test; no process is started.
 const cp = require('node:child_process'), os = require('node:os');
+// A missing optional runtime may skip on non-Windows hosts; a runtime that
+// exists but hangs or fails must fail the test rather than hide native checks.
+function checkedPowerShellSpawn(program, args, options, allowMissing = false, spawn = cp.spawnSync) {
+  const result = spawn(program, args, options);
+  if (allowMissing && result.error && result.error.code === 'ENOENT') return null;
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, (result.stdout || '') + (result.stderr || ''));
+  return result;
+}
+// Exercise watchdog/error classification without waiting for real timeouts.
+const missingRuntime = Object.assign(new Error('runtime missing'), {code: 'ENOENT'});
+const runtimeTimeout = Object.assign(new Error('runtime timed out'), {code: 'ETIMEDOUT'});
+for (const allowMissing of [false, true]) {
+  assert.throws(() => checkedPowerShellSpawn('shell', [], {}, allowMissing, () => ({error: runtimeTimeout})));
+  assert.throws(() => checkedPowerShellSpawn('shell', [], {}, allowMissing, () => ({status: 1, stderr: 'probe failed'})));
+}
+assert.throws(() => checkedPowerShellSpawn('shell', [], {}, false, () => ({error: missingRuntime})));
+assert.equal(checkedPowerShellSpawn('shell', [], {}, true, () => ({error: missingRuntime})), null);
+const spawnSuccess = {status: 0, stdout: 'ok', stderr: ''};
+assert.equal(checkedPowerShellSpawn('shell', [], {timeout: 15000}, false,
+  (_, __, options) => { assert.equal(options.timeout, 15000); return spawnSuccess; }), spawnSuccess);
 const shell = process.platform === 'win32' ? 'powershell.exe' : 'pwsh';
-const available = cp.spawnSync(shell, ['-NoProfile', '-Command', 'exit 0']);
-if (!available.error && available.status === 0) {
+const available = checkedPowerShellSpawn(shell, ['-NoProfile', '-NonInteractive', '-Command', 'exit 0'],
+  {encoding: 'utf8', timeout: 15000}, process.platform !== 'win32');
+if (available) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'restart test '));
   try {
     const result = fixture('en_US', 0);
     const data = path.join(dir, 'fixture.json');
     fs.writeFileSync(data, JSON.stringify({probe:result.widget.probe, command:decodeTransport(result.events[0].args), probeTransport:result.widget.probeTransport, commandTransport:result.events[0].args.at(-1)}));
-    const run = cp.spawnSync(shell, ['-NoProfile','-NonInteractive','-File',path.join(__dirname,'test_installer_restart.ps1'),'-FixturePath',data], {encoding:'utf8',timeout:30000});
-    assert.equal(run.status,0,run.stdout + run.stderr);
+    const run = checkedPowerShellSpawn(shell, ['-NoProfile','-NonInteractive','-File',path.join(__dirname,'test_installer_restart.ps1'),'-FixturePath',data], {encoding:'utf8',timeout:30000});
     console.log(run.stdout.trim());
   } finally { fs.rmSync(dir,{recursive:true,force:true}); }
 } else { console.log('SKIP: PowerShell runtime unavailable'); }
