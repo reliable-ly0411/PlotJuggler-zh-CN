@@ -1,0 +1,445 @@
+{
+  "schema": "plotjuggler-3x-ubuntu-dot-handoff/v1",
+  "created_utc": "2026-11-13T10:45:22.768139+00:00",
+  "status": "local execution stopped; handoff documentation only; rc15 code repairs not started",
+  "source": {
+    "tested_commit": "4e5c3913b029c8bcd75957b61119751c7f8d8195",
+    "tested_tree": "df24065257faeb3983490c514a490b9e578026ef",
+    "version": "3.18.1-rc.14+upstream.3.17.2.apbin.1.g4e5c3913b029",
+    "upstream_commit": "df5cbaad9bb087413470e818fa5cdb88d6357ce5",
+    "upstream_declared_version": "3.17.2",
+    "downstream_start": "cbc7b7287884208b5a9042de45bcab4b5dcd79c0",
+    "upstream_i18n_pr1459_head": "562a3e58378408e5ef1060699a98f4ba28f1d06a",
+    "handoff_branch": "zh-CN-docs/44-dot-handoff-20261113",
+    "candidate_remote_branch": "zh-CN-feat/release-3-18-1-i18n-launcher"
+  },
+  "links": {
+    "issue": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44",
+    "draft_pr": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/51",
+    "workflow": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/43398989161"
+  },
+  "local_results": {
+    "linux_ctest_selected_passed": 18,
+    "real_x11_apbin_languages_passed": 3,
+    "real_x11_launcher_cases_passed": 2,
+    "raw_build_files_unchanged": 26,
+    "scope": "Targeted checks only, separate from CI artifact acceptance; not full test suite"
+  },
+  "ci_linux": {
+    "appimage-x64": {
+      "job_id": 131797019875,
+      "compiler": [
+        "GNU 11.4.0"
+      ],
+      "runtime_qt": [
+        "5.15.3"
+      ],
+      "selected_ctest": {
+        "passed": 18,
+        "failed": 0,
+        "ctest_skipped": 0
+      },
+      "log_sha256": "f05a9eb22229dd5a841177d3a4225fcb359ae8ea3c2e992eae294d5050dd4aaf"
+    },
+    "appimage-arm64": {
+      "job_id": 131797019955,
+      "compiler": [
+        "GNU 11.4.0"
+      ],
+      "runtime_qt": [
+        "5.15.3"
+      ],
+      "selected_ctest": {
+        "passed": 18,
+        "failed": 0,
+        "ctest_skipped": 0
+      },
+      "log_sha256": "b522f88880042aa482b81af9ac626e274dc161962123f09a0c856b5ee276a242"
+    },
+    "debian-bookworm": {
+      "job_id": 131797019951,
+      "compiler": [
+        "GNU 12.2.0"
+      ],
+      "runtime_qt": [
+        "5.15.8"
+      ],
+      "selected_ctest": {
+        "passed": 18,
+        "failed": 0,
+        "ctest_skipped": 0
+      },
+      "log_sha256": "c96e9019b6eb467273fa5d2e2cf8818811d4a541cdcd3c3adc44d8a9b9eea74b"
+    },
+    "debian-trixie": {
+      "job_id": 131797019947,
+      "compiler": [
+        "GNU 14.2.0"
+      ],
+      "runtime_qt": [
+        "5.15.15"
+      ],
+      "selected_ctest": {
+        "passed": 18,
+        "failed": 0,
+        "ctest_skipped": 0
+      },
+      "log_sha256": "95792835c2a4a23d6e8e997402a955f492525f0ef7c8255fe1b4f78fe17be329"
+    },
+    "ubuntu-noble": {
+      "job_id": 131797019997,
+      "compiler": [
+        "GNU 13.3.0"
+      ],
+      "runtime_qt": [
+        "5.15.13"
+      ],
+      "selected_ctest": {
+        "passed": 18,
+        "failed": 0,
+        "ctest_skipped": 0
+      },
+      "log_sha256": "7576f799f90d381d5f9eb1361f751512f3e7a165aba645f7fc0ddb8a9714cbad"
+    }
+  },
+  "ci_windows": {
+    "job_id": 131797019959,
+    "conclusion": "failure",
+    "compiler": "MSVC19.44.35229.0",
+    "windows_sdk": "10.0.26100.0",
+    "runtime_qt": "5.15.2",
+    "selected_ctest": {
+      "passed": 17,
+      "failed": 0,
+      "ctest_skipped": 0
+    },
+    "ui_restart": {
+      "passed": 6,
+      "failed": 0,
+      "memes_not_selected": 3
+    },
+    "portable_validation": "passed",
+    "packaged_launcher": "passed",
+    "ifw_installer_creation": "passed",
+    "private_root_scan": {
+      "status": "passed",
+      "roots": 9,
+      "files": 207
+    },
+    "payload_bytes": 217019564,
+    "privacy_identity_audit": {
+      "status": "failed",
+      "files": [
+        "DataLoadParquet.dll",
+        "ProtobufParser.dll",
+        "ToolboxMosaico.dll"
+      ]
+    },
+    "software_artifact_upload": "skipped because production identity/payload gates failed",
+    "job_log_sha256": "ba89c9a87ac5125c17615e54e3d169b2782f40db0d4740daf5e6c414dd5e6b2e"
+  },
+  "artifacts": [
+    {
+      "id": 14029200673,
+      "name": "Metadata-Windows",
+      "bytes": 13210,
+      "digest": "sha256:467b93009d807682a8a04d001c9d7bd8b6de2c7af5525a471117570b7e8315b1",
+      "expired": false,
+      "created_at": "2026-11-13T10:27:37Z",
+      "expires_at": "2027-02-11T09:09:44Z",
+      "run_id": 43398989161,
+      "head": "4e5c3913b029c8bcd75957b61119751c7f8d8195"
+    },
+    {
+      "id": 14028348568,
+      "name": "Evidence-Windows",
+      "bytes": 1093544,
+      "digest": "sha256:f54e9be375964639e5907465c4fd52e058364d6dec2b5b27b474054b269f4faa",
+      "expired": false,
+      "created_at": "2026-11-13T10:27:39Z",
+      "expires_at": "2026-11-27T10:27:38Z",
+      "run_id": 43398989161,
+      "head": "4e5c3913b029c8bcd75957b61119751c7f8d8195"
+    },
+    {
+      "id": 14028163245,
+      "name": "ReviewOnly-Windows-public-binaries-4e5c3913b029c8bcd75957b61119751c7f8d8195",
+      "bytes": 3429728,
+      "digest": "sha256:4c998ac27573e2f0b9627a247fba1f7a0d31c7259e8e37a8c9d85578b42fd124",
+      "expired": false,
+      "created_at": "2026-11-13T10:24:04Z",
+      "expires_at": "2026-11-27T10:24:02Z",
+      "run_id": 43398989161,
+      "head": "4e5c3913b029c8bcd75957b61119751c7f8d8195"
+    },
+    {
+      "id": 14025580569,
+      "name": "Evidence-linux-debian-bookworm",
+      "bytes": 2758940,
+      "digest": "sha256:255c8ba098c7ce7fcf2df40dff294b2086c7e0a9a44a2ba6f780172ade9297bd",
+      "expired": false,
+      "created_at": "2026-11-13T09:23:44Z",
+      "expires_at": "2026-11-27T09:23:42Z",
+      "run_id": 43398989161,
+      "head": "4e5c3913b029c8bcd75957b61119751c7f8d8195"
+    },
+    {
+      "id": 14025280164,
+      "name": "Software-linux-ubuntu-noble",
+      "bytes": 75324729,
+      "digest": "sha256:547c152947ffdbc0e671d0c602c27119e349ea7cb5d889498471d420e49cc006",
+      "expired": false,
+      "created_at": "2026-11-13T09:18:03Z",
+      "expires_at": "2027-02-11T09:09:44Z",
+      "run_id": 43398989161,
+      "head": "4e5c3913b029c8bcd75957b61119751c7f8d8195"
+    },
+    {
+      "id": 14025237377,
+      "name": "Evidence-linux-appimage-x64",
+      "bytes": 2755999,
+      "digest": "sha256:9ff33f9fc641e852c2b9f9a8a6789daacc51e6e6ad97a92d60bce0a4ada05a47",
+      "expired": false,
+      "created_at": "2026-11-13T09:23:57Z",
+      "expires_at": "2026-11-27T09:23:55Z",
+      "run_id": 43398989161,
+      "head": "4e5c3913b029c8bcd75957b61119751c7f8d8195"
+    },
+    {
+      "id": 14024902591,
+      "name": "Evidence-linux-debian-trixie",
+      "bytes": 5272081,
+      "digest": "sha256:bec3c74d330c38b4f85438c94aa8eb6f997c843996782f67ab23cc3a528d7346",
+      "expired": false,
+      "created_at": "2026-11-13T09:22:10Z",
+      "expires_at": "2026-11-27T09:22:09Z",
+      "run_id": 43398989161,
+      "head": "4e5c3913b029c8bcd75957b61119751c7f8d8195"
+    },
+    {
+      "id": 14024652342,
+      "name": "Metadata-linux-ubuntu-noble",
+      "bytes": 9623,
+      "digest": "sha256:f1f9ee50f48da41c1b452050a60cd2fdf7ebe48ff0325fdf85080b64782ef322",
+      "expired": false,
+      "created_at": "2026-11-13T09:18:04Z",
+      "expires_at": "2027-02-11T09:09:44Z",
+      "run_id": 43398989161,
+      "head": "4e5c3913b029c8bcd75957b61119751c7f8d8195"
+    },
+    {
+      "id": 14024623301,
+      "name": "Metadata-linux-debian-trixie",
+      "bytes": 10141,
+      "digest": "sha256:3e29c05fa8c34ba372f4d073619fc2682d203ef7fea01e2eb1063f316f9f53e7",
+      "expired": false,
+      "created_at": "2026-11-13T09:22:08Z",
+      "expires_at": "2027-02-11T09:09:44Z",
+      "run_id": 43398989161,
+      "head": "4e5c3913b029c8bcd75957b61119751c7f8d8195"
+    },
+    {
+      "id": 14024528367,
+      "name": "Software-linux-debian-trixie",
+      "bytes": 73808423,
+      "digest": "sha256:5ab36604b17f32aafceb6fac4cf3a32ebb0666382a93ff33cd12a2a61f7d8102",
+      "expired": false,
+      "created_at": "2026-11-13T09:22:07Z",
+      "expires_at": "2027-02-11T09:09:44Z",
+      "run_id": 43398989161,
+      "head": "4e5c3913b029c8bcd75957b61119751c7f8d8195"
+    },
+    {
+      "id": 14024262832,
+      "name": "Evidence-linux-ubuntu-noble",
+      "bytes": 6103902,
+      "digest": "sha256:39849ae62466bc6124ad7a2b2225a9e0592ec238007fb83b3adbb94891c9abc5",
+      "expired": false,
+      "created_at": "2026-11-13T09:18:06Z",
+      "expires_at": "2026-11-27T09:18:05Z",
+      "run_id": 43398989161,
+      "head": "4e5c3913b029c8bcd75957b61119751c7f8d8195"
+    },
+    {
+      "id": 14024094944,
+      "name": "Evidence-linux-appimage-arm64",
+      "bytes": 2756087,
+      "digest": "sha256:9227bffc605eaee8e7cfe013de7a3c1937d60c9f103649db610e00a8abac508f",
+      "expired": false,
+      "created_at": "2026-11-13T09:24:25Z",
+      "expires_at": "2026-11-27T09:24:24Z",
+      "run_id": 43398989161,
+      "head": "4e5c3913b029c8bcd75957b61119751c7f8d8195"
+    }
+  ],
+  "review_only_dlls": {
+    "DataLoadParquet.dll": {
+      "status": "safe for independent review only",
+      "approved_for_release": false,
+      "unknown_marker_count": 0,
+      "sha256": "6150080815bd29127782c14a8d8e5a54a312c747ce705e882ade4a034d7b45ea",
+      "privacy_scan": "passed for quarantine only",
+      "file_bytes": 8571904,
+      "observed_public_literals": [],
+      "qrc_field_provenance": [],
+      "content_fingerprint_for_review": {
+        "method": "pe-x64-reviewed-timestamps-v1",
+        "file_bytes": 8571904,
+        "qt_rcc_mtime_offsets": [],
+        "sha256": "b8469b27aa9adba0314b456cf86aa1b8069b01a0531dcf4cb36e144442f927c9"
+      }
+    },
+    "ToolboxMosaico.dll": {
+      "status": "failed",
+      "approved_for_release": false,
+      "rule": "Fingerprint or provenance unsupported; identity not approved",
+      "unknown_marker_count": 0,
+      "sha256": "4d01b12c553ec5d92b57c4d5eb818bc0aa2e8e94cfe88351c68537de8dc15b7c",
+      "privacy_scan": "passed for quarantine only"
+    },
+    "ProtobufParser.dll": {
+      "status": "safe for independent review only",
+      "approved_for_release": false,
+      "unknown_marker_count": 0,
+      "sha256": "4739557ca8333919eb03808cf8a8e9dd13c56139f2e26e27fed69f8eb9832e94",
+      "privacy_scan": "passed for quarantine only",
+      "file_bytes": 1192448,
+      "observed_public_literals": [],
+      "qrc_field_provenance": [],
+      "content_fingerprint_for_review": {
+        "method": "pe-x64-reviewed-timestamps-v1",
+        "file_bytes": 1192448,
+        "qt_rcc_mtime_offsets": [],
+        "sha256": "b0155b29ca1dfac7f7d688cbf8807e56425842ad8136929c5a0866961a6e50c9"
+      }
+    }
+  },
+  "source_materials": {
+    "scope": "already verified locally; not uploaded with this documentation commit; reacquire via exact official URL/hash if needed",
+    "qt": [
+      {
+        "name": "qtbase-everywhere-src-5.15.2.tar.xz",
+        "url": "https://download.qt.io/archive/qt/5.15/5.15.2/submodules/qtbase-everywhere-src-5.15.2.tar.xz",
+        "scope": "Windows Qt 5.15.2 module source",
+        "status": "downloaded, official/pinned SHA256 verified, archive indexed only",
+        "expected_sha256": "909fad2591ee367993a75d7e2ea50ad4db332f05e1c38dd7a5a274e156a4e0f8",
+        "bytes": 50179672,
+        "sha256": "909fad2591ee367993a75d7e2ea50ad4db332f05e1c38dd7a5a274e156a4e0f8"
+      },
+      {
+        "name": "qtsvg-everywhere-src-5.15.2.tar.xz",
+        "url": "https://download.qt.io/archive/qt/5.15/5.15.2/submodules/qtsvg-everywhere-src-5.15.2.tar.xz",
+        "scope": "Windows Qt 5.15.2 module source",
+        "status": "downloaded, official/pinned SHA256 verified, archive indexed only",
+        "expected_sha256": "8bc3c2c1bc2671e9c67d4205589a8309b57903721ad14c60ea21a5d06acb585e",
+        "bytes": 1886268,
+        "sha256": "8bc3c2c1bc2671e9c67d4205589a8309b57903721ad14c60ea21a5d06acb585e"
+      },
+      {
+        "name": "qtwebsockets-everywhere-src-5.15.2.tar.xz",
+        "url": "https://download.qt.io/archive/qt/5.15/5.15.2/submodules/qtwebsockets-everywhere-src-5.15.2.tar.xz",
+        "scope": "Windows Qt 5.15.2 module source",
+        "status": "downloaded, official/pinned SHA256 verified, archive indexed only",
+        "expected_sha256": "a0b42d85dd34ff6e2d23400e02f83d8b85bcd80e60efd1521d12d9625d4a233f",
+        "bytes": 259000,
+        "sha256": "a0b42d85dd34ff6e2d23400e02f83d8b85bcd80e60efd1521d12d9625d4a233f"
+      },
+      {
+        "name": "qtserialport-everywhere-src-5.15.2.tar.xz",
+        "url": "https://download.qt.io/archive/qt/5.15/5.15.2/submodules/qtserialport-everywhere-src-5.15.2.tar.xz",
+        "scope": "Windows Qt 5.15.2 module source",
+        "status": "downloaded, official/pinned SHA256 verified, archive indexed only",
+        "expected_sha256": "59c559d748417306bc1b2cf2315c1e63eed011ace38ad92946af71f23e2ef79d",
+        "bytes": 321496,
+        "sha256": "59c559d748417306bc1b2cf2315c1e63eed011ace38ad92946af71f23e2ef79d"
+      },
+      {
+        "name": "qttranslations-everywhere-src-5.15.2.tar.xz",
+        "url": "https://download.qt.io/archive/qt/5.15/5.15.2/submodules/qttranslations-everywhere-src-5.15.2.tar.xz",
+        "scope": "Windows Qt 5.15.2 module source",
+        "status": "downloaded, official/pinned SHA256 verified, archive indexed only",
+        "expected_sha256": "d5788e86257b21d5323f1efd94376a213e091d1e5e03b45a95dd052b5f570db8",
+        "bytes": 1419504,
+        "sha256": "d5788e86257b21d5323f1efd94376a213e091d1e5e03b45a95dd052b5f570db8"
+      },
+      {
+        "name": "qtimageformats-everywhere-src-5.15.2.tar.xz",
+        "url": "https://download.qt.io/archive/qt/5.15/5.15.2/submodules/qtimageformats-everywhere-src-5.15.2.tar.xz",
+        "scope": "Windows Qt 5.15.2 module source",
+        "status": "downloaded, official/pinned SHA256 verified, archive indexed only",
+        "expected_sha256": "bf8285c7ce04284527ab823ddc7cf48a1bb79131db3a7127342167f4814253d7",
+        "bytes": 1806740,
+        "sha256": "bf8285c7ce04284527ab823ddc7cf48a1bb79131db3a7127342167f4814253d7"
+      },
+      {
+        "name": "qtwinextras-everywhere-src-5.15.2.tar.xz",
+        "url": "https://download.qt.io/archive/qt/5.15/5.15.2/submodules/qtwinextras-everywhere-src-5.15.2.tar.xz",
+        "scope": "Windows Qt 5.15.2 module source",
+        "status": "downloaded, official/pinned SHA256 verified, archive indexed only",
+        "expected_sha256": "65b8272005dec00791ab7d81ab266d1e3313a3bbd8e54e546d984cf4c4ab550e",
+        "bytes": 763948,
+        "sha256": "65b8272005dec00791ab7d81ab266d1e3313a3bbd8e54e546d984cf4c4ab550e"
+      },
+      {
+        "name": "qttools-everywhere-src-5.15.2.tar.xz",
+        "url": "https://download.qt.io/archive/qt/5.15/5.15.2/submodules/qttools-everywhere-src-5.15.2.tar.xz",
+        "scope": "Windows Qt 5.15.2 module source",
+        "status": "downloaded, official/pinned SHA256 verified, archive indexed only",
+        "expected_sha256": "c189d0ce1ff7c739db9a3ace52ac3e24cb8fd6dbf234e49f075249b38f43c1cc",
+        "bytes": 8894728,
+        "sha256": "c189d0ce1ff7c739db9a3ace52ac3e24cb8fd6dbf234e49f075249b38f43c1cc"
+      },
+      {
+        "name": "qtbase-opensource-src_5.15.3+dfsg.orig.tar.xz",
+        "url": "https://archive.ubuntu.com/ubuntu/pool/universe/q/qtbase-opensource-src/qtbase-opensource-src_5.15.3+dfsg.orig.tar.xz",
+        "scope": "Jammy QtCore backport input",
+        "status": "downloaded, official/pinned SHA256 verified, archive indexed only",
+        "expected_sha256": "95d8ee6a62342840e9b40edef98c0fb75535902dc0b0fb0958f7594783f1a16c",
+        "bytes": 48080448,
+        "sha256": "95d8ee6a62342840e9b40edef98c0fb75535902dc0b0fb0958f7594783f1a16c"
+      },
+      {
+        "name": "qtbase-opensource-src_5.15.3+dfsg-2ubuntu0.2.debian.tar.xz",
+        "url": "https://archive.ubuntu.com/ubuntu/pool/universe/q/qtbase-opensource-src/qtbase-opensource-src_5.15.3+dfsg-2ubuntu0.2.debian.tar.xz",
+        "scope": "Jammy QtCore distro patch input",
+        "status": "downloaded, official/pinned SHA256 verified, archive indexed only",
+        "expected_sha256": "8c21ea927a240066221de1155441536e57b7cc874faee1178f75b5edff99eca5",
+        "bytes": 272208,
+        "sha256": "8c21ea927a240066221de1155441536e57b7cc874faee1178f75b5edff99eca5"
+      }
+    ],
+    "arrow24": {
+      "url": "https://archive.apache.org/dist/arrow/arrow-24.0.0/apache-arrow-24.0.0.tar.gz",
+      "bytes": 17360520,
+      "sha256": "9a8094d24fa33b90c672ab77fdda253f29300c8b0dd3f0b8e55a29dbd98b82c9",
+      "LICENSE.txt_sha256": "d1c981370f1ffd4edcdd2fb3565c8939cc40c75e24e1f92d581d04e54f0dff81",
+      "NOTICE.txt_sha256": "afd895d61a00101f6d5a41cf518c83865d815e8109e956f512a0ce4ea9738c06"
+    },
+    "source_snapshot": {
+      "file": "PlotJuggler-3.18.1-rc.14-Sources-4e5c3913b029.git.tar.gz",
+      "bytes": 63264182,
+      "sha256": "403bc9065db7bc1bebf170e432a36075a710f276913dbe985e2ab924a6e7a26a",
+      "tracked_files_verified": 1733,
+      "scope": "exact shallow commit Git source snapshot, external dependency sources excluded; not a full Git history backup"
+    }
+  },
+  "not_run": [
+    "Full CTest and107-image render matrix per targeted scope",
+    "DPI200/small-window/OFF-build broad matrix",
+    "Windows14 installer/portable validation in user VM: software upload gated and resource not reacquired",
+    "Final Bookworm/AppImage package acceptance: packaging failed",
+    "Aggregate seven-package collection: missing passing packages",
+    "Toolbox raw DLL independent review: collector did not export DLL",
+    "Approved real-DLL mutation test completion: old identity gate rejected before positive base"
+  ],
+  "resume_constraints": [
+    "No local development/build or guest operations after this handoff",
+    "Continue only3.x Qt5/C++17; do not mix4.x scores or modify4.x files",
+    "Next candidate repairs after finished rc14 round; increment candidate suffix on software content change",
+    "Only new/affected regression checks; finish selected tests before next repair/build batch",
+    "No force push, stable-line change, release, tag or old asset overwrite as part of this local handoff",
+    "Keep production privacy, source/version and binary identity gates; ReviewOnly is not a release artifact",
+    "VM was released to4.x at2026-11-13T08:15:45Z; obtain explicit handback before guest use",
+    "Keep local source, evidence, source archives and unpublished assets; no further cleanup during stop"
+  ]
+}

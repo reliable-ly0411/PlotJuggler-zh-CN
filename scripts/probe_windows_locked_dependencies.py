@@ -13,6 +13,7 @@ from pe_fixture_diagnostics import inspect_pe
 from windows_conan_build_check import build_arguments, verify
 
 ROOT=Path(__file__).resolve().parents[1]
+PRODUCT_TARGETS = ('DataLoadParquet', 'ToolboxMosaico', 'ProtobufParser')
 
 
 def ignored_option_warnings(output):
@@ -48,16 +49,19 @@ def check_graph(data):
 
 
 def compare_reports(a,b):
-    expected='passed-dll-privacy-not-product-approval'
+    product=a.get('scope')=='three-product-plugins-diagnostic'
+    if product != (b.get('scope')=='three-product-plugins-diagnostic'):raise ValueError('scope mismatch')
+    expected='passed-plugin-privacy-not-release-approval' if product else 'passed-dll-privacy-not-product-approval'
+    if product and (set(a.get('dlls',{})) != {t+'.dll' for t in PRODUCT_TARGETS} or set(b.get('dlls',{})) != {t+'.dll' for t in PRODUCT_TARGETS}):raise ValueError('product target inventory differs')
     if a.get('status')!=expected or b.get('status')!=expected:raise ValueError('both privacy audits must pass')
     if not a.get('dlls') or set(a['dlls'])!=set(b.get('dlls',{})):raise ValueError('DLL inventory differs')
     matches={k:a['dlls'][k]['sha256']==b['dlls'][k]['sha256'] for k in a['dlls']}
-    return {'scope':'actual dependency DLLs only, not product or static library approval',
+    return {'scope':'three product plugins only, not release approval' if product else 'actual dependency DLLs only, not product or static library approval',
             'raw_dlls_equal':all(matches.values()),'dll_matches':matches,'byte_rewriting':False}
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--work',type=Path);p.add_argument('--compare',nargs=2,type=Path);p.add_argument('--output',type=Path);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--work',type=Path);p.add_argument('--compare',nargs=2,type=Path);p.add_argument('--output',type=Path);p.add_argument('--product-plugins',action='store_true');a=p.parse_args()
     if a.compare:
         result=compare_reports(*(json.loads(f.read_text(encoding='utf-8')) for f in a.compare))
         if a.output:a.output.write_text(json.dumps(result,indent=2),encoding='utf-8')
@@ -104,6 +108,29 @@ def main():
                 else:libs[key]=hashlib.sha256(raw).hexdigest()
         report.update(dlls=binaries,static_or_import_libs=libs,host_compiled_count=22,mapping_ref_count=24,
                       build_context_policy='only lock-pinned tools; no exact hook applied to build context; final DLL privacy still required')
+        if a.product_plugins:
+            # Keep the auxiliary-module failure visible, but measure the actual
+            # product targets separately. No deployment or release follows.
+            report['dependency_dlls']=report.pop('dlls')
+            report['dependency_privacy_status']='failed' if any(v['forbidden_paths_found'] for v in binaries.values()) else 'passed'
+            report['scope']='three-product-plugins-diagnostic'
+            build=ROOT/'build-plugin-probe'
+            if build.exists():raise ValueError('product probe build directory already exists')
+            toolchain=base/'build/conan_toolchain.cmake'
+            if not toolchain.is_file():raise ValueError('generated toolchain missing')
+            run(['cmake','-S',ROOT,'-B',build,'-G','Visual Studio 17 2022','-A','x64',
+                 '-DCMAKE_TOOLCHAIN_FILE='+str(toolchain),'-DCMAKE_BUILD_TYPE=Release',
+                 '-DPJ_INSTALLATION=windows','-DPJ_PLUGINS_DIRECTORY=bin','-DBUILD_TESTING=OFF'])
+            run(['cmake','--build',build,'--config','Release','--target',*PRODUCT_TARGETS,'--parallel','2'])
+            product={}
+            for target in PRODUCT_TARGETS:
+                path=build/'bin/Release'/ (target+'.dll')
+                if not path.is_file():raise ValueError('missing actual product target: '+target)
+                product[path.name]=inspect_pe(path.read_bytes(),forbidden)
+            report['dlls']=product
+            if any(v['forbidden_paths_found'] for v in product.values()):raise ValueError('product DLL contains unmapped paths')
+            report['status']='passed-plugin-privacy-not-release-approval'
+            return
         if not binaries:raise ValueError('no actual dependency DLL evidence')
         if any(v['forbidden_paths_found'] for v in binaries.values()):raise ValueError('dependency DLL contains unmapped paths')
         report['status']='passed-dll-privacy-not-product-approval'

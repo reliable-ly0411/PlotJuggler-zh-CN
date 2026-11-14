@@ -32,6 +32,14 @@ class LockedTests(unittest.TestCase):
         self.assertFalse(compare_reports(a,b)['raw_dlls_equal'])
         b['status']='failed'
         with self.assertRaises(ValueError):compare_reports(a,b)
+    def test_product_comparison_requires_exact_inventory_and_scope(self):
+        a={'scope':'three-product-plugins-diagnostic','status':'passed-plugin-privacy-not-release-approval',
+           'dlls':{t+'.dll':{'sha256':'a'} for t in ('DataLoadParquet','ToolboxMosaico','ProtobufParser')}}
+        self.assertTrue(compare_reports(a,a)['raw_dlls_equal'])
+        b=json.loads(json.dumps(a));b['dlls'].pop('ToolboxMosaico.dll')
+        with self.assertRaises(ValueError):compare_reports(a,b)
+        b=json.loads(json.dumps(a));b['scope']='dependency'
+        with self.assertRaises(ValueError):compare_reports(a,b)
     def test_exact_contexts(self):self.assertEqual(len(check_graph(graph())),33)
     def test_real_txt_consumer_is_not_a_dependency(self):
         g=graph();g['graph']['nodes'].append({'id':'0','recipe':'Consumer','context':'host','ref':'conanfile'})
