@@ -103,6 +103,18 @@ echo "==> Running linuxdeploy (Qt + base)"
     -i "$REPO_ROOT/plotjuggler.png" \
     --plugin qt
 
+# Preserve sysconfig, but relocate the two verified distro links to the
+# actual flattened library. All other links still face the final audit.
+if [[ -n "$PY_VER" ]]; then
+    [[ "$PY_VER" == "3.10" ]] || { echo "Unreviewed Python AppImage layout" >&2; exit 1; }
+    python3 "$REPO_ROOT/scripts/normalize_python_config_link.py" --root "$APPDIR" \
+        --report "$REPO_ROOT/acceptance/python-config-link.json"
+    # Do not ship an absolute /etc hook into a self-contained application.
+    # Only the byte-verified optional distro Apport hook may be omitted.
+    python3 "$REPO_ROOT/scripts/omit_host_sitecustomize.py" --root "$APPDIR" \
+        --report "$REPO_ROOT/acceptance/python-sitecustomize.json"
+fi
+
 # Drop the gtk2 platformtheme injection (we don't bundle it; Fusion is forced from main.cpp).
 HOOK="$APPDIR/apprun-hooks/linuxdeploy-plugin-qt-hook.sh"
 if [[ -f "$HOOK" ]]; then

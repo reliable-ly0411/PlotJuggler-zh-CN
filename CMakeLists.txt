@@ -389,6 +389,8 @@ if(PJ_BUILD_FORK_TESTS)
 
   find_package(Python3 COMPONENTS Interpreter QUIET)
   if(Python3_Interpreter_FOUND)
+    add_test(NAME MemeReferenceStaging COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_meme_reference_staging.py)
     add_test(NAME PackagePrivacy COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_package_privacy.py)
     add_test(NAME VisibleStrings COMMAND ${Python3_EXECUTABLE}
@@ -399,10 +401,20 @@ if(PJ_BUILD_FORK_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_public_binary_review.py)
     add_test(NAME AcceptanceStageCollection COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_zh_acceptance.py)
+    add_test(NAME VersionPreflight COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_version_preflight.py)
     add_test(NAME PackageAuditInventory COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_package_audit_inventory.py)
     add_test(NAME PrivateBuildRoots COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_private_roots.py)
+    if(UNIX)
+      add_test(NAME PythonConfigLink COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_python_config_link.py)
+      add_test(NAME AppImageAcceptancePaths COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_appimage_acceptance_paths.py)
+      add_test(NAME QtCorePathMapping COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_qt5_core_pathmap.py)
+    endif()
     if(NOT WIN32)
       add_test(NAME LinuxStageElfs COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_linux_stage_elfs.py)
@@ -419,6 +431,8 @@ if(PJ_BUILD_FORK_TESTS)
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_downloaded_source_resolution.py)
     add_test(NAME LinuxPublicElf COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_linux_public_elf.py)
+    add_test(NAME WindowsConanPathmapHook COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_conan_pathmap_hook.py)
     add_test(NAME WindowsConanPathmap COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_windows_conan_pathmap.py)
     add_test(NAME WindowsConanBuildCheck COMMAND ${Python3_EXECUTABLE}

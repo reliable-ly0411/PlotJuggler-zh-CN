@@ -41,6 +41,124 @@ def diagnostic_name(name, records):
     return name
 
 
+QRC_MAX_SOURCE_BYTES = 4 * 1024 * 1024
+QRC_MAX_CHAIN_BYTES = 8 * 1024 * 1024
+QRC_MAX_WRAPPERS = 4
+
+
+def qrc_include_target(wrapper, target, diagnostics):
+    """Recognize CMake's public/checksum wrapper and Release include directory.
+
+    cmQtAutoRcc::InitFromInfo puts public wrappers in <autogen>/<checksum>
+    (or <checksum>_Release), while MultiConfigOutput is relative to
+    <autogen>/include_Release. Never search other targets/configurations.
+    """
+    candidates = [("wrapper-relative", wrapper.parent / target)]
+    parts = target.split("/")
+    if (len(parts) == 2 and re.fullmatch(r"[A-Z0-9]{10}", parts[0]) and
+            wrapper.parent.name in (parts[0], parts[0] + "_Release") and
+            wrapper.parent.parent.name.endswith("_autogen") and
+            parts[1] == wrapper.stem + "_CMAKE_.cpp"):
+        candidates.append(("cmake-release-include", wrapper.parent.parent / "include_Release" / target))
+    present = [(kind, path) for kind, path in candidates if path.exists() or path.is_symlink()]
+    diagnostics.append({"candidate_layouts": [kind for kind, _ in candidates],
+                        "present_layouts": [kind for kind, _ in present]})
+    if len(present) != 1:
+        raise ValueError("QRC include candidate count must be one")
+    return present[0][1]
+
+
+def read_qrc_chain(build, path, evidence_chain=None, resolutions=None):
+    """Resolve only a sole include in bounded known CMake layouts.
+
+    Every component must be a non-symlink within the supplied build root. No
+    preprocessor execution, global basename search, or duplicate selection.
+    Original bytes are retained for hash-based quarantine provenance.
+    """
+    build = build.resolve()
+    chain = evidence_chain if evidence_chain is not None else []
+    resolutions = resolutions if resolutions is not None else []
+    visited, total = set(), 0
+    for depth in range(QRC_MAX_WRAPPERS + 1):
+        relative = path.absolute().relative_to(build)
+        current = build
+        for component in relative.parts:
+            if component in (".", ".."):
+                raise ValueError("Unsafe QRC path")
+            current = current / component
+            if current.is_symlink():
+                raise ValueError("Symlink in QRC source path")
+        resolved = path.resolve(strict=True)
+        if not resolved.is_relative_to(build) or resolved in visited or not resolved.is_file():
+            raise ValueError("QRC cycle or source outside build")
+        visited.add(resolved)
+        if resolved.stat().st_size > QRC_MAX_SOURCE_BYTES:
+            raise ValueError("QRC source exceeds size limit")
+        with resolved.open("rb") as stream:
+            data = stream.read(QRC_MAX_SOURCE_BYTES + 1)
+        total += len(data)
+        if len(data) > QRC_MAX_SOURCE_BYTES or total > QRC_MAX_CHAIN_BYTES:
+            raise ValueError("QRC source chain exceeds size limit")
+        text = data.decode("utf-8")
+        body = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S).strip()
+        if re.search(r"static\s+const\s+unsigned\s+char\s+qt_resource_struct", body) or "#include" not in body:
+            chain.append(("generated", data))
+            return data, chain
+        match = re.fullmatch(r'#include\s*(?:<([A-Za-z0-9_./-]+)>|"([A-Za-z0-9_./-]+)")', body)
+        if not match or depth == QRC_MAX_WRAPPERS:
+            raise ValueError("Unsupported QRC wrapper")
+        target = match.group(1) or match.group(2)
+        if target.startswith("/") or any(part in ("", ".", "..") for part in target.split("/")) or not target.endswith(".cpp"):
+            raise ValueError("Unsafe QRC wrapper include")
+        chain.append(("wrapper", data))
+        path = qrc_include_target(resolved, target, resolutions)
+    raise ValueError("QRC wrapper depth exceeded")
+
+
+def collect_qrc_sources(build, evidence=None):
+    """Collect unique generated QRC sources and bounded wrapper evidence."""
+    build = build.resolve()
+    sources, diagnostics = [], {}
+    for basename in QRC_EXPECTED:
+        paths = list(build.rglob(basename))
+        entry = {"matches": len(paths), "regular_files": 0,
+                 "unreadable_files": 0, "content_sha256": [], "accepted": False}
+        diagnostics[basename] = entry
+        for path in paths:
+            try:
+                if not path.is_file() or path.is_symlink():
+                    continue
+                if path.stat().st_size > QRC_MAX_SOURCE_BYTES:
+                    entry["rule"] = "QRC source size limit exceeded"
+                    continue
+                with path.open("rb") as stream:
+                    value = stream.read(QRC_MAX_SOURCE_BYTES + 1)
+                if len(value) > QRC_MAX_SOURCE_BYTES:
+                    entry["rule"] = "QRC source size limit exceeded"
+                    continue
+                entry["regular_files"] += 1
+                entry["content_sha256"].append(sha(value))
+            except OSError:
+                entry["unreadable_files"] += 1
+        entry["content_sha256"].sort()
+        if len(paths) != 1 or entry["regular_files"] != 1:
+            continue
+        chain, resolutions = [], []
+        try:
+            actual, _ = read_qrc_chain(build, paths[0], chain, resolutions)
+        except (ValueError, OSError, UnicodeError):
+            entry["rule"] = "QRC wrapper resolution rejected"
+        else:
+            sources.append((basename, actual))
+            entry["accepted"] = True
+        entry["include_resolution"] = resolutions
+        entry["resolution_chain"] = [{"role": role, "sha256": sha(data), "file_bytes": len(data)}
+                                     for role, data in chain]
+        if evidence is not None:
+            evidence.extend((basename, role, index, data) for index, (role, data) in enumerate(chain))
+    return sources, diagnostics
+
+
 def main():
     global COLLECTION_PHASE
     parser = argparse.ArgumentParser(__doc__)
@@ -77,21 +195,26 @@ def main():
     COLLECTION_PHASE = "BUILD-INFO privacy scan"
     info_bytes = info_paths[0].read_bytes()
     check_metadata(info_bytes, "BUILD-INFO.json", records)
-    selected, selected_bytes = {}, {}
+    selected, selected_bytes, source_exports = {}, {}, {}
     temporary = copy.deepcopy(records)
     # Resource provenance is relevant only to Toolbox; missing/ambiguous
     # sources must not prevent independent scans of the other selected DLLs.
-    sources = []
-    source_error = False
-    for basename in QRC_EXPECTED:
-        paths = list(build.rglob(basename))
-        if len(paths) != 1:
-            source_error = True
-            continue
+    source_evidence = []
+    sources, source_diagnostics = collect_qrc_sources(build, source_evidence)
+    source_error = not all(item["accepted"] for item in source_diagnostics.values())
+    source_export_report = []
+    for basename, role, index, source_data in source_evidence:
+        record = {"basename": basename, "role": role, "chain_index": index,
+                  "sha256": sha(source_data), "exported": False}
         try:
-            sources.append((basename, paths[0].read_bytes()))
-        except OSError:
-            source_error = True
+            check_metadata(source_data, "generated-qrc-source", records)
+        except ValueError:
+            record["rule"] = "Generated source privacy scan rejected content"
+        else:
+            filename = "qrc-" + record["sha256"] + ".cpp"
+            source_exports[filename] = source_data
+            record.update(exported=True, file=filename)
+        source_export_report.append(record)
     for name in NAMES:
         COLLECTION_PHASE = "selected DLL review: " + name
         entry = {"status": "failed", "approved_for_release": False,
@@ -117,6 +240,11 @@ def main():
                 entry["rule"] = privacy_rule(error)
                 continue
             entry["privacy_scan"] = "passed for quarantine only"
+            # Preserve raw privacy-scanned bytes for independent diagnosis even
+            # when provenance/fingerprinting below is unresolved. This is never
+            # production approval; unresolved entries still fail collection.
+            selected_bytes[name] = data
+            entry["raw_exported_for_diagnosis"] = True
             temporary["public_ci_source_records"][name] = scan_policy["public_ci_source_records"][name]
             try:
                 if name not in records.get("public_ci_source_records", {}):
@@ -128,12 +256,16 @@ def main():
                 entry["existing_production_gate"] = {"passed": True}
             entry["rule"] = "Fingerprint or provenance unsupported; identity not approved"
             if name == "ToolboxMosaico.dll":
+                entry["qrc_source_diagnostics"] = source_diagnostics
                 if source_error:
+                    entry["rule"] = "Generated QRC sources missing, ambiguous or unreadable"
                     continue
+                entry["rule"] = "Generated QRC structure or PE location rejected"
                 offsets, provenance = derive_qrc_offsets(data, sources)
                 check_metadata(json.dumps(provenance).encode("utf-8"), "resource-provenance.json", records)
             else:
                 offsets, provenance = [], []
+            entry["rule"] = "PE content fingerprint rejected"
             content = {"method": METHOD, "file_bytes": len(data), "qt_rcc_mtime_offsets": offsets}
             content["sha256"] = fingerprint(data, content)
             if not content["sha256"]:
@@ -175,6 +307,7 @@ def main():
                        "repository": expected_repo, "sha256": sha(info_bytes)},
         "production_gate_unchanged": True,
         "selected": selected,
+        "generated_sources_for_review": source_export_report,
         "whole_payload_privacy_diagnostic": {"approved_for_release": False,
                                               "files": inventory, "errors": errors},
         "not_executed": ["Independent binary review", "14 real-DLL counterexamples against any new approved identity",
@@ -187,6 +320,10 @@ def main():
         if sha((out / name).read_bytes()) != selected[name]["sha256"]:
             (out / name).unlink(missing_ok=True)
             raise ValueError("Review copy verification failed")
+    for name, data in source_exports.items():
+        (out / name).write_bytes(data)
+        if sha((out / name).read_bytes()) != sha(data):
+            raise ValueError("Review source copy verification failed")
     # A completed atomic manifest is the only signal that upload is safe.
     temp_manifest = out / "review-manifest.json.tmp"
     temp_manifest.write_text(json.dumps(report, indent=2), encoding="utf-8")
@@ -198,7 +335,7 @@ def main():
     if output:
         with open(output, "a", encoding="utf-8", newline="\n") as stream:
             stream.write("manifest-ready=true\n")
-    if len(selected_bytes) != len(NAMES):
+    if any(entry["status"] != "safe for independent review only" for entry in selected.values()):
         raise SystemExit(1)
 
 

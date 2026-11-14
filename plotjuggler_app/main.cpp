@@ -13,7 +13,8 @@
 #include <QTextBrowser>
 #include <QDialogButtonBox>
 #include <QLabel>
-#include "semver.h"
+#include "release_line.h"
+#include <memory>
 #include <iostream>
 #include <QApplication>
 #include <QSplashScreen>
@@ -557,39 +558,48 @@ int main(int argc, char* argv[])
   }
 
   // Check for new releases on GitHub
-  QNetworkAccessManager* manager_new_release = new QNetworkAccessManager(&app);
-  QObject::connect(
-      manager_new_release, &QNetworkAccessManager::finished, window, [window](QNetworkReply* reply) {
-        if (reply->error())
-        {
-          qDebug() << "GitHub release check error:" << reply->error() << reply->errorString();
-          return;
-        }
-
-        QString answer = reply->readAll();
-        QJsonDocument document = QJsonDocument::fromJson(answer.toUtf8());
-        QJsonObject data = document.object();
-        QString url = data["html_url"].toString();
-        QString name = data["name"].toString();
-        QString tag_name = data["tag_name"].toString();
-
-        qDebug() << "Current version:" << VERSION_STRING << ". Latest release version:" << tag_name;
-
-        if (PJ::isNewerSemVer(tag_name, VERSION_STRING))
-        {
-          QString message = QObject::tr("New release available: <b>%1</b><br>"
-                                        "<a href=\"%2\">View on GitHub</a>")
-                                .arg(name, url);
-          QPixmap icon(":/resources/success_kid.png");
-          window->showToast(message, icon);
-        }
-      });
-
-  QNetworkRequest request_new_release;
-  request_new_release.setUrl(
-      QUrl("https://api.github.com/repos/reliable-ly0411/PlotJuggler-zh-CN/releases/latest"));
-
-  manager_new_release->get(request_new_release);
+  auto* manager_new_release = new QNetworkAccessManager(&app);
+  auto selection = std::make_shared<PJ::ReleaseLineSelection>(VERSION_STRING);
+  const auto request_page = [manager_new_release](int page) {
+    QNetworkRequest request(QUrl(QString(
+        "https://api.github.com/repos/reliable-ly0411/PlotJuggler-zh-CN/releases?per_page=100&page=%1")
+                                    .arg(page)));
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                         QNetworkRequest::ManualRedirectPolicy);
+    auto* reply = manager_new_release->get(request);
+    // Qt 5.12-compatible timeout. The reply context cancels the timer on deletion.
+    QTimer::singleShot(15000, reply, [reply]() { if (reply->isRunning()) reply->abort(); });
+    QObject::connect(reply, &QNetworkReply::readyRead, reply, [reply]() {
+      if (reply->bytesAvailable() > 2 * 1024 * 1024) reply->abort();
+    });
+  };
+  QObject::connect(manager_new_release, &QNetworkAccessManager::finished, window,
+                   [window, selection, request_page](QNetworkReply* reply) {
+    reply->deleteLater();
+    if (reply->error() || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 200 ||
+        reply->bytesAvailable() > 2 * 1024 * 1024)
+    {
+      qDebug() << "GitHub maintenance-line release check failed";
+      return;
+    }
+    QJsonParseError error;
+    const auto document = QJsonDocument::fromJson(reply->readAll(), &error);
+    if (error.error != QJsonParseError::NoError || !document.isArray()) return;
+    const auto result = selection->consume(document.array());
+    if (result == PJ::ReleaseLineSelection::More)
+    {
+      request_page(selection->pages + 1);
+      return;
+    }
+    // Fail closed on incomplete pagination or invalid responses, even when an
+    // earlier page contained a candidate. Never advertise a cross-major build.
+    if (result != PJ::ReleaseLineSelection::Complete || selection->tag.isEmpty()) return;
+    const QString message = QObject::tr("New release available: <b>%1</b><br>"
+                                       "<a href=\"%2\">View on GitHub</a>")
+                                .arg(selection->name.toHtmlEscaped(), selection->url.toHtmlEscaped());
+    window->showToast(message, QPixmap(":/resources/success_kid.png"));
+  });
+  request_page(1);
 
   // This fork does not send machine identifiers or usage telemetry.
 
