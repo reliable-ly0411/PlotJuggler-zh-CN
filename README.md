@@ -8,7 +8,7 @@
   支持简体中文、繁體中文（台灣）与 English，Qt 6.12.0 / SDK 0.39.0；已验范围和限制以 Release 为准。
 - **开发源码：** `zh-CN-4.x-dev` 当前为 `4.1.0-zh.1.dev.3`，Qt 6.12.0 / SDK 0.40.0（PR #226 非官方 Unicode 修复快照），精确上游提交 `8b847cb74`。
   这是上游 4.1.0 之后的源码，已通过 Linux 130 项 / Windows 127 项定向原生测试，未做新成品包验收；[定向原生验证记录](docs/localization/VALIDATION-4X-20261113.md)区分通过、失败与未覆盖。
-- **稳定维护线：** `zh-CN-4.x` 已于 2026-11-13 正常合入开发快照 `0b4b4c29` 和定向验证修订。源码仍标识 `4.1.0-zh.1.dev.3`，本次是维护分支晋级，不是新软件包发布；正式标签、原包与 Latest 不变。跨屏 DPI、实体 GPU 和新安装包未验。
+- **稳定维护线：** `zh-CN-4.x` 已合入上述开发快照和定向验证修订；2026-11-14 又通过 [#58](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/58) / [#59](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/59) 将上游候选与下游共同的 1,301 条简中译文统一。此次晋级后开发线与稳定线文件树相同，Git 合并记录不同。源码仍标识 `4.1.0-zh.1.dev.3`，不是新软件包发布；正式标签、原包与 Latest 不变。跨屏 DPI、实体 GPU 和新安装包未验。
 - **3.x 汉化计划：** 3.18.1 正在独立候选线上增加翻译修订、繁体中文和启动器，尚未发布；进度与未解决项见 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44) 和[草稿 PR #51](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/51)。它基于官方 Qt5 3.17.2，不是上游官方 3.18.1。
 - **上游镜像：** `main` / `main-3.x`，不混入汉化改动；3.x 的 `zh-CN` / `zh-CN-dev` 与 4.x 独立维护。
 
