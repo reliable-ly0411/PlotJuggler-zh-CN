@@ -830,6 +830,168 @@
       "translations": [
         "此 GPU 上某个场景管线没有 HDR 变体"
       ]
+    },
+    {
+      "context": "PJ::FileLoader",
+      "source": "The browser can no longer read '%1': it changed or was removed on disk since it was opened. Data loaded from it may be incomplete; open it again to reload it.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "浏览器无法再读取“%1”：该文件自打开后已在磁盘上更改或移除。从中加载的数据可能不完整，请重新打开以重新加载。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "%1 is controlling PlotJuggler through MCP. Closing the agent's session or this page stops it.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "%1 正通过 MCP 控制 PlotJuggler。关闭该智能体的会话或此页面即可停止控制。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "'%1' has no content fingerprint yet: it is still being computed, or the file changed since it was picked. Save the layout again in a moment, or open the file again.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "“%1”尚无内容指纹：仍在计算中，或文件自选取后发生了更改。请稍后再次保存布局，或重新打开文件。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "AI agent: %1",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "AI 智能体：%1"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "Not connecting to the AI agent relay %1: it must be an http address on this computer (127.0.0.1).",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "未连接到 AI 智能体中继 %1：它必须是本机（127.0.0.1）上的 http 地址。"
+      ]
+    },
+    {
+      "context": "PJ::MainWindow",
+      "source": "The MCP server could not listen on 127.0.0.1, so AI agents cannot reach PlotJuggler.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "MCP 服务器无法监听 127.0.0.1，因此 AI 智能体无法连接 PlotJuggler。"
+      ]
+    },
+    {
+      "context": "PJ::McpServer",
+      "source": "AI agent (%1)",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "AI 智能体（%1）"
+      ]
+    },
+    {
+      "context": "PJ::McpServer",
+      "source": "An AI agent asked you to choose: ",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "AI 智能体请求选择： "
+      ]
+    },
+    {
+      "context": "PJ::McpServer",
+      "source": "an MCP client",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "某个 MCP 客户端"
+      ]
+    },
+    {
+      "context": "PJ::PlotWidget",
+      "source": "Zoom Out Horizontally",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "水平缩小至全范围"
+      ]
+    },
+    {
+      "context": "PJ::PlotWidget",
+      "source": "Zoom Out Vertically",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "垂直缩小至全范围"
+      ]
+    },
+    {
+      "context": "PJ::PreferencesDialog",
+      "source": "memes",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "趣味图片"
+      ]
+    },
+    {
+      "context": "PreferencesContent",
+      "source": "Let AI agents control PlotJuggler (MCP server):",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "允许 AI 智能体控制 PlotJuggler（MCP 服务器）："
+      ]
+    },
+    {
+      "context": "PreferencesContent",
+      "source": "Open and save files with the system's own file dialog instead of PlotJuggler's (Save Layout keeps PlotJuggler's). It does not stall on disconnected network drives, but does not follow the app's theme.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "使用系统自带的文件对话框打开和保存文件，而不使用 PlotJuggler 的对话框（保存布局仍使用 PlotJuggler 的对话框）。它不会因断开的网络驱动器而卡住，但也不会跟随应用的主题。"
+      ]
+    },
+    {
+      "context": "PreferencesContent",
+      "source": "Serve the Model Context Protocol on this computer only (127.0.0.1, behind a secret token), so AI agents such as Claude Code or Codex can open files, read series, and draw in their own tabs. The status bar names an agent while it is active. Shows whether outside agents may connect now (also when allowed with --mcp); on by default; applies on OK. An agent a toolbox plugin starts itself gets its own private access and does not need this.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "仅在本机提供模型上下文协议服务（127.0.0.1，使用秘密令牌保护），让 Claude Code 或 Codex 等 AI 智能体能够打开文件、读取序列，并在各自的标签页中绘图。智能体活动时，状态栏会显示其名称。此开关显示当前是否允许外部智能体连接（包括通过 --mcp 允许的连接）；默认开启，点击“确定”后生效。工具箱插件自行启动的智能体拥有独立的私有访问权限，无需开启此项。"
+      ]
+    },
+    {
+      "context": "PreferencesContent",
+      "source": "Time zone of the clock times shown while the date-time toggle (bottom left) is on.",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "启用左下角的日期时间开关时，时钟时间所使用的时区。"
+      ]
+    },
+    {
+      "context": "TimelineWidget",
+      "source": "Show time as clock time (HH:mm:ss) instead of seconds",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "将时间显示为时钟时间（HH:mm:ss），而非秒数"
+      ]
+    },
+    {
+      "context": "TimelineWidget",
+      "source": "Use time offset: show time relative to each dataset's start (axis begins at 0) instead of absolute time",
+      "comment": "",
+      "numerus": false,
+      "translations": [
+        "使用时间偏移：显示相对于各数据集起点的时间（横轴从 0 开始），而非绝对时间"
+      ]
     }
   ]
 }
