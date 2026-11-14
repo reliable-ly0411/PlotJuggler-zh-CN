@@ -92,6 +92,7 @@ jobs:
           evidence="$RUNNER_TEMP/stable-delta-evidence"
           python3 scripts/validation/select_upstream_sync_tests.py build "$evidence"
           xvfb-run -a ctest --test-dir build --tests-from-file "$evidence/test-names.txt" --verbose --output-on-failure --timeout 120 --parallel 1 --no-tests=error --output-junit "$evidence/ctest.xml" 2>&1 | tee "$evidence/ctest.log"
+          python3 scripts/validation/select_upstream_sync_tests.py --verify-log "$evidence/ctest.log"
           python3 - "$evidence/ctest.xml" <<'PY'
           import sys, xml.etree.ElementTree as E
           cases=E.parse(sys.argv[1]).getroot().findall('.//testcase')

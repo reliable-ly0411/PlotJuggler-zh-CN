@@ -78,6 +78,8 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           ctest --test-dir build -C RelWithDebInfo --tests-from-file "$e/test-names.txt" --verbose --output-on-failure --timeout 120 --parallel 1 --no-tests=error --output-junit "$e/ctest.xml" 2>&1 | Tee-Object "$e/ctest.log"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python scripts/validation/select_upstream_sync_tests.py --verify-log "$e/ctest.log"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           python -c "import sys,xml.etree.ElementTree as E;from pathlib import Path;c=E.parse(sys.argv[1]).getroot().findall('.//testcase');expected=set(Path(sys.argv[1]).with_name('test-names.txt').read_text().splitlines());assert len(c)==len(expected) and {x.get('name') for x in c}==expected;assert all(not any(x.find(k) is not None for k in ('failure','error','skipped')) for x in c), 'Failed or skipped tests';print('Targeted passed:',len(c))" "$e/ctest.xml"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
