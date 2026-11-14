@@ -20,7 +20,7 @@
     "commit": "fc6065fd64305479946552a757d78e6afdd2c506",
     "path": "3rdparty/plotjuggler-apbin-plugins",
     "sdk_version": "1.0.0-dev.2",
-    "sdk_source_commit": "5dae1ecf5af4307e1e025b7f1a8dde9e8f67e065",
+    "sdk_source_commit": "a8766632ad50c8ff7183e42ccf78dbde4f90a57a",
     "license": "LGPL-3.0-only",
     "linkage": "Separate native shared library; no static embedding in the application.",
     "version": "1.2.0-pj4.rc.1",

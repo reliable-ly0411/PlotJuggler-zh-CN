@@ -1,19 +1,23 @@
 {
   "version": "1.0.0-dev.2",
   "repository": "https://github.com/reliable-ly0411/plotjuggler_sdk",
-  "commit": "5dae1ecf5af4307e1e025b7f1a8dde9e8f67e065",
+  "commit": "a8766632ad50c8ff7183e42ccf78dbde4f90a57a",
   "upstream_repository": "https://github.com/PlotJuggler/plotjuggler_sdk",
   "upstream_base": "b396484e5399d59f430bdde31c0a77e167f6acf2",
   "upstream_pull_request": "https://github.com/PlotJuggler/plotjuggler_sdk/pull/226",
-  "archive_url": "https://api.github.com/repos/reliable-ly0411/plotjuggler_sdk/tarball/5dae1ecf5af4307e1e025b7f1a8dde9e8f67e065",
-  "archive_sha256": "1da72a30663a74acbf10bd2749abf6205a6d76ac4086a58fe6fbe5ee45a7bb6e",
-  "recipe_revision": "dc63822eeb4da6649fb71a6a61ffca7f",
+  "archive_url": "https://codeload.github.com/reliable-ly0411/plotjuggler_sdk/tar.gz/a8766632ad50c8ff7183e42ccf78dbde4f90a57a",
+  "archive_sha256": "33e4f467417b21a79b5564edaa6d883ec953fd424c5ad8adaaff8b9088ac3b66",
+  "recipe_revision": "2c06205a818aa2b0c07984986de51953",
   "license": "Apache-2.0",
-  "distribution": "SDK dev.2 with the complete Unicode path fixes from upstream PR #226.",
+  "distribution": "SDK dev.2 with upstream PR #226 Unicode path fixes and PR #241 null-sample accessors.",
   "host_contract_version": "1.0.0-dev.2",
   "upstream_release_commit": "b396484e5399d59f430bdde31c0a77e167f6acf2",
   "license_files_sha256": {
     "LICENSE": "d982c2f8dce28e500f42757cdaf17640e3b0e2c1b8f16a1c5814b890c863e55f",
     "LICENSE-APACHE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
-  }
+  },
+  "upstream_pull_requests": [
+    "https://github.com/PlotJuggler/plotjuggler_sdk/pull/226",
+    "https://github.com/PlotJuggler/plotjuggler_sdk/pull/241"
+  ]
 }

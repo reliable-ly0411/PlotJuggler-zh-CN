@@ -12,7 +12,7 @@
 |---|---|---|
 | [已发布 rc.4](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.0.0-zh.1.rc.4) | `4.0.0-zh.1.rc.4`，Qt `6.11.1`，宿主 SDK `0.34.1` | 简体中文 / English；Windows x64、Linux x86_64 原生预发布包 |
 | [已发布正式版](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1) | `4.1.0+zh.1`，Qt `6.12.0`，宿主 SDK `0.39.0` | 简体中文 / 繁體中文（台灣）/ English；2026-11-12 已发布；Windows 安装器/便携 ZIP、Linux AppImage/DEB |
-| 当前开发源码 | `4.1.0-zh.1.dev.3`，Qt `6.12.0`，宿主 SDK `1.0.0-dev.2`（完整 PR #226 修复） | 简体中文 / 繁體中文（台灣）/ English；尚未发布或完成最终原包验收 |
+| 当前开发源码 | `4.1.0-zh.1.dev.3`，Qt `6.12.0`，宿主 SDK `1.0.0-dev.2`（PR #226 路径修复及 #241 空样本接口） | 简体中文 / 繁體中文（台灣）/ English；尚未发布或完成最终原包验收 |
 
 `zh-CN-4.x` 为默认稳定维护线，`zh-CN-4.x-dev` 为开发集成线；“稳定线”是分支用途，
 4.1.0+zh.1 已正式发布，繁中、插件元数据和 FFT 显示修复已纳入该版；
@@ -198,4 +198,4 @@ rc.4 原包干净环境验收区分插件清单与运行状态：Linux 包含 21
 
 ## 正式版修复向开发线合并
 
-本轮通过正常 Git 合并保留 `v4.1.0+zh.1` 的提交历史，同时保留开发线 Qt 6.12、SDK 0.40 与后续上游功能。SDK 使用未合并的 [PR #226](https://github.com/PlotJuggler/plotjuggler_sdk/pull/226) 修复快照，不是未经修改的官方 0.40 发布包；来源、哈希、Conan revision 与许可证见 [固定来源](../../cmake/host-sdk-source.json)。正式版历史验收不代表现代开发线已通过双平台成品包验收；Windows 原生闭包需重新审查，禁止复用旧批准作为新证据。
+本轮通过正常 Git 合并保留 `v4.1.0+zh.1` 历史，开发线使用 Qt 6.12、SDK dev.2，回移官方 #226 路径修复和 #241 空样本接口。固定来源、哈希及许可证见[SDK 来源](../../cmake/host-sdk-source.json)。
