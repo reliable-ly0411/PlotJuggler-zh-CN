@@ -193,6 +193,12 @@
          </item>
          <item row="1" column="0" colspan="2">
           <widget class="QLabel" name="labelLanguageRestart">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>Language changes take effect after restarting PlotJuggler.</string>
            </property>
