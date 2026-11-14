@@ -7,6 +7,7 @@
 #endif
 
 #include <QCoreApplication>
+#include <clocale>
 
 #if defined(Q_OS_WIN) && defined(PJ_TEST_PINNED_WIDGET_FIXTURES)
 #include "pj_test_child_cleanup.h"
@@ -36,5 +37,6 @@ int main(int argc, char** argv) {
   }
 #endif
   QCoreApplication app(argc, argv);
+  std::setlocale(LC_NUMERIC, "C");  // as pj_app's main(): Luau cannot read "0.5" under a decimal-comma locale
   return RUN_ALL_TESTS();
 }
