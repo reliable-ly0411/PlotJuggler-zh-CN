@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 import unittest
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'scripts'))
-from probe_windows_locked_dependencies import check_graph, compare_reports
+from probe_windows_locked_dependencies import check_graph, compare_reports, ignored_option_warnings
 from windows_conan_pathmap import render
 
 def graph():
@@ -16,6 +16,15 @@ def graph():
     return {'graph':{'nodes':nodes}}
 
 class LockedTests(unittest.TestCase):
+    def test_expected_openssl_capability_probes(self):
+        output='\n'.join(f"cl : Command line warning D9002 : ignoring unknown option '{s}'" for s in ('-x','/dev/null','-dM')).encode()
+        self.assertEqual(ignored_option_warnings(output),[])
+    def test_ignored_policy_or_unknown_option_rejected(self):
+        for flag in ('/pathmap:C:/cache=Z:/public','/Brepro','/unknown','-x-extra'):
+            output=f"cl : Command line warning D9002 : ignoring unknown option '{flag}'".encode()
+            self.assertEqual(len(ignored_option_warnings(output)),1)
+        self.assertEqual(len(ignored_option_warnings(b"LINK : warning LNK4044: unrecognized option '/Brepro'; ignored")),1)
+        self.assertEqual(len(ignored_option_warnings(b"unknown formatting D9002 -x")),1)
     def test_raw_comparison_never_normalizes(self):
         a={'status':'passed-dll-privacy-not-product-approval','dlls':{'lib.dll':{'sha256':'a'}}}
         b={'status':a['status'],'dlls':{'lib.dll':{'sha256':'b'}}}

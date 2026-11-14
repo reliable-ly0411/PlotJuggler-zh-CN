@@ -8,6 +8,10 @@ on:
       - scripts/windows_conan_mapping_refs.json
       - scripts/hook_windows_conan_pathmap.py
       - scripts/windows_conan_pathmap.py
+      - cmake/conan/openssl-overlay/**
+      - cmake/conan/windows-msvc194.lock
+      - tests/test_openssl_overlay.py
+      - tests/test_windows_locked_dependencies.py
   workflow_dispatch:
 permissions:
   contents: read
@@ -36,6 +40,8 @@ jobs:
           python tests/test_windows_conan_pathmap.py -v
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           python tests/test_windows_locked_dependencies.py -v
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python tests/test_openssl_overlay.py -v
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Actual locked host graph from source, isolated cache
         shell: pwsh

@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -12,6 +13,16 @@ from pe_fixture_diagnostics import inspect_pe
 from windows_conan_build_check import build_arguments, verify
 
 ROOT=Path(__file__).resolve().parents[1]
+
+
+def ignored_option_warnings(output):
+    """Separate OpenSSL's intentional GCC capability probes from ignored policy flags."""
+    warnings=[]
+    for line in output.decode('utf-8',errors='replace').splitlines():
+        if 'D9002' not in line and 'LNK4044' not in line:continue
+        match=re.fullmatch(r"cl : Command line warning D9002 : ignoring unknown option '(-x|/dev/null|-dM)'",line.strip())
+        if not match:warnings.append(line)
+    return warnings
 
 
 def check_graph(data):
@@ -60,8 +71,10 @@ def main():
     def run(args):
         r=subprocess.run([str(x) for x in args],cwd=ROOT,env=env,capture_output=True)
         with (base/'commands.log').open('ab') as f:f.write((' '.join(map(str,args))+'\n').encode());f.write(r.stdout+r.stderr)
-        if b'D9002' in r.stdout+r.stderr or b'LNK4044' in r.stdout+r.stderr:raise RuntimeError('ignored compiler/linker option')
-        if r.returncode:raise RuntimeError('command failed; inspect commands.log')
+        warnings=ignored_option_warnings(r.stdout+r.stderr)
+        if warnings:report.setdefault('ignored_option_warnings',[]).extend(warnings)
+        if r.returncode:raise RuntimeError(f'command failed (exit {r.returncode}); inspect commands.log')
+        if warnings:raise RuntimeError('ignored compiler/linker option; inspect ignored_option_warnings')
         return r.stdout
     try:
         run(['conan','profile','detect'])
