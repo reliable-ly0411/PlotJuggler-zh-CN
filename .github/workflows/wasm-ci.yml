@@ -67,7 +67,7 @@ jobs:
     if: >-
       ${{ !cancelled() && !github.event.pull_request.draft &&
       (github.event_name != 'schedule' || needs.changed.outputs.changed == 'true') }}
-    runs-on: depot-ubuntu-22.04-4
+    runs-on: ubuntu-22.04
     # Generous first-run ceiling (cold Qt+emsdk+ccache); warm runs are expected
     # in the 20-30 minute band. Tighten once real timings accumulate.
     timeout-minutes: 120
@@ -329,7 +329,7 @@ jobs:
     if: >-
       ${{ !cancelled() && needs.wasm.result == 'success' &&
       !(github.event_name == 'pull_request' && startsWith(github.base_ref, 'release-') && vars.PJ_CI_RELEASE_PR_LITE == 'true') }}
-    runs-on: depot-ubuntu-22.04-4
+    runs-on: ubuntu-22.04
     timeout-minutes: 60
     env:
       PJ_WASM_URL: http://127.0.0.1:6931/
@@ -441,7 +441,7 @@ jobs:
     if: >-
       ${{ !cancelled() && needs.wasm.result == 'success' &&
       !(github.event_name == 'pull_request' && startsWith(github.base_ref, 'release-') && vars.PJ_CI_RELEASE_PR_LITE == 'true') }}
-    runs-on: depot-ubuntu-22.04-4
+    runs-on: ubuntu-22.04
     timeout-minutes: 60
     env:
       LIBGL_ALWAYS_SOFTWARE: '1'

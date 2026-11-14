@@ -32,7 +32,7 @@ jobs:
     # 14.5x, while both release pipelines deliberately use VS2022/MSVC 14.44.
     # Pinning this also lets CI and the installer share the same sccache objects
     # and Conan package IDs instead of maintaining two Windows toolchain graphs.
-    runs-on: depot-windows-2022-4
+    runs-on: windows-2022
     # Windows is a required shipped target (CLAUDE.md). The job blocks on its
     # compile and its D3D11 display runners (the Windows gate of the QRhi
     # renderer, pj_scene3D/docs/TECHNICAL_NOTES.md, CI lanes); its unit-suite step stays
