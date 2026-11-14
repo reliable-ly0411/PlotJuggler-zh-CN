@@ -1,10 +1,12 @@
 import importlib.util
 import json
+import tempfile
+import hashlib
 from pathlib import Path
 import sys
 import unittest
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'scripts'))
-from probe_windows_locked_dependencies import check_graph, compare_reports, ignored_option_warnings
+from probe_windows_locked_dependencies import check_graph, compare_reports, ignored_option_warnings, retain_product_evidence, PRODUCT_TARGETS
 from windows_conan_pathmap import render
 
 def graph():
@@ -16,6 +18,22 @@ def graph():
     return {'graph':{'nodes':nodes}}
 
 class LockedTests(unittest.TestCase):
+    def test_retain_only_unchanged_audited_originals(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);source=root/'source';source.mkdir()
+            raw=b'original diagnostic bytes'
+            report={}
+            for target in PRODUCT_TARGETS:
+                name=target+'.dll';(source/name).write_bytes(raw)
+                report[name]={'sha256':hashlib.sha256(raw).hexdigest(),'forbidden_paths_found':[],'byte_rewriting':False}
+            retain_product_evidence(source,root/'good',report)
+            self.assertEqual((root/'good'/next(iter(report))).read_bytes(),raw)
+            item=report[next(iter(report))];item['forbidden_paths_found']=['private']
+            with self.assertRaises(ValueError):retain_product_evidence(source,root/'bad',report)
+            self.assertFalse((root/'bad').exists())
+            item['forbidden_paths_found']=[];item['sha256']='wrong'
+            with self.assertRaises(ValueError):retain_product_evidence(source,root/'changed',report)
+            self.assertFalse((root/'changed').exists())
     def test_expected_openssl_capability_probes(self):
         output='\n'.join(f"cl : Command line warning D9002 : ignoring unknown option '{s}'" for s in ('-x','/dev/null','-dM')).encode()
         self.assertEqual(ignored_option_warnings(output),[])

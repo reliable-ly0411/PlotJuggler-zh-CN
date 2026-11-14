@@ -1,7 +1,7 @@
 name: Diagnostic actual Windows plugin paths
 on:
   push:
-    branches: [zh-CN-diag/44-pathmap-coff]
+    branches: [zh-CN-ci/44-plugin-byte-diagnostics]
     paths:
       - .github/workflows/zh-windows-locked-pathmap-probe.yml
       - scripts/probe_windows_locked_dependencies.py
@@ -62,7 +62,8 @@ jobs:
           path: |
             ${{ runner.temp }}/pj-locked-${{ matrix.cache }}-${{ github.run_id }}-${{ github.run_attempt }}/*.json
             ${{ runner.temp }}/pj-locked-${{ matrix.cache }}-${{ github.run_id }}-${{ github.run_attempt }}/*.log
-          retention-days: 14
+            ${{ runner.temp }}/pj-locked-${{ matrix.cache }}-${{ github.run_id }}-${{ github.run_attempt }}/audited-product-dlls/*.dll
+          retention-days: 7
           if-no-files-found: error
   compare:
     needs: dependencies

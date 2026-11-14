@@ -60,6 +60,23 @@ def compare_reports(a,b):
             'raw_dlls_equal':all(matches.values()),'dll_matches':matches,'byte_rewriting':False}
 
 
+def retain_product_evidence(source, destination, report):
+    """Retain original audited DLL bytes, never normalize or rewrite them."""
+    expected={t+'.dll' for t in PRODUCT_TARGETS}
+    if set(report)!=expected:raise ValueError('evidence inventory differs')
+    blobs={}
+    for name in sorted(expected):
+        item=report[name]
+        if item.get('forbidden_paths_found') or item.get('byte_rewriting') is not False:
+            raise ValueError('only privacy-audited original DLLs may be retained')
+        raw=(source/name).read_bytes()
+        if hashlib.sha256(raw).hexdigest()!=item['sha256']:
+            raise ValueError('DLL changed after privacy audit')
+        blobs[name]=raw
+    destination.mkdir(exist_ok=False)
+    for name,raw in blobs.items():(destination/name).write_bytes(raw)
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--work',type=Path);p.add_argument('--compare',nargs=2,type=Path);p.add_argument('--output',type=Path);p.add_argument('--product-plugins',action='store_true');a=p.parse_args()
     if a.compare:
@@ -129,6 +146,7 @@ def main():
                 product[path.name]=inspect_pe(path.read_bytes(),forbidden)
             report['dlls']=product
             if any(v['forbidden_paths_found'] for v in product.values()):raise ValueError('product DLL contains unmapped paths')
+            retain_product_evidence(build/'bin/Release',base/'audited-product-dlls',product)
             report['status']='passed-plugin-privacy-not-release-approval'
             return
         if not binaries:raise ValueError('no actual dependency DLL evidence')
