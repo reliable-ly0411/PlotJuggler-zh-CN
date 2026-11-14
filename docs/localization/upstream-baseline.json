@@ -1,9 +1,9 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
   "upstream_branch": "main",
-  "upstream_commit": "8b847cb74fa7938dcfb3b2385b1c7b8db3f69bc0",
+  "upstream_commit": "5a8f2583b0ae336930910c84307bde1a65c31fd3",
   "upstream_version_file": "versions.env",
-  "baseline_recorded_utc": "2026-11-12",
+  "baseline_recorded_utc": "2026-11-14",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
   "localization_source_branch": "zh-CN",
   "localization_source_commit": "766a88d8e689c7803f32acb315ac872a0a67a57b",
@@ -31,7 +31,7 @@
     "tag_object": "da079f6670d3a1873ed1011dedc15556e6f838de",
     "commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
     "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.1.0",
-    "relationship": "Development snapshot with 56 upstream commits after official 4.1.0; not unchanged release or accepted localization package."
+    "relationship": "Development snapshot with 60 upstream commits after official 4.1.0; not unchanged release or accepted localization package."
   },
   "csv_path_fix": {
     "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
@@ -52,7 +52,7 @@
     "license": "MIT",
     "strategy": "Host display mapping for the unchanged official binary; no plugin rebuild or SDK change."
   },
-  "host_sdk_version": "0.39.0",
+  "host_sdk_version": "0.40.0",
   "qt_version": "6.12.0",
   "previous_upstream_commit": "0345ec513bde7f05ad3148548ac30401f2b6f7a7",
   "integration_parents": {
@@ -66,17 +66,16 @@
     "note": "Historical released package scope; not an acceptance claim for the new development snapshot."
   },
   "latest_sync": {
-    "previous_upstream_commit": "349c74e3b0ada0081b7d0006e729de66e8e3b6e5",
-    "development_parent": "82a787414217e32638f257e02fdb03d8d08d477a",
+    "previous_upstream_commit": "8b847cb74fa7938dcfb3b2385b1c7b8db3f69bc0",
+    "development_parent": "cbb4d23f1579e4f93dc5ff1310a8be170ae61291",
     "upstream_commits": [
-      "08aa99c272bbeca4024cbbd45d78320c7fca335f",
-      "a0956b2023849e0bf8755ece425fe184b700f09d",
-      "092bcfa205f2bd2282f471f29507bbcd14755eef",
-      "b0cd6fca1d916ebb63190dc5d811dfdacac636fb",
-      "0511b57bb1806b08c1ee3fee60d96c1e0448c358"
+      "b9136ebd13b1f916db1af481ab739563710e8184",
+      "720fd800b501aa7b647736b897f4fe134fe1ec5b",
+      "1d456dbb715cbb5c6476aff99d13f910d3b24f5d",
+      "5a8f2583b0ae336930910c84307bde1a65c31fd3"
     ],
-    "upstream_commits_after_release": 19,
-    "macos_package_status": "Upstream source integrated; localization, native package acceptance and publication are not enabled."
+    "upstream_commits_after_release": 60,
+    "package_status": "Source synchronization only; published tags and packages unchanged; new native package acceptance pending."
   },
   "forward_port_source": "0113492d7a7f96e486de1f9adcde6e43893ab630"
 }
