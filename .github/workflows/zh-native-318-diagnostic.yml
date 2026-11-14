@@ -1,0 +1,15 @@
+name: 3.18 cloud-native full diagnostic (no publish)
+on:
+  push:
+    branches:
+      - zh-CN-fix/44-rc15-native
+      - zh-CN-feat/release-3-18-1-i18n-launcher
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full-round:
+    uses: ./.github/workflows/zh-release.yml
+    with:
+      ref: ${{ github.sha }}
+      release_manifest: ''

@@ -1,0 +1,285 @@
+{
+  "review": "https://github.com/PlotJuggler/PlotJuggler/pull/1459#issuecomment-6753848134",
+  "changes": [
+    {
+      "context": "DataStreamMQTT",
+      "source": "Topics filter:",
+      "before": "主题筛选：",
+      "after": "话题筛选：",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "DataStreamMQTT",
+      "source": "Select a specific topic:",
+      "before": "选择特定主题：",
+      "after": "选择特定话题：",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "DataStreamZMQ",
+      "source": "Topics:",
+      "before": "主题：",
+      "after": "话题：",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "FoxgloveDialog",
+      "source": "Topic Name",
+      "before": "主题名称",
+      "after": "话题名称",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "MainWindow",
+      "source": "<html><head/><body><p>Select the streaming plugin.</p></body></html>",
+      "before": "<html><head/><body><p>选择数据流插件。</p></body></html>",
+      "after": "<html><head/><body><p>选择流数据插件。</p></body></html>",
+      "reason": "consistent stream plugin terminology"
+    },
+    {
+      "context": "MainWindow",
+      "source": "<html><head/><body><p>Start/Stop the streaming plugin.</p></body></html>",
+      "before": "<html><head/><body><p>启动或停止数据流插件。</p></body></html>",
+      "after": "<html><head/><body><p>启动或停止流数据插件。</p></body></html>",
+      "reason": "consistent stream plugin terminology"
+    },
+    {
+      "context": "MainWindow",
+      "source": "Show point in plot",
+      "before": "在曲线图中显示数据点",
+      "after": "显示光标处数据点的数值",
+      "reason": "value under cursor, distinct from point markers"
+    },
+    {
+      "context": "ParserFactoryProtobuf",
+      "source": "Type a topic or type ID",
+      "before": "输入主题名称或类型 ID",
+      "after": "输入话题名称或类型 ID",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "PlotWidgetEditor",
+      "source": "Sticks",
+      "before": "棒状",
+      "after": "竖线",
+      "reason": "Qwt sticks render vertical lines"
+    },
+    {
+      "context": "ProtobufLoader",
+      "source": "Load one or more .proto files. The \"Default message type\" is used for streams with no topic (e.g. UDP) or for topics not listed in the Topic Mapping tab.",
+      "before": "加载一个或多个 .proto 文件。“默认消息类型”用于无主题的数据流（如 UDP），以及未在“主题映射”中列出的主题。",
+      "after": "加载一个或多个 .proto 文件。“默认消息类型”用于无话题的数据流（如 UDP），以及未在“话题映射”中列出的话题。",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "ProtobufLoader",
+      "source": "Topic Mapping",
+      "before": "主题映射",
+      "after": "话题映射",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "ProtobufLoader",
+      "source": "Map specific topics to specific message types. Works for MQTT/ZMQ streamers (each topic gets its own parser). Topics not listed here fall back to the Default message type. UDP streamers pass an empty topic — use the Default type.",
+      "before": "将主题映射到对应消息类型。适用于 MQTT/ZMQ 数据流，每个主题使用独立解析器。未列出的主题使用默认消息类型。UDP 传递空主题，应使用默认类型。",
+      "after": "将话题映射到对应消息类型。适用于 MQTT/ZMQ 数据流，每个话题使用独立解析器。未列出的话题使用默认消息类型。UDP 传递空话题，应使用默认类型。",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "ProtobufLoader",
+      "source": "Topic",
+      "before": "主题",
+      "after": "话题",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "Click to select all topics",
+      "before": "点击以选择全部主题",
+      "after": "点击以选择全部话题",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "Download selected topics",
+      "before": "下载所选主题",
+      "after": "下载所选话题",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "Loading topics for %1...",
+      "before": "正在加载 %1 的主题…",
+      "after": "正在加载 %1 的话题…",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "No topics returned — enter a topic name manually if needed",
+      "before": "未返回主题 — 如有需要，请手动输入主题名称",
+      "after": "未返回话题 — 如有需要，请手动输入话题名称",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "%1 topic(s) available",
+      "before": "可用主题：%1 个",
+      "after": "可用话题：%1 个",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "Selected %1 topics — adjust range and click Fetch",
+      "before": "已选 %1 个主题 — 调整范围后点击「下载」",
+      "after": "已选 %1 个话题 — 调整范围后点击「下载」",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "Fetch Errors (%1 topics)",
+      "before": "获取错误（%1 个主题）",
+      "after": "获取错误（%1 个话题）",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "%1 topic(s) failed:\n\n%2",
+      "before": "%1 个主题获取失败：\n\n%2",
+      "after": "%1 个话题获取失败：\n\n%2",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "Fetching %1 topic(s)...",
+      "before": "正在获取 %1 个主题…",
+      "after": "正在获取 %1 个话题…",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "Topic",
+      "before": "主题",
+      "after": "话题",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "Topic    : %1\n",
+      "before": "主题：%1\n",
+      "after": "话题：%1\n",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "Topics",
+      "before": "主题",
+      "after": "话题",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "Topics (none — click a topic manually)",
+      "before": "主题（未选择，请手动点击主题）",
+      "after": "话题（未选择，请手动点击话题）",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "listTopics failed: ",
+      "before": "获取主题失败：",
+      "after": "获取话题失败：",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "pullTopics failed: ",
+      "before": "拉取主题失败：",
+      "after": "拉取话题失败：",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "QObject",
+      "source": "pullTopics failed: unknown error",
+      "before": "拉取主题失败：未知错误",
+      "after": "拉取话题失败：未知错误",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "UDPServerDialog",
+      "source": "Strip a fixed-size type ID from the start of every datagram and pass it as topic name to the parser. Enables multi-type protobuf/JSON/etc. on a single UDP port when the publisher prepends a type identifier.",
+      "before": "从每个数据报的开头提取固定长度的类型 ID，并将其作为主题名称传递给解析器。当发送端添加类型标识时，同一 UDP 端口可处理多种 Protobuf、JSON 等消息。",
+      "after": "从每个数据报的开头提取固定长度的类型 ID，并将其作为话题名称传递给解析器。当发送端添加类型标识时，同一 UDP 端口可处理多种 Protobuf、JSON 等消息。",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "WebSocketDialog",
+      "source": "Select one or multiple topics:",
+      "before": "选择一个或多个主题：",
+      "after": "选择一个或多个话题：",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "WebSocketDialog",
+      "source": "Topic Name",
+      "before": "主题名称",
+      "after": "话题名称",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "dialog_mcap",
+      "source": "<html><head/><body><p>Press\n           <span style=\"\n           font-weight:600;\">Ctrl+A</span> to select\n           all the topics and <span style=\"\n           font-weight:600;\">Ctrl+Shift+A</span> to\n           deselect all</p></body></html>",
+      "before": "<html><head/><body><p>按<span style=\"\n           font-weight:600;\">Ctrl+A</span>可选择全部主题，按<span style=\"\n           font-weight:600;\">Ctrl+Shift+A</span>可取消全选</p></body></html>",
+      "after": "<html><head/><body><p>按<span style=\"\n           font-weight:600;\">Ctrl+A</span>可选择全部话题，按<span style=\"\n           font-weight:600;\">Ctrl+Shift+A</span>可取消全选</p></body></html>",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "dialog_mcap",
+      "source": "Filter Topic Names: ",
+      "before": "筛选主题名称：",
+      "after": "筛选话题名称：",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "toolBoxUI",
+      "source": "Topic",
+      "before": "主题",
+      "after": "话题",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    },
+    {
+      "context": "toolBoxUI",
+      "source": "If enabled, one file per group (i.e. \"topic\" or \"channel\") will be created in a user provided folder\n",
+      "before": "启用后，在指定目录中为每个分组（主题或通道）创建一个文件。\n",
+      "after": "启用后，在指定目录中为每个分组（话题或通道）创建一个文件。\n",
+      "reason": "ROS/message topic is 话题; theme remains 主题"
+    }
+  ],
+  "source_actions": {
+    "QObject::Split &Horizontally": "unique H mnemonic",
+    "QObject::Split &Vertically": "unique V mnemonic",
+    "QObject::Zoom Out Horizontally": "no mnemonic, avoid collision",
+    "QObject::Zoom Out Vertically": "no mnemonic, avoid collision"
+  },
+  "excluded_4x": [
+    "Dataset merge canonical formats",
+    "Refresh derived marker rules",
+    "Source promotion",
+    "Scene3D meshes/grid and SceneEntities",
+    "Web-hosted layouts",
+    "Cloud browser",
+    "Custom widget UI",
+    "Duplicate tab added in PJ4 #1495",
+    "Qt6 CurveTreeView extraction workaround",
+    "PJ4 plugin SDK and marketplace"
+  ],
+  "qt5_context_menu_followup": {
+    "finding": "Actual PJ3 menus also include flip/copy/statistics actions with colliding accelerators; PJ4 source fixes alone are insufficient.",
+    "keys": [
+      "Copy &image to clipboard",
+      "F&lip Horizontal Axis",
+      "Flip Ver&tical Axis",
+      "Show &data statistics"
+    ],
+    "test": "Native timeseries and XY popup actions checked for duplicates in --self-test-ui."
+  }
+}

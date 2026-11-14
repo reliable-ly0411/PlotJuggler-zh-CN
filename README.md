@@ -1,20 +1,31 @@
-# PlotJuggler 3 中文 / ArduPilot 分支
+# PlotJuggler 三语言 / ArduPilot Qt5 分支
 
-本 fork 基于官方 Qt5 **3.17.2**，提供简体中文界面、English 切换及默认随包的
-ArduPilot DataFlash BIN 加载器。下游版本号与官方上游版本号不同。
+本 fork 基于官方 Qt5 / C++17 3.x 维护线，提供 English、简体中文、繁體中文、
+独立启动器和随包的 ArduPilot DataFlash BIN 加载器。本轮下游候选为
+`3.18.1-rc.14+upstream.3.17.2.apbin.1.g<commit>`；
+当前为集中修复提案，尚未通过该候选验收。此前候选的证据保留，
+修复范围及定向验收见 [rc.14 说明](docs/localization/3.18.1-rc14-catalog-cleanup.md)。
+计划登记于 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44)；
+实际下载包须与其最终发布说明、源码提交和 SHA256 清单一并核对。
+上游 `main-3.x` 固定为 `df5cbaad9bb087413470e818fa5cdb88d6357ce5`，其声明版本为 3.17.2；
+3.18.1 是下游发行目标。Qt6 / 4.x 的功能、插件 ABI 和验收记录不适用于这里。
+简体模式保留既有离线图库；繁体模式使用英文原图。
+普通启动直接进入主程序，不再弹出语言选择；首次跟随系统界面语言，
+之后优先使用已保存的选择。语言可在主窗口的语言菜单中切换，重启生效。
 
-## 下载与开发状态
+已发布的 3.x 包见 [v3.18.0-zh.4](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v3.18.0-zh.4)
+及其发布说明、校验清单；3.18.1 候选尚未发布，开发工作见 [PR #51](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/51)。
+`zh-CN` 为 3.x 稳定维护线，`zh-CN-dev` 为开发集成线，候选在独立主题分支。
+仓库默认分支为独立的 `zh-CN-4.x`；4.x 的 [v4.1.0+zh.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)
+使用 Qt6/PJ4 SDK，两代插件不能混用。下方官方徽章、功能和下载源不代表本候选已完成交付验收。
 
-- **已发布 3.x：** [v3.18.0-zh.4](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v3.18.0-zh.4)。安装前阅读对应发布说明并核对校验文件；旧标签和附件保持不变。
-- **3.18.1 汉化候选：尚未发布。** 计划包括翻译修订、繁體中文（台灣）、共享语言设置的启动器，以及曲线、布局和启动图库回归。进度、实际测试范围和待解决项见 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44) 与[草稿 PR #51](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/51)。
-- 候选按各版本先全量记录测试，再集中修复和重新构建。仍需完成对应新提交的双平台回归、许可证与来源材料、七个同源成品包验收，之后才准备预发行版；旧候选的测试结果不代替新候选验收。
-- **分支：** `zh-CN` 为 3.x 稳定维护线，`zh-CN-dev` 为开发集成线，候选功能在独立主题分支；草稿 PR 不等于已经合入或可以下载。仓库默认分支现为独立的 `zh-CN-4.x`。
-- **4.x 正式版：** [v4.1.0+zh.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)，采用 Qt6/PJ4 SDK，与本 Qt5/PJ3 分支分别构建；两代插件不能混用。
-
-启动图库使用离线内嵌的 AI 中文嵌字图片。下文官方功能、下载源与构建徽章不代表本汉化候选已完成对应交付或验收。
+本轮按用户要求仅测试新增功能及可能回归的部分，先完成选定测试再集中修补和构建。
+七个同源软件包及必要的身份、隐私、许可和源码材料仍须通过发布核对；旧候选的成绩不转记。
 
 - [汉化分支命名、开发流程与发布规则](docs/BRANCHING.zh-CN.md)
 - [使用、解析范围、许可和同步说明](docs/zh-CN.md)
+- [本轮实施与验收状态](docs/localization/3.18.1-validation.md)
+- [翻译修订逐项回移记录](docs/localization/3.18.1-backport.json)
 - [Windows 安装器与 portable 构建](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-windows.yml)
 - [Linux AppImage 构建](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-linux.yml)
 - [每日上游同步及冲突报告](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-sync.yml)

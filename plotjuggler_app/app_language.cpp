@@ -8,26 +8,63 @@
 #include <QTranslator>
 #include <QDebug>
 
-void installApplicationLanguage(QApplication& app)
+QString normalizedApplicationLanguage(QString language)
 {
-  QString language = QSettings().value("Preferences::language", "zh_CN").toString();
+  language = language.trimmed().section('.', 0, 0).section('@', 0, 0);
+  language.replace('-', '_');
+  const QStringList parts = language.split('_', Qt::SkipEmptyParts);
+  if (parts.isEmpty() || parts.first().compare("zh", Qt::CaseInsensitive) != 0) return "en_US";
+  // Explicit script takes precedence over region, irrespective of casing.
+  for (const auto& part : parts.mid(1))
+  {
+    if (part.compare("Hans", Qt::CaseInsensitive) == 0) return "zh_CN";
+    if (part.compare("Hant", Qt::CaseInsensitive) == 0) return "zh_TW";
+  }
+  for (const auto& part : parts.mid(1))
+  {
+    if (part.compare("TW", Qt::CaseInsensitive) == 0 ||
+        part.compare("HK", Qt::CaseInsensitive) == 0 ||
+        part.compare("MO", Qt::CaseInsensitive) == 0) return "zh_TW";
+    if (part.compare("CN", Qt::CaseInsensitive) == 0 ||
+        part.compare("SG", Qt::CaseInsensitive) == 0) return "zh_CN";
+  }
+  return "zh_CN"; // A bare Chinese locale uses Simplified Chinese.
+}
+
+QString selectedApplicationLanguage(const QApplication& app)
+{
+  QSettings settings;
+  const QStringList system_languages = QLocale::system().uiLanguages();
+  QString language = settings.contains("Preferences::language")
+      ? settings.value("Preferences::language").toString()
+      : (system_languages.isEmpty() ? QStringLiteral("en_US") : system_languages.first());
   const auto arguments = app.arguments();
   for (int i = 1; i < arguments.size(); ++i)
   {
+    if (arguments[i] == "--") break;
     if (arguments[i].startsWith("--language=")) language = arguments[i].mid(11);
-    else if (arguments[i] == "--language" && i + 1 < arguments.size()) language = arguments[++i];
+    else if (arguments[i] == "--language" && i + 1 < arguments.size() &&
+             !arguments[i + 1].startsWith("--")) language = arguments[++i];
   }
-  language = (language == "zh_CN" || language == "zh-CN") ? "zh_CN" : "en_US";
+  return normalizedApplicationLanguage(language);
+}
+
+void installApplicationLanguage(QApplication& app)
+{
+  Q_INIT_RESOURCE(i18n);
+  const QString language = selectedApplicationLanguage(app);
   app.setProperty("interfaceLanguage", language);
-  if (language != "zh_CN") return;
-  QLocale::setDefault(QLocale(QLocale::Chinese, QLocale::China));
+  if (language == "en_US") return;
+  // Interface language must not change numeric parsing, protocol or export locales.
   auto* qt = new QTranslator(&app);
-  if (qt->load("qtbase_zh_CN", app.applicationDirPath() + "/translations") ||
-      qt->load("qtbase_zh_CN", QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+  const QString qt_catalog = "qtbase_" + language;
+  if (qt->load(":/i18n/" + qt_catalog + ".qm") ||
+      qt->load(qt_catalog, app.applicationDirPath() + "/translations") ||
+      qt->load(qt_catalog, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
     app.installTranslator(qt);
   auto* catalog = new QTranslator(&app);
-  if (catalog->load(":/i18n/plotjuggler_zh_CN.qm")) app.installTranslator(catalog);
-  else qWarning() << "Simplified Chinese translation catalog is missing";
+  if (catalog->load(":/i18n/plotjuggler_" + language + ".qm")) app.installTranslator(catalog);
+  else qWarning() << "Translation catalog is missing:" << language;
 }
 
 // Qt 5.15 standard button keys; our own translations also work without qtbase_zh_CN.qm.

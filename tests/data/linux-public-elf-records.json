@@ -1,0 +1,88 @@
+{
+  "records": {
+    "lib/libgnutls.so.30": {
+      "elf_sha256": "20def1ef4770457f44cb8721edb31d54ce4bc76e7b6537d6a88066b50e987118",
+      "architecture": "ELF64 little-endian x86-64 ET_DYN",
+      "soname": "libgnutls.so.30",
+      "source": "https://gitlab.com/gnutls/gnutls/-/blob/3.8.3/lib/crypto-selftests-pk.c",
+      "nul_records": [
+        {
+          "rule": "private_key",
+          "start": 1637408,
+          "end": 1637609,
+          "match_start": 1637408,
+          "match_end": 1637608,
+          "record_sha256": "c72070fc1ffb2df729650b949157c85ec03d8ec9743ba7956c03e21d385bce4e"
+        },
+        {
+          "rule": "private_key",
+          "start": 1637632,
+          "end": 1637788,
+          "match_start": 1637632,
+          "match_end": 1637787,
+          "record_sha256": "3de5d1d9ca9af8e24d29bab925c3d500c2cdd11a06c4a2c6a6b336e73bb3ad56"
+        },
+        {
+          "rule": "private_key",
+          "start": 1637792,
+          "end": 1637944,
+          "match_start": 1637792,
+          "match_end": 1637943,
+          "record_sha256": "b8369cc647a1e1e8f8e420b6b8580c36223f89b0f8e70281732d028aebf15fac"
+        },
+        {
+          "rule": "private_key",
+          "start": 1638624,
+          "end": 1638851,
+          "match_start": 1638624,
+          "match_end": 1638850,
+          "record_sha256": "d653005e4d23cf91e3572fe8148ab6db2e474924d9711838521d3ba352b193f5"
+        },
+        {
+          "rule": "private_key",
+          "start": 1639296,
+          "end": 1640508,
+          "match_start": 1639296,
+          "match_end": 1640507,
+          "record_sha256": "80ec06e06b06635bcad5c71b0e9e7a3516c02133c682a2369b09599addb8d7f3"
+        },
+        {
+          "rule": "private_key",
+          "start": 1640512,
+          "end": 1642187,
+          "match_start": 1640512,
+          "match_end": 1642186,
+          "record_sha256": "f4b1de2f94f1df2d588ff6c18290e0f7f5091267b9ef0da8433c622bad3d127a"
+        }
+      ],
+      "ubuntu_source_version": "gnutls28 3.8.3-1.1ubuntu3.6",
+      "ubuntu_patched_source_sha256": "0199a5b05732d825e235001455afa1d54178d8508da1fd2e0eb8a5ef271405b8"
+    },
+    "lib/libpython3.12.so.1.0": {
+      "elf_sha256": "3409617ca9f87ec920edb7153a900207e5db6348e57eb4616db33d78d72ee4ba",
+      "architecture": "ELF64 little-endian x86-64 ET_DYN",
+      "soname": "libpython3.12.so.1.0",
+      "source": "https://github.com/python/cpython/blob/v3.12.3/Lib/ntpath.py",
+      "nul_records": [
+        {
+          "rule": "private_path",
+          "start": 6379002,
+          "end": 6379514,
+          "match_start": 6379323,
+          "match_end": 6379352,
+          "record_sha256": "0525dfe66be0855dc2b9edb9bf2cf184ac76554aab8ac2daced7780225902360"
+        },
+        {
+          "rule": "private_path",
+          "start": 8053000,
+          "end": 8053510,
+          "match_start": 8053321,
+          "match_end": 8053350,
+          "record_sha256": "22b6547d11d1b53f8279a182153db0d4c2ec210e6c340d1621eeea58bfb5edd6"
+        }
+      ],
+      "ubuntu_source_version": "python3.12 3.12.3-1ubuntu0.17",
+      "ubuntu_patched_source_sha256": "c4dd79bf103677daaad873952b89fc1f973425e7b250006cc35af4c164181da8"
+    }
+  }
+}

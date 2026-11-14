@@ -150,7 +150,8 @@ bool WebsocketClient::start(QStringList*)
       const QUrl url(url_str);
       if (!url.isValid())
       {
-        QMessageBox::warning(&dialog, "WebSocket Client", "Invalid URL", QMessageBox::Ok);
+        QMessageBox::warning(&dialog, QObject::tr("WebSocket Client"), QObject::tr("Invalid URL"),
+                             QMessageBox::Ok);
         dialog.setConnected(false);
         return;
       }
@@ -761,7 +762,7 @@ void WebsocketClient::createParsersForTopics()
       {
         QMessageBox::warning(
             nullptr, QObject::tr("Encoding problem"),
-            QString("No parser available for encoding [%0]").arg(t.schema_encoding));
+            QObject::tr("No parser available for encoding [%0]").arg(t.schema_encoding));
       }
       continue;
     }

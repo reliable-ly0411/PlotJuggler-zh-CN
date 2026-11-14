@@ -86,7 +86,7 @@ bool DataLoadULog::readDataFromFile(FileLoadInfo* fileload_info, PlotDataMapRef&
   }
 
   ULogParametersDialog* dialog = new ULogParametersDialog(parser, _main_win);
-  dialog->setWindowTitle(QString("ULog file %1").arg(filename));
+  dialog->setWindowTitle(tr("ULog file %1").arg(filename));
   dialog->setAttribute(Qt::WA_DeleteOnClose);
   dialog->restoreSettings();
   dialog->show();

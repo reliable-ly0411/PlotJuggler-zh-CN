@@ -30,25 +30,25 @@ TEST(TimeFormat, TimestampLongFormatOver24h)
 
 TEST(TimeFormat, DurationSeconds)
 {
-  constexpr int64_t ns = 42LL * 1'000'000'000;
+  constexpr int64_t ns = 42LL * 1000000000;
   EXPECT_EQ(formatDuration(ns), "42s");
 }
 
 TEST(TimeFormat, DurationMinutesAndSeconds)
 {
-  constexpr int64_t ns = (12 * 60 + 30) * 1'000'000'000LL;
+  constexpr int64_t ns = (12 * 60 + 30) * 1000000000LL;
   EXPECT_EQ(formatDuration(ns), "12m 30s");
 }
 
 TEST(TimeFormat, DurationHoursAndMinutes)
 {
-  constexpr int64_t ns = (3 * 3600 + 45 * 60) * 1'000'000'000LL;
+  constexpr int64_t ns = (3 * 3600 + 45 * 60) * 1000000000LL;
   EXPECT_EQ(formatDuration(ns), "3h 45m");
 }
 
 TEST(TimeFormat, DurationDaysAndHours)
 {
-  constexpr int64_t ns = (2 * 86400 + 5 * 3600 + 30 * 60) * 1'000'000'000LL;
+  constexpr int64_t ns = (2 * 86400 + 5 * 3600 + 30 * 60) * 1000000000LL;
   EXPECT_EQ(formatDuration(ns), "2d 5h 30m");
 }
 
@@ -59,24 +59,24 @@ TEST(TimeFormat, DurationZero)
 
 TEST(TimeFormat, DurationSubSecond)
 {
-  EXPECT_EQ(formatDuration(500'000'000LL), "0s");
+  EXPECT_EQ(formatDuration(500000000LL), "0s");
 }
 
 TEST(TimeFormat, DurationExactMinute)
 {
-  constexpr int64_t ns = 60LL * 1'000'000'000;
+  constexpr int64_t ns = 60LL * 1000000000;
   EXPECT_EQ(formatDuration(ns), "1m 0s");
 }
 
 TEST(TimeFormat, DurationExactHour)
 {
-  constexpr int64_t ns = 3600LL * 1'000'000'000;
+  constexpr int64_t ns = 3600LL * 1000000000;
   EXPECT_EQ(formatDuration(ns), "1h 0m");
 }
 
 TEST(TimeFormat, DurationExactDay)
 {
-  constexpr int64_t ns = 86400LL * 1'000'000'000;
+  constexpr int64_t ns = 86400LL * 1000000000;
   EXPECT_EQ(formatDuration(ns), "1d 0h 0m");
 }
 
@@ -84,13 +84,13 @@ TEST(TimeFormat, DurationExactDay)
 
 TEST(TimeFormat, NeedsLongFormatTrue)
 {
-  constexpr int64_t span = 25LL * 3600 * 1'000'000'000;
+  constexpr int64_t span = 25LL * 3600 * 1000000000;
   EXPECT_TRUE(needsLongFormat(span));
 }
 
 TEST(TimeFormat, NeedsLongFormatFalse)
 {
-  constexpr int64_t span = 23LL * 3600 * 1'000'000'000;
+  constexpr int64_t span = 23LL * 3600 * 1000000000;
   EXPECT_FALSE(needsLongFormat(span));
 }
 

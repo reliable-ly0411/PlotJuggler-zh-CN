@@ -552,7 +552,7 @@ bool DataLoadMCAP::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_dat
       if (notified_encoding_problem.count(schema_encoding) == 0)
       {
         notified_encoding_problem.insert(schema_encoding);
-        auto msg = QString("No parser available for encoding [%0] nor [%1]")
+        auto msg = tr("No parser available for encoding [%0] nor [%1]")
                        .arg(channel_encoding)
                        .arg(schema_encoding);
         QMessageBox::warning(nullptr, QObject::tr("Encoding problem"), msg);
@@ -591,10 +591,10 @@ bool DataLoadMCAP::readDataFromFile(FileLoadInfo* info, PlotDataMapRef& plot_dat
     QString error_message;
     for (const auto& [schema_name, failed_parser_info] : parsers_blacklist)
     {
-      error_message += QString("Schema: %1\n").arg(QString::fromStdString(schema_name));
+      error_message += tr("Schema: %1\n").arg(QString::fromStdString(schema_name));
       error_message +=
-          QString("Error: %1\n").arg(QString::fromStdString(failed_parser_info.error_message));
-      error_message += QString("Topics affected: \n");
+          tr("Error: %1\n").arg(QString::fromStdString(failed_parser_info.error_message));
+      error_message += tr("Topics affected: \n");
       for (const auto& topic : failed_parser_info.topics)
       {
         error_message += QString(" - %1\n").arg(QString::fromStdString(topic));

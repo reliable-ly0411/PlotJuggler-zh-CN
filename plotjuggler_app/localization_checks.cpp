@@ -15,6 +15,8 @@
 #include <QJsonArray>
 #include <QRegularExpression>
 #include <QUrl>
+#include <QMessageBox>
+#include <QSettings>
 
 QJsonObject checkLocalizedUi(QMainWindow* window, const QString& output, bool chinese)
 {
@@ -51,6 +53,42 @@ QJsonObject checkLocalizedUi(QMainWindow* window, const QString& output, bool ch
   result["report_action_ok"] = report_ok;
   result["report_url"] = report ? report->data().toUrl().toString() : QString();
 
+  auto* language_menu = window->findChild<QMenu*>("menuLanguage");
+  bool languages_ok = language_menu && language_menu->actions().size() == 3;
+  if (language_menu)
+  {
+    language_menu->popup(window->mapToGlobal(QPoint(100, 45)));
+    QApplication::processEvents();
+    languages_ok = language_menu->grab().save(output + "/language-menu.png") && languages_ok;
+    language_menu->hide();
+  }
+  const QString current_language = qApp->property("interfaceLanguage").toString();
+  const auto select_language = [&](const QString& locale) {
+    auto* action = window->findChild<QAction*>("language:" + locale);
+    if (!action) return false;
+    bool prompt_seen = false;
+    QTimer timer;
+    timer.setSingleShot(true);
+    QObject::connect(&timer, &QTimer::timeout, window, [&]() {
+      auto* prompt = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+      if (prompt && prompt->parentWidget() == window)
+      {
+        prompt_seen = prompt->grab().save(output + "/language-" + locale + ".png");
+        prompt->accept();
+      }
+    });
+    timer.start(100);
+    action->trigger();
+    QSettings settings;
+    settings.sync();
+    return prompt_seen && settings.status() == QSettings::NoError &&
+           settings.value("Preferences::language").toString() == locale;
+  };
+  for (const auto& locale : {"en_US", "zh_CN", "zh_TW"})
+    languages_ok = select_language(locale) && languages_ok;
+  languages_ok = select_language(current_language) && languages_ok;
+  result["language_menu_and_save_ok"] = languages_ok;
+
   bool about_ok = false;
   QTimer::singleShot(200, window, [&]() {
     auto* dialog = window->findChild<QDialog*>("AboutDialog");
@@ -61,10 +99,13 @@ QJsonObject checkLocalizedUi(QMainWindow* window, const QString& output, bool ch
     const QString text = body ? body->toPlainText() : QString();
     auto* close = buttons ? buttons->button(QDialogButtonBox::Close) : nullptr;
     const QString button = close ? close->text() : QString();
+    QString semantic_button = button;
+    semantic_button.remove(QRegularExpression(QStringLiteral("\\(&[A-Za-z]\\)")));
+    semantic_button.remove('&');
     about_ok = html.contains("reliable-ly0411/PlotJuggler-zh-CN/issues/new") &&
       text.contains("Davide Faconti") && text.contains("Built with love") &&
-      text.contains(QString::fromUtf8("向汉化项目报告问题")) &&
-      (chinese ? button == QString::fromUtf8("关闭") : button == "Close");
+      text.contains(QCoreApplication::translate("MainWindow", "Report a translation issue")) &&
+      semantic_button == QCoreApplication::translate("QPlatformTheme", "Close");
     result["about_text"] = text;
     result["close_button"] = button;
     result["about_screenshot"] = dialog->grab().save(output + "/about.png");
@@ -109,6 +150,6 @@ QJsonObject checkLocalizedUi(QMainWindow* window, const QString& output, bool ch
     result["mosaico_screenshot"] = window->grab().save(output + "/mosaico.png");
   }
   result["mosaico_ok"] = cloud_ok;
-  result["ok"] = tools_ok && report_ok && about_ok && cloud_ok;
+  result["ok"] = tools_ok && report_ok && about_ok && cloud_ok && languages_ok;
   return result;
 }

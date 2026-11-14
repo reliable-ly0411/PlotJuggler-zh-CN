@@ -1,0 +1,10 @@
+Qt Installer Framework 4.7.0
+
+The Windows installer uses Qt Installer Framework, copyright its respective
+contributors including The Qt Company Ltd. The framework is available under
+GNU General Public License version 3 with the Qt Company GPL Exception 1.0;
+the complete license and exception are provided in LICENSE.GPL3-EXCEPT.
+
+Official Qt Installer Framework 4.7.0 source code:
+https://download.qt.io/official_releases/qt-installer-framework/4.7.0/installer-framework-everywhere-src-4.7.0.tar.xz
+SHA-256: 6a88bdf40be359aca5ac66328c597a14d3520db40c04db3c8d0174cf1f4b8aa7

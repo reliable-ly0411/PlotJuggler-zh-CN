@@ -1,0 +1,9 @@
+{
+  "qt_version": "@Qt5Core_VERSION_STRING@",
+  "catalogs": {
+    "@PJ_QTBASE_zh_CN_NAME@": "@PJ_QTBASE_CN_SHA256@",
+    "@PJ_QTBASE_zh_TW_NAME@": "@PJ_QTBASE_TW_SHA256@"
+  },
+  "source": "https://github.com/qt/qttranslations",
+  "modified": false
+}

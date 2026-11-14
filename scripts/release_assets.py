@@ -6,16 +6,72 @@ import json
 from pathlib import Path
 import re
 import shutil
+import subprocess
 
 SUFFIXES = ("Windows-x64.zip", "Windows-x64.exe", "x86_64.AppImage", "aarch64.AppImage",
             "24.04-amd64.deb", "bookworm-amd64.deb", "trixie-amd64.deb")
 
 
-def expected_files(source):
+def source_contract(root=None, source=None):
+    """Read explicit declarations; collection uses the exact commit, never dirty files."""
+    root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
+    if source is None:
+        # Local diagnostic/fixture inspection only. Release collection always
+        # supplies the complete commit and requires its actual Git objects.
+        read = lambda name: (root / name).read_text(encoding="utf-8")
+    else:
+        if re.fullmatch(r"[0-9a-f]{40}", source) is None:
+            raise ValueError("A full source commit is required")
+        def git(*args):
+            result = subprocess.run(["git", "-C", str(root), *args],
+                                    capture_output=True, text=True, encoding="utf-8")
+            if result.returncode:
+                raise ValueError("Cannot read the specified source commit contract")
+            return result.stdout
+        if git("cat-file", "-t", source).strip() != "commit":
+            raise ValueError("Source identity must be a commit")
+        read = lambda name: git("show", source + ":" + name)
+    project = read("CMakeLists.txt")
+    declarations = read("cmake/ForkVersion.cmake")
+    versions = re.findall(r'^project\(\s*plotjuggler\b[^)]*\bVERSION\s+(\d+\.\d+\.\d+)\s*\)',
+                          project, re.MULTILINE)
+    if len(versions) != 1:
+        raise ValueError("Exactly one explicit project version is required")
+
+    def setting(name, pattern):
+        matches = re.findall(r'^set\(' + re.escape(name) + r'\s+"([^"\n]+)"\)\s*$',
+                             declarations, re.MULTILINE)
+        if len(matches) != 1 or re.fullmatch(pattern, matches[0]) is None:
+            raise ValueError("Invalid or ambiguous version declaration: " + name)
+        return matches[0]
+
+    number = r'(?:0|[1-9][0-9]*)'
+    core = number + r'\.' + number + r'\.' + number
+    if re.fullmatch(core, versions[0]) is None:
+        raise ValueError("Invalid project version")
+    prerelease = setting("PJ_FORK_PRERELEASE", r'[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*')
+    if any(part.isdecimal() and len(part) > 1 and part[0] == '0'
+           for part in prerelease.split('.')):
+        raise ValueError("Prerelease numeric identifiers cannot have leading zeros")
+    return {
+        "tag": "v" + versions[0] + "-" + prerelease,
+        "base_version": versions[0] + "-" + prerelease,
+        "upstream_version": setting("PJ_UPSTREAM_VERSION", core),
+        "upstream_sha": setting("PJ_UPSTREAM_SHA", r'[0-9a-f]{40}'),
+        "ardupilot_revision": setting("PJ_ARDUPILOT_REVISION", number),
+    }
+
+
+def _expected_files(source, contract):
     if not re.fullmatch(r"[0-9a-f]{40}", source):
         raise ValueError("A full source commit is required")
-    version = "3.18.0-zh.4+upstream.3.17.2.apbin.1.g" + source[:12]
+    version = (contract["base_version"] + "+upstream." + contract["upstream_version"]
+               + ".apbin." + contract["ardupilot_revision"] + ".g" + source[:12])
     return version, {"PlotJuggler-" + version + "-" + suffix for suffix in SUFFIXES}
+
+
+def expected_files(source):
+    return _expected_files(source, source_contract(source=source))
 
 
 def digest(path):
@@ -27,7 +83,11 @@ def digest(path):
 
 
 def inventory(directory, source):
-    version, expected = expected_files(source)
+    return _inventory(directory, source, source_contract(source=source))
+
+
+def _inventory(directory, source, contract):
+    version, expected = _expected_files(source, contract)
     files = {}
     for path in Path(directory).rglob("*"):
         if path.is_symlink():
@@ -42,7 +102,8 @@ def inventory(directory, source):
 
 
 def collect(software, metadata, source, output, report):
-    version, files = inventory(software, source)
+    contract = source_contract(source=source)
+    version, files = _inventory(software, source, contract)
     identities = []
     reports = list(Path(metadata).rglob("package-size.json"))
     if len(reports) != 6:
@@ -80,18 +141,20 @@ def collect(software, metadata, source, output, report):
     for name, path in files.items():
         shutil.copyfile(path, output / name)
     report.mkdir(parents=True, exist_ok=True)
-    result = {"tag": "v3.18.0-zh.4", "version": version, "source_commit": source,
+    result = {"tag": contract["tag"], "version": version, "source_commit": source,
               "software_assets": sorted(identities, key=lambda item: item["name"]),
               "asset_count": 7, "process_attachments": 0, "published": False}
     (report / "seven-packages.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
-    notes = f"""PlotJuggler 简体中文 v3.18.0-zh.4
+    notes = f"""PlotJuggler 三语言 {contract['tag']} (Pre-release)
 
-Source: `{source}`; upstream baseline: PlotJuggler 3.17.2.
+Source: `{source}`; upstream `main-3.x`: `{contract['upstream_sha']}` (declares {contract['upstream_version']}).
+This downstream version is not an upstream release.
 
-- Simplified Chinese UI with English switching and bundled ArduPilot DataFlash BIN loader.
-- 88 localized startup images: 71 lossless overlays and 17 complete images. 10 untranslated fallbacks and 8 technical originals remain.
+- English, 简体中文 and 繁體中文, with embedded matching Qt5 standard dialog catalogs.
+- Optional sibling launcher; arguments and the caller's working directory are retained.
+- Traditional Chinese startup images fall back to original English images. Simplified Chinese retains the existing localized images and explicit fallbacks.
 - Seven software assets: Windows x64 ZIP/installer, x86_64/aarch64 AppImages, Ubuntu 24.04 and Debian bookworm/trixie amd64 DEBs.
-- Smaller localized image resources. Measured timings and limitations, including the English first-render regression, are in docs/zh4-performance.md. No universal startup-speed improvement is claimed.
+- Native/GUI/package validation and remaining limits are tracked in issue #44 and docs/localization/3.18.1-validation.md.
 - Original copyright and MPL-2.0 notices retained; the DataFlash plugin retains its LGPL-3.0 notices. DataFlash text logs are not supported by this loader.
 
 Checksums:

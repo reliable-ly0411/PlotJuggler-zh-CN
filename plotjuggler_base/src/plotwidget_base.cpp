@@ -409,7 +409,7 @@ PlotWidgetBase::CurveInfo* PlotWidgetBase::addCurve(const std::string& name, Plo
   }
   catch (std::exception& ex)
   {
-    QMessageBox::warning(qwtPlot(), "Exception!", ex.what());
+    QMessageBox::warning(qwtPlot(), QObject::tr("Exception!"), ex.what());
     return nullptr;
   }
 

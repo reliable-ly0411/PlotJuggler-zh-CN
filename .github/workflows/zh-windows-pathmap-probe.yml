@@ -1,0 +1,55 @@
+name: Experimental Windows Conan exact-path probe
+on:
+  push:
+    branches: [zh-CN-fix/44-rc15-native]
+    paths:
+      - .github/workflows/zh-windows-pathmap-probe.yml
+      - scripts/windows_conan_pathmap.py
+      - scripts/hook_windows_conan_pathmap.py
+      - scripts/probe_windows_conan_pathmap.py
+      - tests/test_windows_conan_pathmap*.py
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-probe:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install pinned isolated probe tooling
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check conan==2.34.0
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --version
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Unit checks
+        shell: pwsh
+        run: |
+          python tests/test_windows_conan_pathmap.py -v
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python tests/test_windows_conan_pathmap_hook.py -v
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python tests/test_windows_conan_pathmap_probe.py -v
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Real MSVC dual-cache and negative-control probe
+        shell: pwsh
+        run: |
+          python scripts/probe_windows_conan_pathmap.py --work "$env:RUNNER_TEMP/pj-pathmap-probe-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Upload diagnostic evidence only, no product binaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-pathmap-probe-evidence
+          path: |
+            ${{ runner.temp }}/pj-pathmap-probe-${{ github.run_id }}-${{ github.run_attempt }}/summary.json
+            ${{ runner.temp }}/pj-pathmap-probe-${{ github.run_id }}-${{ github.run_attempt }}/*.log
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,6 +1,7 @@
 #include "custom_function.h"
 
 #include <limits>
+#include <QCoreApplication>
 #include <QFile>
 #include <QMessageBox>
 #include <QElapsedTimer>
@@ -169,7 +170,8 @@ SnippetsMap GetSnippetsFromXML(const QString& xml_text)
   if (!doc.setContent(xml_text, &parseErrorMsg, &parseErrorLine))
   {
     QMessageBox::critical(nullptr, QObject::tr("Error"),
-                          QString("Failed to parse snippets (xml), error %1 at line %2")
+                          QCoreApplication::translate(
+                              "QObject", "Failed to parse snippets (xml), error %1 at line %2")
                               .arg(parseErrorMsg)
                               .arg(parseErrorLine));
     return {};

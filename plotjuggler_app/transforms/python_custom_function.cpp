@@ -282,7 +282,7 @@ static std::string validatePythonImports(const QString& code, const char* tag)
     {
       if (trimmed != "import math")
       {
-        return QString("%1: line %2: only 'import math' is allowed")
+        return QCoreApplication::translate("QObject", "%1: line %2: only 'import math' is allowed")
             .arg(tag)
             .arg(line_no)
             .toStdString();
@@ -291,7 +291,8 @@ static std::string validatePythonImports(const QString& code, const char* tag)
 
     if (trimmed.startsWith("from "))
     {
-      return QString("%1: line %2: 'from ... import ...' is not allowed")
+      return QCoreApplication::translate("QObject",
+                                         "%1: line %2: 'from ... import ...' is not allowed")
           .arg(tag)
           .arg(line_no)
           .toStdString();

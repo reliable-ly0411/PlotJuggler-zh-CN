@@ -11,6 +11,7 @@
 
 class MQTT_Dialog : public QDialog
 {
+  Q_OBJECT
 public:
   MQTT_Dialog(MQTTClient::Ptr mosq_client);
 
@@ -45,6 +46,7 @@ private slots:
 
   void onLoadPrivateKey();
 
+private:
   QString _server_certificate_file;
   QString _client_certificate_file;
   QString _private_key_file;
