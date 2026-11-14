@@ -1,0 +1,550 @@
+{
+  "schema": 1,
+  "release_baseline_provenance": "previous_releases from the pre-publication baseline-and-graph.json; original captured_at below",
+  "release_baseline_captured_at": "2026-11-12T11:50:52.175Z",
+  "previous_releases": [
+    {
+      "id": 425283307,
+      "tag": "v4.0.0-zh.1.rc.4",
+      "draft": false,
+      "prerelease": true,
+      "assets": [
+        {
+          "id": 681197760,
+          "name": "PlotJuggler-4.0.0-zh.1.rc.4-Windows-x64-zh-CN.exe",
+          "size": 172436933,
+          "digest": "sha256:375c8ac3adb43b09d4a9e095a608f0e50de8ddd63f5dabd77a7beb8cb92924e7"
+        },
+        {
+          "id": 681199734,
+          "name": "PlotJuggler-4.0.0-zh.1.rc.4-x86_64-zh-CN.AppImage",
+          "size": 193100280,
+          "digest": "sha256:6869afc48d21911e487940bd86692461abdc9947da7e3d744f9f4f0501978310"
+        },
+        {
+          "id": 681202247,
+          "name": "plotjuggler4_4.0.0.zh.1.rc.4-1_amd64-zh-CN.deb",
+          "size": 154697244,
+          "digest": "sha256:bd255deed4fdb789f7f2f10ffebf551c1eb33189c0e57deae1ade2b7d2bab14e"
+        },
+        {
+          "id": 681202112,
+          "name": "SHA256SUMS.txt",
+          "size": 345,
+          "digest": "sha256:cfa5605924e7a01bd04fc9935a21431a548019e32c11439eb24cfb40ab55c84f"
+        }
+      ]
+    },
+    {
+      "id": 421667707,
+      "tag": "v4.0.0-zh.1.rc.3",
+      "draft": false,
+      "prerelease": true,
+      "assets": [
+        {
+          "id": 668668104,
+          "name": "PlotJuggler-4.0.0-zh.1.rc.3-Windows-x64-zh-CN.exe",
+          "size": 172448827,
+          "digest": "sha256:eb63da54cdb3059190b9d74d3312b38540112b6e7a41ea7e17dca6e6b9615f7a"
+        },
+        {
+          "id": 668670188,
+          "name": "PlotJuggler-4.0.0-zh.1.rc.3-x86_64-zh-CN.AppImage",
+          "size": 193100280,
+          "digest": "sha256:13716407184d0e8a06c325b70bcf13bfe55b3fa62985542af0e94ca34146bb4f"
+        },
+        {
+          "id": 668672372,
+          "name": "plotjuggler4_4.0.0.zh.1.rc.3-1_amd64-zh-CN.deb",
+          "size": 154690512,
+          "digest": "sha256:febac68864101e077111bf90e99c548bed7d7907b79bc1dda67f5e774b6ebc94"
+        },
+        {
+          "id": 668672285,
+          "name": "SHA256SUMS.txt",
+          "size": 345,
+          "digest": "sha256:5b5ffc13682b4a23185d687ac6030072d806bb09161480bb22cd141b96d89c2c"
+        }
+      ]
+    },
+    {
+      "id": 420226107,
+      "tag": "v4.0.0-zh.1.rc.2",
+      "draft": false,
+      "prerelease": true,
+      "assets": [
+        {
+          "id": 664381964,
+          "name": "PlotJuggler-4.0.0-zh.1.rc.2-Windows-x64-zh-CN.exe",
+          "size": 135315148,
+          "digest": "sha256:735cad51dcc41f0d5dbf54cba9dfae4d7329aa78ef45f5784c0124e646c780c1"
+        },
+        {
+          "id": 664382142,
+          "name": "PlotJuggler-4.0.0-zh.1.rc.2-x86_64-zh-CN.AppImage",
+          "size": 160102904,
+          "digest": "sha256:35375505048226ed02d0d18937bb0247dbf6b081a7e749ab5b34738fc64990c8"
+        },
+        {
+          "id": 664382492,
+          "name": "plotjuggler4_4.0.0.zh.1.rc.2-1_amd64-zh-CN.deb",
+          "size": 121349544,
+          "digest": "sha256:9b74ebc370cedadb67e67f7532b5526a902475d02c1d429cbf4a160d2357f1a4"
+        },
+        {
+          "id": 664382476,
+          "name": "SHA256SUMS.txt",
+          "size": 345,
+          "digest": "sha256:ab555703ce9eca24762f45f20e1305a549ed62b36f9377f71966f499307706c1"
+        }
+      ]
+    },
+    {
+      "id": 418219078,
+      "tag": "v4.0.0-zh.1.rc.1",
+      "draft": false,
+      "prerelease": true,
+      "assets": [
+        {
+          "id": 658850441,
+          "name": "PlotJuggler-4.0.0-zh.1.rc.1-Windows-x64-zh-CN.exe",
+          "size": 135239901,
+          "digest": "sha256:1a9433c13c3ecc845910a419fe237fffa0986b3a0bdbcb58b1011f5969085cc7"
+        },
+        {
+          "id": 658850440,
+          "name": "PlotJuggler-4.0.0-zh.1.rc.1-x86_64-zh-CN.AppImage",
+          "size": 159988216,
+          "digest": "sha256:8718593df9ede797dfadfc0e6668771af354cae785b2752dbb50da4363e39cca"
+        },
+        {
+          "id": 658850442,
+          "name": "plotjuggler4_4.0.0.zh.1.rc.1-1_amd64-zh-CN.deb",
+          "size": 121232444,
+          "digest": "sha256:db846729c41a629ba5991b7f7eeae115d168da6ddcc36afbd352a7412ff7417c"
+        },
+        {
+          "id": 658887297,
+          "name": "SHA256SUMS-public-filenames.txt",
+          "size": 345,
+          "digest": "sha256:6af13ad89cc2e3e2dd4287552d7ac5c8f4d2000f5db87b21f6e91a50c5a38222"
+        },
+        {
+          "id": 658850439,
+          "name": "SHA256SUMS.txt",
+          "size": 345,
+          "digest": "sha256:813c1f5dc04111cfbbfe28aa12c3b7da1205a112f8530125222b64789edd053d"
+        }
+      ]
+    },
+    {
+      "id": 415558297,
+      "tag": "v3.18.0-zh.4",
+      "draft": false,
+      "prerelease": true,
+      "assets": [
+        {
+          "id": 649412103,
+          "name": "PlotJuggler-3.18.0-zh.4+upstream.3.17.2.apbin.1.g572fb8443fcb-24.04-amd64.deb",
+          "size": 75873766,
+          "digest": "sha256:3e48bef50d6c5159927e0db3077a514fefa713a341b804e323f6658a823857f7"
+        },
+        {
+          "id": 649412641,
+          "name": "PlotJuggler-3.18.0-zh.4+upstream.3.17.2.apbin.1.g572fb8443fcb-aarch64.AppImage",
+          "size": 137320968,
+          "digest": "sha256:6f720da567e334a3ddcd6c28d74c2bdb66ede0ca49dd11ee345752b4f62eed03"
+        },
+        {
+          "id": 649412542,
+          "name": "PlotJuggler-3.18.0-zh.4+upstream.3.17.2.apbin.1.g572fb8443fcb-bookworm-amd64.deb",
+          "size": 74268972,
+          "digest": "sha256:a5f4a9bb6b4ef897cab3006a2982203dc83c8c0b65fab6a01c60237f7db39ffb"
+        },
+        {
+          "id": 649412795,
+          "name": "PlotJuggler-3.18.0-zh.4+upstream.3.17.2.apbin.1.g572fb8443fcb-trixie-amd64.deb",
+          "size": 74350532,
+          "digest": "sha256:8aef653ba00e1b114bb25122cd63b2cc120369b73e9e01cd2cc3a0c74e5d1a8c"
+        },
+        {
+          "id": 649412388,
+          "name": "PlotJuggler-3.18.0-zh.4+upstream.3.17.2.apbin.1.g572fb8443fcb-Windows-x64.exe",
+          "size": 132969657,
+          "digest": "sha256:4e31436acaa86e06d3813d91201f03cc25ab58e0b119f0cba98b248429847880"
+        },
+        {
+          "id": 649412227,
+          "name": "PlotJuggler-3.18.0-zh.4+upstream.3.17.2.apbin.1.g572fb8443fcb-Windows-x64.zip",
+          "size": 122291986,
+          "digest": "sha256:ee1eea5a402805d81070827a1a6cf9db6e869dde54afd2e975919670771d05ba"
+        },
+        {
+          "id": 649412876,
+          "name": "PlotJuggler-3.18.0-zh.4+upstream.3.17.2.apbin.1.g572fb8443fcb-x86_64.AppImage",
+          "size": 140462584,
+          "digest": "sha256:5b0174730c4b9b200cb1a223923c7862f60c87927e1ee70601d0aceb01e33685"
+        }
+      ]
+    },
+    {
+      "id": 414026871,
+      "tag": "v3.18.0-zh.3",
+      "draft": false,
+      "prerelease": true,
+      "assets": [
+        {
+          "id": 644521721,
+          "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-24.04-amd64.deb",
+          "size": 152432002,
+          "digest": "sha256:748dd883b1c979548c8eea37919ba30147c2c511bed880b27e11949c58684e31"
+        },
+        {
+          "id": 644522013,
+          "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-aarch64.AppImage",
+          "size": 368589320,
+          "digest": "sha256:3637a75310e4087283ff38512e5a5c64a47e8b145a292c854b3d67cc978351ef"
+        },
+        {
+          "id": 644522690,
+          "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-bookworm-amd64.deb",
+          "size": 150238528,
+          "digest": "sha256:ab6c671f24ee98fc69937868c1e9b81622dd38cad887f5f5183b1beaebd9d500"
+        },
+        {
+          "id": 644523055,
+          "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-trixie-amd64.deb",
+          "size": 150308224,
+          "digest": "sha256:0e9a05474a21fd272152191eb5af697ed26af343ab8764b88ea5db5d7ffa79c9"
+        },
+        {
+          "id": 644510254,
+          "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-Windows-x64.exe",
+          "size": 339074842,
+          "digest": "sha256:a7a1b4bba6037a9db1ef1669e9495923003a4c863cd4784c4af5098ef5023008"
+        },
+        {
+          "id": 644510945,
+          "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-Windows-x64.zip",
+          "size": 359724860,
+          "digest": "sha256:afe4f9ae76b77d5304e928d4e3969652e770f14cd618436268f16a355a430957"
+        },
+        {
+          "id": 644511882,
+          "name": "PlotJuggler-3.18.0-zh.3+upstream.3.17.2.apbin.1.g3117288ce8d7-x86_64.AppImage",
+          "size": 370395640,
+          "digest": "sha256:3a21adfc5925e8b519a5958cc96a32f11db175acfd1a8566e27f29b13d9d8427"
+        }
+      ]
+    },
+    {
+      "id": 413662541,
+      "tag": "v3.18.0-zh.2",
+      "draft": false,
+      "prerelease": true,
+      "assets": [
+        {
+          "id": 644288258,
+          "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-24.04-amd64.deb",
+          "size": 27807226,
+          "digest": "sha256:c6b1f119675e4b157200854fe15e2ad29c580a32277356715910349d1fe2740e"
+        },
+        {
+          "id": 644288357,
+          "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-aarch64.AppImage",
+          "size": 90544648,
+          "digest": "sha256:990ce7836234370f915394d4ce16cd072bd280edc30524f05710413d1977c56d"
+        },
+        {
+          "id": 644288580,
+          "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-bookworm-amd64.deb",
+          "size": 26180188,
+          "digest": "sha256:eccd48a771c04b4904f297f3dbf80594407aa300311d542139d750986864ec7b"
+        },
+        {
+          "id": 644288675,
+          "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-trixie-amd64.deb",
+          "size": 26256120,
+          "digest": "sha256:d605c14bc32a34f3dfe75a11037c2bb514e3b24aae2984cb90cda14e372441c9"
+        },
+        {
+          "id": 643458367,
+          "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-Windows-x64.exe",
+          "size": 84776930,
+          "digest": "sha256:4c54c3403bdbc6dcb69c66263b9977781a579a855707476354046a4424bf2b3c"
+        },
+        {
+          "id": 643458482,
+          "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-Windows-x64.zip",
+          "size": 74160328,
+          "digest": "sha256:14c7841aeb992410d674327865b61077d89f84d258601a7c97bbfc19fb2117d1"
+        },
+        {
+          "id": 643458625,
+          "name": "PlotJuggler-3.18.0-zh.2+upstream.3.17.2.apbin.1.gde2821269e4f-x86_64.AppImage",
+          "size": 92338680,
+          "digest": "sha256:bfa0b3240d6e42f571b04298e20084ba2ee0a0fa0f767ca44cf4403b742e8c49"
+        }
+      ]
+    },
+    {
+      "id": 413522864,
+      "tag": "v3.18.0-zh.1",
+      "draft": false,
+      "prerelease": true,
+      "assets": [
+        {
+          "id": 644287158,
+          "name": "PlotJuggler-3.18.0-zh.1+upstream.3.17.2.apbin.1.g48d321f908d5-24.04-amd64.deb",
+          "size": 27558276,
+          "digest": "sha256:78203652bfcca978c53155dbf48c3265f6e53998242bfc68f4c1ed86a590d211"
+        },
+        {
+          "id": 644287283,
+          "name": "PlotJuggler-3.18.0-zh.1+upstream.3.17.2.apbin.1.g48d321f908d5-aarch64.AppImage",
+          "size": 90266120,
+          "digest": "sha256:96875fffec5955170c3f164d21e1a7fc23762642cb269cca29afe0992e9e2e59"
+        },
+        {
+          "id": 644287549,
+          "name": "PlotJuggler-3.18.0-zh.1+upstream.3.17.2.apbin.1.g48d321f908d5-bookworm-amd64.deb",
+          "size": 25945340,
+          "digest": "sha256:95a8c6f104b7fcffa8bfaa46e708e93cb1a9be8dc750ef95842ebdfd407317f8"
+        },
+        {
+          "id": 644287665,
+          "name": "PlotJuggler-3.18.0-zh.1+upstream.3.17.2.apbin.1.g48d321f908d5-trixie-amd64.deb",
+          "size": 26017436,
+          "digest": "sha256:34a5db812b50bc7c9d1b40b67cb5f7b3810990063d3770ca6894f001f94270c4"
+        },
+        {
+          "id": 643053027,
+          "name": "PlotJuggler-3.18.0-zh.1+upstream.3.17.2.apbin.1.g48d321f908d5-Windows-x64.exe",
+          "size": 84526439,
+          "digest": "sha256:e044e922507e77efe9ef58a8ed0ec97b1607a23a12d7fabb6aca10cf3da5f5ab"
+        },
+        {
+          "id": 643060161,
+          "name": "PlotJuggler-3.18.0-zh.1+upstream.3.17.2.apbin.1.g48d321f908d5-Windows-x64.zip",
+          "size": 73905621,
+          "digest": "sha256:b51d5f2e7d2e2d739dfab4ddb6cec28986d82e6d651cf6d0e7f05965b3ce3481"
+        },
+        {
+          "id": 643063997,
+          "name": "PlotJuggler-3.18.0-zh.1+upstream.3.17.2.apbin.1.g48d321f908d5-x86_64.AppImage",
+          "size": 92097016,
+          "digest": "sha256:130d414904b7e0c7d89f2c6481fc90ec23cc6b95d236e171605b9c6ead451064"
+        }
+      ]
+    }
+  ],
+  "tags_provenance": "Fresh read-only ls-remote --tags --refs snapshot during recovery preparation, NOT a recovered original publisher snapshot. All eight published old tag object IDs also match retained local Git refs. Independently matches the saved API type/SHA snapshot current-tags-before-recovery.json.",
+  "tags_captured_at": "2026-11-12T12:00:55.895663+00:00",
+  "tags": {
+    "refs/tags/0.01": "cfbce3260d935c1379827188a43512fe8c17f59d",
+    "refs/tags/0.10.0": "6664a2f1213790fb2b79548562c9e0a5636743d6",
+    "refs/tags/0.10.1": "ea7d490d09d0cface7b283c9d1880a4605f67c4d",
+    "refs/tags/0.10.2": "25d4e0c1a08614a68afcaf024e40600ef0562b1d",
+    "refs/tags/0.10.3": "83dc1c7b0b9a90474196113d864b762a0f8de53b",
+    "refs/tags/0.11.0": "6ee25a2707b4500c1b06410c99082988e999b09a",
+    "refs/tags/0.12.0": "3428bfaed18dd06b645ccb20f127ab3eb5fea429",
+    "refs/tags/0.12.1": "8fec2d1daaa53f06fcea9ef4c63fdad16053d1c3",
+    "refs/tags/0.12.3": "abccd626929eaeb837ca0d0ceabc15877916f707",
+    "refs/tags/0.13.0": "513829691ae052791fc289db13df0bb747373932",
+    "refs/tags/0.13.1": "2669c050ed447d91831510a8d50c50643831622f",
+    "refs/tags/0.14.0": "c884a2692359deba1e865e7e85c0a8c9d3a1430d",
+    "refs/tags/0.14.1": "ece6f813540c9bfbf481e15e247abb07b2f88b89",
+    "refs/tags/0.14.2": "6dc4250e521217f19c7d74496f0ca84ecb237ae1",
+    "refs/tags/0.15.0": "d2c7991a2ac41e180c44f37eac3d2877ab0ec922",
+    "refs/tags/0.15.1": "4260924607f0147647e0046c09ea27906c6d93ba",
+    "refs/tags/0.15.3": "e3639b80bfe32231aa722763b8a162fd9c1048c0",
+    "refs/tags/0.16.0": "ebf4641461f6bb460db81c04d506b8f60ec02898",
+    "refs/tags/0.17.0": "5c40d2c60d10da0c5050e7bcd77000d8b9218fbe",
+    "refs/tags/0.18.0": "1e595988d40e636842d409a7692c255357e4c73f",
+    "refs/tags/0.6": "3b7dd7fdaf0af75ff5c6d776efa6b7103e049b64",
+    "refs/tags/0.6.1": "0bc0a0aa16b25d68cbd56f3664ddd7d12ac4cfe5",
+    "refs/tags/0.7.0-alpha": "68ef24423b99260d32c4a4d61cb0849774ff8808",
+    "refs/tags/0.7.x-beta": "322762d3fb22a25d8362bd1114b81ef301acf828",
+    "refs/tags/0.8.0": "555fc542abc71e0e30a8be7fb9b2875aaae99a7d",
+    "refs/tags/0.8.1": "e116f846df93931d88b9d715eb168f01dafea4ce",
+    "refs/tags/0.9.0": "35d775d5e978cf56bc868898f11a13313f760adc",
+    "refs/tags/0.9.1": "9930f0fae0c38e7a7b0f19708273b69c29401ab8",
+    "refs/tags/1.0.0": "d6d21bc7d4002324e2829015aaa0308c9bf4f8e6",
+    "refs/tags/1.0.1": "df438264a13f8a64b3ea6220efc18555cd500b4e",
+    "refs/tags/1.0.2": "e67e20402946051fc7b2ff15133fdf41e8a0db85",
+    "refs/tags/1.0.3": "206cda2cb8c7275db082f42c76749853fd2b016b",
+    "refs/tags/1.0.4": "75c29dfd676b3d11fffd594dffb6f7da352839f3",
+    "refs/tags/1.0.5": "7fa6a3d6c3b16215eb3c1508341f03d504922b33",
+    "refs/tags/1.0.7": "50d3d1ca1fef42203f380c5eee8bba056b614893",
+    "refs/tags/1.0.8": "80099a1084a3e4c6402115e1ebbcbcaf9122580b",
+    "refs/tags/1.1.0": "23f9643361d86675c1a6ca99595e48feaf68fd91",
+    "refs/tags/1.1.1": "d02b820e774f4ddb5d25362fb24d2e4bdec26361",
+    "refs/tags/1.1.2": "050c1f50875c05cc711df498360112b446ae5be3",
+    "refs/tags/1.1.3": "63b446c0ca13cf6fe839dd983ce00b9dc129f857",
+    "refs/tags/1.2.0": "5a890dafce8de0069c416594f32fc3b935c7f2e5",
+    "refs/tags/1.2.1": "eb5cc43844ca75e1d4ea58512175707f41c30deb",
+    "refs/tags/1.3.0": "a01237e2d0ddb5fff165dca44ec6cfee4d9b0791",
+    "refs/tags/1.3.1": "a3f9e8a53dd3cdf395b1a00d4276e726e241df42",
+    "refs/tags/1.4.0": "5e0c49314b497322ed2b95720229fc687c4476e0",
+    "refs/tags/1.4.1": "70fae3f853d378ee66e98a589d846e7a40c6c9e9",
+    "refs/tags/1.4.2": "8a4a22b77e3eac68a7a676e9645a775b87c597dd",
+    "refs/tags/1.5.0": "4076d849375c2cbbc902c562e6b862930cf41cb9",
+    "refs/tags/1.5.1": "1284d3abae4d2dc0ee944c8095aad4c97a53ce8a",
+    "refs/tags/1.5.2": "d2af985e11e31c806ccc008e52f8d2cce91051fa",
+    "refs/tags/1.6.0": "ed5a760bee1b67ee2f53db803ee4c5a6c798cd30",
+    "refs/tags/1.6.1": "a7e1f960fe9ac787c632a79318ec9145c902e01d",
+    "refs/tags/1.6.2": "497459babe5ac0ff3df44319a4612f46aa7c4a8a",
+    "refs/tags/1.7.0": "2dc472f3dd31509512b10d84415e382ec152e3bf",
+    "refs/tags/1.7.1": "71062c0d7c2366721328e46832e4d4d023a616ea",
+    "refs/tags/1.7.2": "b4bc4ea79ed3ba23980c1ac89ff315410dd37450",
+    "refs/tags/1.7.3": "f28dcb2390670fb25fb70b846544d39cc209b43c",
+    "refs/tags/1.8.0": "254d785ff2d914d01112ecbb72f8e545bb394b24",
+    "refs/tags/1.8.1": "15a15aa65ff5e0205e4453c89ea3a1ee4fe14f6d",
+    "refs/tags/1.8.2": "24a8f12c340e02683a7b162e1fb5f7d3d426752e",
+    "refs/tags/1.8.3": "97e9f43032b11ef899b684481b143fad98b5678d",
+    "refs/tags/1.8.4": "3baa736c6f980499fe8d1399f7bc1a48382f620e",
+    "refs/tags/1.9.0": "f6f1c191f30b975cae45dc0222ce56ddeba16894",
+    "refs/tags/2.0.0": "164907cc0284cb49289c0a69a94a6f1803316f7c",
+    "refs/tags/2.0.1": "056cdef3a3944c0e6d894eb7541b63fdf79b64fe",
+    "refs/tags/2.0.2": "9d7379e64433468b6693399a08d550a1badcf134",
+    "refs/tags/2.0.3": "7e3a93999d6865569c1f17f0cb23c22843bf38e3",
+    "refs/tags/2.0.4": "1be0bbccd922f5e147869bc6d74adacc8c469017",
+    "refs/tags/2.0.5": "cdeced5b4c9fe167754c5ea1d9fe28893b274cce",
+    "refs/tags/2.0.7": "a61f80049ebb07970456d1975ab09604d115fd03",
+    "refs/tags/2.0_beta_2": "94740f4afd70eef45e42727a05425be850cdcb9d",
+    "refs/tags/2.0_rc_1": "316cd0da764cd0ac68a06f6e4536b637f9b7bb61",
+    "refs/tags/2.1.0": "5a8cda224b8a0e03650606803e0805697dcde1c3",
+    "refs/tags/2.1.1": "8aa1d2751c3ba45ca5b657754d9d7861999e0832",
+    "refs/tags/2.1.10": "45d765b527f200ff4150f544d084be450c97f70f",
+    "refs/tags/2.1.2": "46ad73aa91837ad7437fa0694f52c149e609402d",
+    "refs/tags/2.1.3": "56f7f23bff1a31cc61e69c7ae437021e4f9af17f",
+    "refs/tags/2.1.4": "87c652b48212a602d2afe535c4de5bebf52f0058",
+    "refs/tags/2.1.5": "eefc3d57d14c5329e2606482794f365604baa77d",
+    "refs/tags/2.1.6": "9b10c46d7a16f5f1a31a9f9512b1d9063195b74d",
+    "refs/tags/2.1.7": "ce743db67b3d9638c21917e2b69f192ae647c85e",
+    "refs/tags/2.1.8": "073611c72f582f170ebfafa4e8b7356bc6bc15ac",
+    "refs/tags/2.1.9": "36419a788b2a0953997dd0828595c9db0220083f",
+    "refs/tags/2.3.0": "41789abb675be7b8f6dc673badb28876f22be850",
+    "refs/tags/2.3.1": "c15b518c84c3549e2803a26cd03794f914613537",
+    "refs/tags/2.3.2": "6d64daf5e7e12df6e7fee105f55e301311c679cc",
+    "refs/tags/2.3.3": "4e6ffcda1316f31d800e559e579cfed14a21430a",
+    "refs/tags/2.3.4": "20c39336ee448a4136463044bc487c0ee9fc8fb1",
+    "refs/tags/2.3.5": "72c8eccfb761a1b71d2a6cc6fc6208324aaf0f7b",
+    "refs/tags/2.3.6": "12e6d23a23e671730aebcd00cbf9969f7ce8f09b",
+    "refs/tags/2.3.7": "6e351971c53d44a086c14be44bdd3cfc9b3d1bd1",
+    "refs/tags/2.4.0": "37b1db92060f39d89cb6bb7b807a134cd14ea329",
+    "refs/tags/2.4.1": "5c5d5e3fe8ff1e081c2f9d0343d03a9bb75a9d0d",
+    "refs/tags/2.4.2": "48affaec5bdd5e594d34e687b828897c9191395e",
+    "refs/tags/2.4.3": "4dcac39307749f472e65ced90bc13cfa60f3b4c0",
+    "refs/tags/2.5.0": "e91fc6c9f5e50e5f8e5eba44224f9c4988da1227",
+    "refs/tags/2.5.1": "6fa03249c24caf80c47aabcbcabd4dd58257b108",
+    "refs/tags/2.6.0": "869b250771153fe43f7062ea16a7c69f75356713",
+    "refs/tags/2.6.1": "2e52ca22aa916f4887c2c8cf3c7b41221a150f0b",
+    "refs/tags/2.6.2": "1d6f0b9594d8f2a2dbcf73801598825ec72e3778",
+    "refs/tags/2.6.3": "f7c5b56655f38e9bb0f675d5335875beaafcab93",
+    "refs/tags/2.6.4": "43704023f4e8d5275df212b326712a8ae1357714",
+    "refs/tags/2.7.0": "57375a6163696e9d0ea058f7400e4464e1c45583",
+    "refs/tags/2.8.0": "7071c694c5cc9ade30f495247d115343d20452de",
+    "refs/tags/2.8.1": "c73210bfe17da1f690c946f7fe88a473f75d688c",
+    "refs/tags/2.8.2": "cde6fc7690519ee725de9a7347ca37fe28afab02",
+    "refs/tags/2.8.3": "d66bc0bdfd3030e1185dc624711df97a566ae653",
+    "refs/tags/2.8.4": "eeed1258ae4ec81ef8d0a1445cd944eaf84e9a62",
+    "refs/tags/3.0.0": "7307ace589e9e45fdb90133fd8e71a76c8eb7539",
+    "refs/tags/3.0.1": "3beeafa4f68ddc39e73a804b46d843a9a217ed90",
+    "refs/tags/3.0.2": "e7ac8cfbc2a543d243e5e5a1497444fc5e07b7ac",
+    "refs/tags/3.0.3": "4e1b3e906cb8b043285a245a606e2b7a6a9c2ead",
+    "refs/tags/3.0.4": "131e33b943517dc4dc079793151c6e2c9fffcfb2",
+    "refs/tags/3.0.5": "2468863e31ab039bcd7fb3732f67aea20f1427a8",
+    "refs/tags/3.0.6": "ab0088cda6031bbb95a33099bae6142d0a85d907",
+    "refs/tags/3.0.7": "3bd795554b0f687a5ea8f579f76b1c4e4ca27ddb",
+    "refs/tags/3.1.0": "b7369c4fe7405aed3cf2c9f803a4071d34932774",
+    "refs/tags/3.1.1": "c8d5783852ecfd94670f38fb494d32084aa29910",
+    "refs/tags/3.1.2": "358d6d9b2db625cef2fdb30256e7b1cad0330097",
+    "refs/tags/3.10.0": "9034fb6f3b9ff0c66c9d46c3526411902c722855",
+    "refs/tags/3.10.1": "c8ff9e1f74dc2d1c66207493da83522532ae97a6",
+    "refs/tags/3.10.10": "70ab11494d5bfe7697e62c26b80115c803e049b2",
+    "refs/tags/3.10.11": "93367183df9cd2b3e4b35515e3dc87013b800918",
+    "refs/tags/3.10.2": "73caaa3a83be7556309d5e3354a02a662815de46",
+    "refs/tags/3.10.3": "b249767cf219eb123eff92090e725e7d951cf216",
+    "refs/tags/3.10.4": "7ef34abfcfde91b363b67d0b8e5ce4b4ddefb6e3",
+    "refs/tags/3.10.5": "7bbbea12389ad3520bb9a47b67d6b98154017ba8",
+    "refs/tags/3.10.7": "4883005be812b778303b7028b9356c84dd312646",
+    "refs/tags/3.10.8": "3e51c126cfcf5bb9272c4c797e0890cca23c9d79",
+    "refs/tags/3.10.9": "7f242c86ab5eceee469eb29c928d57153593e593",
+    "refs/tags/3.11.0": "03548e45a5da53900741bd4f7b1e1a62b95f029d",
+    "refs/tags/3.11.1": "e9e2e624d67cc157143f42342d916c0abe38a487",
+    "refs/tags/3.12.0": "96af6ae9b345d541bb1efa27d2d25f14a954d7a7",
+    "refs/tags/3.12.1": "75f9885826a7aca8c337057d368fe9e4ccfd89b2",
+    "refs/tags/3.12.2": "f84b83af38276fec791e58fe6cff2bdad88b0a36",
+    "refs/tags/3.13.0": "5c8b44c1ceeed2db698e233b4b7794a136047d4b",
+    "refs/tags/3.13.1": "3827be11f10113b8368f0351fd974bdf05a53e44",
+    "refs/tags/3.13.2": "e557c62731792a34fe6c9e3c13806c343ba487b8",
+    "refs/tags/3.14.0": "a59426cb052d7a796c6e82b5446e4d0e655db037",
+    "refs/tags/3.14.1": "a3107f96939afc46aab95fc44d1991ee80132f41",
+    "refs/tags/3.14.2": "47f33dc7ec1b7859abb3e7b2f8975e2b192f495e",
+    "refs/tags/3.14.3": "e93b8860d45834ff9b7b52b28c70d5cffadb2b5d",
+    "refs/tags/3.14.4": "2e37c1b3fbfddaab4e2f2ae8dafb8efb27ab6fbf",
+    "refs/tags/3.14.5": "28f0a21a59c9977f912573ba96c71837e68526b6",
+    "refs/tags/3.15.0": "1168247f8e688a3329309835f006637a15b5fd53",
+    "refs/tags/3.16.0": "5a0f01bcd5f8df7fd20923017b0dc3b72581337f",
+    "refs/tags/3.17.0": "1c81250c35535d5a50e5e8ccf6d00890c28997a3",
+    "refs/tags/3.17.1": "ddcbd05be05f9a8e90da624828b36ec795383fb4",
+    "refs/tags/3.17.2": "034a5cc919909aebb124e0dc1abbe2029c3eed0f",
+    "refs/tags/3.2.0": "d8ac062784b97b64369461b2dd8083021edf5fc6",
+    "refs/tags/3.2.1": "acfea136f122c7f24a71a911cd3ed9ed04022c96",
+    "refs/tags/3.3.0": "373cca74f7f2078059857bc74983da50102e7c3a",
+    "refs/tags/3.3.1": "d880c4a9fb2d8f4f62879b2d7eda0eca049eac23",
+    "refs/tags/3.3.2": "0a39f3b3470bef3f6bd6fcda7500b559c3988bbd",
+    "refs/tags/3.3.3": "ce6853a41ed4ef4ae5c521453f9002c12dba821d",
+    "refs/tags/3.3.4": "6f96cc7d2a488221e2136651fcde38117c82c90e",
+    "refs/tags/3.3.5": "3fda3a0f6caaf471b0f31f15d9f6b531fa606c6c",
+    "refs/tags/3.4.0": "fca85d7fe921eab4d0283100c53ed89a553ac8e2",
+    "refs/tags/3.4.1": "ae42b115aab5fa4e28272b5e63c22c6a6c4367d7",
+    "refs/tags/3.4.2": "1a73e67c2ae9b819398e4ae16e511298ade9c6de",
+    "refs/tags/3.4.3": "0f3f5178bca6bd1d0fc467dfba7104fbabcdf2d7",
+    "refs/tags/3.4.4": "2585ed9547fe5e9bc7f46011f83c026d8144676d",
+    "refs/tags/3.4.5": "0dcb2f86eb7d04cf79f19da00fc39701e9028c03",
+    "refs/tags/3.5.0": "d938c408fa68cfeca389c132125cd21dcb3eccfe",
+    "refs/tags/3.5.1": "e2f4f9400128eed938e82e77f839b749ec4066f1",
+    "refs/tags/3.5.2": "d0ca482f675a781203f76e22f4212a1751e4faeb",
+    "refs/tags/3.6.0": "e99ff0541b4403e39e6054391e70280c669ec3c6",
+    "refs/tags/3.6.1": "8ff5e6a43a372008c03ae75f14737ed62c1ab641",
+    "refs/tags/3.7.0": "4eec75bd18d9dbd07b99b77b2273cb6cf3d5c8ae",
+    "refs/tags/3.7.1": "fb2bab446f63c726f85e71b155d9fcbeb5603dc1",
+    "refs/tags/3.8.0": "a5246dc88ca9b59d009cc9e4550ae2fac53a222d",
+    "refs/tags/3.8.1": "07be60ca96342ddb19a5cf39280bcac2e741777e",
+    "refs/tags/3.8.10": "c7b7cc9089e00e9c2539c7f8a8923b251e93cb15",
+    "refs/tags/3.8.2": "289b1fcefc3794826ceb5499e29aea5ab2c866dd",
+    "refs/tags/3.8.3": "25dea896e4126baae69b362c8dc7cdb5af31097c",
+    "refs/tags/3.8.4": "54bd6836ca571bfadb68acaece19b94603e03f99",
+    "refs/tags/3.8.5": "8fee65930389a2e016689e64f8765f33d86ec83d",
+    "refs/tags/3.8.6": "153a9c938ab17e700066297a4a840ffd8e951933",
+    "refs/tags/3.8.7": "b9fd8cf829280a1d05197bbc4495b6e87685f759",
+    "refs/tags/3.8.8": "92f7389b0112780cd9282522c1a348d5e54dd5c5",
+    "refs/tags/3.8.9": "96f3ff5d5fcc6506f32f171348fe3ee7282c7f4f",
+    "refs/tags/3.9.0": "23d2ec6257983cf5697a7a0ac12b2a619317e298",
+    "refs/tags/3.9.1": "d16637fa9d47208c30e448d64c7a15ee2f85d83f",
+    "refs/tags/3.9.2": "d115b540c4f2664259a594259b9e11595f0263fc",
+    "refs/tags/3.9.3": "c560f2b390e5278daa380ba788a09b3b318a336b",
+    "refs/tags/3.999.0": "d9b16ca7db28460ba324bc820d959f80aa0e53c0",
+    "refs/tags/3.999.3": "4dc16a13439010e9d101923886b21571e8c85d97",
+    "refs/tags/3.999.9": "bb708151f50f68f9d72cd0a0767b1a75e594084c",
+    "refs/tags/4.0.0": "d278b1fe98f699d27b820867f454a697e50def2e",
+    "refs/tags/custom_plot_alpha_1": "17089ac2d9580090c3b56e7460c0077c37262d1a",
+    "refs/tags/custom_plot_alpha_2": "d6a306d20727db6432691f42bfde8ab8edb6a8de",
+    "refs/tags/custom_plot_alpha_3": "f066b13b6726e70582a208744194fc9e1a4c591f",
+    "refs/tags/custom_plot_beta_1": "8ce4329e75432c5edf679c75dece99f2699c07c7",
+    "refs/tags/v3.18.0-zh.1": "5e7b3462e73f9ded1c2b6d6916a8dd2bc569224b",
+    "refs/tags/v3.18.0-zh.2": "c62d19eaa6f6b41c5510adc07b59ce56f8ac4f9e",
+    "refs/tags/v3.18.0-zh.3": "3117288ce8d710bde4f7a86ca5ed5240ebb1c301",
+    "refs/tags/v3.18.0-zh.4": "e4ac8825270332fbd40063cad79cdfe062776be7",
+    "refs/tags/v4.0.0-zh.1.rc.1": "14c919f903936130c151818dbf1a0144ea6a6050",
+    "refs/tags/v4.0.0-zh.1.rc.2": "09487081b7dc144c1bfaf674c4a08769e12538ad",
+    "refs/tags/v4.0.0-zh.1.rc.3": "057f707e017c4e296da93efc1272e932eb672738",
+    "refs/tags/v4.0.0-zh.1.rc.4": "14c5be74a1977ba4d80187d67579f0e610c70077",
+    "refs/tags/v4.1.0+zh.1": "0113492d7a7f96e486de1f9adcde6e43893ab630"
+  },
+  "independent_tag_snapshot_captured_at": "2026-11-12T12:00:17.778Z",
+  "latest_before_id": null,
+  "latest_provenance": "All eight previous releases are prereleases; releases/latest was verified as genuine HTTP 404 Not Found before recovery. No prior Latest is expected."
+}

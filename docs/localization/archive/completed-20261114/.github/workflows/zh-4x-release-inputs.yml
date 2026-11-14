@@ -1,0 +1,48 @@
+name: Transfer fixed 4.1.0 test inputs
+
+on:
+  push:
+    branches: ['zh-CN-4.x-ci/release-test-inputs-4-1-0']
+
+permissions:
+  contents: read
+
+jobs:
+  fixed-inputs:
+    if: github.event.created
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: c861ed7a8983e71992bd334dadf7159a21e75ba9
+          persist-credentials: false
+      - name: Archive the exact accepted source and pinned public BIN fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = c861ed7a8983e71992bd334dadf7159a21e75ba9
+          test "$(git rev-parse HEAD^{tree})" = 2c02f674859b3a8e5130d2592ca2883f476f27d3
+          mkdir inputs
+          git archive --format=zip --prefix=PlotJuggler-source-c861ed7a/ \
+            --output=inputs/PlotJuggler-4.1.0+zh.1-source-c861ed7a.zip HEAD
+          curl --fail --location --max-time 180 --retry 0 \
+            https://raw.githubusercontent.com/reliable-ly0411/plotjuggler-apbin-plugins/0cc7cc10a25af3cb2ab122861b9be4fc01c99da5/tests/logs/00000001.BIN \
+            --output inputs/00000001.BIN
+          echo '28dcbac522ceb75eee10f6af37b0d6e342c1dc79e2be1a9f766fe18a14336766  inputs/00000001.BIN' | sha256sum --check
+          printf '%s\n' \
+            'source_commit=c861ed7a8983e71992bd334dadf7159a21e75ba9' \
+            'source_tree=2c02f674859b3a8e5130d2592ca2883f476f27d3' \
+            'bin_repository=reliable-ly0411/plotjuggler-apbin-plugins' \
+            'bin_commit=0cc7cc10a25af3cb2ab122861b9be4fc01c99da5' \
+            'bin_path=tests/logs/00000001.BIN' \
+            'purpose=Fixed test inputs only; no application binaries or release publication.' \
+            > inputs/PROVENANCE.txt
+          (cd inputs && sha256sum *.zip *.BIN > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zh4-fixed-test-inputs-c861ed7a
+          path: inputs/
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
