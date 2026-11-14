@@ -1,0 +1,107 @@
+name: 4.x stable delta targeted native checks
+on:
+  push:
+    branches: [zh-CN-4.x-ci/stable-delta-linux-20261113]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  linux-targeted:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PJ_BUILD_JOBS: '2'
+      PJ_BENCH: '1'
+      PJ_REQUIRE_GPU_TESTS: '1'
+      QT_QPA_PLATFORM: xcb
+      LIBGL_ALWAYS_SOFTWARE: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - name: Prepare evidence and official build tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/stable-delta-evidence"
+          git rev-parse HEAD > "$RUNNER_TEMP/stable-delta-evidence/commit.txt"
+          git submodule status --recursive > "$RUNNER_TEMP/stable-delta-evidence/submodules.txt"
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 libva-dev libdrm-dev xvfb ccache zstd mesa-vulkan-drivers libvulkan-dev libset-scalar-perl
+          python3 -m venv "$RUNNER_TEMP/pj-tools"
+          "$RUNNER_TEMP/pj-tools/bin/pip" install conan==2.22.2 aqtinstall==3.3.0 cmake==3.31.10 ninja
+          echo "$RUNNER_TEMP/pj-tools/bin" >> "$GITHUB_PATH"
+      - uses: actions/cache@v5
+        with:
+          path: .qt
+          key: stable-delta-qt-linux-${{ hashFiles('versions.env') }}
+      - uses: actions/cache/restore@v5
+        with:
+          path: ~/.conan2
+          key: stable-delta-conan-linux-${{ hashFiles('conan.lock', 'cmake/host-sdk-source.json') }}
+      - name: Acquire pinned Qt and resolve locked dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./scripts/install_qt6.sh 2>&1 | tee "$RUNNER_TEMP/stable-delta-evidence/qt.log"
+          conan profile detect --force
+          scripts/configure_conan_remote.sh
+          python3 scripts/bootstrap_host_sdk.py
+          mkdir -p "$RUNNER_TEMP/conan-source-cache/s"
+          find .github/conan/source-backup -maxdepth 1 -type f ! -name README.md -exec cp {} "$RUNNER_TEMP/conan-source-cache/s/" \;
+          printf 'core.sources:download_cache=%s\n' "$RUNNER_TEMP/conan-source-cache" >> "$(conan config home)/global.conf"
+          # Keep locked xz 5.4.5 bytes; its old tukaani.org URL times out on runners.
+          python3 - "$RUNNER_TEMP/conan-source-cache/s" <<'PYXZ'
+          import hashlib, json, pathlib, sys, time, urllib.request
+          cache=pathlib.Path(sys.argv[1])
+          for seed in cache.iterdir():
+              if len(seed.name)==64:
+                  assert hashlib.sha256(seed.read_bytes()).hexdigest()==seed.name, seed
+          sha='da9dec6c12cf2ecf269c31ab65b5de18e8e52b96f35d5bcd08c12b43e6878803'
+          url='https://github.com/tukaani-project/xz/releases/download/v5.4.5/xz-5.4.5.tar.xz'
+          with urllib.request.urlopen(url, timeout=60) as response:
+              data=response.read(10*1024*1024)
+          assert hashlib.sha256(data).hexdigest()==sha, 'xz source hash mismatch'
+          target=cache/sha
+          assert not target.exists(), 'unexpected xz cache entry'
+          (cache/(sha+'.json')).write_text(json.dumps({'references':{'xz_utils/5.4.5':['https://tukaani.org/xz/xz-5.4.5.tar.xz']},'timestamp':int(time.time())}))
+          target.write_bytes(data)
+          print('Verified official xz 5.4.5 source:', sha)
+          PYXZ
+          conan install . --output-folder=build --build=missing -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial -s build_type=RelWithDebInfo -s compiler.cppstd=20 2>&1 | tee "$RUNNER_TEMP/stable-delta-evidence/conan.log"
+      - uses: actions/cache/save@v5
+        with:
+          path: ~/.conan2
+          key: stable-delta-conan-linux-${{ hashFiles('conan.lock', 'cmake/host-sdk-source.json') }}
+      - name: Build only application and changed-surface test targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./build.sh --skip-conan-install --no-demos --no-widget-demos --no-marketplace-app --target pj_app 2>&1 | tee "$RUNNER_TEMP/stable-delta-evidence/app-build.log"
+          cmake --build build --parallel 2 --target pj_app_unit_tests pj_app_gui_tests pj_plotting_widget_tests mcp_bridge_test rhi_mixed_dock_test scene3d_rhi_model_cache_test file_loader_test ardupilot_import_test 2>&1 | tee "$RUNNER_TEMP/stable-delta-evidence/test-build.log"
+      - name: Select and run changed-surface tests only
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/stable-delta-evidence"
+          python3 scripts/validation/select_stable_delta_tests.py build "$evidence"
+          xvfb-run -a ctest --test-dir build --tests-from-file "$evidence/test-names.txt" --output-on-failure --timeout 120 --parallel 1 --no-tests=error --output-junit "$evidence/ctest.xml" 2>&1 | tee "$evidence/ctest.log"
+          python3 - "$evidence/ctest.xml" <<'PY'
+          import sys, xml.etree.ElementTree as E
+          cases=E.parse(sys.argv[1]).getroot().findall('.//testcase')
+          from pathlib import Path
+          expected=set(Path(sys.argv[1]).with_name('test-names.txt').read_text().splitlines())
+          assert len(cases)==len(expected) and {c.get('name') for c in cases}==expected, 'Missing or extra cases'
+          assert all(not any(c.find(k) is not None for k in ('failure','error','skipped')) for c in cases), 'Failed or skipped coverage; review evidence'
+          print('Targeted cases passed:',len(cases))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: stable-delta-linux-evidence
+          path: ${{ runner.temp }}/stable-delta-evidence
+          if-no-files-found: error

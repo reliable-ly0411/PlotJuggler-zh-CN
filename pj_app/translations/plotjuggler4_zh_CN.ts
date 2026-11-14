@@ -4695,7 +4695,7 @@ from %2</source>
     <message>
         <location line="-1440"/>
         <source>The browser can no longer read &apos;%1&apos;: it changed or was removed on disk since it was opened. Data loaded from it may be incomplete; open it again to reload it.</source>
-        <translation>浏览器已无法读取“%1”：文件打开后已在磁盘上更改或删除。从中加载的数据可能不完整；请重新打开文件以重新加载。</translation>
+        <translation>浏览器无法再读取“%1”：该文件自打开后已在磁盘上更改或移除。从中加载的数据可能不完整，请重新打开以重新加载。</translation>
     </message>
     <message>
         <location line="+1275"/>
@@ -5386,7 +5386,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+7"/>
         <source>&apos;%1&apos; has no content fingerprint yet: it is still being computed, or the file changed since it was picked. Save the layout again in a moment, or open the file again.</source>
-        <translation>“%1”尚无内容指纹：仍在计算中，或文件自选取后已更改。请稍后再次保存布局，或重新打开文件。</translation>
+        <translation>“%1”尚无内容指纹：仍在计算中，或文件自选取后发生了更改。请稍后再次保存布局，或重新打开文件。</translation>
     </message>
     <message>
         <location line="+89"/>
@@ -6338,12 +6338,12 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+41"/>
         <source>The MCP server could not listen on 127.0.0.1, so AI agents cannot reach PlotJuggler.</source>
-        <translation>MCP 服务器无法监听 127.0.0.1，因此 AI 代理无法连接 PlotJuggler。</translation>
+        <translation>MCP 服务器无法监听 127.0.0.1，因此 AI 智能体无法连接 PlotJuggler。</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>AI agent: %1</source>
-        <translation>AI 代理：%1</translation>
+        <translation>AI 智能体：%1</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -6382,11 +6382,11 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <source>%1 is controlling PlotJuggler through MCP. Closing the agent's session or this page stops it.</source>
-        <translation>%1 正通过 MCP 控制 PlotJuggler。关闭该智能体会话或此页面即可停止控制。</translation>
+        <translation>%1 正通过 MCP 控制 PlotJuggler。关闭该智能体的会话或此页面即可停止控制。</translation>
     </message>
     <message>
         <source>Not connecting to the AI agent relay %1: it must be an http address on this computer (127.0.0.1).</source>
-        <translation>未连接到 AI 智能体中继 %1：它必须是本机（127.0.0.1）的 http 地址。</translation>
+        <translation>未连接到 AI 智能体中继 %1：它必须是本机（127.0.0.1）上的 http 地址。</translation>
     </message>
 </context>
 <context>
@@ -7624,17 +7624,17 @@ Details: %1</source>
     <message>
         <location filename="../src/mcp/McpServer.cpp" line="+359"/>
         <source>an MCP client</source>
-        <translation>一个 MCP 客户端</translation>
+        <translation>某个 MCP 客户端</translation>
     </message>
     <message>
         <location line="+52"/>
         <source>AI agent (%1)</source>
-        <translation>AI 代理（%1）</translation>
+        <translation>AI 智能体（%1）</translation>
     </message>
     <message>
         <location filename="../src/mcp/McpServerTools.cpp" line="+97"/>
         <source>An AI agent asked you to choose: </source>
-        <translation>AI 代理请求选择：</translation>
+        <translation>AI 智能体请求选择： </translation>
     </message>
 </context>
 <context>
@@ -7784,12 +7784,12 @@ Details: %1</source>
     <message>
         <location line="+13"/>
         <source>Zoom Out Horizontally</source>
-        <translation>水平缩小</translation>
+        <translation>水平缩小至全范围</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Zoom Out Vertically</source>
-        <translation>垂直缩小</translation>
+        <translation>垂直缩小至全范围</translation>
     </message>
     <message>
         <location line="-16"/>
@@ -7872,7 +7872,7 @@ Details: %1</source>
     <message>
         <location line="+0"/>
         <source>memes</source>
-        <translation>趣图</translation>
+        <translation>趣味图片</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -8936,7 +8936,7 @@ Details: %1</source>
     <message>
         <location line="-3"/>
         <source>Open and save files with the system&apos;s own file dialog instead of PlotJuggler&apos;s (Save Layout keeps PlotJuggler&apos;s). It does not stall on disconnected network drives, but does not follow the app&apos;s theme.</source>
-        <translation>使用系统自带的文件对话框打开和保存文件，而不是 PlotJuggler 的对话框（保存布局仍使用 PlotJuggler 的对话框）。它不会因已断开的网络驱动器而卡住，但不会采用应用的主题。</translation>
+        <translation>使用系统自带的文件对话框打开和保存文件，而不使用 PlotJuggler 的对话框（保存布局仍使用 PlotJuggler 的对话框）。它不会因断开的网络驱动器而卡住，但也不会跟随应用的主题。</translation>
     </message>
     <message>
         <location line="-308"/>
@@ -9031,12 +9031,12 @@ Details: %1</source>
     <message>
         <location line="+37"/>
         <source>Serve the Model Context Protocol on this computer only (127.0.0.1, behind a secret token), so AI agents such as Claude Code or Codex can open files, read series, and draw in their own tabs. The status bar names an agent while it is active. Shows whether outside agents may connect now (also when allowed with --mcp); on by default; applies on OK. An agent a toolbox plugin starts itself gets its own private access and does not need this.</source>
-        <translation>仅在本机提供模型上下文协议服务（127.0.0.1，由秘密令牌保护），让 Claude Code 或 Codex 等 AI 代理能打开文件、读取序列并在各自的标签页中绘图。代理活动时，状态栏会显示其名称。此项显示当前是否允许外部代理连接（包括通过 --mcp 允许时）；默认开启，点击“确定”后生效。工具箱插件自行启动的代理具有独立的专用访问权限，无需开启此项。</translation>
+        <translation>仅在本机提供模型上下文协议服务（127.0.0.1，使用秘密令牌保护），让 Claude Code 或 Codex 等 AI 智能体能够打开文件、读取序列，并在各自的标签页中绘图。智能体活动时，状态栏会显示其名称。此开关显示当前是否允许外部智能体连接（包括通过 --mcp 允许的连接）；默认开启，点击“确定”后生效。工具箱插件自行启动的智能体拥有独立的私有访问权限，无需开启此项。</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Let AI agents control PlotJuggler (MCP server):</source>
-        <translation>允许 AI 代理控制 PlotJuggler（MCP 服务器）：</translation>
+        <translation>允许 AI 智能体控制 PlotJuggler（MCP 服务器）：</translation>
     </message>
     <message>
         <location line="+52"/>
@@ -9082,7 +9082,7 @@ Details: %1</source>
     <message>
         <location line="+7"/>
         <source>Time zone of the clock times shown while the date-time toggle (bottom left) is on.</source>
-        <translation>开启左下角的日期时间开关时，时钟时间显示所使用的时区。</translation>
+        <translation>启用左下角的日期时间开关时，时钟时间所使用的时区。</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -9680,12 +9680,12 @@ Details: %1</source>
     <message>
         <location filename="../src/ui/TimelineWidget.ui" line="+42"/>
         <source>Use time offset: show time relative to each dataset&apos;s start (axis begins at 0) instead of absolute time</source>
-        <translation>使用时间偏移：显示相对于各数据集起点的时间（坐标轴从 0 开始），而不是绝对时间</translation>
+        <translation>使用时间偏移：显示相对于各数据集起点的时间（横轴从 0 开始），而非绝对时间</translation>
     </message>
     <message>
         <location line="+37"/>
         <source>Show time as clock time (HH:mm:ss) instead of seconds</source>
-        <translation>以时钟时间（HH:mm:ss）显示时间，而不是秒数</translation>
+        <translation>将时间显示为时钟时间（HH:mm:ss），而非秒数</translation>
     </message>
     <message>
         <location line="+85"/>

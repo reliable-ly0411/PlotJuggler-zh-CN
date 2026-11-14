@@ -4,16 +4,21 @@
 用于时序信号、飞控日志及多模态数据的交互式分析。保留上游英文界面，新增中文界面和
 独立的 ArduPilot DataFlash BIN 加载插件。
 
-- **正式版：** [v4.1.0+zh.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)，提供 Windows 安装器/便携包、Linux AppImage/DEB；已验范围及限制以 Release 为准。
-- **开发线：** `zh-CN-4.x-dev` 当前为 `4.1.0-zh.1.dev.3`，Qt 6.12.0 / SDK 0.40.0（PR #226 Unicode 路径修复快照），精确上游快照 `8b847cb74`。这不是已发布正式版，尚未完成本轮双平台原包验收。
-- **稳定维护线：** `zh-CN-4.x` 保持已发布 4.1 内容；`main` / `main-3.x` 为上游镜像，3.x 汉化线独立维护。
+- **正式版：** [v4.1.0+zh.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)，2026-11-12 发布，提供 Windows 安装器/便携包、Linux AppImage/DEB。
+  支持简体中文、繁體中文（台灣）与 English，Qt 6.12.0 / SDK 0.39.0；已验范围和限制以 Release 为准。
+- **开发源码：** `zh-CN-4.x-dev` 当前为 `4.1.0-zh.1.dev.3`，Qt 6.12.0 / SDK 0.40.0（PR #226 非官方 Unicode 修复快照），精确上游提交 `8b847cb74`。
+  这是上游 4.1.0 之后的源码，已通过 Linux 130 项 / Windows 127 项定向原生测试，未做新成品包验收；[定向原生验证记录](docs/localization/VALIDATION-4X-20261113.md)区分通过、失败与未覆盖。
+- **稳定维护线：** `zh-CN-4.x` 已于 2026-11-13 正常合入开发快照 `0b4b4c29` 和定向验证修订。源码仍标识 `4.1.0-zh.1.dev.3`，本次是维护分支晋级，不是新软件包发布；正式标签、原包与 Latest 不变。跨屏 DPI、实体 GPU 和新安装包未验。
+- **3.x 汉化计划：** 3.18.1 正在独立候选线上增加翻译修订、繁体中文和启动器，尚未发布；进度与未解决项见 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44) 和[草稿 PR #51](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/51)。它基于官方 Qt5 3.17.2，不是上游官方 3.18.1。
+- **上游镜像：** `main` / `main-3.x`，不混入汉化改动；3.x 的 `zh-CN` / `zh-CN-dev` 与 4.x 独立维护。
 
 新配置默认简体中文，可在首选项切换语言，下次启动生效。界面语言不改变数值或数据解析规则。
 详细覆盖和限制见[中文与多语言说明](docs/localization/README.zh-CN.md)。
 
-This is an unofficial Chinese-language fork of PlotJuggler. Published rc.4 packages support
-Simplified Chinese and English; Traditional Chinese (Taiwan) is available in the unpublished
-development line. For Chinese packages, use the fork release linked above, not the upstream downloads.
+This is an unofficial Chinese-language fork of PlotJuggler. The published
+4.1.0+zh.1 release supports Simplified Chinese, Traditional Chinese (Taiwan),
+and English. Development snapshots and the 3.18.1 candidate are not released
+packages. Use this fork's release page, not upstream downloads.
 
 ## 上游功能概览 / Upstream capabilities
 
@@ -32,7 +37,7 @@ in a single application.
      https://plotjuggler.io/videos/pj-plotting-800.jpg,
      https://plotjuggler.io/videos/pj-waymo-800.jpg. -->
 
-![Robot model, camera feeds, depth images and joint torque plots in a shared PJ4 workspace](docs/images/anymal.png)
+![Robot model, camera feeds, depth images and joint torque plots in a shared PJ4 workspace](docs/images/workspace.jpg)
 
 ## Analyze signals interactively
 
@@ -90,19 +95,22 @@ Need a custom integration? Build a loader, streamer, parser or toolbox with the
 
 ## 下载与安装中文版
 
-请打开 [rc.4 中文版发布页](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.0.0-zh.1.rc.4)，
+请打开 [4.1.0+zh.1 中文版发布页](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)，
 阅读已知限制并核对同页的 `SHA256SUMS.txt`。完整历史见[本仓库 Releases](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases)。
-预发布候选不会通过 GitHub 的 `releases/latest` 自动选中。
+本正式版已设为 Latest；历史预发布包保持不变。
 
-| 系统 | rc.4 下载文件 | 安装方式 |
+| 系统 | 4.1.0+zh.1 下载文件 | 安装方式 |
 | --- | --- | --- |
-| Windows x64 | `PlotJuggler-4.0.0-zh.1.rc.4-Windows-x64-zh-CN.exe` | 运行离线安装器，建议使用独立目录；安装器未签名 |
-| Linux x86_64 | `PlotJuggler-4.0.0-zh.1.rc.4-x86_64-zh-CN.AppImage` | 赋予执行权限后运行 |
-| Ubuntu / Debian amd64 | `plotjuggler4_4.0.0.zh.1.rc.4-1_amd64-zh-CN.deb` | 用 `sudo apt install ./下载的文件名.deb` 安装，运行 `plotjuggler4` |
+| Windows x64 | `PlotJuggler-4.1.0+zh.1-Windows-x64-zh-CN.exe` | 运行离线安装器，建议使用独立目录；安装器未签名 |
+| Windows x64 便携包 | `PlotJuggler-4.1.0+zh.1-Windows-x64-portable-zh-CN.zip` | 完整解压后运行，不与旧目录混装 |
+| Linux x86_64 | `PlotJuggler-4.1.0+zh.1-x86_64-zh-CN.AppImage` | 赋予执行权限后运行 |
+| Ubuntu / Debian amd64 | `plotjuggler4_4.1.0+zh.1-1_amd64-zh-CN.deb` | 用 `sudo apt install ./下载的文件名.deb` 安装，运行 `plotjuggler4` |
+
+下列系统和插件边界描述上方 `4.1.0+zh.1` 正式包，不是当前维护源码的成品验收结论。
 
 Linux 包的实际验收环境为 Ubuntu 22.04 / 24.04，普通组件要求 glibc 2.35 或更新版本；
 不据此承诺所有 Linux 发行版。AppImage 缺少 FUSE 时可用 `APPIMAGE_EXTRACT_AND_RUN=1` 运行。
-DEB 文件名使用点号，包内版本仍为 `4.0.0~zh.1~rc.4-1`。
+DEB 包内版本为 `4.1.0+zh.1-1`。本版使用 X11/xcb，Wayland 桌面需要 XWayland。
 没有本中文版的 APT 或 IFW 自动更新服务，更新请使用本仓库发布页。
 
 升级前备份布局和配置。测试开发版时可使用[独立配置目录](docs/localization/ISOLATED_PROFILE.zh-CN.md)，
@@ -118,9 +126,10 @@ DEB 文件名使用点号，包内版本仍为 `4.0.0~zh.1~rc.4-1`。
 ### 覆盖与兼容性限制
 
 - 翻译覆盖主程序及限定的插件显示内容，不保证任意第三方插件、系统界面或图片文字均已翻译。
-- rc.4 的 Linux 包包含 21 个插件，Windows 包含 19 个；市场可用项目不等于随包项目。
+- 4.1.0+zh.1 的 Linux 包包含 21 个插件，Windows 包含 19 个；市场可用项目不等于随包项目。
   Linux 的 ROS 2 订阅插件需要外部 ROS 环境，不能用普通包验收推断其功能已验证。
 - 未提供已验的 macOS、ARM 或 WebAssembly 中文发布包。WebAssembly 不启用原生 BIN 共享插件。
+- 最终包的六组自动验收已完成；不代表所有 Windows 桌面、安装页和图形驱动组合都经人工验证，详见[发行说明](docs/localization/RELEASE-4.1.0+zh.1.md)。
 - 不保证完全兼容 3.x 布局。开发线的源码测试不能替代完整应用、图形界面及最终安装包验收。
 
 ### 官方英文发行版与 APT
