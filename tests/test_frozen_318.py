@@ -4,6 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+import subprocess
 import unittest
 from unittest.mock import patch
 
@@ -24,8 +25,25 @@ class FrozenChecks(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); (root/'lock').write_text('changed')
             m={'source':'s','tree':'t','epoch':1,'source_files':{'lock':f.digest(b'locked')}}
-            with patch.object(f,'git',side_effect=['s','t','1']):
+            with patch.object(f,'git',side_effect=['s','t','1']), patch.object(f.subprocess,'check_output',return_value=b'changed'):
                 with self.assertRaises(ValueError):f.verify_source(root,m)
+    def test_crlf_checkout_and_changed_content(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            def g(*args):
+                return subprocess.check_output(['git','-C',td,*args],text=True).strip()
+            g('init');g('config','user.email','test@example.invalid');g('config','user.name','Test')
+            g('config','core.autocrlf','true')
+            (root/'hook.py').write_bytes(b'print(1)\n')
+            g('add','hook.py');g('commit','-m','fixture')
+            m={'source':g('rev-parse','HEAD'),'tree':g('rev-parse','HEAD^{tree}'),
+               'epoch':int(g('show','-s','--format=%ct','HEAD')),
+               'source_files':{'hook.py':f.digest(b'print(1)\n')}}
+            (root/'hook.py').write_bytes(b'print(1)\r\n')
+            f.verify_source(root,m,True)
+            (root/'hook.py').write_bytes(b'print(2)\r\n')
+            with self.assertRaises(ValueError):f.verify_source(root,m)
+
     def test_toolchain(self):
         s={'os':'Windows','arch':'x86_64','compiler':'msvc','compiler.version':'194','build_type':'Release'}
         graph={'graph':{'nodes':{'1':{'context':'host','ref':'example/1','settings':s}}}}

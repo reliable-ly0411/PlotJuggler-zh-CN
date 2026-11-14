@@ -30,7 +30,12 @@ def verify_source(root, manifest, initial=False):
     require(git(root, 'rev-parse', 'HEAD^{tree}') == manifest['tree'], 'Wrong product tree')
     require(git(root, 'show', '-s', '--format=%ct', 'HEAD') == str(manifest['epoch']), 'Wrong product epoch')
     for relative, expected in manifest['source_files'].items():
-        require(digest((root / relative).read_bytes()) == expected, 'Source input differs: ' + relative)
+        # Hash canonical Git bytes, then prove the working file cleans to that
+        # exact blob. Windows checkout CRLF is not a source-content change.
+        canonical = subprocess.check_output(['git', '-C', str(root), 'show', 'HEAD:' + relative])
+        require(digest(canonical) == expected, 'Pinned source blob differs: ' + relative)
+        require(git(root, 'hash-object', '--path=' + relative, relative) ==
+                git(root, 'rev-parse', 'HEAD:' + relative), 'Working source input differs: ' + relative)
     if initial:
         require(not git(root, 'diff', 'HEAD', '--name-only'), 'Dirty source before building')
 
