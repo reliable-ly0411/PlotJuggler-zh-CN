@@ -538,7 +538,8 @@ if(PJ_BUILD_TESTS)
     # runs each case in its own process while sharing one linked executable.
     set(PJ_APP_GUI_TEST_SOURCES
         tests/preferences_language_test.cpp
-        tests/slider_states_test.cpp)
+        tests/slider_states_test.cpp
+        tests/test_process_isolation_test.cpp)
 
     # Browser presets: PresetController's bounded download against a loopback server.
     list(APPEND PJ_APP_GUI_TEST_SOURCES
