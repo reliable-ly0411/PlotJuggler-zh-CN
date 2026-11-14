@@ -21,6 +21,7 @@ add_library(pj_app_shell OBJECT
     src/Splashscreen.h
     src/DialogPresenter.cpp
     src/DialogPresenter.h
+    src/DialogWatch.h
     src/FanoutConfig.cpp
     src/FanoutConfig.h
     src/BrowserFileStore.cpp
@@ -121,6 +122,9 @@ add_library(pj_app_shell OBJECT
     src/ui/AboutDialog.cpp
     src/ui/AboutDialog.h
     src/ui/AboutDialog.ui
+    src/ui/McpJobsDialog.cpp
+    src/ui/McpJobsDialog.h
+    src/ui/McpJobsDialog.ui
     src/ui/TimelineWidget.cpp
     src/ui/TimelineWidget.h
     src/ui/TimelineWidget.ui
@@ -910,6 +914,7 @@ if(PJ_BUILD_TESTS)
         src/LoadInput.h
         src/DialogPresenter.cpp
         src/DialogPresenter.h
+        src/DialogWatch.h
         src/FanoutConfig.cpp
         src/FanoutConfig.h
         # FileLoader's same-source match uses LayoutXml::isSamePath for full-path
