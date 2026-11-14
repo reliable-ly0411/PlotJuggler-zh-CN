@@ -35,6 +35,17 @@ jobs:
       env:
         RELEASE_MANIFEST: ${{ inputs.release_manifest }}
       run: python .github/release_policy/policy.py materialize
+    - name: Checkout independent frozen-product verifier
+      uses: actions/checkout@v6
+      with:
+        ref: ${{ github.sha }}
+        path: .audit-control
+        persist-credentials: false
+    - name: Verify exact frozen product before any build
+      shell: pwsh
+      run: |
+        python .audit-control/scripts/verify_frozen_318.py --source . --initial
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
@@ -261,25 +272,13 @@ jobs:
         }
 
         Write-Host "Installer created successfully: $installer_name"
-    - name: Collect isolated public DLL evidence for independent review
+    - name: Independently verify frozen candidate and install exact-only audit identities
       id: public-binary-review
       if: always() && steps.native-build.outcome == 'success' && steps.stage-runtime.outcome == 'success'
       shell: pwsh
-      env:
-        REVIEW_SOURCE_SHA: ${{ steps.native-build.outputs.source-sha }}
       run: |
-        # This tool only authorizes a privacy-scanned ReviewOnly artifact.
-        # It never changes approved identities or approves release payloads.
-        python scripts/windows_public_binary_review.py --repo . --build build --payload installer/io.plotjuggler.application/data --out review-only/public-binaries --commit "$env:REVIEW_SOURCE_SHA" --run "$env:GITHUB_RUN_ID" --run-attempt "$env:GITHUB_RUN_ATTEMPT"
+        python .audit-control/scripts/verify_frozen_318.py --source . --payload installer/io.plotjuggler.application/data --graph "$env:RUNNER_TEMP/pj-conan-install.json" --out acceptance/frozen-product-review.json
         if ($LASTEXITCODE) { exit $LASTEXITCODE }
-    - name: Upload isolated DLL review evidence
-      if: always() && steps.public-binary-review.outputs.manifest-ready == 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ReviewOnly-Windows-public-binaries-${{ steps.native-build.outputs.source-sha }}
-        path: review-only/public-binaries/
-        if-no-files-found: error
-        retention-days: 14
     - name: Verify real public DLL identities and mutation rejection
       id: public-binary-identities
       if: always() && steps.native-build.outcome == 'success' && steps.stage-runtime.outcome == 'success'

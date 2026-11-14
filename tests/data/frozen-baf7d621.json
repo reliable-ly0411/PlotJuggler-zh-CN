@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "source": "baf7d62133db26bb14911d446a1ce623fe704274",
+  "tree": "eaa481e413511d361dd9f1c38c7c4a19b61310ad",
+  "epoch": 1794640275,
+  "review_run": 43569903164,
+  "review_artifact": 14106135528,
+  "review_archive_sha256": "e35e759f449b5d66368bd663f5681f7a282dc0c4254ec6b628a9343509193c5e",
+  "source_files": {
+    "cmake/conan/windows-msvc194.lock": "08b7b2b962147955631f19109a2776554fd574fd018f506dc2066718c544cb24",
+    "cmake/conan/openssl-overlay/conanfile.py": "66a5b8e8fd59d5d93a1193458dd9ed47c43cfabd6e6c30c81eb517c63c26b3a6",
+    "scripts/hook_windows_conan_pathmap.py": "dd815bd36aad318fdbc43af07d1e7d72f04139788e7b8697948bd568e5cbb80c",
+    "scripts/windows_conan_host_refs.json": "735d88bc0ecf9f816c388852d87aeb076c9d5ecfd910f5344c78eb4e074eb003",
+    "scripts/windows_conan_mapping_refs.json": "b84b28874b8ae266208b900a3f5213b76951d237a4f43ceeed25890f37675825",
+    "scripts/windows_conan_pathmap.py": "2109b483bca4be035ae39c2eaea293c1564156332054161f34c94ff40432c432",
+    "tests/data/public-build-records.json": "92afcefa32a98dfca8afe86c625fa9a399919490134e47665cccb36959af36d1"
+  },
+  "dlls": {
+    "DataLoadParquet.dll": {
+      "sha256": "1b0899a476e158c327a916c93bbc693aaa683c9979168f9883937e8c8237053b",
+      "bytes": 8573440
+    },
+    "ToolboxMosaico.dll": {
+      "sha256": "6ab015e58b5a5088d1327f7598e02fb7a21e552405d8eac96c731802fb9fba4d",
+      "bytes": 18494976
+    },
+    "ProtobufParser.dll": {
+      "sha256": "ba9eb35688919fb28eb3c6860042824f10b8c8a6651ea84df75f2c4ef1468e8d",
+      "bytes": 1193984
+    }
+  },
+  "qrc_structs": [
+    {
+      "bytes": 66,
+      "sha256": "b8dd8b312c862366897db07a0512d7ed43a532d2ee0ba7953d9b0b1ded34c972",
+      "dll_offset": 13576576,
+      "nodes": 3
+    },
+    {
+      "bytes": 154,
+      "sha256": "25541045733a01db59eb965d2b6030f60c357ee8e321b725ffdf4cfa86f763ef",
+      "dll_offset": 13600800,
+      "nodes": 7
+    }
+  ]
+}
