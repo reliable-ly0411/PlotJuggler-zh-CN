@@ -436,6 +436,53 @@ class ResourceEvidence(unittest.TestCase):
         self.assertNotEqual(fingerprint(data, record), expected)
 
 
+class ProductionVerifier(unittest.TestCase):
+    def fixture(self, folder, with_literal=False):
+        builder = ResourceEvidence()
+        builder.sources = SOURCES
+        data = builder.pe()
+        # This probe needs no Qt timestamps; a single synthetic .text section.
+        data[392:400] = b".text\0\0\0"
+        literal = b"C:\\Users\\runneradmin\\.conan2\\p\\b\\arrow1111111111111\\b\\src\\cpp\\old.cc"
+        if with_literal:
+            data[9000:9000+len(literal)+1] = literal + b"\0"
+        record = {"method": METHOD, "file_bytes": len(data), "qt_rcc_mtime_offsets": []}
+        record["sha256"] = fingerprint(data, record)
+        self.assertIsNotNone(record["sha256"])
+        records = {"public_ci_source_records": {"DataLoadParquet.dll": {
+            "observed_plugin_sha256": sha(data), "content_fingerprint": record,
+            "nul_terminated_literals": [literal.decode()] if with_literal else []}}}
+        (Path(folder) / "DataLoadParquet.dll").write_bytes(data)
+        return bytes(data), records
+
+    def test_empty_markers_and_no_literals_pass_with_all_negative_cases(self):
+        from verify_public_binary_records import verify_payload
+        with tempfile.TemporaryDirectory() as folder:
+            data, records = self.fixture(folder)
+            original = copy.deepcopy(records)
+            self.assertEqual(check(data, "DataLoadParquet.dll", records), [])
+            result = verify_payload(folder, records)
+            self.assertTrue(result[0]["accepted"])
+            self.assertEqual(len(result[0]["negative_cases_rejected"]), 8)
+            self.assertIn("unapproved_public_path", result[0]["negative_cases_rejected"])
+            self.assertEqual(records, original)
+
+    def test_existing_exact_path_records_remain_supported(self):
+        from verify_public_binary_records import verify_payload
+        with tempfile.TemporaryDirectory() as folder:
+            _, records = self.fixture(folder, True)
+            self.assertEqual(len(verify_payload(folder, records)[0]["negative_cases_rejected"]), 8)
+
+    def test_wrong_identity_and_empty_policy_fail_closed(self):
+        from verify_public_binary_records import verify_payload
+        with tempfile.TemporaryDirectory() as folder:
+            _, records = self.fixture(folder)
+            records["public_ci_source_records"]["DataLoadParquet.dll"]["observed_plugin_sha256"] = "0" * 64
+            records["public_ci_source_records"]["DataLoadParquet.dll"]["content_fingerprint"]["sha256"] = "0" * 64
+            with self.assertRaises(ValueError): verify_payload(folder, records)
+            with self.assertRaises(ValueError): verify_payload(folder, {"public_ci_source_records": {}})
+
+
 class CollectorIntegration(unittest.TestCase):
     """Synthetic PE fixtures exercise CLI plumbing, never actual DLL acceptance."""
     def setup_fixture(self, root):
