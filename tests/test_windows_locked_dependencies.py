@@ -8,6 +8,7 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'scripts'))
 from probe_windows_locked_dependencies import check_graph, compare_reports, ignored_option_warnings, retain_product_evidence, PRODUCT_TARGETS
 from windows_conan_pathmap import render
+from hook_windows_conan_pathmap import stable_mimalloc_banner
 
 def graph():
     mapping=json.loads((ROOT/'scripts/windows_conan_mapping_refs.json').read_text())
@@ -18,6 +19,15 @@ def graph():
     return {'graph':{'nodes':nodes}}
 
 class LockedTests(unittest.TestCase):
+    def test_mimalloc_banner_precompile_only(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/'options.c'
+            path.write_text('banner, __DATE__, __TIME__);')
+            stable_mimalloc_banner(path)
+            self.assertEqual(path.read_text(),'banner, "reproducible build", "time not recorded");')
+            with self.assertRaises(ValueError):stable_mimalloc_banner(path)
+            path.write_text('unrecognized source')
+            with self.assertRaises(ValueError):stable_mimalloc_banner(path)
     def test_retain_only_unchanged_audited_originals(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);source=root/'source';source.mkdir()

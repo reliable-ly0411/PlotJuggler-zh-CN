@@ -88,6 +88,12 @@ def main():
     if sys.platform!='win32':p.error('native Windows required')
     base=a.work.resolve();base.mkdir(exist_ok=False);cache=base/'conan';cache.mkdir()
     env=os.environ.copy();env['CONAN_HOME']=str(cache)
+    # Qt 5.15.2 rcc embeds source mtimes. Use this exact source commit's time,
+    # never checkout/extraction time, before generation (not binary rewriting).
+    epoch=subprocess.check_output(['git','show','-s','--format=%ct','HEAD'],cwd=ROOT,text=True).strip()
+    if not epoch.isdecimal() or int(epoch)<=0:raise ValueError('invalid source commit epoch')
+    env['SOURCE_DATE_EPOCH']=epoch
+    env['QT_RCC_SOURCE_DATE_OVERRIDE']=epoch
     report={'scope':'diagnostic only; no product identity approval','status':'failed'}
     def run(args):
         r=subprocess.run([str(x) for x in args],cwd=ROOT,env=env,capture_output=True)

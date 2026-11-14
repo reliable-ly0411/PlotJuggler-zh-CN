@@ -124,3 +124,26 @@ def pre_generate(conanfile):
             raise ValueError('reviewed linker flags must participate in package identity')
     for field, value in updates.items():
         conanfile.conf.define(field, value)
+
+def stable_mimalloc_banner(path):
+    """Remove volatile diagnostic-banner macros before compilation, not in DLLs."""
+    original = ', __DATE__, __TIME__);'
+    replacement = ', "reproducible build", "time not recorded");'
+    text = path.read_text(encoding='utf-8')
+    if text.count(original) != 1:
+        raise ValueError('unexpected pinned mimalloc options.c banner')
+    path.write_text(text.replace(original, replacement), encoding='utf-8')
+
+
+def pre_build(conanfile):
+    policy = conanfile.conf.get(POLICY_CONF, default=None)
+    if policy is None:
+        return
+    if conanfile.context != 'host' or str(conanfile.settings.get_safe('os')) != 'Windows':
+        return
+    if exact_ref(conanfile.ref) != 'mimalloc/2.2.4#dd236e6e0a2a1ef80cbc193d6f7f7090':
+        return
+    refs = conanfile.conf.get(REFS_CONF, check_type=list)
+    if policy != policy_digest(refs) or exact_ref(conanfile.ref) not in refs:
+        raise ValueError('unreviewed mimalloc banner policy')
+    stable_mimalloc_banner(Path(conanfile.source_folder) / 'src' / 'options.c')
