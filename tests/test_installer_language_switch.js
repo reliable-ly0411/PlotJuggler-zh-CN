@@ -109,7 +109,7 @@ for (const command of ['', 'x', 'xy', 'xyz', '中文 😀', '$x=@(); $json=@{arg
   assert.equal(Buffer.from(encoded, 'base64').toString('utf16le'), command);
 }
 console.log('IFW variable-substitution transport regression checks passed');
-// Optional real PowerShell parse/control-flow test; no process is started.
+// Optional real PowerShell parse/control-flow test; no GUI is launched.
 const cp = require('node:child_process'), os = require('node:os');
 // A missing optional runtime may skip on non-Windows hosts; a runtime that
 // exists but hangs or fails must fail the test rather than hide native checks.
@@ -130,21 +130,20 @@ for (const allowMissing of [false, true]) {
 assert.throws(() => checkedPowerShellSpawn('shell', [], {}, false, () => ({error: missingRuntime})));
 assert.equal(checkedPowerShellSpawn('shell', [], {}, true, () => ({error: missingRuntime})), null);
 const spawnSuccess = {status: 0, stdout: 'ok', stderr: ''};
-assert.equal(checkedPowerShellSpawn('shell', [], {timeout: 15000}, false,
-  (_, __, options) => { assert.equal(options.timeout, 15000); return spawnSuccess; }), spawnSuccess);
+assert.equal(checkedPowerShellSpawn('shell', [], {timeout: 30000}, false,
+  (_, __, options) => { assert.equal(options.timeout, 30000); return spawnSuccess; }), spawnSuccess);
 const shell = process.platform === 'win32' ? 'powershell.exe' : 'pwsh';
-const available = checkedPowerShellSpawn(shell, ['-NoProfile', '-NonInteractive', '-Command', 'exit 0'],
-  {encoding: 'utf8', timeout: 15000}, process.platform !== 'win32');
-if (available) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'restart test '));
-  try {
-    const result = fixture('en_US', 0);
-    const data = path.join(dir, 'fixture.json');
-    fs.writeFileSync(data, JSON.stringify({probe:result.widget.probe, command:decodeTransport(result.events[0].args), probeTransport:result.widget.probeTransport, commandTransport:result.events[0].args.at(-1)}));
-    const run = checkedPowerShellSpawn(shell, ['-NoProfile','-NonInteractive','-File',path.join(__dirname,'test_installer_restart.ps1'),'-FixturePath',data], {encoding:'utf8',timeout:30000});
-    console.log(run.stdout.trim());
-  } finally { fs.rmSync(dir,{recursive:true,force:true}); }
-} else { console.log('SKIP: PowerShell runtime unavailable'); }
+// Run the real fixture directly: a separate exit-0 probe duplicates cold
+// startup and can time out before any useful validation has run.
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'restart test '));
+try {
+  const result = fixture('en_US', 0);
+  const data = path.join(dir, 'fixture.json');
+  fs.writeFileSync(data, JSON.stringify({probe:result.widget.probe, command:decodeTransport(result.events[0].args), probeTransport:result.widget.probeTransport, commandTransport:result.events[0].args.at(-1)}));
+  const run = checkedPowerShellSpawn(shell, ['-NoProfile','-NonInteractive','-File',path.join(__dirname,'test_installer_restart.ps1'),'-FixturePath',data], {encoding:'utf8',timeout:30000}, process.platform !== 'win32');
+  if (run) console.log(run.stdout.trim());
+  else console.log('SKIP: PowerShell runtime unavailable');
+} finally { fs.rmSync(dir,{recursive:true,force:true}); }
 
 // IFW 4.10 Component::languageChanged -> ScriptEngine::callScriptMethod extracts
 // retranslateUi then QJSValue::call(arguments), not callWithInstance(context).
