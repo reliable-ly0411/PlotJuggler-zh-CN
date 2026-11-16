@@ -51,7 +51,18 @@ class GitHub:
             with self.opener.open(request, timeout=60) as response:
                 return json.load(response)
         except urllib.error.HTTPError as exc:
-            raise SyncError(f"GitHub {method} {path}: HTTP {exc.code}; no request retried") from exc
+            # Preserve GitHub's reason without logging request headers or token values.
+            detail = ""
+            try:
+                payload = json.loads(exc.read(8192))
+                message = payload.get("message", "") if isinstance(payload, dict) else ""
+                if isinstance(message, str):
+                    if self.token:
+                        message = message.replace(self.token, "[redacted]")
+                    detail = ": " + " ".join(message.split())[:1000] if message else ""
+            except (OSError, ValueError, TypeError):
+                pass
+            raise SyncError(f"GitHub {method} {path}: HTTP {exc.code}{detail}; no request retried") from exc
         except (OSError, ValueError) as exc:
             raise SyncError(f"GitHub {method} {path}: request failed; no request retried") from exc
 

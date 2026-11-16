@@ -81,6 +81,28 @@ class SyncTests(unittest.TestCase):
         self.assertEqual(self.git('rev-parse', 'HEAD^2'), self.upstream)
         self.assertFalse(any(c[0] == 'push' for c in self.commands))
 
+    def test_policy_only_conflict_keeps_trusted_policy(self):
+        self.advance()
+        Path('.github/workflow.yml').write_text('reviewed local automation')
+        self.commit('local policy')
+        result = module.sync(CONFIG)
+        self.assertTrue(result['changed'])
+        self.assertEqual(Path('.github/workflow.yml').read_text(), 'reviewed local automation')
+        self.assertEqual(Path('source.txt').read_text(), 'upstream')
+        self.assertEqual(self.git('rev-parse', 'HEAD^2'), self.upstream)
+        self.assertEqual(self.git('status', '--porcelain'), '')
+
+    def test_mixed_source_and_policy_conflict_still_aborts(self):
+        self.advance(conflict=True)
+        Path('.github/workflow.yml').write_text('reviewed local automation')
+        self.commit('local policy')
+        before = self.git('rev-parse', 'HEAD')
+        with self.assertRaises(RuntimeError):
+            module.sync(CONFIG, push=True)
+        self.assertEqual(before, self.git('rev-parse', 'HEAD'))
+        self.assertEqual(self.git('status', '--porcelain'), '')
+        self.assertFalse(any(c[0] == 'push' for c in self.commands))
+
     def test_push_updates_only_development_ref(self):
         self.advance()
         with tempfile.TemporaryDirectory() as remote:
