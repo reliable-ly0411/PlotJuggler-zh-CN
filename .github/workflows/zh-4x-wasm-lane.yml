@@ -181,6 +181,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Language probe unit tests import the pinned Playwright assertions.
+          npm --prefix tests/wasm ci
           npm --prefix tests/wasm run test:package
           node scripts/package_wasm.mjs --presets resources/wasm-presets \
             --source build-wasm-prod/pj_app --output build-wasm-prod/deploy
@@ -224,9 +226,7 @@ jobs:
 
       - name: Install browser gate
         working-directory: tests/wasm
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Deployment contract and cold threaded boot (production package)
         working-directory: tests/wasm

@@ -299,3 +299,35 @@ does not replace exact-head native or browser acceptance.
 The repaired catalogs were also rebuilt through the standalone Qt 6.12 i18n
 project: 26/26 CTest entries passed, plus 11/11 unchanged checker unit tests.
 No current WASM run was cancelled or repeated for this follow-up.
+
+## Exact-head 1b9 packaging-test dependency failure
+
+In run [44118271359](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/44118271359),
+localized build job 134162410862 compiled the production application, then
+failed `Package production build and verify packaging scripts`: the added
+`ui_language.test.cjs` imports `@playwright/test`, but `npm ci` was scheduled
+later in the browser-install step. The local replay had an existing dependency
+installation and therefore did not expose the clean-runner ordering defect.
+The failure is `Cannot find module '@playwright/test'`; it is not a compile
+error, budget failure or observed browser failure. Production receipt/size
+measurement, budget checks, acceptance build and both localized browser jobs
+were skipped. No new localized size or functional pass can be claimed here.
+
+Both WASM build workflows now install the unchanged lockfile's dependencies
+before `test:package`, reusing that installation for the later browser setup.
+Separate Chromium/Firefox jobs keep their own installations. All 40 packaging
+and language unit tests, browser installation, source offers, licenses, budget
+scripts and thresholds are retained. A clean scratch replay first reproduced
+the missing-module failure; after pinned `npm ci` the five language cases pass.
+A fresh dependency installation in the isolated worktree then passes all
+**40/40** package tests. One local install initially failed because the default
+`/home/agent/.npm` cache was unavailable; using a writable temporary cache
+succeeded. Both logs are retained.
+
+Actionlint passes with the existing Depot runner label declared in a temporary
+local configuration; without that declaration it reports the three pre-existing
+unknown-label diagnostics. No repository lint policy or runner was changed.
+The complete failed localized job log is retained as
+`/workspace/scratch/pj-sdk101-validation/1b9-wasm-localized-build.log`.
+The upstream lane of this same run remains active; it has not been cancelled
+or repeated. Grouped publication of these local follow-ups waits for that run.
