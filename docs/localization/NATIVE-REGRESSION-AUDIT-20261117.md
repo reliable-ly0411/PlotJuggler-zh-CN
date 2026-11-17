@@ -265,3 +265,26 @@ evidence retention, and child-process exit/identity preservation with a stand-in
 launcher. This is not a Firefox runtime/profile validation. Actual Gecko profile
 capture and root-cause attribution remain unverified; the prepared diagnostic is
 not present in the already-running `f4f0fcb0` jobs.
+
+## ca245298 Linux CSV warning expectation drift
+
+Native job `134306726219` in run `44158806003` passed 6,154 native tests
+(103 additional entries skipped), the early ArduPilot import and both two-case
+X11/Wayland lifetime suites. Font/license staging and the pinned official plugin
+rebuilds then passed. The following real FileLoader gate failed all three language
+CTest entries: each passed four cases and failed the three short-warning
+Continue/Abort/Close cases, at the exact body equality assertion on line 114.
+
+The #397 compatibility patch already uses the generic skipped-row introductory
+sentence in both the actual CSV DSO and its independent DSO language tests. The
+host's FileLoader test still expected the column-count-only introduction. Its
+English, Simplified Chinese and Traditional Chinese expected strings are now
+aligned with the pinned `csv-loader.patch`. The exact full-body comparison,
+title/buttons, long-body checks, cancellation paths, data values and time axis
+remain unchanged. No plugin implementation or source/SDK pin changes here.
+
+The actual affected C++ test translation unit compiles with Qt 6.12.0, SDK 1.0.1
+headers and `-Wall -Wextra -Werror`; the CSV acceptance/owned-output Python subset
+passes 10 tests. This local check is compilation and validation-harness coverage,
+not a linked real FileLoader rerun. The original package and clean-install steps
+were skipped after the CSV gate failure and still require exact-head CI.
