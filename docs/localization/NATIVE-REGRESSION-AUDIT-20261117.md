@@ -288,3 +288,62 @@ headers and `-Wall -Wextra -Werror`; the CSV acceptance/owned-output Python subs
 passes 10 tests. This local check is compilation and validation-harness coverage,
 not a linked real FileLoader rerun. The original package and clean-install steps
 were skipped after the CSV gate failure and still require exact-head CI.
+
+## f4f0fcb0 results and retained Firefox sampling
+
+Source run `44166438824` passed on both platforms. Dual-WASM run `44166437653`
+completed under the existing non-blocking Firefox-editor policy, not whole-suite
+acceptance. The localized lane passed 96 Chromium functional cases, five serial
+cases, five layout/glyph cases, the 64-image JPEG case, and four cases in each of
+English/Simplified/Traditional Chinese. Its Firefox shards passed 50 and 42 cases
+(seven existing skips), both editor cases and each four-case language group.
+The upstream lane passed the same functional/serial suites, but its first Firefox
+shard's transform heartbeat measured `179.34000000000015 ms` against `100 ms`.
+That failure remains part of the result despite the green job conclusion.
+
+The actual upstream production startup is `15,064,879 B` against `16,932,000 B`.
+The localized production startup is `24,580,257 B`; its full package is
+`25,337,479 B` against the separate `26,000,000 B` limit. Forty delivered files in
+each production package were rehashed against its receipt. Both actual notices
+contain the PlotJuggler Sans OFL. This does not establish native clean-install
+acceptance or erase earlier Anymal/Python/editor failures.
+
+The preceding ca245298 Windows job `134306725599` subsequently completed: its
+combined native report contains 5,962 entries, 5,859 passes, 103 skips and no
+failures. Font/license staging and official-plugin rebuilds passed, followed by
+the same three-language CSV short-warning expectation failure as Linux. Each
+language passed four cases and failed Continue/Abort/Close at the exact body
+comparison; long warnings and empty input passed. Neither platform reached
+original-package or clean-install validation. CSV fix `453c3a81` is required on
+the next candidate; the already-running f4f0fcb0 native jobs cannot include it.
+
+Independent diagnostic run `44175824162`, controller
+`82b5a916011543048434fa40d293e3f1745ba66e`, reused the retained upstream f4 and
+localized ca acceptance artifacts without rebuilding the application. Original
+archive hashes, source/controller identities and acceptance receipts passed
+before replay. Both sampled replays failed the unchanged 60-second pending poll
+and wrote real Gecko profiles, console records and heartbeat histories. The
+diagnostic archive SHA-256 values are:
+
+- Localized artifact `14368933562`:
+  `44dfc45b87fea8198309d929d2b8ca837160cb6d9788117cf864e255ecfb2a05`.
+- Upstream artifact `14369672846`:
+  `9062b19b934f3a163d618d81a70dd490609680efdedde85bc0cf17e6693dd0eb`.
+
+Each page's phase mark was aligned with the same UserTiming marker in its own
+Gecko process. The localized maximum gap was `258.72 ms` (255/258 samples contain
+WASM frames); the upstream maximum was `239.62 ms` (238/240). After the first
+three seconds until failure, 56,041/56,951 localized and 56,135/57,062 upstream
+main-thread samples contained `PollWrapper`, while only 69 and 68 respectively
+contained WASM frames. Both pages continued heartbeat and status reporting,
+reported `materializing=1`, and recorded no page error.
+
+Thus these sampled timeouts do not show a continuously busy replay for all
+60 seconds. Initial WASM work and later pending-without-progress need separate
+diagnosis. The source arms a zero-interval Qt materialization timer; whether that
+timer fires, stops, or loses delivery is not exposed by the retained observation.
+The stripped WASM indices do not identify exact C++ hot functions without the
+same binary's symbol map. No timer or runtime behavior is changed on this basis.
+Sampling changes timing and cannot replace the original 179.34/206.42 ms failures
+or the original unsampled pending timeout. Future failure-only diagnostics retain
+the original JSON result and all assertions before the separate sampled replay.
