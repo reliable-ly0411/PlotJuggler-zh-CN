@@ -33,9 +33,10 @@ the -O2 pass is not a default-optimization or full-product acceptance result.
 - Its independent localized budget counts **every manifest file** using Brotli
   bytes, or identity bytes when Brotli is absent, including presets and Python
   stdlib: **26,000,000 B**. The existing upstream startup budget/script/workflow
-  is unchanged. The candidate runs that 16,932,000 B startup check and the
-  localized total check independently; either failure fails the gate, with
-  both measurements printed. No images are removed.
+  is unchanged. Independent builds now apply 16,932,000 B to the unlocalized
+  upstream reference's startup set and 26,000,000 B to the complete localized
+  package. Both actual startup and total measurements remain recorded for
+  each artifact. This scope change is not a size reduction. No images are removed.
 
 The older WASM candidates 80a97e12, d0734db9 and 54783848 remain preserved on their
 branches. Their product changes and old test results are not substituted for
@@ -131,3 +132,35 @@ The original PNGs, English images, candidate branches, source hashes, licenses,
 both budget values and all failure records remain. The former 23,941,450 B
 candidate measurement does not validate the new build. Exact new-head native,
 WASM size and browser results remain required before any promotion.
+
+## b8ccc771 measured result and independent budget lanes
+
+Run `44073814358`, job `134006521134`, built and deterministically packaged
+`b8ccc7712cf2cfecfbc067a989f0ea295db19f0c`: startup 24,578,977 B, localized
+total 25,336,199 B. The total passed its 26,000,000 B limit; the combined startup
+gate failed by 7,646,977 B and all later browser jobs were skipped. Both sizes
+fell by 27,332,401 B from cdf40086 under the same script. The failed run remains
+evidence, not a pass retroactively granted by the new workflow.
+
+The verified manifest artifact is `14325164626`, ZIP SHA-256
+`fadb3d63de4a0cf66bc0bdacbf27b4dd0b94d95d165cae14bc8350169d1516a2`.
+The manifest SHA-256 is
+`33fcd52730f8f04714c394c0069e1bb9ab9246ed962e19d6f320ea319618ec81`.
+
+The authorized independent localized budget is now implemented by two real
+source builds, described in [the validation contract](WASM-DUAL-ARTIFACT-VALIDATION.md).
+The unlocalized reference is pinned by `upstream-baseline.json`; localized
+sources are the exact triggering commit. Receipts bind source/tree/controller,
+feature configuration, production versus probe kind, and all delivered file
+hashes. Browser jobs verify their own acceptance artifact before serving it.
+No bytes are subtracted from a shared binary. All functional, serial and Firefox
+suites remain, with localized image/font/log/layout probes on the localized lane.
+
+Upstream run `44014675732` at exact `5002da40` measured production startup
+15,065,038 B. Its source workflow had independently raised its threshold to
+20,000,000 B; this fork keeps the stricter inherited 16,932,000 B threshold on
+the new reference lane. Its Chromium functional suite passed 96 cases, but
+serial anymal load/reopen failed: longest main-thread task 2403 ms versus the
+unchanged 2000 ms assertion (layout restore itself 727 ms). This is a real
+performance failure; its cause is not established by that log. The two-lane
+workflow retains the assertion, exact serial console log and failure screenshots.
