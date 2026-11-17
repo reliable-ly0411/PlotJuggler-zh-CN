@@ -440,3 +440,47 @@ pending. Previous f4 native run `44166480802` ended with zero native XML failure
 both real CSV validation steps on the old warning introduction. Both original
 package and clean-install stages were skipped. That old failure is preserved;
 e44 contains the exact three-language expectation correction, awaiting execution.
+
+
+## Retained symbolized replay and panel parsing candidate
+
+WASM run `44193448684` at 31746852 passed Chromium 96 functional/five serial,
+five layout/glyph, one JPEG64 and four cases per language, plus Firefox 50/42
+functional, two editors and four cases per language. Original Anymal load/reopen
+longest tasks were 1,305/1,279 ms. The original editor JSON and byte hashes are
+retained; the failure-only profile correctly skipped this passed suite.
+
+Independent diagnostic controller `ced01083af7316e93a10158c0cac72de9d989fc5`
+(run `44200970606`, job `134454623588`) reused the exact 31746852 acceptance
+archive and original passed report, verifying archive and per-file receipt hashes
+before serving. Its explicitly labeled single sampled replay failed the unchanged
+100 ms heartbeat assertion at **158.78 ms**, after materialization completed.
+This diagnostic does not replace the normal run or erase prior 19cd52c8 failures.
+Its archive SHA-256 is
+`a5c3c854972ac562be8e354692d66920907c0402fa79e5ba9cfe9ad81aa0b62e`.
+
+The exact receipt-bound symbol map resolves 155 samples in the longest gap:
+92 include `PanelEngine::Impl::runTick`, 63 include `applyAndDiff`, 36 include
+`QWidgetRepaintManager::paintAndFlush`, and 16 include incremental materialization.
+These inclusive stack counts are not disjoint timings. Parsing stacks in
+`applyAndDiff` reach nlohmann's number lexer and libc's `strtod`/`__floatscan`.
+The positive materialization timer fixed the observed pending-replay symptom;
+this evidence identifies additional panel/paint work on the same main-thread task.
+
+The host-only candidate reuses SDK 1.0.1's existing `WidgetDataView::raw()` tree
+for the owned diff copy instead of parsing a complete numeric preview twice.
+Malformed data still returns without replacing the previous typed view: only the
+SDK's ambiguous empty-object fallback needs a separate validity check. The diff
+copy can consume commands without changing the full typed view. SDK pin, plugin
+ABI, every preview sample, one-shot handling, tick intervals and budgets remain
+unchanged. Other painting and parsing costs remain to be measured on the new head.
+
+Four focused native tests pass: malformed inputs (including numeric overflow),
+valid empty/non-object JSON, command/view independence, and all 2,000 preview
+samples with exact integer-range preservation. Both actual `panel_engine.cpp`
+conditional branches compile with `-Wall -Wextra -Werror`. These are native GCC
+object builds with/without `PJ_TARGET_WASM`, not an Emscripten link or a full GUI
+runner pass. The first local focused build stopped because its scratch CMake
+harness linked an undefined gtest_main target; its failure log is retained. The
+corrected harness uses the installed pinned gtest archive and passes. Browser
+performance and the complete panel GUI suite remain unverified for this fix.

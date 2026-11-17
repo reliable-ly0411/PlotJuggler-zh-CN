@@ -33,6 +33,7 @@
 
 #include "browser_save_target.hpp"
 #include "host_info.hpp"
+#include "parsed_widget_data.hpp"
 using namespace Qt::StringLiterals;
 
 namespace PJ {
@@ -223,11 +224,12 @@ struct PanelEngine::Impl {
       return std::nullopt;
     }
     prev_raw = raw;
-    nlohmann::json new_data = nlohmann::json::parse(raw, nullptr, false);
-    if (new_data.is_discarded()) {
+    auto parsed_view = detail::parseWidgetDataView(raw);
+    if (!parsed_view) {
       return std::nullopt;
     }
-    prev_view = WidgetDataView(raw);
+    nlohmann::json new_data = parsed_view->raw();
+    prev_view = std::move(*parsed_view);
     // Alias, not a copy. A nested applyAndDiff (modal sub-dialog exec below)
     // reassigns prev_view, so `view` must not be read after that exec returns —
     // today every use precedes it.

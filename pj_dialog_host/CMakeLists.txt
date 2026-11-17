@@ -86,6 +86,7 @@ if(PJ_BUILD_TESTS)
     pj_add_test_runner(pj_dialog_host_panel_tests MANAGED_PROFILE MAIN gui WARNINGS
         SOURCES
             tests/panel_engine_test.cpp
+            tests/parsed_widget_data_test.cpp
             tests/mock_panel_plugin.cpp
         LIBS pj_dialog_engine_qt plotjuggler_sdk::plugin_sdk pj_plotting pj_runtime
     )

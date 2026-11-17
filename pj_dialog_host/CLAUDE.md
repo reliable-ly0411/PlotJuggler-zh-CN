@@ -8,6 +8,13 @@ Single static-library target: `pj_dialog_engine_qt`. Public links: `plotjuggler_
 
 The protocol itself is documented in the SDK's `pj_plugins/docs/dialog-plugin-guide.md`; this module only realizes it in Qt. No `docs/` folder by design.
 
+Panel refreshes reuse `WidgetDataView::raw()` for the diff's owned copy rather
+than parsing the same numeric preview payload twice. The SDK normalizes malformed
+JSON to an empty object, so that ambiguous result is separately validated before
+replacing the previous view. One-shot commands remain in the typed view while
+the diff copy strips them; rejection, identical-data and command replay semantics
+remain unchanged.
+
 ## What belongs here
 
 - The dialog engine that interprets the SDK's `WidgetData` graph and instantiates Qt widgets.
