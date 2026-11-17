@@ -9,7 +9,7 @@ import shutil
 import subprocess
 import urllib.request
 
-from version_map import versions
+from version_map import package_versions
 from collect_licenses import collect
 from host_versions import read_host_versions
 from linux_tools import prepare_linux_tools
@@ -47,10 +47,11 @@ def require_clean_source():
     return revision, tree
 
 
-def stage(build, prefix, config, linux_tools):
+def stage(build, prefix, config, linux_tools, *, development_candidate=False):
     """Copy the exact CMake-selected DSO plus its legal and font payload."""
     revision, tree = require_clean_source()
     host = read_host_versions(ROOT)
+    package = package_versions(host['version'], development_candidate=development_candidate)
     build, prefix = build.resolve(), prefix.resolve()
     if prefix.exists():
         raise ValueError(f'Use an empty staging destination: {prefix}')
@@ -88,8 +89,8 @@ def stage(build, prefix, config, linux_tools):
               'bin_plugin_commit': baseline['ardupilot_plugin']['commit'],
               'bin_plugin_version': plugin_manifest['version'], 'bin_plugin_license': plugin_manifest['license'],
               'registry_commit': REGISTRY_REV, 'cjk_font_sha256': FONT_SHA,
-              'ifw_package_version': versions(host['version'])['ifw'],
-              'debian_version': versions(host['version'])['deb']}
+              'ifw_package_version': package['ifw'], 'debian_version': package['deb'],
+              'publishable': package['publishable']}
     record['host_sdk_source'] = json.loads((ROOT / 'cmake/host-sdk-source.json').read_text(encoding='utf-8'))
     locked = json.loads((ROOT / 'packaging/localization/registry-lock.json').read_text(encoding='utf-8'))
     ids = CORE_PLUGINS + (['toolbox-assistant-agent', 'ros2-topic-subscriber'] if linux_tools else [])
@@ -121,5 +122,6 @@ if __name__ == '__main__':
     p.add_argument('--prefix', type=Path, required=True)
     p.add_argument('--config', default='RelWithDebInfo')
     p.add_argument('--linux-tools', action='store_true')
+    p.add_argument('--development-candidate', action='store_true')
     a = p.parse_args()
-    stage(a.build, a.prefix, a.config, a.linux_tools)
+    stage(a.build, a.prefix, a.config, a.linux_tools, development_candidate=a.development_candidate)

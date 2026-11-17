@@ -101,3 +101,42 @@ No run has been cancelled or duplicated. The catalog correction is retained
 on the isolated native-regressions branch pending grouped publication after
 that existing run finishes; stable/development still point to
 `1613eaec28e7c4aee13f7efc72f5e2b2d73a35ae`.
+
+## Exact-head 318 native execution and development-package identity
+
+Candidate `31804af17641e54ebfc17ac27691f0cfc37b74ed`, native run
+[44125850938](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/44125850938),
+built both full applications and passed all executed native tests. CTest's
+100% success summary includes skipped entries; downloaded JUnit gives:
+
+- Linux: 6,257 main entries, 6,154 passed and 103 skipped; independent X11
+  and Wayland window lifetime runs each passed 2/2.
+- Windows: 5,743 base entries, 5,643 passed and 100 skipped; QRhi 217 entries,
+  214 passed and 3 skipped; native windows 2/2. The combined report has
+  5,962 entries, 5,859 passed and 103 skipped. Separate widget 9/9 and
+  file-dialog 4/4 runs overlap existing cases and are not extra unique tests.
+- Both platforms passed full-source Qt language extraction and 26 language
+  CTests, and the actual ArduPilot import 1/1 before the full build completed.
+- All five previously failing cases executed successfully on both platforms.
+  Embedded output confirms `installedApbin()` and
+  `SplashMemePool.EmptyPoolFallsBackToTheSeriousSplash`; the recipe, scrubber
+  and preferences entries have no skip, failure or error records.
+
+Both jobs then failed `Validate release identity`: the strict release mapper
+rejects the actual application version `4.1.0-zh.1.dev.3`. No original package,
+clean installation acceptance or final manifest was produced. This is not
+whole-package acceptance. The strict release rejection remains appropriate;
+the build-only candidate workflow needs explicit development package mapping,
+with no tag and `publishable=false`, as documented in `RELEASING.md`.
+
+Verified report ZIPs (full logs and extracted JUnit retained in cloud scratch):
+
+- Linux `14354037464`: `6a51367e5c9b12b3561b64a0d482cf8ec4cd7e9dd978acc8523f3af6dbb46568`.
+- Windows `14353272383`: `e6a4f788976ff4ab7734bbc2092a5d65ec6813327900989e88986533cb1ec93d`.
+
+Development mapping validation covers explicit opt-in, unchanged release
+mappings, rejection by release promotion, dpkg ordering and a real generated
+Debian control field/file name. Synthetic final manifests retain all six
+report, eighteen screenshot, four artifact and byte-integrity gates for both
+release and development inputs. Actual IFW construction, staged payload and
+clean-package acceptance remain to be run on the new exact commit.

@@ -357,7 +357,7 @@ jobs:
           [[ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]] || { cat build/wayland-compositor.log; exit 1; }
           env -u DISPLAY QT_QPA_PLATFORM=wayland ctest --test-dir build -R "$suite" \
             --no-tests=error --output-on-failure --timeout 120 --output-junit "$PWD/build/rhi-window-wayland.xml"
-      - name: Validate release identity
+      - name: Validate candidate package identity
         run: |
           python tests/check_localization_provenance.py
           python tests/test_release_versions.py -v
@@ -366,12 +366,12 @@ jobs:
           python tests/test_localized_plugin_build.py -v
           python tests/test_package_acceptance.py -v
           if [[ "$RUNNER_OS" == Linux ]]; then python tests/test_deb_dependencies.py -v; fi
-          python packaging/localization/version_map.py "$PJ_VERSION"
+          python packaging/localization/version_map.py "$PJ_VERSION" --development-candidate
       - name: Stage pinned BIN, licenses and CJK fallback
         run: |
           args=()
           if [[ "$RUNNER_OS" == Linux ]]; then args+=(--linux-tools); fi
-          python packaging/localization/prepare_payload.py --prefix build/fork-prefix "${args[@]}"
+          python packaging/localization/prepare_payload.py --development-candidate --prefix build/fork-prefix "${args[@]}"
       - name: Rebuild pinned display-localized official plugins
         id: localized-plugins
         shell: pwsh
@@ -418,7 +418,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $packageVersion = python packaging/localization/version_map.py $env:PJ_VERSION --format ifw
+          $packageVersion = python packaging/localization/version_map.py $env:PJ_VERSION --development-candidate --format ifw
+          if ($LASTEXITCODE -ne 0) { throw "Candidate version mapping failed" }
           ./packaging/installer/build_windows_installer.ps1 `
             -QtDir ".qt/$env:PJ_QT_VERSION/msvc2022_64" `
             -Version $env:PJ_VERSION -PackageVersion $packageVersion `
@@ -574,7 +575,7 @@ jobs:
           pattern: zh4-final-*
           path: reports
       - name: Bind exact original packages to all clean acceptance reports
-        run: python3 packaging/localization/create_release_manifest.py
+        run: python3 packaging/localization/create_release_manifest.py --development-candidate
       - uses: actions/upload-artifact@v4
         with:
           name: zh4-release-manifest

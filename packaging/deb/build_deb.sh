@@ -85,6 +85,7 @@ VERSION="${VERSION#v}"
 VERSION="${VERSION#V}"
 # Preserve SemVer prerelease ordering in dpkg.
 VERSION="${VERSION/-zh./~zh.}"
+VERSION="${VERSION/.dev./~dev.}"
 VERSION="${VERSION/.rc./~rc.}"
 [[ -n "${COMMIT_HASH}" ]] && VERSION="${VERSION}~${COMMIT_HASH}"
 DEB_VERSION="${VERSION}-1"
