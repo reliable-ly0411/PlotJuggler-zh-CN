@@ -174,13 +174,19 @@ TEST(SplashMemePool, CapLeavesImagesInsideTheBoxUntouched) {
   EXPECT_EQ(capMemeToSplashBox(exactly_at_the_bound).size(), exactly_at_the_bound.size());
 }
 
-// The browser build compiles no memes: a funny splash request over an empty pool must still show the serious
-// banner, not nothing.
+// A funny splash request over an empty image pool must still show the serious
+// banner. Localized catalog metadata is not an image in the English pool.
 TEST(SplashMemePool, EmptyPoolFallsBackToTheSeriousSplash) {
+  const AppLanguage language(*qApp, u"en_US"_s);
+  QSettings settings;
+  settings.setValue(kSplashModeKey, kSplashModeMemes);
   unregisterMemePool();
-  EXPECT_TRUE(QDir(QStringLiteral(":/resources/memes")).entryList(QDir::Files).isEmpty());
-  EXPECT_FALSE(makeStartupSplash().isNull());
+  EXPECT_TRUE(compiledPool().isEmpty());
+  const QPixmap splash = makeStartupSplash();
+  EXPECT_FALSE(splash.isNull());
+  EXPECT_EQ(splash.deviceIndependentSize(), QSizeF(720, 300));
   registerMemePool();
+  EXPECT_FALSE(compiledPool().isEmpty());
 }
 
 }  // namespace
@@ -192,6 +198,14 @@ int main(int argc, char** argv) {
   }
   QStandardPaths::setTestModeEnabled(true);
   QApplication app(argc, argv);
+  QTemporaryDir profile;
+  if (!profile.isValid()) {
+    return 1;
+  }
+  QSettings::setDefaultFormat(QSettings::IniFormat);
+  QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, profile.path());
+  QCoreApplication::setOrganizationName(u"PlotJugglerTest"_s);
+  QCoreApplication::setApplicationName(u"SplashMemePool"_s);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

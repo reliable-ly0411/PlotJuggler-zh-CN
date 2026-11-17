@@ -247,10 +247,15 @@ TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReacha
     EXPECT_EQ(running.catalogLoaded(), requested != u"en_US"_s);
     PJ::Theme theme;
     PJ::PreferencesDialog dialog(theme);
+    // The upstream width floor follows the widest page's controls. Exercise
+    // the actual minimum while retaining the 300 px scrolling-height contract.
+    const QSize minimum = dialog.minimumSize();
+    ASSERT_GE(minimum.width(), 420);
+    ASSERT_EQ(minimum.height(), 300);
     dialog.resize(420, 300);
     dialog.show();
     QTest::qWait(20);
-    ASSERT_EQ(dialog.size(), QSize(420, 300));
+    ASSERT_EQ(dialog.size(), minimum);
     auto* pages = dialog.findChild<QStackedWidget*>(u"pagesStack"_s);
     auto* scroll = dialog.findChild<QScrollArea*>(u"appearanceScrollArea"_s);
     auto* label = dialog.findChild<QLabel*>(u"labelLanguage"_s);
@@ -283,9 +288,9 @@ TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReacha
       EXPECT_TRUE(control->isVisible());
       const QRect visible_rect(control->mapTo(scroll->viewport(), QPoint(0, 0)), control->size());
       EXPECT_TRUE(scroll->viewport()->rect().contains(visible_rect))
-          << control->objectName().toStdString() << " rect=" << visible_rect.x() << "," << visible_rect.y()
-          << "," << visible_rect.width() << "x" << visible_rect.height() << " viewport="
-          << scroll->viewport()->width() << "x" << scroll->viewport()->height();
+          << control->objectName().toStdString() << " rect=" << visible_rect.x() << "," << visible_rect.y() << ","
+          << visible_rect.width() << "x" << visible_rect.height() << " viewport=" << scroll->viewport()->width() << "x"
+          << scroll->viewport()->height();
     }
     dialog.reject();
   }
