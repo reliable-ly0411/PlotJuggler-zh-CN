@@ -197,3 +197,29 @@ ran 807 entries: **776 passed, 31 platform/environment skips**, zero failures
 or errors. The focused 105-case result above is a subset, not an additional
 105 unique tests. Provenance and both translation catalogs also pass; the
 local catalog-only command does not claim fresh lupdate coverage.
+
+## ca245298 source-only checkout regression
+
+Source run 44158751589 failed on Linux job 134306517146 (807 entries, one
+error, 24 skips) and Windows job 134306516805 (805 entries, one error,
+33 skips). The new font regression tried to read the APBIN submodule's
+manifest, while these source-only jobs deliberately do not initialize
+submodules. The real native workflow does initialize them and crossed its
+lightweight preflight; its application and package checks were still running.
+This source-test failure is separate from the fixed production OFL path.
+
+The test now isolates its unrelated APBIN input/notice copies in an explicitly
+synthetic temporary source tree. It still copies the actual tracked UI fonts,
+complete OFL, README, QRC and host-version inputs, exercises the real staging
+function, and preserves every font/QRC assertion. Real native plugin identity,
+license, hash and source assertions are unchanged. No missing dependency is
+converted into a skip, and no additional checkout/download is required.
+
+A source archive without any initialized submodule first reproduced the error.
+After the test repair, the same check passes there. Reintroducing the old
+`resources/fonts/NotoSans` staging path in that isolated snapshot still fails,
+showing that the original font regression remains detected. The full local
+source preflight then passes 807 entries (776 passes, 31 platform/environment
+skips); pre-commit and whitespace checks pass. Both original CI logs and the
+three isolated-check logs are retained under the cloud validation scratch
+root. Existing ca245298 native and WASM runs were not cancelled or repeated.

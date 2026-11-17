@@ -229,15 +229,31 @@ class SourceIdentityTests(unittest.TestCase):
             pass
 
         with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / 'source'
+            source.mkdir()
+            for name in ['LICENSE', 'versions.env', 'conanfile.txt']:
+                shutil.copy2(ROOT / name, source / name)
+            shutil.copytree(ROOT / 'resources/fonts/PlotJugglerSans',
+                            source / 'resources/fonts/PlotJugglerSans')
+            shutil.copy2(ROOT / 'resources/resources.qrc', source / 'resources/resources.qrc')
+            # Source-only CI deliberately has no initialized submodules. This
+            # font regression needs only synthetic inputs for unrelated APBIN
+            # copies; native CI retains the real plugin identity/license gates.
+            sdk = source / '3rdparty/plotjuggler-apbin-plugins/sdk4'
+            sdk.mkdir(parents=True)
+            for name in ['LICENSE', 'COPYING.GPL3', 'LICENSE.APACHE2', 'UPSTREAM.md']:
+                (sdk / name).write_text('Synthetic unrelated APBIN fixture.\n', encoding='utf-8')
             build = Path(tmp) / 'build'
             (build / 'ardupilot-dataflash').mkdir(parents=True)
             binary = build / 'ardupilot.so'
             binary.write_bytes(elf())
             (build / 'ardupilot-package-path-Release.txt').write_text(str(binary), encoding='utf-8')
-            shutil.copy2(ROOT / '3rdparty/plotjuggler-apbin-plugins/sdk4/manifest.json',
-                         build / 'ardupilot-dataflash/ardupilot_source_plugin.pjmanifest.json')
+            (build / 'ardupilot-dataflash/ardupilot_source_plugin.pjmanifest.json').write_text(
+                json.dumps({'id': 'ardupilot-dataflash', 'version': '0.0.0-test',
+                            'license': 'LGPL-3.0-only'}), encoding='utf-8')
             prefix = Path(tmp) / 'stage'
-            with mock.patch.object(payload, 'require_clean_source', return_value=('a' * 40, 'b' * 40)), \
+            with mock.patch.object(payload, 'ROOT', source), \
+                 mock.patch.object(payload, 'require_clean_source', return_value=('a' * 40, 'b' * 40)), \
                  mock.patch.object(payload, 'download', side_effect=BeforeRemotePayloads) as download:
                 with self.assertRaises(BeforeRemotePayloads):
                     payload.stage(build, prefix, 'Release', False, development_candidate=True)
