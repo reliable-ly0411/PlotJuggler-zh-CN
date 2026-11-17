@@ -414,6 +414,30 @@ there was no repeat-until-pass run, changed threshold or additional hosted
 fixture download. The original failure, replay logs and their SHA-256 hashes
 are retained under `/workspace/scratch/pj-sdk101-validation/python-2627-replay/`.
 
+A follow-up comparison installs the unchanged Playwright lockfile's exact
+Chromium **149.0.7827.55 / revision 1228** and tests each retained package once,
+sequentially, with the original assertions. Both pass **2/2**, with upstream
+ratio **1.4249** and localized **1.4495**. These results are close to the limit,
+and the separate cloud host/process still differs from CI. They do not clear
+the original 1.5953 failure. Logs/hashes are retained in
+`python-2627-replay-ci-browser/results.json` below the same scratch root.
+
+Separate profiled derivatives retain every original assertion line and collect
+V8 worker profiles plus the main-thread timeline. The first capture lacked
+phase markers, and the next page-only CDP capture omitted worker console
+messages; both limited captures are retained. The final diagnostic records
+worker-console receipt times against a trace anchor: the alternating-round
+interval spans about 174 ms upstream and 188 ms localized, with the main
+thread predominantly idle and samples on the worker. Receipt timing includes
+transport delay and millisecond rounding. Profiling perturbs timings; sampled
+frames without native symbols, including waiting workers, are not exclusive
+CPU-time accounting or a source-level explanation of the CI failure. No
+benchmark warm-up, round count, gate, production source or browser assertion
+was changed. Full traces, hashes and interval summaries remain in
+`python-2627-worker-profile-correlated/`. An initial diagnostic invocation
+stopped on an ambiguous source anchor before any app test ran; that failure
+and the corrected exact-anchor derivation are retained as well.
+
 Anymal passed this round: upstream load/reopen **810/1334 ms**, localized
 **1299/1308 ms**. Earlier 31804af1 load failures (**2562/2398 ms**) and other
 historical results remain open evidence. All six current browser evidence
