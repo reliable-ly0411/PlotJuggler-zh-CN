@@ -140,3 +140,38 @@ Debian control field/file name. Synthetic final manifests retain all six
 report, eighteen screenshot, four artifact and byte-integrity gates for both
 release and development inputs. Actual IFW construction, staged payload and
 clean-package acceptance remain to be run on the new exact commit.
+
+## Exact 2627 Linux font-notice staging failure
+
+Native run [44141874689](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/44141874689),
+Linux job 134246539597, finished its application build and native checks.
+The downloaded JUnit artifact (ID 14359338470, ZIP SHA-256
+`e85e888f91461e6445d8de048edf31943e5a8dd1d066fed092afd4542f7ea642`)
+records **6,154 passed, 103 skipped, zero failures/errors** across 6,257
+entries. ArduPilot's early import regression passed **1/1**; the complete
+log also records X11 and Wayland checks **2/2 each**. These are exact-head
+results, not reuse of the preceding candidate's native tests.
+
+At 19:00:40 UTC, `prepare_payload.py` failed copying
+`resources/fonts/NotoSans/OFL.txt`. Upstream now embeds the two
+`resources/fonts/PlotJugglerSans/` faces. The prior development-version
+mapping gate was crossed; the next failure is this stale font-license path.
+No original installer or clean-install acceptance ran after it.
+
+The fix stages the current UI font's complete OFL and README under its real
+family name. Clean-package verification explicitly requires both, and the
+existing dependency file manifest continues to hash their full bytes. The
+separately pinned Noto CJK fallback, its font/license hashes, all source-image
+resources, application tests and package gates remain intact.
+
+A regression exercises staging against the real tracked resource/QRC tree,
+with a synthetic APBIN payload and an explicit stop before remote downloads.
+It reproduced the same missing old path before the fix, then verified both
+complete notices byte-for-byte after it. The four relevant offline acceptance/
+version/manifest suites pass **105/105**, with no skips, including the real
+Xvfb capture mechanics check. The initial local invocation lacked Xvfb in
+PATH; the next had the existing tools but missed the test-module import path.
+Both nonzero logs are retained. The final invocation uses the already installed
+cloud tools and correct test import path; no test was disabled. Pre-commit
+and whitespace checks pass. This targeted result does not certify a complete
+installer. Windows remains on its existing run at this checkpoint.

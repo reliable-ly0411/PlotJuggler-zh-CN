@@ -222,6 +222,39 @@ class FixtureTests(unittest.TestCase):
 
 
 class SourceIdentityTests(unittest.TestCase):
+    def test_staging_retains_the_actual_embedded_ui_font_notices(self):
+        # Use the real tracked resources: a synthetic old NotoSans tree hid the
+        # upstream font rename until the full native packaging job reached it.
+        class BeforeRemotePayloads(Exception):
+            pass
+
+        with tempfile.TemporaryDirectory() as tmp:
+            build = Path(tmp) / 'build'
+            (build / 'ardupilot-dataflash').mkdir(parents=True)
+            binary = build / 'ardupilot.so'
+            binary.write_bytes(elf())
+            (build / 'ardupilot-package-path-Release.txt').write_text(str(binary), encoding='utf-8')
+            shutil.copy2(ROOT / '3rdparty/plotjuggler-apbin-plugins/sdk4/manifest.json',
+                         build / 'ardupilot-dataflash/ardupilot_source_plugin.pjmanifest.json')
+            prefix = Path(tmp) / 'stage'
+            with mock.patch.object(payload, 'require_clean_source', return_value=('a' * 40, 'b' * 40)), \
+                 mock.patch.object(payload, 'download', side_effect=BeforeRemotePayloads) as download:
+                with self.assertRaises(BeforeRemotePayloads):
+                    payload.stage(build, prefix, 'Release', False, development_candidate=True)
+            download.assert_called_once()
+            family = ROOT / 'resources/fonts/PlotJugglerSans'
+            for original, staged in [('OFL.txt', 'PlotJugglerSans-OFL.txt'),
+                                     ('README.md', 'PlotJugglerSans-README.md')]:
+                self.assertEqual((prefix / 'share/licenses' / staged).read_bytes(),
+                                 (family / original).read_bytes())
+            qrc = ET.parse(ROOT / 'resources/resources.qrc')
+            embedded = [node.text for node in qrc.iter('file') if 'fonts/' in (node.text or '')]
+            self.assertEqual(set(embedded), {
+                'fonts/PlotJugglerSans/PlotJugglerSans-Regular.ttf',
+                'fonts/PlotJugglerSans/PlotJugglerSans-Bold.ttf'})
+            for name in embedded:
+                self.assertTrue((ROOT / 'resources' / name).is_file())
+
     def test_clean_source_has_exact_commit_and_tree(self):
         with mock.patch.object(payload.subprocess, 'check_output', side_effect=['', 'a'*40+'\n', 'b'*40+'\n']):
             self.assertEqual(payload.require_clean_source(), ('a'*40, 'b'*40))

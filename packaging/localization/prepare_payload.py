@@ -73,7 +73,9 @@ def stage(build, prefix, config, linux_tools, *, development_candidate=False):
     if (source / 'licenses').is_dir():
         shutil.copytree(source / 'licenses', licenses / 'ardupilot-dataflash/dependencies')
     shutil.copy2(ROOT / 'LICENSE', licenses / 'PlotJuggler-MPL-2.0.txt')
-    shutil.copy2(ROOT / 'resources/fonts/NotoSans/OFL.txt', licenses / 'NotoSans-OFL.txt')
+    ui_font = ROOT / 'resources/fonts/PlotJugglerSans'
+    shutil.copy2(ui_font / 'OFL.txt', licenses / 'PlotJugglerSans-OFL.txt')
+    shutil.copy2(ui_font / 'README.md', licenses / 'PlotJugglerSans-README.md')
     base = f'https://raw.githubusercontent.com/notofonts/noto-cjk/{FONT_REV}/'
     download(base + 'Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf',
              prefix / 'bin/fonts/NotoSansCJKsc-Regular.otf', FONT_SHA)

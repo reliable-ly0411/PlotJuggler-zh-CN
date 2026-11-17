@@ -621,7 +621,8 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
     assert hashlib.sha256(font.read_bytes()).hexdigest() == FONT_SHA
     for name in ['ardupilot-dataflash/LICENSE', 'ardupilot-dataflash/COPYING.GPL3',
                  'ardupilot-dataflash/LICENSE.APACHE2', 'ardupilot-dataflash/UPSTREAM.md',
-                 'NotoSansCJK-OFL.txt', 'PlotJuggler-MPL-2.0.txt', 'Qt-LGPL.txt', 'DEPENDENCIES.json',
+                 'NotoSansCJK-OFL.txt', 'PlotJugglerSans-OFL.txt', 'PlotJugglerSans-README.md',
+                 'PlotJuggler-MPL-2.0.txt', 'Qt-LGPL.txt', 'DEPENDENCIES.json',
                  f'Qt-{host["qt_version"]}/HPND-sell-variant.txt',
                  'ardupilot-dataflash/dependencies/fmt-12.1.0-LICENSE.txt',
                  'ardupilot-dataflash/dependencies/fast-float-8.1.0-LICENSE.txt',
