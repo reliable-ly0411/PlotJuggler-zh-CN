@@ -175,3 +175,25 @@ Both nonzero logs are retained. The final invocation uses the already installed
 cloud tools and correct test import path; no test was disabled. Pre-commit
 and whitespace checks pass. This targeted result does not certify a complete
 installer. Windows remains on its existing run at this checkpoint.
+
+Windows job 134246540331 subsequently completed with the same stale
+`NotoSans/OFL.txt` copy failure at 19:25:15 UTC. Its verified report artifact
+(ID 14362820935, ZIP SHA-256
+`64ee6fac29eb27c745a93685600e8387c629c9376c668473237d14ac5b9481ce`)
+records **5,859 passed, 103 skipped, zero failures/errors** in the combined
+5,962-entry native report. The constituent headless 5,743 and QRhi 217 reports
+are not added again to that total. The extra widget and file-dialog checks
+passed **9/9** and **4/4**, and the early ArduPilot import passed **1/1**.
+All five previously failing native regressions appear as executed passes in
+both platforms' JUnit output. Both platform builds and the standalone language
+checks completed successfully.
+
+The workflow ended failed; `linux-clean`, `windows-clean`,
+`windows-portable-clean` and `release-manifest` were explicitly skipped.
+Neither platform produced accepted original packages in this run. The same
+font-notice fix covers both failures. At local commit
+`9a90f32e90d0985a160b334c6b6ee12ce7ae4eef`, the complete source preflight
+ran 807 entries: **776 passed, 31 platform/environment skips**, zero failures
+or errors. The focused 105-case result above is a subset, not an additional
+105 unique tests. Provenance and both translation catalogs also pass; the
+local catalog-only command does not claim fresh lupdate coverage.
