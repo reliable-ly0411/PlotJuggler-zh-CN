@@ -376,3 +376,20 @@ at the unchanged processor-removal code. That failure is retained, not suppresse
 it is not evidence of a successful whole-file compile or browser validation.
 Pre-commit passes. The isolated change is not in published candidate e44a1a53
 or its running CI and still requires exact-head browser validation.
+
+The strict compile blocker is resolved separately by explicitly initializing the
+filter-dependent record's unused `transform_key` to its existing empty value.
+Both native and `PJ_TARGET_WASM` branches of the actual full translation unit now
+compile with `-Wall -Wextra -Werror`; no warning flag was disabled. These are
+native-compiler object checks, not an Emscripten link or runtime result. The first
+strict failure log is retained alongside the passing compile log.
+
+The independent `zh-4x-wasm-timer-validation.yml` entry builds this branch as one
+complete localized source/controller identity through the existing reusable
+WASM lane. It preserves the production total budget, production cold boot,
+acceptance probes, Chromium serial/functional cases and Firefox suites, including
+the existing editor failure reporting and failure-only sampling. It neither
+patches the upstream reference checkout nor cancels the e44a1a53 candidate runs.
+This isolates the product change while the baseline candidate continues. Browser
+results must be read from the new exact run; the timer probe does not establish
+that the 100 ms first-task gate passes.
