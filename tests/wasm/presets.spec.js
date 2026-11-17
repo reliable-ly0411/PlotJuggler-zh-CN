@@ -978,15 +978,31 @@ test('every deployed sample opens into its own views', async ({ page }) => {
 });
 
 // @serial: its main-thread time bound fails on a loaded runner (playwright.config.js).
-test('anymal sample stays responsive through load and reopen', { tag: '@serial' }, async ({ page, browserName }) => {
+test('anymal sample stays responsive through load and reopen', { tag: '@serial' }, async ({ page, browserName }, testInfo) => {
   test.setTimeout(300000);
   const errors = [];
   const samples = await startSamples();
+  let profile;
+  let originalFailure;
   try {
     const context = page.context();
     await page.close();
     const run = await bootSamples(context, errors, samples);
     const complete = completedMeshes(await uiTranslations(run.page));
+    if (process.env.PJ_WASM_CPU_PROFILE === '1') {
+      expect(browserName).toBe('chromium');
+      const { startChromiumProfile } = require('./support/cpu_profile');
+      const { createHash } = require('node:crypto');
+      profile = await startChromiumProfile(run.page, testInfo.outputPath('cpu-profile'), {
+        source: process.env.PJ_SOURCE_SHA,
+        controller: process.env.PJ_CONTROLLER_SHA,
+        role: process.env.PJ_VALIDATION_ROLE,
+        packageManifestSha256: createHash('sha256')
+          .update(fs.readFileSync(path.join(SAMPLES_PACKAGE, 'manifest.json'))).digest('hex'),
+        fixtureManifestSha256: createHash('sha256')
+          .update(fs.readFileSync(path.join(__dirname, 'fixtures/hosted_assets.json'))).digest('hex'),
+      });
+    }
     // While `load` runs: the longest main-thread task, and the longest gap between
     // painted frames. Only the task is bounded. The gap also holds the frame after
     // it, and headless Chromium has no GPU: compositing reads the WebGL canvas
@@ -1029,12 +1045,14 @@ test('anymal sample stays responsive through load and reopen', { tag: '@serial' 
       });
     };
     const openAnymal = async (pass, staged) => {
+      if (profile) await profile.mark(`anymal-${pass}-start`);
       const from = run.messages.length;
       const { frameGap, task } = await watchMainThread(async () => {
         expect(await pickSample(run, samples, 'anymal'), pass).toContain('PJ_WASM_LAYOUT_LOAD_OK');
         await waitForScene3DModels(run.page, run.messages,
           models => anymalLoaded(models, complete), 60000);
       });
+      if (profile) await profile.mark(`anymal-${pass}-models-ready`);
       const restore = run.messages.slice(from).map(text => /PJ_WASM_LAYOUT_RESTORE_MS ms=(\d+)/.exec(text))
         .filter(Boolean).map(match => Number(match[1]));
       expect(restore.length, pass).toBeGreaterThan(0);
@@ -1060,8 +1078,18 @@ test('anymal sample stays responsive through load and reopen', { tag: '@serial' 
     expect(await datasetCount(run.page, run.messages)).toBe(1);
     await expectAnymalViews(run);
     expect(errors).toEqual([]);
+  } catch (error) {
+    originalFailure = error;
+    throw error;
   } finally {
-    await samples.close();
+    try {
+      if (profile) await profile.stop();
+    } catch (error) {
+      if (!originalFailure) throw error;
+      console.error('CPU diagnostic also failed:', error);
+    } finally {
+      await samples.close();
+    }
   }
 });
 

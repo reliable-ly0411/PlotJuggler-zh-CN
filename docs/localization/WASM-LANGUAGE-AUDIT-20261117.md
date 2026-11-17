@@ -331,3 +331,35 @@ The complete failed localized job log is retained as
 `/workspace/scratch/pj-sdk101-validation/1b9-wasm-localized-build.log`.
 The upstream lane of this same run remains active; it has not been cancelled
 or repeated. Grouped publication of these local follow-ups waits for that run.
+
+## CPU diagnostics after a failed serial acceptance result
+
+The ordinary serial suite remains unprofiled and keeps its 2,000 ms Chromium
+long-task limit. Its line log and JSON report are retained separately. Only
+an actual failed/timed-out Anymal Chromium result admits the diagnostic
+replay; an absent, duplicated or Firefox-only result is rejected. A passing
+replay cannot change the first step's failure or replace its evidence.
+
+The replay uses the same job's existing acceptance package and fixture mirror.
+It performs no compilation, fixture download, credential change or network
+fallback. The controller's sample layouts and fixture manifest must match
+the source checkout byte-for-byte; every existing mirrored file must match
+its pinned size and SHA-256. Missing files stop the diagnostic. The browser
+keeps the existing offline rules. This does not enable a local replay where
+hosted fixtures were previously refused with HTTP 403.
+
+Retained diagnostic output contains CPU samples, a Chromium timeline,
+Long Tasks entries with their time origin, timed application console events,
+load/model-ready marks, browser/CPU metadata and source/controller/package/
+fixture identities. Profiling perturbs timing, so these outputs explain work
+and cannot certify the original performance gate. Stripped WASM has no source
+names section; some sampled frames may require additional symbol mapping.
+
+The capture path was tested with real headless Chromium on a synthetic local
+page, including a deliberately failing DOM-click workload: both original
+and replay exited 1, the original report hash stayed unchanged, and the
+351 ms synthetic long task appeared alongside 456 CPU samples and timeline
+marks. Three admission guards and all 43 package-script tests passed. A
+CDP-evaluated busy loop produced samples but no Long Tasks entry, so it was
+replaced with a real DOM event for this tool calibration. None of these
+synthetic results is an Anymal application performance measurement.

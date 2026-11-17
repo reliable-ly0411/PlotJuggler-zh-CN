@@ -482,9 +482,17 @@ jobs:
           exit "$status"
 
       - name: Serial cases (acceptance package)
+        id: serial
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: serial-report.json
         shell: bash
         if: ${{ !cancelled() && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
-        run: npm --prefix tests/wasm run test:serial -- --output serial-results 2>&1 | tee serial-browser.log
+        run: npm --prefix tests/wasm run test:serial -- --reporter=line,json --output serial-results 2>&1 | tee serial-browser.log
+
+      - name: Diagnose failed Anymal using the same local package and fixtures
+        if: ${{ !cancelled() && steps.serial.outcome == 'failure' }}
+        shell: bash
+        run: node .ci-controller/tests/wasm/profile_anymal.cjs "$PWD" 2>&1 | tee cpu-profile.log
 
       - name: Same functional assertions in English, Simplified and Traditional Chinese
         if: ${{ !cancelled() && inputs.role == 'localized' && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
@@ -509,6 +517,9 @@ jobs:
           name: wasm-${{ inputs.role }}-chromium-evidence-${{ inputs.source_sha }}-${{ github.run_attempt }}
           path: |
             serial-browser.log
+            cpu-profile.log
+            tests/wasm/serial-report.json
+            cpu-profile-results/
             tests/wasm/serial-results/
             tests/wasm/test-results/
             tests/wasm/playwright-report/
