@@ -11,7 +11,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     enable_testing()
 endif()
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network Svg)
 get_filename_component(profile_root "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
 add_executable(app_profile_test
     app_profile_test.cpp
@@ -29,7 +29,7 @@ target_include_directories(app_profile_test PRIVATE
     "${profile_root}/pj_widgets/include"
     "${profile_root}/pj_scene3D/widgets/src"
     "${profile_root}/pj_scene3D/core/include")
-target_link_libraries(app_profile_test PRIVATE Qt6::Widgets Qt6::Network)
+target_link_libraries(app_profile_test PRIVATE Qt6::Widgets Qt6::Network Qt6::Svg)
 target_compile_definitions(app_profile_test PRIVATE PJ_PROFILE_SOURCE_DIR="${profile_root}")
 if(MSVC)
     target_compile_options(app_profile_test PRIVATE /W4 /WX /permissive- /utf-8)

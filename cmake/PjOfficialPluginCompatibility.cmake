@@ -39,8 +39,10 @@ function(pj_apply_official_plugin_compatibility source_dir)
     # git apply otherwise treats these source-relative paths as outside the host's
     # current subdirectory and silently skips them, even with --check.
     get_filename_component(_source_parent "${source_dir}/.." REALPATH)
+    # Archive provenance is byte-exact LF regardless of the user's Git CRLF policy.
     set(_git "${CMAKE_COMMAND}" -E env --unset=GIT_DIR --unset=GIT_WORK_TREE
-        --unset=GIT_INDEX_FILE "GIT_CEILING_DIRECTORIES=${_source_parent}" "${GIT_EXECUTABLE}")
+        --unset=GIT_INDEX_FILE "GIT_CEILING_DIRECTORIES=${_source_parent}" "${GIT_EXECUTABLE}"
+        -c core.autocrlf=false -c core.eol=lf)
     set(_args "${_patch_dir}/wasm-csv397.patch" "${_patch_dir}/wasm-log391.patch")
     execute_process(COMMAND ${_git} apply --check ${_args}
         WORKING_DIRECTORY "${source_dir}" RESULT_VARIABLE _check ERROR_VARIABLE _error)

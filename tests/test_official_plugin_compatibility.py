@@ -48,9 +48,13 @@ class OfficialPluginCompatibilityTests(unittest.TestCase):
             f'include("{(cmake / "PjOfficialPluginCompatibility.cmake").as_posix()}")\n'
             f'pj_apply_official_plugin_compatibility("{self.source.as_posix()}")\n', encoding='utf-8')
 
-    def run_apply(self):
+    def run_apply(self, crlf=False):
         env = os.environ.copy()
         env.update(GIT_DIR=str(self.root / '.git'), GIT_WORK_TREE=str(self.root))
+        if crlf:
+            env.update(GIT_CONFIG_COUNT='2', GIT_CONFIG_KEY_0='core.autocrlf',
+                       GIT_CONFIG_VALUE_0='true', GIT_CONFIG_KEY_1='core.eol',
+                       GIT_CONFIG_VALUE_1='crlf')
         return subprocess.run(['cmake', '-P', str(self.script)], cwd=self.root, env=env,
                               text=True, capture_output=True)
 
@@ -71,6 +75,14 @@ class OfficialPluginCompatibilityTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('input mismatch', result.stderr)
         self.assertEqual(target.read_bytes(), b'corrupt\n')
+
+    def test_crlf_user_configuration_preserves_exact_archive_bytes(self):
+        for _ in range(2):
+            result = self.run_apply(crlf=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            for module in ['data_load_csv', 'widget_log']:
+                self.assertEqual((self.source / module / 'source.txt').read_bytes(), b'after\n')
+                self.assertEqual((self.root / module / 'source.txt').read_bytes(), b'host sentinel\n')
 
     def test_patch_hash_is_checked_before_mutation(self):
         patch = self.patches / 'wasm-csv397.patch'

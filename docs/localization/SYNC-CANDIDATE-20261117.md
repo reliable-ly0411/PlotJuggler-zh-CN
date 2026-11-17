@@ -60,3 +60,19 @@ checks cover correct destination/idempotence, corrupt output rejection and
 patch-hash rejection; the actual upstream patches also apply with matching
 output hashes in that layout. The original failed run remains evidence; only
 new-head CI can establish the corrected candidate's result.
+
+The first package run `44055174802` failed on both Linux and Windows in the
+focused language build: the standalone profile test compiles `WidgetTuner.cpp`,
+whose upstream SVG helper requires Qt Svg. The target now explicitly finds and
+links `Qt6::Svg`; no production helper or test is removed.
+
+Follow-up `0e397a325d959e4366b0ce6e3581358fe4575642` passed Linux source checks but
+failed Windows source checks in run `44056066526`; package run `44056280554`
+retains the corresponding Windows preflight failure and Linux SVG failure.
+Git's Windows CRLF policy changed applied archive bytes and correctly tripped
+the output-hash assertion. The same two failures were reproduced on Linux with
+`core.autocrlf=true` / `core.eol=crlf`. Patch commands now explicitly preserve LF,
+and a real Git/CMake regression checks exact bytes, host-file isolation and
+idempotent reconfiguration under that policy. All hash assertions remain strict.
+The failed package runs completed before cancellation; they were not canceled
+or accepted. These corrections require fresh exact-head acceptance.
