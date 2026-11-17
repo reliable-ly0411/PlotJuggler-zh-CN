@@ -166,7 +166,7 @@ Source inspection identifies the next profiling boundaries, not a proven
 fix: `DataProcessorService::installTransform` runs an initial 8 ms
 `materializeStep`; a zero-interval Qt timer calls `stepMaterialization` for later
 slices. Failure reporting, dependent/output bookkeeping, catalog notifications
-and synchronous UI/render work are outside the inner SDK slice deadline.
+and synchronous UI/render work are outside the inner datastore slice deadline.
 Measure those spans and the browser event-loop/graphics work separately before
 changing scheduling. Neither the 100 ms heartbeat nor 60-second completion
 assertion has been widened.
@@ -177,3 +177,17 @@ own output directory/log, every language is attempted even if another fails,
 and any failure fails the step. Existing full suites, serial bounds, upstream
 source builds, budgets, image assertions and the original non-blocking editor
 policy remain intact. This adds browser checks, not another full build.
+
+
+The candidate worktree was fast-forwarded through the reviewed language change
+and the three-language CI step. Integrated source validation passed **801 tests,
+31 skipped**, with no failures. The original `3c471fc5` native Linux/Windows run
+`44098684851` is still compiling; the remote remains at that head pending its
+final logs. No replacement native run has been started.
+
+`pj_datastore/src/incremental_engine.cpp` owns the slice implementation (not the
+SDK ABI layer). The main-thread complete-read barrier can also call
+`finishPendingMaterialization` with an effectively unbounded deadline. That
+path and UI/render notifications should be included in a timing trace; source
+inspection alone does not establish that either caused the observed Firefox
+failure.
