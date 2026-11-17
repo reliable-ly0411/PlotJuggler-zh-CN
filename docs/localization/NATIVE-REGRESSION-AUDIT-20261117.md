@@ -68,3 +68,36 @@ Downloaded report ZIPs were verified against the GitHub artifact digests:
 These focused results do not establish full native, browser, GUI, installer,
 marketplace-installation or final-package acceptance. Stable/development
 promotion, publication and tag changes remain outside this candidate step.
+
+## Exact-head 1b9 preflight failure and catalog repair
+
+The five native changes above were published in commit
+`e407a6b2e72f5986723e4e33152df96ba75eb4c6`, followed by the browser console
+framing/split-menu probe repair in candidate
+`1b9af0c7b675c53b5a2b2967f1e500aff5495773`. Source run 44118271684 passed
+on Linux and Windows. Its catalog-only validation did not check source drift.
+
+Native run [44118377038](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/44118377038)
+failed on both platforms before application configuration: full Qt extraction
+reported `QObject / Reselect source` and `QObject / Select source ` as stale
+active entries in each catalog. The old probe references had been removed.
+The earlier local extraction also returned 1; zero missing translations was
+incorrectly treated as success at that checkpoint. Both full CI logs and the
+original local failure log remain preserved. None of the five repaired native
+regressions ran on this head; they remain unverified in full native CI.
+
+The minimal repair marks those four catalog records `vanished`, preserving
+their translated text and history. Production `PJ::MainWindow` source-selection
+translations remain active. No checker or assertion was changed. From this
+isolated worktree, pinned Qt 6.12.0 full extraction now exits 0 with 2,151/2,151
+active messages per language, zero missing and zero stale. The unchanged
+translation-checker regression suite passes 11/11. A fresh standalone i18n
+build compiles the actual language loader, catalogs, resource linkage, bundled
+plugin UI mappings, splash and related fixtures; CTest passes **26/26**, exit 0.
+This is a focused language/runtime verification, not a full application build.
+
+At 2026-11-17 15:58 UTC, dual WASM run 44118271359 still builds exact 1b9.
+No run has been cancelled or duplicated. The catalog correction is retained
+on the isolated native-regressions branch pending grouped publication after
+that existing run finishes; stable/development still point to
+`1613eaec28e7c4aee13f7efc72f5e2b2d73a35ae`.

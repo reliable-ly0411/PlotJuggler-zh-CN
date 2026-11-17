@@ -80,7 +80,9 @@ selection roles were checked against MainWindow and MessageBox production code.
 The focused Python WASM source suite passed 15/15. Both translation catalogs
 remain 2153/2153 translated with zero missing source messages; the source check
 reports two stale QObject entries (`Reselect source`, `Select source `) after
-removing their probe-only references. Catalog text has been preserved.
+removing their probe-only references and exits **1 (failure)**. Zero missing
+messages did not make the full source check pass. Catalog text was preserved;
+the stale active status is corrected in the follow-up below.
 Changed JavaScript syntax and collection of 202 browser tests passed.
 Pre-commit and branch-name checks passed.
 
@@ -259,7 +261,9 @@ Focused follow-up, without rebuilding the archived WASM binary:
   C++ probe; the next exact-head WASM run must provide that evidence.
 - Packaging/JS tests 40/40; focused Python source/receipt tests 15/15; full Qt
   extraction still reports 2,153/2,153 translated entries per catalog, zero
-  missing source messages and the two retained probe-only stale entries.
+  missing source messages and the two retained probe-only stale entries. This
+  command returned **1**, so the full extraction check failed; the earlier
+  checkpoint did not distinguish this correctly from catalog-only success.
 
 The first local replay used an obsolete `/plotjuggler4.html` URL and encountered
 404 before boot; it was stopped and its output retained separately. The passes
@@ -272,3 +276,26 @@ launch failure. Neither was bypassed or retried. The 8 ms datastore slicing,
 notifications/render work and whole-series completion barrier remain profiling
 boundaries, not a proven diagnosis. All original timeouts, budgets and other
 assertions remain active, including the existing non-blocking editor policy.
+
+## Catalog-state follow-up after exact-head native preflight
+
+Candidate `1b9af0c7b675c53b5a2b2967f1e500aff5495773` passed both source CI
+jobs in run 44118271684, whose translation invocation is catalog-only. Native
+run [44118377038](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/44118377038)
+failed full Qt extraction on Linux job 134162629205 and Windows job
+134162628823: both found the same two stale active QObject entries. Application
+build, native regression, packaging and clean-package checks were skipped.
+
+The follow-up marks only these no-longer-extracted probe entries `vanished` in
+both catalogs, retaining their text/history. The real `PJ::MainWindow` messages
+remain active, including `Reselect source`, `Select source 1 of %1`, and
+`Select source %1 of %2`. No guard, identity, image, budget or functional
+assertion changes. Full Qt 6.12 extraction now exits **0**: each catalog has
+2,151/2,151 translated active messages, zero missing and zero stale; placeholders,
+plurals, rich text and source contexts all pass. The original nonzero local log
+and both complete CI failure logs are preserved in cloud scratch. This result
+does not replace exact-head native or browser acceptance.
+
+The repaired catalogs were also rebuilt through the standalone Qt 6.12 i18n
+project: 26/26 CTest entries passed, plus 11/11 unchanged checker unit tests.
+No current WASM run was cancelled or repeated for this follow-up.

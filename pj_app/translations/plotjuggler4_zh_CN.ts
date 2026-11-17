@@ -9473,12 +9473,12 @@ Details: %1</source>
     <message>
         <location filename="../tests/wasm_acceptance_probes.inc" line="-306"/>
         <source>Reselect source</source>
-        <translation>重新选择数据源</translation>
+        <translation type="vanished">重新选择数据源</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Select source </source>
-        <translation>选择数据源 </translation>
+        <translation type="vanished">选择数据源 </translation>
     </message>
     <message>
         <location line="+299"/>
