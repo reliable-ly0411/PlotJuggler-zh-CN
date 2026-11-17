@@ -232,11 +232,12 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_source_layout_decision(
   if (dialog != nullptr) {
     for (QPushButton* button : dialog->findChildren<QPushButton*>()) {
       const QPoint center = button->mapToGlobal(button->rect().center());
-      // "Select '<name>'" asks for a side file the layout's sources read.
-      if (button->text() == QObject::tr("Reselect source") ||
-          button->text().startsWith(QObject::tr("Select source ")) || button->text().startsWith(u"Select '"_s)) {
+      // The same primary button selects sources and side files as its label
+      // changes. MessageBox roles are stable across languages and selections.
+      const QString role = button->property("msgbox_role").toString();
+      if (role == "primary"_L1) {
         qInfo("PJ_WASM_SOURCE_LAYOUT_RESELECT center=%d,%d", center.x(), center.y());
-      } else if (button->text() == QObject::tr("Cancel")) {
+      } else if (role == "cancel"_L1) {
         qInfo("PJ_WASM_SOURCE_LAYOUT_CANCEL center=%d,%d", center.x(), center.y());
       }
     }
@@ -1263,6 +1264,8 @@ WasmHoverState findWasmHoverState(PJ::PlotWidget* plot) {
 }
 
 void reportWasmMenuAction(const QString& expected_label, const char* probe_name, const QString& object_name = {}) {
+  QString expected = expected_label;
+  expected.remove(QLatin1Char('&'));
   for (QWidget* widget : QApplication::topLevelWidgets()) {
     auto* menu = qobject_cast<QMenu*>(widget);
     if (menu == nullptr || !menu->isVisible()) {
@@ -1271,7 +1274,7 @@ void reportWasmMenuAction(const QString& expected_label, const char* probe_name,
     for (QAction* action : menu->actions()) {
       QString label = action->text();
       label.remove(QLatin1Char('&'));
-      if (object_name.isEmpty() ? label != expected_label : action->objectName() != object_name) {
+      if (object_name.isEmpty() ? label != expected : action->objectName() != object_name) {
         continue;
       }
       const QPoint center = menu->mapToGlobal(menu->actionGeometry(action).center());
@@ -1471,15 +1474,15 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_multi_plot_state() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_remove_all_action() {
-  reportWasmMenuAction(u"Remove ALL curves"_s, "remove_all");
+  reportWasmMenuAction(QCoreApplication::translate("PJ::PlotWidget", "&Remove ALL curves"), "remove_all");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_zoom_out_action() {
-  reportWasmMenuAction(u"Zoom Out"_s, "zoom_out");
+  reportWasmMenuAction(QCoreApplication::translate("PJ::PlotWidget", "&Zoom Out"), "zoom_out");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_split_horizontal_action() {
-  reportWasmMenuAction(u"Split Horizontally"_s, "split_horizontal");
+  reportWasmMenuAction(QCoreApplication::translate("PJ::DockWidget", "Split Horizontally"), "split_horizontal");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_save_layout_action() {
@@ -1491,11 +1494,11 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_save_source_layout_acti
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_apply_filter_action() {
-  reportWasmMenuAction(u"Apply Filter..."_s, "apply_filter");
+  reportWasmMenuAction(QCoreApplication::translate("PJ::PlotWidget", "Apply Filter..."), "apply_filter");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_quit_action() {
-  reportWasmMenuAction(u"Quit"_s, "quit");
+  reportWasmMenuAction({}, "quit", u"actionExit"_s);
 }
 
 
@@ -1567,6 +1570,10 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_placeholder_icons() {
       transitions.x(), transitions.y(), scene2d.x(), scene2d.y(), scene3d.x(), scene3d.y(), custom.x(), custom.y());
 }
 
+extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_interface_language() {
+  qInfo("PJ_WASM_INTERFACE_LANGUAGE value=%s", qPrintable(qApp->property("interfaceLanguage").toString()));
+}
+
 // Read-only observations for real canvas clicks and log-widget assertions. No
 // direct bind/create calls: browser tests must use the production picker/drop path.
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_custom_widgets() {
@@ -1634,7 +1641,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_custom_widgets() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_preferences_action() {
-  reportWasmMenuAction(u"Preferences..."_s, "preferences");
+  reportWasmMenuAction({}, "preferences", u"actionPreferences"_s);
 }
 
 // Reports every visible push button inside an open popup menu (the curve
@@ -1786,6 +1793,7 @@ EM_JS(void, pj_wasm_install_browser_test_probes, (), {
   globalThis.pjWasmReportSaveSourceLayoutActionProbe = () => Module._pj_wasm_test_report_save_source_layout_action();
   globalThis.pjWasmReportApplyFilterActionProbe = () => Module._pj_wasm_test_report_apply_filter_action();
   globalThis.pjWasmReportCustomWidgetsProbe = () => Module._pj_wasm_test_report_custom_widgets();
+  globalThis.pjWasmReportInterfaceLanguageProbe = () => Module._pj_wasm_test_report_interface_language();
   globalThis.pjWasmShowJpegVisualProbe = (index) => Module._pj_wasm_test_show_jpeg_visual(index);
   globalThis.pjWasmReportQuitActionProbe = () => Module._pj_wasm_test_report_quit_action();
   globalThis.pjWasmPythonAvailableProbe = () => Module._pj_wasm_test_python_available() === 1;

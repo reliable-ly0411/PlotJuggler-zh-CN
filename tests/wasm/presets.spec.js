@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+const { uiTranslations, completedMeshes } = require('./support/ui_language');
 // A preset is an ordinary source-bound layout opened by URL: its file sources
 // download from beside it, with no picker, all or nothing. A deployment lists
 // its presets in presets/index.json beside the page; the welcome dialog offers
@@ -886,13 +887,13 @@ async function expectSceneMoves(run, ready) {
 
 // The ANYmal and the GrandTour payload with every mesh fetched and the model pass drawing them:
 // unlike the scan, they do not depend on where the cursor is.
-const anymalLoaded = models => models.robots.live === 2 && models.robots.placeholders === 0
+const anymalLoaded = (models, complete) => models.robots.live === 2 && models.robots.placeholders === 0
   && models.robots.draws > 0 && models.robots.status.length === 2
-  && models.robots.status.every(status => /\b(\d+)\/\1 meshes/.test(status))
+  && models.robots.status.every(status => complete.test(status))
   && models.models.rendered > 0 && models.models.draws >= models.robots.draws;
 
 // The robots and, around them, the lidar scan the recording carries compressed.
-const anymalReady = (models, dock) => anymalLoaded(models)
+const anymalReady = (models, dock, complete) => anymalLoaded(models, complete)
   && dock.data.points.live === 1 && dock.data.points.compressed === 1 && dock.data.points.rendered > 0;
 
 // The ANYmal sample's plots, its three camera views, and its robots moving inside its scan.
@@ -904,14 +905,15 @@ async function expectAnymalViews(run) {
   ]);
   const cameras = await requestScene2DState(run.page, run.messages, count(run.messages, 'PJ_WASM_SCENE2D_SUMMARY'));
   expect(cameras.docks.map(dock => [dock.layers, dock.visible])).toEqual([[1, true], [1, true], [1, true]]);
-  await expectSceneMoves(run, anymalReady);
+  const complete = completedMeshes(await uiTranslations(run.page));
+  await expectSceneMoves(run, (models, dock) => anymalReady(models, dock, complete));
 }
 
 // The car model (one mesh, from the asset host) drawn, and the lidar scan (Cloudini-compressed)
 // restored in the map frame and drawn. Only once the cursor has passed the first scan, a few tens
 // of milliseconds into the clip.
-const cityDriveReady = (models, dock) => models.robots.live === 1 && models.robots.placeholders === 0
-  && models.robots.draws > 0 && models.robots.status.length === 1 && /\b1\/1 meshes/.test(models.robots.status[0])
+const cityDriveReady = (models, dock, complete) => models.robots.live === 1 && models.robots.placeholders === 0
+  && models.robots.draws > 0 && models.robots.status.length === 1 && complete.test(models.robots.status[0])
   && dock.fixed === 'map' && dock.data.points.live === 1
   && dock.data.points.compressed === 1 && dock.data.points.rendered > 0;
 
@@ -924,7 +926,8 @@ async function expectCityDriveViews(run) {
   ]);
   const cameras = await requestScene2DState(run.page, run.messages, count(run.messages, 'PJ_WASM_SCENE2D_SUMMARY'));
   expect(cameras.docks.map(dock => [dock.layers, dock.visible])).toEqual([[1, true]]);
-  await expectSceneMoves(run, cityDriveReady);
+  const complete = completedMeshes(await uiTranslations(run.page), 1);
+  await expectSceneMoves(run, (models, dock) => cityDriveReady(models, dock, complete));
 }
 
 // The Built-in filters sample: the raw gyro yaw rate, the same signal through the built-in
@@ -983,6 +986,7 @@ test('anymal sample stays responsive through load and reopen', { tag: '@serial' 
     const context = page.context();
     await page.close();
     const run = await bootSamples(context, errors, samples);
+    const complete = completedMeshes(await uiTranslations(run.page));
     // While `load` runs: the longest main-thread task, and the longest gap between
     // painted frames. Only the task is bounded. The gap also holds the frame after
     // it, and headless Chromium has no GPU: compositing reads the WebGL canvas
@@ -1028,7 +1032,8 @@ test('anymal sample stays responsive through load and reopen', { tag: '@serial' 
       const from = run.messages.length;
       const { frameGap, task } = await watchMainThread(async () => {
         expect(await pickSample(run, samples, 'anymal'), pass).toContain('PJ_WASM_LAYOUT_LOAD_OK');
-        await waitForScene3DModels(run.page, run.messages, anymalLoaded, 60000);
+        await waitForScene3DModels(run.page, run.messages,
+          models => anymalLoaded(models, complete), 60000);
       });
       const restore = run.messages.slice(from).map(text => /PJ_WASM_LAYOUT_RESTORE_MS ms=(\d+)/.exec(text))
         .filter(Boolean).map(match => Number(match[1]));
@@ -1068,9 +1073,11 @@ test('a sample that fails releases what it staged and leaves the open sample as 
     const context = page.context();
     await page.close();
     const run = await bootSamples(context, errors, samples);
+    const complete = completedMeshes(await uiTranslations(run.page));
     // The open sample is the one holding a staged file (its lazy MCAP reader).
     expect(await pickSample(run, samples, 'anymal')).toContain('PJ_WASM_LAYOUT_LOAD_OK');
-    await waitForScene3DModels(run.page, run.messages, anymalLoaded, 60000);
+    await waitForScene3DModels(run.page, run.messages,
+      models => anymalLoaded(models, complete), 60000);
     // Its camera decoders are running before a failure tears a load down.
     const cameras = await requestScene2DState(run.page, run.messages, count(run.messages, 'PJ_WASM_SCENE2D_SUMMARY'));
     expect(cameras.docks.map(dock => [dock.layers, dock.visible])).toEqual([[1, true], [1, true], [1, true]]);

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
+const { uiTranslations } = require('./support/ui_language');
 // Confirmation dialogs, context menus and app dialogs on the Asyncify-free
 // browser build: each must open non-blocking and act once the user answers.
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/language_test');
 const { waitForQtApp } = require('./support/app');
 const { clickActiveDialogButton } = require('./support/dialogs');
 const { curveRowCenter } = require('./support/geometry');
@@ -75,6 +76,9 @@ test('dataset removal asks without blocking and honours Cancel and Remove', asyn
   const screen = await page.locator('#screen').boundingBox();
   expect(screen).not.toBeNull();
 
+  const tr = await uiTranslations(page);
+  const removeLabel = tr('PJ::MainWindow', 'Remove');
+  const cancelLabel = tr('PJ::MainWindow', 'Cancel');
   await loadCsv(page, screen, consoleMessages, 'removal.csv');
   expect(await datasetCount(page, consoleMessages)).toBe(1);
 
@@ -82,26 +86,26 @@ test('dataset removal asks without blocking and honours Cancel and Remove', asyn
     const row = await curveRowCenter(page, screen, consoleMessages, 'removal.csv');
     await page.mouse.click(row.x, row.y, { button: 'right' });
     await page.waitForTimeout(300);
-    const remove = await menuButtonCenter(page, screen, consoleMessages, 'Remove');
+    const remove = await menuButtonCenter(page, screen, consoleMessages, tr('PJ::CurveListPanel', 'Remove'));
     await page.mouse.click(remove.x, remove.y);
     let box;
     await expect.poll(async () => {
       box = await messageBox(page, screen, consoleMessages);
       return box.present;
     }, { timeout: 10000 }).toBe(true);
-    expect(box.title).toBe('Remove dataset');
-    expect([...box.buttons.keys()]).toEqual(['Remove', 'Cancel']);
+    expect(box.title).toBe(tr('PJ::MainWindow', 'Remove dataset'));
+    expect([...box.buttons.keys()]).toEqual([removeLabel, cancelLabel]);
     return box;
   };
 
   // Cancel keeps the data: the question no longer reads as an instant "No".
   let box = await openRemovePrompt();
-  await page.mouse.click(box.buttons.get('Cancel').x, box.buttons.get('Cancel').y);
+  await page.mouse.click(box.buttons.get(cancelLabel).x, box.buttons.get(cancelLabel).y);
   await expect.poll(async () => (await messageBox(page, screen, consoleMessages)).present).toBe(false);
   expect(await datasetCount(page, consoleMessages)).toBe(1);
 
   box = await openRemovePrompt();
-  await page.mouse.click(box.buttons.get('Remove').x, box.buttons.get('Remove').y);
+  await page.mouse.click(box.buttons.get(removeLabel).x, box.buttons.get(removeLabel).y);
   await expect.poll(() => datasetCount(page, consoleMessages), { timeout: 10000 }).toBe(0);
 
   expect(errors).toEqual([]);

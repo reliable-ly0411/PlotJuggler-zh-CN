@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 const { expect } = require('@playwright/test');
 const { count, latest } = require('./console');
+const { expectRequestedLanguage } = require('./language_test');
 
 async function waitForQtApp(page, consoleMessages, previousReadyCount = 0) {
   await expect(page.locator('#screen')).toBeVisible({ timeout: 60000 });
@@ -10,6 +11,7 @@ async function waitForQtApp(page, consoleMessages, previousReadyCount = 0) {
     () => consoleMessages.filter(message => message.includes('PJ_WASM_APP_READY')).length,
     { timeout: 60000 },
   ).toBeGreaterThan(previousReadyCount);
+  await expectRequestedLanguage(page);
 }
 
 

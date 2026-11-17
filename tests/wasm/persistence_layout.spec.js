@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+const { uiTranslations } = require('./support/ui_language');
 const { test, expect } = require('@playwright/test');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -360,7 +361,8 @@ test('browser layouts open transactionally and download with exact round-trip st
   await page.evaluate(() => window.pjWasmReportLayoutDialogProbe());
   const missingDialog = consoleMessages.filter(message => message.includes('PJ_WASM_LAYOUT_DIALOG present=')).at(-1) || '';
   expect(missingDialog).toContain('present=1');
-  expect(missingDialog).toContain('Open matching data sources and try again');
+  expect(missingDialog).toContain((await uiTranslations(page))('PJ::MainWindow',
+    'Layout was parsed but could not be applied to the currently loaded data. Open matching data sources and try again.'));
   await page.evaluate(() => window.pjWasmDismissLayoutDialogProbe());
   const afterIncompatible = await requestPlotState(page, consoleMessages, stateMessages);
   stateMessages += 1;
@@ -580,8 +582,10 @@ test('browser layouts open transactionally and download with exact round-trip st
     message => message.includes('PJ_WASM_LAYOUT_DIALOG present='),
   ).at(-1) || '';
   expect(tripwireDialog).toContain('present=1');
-  expect(tripwireDialog).toContain('Save Layout');
-  expect(tripwireDialog).toContain('ephemeral browser path');
+  const tr = await uiTranslations(page);
+  expect(tripwireDialog).toContain(tr('PJ::MainWindow', 'Save Layout'));
+  expect(tripwireDialog).toContain(tr('PJ::MainWindow',
+    'The layout still contains an ephemeral browser path and was not downloaded.'));
   await page.evaluate(() => window.pjWasmDismissLayoutDialogProbe());
 
   const recentAfter = await requestLayoutPersistence(page, consoleMessages, persistenceMessages + 1);
@@ -616,7 +620,7 @@ test('browser layouts open transactionally and download with exact round-trip st
   expect(recentRestore.view.left).toBeCloseTo(0.25, 6);
   expect(recentRestore.view.right).toBeCloseTo(1.25, 6);
 
-  await clickRecentMenuAction(page, consoleMessages, 'Clear recent layouts');
+  await clickRecentMenuAction(page, consoleMessages, tr('PJ::LeftPanel', 'Clear recent layouts'));
   const afterRecentClear = await requestBrowserPersistenceState(
     page,
     consoleMessages,
@@ -992,7 +996,9 @@ test('multi-source browser layouts stage duplicate basenames transactionally and
   const mismatchDialog = consoleMessages.filter(
     message => message.includes('PJ_WASM_LAYOUT_DIALOG present='),
   ).at(-1) || '';
-  expect(mismatchDialog).toContain('not the file saved for source 1 of 2');
+  expect(mismatchDialog).toContain((await uiTranslations(page))('PJ::MainWindow',
+    "The selected '%1' is not the file saved for source %2 of %3 ('%4'). Select the original file for that saved slot.",
+    'duplicate.csv', 1, 2, 'pj4-sources/0/duplicate.csv'));
   await page.evaluate(() => window.pjWasmDismissLayoutDialogProbe());
   await selectReplaySource(leftBytes);
   await expect.poll(

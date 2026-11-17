@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+const { uiTranslations } = require('./support/ui_language');
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
@@ -59,6 +60,7 @@ test('a topic robot_description fetches package meshes through the layout roots'
   });
   try {
     const { screen, layout } = await sceneWithLayout(page, messages, 'ros2_package_robot_description_real.mcap');
+    const tr = await uiTranslations(page);
     const topic = { source_type: 'topic', source_value: '/robot_description', source_topic_name: '/robot_description' };
 
     // An uploaded file has no location: a relative root fails the load visibly
@@ -89,7 +91,8 @@ test('a topic robot_description fetches package meshes through the layout roots'
     // One mesh lands; the missing one (404) and the CORS-denied one fail
     // visibly as placeholders.
     const state = await waitForModels(page, messages, models =>
-      models.robots.live === 1 && models.robots.status.join(' ').includes('2 mesh load(s) failed'));
+      models.robots.live === 1 && models.robots.status.join(' ').includes(tr('pj::scene3d::RobotModelLayer',
+        '  •  %n mesh load(s) failed (shown as magenta placeholders)', 2)));
     expect(state.docks[0].models.robots).toMatchObject({
       sourceType: 0, draws: 3, visual: 3, placeholders: 2, meshes: 5, bridges: 2,
     });

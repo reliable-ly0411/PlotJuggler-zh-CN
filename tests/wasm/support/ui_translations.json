@@ -1,0 +1,94 @@
+{
+  "PJ::CurveListPanel": {
+    "Remove": {
+      "zh_CN": "移除",
+      "zh_TW": "移除"
+    }
+  },
+  "PJ::MainWindow": {
+    "Remove dataset": {
+      "zh_CN": "移除数据集",
+      "zh_TW": "移除資料集"
+    },
+    "Remove": {
+      "zh_CN": "移除",
+      "zh_TW": "移除"
+    },
+    "Cancel": {
+      "zh_CN": "取消",
+      "zh_TW": "取消"
+    },
+    "Streaming": {
+      "zh_CN": "数据流",
+      "zh_TW": "串流資料"
+    },
+    "The stream failed:\n\n%1": {
+      "zh_CN": "数据流发生错误：\n\n%1",
+      "zh_TW": "資料串流發生錯誤：\n\n%1"
+    },
+    "The selected '%1' is not the file saved for source %2 of %3 ('%4'). Select the original file for that saved slot.": {
+      "zh_CN": "选中的“%1”不是第 %2 个数据源（共 %3 个，“%4”）所保存的文件。请选择该槽位对应的原始文件。",
+      "zh_TW": "選取的「%1」不是第 %2 個資料來源（共 %3 個，「%4」）所儲存的檔案。請選擇該槽位對應的原始檔案。"
+    },
+    "Layout was parsed but could not be applied to the currently loaded data. Open matching data sources and try again.": {
+      "zh_CN": "布局已解析，但无法应用到当前加载的数据。请打开匹配的数据源后重试。",
+      "zh_TW": "版面配置已解析，但無法套用到目前載入的資料。請開啟符合的資料來源後重試。"
+    },
+    "Save Layout": {
+      "zh_CN": "保存布局",
+      "zh_TW": "儲存版面配置"
+    },
+    "The layout still contains an ephemeral browser path and was not downloaded.": {
+      "zh_CN": "布局仍包含临时浏览器路径，因此未下载。",
+      "zh_TW": "版面配置仍包含暫時瀏覽器路徑，因此未下載。"
+    }
+  },
+  "PJ::PlotWidget": {
+    "Duplicate name": {
+      "zh_CN": "名称重复",
+      "zh_TW": "名稱重複"
+    }
+  },
+  "PJ::BundledPluginMetadata": {
+    "Dummy Streamer": {
+      "zh_CN": "模拟数据流",
+      "zh_TW": "模擬資料串流"
+    }
+  },
+  "QObject": {
+    "error: %1": {
+      "zh_CN": "错误：%1",
+      "zh_TW": "錯誤：%1"
+    }
+  },
+  "pj::scene3d::RobotModelLayer": {
+    "Select the local URDF again; browser layouts cannot retain host-file access": {
+      "zh_CN": "请重新选择本地 URDF；浏览器布局无法保留对本机文件的访问权限",
+      "zh_TW": "請重新選擇本機 URDF；瀏覽器版面配置無法保留對本機檔案的存取權限"
+    },
+    "  •  %n mesh load(s) failed (shown as magenta placeholders)": {
+      "zh_CN": "  •  %n 个网格加载失败（以品红色占位对象显示）",
+      "zh_TW": "  •  %n 個網格載入失敗（以品紅色預留位置物件顯示）"
+    },
+    "  •  %1/%1 meshes": {
+      "zh_CN": "  •  %1/%1 个网格",
+      "zh_TW": "  •  %1/%1 個網格"
+    },
+    "  •  %n mesh reference(s) unavailable in the browser sandbox (shown as magenta placeholders)": {
+      "zh_CN": "  •  %n 个网格引用在浏览器沙箱中不可用（以品红色占位对象显示）",
+      "zh_TW": "  •  %n 個網格參照在瀏覽器沙箱中不可用（以品紅色預留位置物件顯示）"
+    }
+  },
+  "PJ::StreamingSourceManager": {
+    "[stream] %1": {
+      "zh_CN": "[流] %1",
+      "zh_TW": "[串流] %1"
+    }
+  },
+  "PJ::LeftPanel": {
+    "Clear recent layouts": {
+      "zh_CN": "清空最近使用的布局",
+      "zh_TW": "清除最近使用的版面配置"
+    }
+  }
+}
