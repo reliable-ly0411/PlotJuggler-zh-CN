@@ -134,3 +134,46 @@ workflow gates or the dual-artifact receipt scheme. The last measured 55 build
 remains: upstream startup 15,065,341 B against 16,932,000 B; localized startup
 24,579,178 B and full package 25,336,400 B against the independent 26,000,000 B
 full-package gate. Those measurements do not certify a later head.
+
+
+## Follow-up: exact 3c run and validation plan
+
+Run `44098646743` at controller/source candidate `3c471fc5` ended with the same
+localized 17 functional and two serial Chromium failures; the additional
+log/layout/glyph (5) and JPEG pixel (1) scenarios passed. Localized Firefox
+remained 75 functional passes, 17 failures and seven existing skips; its
+non-blocking editor suite was one pass and one menu-selector failure.
+
+The unchanged upstream source `5002da40` had 96 Chromium functional passes and
+five serial passes this time. ANYmal longest tasks were 1314 ms (load) and
+1333 ms (reopen), below the unchanged 2000 ms gate. This successful observation
+does not erase the previous 2459 ms failure or establish its cause.
+Upstream Firefox had 92 functional passes and seven existing skips. Its
+non-blocking Transform Editor now completed materialization but failed the
+unchanged 100 ms heartbeat bound at 166.98 ms. Thus the earlier materialization
+timeout and current responsiveness failure must be investigated independently
+of UI translation.
+
+A cloud-only Firefox 151.0 / Playwright 1.61.1 replay was attempted against the
+archived upstream binary, with a private Xvfb and the original test. Firefox
+failed before application startup: browser launch timed out after 180 seconds,
+reporting a read-only `/proc/self/uid_map` sandbox error and SWGL framebuffer
+mapping failure. No application assertion ran. No sandbox disable flag or
+permission bypass was used. The full launch error is retained separately from
+CI's actual application failures.
+
+Source inspection identifies the next profiling boundaries, not a proven
+fix: `DataProcessorService::installTransform` runs an initial 8 ms
+`materializeStep`; a zero-interval Qt timer calls `stepMaterialization` for later
+slices. Failure reporting, dependent/output bookkeeping, catalog notifications
+and synchronous UI/render work are outside the inner SDK slice deadline.
+Measure those spans and the browser event-loop/graphics work separately before
+changing scheduling. Neither the 100 ms heartbeat nor 60-second completion
+assertion has been widened.
+
+The next localized candidate adds the same four functional scenarios in all
+three languages to both Chromium and Firefox shard 1. Each language gets its
+own output directory/log, every language is attempted even if another fails,
+and any failure fails the step. Existing full suites, serial bounds, upstream
+source builds, budgets, image assertions and the original non-blocking editor
+policy remain intact. This adds browser checks, not another full build.

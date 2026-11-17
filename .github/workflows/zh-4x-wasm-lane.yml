@@ -486,6 +486,22 @@ jobs:
         if: ${{ !cancelled() && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
         run: npm --prefix tests/wasm run test:serial -- --output serial-results 2>&1 | tee serial-browser.log
 
+      - name: Same functional assertions in English, Simplified and Traditional Chinese
+        if: ${{ !cancelled() && inputs.role == 'localized' && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
+        working-directory: tests/wasm
+        shell: bash
+        run: |
+          status=0
+          for language in en_US zh_CN zh_TW; do
+            PJ_WASM_TEST_LANGUAGE="$language" npx playwright test \
+              dialogs.spec.js plotting.spec.js scene3d_models.spec.js \
+              --project=chromium --workers=1 --reporter=line \
+              --grep 'dataset removal|Preferences opens|right-drag creates XY|a local URDF renders' \
+              --output "language-${language}-chromium-results" \
+              2>&1 | tee "language-${language}-chromium.log" || status=1
+          done
+          exit "$status"
+
       - name: Preserve localized browser assertions and screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -501,6 +517,8 @@ jobs:
             tests/wasm/localized-jpeg.log
             tests/wasm/localized-log-results/
             tests/wasm/localized-jpeg-results/
+            tests/wasm/language-*-chromium.log
+            tests/wasm/language-*-chromium-results/
           if-no-files-found: warn
           retention-days: 14
 
@@ -637,6 +655,22 @@ jobs:
         continue-on-error: true
         run: xvfb-run -a npm --prefix tests/wasm run test:firefox -- --grep editors.spec.js --output firefox-editors-results
 
+      - name: Same functional assertions in three languages (Firefox)
+        if: ${{ !cancelled() && inputs.role == 'localized' && matrix.shard == 1 && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
+        working-directory: tests/wasm
+        shell: bash
+        run: |
+          status=0
+          for language in en_US zh_CN zh_TW; do
+            PJ_WASM_TEST_LANGUAGE="$language" xvfb-run -a npx playwright test \
+              dialogs.spec.js plotting.spec.js scene3d_models.spec.js \
+              --project=firefox --workers=1 --reporter=line \
+              --grep 'dataset removal|Preferences opens|right-drag creates XY|a local URDF renders' \
+              --output "language-${language}-firefox-results" \
+              2>&1 | tee "language-${language}-firefox.log" || status=1
+          done
+          exit "$status"
+
       - name: Preserve Firefox browser evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -647,6 +681,8 @@ jobs:
             tests/wasm/playwright-report/
             tests/wasm/firefox-functional-results/
             tests/wasm/firefox-editors-results/
+            tests/wasm/language-*-firefox.log
+            tests/wasm/language-*-firefox-results/
             validation-receipts/
           if-no-files-found: warn
           retention-days: 14
