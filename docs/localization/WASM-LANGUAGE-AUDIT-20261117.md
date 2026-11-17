@@ -181,9 +181,9 @@ policy remain intact. This adds browser checks, not another full build.
 
 The candidate worktree was fast-forwarded through the reviewed language change
 and the three-language CI step. Integrated source validation passed **801 tests,
-31 skipped**, with no failures. The original `3c471fc5` native Linux/Windows run
-`44098684851` is still compiling; the remote remains at that head pending its
-final logs. No replacement native run has been started.
+31 skipped**, with no failures. At that integration checkpoint, the original `3c471fc5` native run
+`44098684851` was still compiling. Its final failures and isolated fixes are now
+recorded in [the native regression audit](NATIVE-REGRESSION-AUDIT-20261117.md).
 
 `pj_datastore/src/incremental_engine.cpp` owns the slice implementation (not the
 SDK ABI layer). The main-thread complete-read barrier can also call
@@ -191,3 +191,84 @@ SDK ABI layer). The main-thread complete-read barrier can also call
 path and UI/render notifications should be included in a timing trace; source
 inspection alone does not establish that either caused the observed Firefox
 failure.
+
+
+## Exact 2459f63b final run and follow-up
+
+[Run 44108777625](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/44108777625)
+completed against controller/localized source
+`2459f63bf38dc0b7eddc2e8588197672afdd0ad8` and the unchanged upstream
+`5002da40a6499cb99c1073d5b8c611f1e825cb4b`. Source CI
+[44108777769](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/44108777769)
+passed on Linux (801 tests, 24 skipped) and Windows (799 tests, 32 skipped).
+
+| Actual production measurement | Upstream | Localized |
+| --- | ---: | ---: |
+| Startup Brotli bytes | 15,064,636 | 24,578,988 |
+| Complete download bytes | 15,821,858 | 25,336,210 |
+| Applicable unchanged gate | 16,932,000 startup | 26,000,000 total |
+
+Both production and acceptance archives for each role were downloaded and
+checked against GitHub SHA-256 digests. Every receipt file entry, extra support
+file, source SHA and source tree was independently verified locally. The
+[package evidence](WASM-2459-PACKAGE-EVIDENCE.json) records exact archive and
+receipt hashes. All twelve run artifacts and complete browser/build logs are
+retained in cloud scratch under `dual2459-artifacts/` and `2459-*.log`.
+
+Final browser results, without collapsing non-blocking failures into green jobs:
+
+- Upstream Chromium: functional 96 passed; serial 5 passed. Anymal longest
+  load/reopen tasks were 1,096/1,060 ms. The earlier 2,459 ms failure remains
+  unresolved evidence; unchanged-source passes do not establish a repair.
+- Upstream Firefox: shard 1 functional 50 passed; shard 2 42 passed / 7 skipped.
+  The non-blocking editor step was 1 passed / 1 failed: the large Luau series
+  still reported materializing after the original 60-second deadline.
+- Localized Chromium: functional 85 passed / 11 failed; serial 3 passed / 2
+  failed; log/layout/glyph 5 passed; JPEG pixel-drawing 1 passed (64 images).
+- Localized Firefox: shard 1 functional 46 passed / 4 failed; shard 2 34 passed /
+  8 failed / 7 skipped. Non-blocking editors: 1 passed / 1 failed, with a
+  185.06 ms heartbeat gap against the unchanged 100 ms gate.
+- All twelve additional language cases failed in each browser on the same
+  console-framing defect before their functional assertions could execute.
+
+The localized functional failures divide into two concrete probe defects:
+
+1. Emscripten's dedicated language probe emits a trailing newline. Splitting
+   only on a space retained `zh_CN\n` (or the other requested language), which
+   the strict language allowlist correctly rejected. Trim console framing and
+   split whitespace; retain exact supported-language and requested-language
+   equality. Five Node regressions cover English, LF, CRLF, archived multi-field
+   output and rejection of an unsupported language.
+2. The populated PlotWidget menu uses `PJ::PlotWidget / Split &Horizontally`;
+   the empty dock uses `PJ::DockWidget / Split Horizontally`. Match those two
+   exact translated action labels, normalizing accelerators on both sides.
+   No UI action is triggered by the probe and no alternative language is
+   accepted. The actual split behavior, curves and tracker assertions remain.
+
+Focused follow-up, without rebuilding the archived WASM binary:
+
+- Chromium 156 / Playwright 1.61.1, actual 2459 acceptance bytes and corrected
+  JavaScript: English, Simplified and Traditional functional cases 4/4 each.
+- Five additional cases passed: transactional layout save/restore, multi-source
+  duplicate basenames/timeline, valid and invalid Python layout recipes, URL
+  model meshes, and the complete dummy-stream lifecycle including Quit.
+- Actual extracted menu-probe functions against Qt 6.12 and both production
+  catalogs: the original fails on the populated Chinese plot menu; corrected
+  functions pass 21 visible and 21 hidden checks across seven menu identities
+  and three languages. This is not an Emscripten link/browser pass for the new
+  C++ probe; the next exact-head WASM run must provide that evidence.
+- Packaging/JS tests 40/40; focused Python source/receipt tests 15/15; full Qt
+  extraction still reports 2,153/2,153 translated entries per catalog, zero
+  missing source messages and the two retained probe-only stale entries.
+
+The first local replay used an obsolete `/plotjuggler4.html` URL and encountered
+404 before boot; it was stopped and its output retained separately. The passes
+above use the receipt's real `index.html` entrypoint at `/`. No GitHub run was
+cancelled or retried for this local invocation error.
+
+Anymal hosted-asset profiling remains blocked by the recorded HTTP 403;
+Firefox local profiling remains blocked before app startup by its sandbox
+launch failure. Neither was bypassed or retried. The 8 ms datastore slicing,
+notifications/render work and whole-series completion barrier remain profiling
+boundaries, not a proven diagnosis. All original timeouts, budgets and other
+assertions remain active, including the existing non-blocking editor policy.

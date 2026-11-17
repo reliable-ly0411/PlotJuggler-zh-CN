@@ -1263,9 +1263,11 @@ WasmHoverState findWasmHoverState(PJ::PlotWidget* plot) {
   return result;
 }
 
-void reportWasmMenuAction(const QString& expected_label, const char* probe_name, const QString& object_name = {}) {
-  QString expected = expected_label;
-  expected.remove(QLatin1Char('&'));
+void reportWasmMenuAction(const QStringList& expected_labels, const char* probe_name, const QString& object_name = {}) {
+  QStringList expected = expected_labels;
+  for (QString& label : expected) {
+    label.remove(QLatin1Char('&'));
+  }
   for (QWidget* widget : QApplication::topLevelWidgets()) {
     auto* menu = qobject_cast<QMenu*>(widget);
     if (menu == nullptr || !menu->isVisible()) {
@@ -1274,7 +1276,7 @@ void reportWasmMenuAction(const QString& expected_label, const char* probe_name,
     for (QAction* action : menu->actions()) {
       QString label = action->text();
       label.remove(QLatin1Char('&'));
-      if (object_name.isEmpty() ? label != expected : action->objectName() != object_name) {
+      if (object_name.isEmpty() ? !expected.contains(label) : action->objectName() != object_name) {
         continue;
       }
       const QPoint center = menu->mapToGlobal(menu->actionGeometry(action).center());
@@ -1474,15 +1476,19 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_multi_plot_state() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_remove_all_action() {
-  reportWasmMenuAction(QCoreApplication::translate("PJ::PlotWidget", "&Remove ALL curves"), "remove_all");
+  reportWasmMenuAction({QCoreApplication::translate("PJ::PlotWidget", "&Remove ALL curves")}, "remove_all");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_zoom_out_action() {
-  reportWasmMenuAction(QCoreApplication::translate("PJ::PlotWidget", "&Zoom Out"), "zoom_out");
+  reportWasmMenuAction({QCoreApplication::translate("PJ::PlotWidget", "&Zoom Out")}, "zoom_out");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_split_horizontal_action() {
-  reportWasmMenuAction(QCoreApplication::translate("PJ::DockWidget", "Split Horizontally"), "split_horizontal");
+  // The populated plot and its empty dock expose distinct Qt translation keys.
+  reportWasmMenuAction(
+      {QCoreApplication::translate("PJ::PlotWidget", "Split &Horizontally"),
+       QCoreApplication::translate("PJ::DockWidget", "Split Horizontally")},
+      "split_horizontal");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_save_layout_action() {
@@ -1494,7 +1500,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_save_source_layout_acti
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_apply_filter_action() {
-  reportWasmMenuAction(QCoreApplication::translate("PJ::PlotWidget", "Apply Filter..."), "apply_filter");
+  reportWasmMenuAction({QCoreApplication::translate("PJ::PlotWidget", "Apply Filter...")}, "apply_filter");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_quit_action() {

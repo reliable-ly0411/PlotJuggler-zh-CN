@@ -22,7 +22,7 @@ async function uiTranslations(page) {
     });
     const marker = modern ? 'PJ_WASM_INTERFACE_LANGUAGE value=' : 'PJ_WASM_CUSTOM_UI language=';
     await expect.poll(() => messages.find(message => message.includes(marker))).toBeTruthy();
-    const language = messages.find(message => message.includes(marker)).split(marker)[1].split(' ')[0];
+    const language = messages.find(message => message.includes(marker)).split(marker)[1].trim().split(/\s+/)[0];
     expect(['en_US', 'zh_CN', 'zh_TW']).toContain(language);
     const tr = (context, source, ...args) => {
       const entry = translations[context]?.[source];
