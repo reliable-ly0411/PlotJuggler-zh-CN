@@ -347,3 +347,32 @@ same binary's symbol map. No timer or runtime behavior is changed on this basis.
 Sampling changes timing and cannot replace the original 179.34/206.42 ms failures
 or the original unsampled pending timeout. Future failure-only diagnostics retain
 the original JSON result and all assertions before the separate sampled replay.
+
+## Isolated WASM zero-timer follow-up
+
+The pinned Qt 6.12.0 sources expose a concrete continuation hazard:
+`QTimerInfoList::activateTimers()` delivers a zero-interval callback but excludes
+it from its returned activation count. `QEventDispatcherWasm::sendTimerEvents()`
+rearms its native timer only when that count is positive. A native executable
+linked to the actual Qt 6.12.0 private timer-list implementation, with the same
+WASM rearm predicate, measured:
+
+- 0 ms: one callback, returned count zero, timer still pending, no rearm; the
+  three-callback progress assertion failed with exit 1.
+- 1 ms: three callbacks, returned count one, timer pending and rearmed; the same
+  progress assertion passed with exit 0.
+
+This is a native mechanism probe, not a compiled-WASM/browser reproduction.
+The isolated change gives only the WASM materialization timer a positive 1 ms
+interval. It does not alter per-slice budgets, data, notification intervals or
+the existing 100 ms/60-second browser assertions. The native unit test explicitly
+pumps `processEvents`, so its success alone cannot cover the browser's need to
+rearm a native wakeup. The initial >100 ms WASM work remains a separate issue.
+
+The timer probe compiled with `-Wall -Wextra -Werror`. A separate strict syntax
+attempt for both branches of the whole `DataProcessorService.cpp` stopped on
+its pre-existing `Dependent::transform_key` missing-field-initializer warning
+at the unchanged processor-removal code. That failure is retained, not suppressed;
+it is not evidence of a successful whole-file compile or browser validation.
+Pre-commit passes. The isolated change is not in published candidate e44a1a53
+or its running CI and still requires exact-head browser validation.

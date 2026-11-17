@@ -1224,7 +1224,13 @@ void DataProcessorService::armMaterializationTimer() {
   }
   if (!materialize_timer_) {
     materialize_timer_ = std::make_unique<QTimer>();
+#ifdef PJ_TARGET_WASM
+    // Qt 6.12's WASM dispatcher rearms only for counted timer activations;
+    // zero-interval callbacks are delivered but excluded from that count.
+    materialize_timer_->setInterval(1);
+#else
     materialize_timer_->setInterval(0);
+#endif
     QObject::connect(materialize_timer_.get(), &QTimer::timeout, materialize_timer_.get(), [this]() {
       if (stepMaterialization()) {
         materialize_timer_->stop();
