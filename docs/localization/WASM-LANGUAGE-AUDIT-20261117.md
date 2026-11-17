@@ -370,3 +370,60 @@ retain the complete assertion sequences. A
 CDP-evaluated busy loop produced samples but no Long Tasks entry, so it was
 replaced with a real DOM event for this tool calibration. None of these
 synthetic results is an Anymal application performance measurement.
+
+## Exact-head 2627 browser evidence and remaining performance failure
+
+Run [44141813684](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/44141813684)
+used localized source/controller `2627eed1ce000075eaabb9a86403493eb0799406`
+and independent upstream source `5002da40a6499cb99c1073d5b8c611f1e825cb4b`.
+Both production/acceptance builds passed. Downloaded ZIP digests and package
+receipts were checked against the actual extracted files. Upstream production
+startup is **15,065,250 B / 16,932,000 B**; localized production startup is
+**24,580,164 B**, and its complete package is **25,337,386 B / 26,000,000 B**.
+Acceptance binaries are distinct probe builds; their sizes are not substituted
+for production measurements.
+
+Upstream Chromium passed 96 functional and all 5 serial cases. Upstream
+Firefox passed 50 and 42 functional cases, with its 2 editor cases passing.
+Localized Chromium passed 96 functional, 5 layout/glyph, 1 JPEG and 4 cases
+in each of English, Simplified Chinese and Traditional Chinese. Localized
+Firefox passed 50 and 42 functional cases, 2 editor cases and the same 4 cases
+per language. Both second Firefox shards retain their 7 existing skips.
+
+Localized Chromium job 134257276818 failed exactly one serial case:
+`python.spec.js:103` measured Python **44.35 us** against Luau **27.80 us**,
+a ratio of **1.5953**, exceeding the unchanged **1.5** limit. The 4 other serial
+cases passed. The numeric/error assertions before that comparison passed;
+assertions after it and the later busy-GIL phase did not execute. Logged
+watchdog/import/memory outcomes alone are not counted as those assertions
+passing. Python implementation and probe sources did not change between
+31804af1 and 2627eed1. Comparing their retained acceptance binaries finds
+identical upstream code sections. Localized code differs in only five bytes
+of one eight-byte constant-return function out of 73,578 defined functions:
+its `i32.const` changes from `0x31804af1` to `0x2627eed1`, matching the source
+SHA prefixes. Its source symbol is not mapped. The data sections also differ;
+this narrow binary observation does not establish identical runtime behavior
+or attribute the performance failure.
+
+A single sequential diagnostic replay of both retained acceptance packages
+used the unchanged Python spec and assertions on this cloud container's
+Chromium **156.0.8078.79** (CI used **149.0.7827.55**). Each passed **2/2**,
+including the busy-GIL phase: upstream ratio **1.1488**, localized **1.0904**.
+This different-browser result does not replace or explain the CI failure;
+there was no repeat-until-pass run, changed threshold or additional hosted
+fixture download. The original failure, replay logs and their SHA-256 hashes
+are retained under `/workspace/scratch/pj-sdk101-validation/python-2627-replay/`.
+
+Anymal passed this round: upstream load/reopen **810/1334 ms**, localized
+**1299/1308 ms**. Earlier 31804af1 load failures (**2562/2398 ms**) and other
+historical results remain open evidence. All six current browser evidence
+ZIPs were downloaded and verified; none contains a CPU profile or timeline.
+Absence of those traces cannot identify the slow task or its cause. The
+source-derived CPU diagnostic remains unpublished pending useful grouped
+verification; it has not measured the real Anymal failure yet.
+
+Native run [44141874689](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/44141874689)
+was still building both applications at this checkpoint. No clean-install
+acceptance or whole-application pass is asserted. The published candidate
+remains 2627eed1; stable/development remain 1613eaec, with no promotion,
+release, tag change, forced update or duplicate run.
