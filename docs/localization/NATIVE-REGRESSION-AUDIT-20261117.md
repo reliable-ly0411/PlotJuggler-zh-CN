@@ -223,3 +223,45 @@ source preflight then passes 807 entries (776 passes, 31 platform/environment
 skips); pre-commit and whitespace checks pass. Both original CI logs and the
 three isolated-check logs are retained under the cloud validation scratch
 root. Existing ca245298 native and WASM runs were not cancelled or repeated.
+## Firefox editor evidence after ca245298
+
+WASM run `44158751480` reports success because its existing Firefox editor step
+is non-blocking. Its full logs still contain two real failures:
+
+- Localized job `134315471373`: the transform completed, but the maximum browser
+  heartbeat gap was `206.4200000000019 ms`, exceeding the unchanged `100 ms` bound
+  at `editors.spec.js:575`. Assertions after that point did not execute.
+- Upstream job `134318627239`: materialization remained pending through the
+  unchanged `60,000 ms` poll at `editors.spec.js:565`. Heartbeat and final-series
+  assertions after that point did not execute.
+
+Both Firefox functional shards passed (50 and 42 tests, with seven existing skips
+in shard two). Chromium passed 96 functional and five serial tests in each lane.
+These successes do not erase either editor failure or historical Anymal/Python
+performance failures.
+
+The result probe reads transform recipe metadata and custom-tree coordinates; it
+does not traverse the 30,000 samples. This rules out the suggested full-series
+scan in that probe, but does not identify the failing main-thread work. No CPU
+trace was retained for those failed editor measurements. The local pinned
+Firefox attempt stopped before app launch (`Sandbox: writing /proc/self/uid_map:
+EROFS`); no sandbox relaxation is part of this investigation.
+
+The prepared diagnostic keeps the original editor run, JSON report, exit status,
+assertions and timeouts. Only a failed/timed-out original Firefox transform admits
+a separate replay of that lane's own test and already-verified acceptance package.
+The derivative adds phase marks and failure-safe console/heartbeat retention; it
+does not substitute the controller's product tests into the upstream lane.
+Firefox startup sampling uses Mozilla's documented `MOZ_PROFILER_STARTUP`,
+`MOZ_PROFILER_STARTUP_FILTERS` and `MOZ_PROFILER_SHUTDOWN` variables
+([Mozilla documentation](https://firefox-source-docs.mozilla.org/networking/http/logging.html#capturing-a-profile-with-logs-at-startup)).
+No symbol download, fixture fetch, rebuild, sandbox override or credential fallback
+is added. Sampling perturbs timing; replay results cannot replace original failed
+acceptance. Missing profile output is a diagnostic failure, not success.
+
+Local checks cover failure-only admission, byte-for-byte retention of each lane's
+original spec after removing diagnostic additions, drift rejection, failed-page
+evidence retention, and child-process exit/identity preservation with a stand-in
+launcher. This is not a Firefox runtime/profile validation. Actual Gecko profile
+capture and root-cause attribution remain unverified; the prepared diagnostic is
+not present in the already-running `f4f0fcb0` jobs.

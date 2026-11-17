@@ -659,12 +659,24 @@ jobs:
           --grep-invert editors.spec.js --shard=${{ matrix.shard }}/2 --output firefox-functional-results
 
       - name: Editors suite (Firefox, non-blocking)
+        id: editors
         # Non-blocking until the time-sliced first Luau materialization is
         # proven to hold the 100 ms main-thread heartbeat budget in Firefox
         # on CI runners.
         if: ${{ !cancelled() && matrix.shard == 1 && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
         continue-on-error: true
-        run: xvfb-run -a npm --prefix tests/wasm run test:firefox -- --grep editors.spec.js --output firefox-editors-results
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/tests/wasm/firefox-editors-report.json
+        run: |
+          set -o pipefail
+          xvfb-run -a npm --prefix tests/wasm run test:firefox -- \
+            --grep editors.spec.js --reporter=line,json --output firefox-editors-results \
+            2>&1 | tee firefox-editors.log
+
+      - name: Diagnose failed Firefox transform on the same acceptance package
+        if: ${{ !cancelled() && matrix.shard == 1 && steps.editors.outcome == 'failure' }}
+        continue-on-error: true
+        run: xvfb-run -a node .ci-controller/tests/wasm/profile_firefox_editor.cjs "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/.ci-controller"
 
       - name: Same functional assertions in three languages (Firefox)
         if: ${{ !cancelled() && inputs.role == 'localized' && matrix.shard == 1 && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
@@ -692,6 +704,9 @@ jobs:
             tests/wasm/playwright-report/
             tests/wasm/firefox-functional-results/
             tests/wasm/firefox-editors-results/
+            tests/wasm/firefox-editors-report.json
+            firefox-editors.log
+            firefox-editor-profile-results/
             tests/wasm/language-*-firefox.log
             tests/wasm/language-*-firefox-results/
             validation-receipts/
