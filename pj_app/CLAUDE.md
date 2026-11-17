@@ -105,6 +105,11 @@ Noto Sans UI family while allowing Chinese text on hosts without system CJK font
 The native release packaging copies the pinned font and its OFL text together;
 source builds and WebAssembly do not download it at application startup.
 
+WebAssembly embeds the separately licensed Noto Sans SC subset from
+`resources/fonts/NotoSansSC`, after the primary PlotJuggler Sans family.
+`scripts/check_cjk_font_coverage.py` checks both Chinese catalogs; acceptance
+probes also inspect actual action-font glyph shaping in the browser.
+
 ## Localized startup artwork
 
 Chinese sessions respect the saved serious/meme artwork choice. The Chinese

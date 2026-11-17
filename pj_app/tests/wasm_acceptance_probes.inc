@@ -13,6 +13,10 @@
 #include <QAbstractButton>
 #include <QCheckBox>
 #include <QDirIterator>
+#include <QGlyphRun>
+#include <QTextLayout>
+#include <QTreeView>
+#include <QListWidget>
 #include <qwt_plot.h>
 #include <functional>
 #include <string>
@@ -26,6 +30,9 @@
 #endif
 
 #include "pj_scripting/python_object_script.h"
+
+
+#include "wasm_jpeg_visual_probe.inc"
 
 namespace {
 
@@ -91,9 +98,12 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_file_menu() {
   if (auto* main_window = wasmTestMainWindow()) {
     for (QMenuBar* menu_bar : main_window->findChildren<QMenuBar*>()) {
       for (QAction* action : menu_bar->actions()) {
-        QString label = action->text();
-        label.remove(QLatin1Char('&'));
-        if (label != QObject::tr("File")) {
+        QMenu* menu = action->menu();
+        const QList<QAction*> entries = menu != nullptr ? menu->actions() : QList<QAction*>{};
+        const bool contains_save = std::any_of(entries.cbegin(), entries.cend(), [](QAction* entry) {
+          return entry->objectName() == u"actionSaveLayout"_s;
+        });
+        if (!contains_save) {
           continue;
         }
         const QPoint center = menu_bar->mapToGlobal(menu_bar->actionGeometry(action).center());
@@ -1252,7 +1262,7 @@ WasmHoverState findWasmHoverState(PJ::PlotWidget* plot) {
   return result;
 }
 
-void reportWasmMenuAction(const QString& expected_label, const char* probe_name) {
+void reportWasmMenuAction(const QString& expected_label, const char* probe_name, const QString& object_name = {}) {
   for (QWidget* widget : QApplication::topLevelWidgets()) {
     auto* menu = qobject_cast<QMenu*>(widget);
     if (menu == nullptr || !menu->isVisible()) {
@@ -1261,7 +1271,7 @@ void reportWasmMenuAction(const QString& expected_label, const char* probe_name)
     for (QAction* action : menu->actions()) {
       QString label = action->text();
       label.remove(QLatin1Char('&'));
-      if (label != expected_label) {
+      if (object_name.isEmpty() ? label != expected_label : action->objectName() != object_name) {
         continue;
       }
       const QPoint center = menu->mapToGlobal(menu->actionGeometry(action).center());
@@ -1473,11 +1483,11 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_split_horizontal_action
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_save_layout_action() {
-  reportWasmMenuAction(u"Save Layout..."_s, "save_layout");
+  reportWasmMenuAction({}, "save_layout", u"actionSaveLayout"_s);
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_save_source_layout_action() {
-  reportWasmMenuAction(u"Save Layout with Sources..."_s, "save_source_layout");
+  reportWasmMenuAction({}, "save_source_layout", u"actionSaveSourceLayout"_s);
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_apply_filter_action() {
@@ -1551,9 +1561,76 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_placeholder_icons() {
   const QPoint transitions = center("buttonVizStateTransitions");
   const QPoint scene2d = center("buttonVizScene2D");
   const QPoint scene3d = center("buttonVizScene3D");
+  const QPoint custom = center("buttonVizCustomWidget");
   qInfo(
-      "PJ_WASM_PLACEHOLDER_ICONS plot=%d,%d transitions=%d,%d scene2d=%d,%d scene3d=%d,%d", plot.x(), plot.y(),
-      transitions.x(), transitions.y(), scene2d.x(), scene2d.y(), scene3d.x(), scene3d.y());
+      "PJ_WASM_PLACEHOLDER_ICONS plot=%d,%d transitions=%d,%d scene2d=%d,%d scene3d=%d,%d custom=%d,%d", plot.x(), plot.y(),
+      transitions.x(), transitions.y(), scene2d.x(), scene2d.y(), scene3d.x(), scene3d.y(), custom.x(), custom.y());
+}
+
+// Read-only observations for real canvas clicks and log-widget assertions. No
+// direct bind/create calls: browser tests must use the production picker/drop path.
+extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_custom_widgets() {
+  for (QWidget* widget : QApplication::topLevelWidgets()) {
+    auto* window = qobject_cast<PJ::MainWindow*>(widget);
+    if (window == nullptr) {
+      continue;
+    }
+    for (auto* list : window->findChildren<QListWidget*>(u"listCustomWidgets"_s)) {
+      if (!list->isVisible()) {
+        continue;
+      }
+      for (int row = 0; row < list->count(); ++row) {
+        const auto* item = list->item(row);
+        const QPoint point = window->mapFromGlobal(list->viewport()->mapToGlobal(list->visualItemRect(item).center()));
+        qInfo("PJ_WASM_CUSTOM_PICK plugin=%s type=%s x=%d y=%d enabled=%d",
+              qPrintable(item->data(Qt::UserRole).toString()), qPrintable(item->data(Qt::UserRole + 1).toString()),
+              point.x(), point.y(), item->flags().testFlag(Qt::ItemIsEnabled) ? 1 : 0);
+      }
+    }
+    QStringList action_texts;
+    for (auto* action : window->findChildren<QAction*>()) {
+      if (!action->text().isEmpty()) action_texts.append(action->text());
+    }
+    qInfo("PJ_WASM_CUSTOM_UI language=%s actions=%s",
+          qPrintable(qApp->property("interfaceLanguage").toString()),
+          action_texts.join("\n").toUtf8().toBase64().constData());
+    // Inspect the real action font shaping, not merely translated UTF-8 text.
+    int missing_glyphs = 0;
+    int shaped_glyphs = 0;
+    for (auto* action : window->findChildren<QAction*>()) {
+      QTextLayout layout(action->text(), action->font());
+      layout.beginLayout();
+      auto line = layout.createLine();
+      if (line.isValid()) line.setLineWidth(10000);
+      layout.endLayout();
+      for (const auto& run : layout.glyphRuns()) {
+        for (const auto glyph : run.glyphIndexes()) {
+          ++shaped_glyphs;
+          if (glyph == 0) ++missing_glyphs;
+        }
+      }
+    }
+    qInfo("PJ_WASM_CUSTOM_GLYPHS total=%d missing=%d", shaped_glyphs, missing_glyphs);
+    int count = 0;
+    for (auto* dock : window->findChildren<PJ::CustomWidgetDockWidget*>()) {
+      if (!dock->isVisible()) {
+        continue;
+      }
+      const auto* view = dock->findChild<QTreeView*>(u"logView"_s);
+      const int rows = view != nullptr && view->model() != nullptr ? view->model()->rowCount() : -1;
+      const QPoint center = window->mapFromGlobal(dock->mapToGlobal(dock->rect().center()));
+      const auto resolved = std::count_if(dock->bindings().begin(), dock->bindings().end(),
+                                          [](const auto& wire) { return wire.resolved; });
+      qInfo("PJ_WASM_CUSTOM_DOCK plugin=%s type=%s missing=%d bindings=%zu pending=%d rows=%d x=%d y=%d resolved=%lld",
+            qPrintable(dock->pluginId()), qPrintable(dock->widgetType()), dock->isMissing() ? 1 : 0,
+            dock->bindings().size(), dock->hasPendingWires() ? 1 : 0, rows, center.x(), center.y(),
+            static_cast<long long>(resolved));
+      ++count;
+    }
+    qInfo("PJ_WASM_CUSTOM_DONE count=%d", count);
+    return;
+  }
+  qWarning("PJ_WASM_CUSTOM_FAILED no main window");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_preferences_action() {
@@ -1708,6 +1785,8 @@ EM_JS(void, pj_wasm_install_browser_test_probes, (), {
   globalThis.pjWasmReportSaveLayoutActionProbe = () => Module._pj_wasm_test_report_save_layout_action();
   globalThis.pjWasmReportSaveSourceLayoutActionProbe = () => Module._pj_wasm_test_report_save_source_layout_action();
   globalThis.pjWasmReportApplyFilterActionProbe = () => Module._pj_wasm_test_report_apply_filter_action();
+  globalThis.pjWasmReportCustomWidgetsProbe = () => Module._pj_wasm_test_report_custom_widgets();
+  globalThis.pjWasmShowJpegVisualProbe = (index) => Module._pj_wasm_test_show_jpeg_visual(index);
   globalThis.pjWasmReportQuitActionProbe = () => Module._pj_wasm_test_report_quit_action();
   globalThis.pjWasmPythonAvailableProbe = () => Module._pj_wasm_test_python_available() === 1;
   globalThis.pjWasmPythonSmokeProbe = () => Module._pj_wasm_test_python_smoke?.();

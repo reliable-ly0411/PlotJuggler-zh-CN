@@ -7079,7 +7079,11 @@ void MainWindow::enableAutoplay() {
 
 bool MainWindow::applyBrowserRestoredLayout(
     QDomDocument doc, const QString& browser_name, const LayoutTimelinePlan& stream_tracks) {
-  if (session_->catalogModel().datasets().empty() && stream_tracks.empty()) {
+  // Custom widgets preserve pending wires and bind them when a source arrives.
+  // Let those layouts reach the exact transactional restore even in a fresh
+  // browser session; unresolved ordinary curves/scenes still fail there.
+  const bool has_custom_widgets = !doc.elementsByTagName(u"CustomWidget"_s).isEmpty();
+  if (session_->catalogModel().datasets().empty() && stream_tracks.empty() && !has_custom_widgets) {
     showBrowserLayoutWarning(
         this, tr("Load Layout"), tr("No data is loaded. Open a data source before applying this layout."));
     return false;

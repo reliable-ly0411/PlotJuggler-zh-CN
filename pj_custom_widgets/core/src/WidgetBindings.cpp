@@ -187,6 +187,22 @@ bool WidgetBindings::resolveFromIdentity(WidgetWire& wire) const {
   }
   const SavedSeriesPath& id = wire.identity;
   if (wire.kind == WidgetInputKind::kObject) {
+    // Generic layouts deliberately omit all dataset qualifiers. Resolve a
+    // unique object topic, just as generic scalar wires resolve by topic/field.
+    // Never use this fallback for a saved numeric or portable source identity.
+    if (id.dataset_id == 0 && id.dataset_source.isEmpty() && id.dataset_path.isEmpty()) {
+      std::optional<ObjectTopicId> match;
+      for (const ObjectTopicId topic : session_->objectStore().listTopics()) {
+        if (QString::fromStdString(session_->objectStore().descriptor(topic).topic_name) != id.topic) {
+          continue;
+        }
+        if (match.has_value()) {
+          return false;  // Ambiguous generic topic: wait, never guess a source.
+        }
+        match = topic;
+      }
+      return match.has_value() && fillObject(wire, *match);
+    }
     const DatasetIdentityResolution dataset =
         session_->resolveObjectDatasetIdentity(id.dataset_id, id.dataset_source, id.dataset_path, id.topic);
     if (!dataset.id) {

@@ -434,7 +434,18 @@ int main(int argc, char* argv[]) {
   }
   // Native release bundles carry a separately licensed CJK fallback, so Chinese
   // remains legible on systems without an installed Chinese font collection.
-#ifndef PJ_TARGET_WASM
+#ifdef PJ_TARGET_WASM
+  const int cjk_font_id = QFontDatabase::addApplicationFont(u":/resources/fonts/NotoSansSC/NotoSansSC-Subset.otf"_s);
+  if (cjk_font_id < 0) {
+    qWarning("Failed to load bundled browser CJK font");
+  } else {
+    QFont app_font = QApplication::font();
+    QStringList families = app_font.families();
+    families.append(QFontDatabase::applicationFontFamilies(cjk_font_id));
+    app_font.setFamilies(families);
+    QApplication::setFont(app_font);
+  }
+#else
   const QString cjk_font = QCoreApplication::applicationDirPath() + u"/fonts/NotoSansCJKsc-Regular.otf"_s;
   if (QFile::exists(cjk_font) && QFontDatabase::addApplicationFont(cjk_font) < 0) {
     qWarning("Failed to load bundled CJK fallback font");

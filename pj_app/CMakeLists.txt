@@ -247,7 +247,8 @@ if(EMSCRIPTEN)
         src/main.cpp
         src/BundledFont.cpp
         ${CMAKE_SOURCE_DIR}/resources/resources.qrc
-        ${CMAKE_SOURCE_DIR}/resources/memes.qrc)
+        ${CMAKE_SOURCE_DIR}/resources/memes.qrc
+        ${CMAKE_SOURCE_DIR}/resources/fonts/NotoSansSC/wasm-cjk.qrc)
 else()
     add_executable(pj_app src/main.cpp src/AppProfile.cpp src/AppProfile.h src/BundledFont.cpp)
 endif()

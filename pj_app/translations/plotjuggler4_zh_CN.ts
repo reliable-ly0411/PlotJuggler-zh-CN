@@ -27,7 +27,7 @@
 <context>
     <name>AppLanguage</name>
     <message>
-        <location filename="../src/main.cpp" line="+456"/>
+        <location filename="../src/main.cpp" line="+468"/>
         <source>Interface language for this session (zh_CN, zh_TW or en_US).</source>
         <translation>本次会话的界面语言（zh_CN、zh_TW 或 en_US）。</translation>
     </message>
@@ -546,17 +546,17 @@
     <message>
         <location line="-103"/>
         <source>&lt;span style=&quot;font-weight:600;&quot;&gt;Preview&lt;/span&gt;</source>
-        <translation>&lt;span style="font-weight:600;"&gt;预览&lt;/span&gt;</translation>
+        <translation>&lt;span style=&quot;font-weight:600;&quot;&gt;预览&lt;/span&gt;</translation>
     </message>
     <message>
         <location line="+51"/>
         <source>&lt;span style=&quot;font-weight:600;&quot;&gt;Source curve:&lt;/span&gt;</source>
-        <translation>&lt;span style="font-weight:600;"&gt;源曲线：&lt;/span&gt;</translation>
+        <translation>&lt;span style=&quot;font-weight:600;&quot;&gt;源曲线：&lt;/span&gt;</translation>
     </message>
     <message>
         <location line="+60"/>
         <source>&lt;span style=&quot;font-weight:600;&quot;&gt;Transform:&lt;/span&gt;</source>
-        <translation>&lt;span style="font-weight:600;"&gt;变换：&lt;/span&gt;</translation>
+        <translation>&lt;span style=&quot;font-weight:600;&quot;&gt;变换：&lt;/span&gt;</translation>
     </message>
     <message>
         <location line="+93"/>
@@ -658,7 +658,7 @@
     <message>
         <location line="+122"/>
         <source>&apos;%1&apos;, which the source&apos;s plugin reads, has no content fingerprint: the file changed since it was picked. Open the source again.</source>
-        <translation>数据源插件读取的 '%1' 没有内容指纹：该文件在选取后已发生变化。请重新打开数据源。</translation>
+        <translation>数据源插件读取的 &apos;%1&apos; 没有内容指纹：该文件在选取后已发生变化。请重新打开数据源。</translation>
     </message>
 </context>
 <context>
@@ -4512,7 +4512,7 @@ from %2</source>
 <context>
     <name>PJ::ExtensionManager</name>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+988"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+987"/>
         <source>Not available for this platform (%1)</source>
         <translation>不适用于此平台（%1）</translation>
     </message>
@@ -5351,13 +5351,13 @@ for example when the stream is already rectified.</source>
         <location line="+189"/>
         <location line="+2074"/>
         <location line="+339"/>
-        <location line="+2138"/>
+        <location line="+2142"/>
         <location line="+1219"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-7402"/>
+        <location line="-7406"/>
         <source>Undo</source>
         <translation>撤销</translation>
     </message>
@@ -5456,12 +5456,12 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+2"/>
-        <location line="+4740"/>
+        <location line="+4744"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="-4557"/>
+        <location line="-4561"/>
         <source>Are you sure you want to remove &apos;%1&apos; and its data?</source>
         <translation>确定要移除“%1”及其数据吗？</translation>
     </message>
@@ -5623,7 +5623,7 @@ for example when the stream is already rectified.</source>
         <location line="+15"/>
         <location line="+6"/>
         <location line="+436"/>
-        <location line="+174"/>
+        <location line="+178"/>
         <location line="+15"/>
         <location line="+401"/>
         <location line="+346"/>
@@ -5631,16 +5631,16 @@ for example when the stream is already rectified.</source>
         <translation>加载布局</translation>
     </message>
     <message>
-        <location line="-2552"/>
+        <location line="-2556"/>
         <location line="+25"/>
-        <location line="+2625"/>
+        <location line="+2629"/>
         <location line="+7"/>
         <location line="+5"/>
         <source>Save Layout</source>
         <translation>保存布局</translation>
     </message>
     <message>
-        <location line="-2655"/>
+        <location line="-2659"/>
         <source>Requested layout download: %1</source>
         <translation>已请求下载布局：%1</translation>
     </message>
@@ -5901,27 +5901,27 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="-2988"/>
         <source>New release available: &lt;span style=&apos;font-weight:600;&apos;&gt;%1&lt;/span&gt;</source>
-        <translation>有新版本可用：&lt;span style='font-weight:600;'&gt;%1&lt;/span&gt;</translation>
+        <translation>有新版本可用：&lt;span style=&apos;font-weight:600;&apos;&gt;%1&lt;/span&gt;</translation>
     </message>
     <message>
         <location line="+2102"/>
         <source>&apos;%1&apos; records a malformed content fingerprint.</source>
-        <translation>'%1' 记录的内容指纹格式无效。</translation>
+        <translation>&apos;%1&apos; 记录的内容指纹格式无效。</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>This layout contains more than one file named &apos;%1&apos;, but no valid content fingerprints to tell them apart safely. Open the sources separately and use a newer source-bound layout.</source>
-        <translation>此布局包含多个名为 '%1' 的文件，但没有有效的内容指纹来安全区分它们。请分别打开各数据源，并使用较新的、与数据源绑定的布局。</translation>
+        <translation>此布局包含多个名为 &apos;%1&apos; 的文件，但没有有效的内容指纹来安全区分它们。请分别打开各数据源，并使用较新的、与数据源绑定的布局。</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>This layout was saved with data source &apos;%1&apos;, whose plugin also reads %2 more file(s) you select next. Reselect that file to reload it, or apply the layout to compatible data already open in this page.</source>
-        <translation>此布局保存时使用数据源 '%1'，其插件还会读取接下来选取的 %2 个文件。请重新选择该数据源文件以重新加载，或将布局应用于此页面中已打开的兼容数据。</translation>
+        <translation>此布局保存时使用数据源 &apos;%1&apos;，其插件还会读取接下来选取的 %2 个文件。请重新选择该数据源文件以重新加载，或将布局应用于此页面中已打开的兼容数据。</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>This layout was saved with %1 data sources, whose plugins also read %4 more file(s) you select after them. Select source 1 of %1: &apos;%2&apos; for saved slot &apos;%3&apos;. Every file will be staged before any import begins.</source>
-        <translation>此布局保存时使用了 %1 个数据源，其插件还会读取随后选取的 %4 个文件。请选择第 1 个数据源（共 %1 个）：已保存槽位 '%3' 对应的 '%2'。所有文件暂存完成后才会开始导入。</translation>
+        <translation>此布局保存时使用了 %1 个数据源，其插件还会读取随后选取的 %4 个文件。请选择第 1 个数据源（共 %1 个）：已保存槽位 &apos;%3&apos; 对应的 &apos;%2&apos;。所有文件暂存完成后才会开始导入。</translation>
     </message>
     <message>
         <location line="+171"/>
@@ -5931,22 +5931,22 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+60"/>
         <source>The selected &apos;%1&apos; is not the file saved as &apos;%2&apos;. Select the original file.</source>
-        <translation>所选 '%1' 不是保存时名为 '%2' 的文件。请选择原始文件。</translation>
+        <translation>所选 &apos;%1&apos; 不是保存时名为 &apos;%2&apos; 的文件。请选择原始文件。</translation>
     </message>
     <message>
         <location line="+33"/>
         <source>Every data source is staged. Select &apos;%1&apos;, which data source &apos;%2&apos; reads (file %3 of %4). No import has started yet.</source>
-        <translation>所有数据源均已暂存。请选择数据源 '%2' 读取的 '%1'（第 %3 个文件，共 %4 个）。尚未开始导入。</translation>
+        <translation>所有数据源均已暂存。请选择数据源 &apos;%2&apos; 读取的 &apos;%1&apos;（第 %3 个文件，共 %4 个）。尚未开始导入。</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Select &apos;%1&apos;</source>
-        <translation>选择 '%1'</translation>
+        <translation>选择 &apos;%1&apos;</translation>
     </message>
     <message>
         <location line="+121"/>
         <source>&apos;%1&apos; is not the file its layout was saved with (its content fingerprint differs).</source>
-        <translation>'%1' 不是保存此布局时使用的文件（内容指纹不同）。</translation>
+        <translation>&apos;%1&apos; 不是保存此布局时使用的文件（内容指纹不同）。</translation>
     </message>
     <message>
         <location line="+482"/>
@@ -5954,7 +5954,7 @@ for example when the stream is already rectified.</source>
         <translation>打开预设</translation>
     </message>
     <message>
-        <location line="+127"/>
+        <location line="+131"/>
         <location line="+61"/>
         <source>No data is loaded. Open a data source before applying this layout.</source>
         <translation>当前没有加载数据。请先打开数据源，再应用此布局。</translation>
@@ -9434,14 +9434,14 @@ Details: %1</source>
         <location filename="../src/FileLoader.cpp" line="-2173"/>
         <location line="+90"/>
         <location line="+7"/>
-        <location filename="../src/MainWindow.cpp" line="-10529"/>
+        <location filename="../src/MainWindow.cpp" line="-10533"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
         <location filename="../src/FileLoader.cpp" line="-92"/>
         <location line="+86"/>
-        <location filename="../tests/wasm_acceptance_probes.inc" line="+229"/>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="+239"/>
         <location line="+303"/>
         <source>Cancel</source>
         <translation>取消</translation>
@@ -9471,12 +9471,7 @@ Details: %1</source>
         <translation>中止</translation>
     </message>
     <message>
-        <location filename="../tests/wasm_acceptance_probes.inc" line="-436"/>
-        <source>File</source>
-        <translation>文件</translation>
-    </message>
-    <message>
-        <location line="+130"/>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="-306"/>
         <source>Reselect source</source>
         <translation>重新选择数据源</translation>
     </message>

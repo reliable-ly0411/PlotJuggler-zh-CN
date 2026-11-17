@@ -431,9 +431,31 @@ jobs:
         # Three workers (playwright.config.js); the @serial cases run alone below.
         run: npm --prefix tests/wasm run test
 
+      - name: Localized log layout, Chinese glyphs and JPEG pixel probes
+        if: ${{ !cancelled() }}
+        working-directory: tests/wasm
+        run: |
+          status=0
+          npx playwright test --config log_widget.playwright.config.js --output localized-log-results 2>&1 | tee localized-log.log || status=1
+          npx playwright test --config jpeg_visual.playwright.config.js --output localized-jpeg-results 2>&1 | tee localized-jpeg.log || status=1
+          exit "$status"
+
       - name: Serial cases (acceptance package)
         if: ${{ !cancelled() }}
         run: npm --prefix tests/wasm run test:serial
+
+      - name: Preserve localized browser assertions and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zh4-localized-browser-evidence
+          path: |
+            tests/wasm/localized-log.log
+            tests/wasm/localized-jpeg.log
+            tests/wasm/localized-log-results/
+            tests/wasm/localized-jpeg-results/
+          if-no-files-found: warn
+          retention-days: 14
 
   wasm-firefox:
     # The acceptance package of the wasm job, in Firefox. Firefox has no

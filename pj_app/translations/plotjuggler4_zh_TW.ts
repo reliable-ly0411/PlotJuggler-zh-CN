@@ -27,7 +27,7 @@
 <context>
     <name>AppLanguage</name>
     <message>
-        <location filename="../src/main.cpp" line="+456"/>
+        <location filename="../src/main.cpp" line="+468"/>
         <source>Interface language for this session (zh_CN, zh_TW or en_US).</source>
         <translation>此工作階段的介面語言（zh_CN、zh_TW 或 en_US）。</translation>
     </message>
@@ -546,17 +546,17 @@
     <message>
         <location line="-103"/>
         <source>&lt;span style=&quot;font-weight:600;&quot;&gt;Preview&lt;/span&gt;</source>
-        <translation>&lt;span style="font-weight:600;"&gt;預覽&lt;/span&gt;</translation>
+        <translation>&lt;span style=&quot;font-weight:600;&quot;&gt;預覽&lt;/span&gt;</translation>
     </message>
     <message>
         <location line="+51"/>
         <source>&lt;span style=&quot;font-weight:600;&quot;&gt;Source curve:&lt;/span&gt;</source>
-        <translation>&lt;span style="font-weight:600;"&gt;來源曲線：&lt;/span&gt;</translation>
+        <translation>&lt;span style=&quot;font-weight:600;&quot;&gt;來源曲線：&lt;/span&gt;</translation>
     </message>
     <message>
         <location line="+60"/>
         <source>&lt;span style=&quot;font-weight:600;&quot;&gt;Transform:&lt;/span&gt;</source>
-        <translation>&lt;span style="font-weight:600;"&gt;轉換：&lt;/span&gt;</translation>
+        <translation>&lt;span style=&quot;font-weight:600;&quot;&gt;轉換：&lt;/span&gt;</translation>
     </message>
     <message>
         <location line="+93"/>
@@ -658,7 +658,7 @@
     <message>
         <location line="+122"/>
         <source>&apos;%1&apos;, which the source&apos;s plugin reads, has no content fingerprint: the file changed since it was picked. Open the source again.</source>
-        <translation>資料來源外掛讀取的 '%1' 沒有內容指紋：該檔案在選取後已變更。請重新開啟資料來源。</translation>
+        <translation>資料來源外掛讀取的 &apos;%1&apos; 沒有內容指紋：該檔案在選取後已變更。請重新開啟資料來源。</translation>
     </message>
 </context>
 <context>
@@ -4512,7 +4512,7 @@ from %2</source>
 <context>
     <name>PJ::ExtensionManager</name>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+988"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+987"/>
         <source>Not available for this platform (%1)</source>
         <translation>此平台不可用（%1）</translation>
     </message>
@@ -5351,13 +5351,13 @@ for example when the stream is already rectified.</source>
         <location line="+189"/>
         <location line="+2074"/>
         <location line="+339"/>
-        <location line="+2138"/>
+        <location line="+2142"/>
         <location line="+1219"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-7402"/>
+        <location line="-7406"/>
         <source>Undo</source>
         <translation>復原</translation>
     </message>
@@ -5456,12 +5456,12 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+2"/>
-        <location line="+4740"/>
+        <location line="+4744"/>
         <source>Delete</source>
         <translation>刪除</translation>
     </message>
     <message>
-        <location line="-4557"/>
+        <location line="-4561"/>
         <source>Are you sure you want to remove &apos;%1&apos; and its data?</source>
         <translation>確定要移除「%1」及其資料嗎？</translation>
     </message>
@@ -5623,7 +5623,7 @@ for example when the stream is already rectified.</source>
         <location line="+15"/>
         <location line="+6"/>
         <location line="+436"/>
-        <location line="+174"/>
+        <location line="+178"/>
         <location line="+15"/>
         <location line="+401"/>
         <location line="+346"/>
@@ -5631,16 +5631,16 @@ for example when the stream is already rectified.</source>
         <translation>載入版面配置</translation>
     </message>
     <message>
-        <location line="-2552"/>
+        <location line="-2556"/>
         <location line="+25"/>
-        <location line="+2625"/>
+        <location line="+2629"/>
         <location line="+7"/>
         <location line="+5"/>
         <source>Save Layout</source>
         <translation>儲存版面配置</translation>
     </message>
     <message>
-        <location line="-2655"/>
+        <location line="-2659"/>
         <source>Requested layout download: %1</source>
         <translation>已要求下載版面配置：%1</translation>
     </message>
@@ -5901,27 +5901,27 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="-2988"/>
         <source>New release available: &lt;span style=&apos;font-weight:600;&apos;&gt;%1&lt;/span&gt;</source>
-        <translation>有新版本可用：&lt;span style='font-weight:600;'&gt;%1&lt;/span&gt;</translation>
+        <translation>有新版本可用：&lt;span style=&apos;font-weight:600;&apos;&gt;%1&lt;/span&gt;</translation>
     </message>
     <message>
         <location line="+2102"/>
         <source>&apos;%1&apos; records a malformed content fingerprint.</source>
-        <translation>'%1' 記錄的內容指紋格式無效。</translation>
+        <translation>&apos;%1&apos; 記錄的內容指紋格式無效。</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>This layout contains more than one file named &apos;%1&apos;, but no valid content fingerprints to tell them apart safely. Open the sources separately and use a newer source-bound layout.</source>
-        <translation>此版面配置包含多個名為 '%1' 的檔案，但沒有有效的內容指紋可安全區分它們。請分別開啟各資料來源，並使用較新的、與資料來源繫結的版面配置。</translation>
+        <translation>此版面配置包含多個名為 &apos;%1&apos; 的檔案，但沒有有效的內容指紋可安全區分它們。請分別開啟各資料來源，並使用較新的、與資料來源繫結的版面配置。</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>This layout was saved with data source &apos;%1&apos;, whose plugin also reads %2 more file(s) you select next. Reselect that file to reload it, or apply the layout to compatible data already open in this page.</source>
-        <translation>此版面配置儲存時使用資料來源 '%1'，其外掛還會讀取接下來選取的 %2 個檔案。請重新選取該資料來源檔案以重新載入，或將版面配置套用至此頁面中已開啟的相容資料。</translation>
+        <translation>此版面配置儲存時使用資料來源 &apos;%1&apos;，其外掛還會讀取接下來選取的 %2 個檔案。請重新選取該資料來源檔案以重新載入，或將版面配置套用至此頁面中已開啟的相容資料。</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>This layout was saved with %1 data sources, whose plugins also read %4 more file(s) you select after them. Select source 1 of %1: &apos;%2&apos; for saved slot &apos;%3&apos;. Every file will be staged before any import begins.</source>
-        <translation>此版面配置儲存時使用了 %1 個資料來源，其外掛還會讀取隨後選取的 %4 個檔案。請選取第 1 個資料來源（共 %1 個）：已儲存槽位 '%3' 對應的 '%2'。所有檔案暫存完成後才會開始匯入。</translation>
+        <translation>此版面配置儲存時使用了 %1 個資料來源，其外掛還會讀取隨後選取的 %4 個檔案。請選取第 1 個資料來源（共 %1 個）：已儲存槽位 &apos;%3&apos; 對應的 &apos;%2&apos;。所有檔案暫存完成後才會開始匯入。</translation>
     </message>
     <message>
         <location line="+171"/>
@@ -5931,22 +5931,22 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+60"/>
         <source>The selected &apos;%1&apos; is not the file saved as &apos;%2&apos;. Select the original file.</source>
-        <translation>所選的 '%1' 不是儲存時名為 '%2' 的檔案。請選取原始檔案。</translation>
+        <translation>所選的 &apos;%1&apos; 不是儲存時名為 &apos;%2&apos; 的檔案。請選取原始檔案。</translation>
     </message>
     <message>
         <location line="+33"/>
         <source>Every data source is staged. Select &apos;%1&apos;, which data source &apos;%2&apos; reads (file %3 of %4). No import has started yet.</source>
-        <translation>所有資料來源均已暫存。請選取資料來源 '%2' 讀取的 '%1'（第 %3 個檔案，共 %4 個）。尚未開始匯入。</translation>
+        <translation>所有資料來源均已暫存。請選取資料來源 &apos;%2&apos; 讀取的 &apos;%1&apos;（第 %3 個檔案，共 %4 個）。尚未開始匯入。</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Select &apos;%1&apos;</source>
-        <translation>選取 '%1'</translation>
+        <translation>選取 &apos;%1&apos;</translation>
     </message>
     <message>
         <location line="+121"/>
         <source>&apos;%1&apos; is not the file its layout was saved with (its content fingerprint differs).</source>
-        <translation>'%1' 不是儲存此版面配置時使用的檔案（內容指紋不同）。</translation>
+        <translation>&apos;%1&apos; 不是儲存此版面配置時使用的檔案（內容指紋不同）。</translation>
     </message>
     <message>
         <location line="+482"/>
@@ -5954,7 +5954,7 @@ for example when the stream is already rectified.</source>
         <translation>開啟預設</translation>
     </message>
     <message>
-        <location line="+127"/>
+        <location line="+131"/>
         <location line="+61"/>
         <source>No data is loaded. Open a data source before applying this layout.</source>
         <translation>目前沒有載入資料。請先開啟資料來源，再套用此版面配置。</translation>
@@ -9434,14 +9434,14 @@ Details: %1</source>
         <location filename="../src/FileLoader.cpp" line="-2173"/>
         <location line="+90"/>
         <location line="+7"/>
-        <location filename="../src/MainWindow.cpp" line="-10529"/>
+        <location filename="../src/MainWindow.cpp" line="-10533"/>
         <source>OK</source>
         <translation>確定</translation>
     </message>
     <message>
         <location filename="../src/FileLoader.cpp" line="-92"/>
         <location line="+86"/>
-        <location filename="../tests/wasm_acceptance_probes.inc" line="+229"/>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="+239"/>
         <location line="+303"/>
         <source>Cancel</source>
         <translation>取消</translation>
@@ -9471,12 +9471,7 @@ Details: %1</source>
         <translation>中止</translation>
     </message>
     <message>
-        <location filename="../tests/wasm_acceptance_probes.inc" line="-436"/>
-        <source>File</source>
-        <translation>檔案</translation>
-    </message>
-    <message>
-        <location line="+130"/>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="-306"/>
         <source>Reselect source</source>
         <translation>重新選擇資料來源</translation>
     </message>

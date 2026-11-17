@@ -30,6 +30,9 @@ What the module must do. How it is built is in [../CLAUDE.md](../CLAUDE.md).
 
 - R12. The panel saves as `<CustomWidget plugin type plugin_version>` with one `<input>` per wire and a `<config>` CDATA. Each wire stores its dataset identity (id, source, path) and is re-resolved at restore. Like a plot curve, a layout file stores the path relative to the layout and keeps no id it cannot validate, and a generic layout keeps none of the three.
 - R13. A wire that does not resolve at restore is kept and retried when the catalog adds items; it is saved unchanged meanwhile.
+- A generic object wire with no dataset id, source or path resolves only when
+  exactly one object topic matches. Duplicate names remain pending, and a
+  source-qualified wire never falls back to an unrelated dataset.
 - R14. Loading a `<CustomWidget>` element always succeeds, including when the plugin is missing; the element is then written back verbatim.
 
 ## Demand

@@ -86,3 +86,48 @@ catalogs already match and extraction reports zero missing/stale messages.
 The regression now asserts those actual live fingerprint/download keys and
 their reviewed Chinese translations, plus the corresponding English fallback.
 The original local `i18n-ctest.log` (25/26 suites passed) is retained.
+
+## cdf40086 full-build findings and scoped follow-up
+
+At `cdf40086ea732ad272b9d38e00dc2514ede85a1a`, source run `44058340269`
+passed both platforms. Package run `44058381807` failed in Linux job
+`133953757541` and Windows job `133953757941`: the actual ArduPilot/FileLoader
+regression still called `DataReader::latestNumericAt`, removed by host commit
+`8a483b49` (#1546). Windows initialization errors were consequences of that same
+missing method. The test now obtains the catalog-selected column through
+`DataReader::series` and `sampleAtOrBeforeTime`; it retains metadata time and
+numeric equality checks and additionally checks the returned sample's time.
+It compiles with the real SDK 1.0.1 / Qt 6.12 headers under strict GCC warnings.
+This syntax check is not a linked FileLoader execution. The native workflow
+builds and runs `ardupilot_import_test` first, then continues the full build and
+all existing tests on that same head.
+
+WASM run `44058340229`, job `133953776165`, successfully built and packaged the
+production configuration, then failed both budgets. Actual manifest totals:
+startup **51,911,378 B**, all localized files **52,668,600 B**. The WASM module
+itself is 97,810,200 B identity / **51,665,386 B Brotli**. Browser tests were
+skipped, not passed. Artifact `14319564844` preserves the exact commit/tree,
+CMake cache and manifest; its ZIP SHA-256 is
+`c7fa7f0e4664ef45457c94d3bd49ac0756c7c01477639e2210afa54508fa7610`.
+
+The source chain had omitted reviewed work from the independent candidates:
+
+- `d0734db9`: 31 quality-90 4:4:4 JPEG derivatives and their source/output
+  manifest, with original PNG bytes and resource aliases retained. Each source
+  PNG and copied JPEG hash was verified before reuse. Their raw source totals
+  are 36,550,977 B PNG / 5,661,250 B JPEG; this is **not a new package result**.
+- The same candidate's licensed browser CJK subset and regeneration/coverage
+  scripts, adapted to keep upstream PlotJuggler Sans as the primary family.
+  Both current catalogs are covered; OFL also enters third-party notices.
+- `80a97e12`: only the deferred generic-object binding and empty-browser
+  custom-widget restore fixes, with the uniqueness/source-identity regression.
+  Explicit source qualifiers and exact transactional restore remain enforced.
+- `54783848` and `d0734db9`: actual Qt JPEG/atlas painting, glyph shaping and
+  real log drag/drop/layout probes, adapted to the current acceptance-only
+  probe file. Existing Chromium/Firefox suites remain. Localized assertions,
+  console logs and screenshots have their own artifact paths.
+
+The original PNGs, English images, candidate branches, source hashes, licenses,
+both budget values and all failure records remain. The former 23,941,450 B
+candidate measurement does not validate the new build. Exact new-head native,
+WASM size and browser results remain required before any promotion.
