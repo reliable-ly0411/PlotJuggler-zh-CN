@@ -5,12 +5,21 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
-const { TITLE, needsProfile, instrumentEditorSpec, run } = require('./profile_firefox_editor.cjs');
+const { TITLE, needsProfile, needsHistoricalProfile, instrumentEditorSpec, run } = require('./profile_firefox_editor.cjs');
 const { installEditorEvidence } = require('./support/editor_evidence.cjs');
 
 function report(status, overrides = {}) {
   return { suites: [{ specs: [{ title: TITLE, tests: [{ projectName: 'firefox', results: [{ status }], ...overrides }] }] }] };
 }
+
+test('historical attachments admit only the exact failed transform timing assertion', () => {
+  const context = `- Name: editors.spec.js >> ${TITLE}\n\n# Error details\n\n\`\`\`\nError: expect(received).toBeLessThan(expected)\n\nExpected: < 100\nReceived:   179.34000000000015\n\`\`\`\n`;
+  assert.equal(needsHistoricalProfile(context), true);
+  for (const changed of [context.replace(TITLE, 'Unrelated editor'), context.replace('179.34000000000015', '90'),
+    context.replace('Expected: < 100', 'Expected: < 200')]) {
+    assert.throws(() => needsHistoricalProfile(changed));
+  }
+});
 
 test('only a failed original Firefox transform permits a diagnostic', () => {
   for (const status of ['failed', 'timedOut']) assert.equal(needsProfile(report(status)), true);

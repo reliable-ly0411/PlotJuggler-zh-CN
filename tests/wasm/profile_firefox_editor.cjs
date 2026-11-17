@@ -21,6 +21,22 @@ function needsProfile(report) {
   return matches[0].results.some(result => ['failed', 'timedOut'].includes(result.status));
 }
 
+// Historical jobs retained Playwright's failure attachment before JSON reporting
+// was enabled. Admit only this exact case and its unchanged timing assertions.
+function needsHistoricalProfile(context) {
+  if (!context.includes(`- Name: editors.spec.js >> ${TITLE}\n`)) {
+    throw new Error('Historical evidence is not the exact transform case');
+  }
+  const details = context.match(/# Error details\s+```\n([\s\S]*?)\n```/);
+  if (!details) throw new Error('Historical failure details missing');
+  const gap = details[1].match(/Expected: < 100\s+Received:\s+([\d.]+)/);
+  if (gap && Number(gap[1]) >= 100) return true;
+  if (/Expected: false\s+Received: true/.test(details[1])
+      && /Timeout 60000ms exceeded while waiting on the predicate/.test(details[1])
+      && context.includes('(await requestToolboxTransformResult(page, consoleMessages)).materializing')) return true;
+  throw new Error('Historical evidence does not establish either original timing failure');
+}
+
 // The derivative retains the source lane's complete test, including every
 // assertion and timeout. Additional timing observations belong to this replay.
 function instrumentEditorSpec(source, helper) {
@@ -39,11 +55,12 @@ function instrumentEditorSpec(source, helper) {
     + `\nrequire(${JSON.stringify(helper)}).installEditorEvidence(test);\n`;
 }
 
-function run(source, controller) {
+function run(source, controller, failureContext) {
   const tests = path.join(source, 'tests/wasm');
-  const reportPath = path.join(tests, 'firefox-editors-report.json');
+  const reportPath = failureContext || path.join(tests, 'firefox-editors-report.json');
   const reportBytes = fs.readFileSync(reportPath);
-  if (!needsProfile(JSON.parse(reportBytes))) {
+  const admitted = failureContext ? needsHistoricalProfile(reportBytes.toString('utf8')) : needsProfile(JSON.parse(reportBytes));
+  if (!admitted) {
     console.log('Original Firefox transform did not fail; no diagnostic replay requested.');
     return 0;
   }
@@ -69,11 +86,14 @@ function run(source, controller) {
   }
   fs.writeFileSync(path.join(output, 'original.spec.js'), original);
   fs.writeFileSync(path.join(output, 'diagnostic.spec.js'), derived);
-  fs.writeFileSync(path.join(output, 'original-report.json'), reportBytes);
+  fs.writeFileSync(path.join(output, failureContext ? 'original-error-context.md' : 'original-report.json'), reportBytes);
   fs.writeFileSync(path.join(output, 'acceptance.json'), receipt);
   const metadata = {
     diagnosticOnly: true, identity, originalSpecSha256: sha(original), diagnosticSpecSha256: sha(derived),
     originalReportSha256: sha(reportBytes), acceptanceReceiptSha256: sha(receipt),
+    originalEvidenceKind: failureContext ? 'Playwright error-context attachment' : 'Playwright JSON report',
+    originalRun: process.env.PJ_ORIGINAL_RUN_ID || null, originalJob: process.env.PJ_ORIGINAL_JOB_ID || null,
+    diagnosticController: process.env.PJ_DIAGNOSTIC_CONTROLLER_SHA || null,
     profiler: 'Gecko startup sampling; perturbs timing; cannot replace the original failed result',
   };
   const env = {
@@ -102,6 +122,7 @@ function run(source, controller) {
 }
 
 if (require.main === module) {
-  process.exitCode = run(path.resolve(process.argv[2]), path.resolve(process.argv[3]));
+  process.exitCode = run(path.resolve(process.argv[2]), path.resolve(process.argv[3]),
+    process.argv[4] ? path.resolve(process.argv[4]) : undefined);
 }
-module.exports = { TITLE, needsProfile, instrumentEditorSpec, run };
+module.exports = { TITLE, needsProfile, needsHistoricalProfile, instrumentEditorSpec, run };
