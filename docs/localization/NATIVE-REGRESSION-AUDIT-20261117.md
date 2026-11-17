@@ -393,3 +393,50 @@ patches the upstream reference checkout nor cancels the e44a1a53 candidate runs.
 This isolates the product change while the baseline candidate continues. Browser
 results must be read from the new exact run; the timer probe does not establish
 that the 100 ms first-task gate passes.
+
+## Exact timer candidate browser result and remaining long task
+
+Independent source `19cd52c895203e8ae3618dfe578f2e0758771348` passed both
+source-check platforms in run `44179927537`. WASM run `44179927751` rebuilt
+`DataProcessorService.cpp` in both production and acceptance configurations.
+Its production receipt and all 40 actual package files were rehashed: startup
+24,580,407 B, complete total 25,337,629 B below 26,000,000 B. The full UI font
+OFL is present. This does not replace the separate upstream startup gate.
+
+Chromium passed 96 functional, five layout/glyph, one 64-image JPEG, five serial
+and four cases in each of English, Simplified and Traditional Chinese. Anymal
+load/reopen longest tasks were 1,313/1,375 ms, below the unchanged 2,000 ms limit.
+Firefox passed 50/42 functional cases (seven existing skips) and four cases per
+language. The editor suite passed one and failed one: the transform completed
+within its existing deadline but its heartbeat gap was **194.78 ms**, above the
+unchanged 100 ms bound. Its later full-output assertions were therefore not
+executed. The workflow's success conclusion reflects its existing non-blocking
+editor policy and is not whole-suite acceptance.
+
+Failure-only sampling on the same acceptance package also completed the replay:
+the before-OK/materialized marks were 1,011.98 ms apart, with a 234.52 ms maximum
+heartbeat gap. Of 233 samples in that gap, 231 contain WASM frames. This is no
+longer evidence of a pending replay idling for 60 seconds. The stripped binary
+contains no function-name section, so the sampled indices do not yet identify
+the responsible C++ functions. Original and diagnostic failures remain separate.
+The Firefox evidence ZIP has SHA-256
+`9d029610d2a65b4516ae7628b28b9a402c2ca3446bb672734211d49b32588d76`.
+
+The independent timer workflow opts into an acceptance-only Emscripten
+`--emit-symbol-map` link. Production configuration and both budget scripts are
+unchanged. The sidecar is retained outside deployed packages, hashed with the
+exact acceptance binary in the receipt, checked after download in every browser
+job, and preserved with Firefox evidence. Missing or changed maps fail receipt
+validation. This is diagnostic evidence, not a performance fix or a deduction
+from measured package sizes. Pinned Emscripten 5.0.5 supports the option in
+[`emcc.py`](https://github.com/emscripten-core/emscripten/blob/5.0.5/emcc.py) and
+emits the final function-index map in
+[`tools/link.py`](https://github.com/emscripten-core/emscripten/blob/5.0.5/tools/link.py).
+
+Candidate `e44a1a53` remains unchanged. Its native run `44178541842` has started
+on both platforms; new-head CSV FileLoader and clean-install results are still
+pending. Previous f4 native run `44166480802` ended with zero native XML failures
+(Linux 6,154 passed/103 skipped; Windows 5,859 passed/103 skipped), then failed
+both real CSV validation steps on the old warning introduction. Both original
+package and clean-install stages were skipped. That old failure is preserved;
+e44 contains the exact three-language expectation correction, awaiting execution.

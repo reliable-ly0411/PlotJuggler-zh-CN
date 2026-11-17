@@ -17,3 +17,4 @@ jobs:
       role: localized
       source_repository: ${{ github.repository }}
       source_sha: ${{ github.sha }}
+      acceptance_symbol_map: true
