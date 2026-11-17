@@ -164,3 +164,30 @@ serial anymal load/reopen failed: longest main-thread task 2403 ms versus the
 unchanged 2000 ms assertion (layout restore itself 727 ms). This is a real
 performance failure; its cause is not established by that log. The two-lane
 workflow retains the assertion, exact serial console log and failure screenshots.
+
+## Native b8 build and stale APBIN identity
+
+Package run `44073828772` completed both actual host builds. The targeted
+`ArduPilotFileLoaderTest` ran and passed on Linux (0.32 s, 11:45 UTC) and Windows
+(0.57 s, 11:50 UTC), proving the retired DataReader call no longer blocks the
+real DSO/FileLoader regression. Both jobs then failed `Prepare verified native
+feedback inputs` before the full native suite or packaging: the fixed APBIN
+source at `fc6065fd` declares `1.3.0-pj4.rc.1`, but the host baseline still said
+`1.2.0-pj4.rc.1`. The generated identity check correctly rejected the mismatch.
+
+The correction aligns the baseline and bundled display metadata with that same
+fixed source; it does not change the plugin gitlink, SDK 1.0.1 host pin, license,
+independent plugin SDK declaration, or any historical release record. Source
+preflight now verifies initialized APBIN source commit/manifest hash, ID, version,
+license and display metadata before dependencies and full compilation. The
+original generated-manifest ID/version/license and input checksum/platform
+checks remain. Native evidence now retains the generated and source manifests
+and baseline to make subsequent identity failures directly inspectable.
+
+The failed CI artifacts did not contain the generated manifest itself. A
+configure-only replay using the exact SDK 1.0.1 `pj_configure_plugin` helper and
+the fixed source manifest produces ID `ardupilot-dataflash`, version
+`1.3.0-pj4.rc.1`, ABI major 5 and LGPL-3.0-only. Its SHA-256 is
+`3a0ca55bc8d0c0f9b70632f9d601aae163528d886ee116c799f4ff69f64d98b3`.
+This replay is not represented as downloaded CI bytes or as a new DSO run.
+The two original failures and all downstream skipped GUI/package checks remain.

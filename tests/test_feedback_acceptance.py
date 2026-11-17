@@ -187,6 +187,25 @@ class FixtureTests(unittest.TestCase):
             self.prepare()
         self.assertFalse(self.output.exists())
 
+    def test_current_pin_requires_matching_baseline_and_preserves_source_identity(self):
+        current = json.loads((ROOT/'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))['ardupilot_plugin']
+        path = self.build/'ardupilot-dataflash/ardupilot_source_plugin.pjmanifest.json'
+        data = json.loads(path.read_text(encoding='utf-8'))
+        data['version'] = current['version']
+        path.write_text(json.dumps(data), encoding='utf-8')
+        # A real newer plugin version cannot be accepted against the old fixture baseline.
+        with self.assertRaisesRegex(ValueError, 'APBIN manifest differs: expected .* got'):
+            self.prepare()
+        self.assertFalse(self.output.exists())
+        baseline_path = self.source/'docs/localization/upstream-baseline.json'
+        baseline_path.write_text(json.dumps({'ardupilot_plugin': current}), encoding='utf-8')
+        record = self.prepare()
+        self.assertEqual(record['apbin_version'], current['version'])
+        self.assertEqual(record['apbin_source_commit'], current['commit'])
+        staged = json.loads((self.output/'ardupilot-dataflash/manifest.json').read_text(encoding='utf-8'))
+        self.assertEqual(staged, data)
+        self.assertEqual(staged['license'], current['license'])
+
     def test_does_not_overwrite_existing_inputs(self):
         self.output.mkdir(); (self.output/'keep').write_bytes(b'unrelated')
         with self.assertRaisesRegex(ValueError, 'new isolated'):

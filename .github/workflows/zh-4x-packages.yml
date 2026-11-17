@@ -281,7 +281,7 @@ jobs:
             done
           fi
           QT_QPA_PLATFORM=offscreen ctest --test-dir build --build-config RelWithDebInfo \
-            --output-on-failure --no-tests=error -R '^ArduPilotFileLoaderTest$' \
+            --output-on-failure --no-tests=error --test-output-size-passed 262144 -R '^ArduPilotFileLoaderTest$' \
             --output-junit "$PWD/build/ardupilot-import-first.xml"
           cmake --build build --config RelWithDebInfo --parallel 2
       - name: Prepare verified native feedback inputs
@@ -446,6 +446,11 @@ jobs:
           path: |
             build/Testing/Temporary/
             build/ardupilot-import-first.xml
+            build/ardupilot-dataflash/ardupilot_source_plugin.pjmanifest.json
+            build/ardupilot-package-path-*.txt
+            docs/localization/upstream-baseline.json
+            cmake/host-sdk-source.json
+            3rdparty/plotjuggler-apbin-plugins/sdk4/manifest.json
             build/native-tests.xml
             build/native-headless.xml
             build/native-qrhi.xml

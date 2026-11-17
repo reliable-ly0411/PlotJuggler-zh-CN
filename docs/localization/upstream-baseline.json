@@ -23,8 +23,10 @@
     "sdk_source_commit": "ffd749ab343c3211b5100f124f6c873667b82629",
     "license": "LGPL-3.0-only",
     "linkage": "Separate native shared library; no static embedding in the application.",
-    "version": "1.2.0-pj4.rc.1",
-    "release_tag": "v1.2.0-pj4.rc.1"
+    "version": "1.3.0-pj4.rc.1",
+    "release_tag": "v1.3.0-pj4.rc.1",
+    "release_commit": "55f75c4214deabda952b9114c7cb4c3005593158",
+    "source_manifest_sha256": "f2ef42dc0d80405dbeb7e2d23cf6831f2c5f2a1c846d39b8643af3fff4b5901d"
   },
   "upstream_release": {
     "tag": "4.1.0",
