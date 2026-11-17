@@ -2,6 +2,22 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
+const { createHash } = require('node:crypto');
+
+// Bind the sampled derivative to the exact original test and package; upstream
+// and localized binaries keep their own probes and language assertions.
+async function startAnymalProfile(page, testInfo, packageDirectory, testDirectory) {
+  const sha = async file => createHash('sha256').update(await fs.readFile(file)).digest('hex');
+  return startChromiumProfile(page, testInfo.outputPath('cpu-profile'), {
+    source: process.env.PJ_SOURCE_SHA,
+    controller: process.env.PJ_CONTROLLER_SHA,
+    role: process.env.PJ_VALIDATION_ROLE,
+    packageManifestSha256: await sha(path.join(packageDirectory, 'manifest.json')),
+    fixtureManifestSha256: await sha(path.join(testDirectory, 'fixtures/hosted_assets.json')),
+    originalSpecSha256: await sha(path.join(testDirectory, 'presets.spec.js')),
+    diagnosticSpecSha256: await sha(testInfo.file),
+  });
+}
 
 // Diagnostic replay only: CDP sampling changes timing and must not replace the
 // preceding unprofiled acceptance result. This helper never downloads fixtures.
@@ -88,4 +104,4 @@ async function startChromiumProfile(page, directory, identity) {
   };
 }
 
-module.exports = { startChromiumProfile };
+module.exports = { startChromiumProfile, startAnymalProfile };

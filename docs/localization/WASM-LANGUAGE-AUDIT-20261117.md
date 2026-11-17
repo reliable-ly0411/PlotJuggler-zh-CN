@@ -342,16 +342,19 @@ replay cannot change the first step's failure or replace its evidence.
 
 The replay uses the same job's existing acceptance package and fixture mirror.
 It performs no compilation, fixture download, credential change or network
-fallback. The controller's sample layouts and fixture manifest must match
-the source checkout byte-for-byte; every existing mirrored file must match
-its pinned size and SHA-256. Missing files stop the diagnostic. The browser
+fallback. Each lane derives the diagnostic from its own original Anymal
+test, with every original assertion retained; unknown test shapes stop
+before substitution. This avoids introducing localized probe requirements
+into the upstream binary. Every existing mirrored file must match that
+source checkout's pinned size and SHA-256. Missing files stop the diagnostic. The browser
 keeps the existing offline rules. This does not enable a local replay where
 hosted fixtures were previously refused with HTTP 403.
 
 Retained diagnostic output contains CPU samples, a Chromium timeline,
 Long Tasks entries with their time origin, timed application console events,
 load/model-ready marks, browser/CPU metadata and source/controller/package/
-fixture identities. Profiling perturbs timing, so these outputs explain work
+fixture identities, plus hashes and copies of the original and derived specs.
+Profiling perturbs timing, so these outputs explain work
 and cannot certify the original performance gate. Stripped WASM has no source
 names section; some sampled frames may require additional symbol mapping.
 
@@ -359,7 +362,11 @@ The capture path was tested with real headless Chromium on a synthetic local
 page, including a deliberately failing DOM-click workload: both original
 and replay exited 1, the original report hash stayed unchanged, and the
 351 ms synthetic long task appeared alongside 456 CPU samples and timeline
-marks. Three admission guards and all 43 package-script tests passed. A
+marks. A second source-derived synthetic replay also preserved both original
+spec and report hashes, retained exit 1 and captured 432 samples plus the
+351 ms task. Five admission/derivation guards and all 45 package-script tests
+passed. Both upstream and localized original test derivatives parse and
+retain the complete assertion sequences. A
 CDP-evaluated busy loop produced samples but no Long Tasks entry, so it was
 replaced with a real DOM event for this tool calibration. None of these
 synthetic results is an Anymal application performance measurement.
