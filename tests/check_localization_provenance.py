@@ -37,7 +37,10 @@ if shallow == "false":
 plugin = record["ardupilot_plugin"]
 assert plugin["repository"] == "https://github.com/reliable-ly0411/plotjuggler-apbin-plugins"
 assert plugin["branch"] == "plotjuggler-4.x-sdk"
-assert plugin["sdk_version"] == "0.34.1"
+assert plugin["sdk_version"] == "1.0.0-dev.2"
+host_sdk = json.loads((ROOT / "cmake/host-sdk-source.json").read_text(encoding="utf-8"))
+assert plugin["sdk_version"] == host_sdk["version"]
+assert plugin["sdk_source_commit"] == host_sdk["commit"]
 for key in ("commit", "upstream_commit", "sdk_source_commit"):
     assert re.fullmatch(r"[0-9a-f]{40}", plugin[key]), f"Invalid plugin {key}"
 # The Git index exists even when a source-check job has not initialized submodules.

@@ -34,6 +34,18 @@ class HostPackageVersionsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     read_host_versions(root)
 
+    def test_exact_prerelease_sdk_pins(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.fixture(root)
+            for version in ('1.0.0-dev.2', '1.0.0-rc.1', '1.0.0'):
+                (root / 'conanfile.txt').write_text('[requires]\nplotjuggler_sdk/' + version, encoding='utf-8')
+                self.assertEqual(read_host_versions(root)['sdk_version'], version)
+            for version in ('1.0.0-', '1.0.0-dev..2', '1.0.0-dev.02', '01.0.0', '[>=1.0.0]', '*'):
+                (root / 'conanfile.txt').write_text('[requires]\nplotjuggler_sdk/' + version, encoding='utf-8')
+                with self.assertRaises(ValueError, msg=version):
+                    read_host_versions(root)
+
     def test_license_collection_uses_selected_host_sdk_and_qt(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
