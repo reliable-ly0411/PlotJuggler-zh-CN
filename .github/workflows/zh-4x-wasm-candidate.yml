@@ -204,9 +204,14 @@ jobs:
             --source build-wasm-prod/pj_app --output build-wasm-prod/deploy-b
           diff -qr build-wasm-prod/deploy build-wasm-prod/deploy-b
 
-      - name: Localized total package budget
-        # Separate 26,000,000 B total; the upstream startup-budget workflow remains unchanged.
-        run: node scripts/wasm_localized_size_budget.mjs build-wasm-prod/deploy/manifest.json
+      - name: Upstream startup and localized total budgets
+        shell: bash
+        run: |
+          # Run both checks even if one fails; neither budget substitutes for the other.
+          status=0
+          node scripts/wasm_size_budget.mjs build-wasm-prod/deploy/manifest.json 16932000 || status=1
+          node scripts/wasm_localized_size_budget.mjs build-wasm-prod/deploy/manifest.json || status=1
+          exit "$status"
 
       - name: Cache Playwright browsers
         uses: actions/cache@v5

@@ -33,7 +33,9 @@ the -O2 pass is not a default-optimization or full-product acceptance result.
 - Its independent localized budget counts **every manifest file** using Brotli
   bytes, or identity bytes when Brotli is absent, including presets and Python
   stdlib: **26,000,000 B**. The existing upstream startup budget/script/workflow
-  is unchanged. A budget failure remains a failure; no images are removed.
+  is unchanged. The candidate runs that 16,932,000 B startup check and the
+  localized total check independently; either failure fails the gate, with
+  both measurements printed. No images are removed.
 
 The older WASM candidates 80a97e12, d0734db9 and 54783848 remain preserved on their
 branches. Their product changes and old test results are not substituted for
