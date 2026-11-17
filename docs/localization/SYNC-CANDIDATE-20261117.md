@@ -191,3 +191,10 @@ the fixed source manifest produces ID `ardupilot-dataflash`, version
 `3a0ca55bc8d0c0f9b70632f9d601aae163528d886ee116c799f4ff69f64d98b3`.
 This replay is not represented as downloaded CI bytes or as a new DSO run.
 The two original failures and all downstream skipped GUI/package checks remain.
+
+The APBIN source hash is checked against the exact pinned Git blob. A real
+`core.autocrlf=true` clone reproduces Windows JSON newline conversion (23 CRLF
+lines, checkout SHA-256 `2e12fb4a5615c723c0bd30d12715414870b8c0034cda4f2ad1cbcb3a226ce899`).
+Preflight accepts only the original blob or its uniform LF-to-CRLF checkout;
+the file CMake consumes must otherwise match exactly. Real Git fixture tests
+cover both forms and reject changed identity bytes and a wrong source hash.

@@ -63,7 +63,13 @@ source_manifest = ROOT / plugin['path'] / 'sdk4/manifest.json'
 if source_manifest.is_file():
     source_head = subprocess.check_output(['git', '-C', str(ROOT / plugin['path']), 'rev-parse', 'HEAD'], text=True).strip()
     assert source_head == plugin['commit'], 'BIN source checkout differs from its pin'
-    assert hashlib.sha256(source_manifest.read_bytes()).hexdigest() == plugin['source_manifest_sha256'], 'BIN source manifest hash differs'
+    # The submodule has no .gitattributes: Windows may check JSON out with CRLF.
+    # Hash the immutable Git blob, then bind the file consumed by CMake to those
+    # same bytes, permitting only uniform checkout newline conversion.
+    source_blob = subprocess.check_output(['git', '-C', str(ROOT / plugin['path']),
+                                           'show', plugin['commit'] + ':sdk4/manifest.json'])
+    assert hashlib.sha256(source_blob).hexdigest() == plugin['source_manifest_sha256'], 'BIN source manifest hash differs'
+    assert source_manifest.read_bytes() in (source_blob, source_blob.replace(b'\n', b'\r\n')), 'BIN checkout manifest differs from pinned source'
     manifest = json.loads(source_manifest.read_text(encoding='utf-8'))
     assert manifest['id'] == 'ardupilot-dataflash' and manifest['version'] == plugin['version'], 'BIN source manifest identity differs'
     assert manifest['license'] == plugin['license'] == 'LGPL-3.0-only', 'BIN source manifest license differs'
