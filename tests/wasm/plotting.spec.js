@@ -6,6 +6,7 @@ const { devicePixelRatioOptions } = require('./support/browser');
 const { dragQtCanvas } = require('./support/canvas');
 const { clickActiveDialogButton } = require('./support/dialogs');
 const { base64Fixture } = require('./support/fixtures');
+const { firstLoadOutcome } = require('./support/load_outcomes');
 const { openFileChooser } = require('./support/pickers');
 const { requestPlotState, requestMultiPlotState, requestPlotHover } = require('./support/plot_probes');
 const { curveRowCenter, placeholderIconCenter } = require('./support/geometry');
@@ -87,6 +88,24 @@ async function requestPlotStylePixels(consoleMessages, previousCount) {
     hash: match[8],
     framebuffer: { width: Number(match[9]), height: Number(match[10]) },
   };
+}
+
+const countMessages = (consoleMessages, marker) => consoleMessages.filter(message => message.includes(marker)).length;
+
+// A click reaches Qt as a queued DOM event, while the state probe is a direct call that can run first: probe until
+// the plot shows the clicked style and width, then take the pixel readback of that last probe (each probe emits
+// one, in order).
+async function requestStyledPlot(page, consoleMessages, expected) {
+  const pixelsBefore = countMessages(consoleMessages, 'PJ_WASM_PLOT_STYLE_PIXELS');
+  let state = null;
+  let probes = 0;
+  await expect.poll(async () => {
+    state = await requestPlotState(page, consoleMessages, countMessages(consoleMessages, 'PJ_WASM_PLOT_STATE count='));
+    probes += 1;
+    return { style: state.style, width: state.width };
+  }, { timeout: 10000 }).toEqual(expected);
+  const readback = await requestPlotStylePixels(consoleMessages, pixelsBefore + probes - 1);
+  return { state, readback };
 }
 
 async function requestPlotGridPixels(consoleMessages, previousCount) {
@@ -230,6 +249,16 @@ async function requestPlotTextPixels(consoleMessages, previousCount) {
   };
 }
 
+// Dark-pixel count of the newest plot readback. A readback completes a frame after
+// it was asked for, so right after a state change the newest one may still show
+// the frame before it: poll this for the expected value instead of taking the
+// first message that arrives.
+function latestPlotTextPixels(consoleMessages) {
+  const message = consoleMessages.filter(entry => entry.includes('PJ_WASM_PLOT_TEXT_PIXELS')).at(-1) || '';
+  const match = message.match(/pixels=(\d+)/);
+  return match ? Number(match[1]) : NaN;
+}
+
 test('QRhi WebGL canvas renders an imported scalar curve', async ({ page }) => {
   test.setTimeout(90000);
   const errors = [];
@@ -252,7 +281,7 @@ test('QRhi WebGL canvas renders an imported scalar curve', async ({ page }) => {
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 15000 },
   ).toContain('plot/temp:3@0..2000000000=10..30');
 
@@ -334,7 +363,7 @@ test('QRhi scalar reduction preserves an isolated extremum within its frame budg
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 15000 },
   ).toContain('plugin=CSV Loader');
 
@@ -399,7 +428,7 @@ test('real curve drag and drop drives the QRhi plot lifecycle', async ({ page })
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 15000 },
   ).toContain('scalar_series=drag/temp,drag/time,drag/value');
 
@@ -486,7 +515,7 @@ test('multi-selected scalar leaves drag to one plot in a single gesture', async 
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 15000 },
   ).toContain('scalar_series=multi-drag/temp,multi-drag/time,multi-drag/value');
 
@@ -538,7 +567,7 @@ test('real curve-style and width controls render every app-exposed QRhi variant'
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 15000 },
   ).toContain('scalar_series=styles/signal,styles/time');
 
@@ -563,18 +592,11 @@ test('real curve-style and width controls render every app-exposed QRhi variant'
   }
   expect(controls.open).toBe(true);
 
-  let stateMessages = consoleMessages.filter(message => message.includes('PJ_WASM_PLOT_STATE count=')).length;
-  let pixelMessages = consoleMessages.filter(message => message.includes('PJ_WASM_PLOT_STYLE_PIXELS')).length;
   const styleSignatures = new Set();
   for (let style = 0; style < controls.styles.length; ++style) {
     const button = controls.styles[style];
     await page.mouse.click(screen.x + button.x, screen.y + button.y);
-    const state = await requestPlotState(page, consoleMessages, stateMessages);
-    stateMessages += 1;
-    const readback = await requestPlotStylePixels(consoleMessages, pixelMessages);
-    pixelMessages += 1;
-    expect(state.style).toBe(style);
-    expect(state.width).toBe(0);
+    const { state, readback } = await requestStyledPlot(page, consoleMessages, { style, width: 0 });
     expect(state.xy).toBe(false);
     expect(readback.style).toBe(style);
     expect(readback.width).toBe(0);
@@ -590,12 +612,7 @@ test('real curve-style and width controls render every app-exposed QRhi variant'
   for (let width = 0; width < controls.widths.length; ++width) {
     const button = controls.widths[width];
     await page.mouse.click(screen.x + button.x, screen.y + button.y);
-    const state = await requestPlotState(page, consoleMessages, stateMessages);
-    stateMessages += 1;
-    const readback = await requestPlotStylePixels(consoleMessages, pixelMessages);
-    pixelMessages += 1;
-    expect(state.style).toBe(0);
-    expect(state.width).toBe(width);
+    const { state, readback } = await requestStyledPlot(page, consoleMessages, { style: 0, width });
     expect(readback.style).toBe(0);
     expect(readback.width).toBe(width);
     expect(readback.pixels).toBeGreaterThan(0);
@@ -621,20 +638,21 @@ test('real curve-style and width controls render every app-exposed QRhi variant'
   expect(bevelImage).toMatchSnapshot('wasm-rhi-thick-line-bevel.png', { maxDiffPixels: 4 });
 
   await page.mouse.click(screen.x + controls.styles[1].x, screen.y + controls.styles[1].y);
-  const dotState = await requestPlotState(page, consoleMessages, stateMessages);
-  stateMessages += 1;
-  const dotReadback = await requestPlotStylePixels(consoleMessages, pixelMessages);
-  pixelMessages += 1;
-  expect(dotState.style).toBe(1);
-  expect(dotState.width).toBe(3);
+  const { state: dotState, readback: dotReadback } = await requestStyledPlot(
+    page, consoleMessages, { style: 1, width: 3 });
   expect(dotReadback.pixels).toBeGreaterThan(0);
   const dotImage = await tightSampleImage(dotState, 1, 4);
   expect(dotImage).toMatchSnapshot('wasm-rhi-square-dot.png', { maxDiffPixels: 4 });
 
-  const gridMessages = consoleMessages.filter(message => message.includes('PJ_WASM_PLOT_GRID_PIXELS')).length;
   await page.mouse.click(screen.x + controls.grid.x, screen.y + controls.grid.y);
-  await requestPlotState(page, consoleMessages, stateMessages);
-  const grid = await requestPlotGridPixels(consoleMessages, gridMessages);
+  // The grid is not in the plot state: probe until the readback shows it (the click may land after a probe).
+  let grid = null;
+  await expect.poll(async () => {
+    const gridMessages = countMessages(consoleMessages, 'PJ_WASM_PLOT_GRID_PIXELS');
+    await requestPlotState(page, consoleMessages, countMessages(consoleMessages, 'PJ_WASM_PLOT_STATE count='));
+    grid = await requestPlotGridPixels(consoleMessages, gridMessages);
+    return grid.major.pixels > 0;
+  }, { timeout: 10000 }).toBe(true);
   expect(grid.major.pixels).toBeGreaterThan(0);
   expect(grid.major.column).toBeGreaterThanOrEqual(0);
   expect(grid.major.period).toBe(6);
@@ -677,7 +695,7 @@ test('dense dotted curves draw complete without a budget retry', async ({ page }
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 30000 },
   ).toContain('dense-dash/temp:20001@');
 
@@ -750,7 +768,7 @@ test('huge offscreen dash phases remain bounded on a visible local segment', asy
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 15000 },
   ).toContain('huge-dash-phase/temp:3@');
 
@@ -807,7 +825,7 @@ test('right-drag creates XY curves through nonblocking dialogs and rolls back ca
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 15000 },
   ).toContain('scalar_series=xy/ax,xy/ay,xy/time');
 
@@ -929,7 +947,7 @@ test('Escape-cancelled curve drag adds nothing and leaves the tree grab balanced
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 15000 },
   ).toContain('scalar_series=cancel-drag/temp,cancel-drag/time,cancel-drag/value');
 
@@ -998,7 +1016,7 @@ test('real rectangle/wheel zoom, Ctrl-drag pan, and reset navigate the QRhi plot
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 15000 },
   ).toContain('scalar_series=navigate/temp,navigate/time');
 
@@ -1126,7 +1144,7 @@ test('Shift-drag seeks playback and moves the QRhi tracker without changing the 
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 15000 },
   ).toContain('scalar_series=tracker/temp,tracker/time');
 
@@ -1279,18 +1297,21 @@ test('Shift-drag seeks playback and moves the QRhi tracker without changing the 
   expect(lineOnlyText.markerLabels).toBe(0);
   expect(lineOnlyText.vertices).toBe(6);
   expect(lineOnlyText.alphaPixels).toBeLessThan(valueNameText.alphaPixels);
-  expect(lineOnlyPixels.pixels).toBeLessThan(valueNamePixels.pixels);
+  await expect.poll(() => latestPlotTextPixels(consoleMessages), { timeout: 10000 })
+    .toBeLessThan(valueNamePixels.pixels);
+  lineOnlyPixels.pixels = latestPlotTextPixels(consoleMessages);
 
   await page.evaluate(() => window.pjWasmCycleTimeTrackerProbe());
   const restoredState = await requestPlotState(page, consoleMessages, stateMessages);
   const restoredText = await requestPlotText(consoleMessages, textMessages);
-  const restoredPixels = await requestPlotTextPixels(consoleMessages, textPixelMessages);
   expect(restoredState.trackerParameter).toBe(1);
   expect(restoredText.legendLayers).toBe(1);
   expect(restoredText.markerLabels).toBe(1);
   expect(restoredText.vertices).toBe(12);
   expect(restoredText.alphaPixels).toBeGreaterThan(lineOnlyText.alphaPixels);
-  expect(restoredPixels.pixels).toBeGreaterThan(lineOnlyPixels.pixels);
+  await expect.poll(() => latestPlotTextPixels(consoleMessages), { timeout: 10000 })
+    .toBeGreaterThan(lineOnlyPixels.pixels);
+  const restoredPixels = { pixels: latestPlotTextPixels(consoleMessages) };
 
   // Fault-inject only the atlas stage: production geometry must stay visible,
   // stale text must not be drawn, the warning must latch, and clearing the
@@ -1425,7 +1446,7 @@ test.describe('HiDPI QRhi text', () => {
     await page.waitForTimeout(1000);
     await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
     await expect.poll(
-      () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+      () => firstLoadOutcome(page),
       { timeout: 15000 },
     ).toContain('scalar_series=hidpi-text/temp,hidpi-text/time');
 
@@ -1507,7 +1528,7 @@ test.describe('sub-1 DPR QRhi cosmetics', () => {
     await page.waitForTimeout(1000);
     await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
     await expect.poll(
-      () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+      () => firstLoadOutcome(page),
       { timeout: 15000 },
     ).toContain('scalar_series=lodpi-grid/temp,lodpi-grid/time');
 
@@ -1581,7 +1602,7 @@ test('mouse hover selects a curve point and renders its QRhi inspector', { tag: 
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 15000 },
   ).toContain('scalar_series=hover/temp,hover/time');
 
@@ -1702,7 +1723,7 @@ test('two split QRhi plots render distinct curves and synchronize playback track
   await page.waitForTimeout(1000);
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('PJ_FILE_LOAD_OK')) || '',
+    () => firstLoadOutcome(page),
     { timeout: 15000 },
   ).toContain('scalar_series=multi-plot/temp,multi-plot/time,multi-plot/value');
 
@@ -1912,7 +1933,7 @@ test('two split QRhi plots render distinct curves and synchronize playback track
 
   expect(consoleMessages.some(message => message.includes('PJ_WASM_PLOT_RHI_FAILED'))).toBe(false);
   expect(consoleMessages.some(message => message.includes('PJ_WASM_MULTI_FAILED'))).toBe(false);
-  expect(consoleMessages.some(message => message.includes('Failed to load bundled Noto Sans font'))).toBe(false);
+  expect(consoleMessages.some(message => message.includes('Failed to load bundled PlotJuggler Sans font'))).toBe(false);
   expect(errors).toEqual([]);
 });
 
@@ -1941,10 +1962,10 @@ test('official MCAP scalar imports, renders through QRhi, and seeks playback', a
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
 
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('/ros2/value/data:3@')) || '',
+    () => firstLoadOutcome(page, '/ros2/value/data:3@'),
     { timeout: 30000 },
   ).toContain('=1.25..7.75');
-  const imported = consoleMessages.find(message => message.includes('/ros2/value/data:3@')) || '';
+  const imported = await firstLoadOutcome(page, '/ros2/value/data:3@');
   expect(imported).toContain('PJ_FILE_LOAD_OK plugin=MCAP Loader');
   expect(imported).toContain('scalar_series=/ros2/value/data');
   const sampleRange = imported.match(/\/ros2\/value\/data:3@(\d+)\.\.(\d+)=1\.25\.\.7\.75/);
@@ -2053,10 +2074,10 @@ test('official MCAP indexless offset fetch renders and seeks stored scalars', as
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
 
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('/unchunked/seek/data:12@')) || '',
+    () => firstLoadOutcome(page, '/unchunked/seek/data:12@'),
     { timeout: 30000 },
   ).toContain('=0..88');
-  const imported = consoleMessages.find(message => message.includes('/unchunked/seek/data:12@')) || '';
+  const imported = await firstLoadOutcome(page, '/unchunked/seek/data:12@');
   expect(imported).toContain('PJ_FILE_LOAD_OK plugin=MCAP Loader');
   expect(imported).toContain('scalar_series=/unchunked/seek/data');
   expect(imported).toContain('/unchunked/seek/data:12@0..2750000000=0..88');
@@ -2164,7 +2185,7 @@ test('official ROS parser decodes ROS1 scalar messages from MCAP', async ({ page
   await clickActiveDialogButton(page, screen, consoleMessages, 'ok');
 
   await expect.poll(
-    () => consoleMessages.find(message => message.includes('/ros1/value/data:3@')) || '',
+    () => firstLoadOutcome(page, '/ros1/value/data:3@'),
     { timeout: 30000 },
   ).toContain('=3.5..9');
   expect(errors).toEqual([]);

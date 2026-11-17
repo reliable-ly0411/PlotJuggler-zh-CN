@@ -31,6 +31,7 @@
 #include <coroutine>
 #include <cstdint>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <pj_plugins/host/widget_data_view.hpp>
 #include <pj_plugins/host_qt/dialog_engine.hpp>
@@ -458,15 +459,12 @@ struct DialogEngine::AsyncRunner {
     QWidget* parser_dialog_widget = nullptr;
     std::unique_ptr<PJ::DialogHandle> parser_dialog_handle;
     PayloadMemo parser_memo;
-    // Staged-file leases retained per target widget. A lease keeps the picker's
-    // MEMFS copy alive because the plugin may re-read backing_path any time until
-    // the dialog completes (e.g. on accept, when it opens the file for real). We
-    // key by a scope-qualified name (top-level dialog vs. parser sub-dialog +
-    // generation — see the completion below) and REPLACE on re-selection so a
-    // superseded pick frees its staged copy immediately instead of pinning every
-    // intermediate choice until dialog close. A pick the plugin rejects retains
-    // nothing.
-    std::vector<std::pair<std::string, std::shared_ptr<void>>> selected_file_leases;
+    // Staged-file leases of every pick delivered to the plugin. A lease keeps the picked file readable at its
+    // backing_path, which the plugin may re-read any time until the dialog completes and the host until the import
+    // ends. A re-pick does not release the earlier one: one picker can fill several entries of the config (a CAN
+    // loader's DBC per interface), and a browser lease is only a reference to the picked File, not a copy. All are
+    // handed over on accept; reject releases them.
+    std::vector<std::shared_ptr<void>> selected_file_leases;
     bool file_picker_active = false;
     std::uint64_t parser_dialog_generation = 0;
 
@@ -480,11 +478,10 @@ struct DialogEngine::AsyncRunner {
       if (!view.isFilePicker(widget_name)) {
         return;
       }
-      // Returns true iff the plugin accepted the path (onFileSelected returned
-      // true); the async completion retains the staging lease only on acceptance.
-      auto apply_selected_path = [&, widget_name, handle, target_widget](const std::string& path) -> bool {
+      // Delivers the pick and, when the plugin asks for it (onFileSelected returned true), re-reads its widget data.
+      auto apply_selected_path = [&, widget_name, handle, target_widget](const std::string& path) {
         if (!handle->sendEvent(widget_name, PJ::WidgetEventBuilder::fileSelected(path))) {
-          return false;
+          return;
         }
         std::string raw = handle->widget_data();
         nlohmann::json new_data = nlohmann::json::parse(raw, nullptr, false);
@@ -498,7 +495,6 @@ struct DialogEngine::AsyncRunner {
           // commands, so the next poll must inspect this payload once.
           target_memo.raw.clear();
         }
-        return true;
       };
       auto filter = view.filePickerFilter(widget_name).value_or("");
       filter = bundledNamedDisplayText(
@@ -518,7 +514,7 @@ struct DialogEngine::AsyncRunner {
         config_.file_selector(
             dialog, filter, title,
             [callbacks_alive, &file_picker_active, &parser_dialog_generation, targets_parser, target_generation,
-             widget_name, apply_selected_path = std::move(apply_selected_path),
+             apply_selected_path = std::move(apply_selected_path),
              &selected_file_leases](std::optional<DialogSelectedFile> selected) mutable {
               if (!*callbacks_alive) {
                 return;
@@ -527,28 +523,10 @@ struct DialogEngine::AsyncRunner {
               if (!selected.has_value() || (targets_parser && target_generation != parser_dialog_generation)) {
                 return;
               }
-              // Only retain the lease if the plugin accepts the path; a rejected
-              // pick frees its staged copy at once. Replace any prior lease for
-              // this widget so a re-selection supersedes — not accumulates.
-              if (apply_selected_path(selected->backing_path)) {
-                // Scope-qualify by target (top-level dialog vs. injected parser
-                // sub-dialog) plus, for the parser scope, its generation: widget
-                // names are chosen by independent plugins and can collide (e.g. a
-                // top-level "pick_file" and a parser sub-dialog's own "pick_file").
-                // A bare-name key would let one scope's completion replace — and
-                // thus free — the other scope's still-needed MEMFS lease.
-                const std::string lease_key = targets_parser
-                                                  ? "parser:" + std::to_string(target_generation) + ":" + widget_name
-                                                  : "top:" + widget_name;
-                auto existing = std::find_if(
-                    selected_file_leases.begin(), selected_file_leases.end(),
-                    [&](const auto& entry) { return entry.first == lease_key; });
-                if (existing != selected_file_leases.end()) {
-                  existing->second = std::move(selected->lease);
-                } else {
-                  selected_file_leases.emplace_back(lease_key, std::move(selected->lease));
-                }
-              }
+              apply_selected_path(selected->backing_path);
+              // Retained whatever onFileSelected returned: that return means "re-read my widget data", not
+              // "path accepted", so a plugin may keep the path and still return false.
+              selected_file_leases.push_back(std::move(selected->lease));
             });
         return;
       }
@@ -576,6 +554,9 @@ struct DialogEngine::AsyncRunner {
         return;
       }
 #ifdef Q_OS_WASM
+      // Only toolbox (PanelEngine) folder pickers become browser downloads: a
+      // dialog's folder picker selects a folder to read (protobuf's include
+      // folders), which a browser cannot provide.
       Q_UNUSED(target_widget)
       Q_UNUSED(target_memo)
       qWarning("DialogEngine: plugin folder pickers are unavailable on WebAssembly");
@@ -1049,6 +1030,7 @@ struct DialogEngine::AsyncRunner {
       } else {
         parser_config_.clear();
       }
+      std::move(selected_file_leases.begin(), selected_file_leases.end(), std::back_inserter(self.selected_files_));
       dr = DialogResult::kAccepted;
     } else {
       handle_.reject();
@@ -1078,6 +1060,7 @@ void DialogEngine::openDialog(QWidget* parent, Completion completion) {
     return;
   }
   dialog_open_ = true;
+  selected_files_.clear();
   AsyncRunner::run(*this, parent, std::move(completion));
 }
 
@@ -1140,6 +1123,10 @@ std::string DialogEngine::savedConfig() const {
 
 std::string DialogEngine::parserConfig() const {
   return parser_config_;
+}
+
+std::vector<std::shared_ptr<void>> DialogEngine::takeSelectedFiles() {
+  return std::exchange(selected_files_, {});
 }
 
 std::string DialogEngine::runHeadless(int max_ticks) {

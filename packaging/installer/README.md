@@ -60,12 +60,12 @@ modules there too.
 
 ## Prerequisites on the Windows build host
 
-- **PJ4 already built** (RelWithDebInfo) with CPython enabled:
+- **PJ4 already built** (Release) with CPython enabled:
   ```powershell
   conan install . --output-folder=build --build=missing `
-      -s build_type=RelWithDebInfo -s compiler.cppstd=20 `
-      -o "cpython/*:shared=True" -s "cpython/*:build_type=Release"
-  cmake --preset ... ; cmake --build build --config RelWithDebInfo
+      -s build_type=Release -s compiler.cppstd=20 `
+      -o "cpython/*:shared=True"
+  cmake --preset ... ; cmake --build build --config Release
   ```
   The `cpython/*:shared=True` override matches Windows CI and produces
   `python3XX.dll` — the local default is static on MSVC and the installer
@@ -151,12 +151,15 @@ source), `-PluginPlatform <key>` (defaults to `windows-x86_64`), and
 `-CleanReleaseName` (name the output `PlotJuggler-<Version>-Windows-x64.exe`
 instead of the commit-stamped default — used by release CI on tag builds).
 
-The default whitelist bundles these 18 published plugins:
+The default whitelist bundles these 27 published plugins:
 `mcap-loader`, `csv-loader`, `parquet-loader`, `ulog-loader`, `mp4-loader`,
 `pointcloud-3d-loader`, `dummy-streamer`, `foxglove-bridge`,
 `plotjuggler-bridge`, `webrtc-client`, `ros-parser`, `protobuf-parser`,
 `json-parser`, `data-tamer-parser`, `toolbox-quaternion`,
-`toolbox-transform-editor`, `toolbox-mosaico`, and `arrow-parser`.
+`toolbox-transform-editor`, `toolbox-mosaico`, `arrow-parser`, `toolbox-fft`,
+`toolbox-anomaly-detector`, `toolbox-data-exporter`, `influx-parser`,
+`navmap-parser`, `candump-loader`, `blf-loader`, `mf4-loader`, and `log-widget`
+(every plugin of the browser build, `cmake/PjWasmOfficialPlugins.cmake`).
 
 ## Portable ZIP
 

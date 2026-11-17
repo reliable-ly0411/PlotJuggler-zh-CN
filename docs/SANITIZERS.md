@@ -18,7 +18,7 @@ The default is `none`.
 
 All diagnostic lanes run in the existing `pj4-appimage-builder` container
 (Ubuntu 22.04). There is no sanitizer-specific image: the local builder already
-contains Qt and the RelWithDebInfo Conan dependency closure, and every lane
+contains Qt and the Release Conan dependency closure, and every lane
 reuses them. The instrumented lanes rebuild PJ4 and the pinned SDK from source.
 
 | Lanes | Compiler |
@@ -66,7 +66,7 @@ test time too.
 CI runs the three lanes as one matrix job in `.github/workflows/sanitizers.yml`,
 off the pull-request path: nightly on the default branch, skipped when it has
 not moved since the previous nightly run (`main-changed.yml`), and on manual
-dispatch. It uses the same `depot-ubuntu-22.04-4` runner as `linux-ci.yml`,
+dispatch. It uses the same `ubuntu-22.04` runner as `linux-ci.yml`,
 restoring its Qt and Conan caches; each lane has its own ccache key so
 instrumented objects cannot seed another lane, and only nightly runs save it.
 
@@ -207,6 +207,12 @@ about it instead of suppressing: `FileLoader` and `EnginePool` use
 `PJ::tsan::release/acquire` (`pj_runtime/TsanAnnotations.h`) to pair the two sides
 (a worker's last access with the `QThread::wait()` return; a task's submission
 with its start on a `QThreadPool` thread), compiled only under TSan.
+`StreamingSourceManager`'s worker posts to the GUI thread through
+`PJ::tsan::invokeQueued`, which gives each queued call a token of its own: one
+token shared by every post would let a call that runs late inherit what the
+worker wrote after posting it, and hide a real race with those writes.
+`tsan_invoke_queued_selftest` (registered like `sanitizer_race_selftest` below,
+passing only on a report naming its racy read) pins that.
 
 Read `cmake/sanitizers/tsan.supp` before adding an entry. Each `called_from_lib`
 must resolve to exactly ONE loaded library, and a pattern that matches several
@@ -320,19 +326,20 @@ they do not enable those sanitizers in a TSan binary. TSan uses its own
 `TSAN_OPTIONS` as described above.
 
 For all selectors, `test.sh` sets `QT_QPA_PLATFORM=offscreen` to avoid visible
-test windows, clears `QT_IM_MODULE` to avoid an incompatible system input
+test windows, clears `QT_IM_MODULE` and `QT_IM_MODULES` to avoid an incompatible system input
 plugin, and points `QT_PLUGIN_PATH` at the checkout's pinned Qt plugins.
 An explicit `--test-dir DIR` overrides the selected directory, with a warning
 if the paths differ; the runtime defaults still follow `--sanitize`.
 
 The authoritative policy is in
 [`cmake/sanitizers/README.md`](../cmake/sanitizers/README.md), with the shared
-file at [`lsan.supp`](../cmake/sanitizers/lsan.supp). Its two entries cover the
+file at [`lsan.supp`](../cmake/sanitizers/lsan.supp). Its three entries cover the
 deliberately retained CPython interpreter and released-GIL guards (a documented
-lifetime decision matched by function, not a blanket Python suppression), and
-the `QOpenGLContext` Qt's `QOpenGLWidget` drops when a context cannot be created
+lifetime decision matched by function, not a blanket Python suppression), the
+`QOpenGLContext` Qt's `QOpenGLWidget` drops when a context cannot be created
 on the offscreen platform (matched on the context's constructor, with no PJ4
-frame in the stack).
+frame in the stack), and the per-thread `QSettings` that `appSettings()` keeps
+for its thread's lifetime by design (matched on `appSettings`).
 
 Add a suppression only after an observed, symbolized leak report supports a
 narrow match. Every pattern must have an immediately preceding comment with

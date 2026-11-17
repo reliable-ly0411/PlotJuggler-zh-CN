@@ -94,7 +94,7 @@ Linux CI floor step caps Mesa at 3.3 (`MESA_GL_VERSION_OVERRIDE=3.3`,
   without `<vulkan/vulkan.h>`, which CMake warns about; OpenGL without a current
   context) gets `kGuaranteedMax3dTextureSize`, 256, logged once. The D3D and
   Metal constants are documented, not measured on hardware.
-- **Metal on GitHub-hosted `macos-14` and on `depot-macos-14`** (Apple silicon VMs):
+- **Metal on GitHub-hosted `macos-14`** (Apple silicon VM):
   `MTLCreateSystemDefaultDevice` returns "Apple Paravirtual device" (not
   headless), a `CAMetalLayer` drawable presents, and QRhi reports `Metal,
   deviceType=Integrated`.
@@ -226,12 +226,15 @@ shader's correctly rounded float add equals the float of the double subtraction.
   re-initialize when shown) and die with it, as upstream's never-shown tabs
   always did. The cost: a hidden tab keeps its GPU resources (§9, note ⁷). `rhi_dock_lifecycle_test` covers reorder, close/reopen, restore,
   float of the whole area, moving and destroying a hidden tab.
-- **ADS hides floating docks on Wayland.** Its Linux stays-on-top emulation calls
+- **ADS can hide floating docks on non-xcb Linux platforms.** Its Linux
+  stays-on-top emulation (`CDockManager::eventFilter`) runs when the main window
+  is activated or deactivated. On xcb it sets X11 properties, and since ADS 5.1
+  it is skipped on Wayland. Any other Linux QPA gets
   `setWindowFlag(Qt::WindowStaysOnTopHint, ...)` on every visible floating
-  container when the main window is activated or deactivated. Off xcb that is a
-  real flag change, and Qt hides a window whose flags change; ADS does not show it
-  again. It affects every backend. `rhi_dock_lifecycle_test` removes that event
-  filter. The fix belongs in the ADS fork (skip the call, or re-show the window).
+  container instead, a real flag change: Qt hides the window and ADS does not
+  show it again. `rhi_dock_lifecycle_test` and the mixed-layout fixture still
+  remove that event filter; whether they still need to on xcb and Wayland is
+  unverified.
 - **Vulkan on Wayland: hiding and re-showing a window within about a frame of a
   present is a protocol error.** Mesa queues the present behind its FIFO
   barrier; the unmap commit waits behind it, and Qt's immediate `get_xdg_surface`
@@ -351,8 +354,8 @@ Other measured tolerances:
 - `DepthResolveMatchesTheForcedReplay`: the depth-resolve and replay chains
   differ on under 1% of pixels with SSAO and EDL on.
 - `scene3d_rhi_model_cache_test`'s cached-vs-uncached A/B is pixel-identical on
-  Mesa and Metal; on Apple's software GL it differs on 10 pixels once shadows go
-  off, and the test allows 16 there (§10).
+  Mesa and Metal; on Apple's software GL it is not reproducible, and the test
+  skips the comparison there (§10).
 - The perf-HUD image differs between any two runs in one 7x9 px digit of its
   timing text.
 
@@ -478,7 +481,7 @@ and diffs.
 | | OpenGL floor step | `scene3d_rhi_render_test.opengl` and `rhi_dock_lifecycle_test.opengl` with Mesa capped at GL 3.3 | blocking |
 | | mixed-DPR step | the two `*AnotherPixelRatio` cases, `.opengl` and `.vulkan`, on a headless mutter's Xwayland with two virtual monitors, `QT_SCREEN_SCALE_FACTORS="1;2"`, `PJ_REQUIRE_MIXED_DPR=1` | non-blocking (`continue-on-error`) until it has run green on the runner's mutter 42 |
 | `windows-ci.yml` | `build` (QRhi) | the unit suite (`-LE qrhi`), then `-L qrhi-d3d11` with the `windows` QPA, `QSG_RHI_PREFER_SOFTWARE_RENDERER=1`; `scripts/ci/check_qrhi_backend.sh` fails unless every view and plot canvas logs `D3D11` on a `Cpu` (WARP) adapter | compile and display step blocking; unit step non-blocking |
-| `macos-ci.yml` | `qrhi-metal` (`depot-macos-14`) | a Metal device and presentation probe, then `-L qrhi-metal` (and, on scheduled and manual runs only, `-L qrhi-opengl`) with the `cocoa` QPA, each requiring every view and plot canvas on its backend, then `-LE qrhi`; on a failure it reruns up to three failed QRhi cases under lldb (their backend from the ctest name) for every thread's backtrace | nightly when the default branch moved, and on demand |
+| `macos-ci.yml` | `qrhi-metal` (`macos-15`) | a Metal device and presentation probe, then `-L qrhi-metal` (and, on scheduled and manual runs only, `-L qrhi-opengl`) with the `cocoa` QPA, each requiring every view and plot canvas on its backend, then `-LE qrhi`; on a failure it reruns up to three failed QRhi cases under lldb (their backend from the ctest name) for every thread's backtrace | nightly when the default branch moved, and on demand |
 | `pixi-ci.yml` | linux-64, win-64 | the QRhi build against conda Qt; win-64 runs the whole suite with the display passes skipped (its runner exposes no window) | — |
 | `sanitizers.yml` | asan, msan, tsan | the Clang 22 + libstdc++ build, offscreen (`test.sh`), so every display case skips; `tsan.supp` carries audited entries for `LatestWinsWorker`'s Qt hand-offs | nightly, on push to main, on dispatch |
 | `wasm-ci.yml` | | build, Playwright suites, the Scene3D capability probe | — |
@@ -502,9 +505,9 @@ loses the same coverage there) and the DPR 2 mixed-dock pass (every float
 recompiles the pipeline set at 4x the pixels; Linux runs it). It runs only on the
 nightly and manual runs (up to 24 min on the software renderer); pull requests gate
 on Metal, and Linux runs every OpenGL case on every PR.
-The lane runs on Depot's `depot-macos-14` (7 cores, the same paravirtual Metal
-device, presents). Depot's macOS capacity is not elastic (a job once queued 40 min),
-so GitHub's `macos-14` stays a `workflow_dispatch` choice for when it queues.
+The lane runs on GitHub-hosted `macos-15` (M1, 3 cores); its first step probes the
+Metal device and presentation and fails in seconds without them. `macos-14` stays a
+`workflow_dispatch` choice.
 
 ## 9. Performance (Gate A)
 
@@ -750,7 +753,7 @@ shadows off and `PJ_S3D_BENCH_NO_SSAO=1` / `PJ_S3D_BENCH_NO_EDL=1` those stages.
   build's `gl_PointSize` sprites on Iris Xe (a 1M 0.1 m sphere cloud: 34.9 vs
   29.6 ms on OpenGL; the 9.9M-sphere tab-switch lattice: 400 vs 310 ms, 311 ms
   as a point list; QRHI_NEXT.md).
-- ADS hides floating docks on Wayland, on every backend (§5).
+- ADS can hide floating docks on Linux platforms other than xcb and Wayland (§5).
 - Mesh maps (`MeshMapRhiPass`) are capped per layer by `kMaxRenderableMeshMapFaces`
   but not counted in `kSceneLimits`' per-view budgets. Two QRhi render tests draw
   them (`MeshMapDrawsChannelColoursAndNoData`: colours, no data, half opacity;
@@ -776,15 +779,11 @@ shadows off and `PJ_S3D_BENCH_NO_SSAO=1` / `PJ_S3D_BENCH_NO_EDL=1` those stages.
   per-backend allowances for exactly these cases (§7).
 - On Apple's software OpenGL ("Apple Software Renderer 4.1", the macOS CI
   runner's) `scene3d_rhi_model_cache_test`'s cached and uncached frames differ on
-  10 pixels from step 6 (shadows off) on; Mesa (OpenGL, Vulkan) and Metal match
-  exactly, and the test allows 16 pixels on that renderer only (§7). The two
-  paths differ only in GPU resource identity: the uncached one re-uploads the
-  colour instances every frame and rebuilt every mesh (buffers, material SRBs) at
-  the two earlier revision bumps; both rebuild their instances and rebind every
-  material's shadow slot to the white texture when shadows go off, and the pass
-  keeps no shadow state across that toggle (`clearShadowMap()`,
-  `releaseShadowResources()`). Unresolved without a Mac to capture the frames:
-  run the test there with `PJ_RHI_TEST_DUMP_DIR` and diff steps 6-8.
+  10 pixels from step 6 (shadows off) on, and once (run 43778744542) on 865
+  pixels at step 0, whose GPU state the cached run's matching step 1 reuses: the
+  renderer, not the caches, as with `ShadowToggleRebindsKeptMeshes`. The test
+  skips the A/B on that renderer only (§7); Mesa (OpenGL, Vulkan) and Metal run
+  it exactly.
 - On the same Apple software renderer, `FilledGridLinesFollowOddCellEdges`'s 1 px
   analytic grid line at an odd cell edge does not clear the pixel's neighbouring
   tones by the test's threshold (same coverage loss as the sub-pixel sprite

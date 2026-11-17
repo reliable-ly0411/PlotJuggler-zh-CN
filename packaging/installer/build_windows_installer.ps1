@@ -27,13 +27,13 @@
   This does NOT build the app or any plugins. Run it AFTER a Windows build of
   the app, e.g.
     conan install . --output-folder=build --build=missing \
-        -s build_type=RelWithDebInfo -s compiler.cppstd=20 \
-        -o "cpython/*:shared=True" -s "cpython/*:build_type=Release"
-    cmake --preset ... && cmake --build build --config RelWithDebInfo
+        -s build_type=Release -s compiler.cppstd=20 \
+        -o "cpython/*:shared=True"
+    cmake --preset ... && cmake --build build --config Release
 
 .PARAMETER BuildDir
   The PJ4 build directory (default: build). Searched for plotjuggler4.exe /
-  pj_app.exe under RelWithDebInfo/ (preferred) then Release/.
+  pj_app.exe under Release/ (preferred) then RelWithDebInfo/.
 
 .PARAMETER QtDir
   Qt kit dir that owns windeployqt.exe, e.g. C:\Qt\6.12.0\msvc2022_64.
@@ -119,7 +119,11 @@ param(
     "dummy-streamer", "foxglove-bridge", "plotjuggler-bridge", "webrtc-client",
     "ros-parser", "protobuf-parser", "json-parser", "data-tamer-parser",
     "toolbox-quaternion", "toolbox-transform-editor", "toolbox-mosaico",
-    "arrow-parser"
+    "arrow-parser",
+    # Also in the browser build (cmake/PjWasmOfficialPlugins.cmake).
+    "toolbox-fft", "toolbox-anomaly-detector", "toolbox-data-exporter",
+    "influx-parser", "navmap-parser", "candump-loader", "blf-loader", "mf4-loader",
+    "log-widget"
   ),
   [string]$PluginPlatform = "windows-x86_64",
   [string]$ConanHome  = "$env:USERPROFILE\.conan2",
@@ -271,11 +275,11 @@ if ($RepoOutDir) {
 }
 
 # --- locate the built app --------------------------------------------------
-# Prefer RelWithDebInfo (CI default), then Release, then any config. The CMake
+# Prefer Release (CI default), then RelWithDebInfo, then any config. The CMake
 # target 'pj_app' has OUTPUT_NAME plotjuggler4 on main, but older builds still
 # ship as pj_app.exe — accept either.
 function Find-AppExe {
-  foreach ($cfg in @("RelWithDebInfo","Release","*")) {
+  foreach ($cfg in @("Release","RelWithDebInfo","*")) {
     foreach ($name in @("plotjuggler4.exe","pj_app.exe")) {
       $glob = if ($cfg -eq "*") { $name } else { "$cfg\$name" }
       $hit = Get-ChildItem -LiteralPath $BuildDir -Recurse -Filter $name -ErrorAction SilentlyContinue |
@@ -287,7 +291,7 @@ function Find-AppExe {
   return $null
 }
 $appExe = Find-AppExe
-if (-not $appExe) { Die "plotjuggler4.exe / pj_app.exe not found under '$BuildDir'. Build PJ4 first (cmake --build build --config RelWithDebInfo)." }
+if (-not $appExe) { Die "plotjuggler4.exe / pj_app.exe not found under '$BuildDir'. Build PJ4 first (cmake --build build --config Release)." }
 Info "app binary  : $($appExe.FullName)"
 
 # --- stage the data payload ------------------------------------------------

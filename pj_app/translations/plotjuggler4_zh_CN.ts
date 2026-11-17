@@ -27,7 +27,7 @@
 <context>
     <name>AppLanguage</name>
     <message>
-        <location filename="../src/main.cpp" line="+408"/>
+        <location filename="../src/main.cpp" line="+456"/>
         <source>Interface language for this session (zh_CN, zh_TW or en_US).</source>
         <translation>本次会话的界面语言（zh_CN、zh_TW 或 en_US）。</translation>
     </message>
@@ -529,22 +529,12 @@
         <translation>滤波器编辑器</translation>
     </message>
     <message>
-        <location line="+14"/>
-        <source>&lt;b&gt;Preview&lt;/b&gt;</source>
-        <translation>&lt;b&gt;预览&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+20"/>
         <source>AutoZoom</source>
         <translation>自动缩放</translation>
     </message>
     <message>
-        <location line="+45"/>
-        <source>&lt;b&gt;Source curve:&lt;/b&gt;</source>
-        <translation>&lt;b&gt;源曲线：&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location line="+45"/>
+        <location line="+90"/>
         <source>Alias:</source>
         <translation>别名：</translation>
     </message>
@@ -554,9 +544,19 @@
         <translation>滤波后的输出序列名称（可编辑）</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>&lt;b&gt;Transform:&lt;/b&gt;</source>
-        <translation>&lt;b&gt;变换：&lt;/b&gt;</translation>
+        <location line="-103"/>
+        <source>&lt;span style=&quot;font-weight:600;&quot;&gt;Preview&lt;/span&gt;</source>
+        <translation>&lt;span style="font-weight:600;"&gt;预览&lt;/span&gt;</translation>
+    </message>
+    <message>
+        <location line="+51"/>
+        <source>&lt;span style=&quot;font-weight:600;&quot;&gt;Source curve:&lt;/span&gt;</source>
+        <translation>&lt;span style="font-weight:600;"&gt;源曲线：&lt;/span&gt;</translation>
+    </message>
+    <message>
+        <location line="+60"/>
+        <source>&lt;span style=&quot;font-weight:600;&quot;&gt;Transform:&lt;/span&gt;</source>
+        <translation>&lt;span style="font-weight:600;"&gt;变换：&lt;/span&gt;</translation>
     </message>
     <message>
         <location line="+93"/>
@@ -600,7 +600,7 @@
 <context>
     <name>LayoutXml</name>
     <message>
-        <location filename="../src/LayoutXml.cpp" line="+84"/>
+        <location filename="../src/LayoutXml.cpp" line="+96"/>
         <source>Data source &apos;%1&apos; has no web location to load from.</source>
         <translation>数据源“%1”没有可供加载的网络位置。</translation>
     </message>
@@ -654,6 +654,11 @@
         <location line="-27"/>
         <source>Streaming source &apos;%1&apos; names more than one plugin.</source>
         <translation>流式数据源“%1”指定了多个插件。</translation>
+    </message>
+    <message>
+        <location line="+122"/>
+        <source>&apos;%1&apos;, which the source&apos;s plugin reads, has no content fingerprint: the file changed since it was picked. Open the source again.</source>
+        <translation>数据源插件读取的 '%1' 没有内容指纹：该文件在选取后已发生变化。请重新打开数据源。</translation>
     </message>
 </context>
 <context>
@@ -3843,7 +3848,7 @@ Message: %3</source>
 <context>
     <name>PJ::CurveListPanel</name>
     <message>
-        <location filename="../src/ui/CurveListPanel.cpp" line="+298"/>
+        <location filename="../src/ui/CurveListPanel.cpp" line="+299"/>
         <source>Show Values</source>
         <translation>显示数值</translation>
     </message>
@@ -3914,7 +3919,7 @@ Message: %3</source>
         <translation>拖动时已跳过“%1”：没有视图能够显示它。</translation>
     </message>
     <message>
-        <location line="+247"/>
+        <location line="+246"/>
         <source>Info</source>
         <translation>信息</translation>
     </message>
@@ -4022,7 +4027,7 @@ Message: %3</source>
 <context>
     <name>PJ::CurveTreeView</name>
     <message>
-        <location filename="../../pj_widgets/src/CurveTreeView.cpp" line="+403"/>
+        <location filename="../../pj_widgets/src/CurveTreeView.cpp" line="+407"/>
         <source>Name</source>
         <translation>名称</translation>
     </message>
@@ -4164,12 +4169,12 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
 <context>
     <name>PJ::CustomWidgetDockWidget</name>
     <message>
-        <location filename="../../pj_custom_widgets/widget/src/CustomWidgetDockWidget.cpp" line="+82"/>
+        <location filename="../../pj_custom_widgets/widget/src/CustomWidgetDockWidget.cpp" line="+91"/>
         <source>unknown exception</source>
         <translation>未知异常</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+123"/>
         <source>This widget was disabled after an error: %1</source>
         <translation>此控件因发生错误而被禁用：%1</translation>
     </message>
@@ -4179,7 +4184,7 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <translation>控件 %1/%2 因发生错误而被禁用：%3</translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+82"/>
         <source>The widget %1 is missing: its plugin is not installed.</source>
         <translation>缺少控件 %1：未安装其插件。</translation>
     </message>
@@ -4200,7 +4205,7 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <translation>无法创建控件 %1：%2</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+49"/>
         <source>The widget %1 rejected its saved settings.</source>
         <translation>控件 %1 拒绝了已保存的设置。</translation>
     </message>
@@ -4215,7 +4220,7 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <translation>无法读取其输入：%1</translation>
     </message>
     <message>
-        <location line="+130"/>
+        <location line="+148"/>
         <source>number</source>
         <translation>数值</translation>
     </message>
@@ -4431,12 +4436,12 @@ from %2</source>
 <context>
     <name>PJ::DockWidget</name>
     <message>
-        <location filename="../../pj_plotting/widget/src/DockWidget.cpp" line="+97"/>
+        <location filename="../../pj_plotting/widget/src/DockWidget.cpp" line="+101"/>
         <source>Plot</source>
         <translation>绘图</translation>
     </message>
     <message>
-        <location line="+370"/>
+        <location line="+389"/>
         <source>&quot;%1&quot; cannot be displayed on its own, but a plugin panel can read it.</source>
         <translation>“%1”无法单独显示，但插件面板可以读取它。</translation>
     </message>
@@ -4446,7 +4451,17 @@ from %2</source>
         <translation>%1 个话题无法单独显示，但插件面板可以读取它们。</translation>
     </message>
     <message>
-        <location line="+493"/>
+        <location line="+3"/>
+        <source>This topic is shown by a Custom Widget. Create one in this panel first.</source>
+        <translation>此主题由自定义控件显示。请先在此面板中创建一个自定义控件。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 topics are shown by a Custom Widget. Create one in this panel first.</source>
+        <translation>%1 个主题由自定义控件显示。请先在此面板中创建一个自定义控件。</translation>
+    </message>
+    <message>
+        <location line="+509"/>
         <source>Close Settings</source>
         <translation>关闭设置</translation>
     </message>
@@ -4484,7 +4499,7 @@ from %2</source>
 <context>
     <name>PJ::ExtensionCatalogService</name>
     <message>
-        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+889"/>
+        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+890"/>
         <source>All supported files</source>
         <translation>所有支持的文件</translation>
     </message>
@@ -4497,7 +4512,7 @@ from %2</source>
 <context>
     <name>PJ::ExtensionManager</name>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+986"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+988"/>
         <source>Not available for this platform (%1)</source>
         <translation>不适用于此平台（%1）</translation>
     </message>
@@ -4548,7 +4563,7 @@ from %2</source>
 <context>
     <name>PJ::FileLoader</name>
     <message>
-        <location filename="../src/FileLoader.cpp" line="+1052"/>
+        <location filename="../src/FileLoader.cpp" line="+1088"/>
         <location line="+1"/>
         <source>Load Data</source>
         <translation>加载数据</translation>
@@ -4565,7 +4580,7 @@ from %2</source>
         <translation>无法暂存选中的文件。</translation>
     </message>
     <message>
-        <location line="+114"/>
+        <location line="+133"/>
         <source>File has no extension; cannot pick a plugin.</source>
         <translation>文件没有扩展名，无法选择插件。</translation>
     </message>
@@ -4586,12 +4601,12 @@ from %2</source>
     </message>
     <message>
         <location line="+16"/>
-        <location line="+589"/>
+        <location line="+609"/>
         <source>Plugin &apos;%1&apos;: createHandle failed.</source>
         <translation>插件“%1”：createHandle 失败。</translation>
     </message>
     <message>
-        <location line="-566"/>
+        <location line="-586"/>
         <source>Could not create the time domain for %1.</source>
         <translation>无法为 %1 创建时间域。</translation>
     </message>
@@ -4601,25 +4616,25 @@ from %2</source>
         <translation>要替换的目标数据集 %1 已不存在。</translation>
     </message>
     <message>
-        <location line="+83"/>
-        <location line="+450"/>
+        <location line="+84"/>
+        <location line="+469"/>
         <source>createDataset failed: %1</source>
         <translation>createDataset 失败：%1</translation>
     </message>
     <message>
-        <location line="-409"/>
-        <location line="+442"/>
+        <location line="-428"/>
+        <location line="+461"/>
         <source>Plugin &apos;%1&apos;: service registration failed: %2</source>
         <translation>插件“%1”：服务注册失败：%2</translation>
     </message>
     <message>
-        <location line="-436"/>
-        <location line="+444"/>
+        <location line="-455"/>
+        <location line="+463"/>
         <source>Plugin &apos;%1&apos;: bind failed: %2</source>
         <translation>插件“%1”：绑定失败：%2</translation>
     </message>
     <message>
-        <location line="-411"/>
+        <location line="-429"/>
         <source>Plugin &apos;%1&apos;: the saved configuration is not a JSON object and cannot be replayed.</source>
         <translation>插件“%1”：已保存的配置不是 JSON 对象，无法重新应用。</translation>
     </message>
@@ -4635,12 +4650,12 @@ from %2</source>
     </message>
     <message>
         <location line="+8"/>
-        <location line="+385"/>
+        <location line="+403"/>
         <source>Plugin &apos;%1&apos;: loadConfig failed: %2</source>
         <translation>插件“%1”：loadConfig 失败：%2</translation>
     </message>
     <message>
-        <location line="-350"/>
+        <location line="-357"/>
         <source>Plugin contract violation: %1. Reinstall the plugin from the Marketplace.</source>
         <translation>插件接口契约违规：%1。请从扩展市场重新安装此插件。</translation>
     </message>
@@ -4655,35 +4670,35 @@ from %2</source>
         <translation>加载已取消</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+29"/>
         <source>Cannot replace dataset %1: the selected configuration expands into %2 datasets.</source>
         <translation>无法替换数据集 %1：选中的配置会生成 %2 个数据集。</translation>
     </message>
     <message>
-        <location line="-784"/>
+        <location line="-840"/>
         <source>Plugin &apos;%1&apos;: saveConfig failed: %2 — layout save will skip plugin config</source>
         <translation>插件“%1”：saveConfig 失败：%2；保存布局时将跳过插件配置</translation>
     </message>
     <message>
-        <location line="+1001"/>
+        <location line="+1058"/>
         <source>Could not create the time domain for %1: %2</source>
         <translation>无法为 %1 创建时间域：%2</translation>
     </message>
     <message>
         <location line="+329"/>
-        <location line="+443"/>
+        <location line="+440"/>
         <source>Loader metadata rejected: %1</source>
         <translation>加载器元数据被拒绝：%1</translation>
     </message>
     <message>
-        <location line="-399"/>
-        <location line="+212"/>
+        <location line="-396"/>
+        <location line="+209"/>
         <location line="+8"/>
         <source>Import discarded</source>
         <translation>已放弃导入</translation>
     </message>
     <message>
-        <location line="-214"/>
+        <location line="-211"/>
         <source>All %1 entries of &apos;%2&apos; failed to load:
 %3</source>
         <translation>“%2”的全部 %1 个条目均加载失败：
@@ -4696,27 +4711,27 @@ from %2</source>
     </message>
     <message>
         <location line="-246"/>
-        <location line="+416"/>
+        <location line="+413"/>
         <source>Plugin &apos;%1&apos;: start failed: %2</source>
         <translation>插件“%1”：启动失败：%2</translation>
     </message>
     <message>
-        <location line="-1453"/>
+        <location line="-1489"/>
         <source>The browser can no longer read &apos;%1&apos;: it changed or was removed on disk since it was opened. Data loaded from it may be incomplete; open it again to reload it.</source>
         <translation>浏览器无法再读取“%1”：该文件自打开后已在磁盘上更改或移除。从中加载的数据可能不完整，请重新打开以重新加载。</translation>
     </message>
     <message>
-        <location line="+1284"/>
+        <location line="+1323"/>
         <source>not a readable file.</source>
         <translation>不是可读取的文件。</translation>
     </message>
     <message>
-        <location line="+202"/>
+        <location line="+199"/>
         <source>Plugin &apos;%1&apos;: derived-series replay failed: %2</source>
         <translation>插件“%1”：派生序列重放失败：%2</translation>
     </message>
     <message>
-        <location line="+209"/>
+        <location line="+213"/>
         <source>Could not load &apos;%1&apos;: %2</source>
         <translation>无法加载“%1”：%2</translation>
     </message>
@@ -4739,7 +4754,7 @@ from %2</source>
 <context>
     <name>PJ::FileSelectionService</name>
     <message>
-        <location filename="../src/FileSelectionService.cpp" line="+121"/>
+        <location filename="../src/FileSelectionService.cpp" line="+87"/>
         <location line="+47"/>
         <source>Browser file staging is unavailable.</source>
         <translation>浏览器文件暂存不可用。</translation>
@@ -5178,12 +5193,12 @@ for example when the stream is already rectified.</source>
 <context>
     <name>PJ::MainWindow</name>
     <message>
-        <location filename="../src/MainWindow.cpp" line="+419"/>
+        <location filename="../src/MainWindow.cpp" line="+421"/>
         <source>PlotJuggler 4 Layout (*.pj4.xml)</source>
         <translation>PlotJuggler 4 布局 (*.pj4.xml)</translation>
     </message>
     <message>
-        <location line="+450"/>
+        <location line="+464"/>
         <source>Open Data File...</source>
         <translation>打开数据文件…</translation>
     </message>
@@ -5256,7 +5271,7 @@ for example when the stream is already rectified.</source>
         <translation>详情请查看通知。</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+55"/>
         <source>This object topic cannot be displayed (type %1).</source>
         <translation>无法显示此对象话题（类型为 %1）。</translation>
     </message>
@@ -5272,13 +5287,13 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+154"/>
-        <location line="+2256"/>
+        <location line="+2295"/>
         <location line="+87"/>
         <source>dataset removed</source>
         <translation>数据集已移除</translation>
     </message>
     <message>
-        <location line="-1963"/>
+        <location line="-2002"/>
         <source>Start Streaming</source>
         <translation>开始接收数据流</translation>
     </message>
@@ -5306,7 +5321,7 @@ for example when the stream is already rectified.</source>
 %1</translation>
     </message>
     <message>
-        <location line="+255"/>
+        <location line="+257"/>
         <source>Stop loading…</source>
         <translation>停止加载…</translation>
     </message>
@@ -5332,17 +5347,17 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+1496"/>
+        <location line="+1533"/>
         <location line="+189"/>
-        <location line="+2057"/>
-        <location line="+305"/>
-        <location line="+2079"/>
+        <location line="+2074"/>
+        <location line="+339"/>
+        <location line="+2138"/>
         <location line="+1219"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-7255"/>
+        <location line="-7402"/>
         <source>Undo</source>
         <translation>撤销</translation>
     </message>
@@ -5352,12 +5367,12 @@ for example when the stream is already rectified.</source>
         <translation>重做</translation>
     </message>
     <message>
-        <location line="+91"/>
+        <location line="+95"/>
         <source>No widget selected</source>
         <translation>未选择视图组件</translation>
     </message>
     <message>
-        <location line="+442"/>
+        <location line="+445"/>
         <source>Loaded test sin/cos data</source>
         <translation>已加载正弦/余弦测试数据</translation>
     </message>
@@ -5397,13 +5412,13 @@ for example when the stream is already rectified.</source>
         <translation>“%1”尚无内容指纹：仍在计算中，或文件自选取后发生了更改。请稍后再次保存布局，或重新打开文件。</translation>
     </message>
     <message>
-        <location line="+89"/>
-        <location line="+2452"/>
+        <location line="+115"/>
+        <location line="+2473"/>
         <source>The layout still contains an ephemeral browser path and was not downloaded.</source>
         <translation>布局仍包含临时浏览器路径，因此未下载。</translation>
     </message>
     <message>
-        <location line="-2320"/>
+        <location line="-2337"/>
         <source>Remove all Datasets</source>
         <translation>移除全部数据集</translation>
     </message>
@@ -5441,12 +5456,12 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+2"/>
-        <location line="+4630"/>
+        <location line="+4740"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="-4447"/>
+        <location line="-4557"/>
         <source>Are you sure you want to remove &apos;%1&apos; and its data?</source>
         <translation>确定要移除“%1”及其数据吗？</translation>
     </message>
@@ -5471,12 +5486,7 @@ for example when the stream is already rectified.</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location line="+250"/>
-        <source>New release available: &lt;b&gt;%1&lt;/b&gt;</source>
-        <translation>有新版本可用：&lt;b&gt;%1&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+254"/>
         <source>Update with &lt;code&gt;sudo apt update &amp;amp;&amp;amp; sudo apt upgrade&lt;/code&gt;</source>
         <translation>使用以下命令更新：&lt;code&gt;sudo apt update &amp;amp;&amp;amp; sudo apt upgrade&lt;/code&gt;</translation>
     </message>
@@ -5598,7 +5608,7 @@ for example when the stream is already rectified.</source>
         <translation> | 已丢弃 %1 条</translation>
     </message>
     <message>
-        <location line="+238"/>
+        <location line="+254"/>
         <source>application shutdown</source>
         <translation>应用程序关闭</translation>
     </message>
@@ -5607,30 +5617,30 @@ for example when the stream is already rectified.</source>
         <location line="+461"/>
         <location line="+101"/>
         <location line="+13"/>
-        <location line="+149"/>
-        <location line="+367"/>
-        <location line="+9"/>
+        <location line="+169"/>
+        <location line="+422"/>
+        <location line="+8"/>
         <location line="+15"/>
         <location line="+6"/>
-        <location line="+423"/>
+        <location line="+436"/>
         <location line="+174"/>
-        <location line="+9"/>
+        <location line="+15"/>
         <location line="+401"/>
         <location line="+346"/>
         <source>Load Layout</source>
         <translation>加载布局</translation>
     </message>
     <message>
-        <location line="-2459"/>
+        <location line="-2552"/>
         <location line="+25"/>
-        <location line="+2532"/>
+        <location line="+2625"/>
         <location line="+7"/>
         <location line="+5"/>
         <source>Save Layout</source>
         <translation>保存布局</translation>
     </message>
     <message>
-        <location line="-2562"/>
+        <location line="-2655"/>
         <source>Requested layout download: %1</source>
         <translation>已请求下载布局：%1</translation>
     </message>
@@ -5743,20 +5753,20 @@ for example when the stream is already rectified.</source>
         <location line="+98"/>
         <location line="+11"/>
         <location line="+10"/>
-        <location line="+44"/>
-        <location line="+32"/>
+        <location line="+64"/>
+        <location line="+31"/>
         <location line="+12"/>
-        <location line="+121"/>
-        <location line="+90"/>
+        <location line="+136"/>
+        <location line="+101"/>
         <location line="+10"/>
-        <location line="+12"/>
-        <location line="+312"/>
+        <location line="+7"/>
+        <location line="+359"/>
         <location line="+54"/>
         <source>Load source-bound layout</source>
         <translation>加载绑定数据源的布局</translation>
     </message>
     <message>
-        <location line="-707"/>
+        <location line="-794"/>
         <source>This layout references cloud-materialized data sources, which are unsupported in the browser. Open it in the desktop PlotJuggler instead.</source>
         <translation>此布局引用了从云端下载的数据源，浏览器暂不支持。请使用桌面版 PlotJuggler 打开。</translation>
     </message>
@@ -5766,38 +5776,28 @@ for example when the stream is already rectified.</source>
         <translation>数据流“%1”无法启动：%2</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+64"/>
         <source>The layout does not uniquely identify every saved data source.</source>
         <translation>此布局无法唯一标识每个已保存的数据源。</translation>
     </message>
     <message>
-        <location line="+19"/>
-        <source>Data source &apos;%1&apos; records a malformed content fingerprint.</source>
-        <translation>数据源“%1”记录的内容指纹格式错误。</translation>
-    </message>
-    <message>
-        <location line="+14"/>
-        <source>This older layout contains more than one source named &apos;%1&apos;, but no content fingerprints to tell them apart safely. Open the sources separately and use a newer source-bound layout.</source>
-        <translation>此旧版布局包含多个名为“%1”的数据源，但缺少内容指纹，无法安全区分。请分别打开这些数据源，并使用新版绑定数据源的布局。</translation>
-    </message>
-    <message>
-        <location line="+16"/>
-        <location line="+246"/>
+        <location line="+48"/>
+        <location line="+304"/>
         <source>%1 (plugin: %2)</source>
         <translation>%1（插件：%2）</translation>
     </message>
     <message>
-        <location line="-243"/>
+        <location line="-298"/>
         <source>This layout was saved with data source &apos;%1&apos;. Reselect that file to reload it, or apply the layout to compatible data already open in this page.</source>
         <translation>此布局保存了数据源“%1”的引用。请重新选择该文件以加载数据，或将布局应用到当前页面中已打开的兼容数据。</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+10"/>
         <source>This layout was saved with %1 data sources. Select source 1 of %1: &apos;%2&apos; for saved slot &apos;%3&apos;. Every file will be staged before any import begins.</source>
         <translation>此布局保存了 %1 个数据源的引用。请选择第 1 个数据源（共 %1 个）：“%2”，对应保存的槽位“%3”。所有文件暂存完成后才会开始导入。</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+10"/>
         <source>Reselect source</source>
         <translation>重新选择数据源</translation>
     </message>
@@ -5817,42 +5817,32 @@ for example when the stream is already rectified.</source>
         <translation>浏览器中当前打开的数据无法与每个已保存的数据源一一对应。</translation>
     </message>
     <message>
-        <location line="+100"/>
+        <location line="+111"/>
         <source>Select &apos;%1&apos; to replay this layout (selected &apos;%2&apos;).</source>
         <translation>请选择“%1”以重新载入此布局（当前选择的是“%2”）。</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+9"/>
         <source>The selected &apos;%1&apos; is not the file saved for source %2 of %3 (&apos;%4&apos;). Select the original file for that saved slot.</source>
         <translation>选中的“%1”不是第 %2 个数据源（共 %3 个，“%4”）所保存的文件。请选择该槽位对应的原始文件。</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+54"/>
         <source>Staged %1 of %2 data sources. Select source %3 of %2: &apos;%4&apos; for saved slot &apos;%5&apos;. No import has started yet.</source>
         <translation>已暂存 %1 个数据源，共 %2 个。请选择第 %3 个数据源（共 %2 个）：“%4”，对应保存的槽位“%5”。尚未开始导入。</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+5"/>
         <source>Select source %1 of %2</source>
         <translation>选择数据源 %1 / %2</translation>
     </message>
     <message>
-        <location line="+77"/>
-        <source>Data source &apos;%1&apos; could not be downloaded: %2</source>
-        <translation>无法下载数据源“%1”：%2</translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+88"/>
         <source>The layout&apos;s data sources exceed the %1 MiB a downloaded layout may load.</source>
         <translation>布局的数据源总大小超过了下载布局允许加载的上限（%1 MiB）。</translation>
     </message>
     <message>
-        <location line="+21"/>
-        <source>Data source &apos;%1&apos; is not the file its layout was saved with (its content fingerprint differs).</source>
-        <translation>数据源“%1”不是保存布局时所用的文件（内容指纹不同）。</translation>
-    </message>
-    <message>
-        <location line="+67"/>
+        <location line="+101"/>
         <source>A staged source could not be queued for import.</source>
         <translation>某个已暂存的数据源无法加入导入队列。</translation>
     </message>
@@ -5903,18 +5893,69 @@ for example when the stream is already rectified.</source>
         <translation>已移除失败的数据源重放结果，但无法精确恢复之前的工作区。</translation>
     </message>
     <message>
-        <location line="+110"/>
+        <location line="-354"/>
+        <location line="+464"/>
         <source>&apos;%1&apos; could not be downloaded: %2</source>
         <translation>无法下载“%1”：%2</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="-2988"/>
+        <source>New release available: &lt;span style=&apos;font-weight:600;&apos;&gt;%1&lt;/span&gt;</source>
+        <translation>有新版本可用：&lt;span style='font-weight:600;'&gt;%1&lt;/span&gt;</translation>
+    </message>
+    <message>
+        <location line="+2102"/>
+        <source>&apos;%1&apos; records a malformed content fingerprint.</source>
+        <translation>'%1' 记录的内容指纹格式无效。</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>This layout contains more than one file named &apos;%1&apos;, but no valid content fingerprints to tell them apart safely. Open the sources separately and use a newer source-bound layout.</source>
+        <translation>此布局包含多个名为 '%1' 的文件，但没有有效的内容指纹来安全区分它们。请分别打开各数据源，并使用较新的、与数据源绑定的布局。</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>This layout was saved with data source &apos;%1&apos;, whose plugin also reads %2 more file(s) you select next. Reselect that file to reload it, or apply the layout to compatible data already open in this page.</source>
+        <translation>此布局保存时使用数据源 '%1'，其插件还会读取接下来选取的 %2 个文件。请重新选择该数据源文件以重新加载，或将布局应用于此页面中已打开的兼容数据。</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>This layout was saved with %1 data sources, whose plugins also read %4 more file(s) you select after them. Select source 1 of %1: &apos;%2&apos; for saved slot &apos;%3&apos;. Every file will be staged before any import begins.</source>
+        <translation>此布局保存时使用了 %1 个数据源，其插件还会读取随后选取的 %4 个文件。请选择第 1 个数据源（共 %1 个）：已保存槽位 '%3' 对应的 '%2'。所有文件暂存完成后才会开始导入。</translation>
+    </message>
+    <message>
+        <location line="+171"/>
+        <source>All files (*)</source>
+        <translation>所有文件 (*)</translation>
+    </message>
+    <message>
+        <location line="+60"/>
+        <source>The selected &apos;%1&apos; is not the file saved as &apos;%2&apos;. Select the original file.</source>
+        <translation>所选 '%1' 不是保存时名为 '%2' 的文件。请选择原始文件。</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Every data source is staged. Select &apos;%1&apos;, which data source &apos;%2&apos; reads (file %3 of %4). No import has started yet.</source>
+        <translation>所有数据源均已暂存。请选择数据源 '%2' 读取的 '%1'（第 %3 个文件，共 %4 个）。尚未开始导入。</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Select &apos;%1&apos;</source>
+        <translation>选择 '%1'</translation>
+    </message>
+    <message>
+        <location line="+121"/>
+        <source>&apos;%1&apos; is not the file its layout was saved with (its content fingerprint differs).</source>
+        <translation>'%1' 不是保存此布局时使用的文件（内容指纹不同）。</translation>
+    </message>
+    <message>
+        <location line="+482"/>
         <source>Open Preset</source>
         <translation>打开预设</translation>
     </message>
     <message>
         <location line="+127"/>
-        <location line="+55"/>
+        <location line="+61"/>
         <source>No data is loaded. Open a data source before applying this layout.</source>
         <translation>当前没有加载数据。请先打开数据源，再应用此布局。</translation>
     </message>
@@ -6329,7 +6370,7 @@ for example when the stream is already rectified.</source>
         <translation>无法为“%1”发布数据源转换服务：%2</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+16"/>
         <source>Failed to publish the playback service for &apos;%1&apos;: %2</source>
         <translation>无法为“%1”发布回放服务：%2</translation>
     </message>
@@ -6792,7 +6833,7 @@ for example when the stream is already rectified.</source>
         <translation>校验和不匹配</translation>
     </message>
     <message>
-        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="-872"/>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="-873"/>
         <source>Extension id is empty</source>
         <translation>扩展 ID 为空</translation>
     </message>
@@ -6883,19 +6924,19 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+27"/>
-        <location line="+100"/>
+        <location line="+101"/>
         <source>no valid plugin DSO found</source>
         <translation>未找到有效的插件动态库</translation>
     </message>
     <message>
-        <location line="-68"/>
-        <location line="+98"/>
+        <location line="-69"/>
+        <location line="+99"/>
         <source>multiple embedded plugin ids in one extension directory: &quot;%1&quot; and &quot;%2&quot;</source>
         <translation>同一扩展目录中包含多个插件 ID：“%1”和“%2”</translation>
     </message>
     <message>
-        <location line="-90"/>
-        <location line="+98"/>
+        <location line="-91"/>
+        <location line="+99"/>
         <source>multiple embedded plugin versions in one extension directory for &quot;%1&quot;</source>
         <translation>同一扩展目录中包含插件“%1”的多个版本</translation>
     </message>
@@ -7127,7 +7168,7 @@ for example when the stream is already rectified.</source>
         <translation>“%1”的更新已暂存；请重启应用使其生效</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+106"/>
         <source> Moved to quarantine: &quot;%1&quot;.</source>
         <translation>已移至隔离目录：“%1”。</translation>
     </message>
@@ -7152,7 +7193,7 @@ for example when the stream is already rectified.</source>
         <translation>更新前无法备份“%1”；暂存安装保留在“%2”</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+16"/>
         <source>Could not promote staged install to &quot;%1&quot;</source>
         <translation>无法将暂存安装正式移入“%1”</translation>
     </message>
@@ -7207,7 +7248,7 @@ for example when the stream is already rectified.</source>
         <translation>“%1”的内容寻址对象未通过完整性检查；将改为加载本地副本。请重新安装以重新生成该对象。</translation>
     </message>
     <message>
-        <location line="+199"/>
+        <location line="+200"/>
         <source>Could not restore the enabled state of &quot;%1&quot;; it may load differently next launch</source>
         <translation>无法恢复“%1”的启用状态；下次启动时其加载行为可能不同</translation>
     </message>
@@ -7255,7 +7296,7 @@ for example when the stream is already rectified.</source>
 <context>
     <name>PJ::MarketplaceWindow</name>
     <message>
-        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="+287"/>
+        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="+295"/>
         <source>PlotJuggler Marketplace</source>
         <translation>PlotJuggler 扩展市场</translation>
     </message>
@@ -7271,12 +7312,12 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+644"/>
+        <location line="+646"/>
         <source>Installed</source>
         <translation>已安装</translation>
     </message>
     <message>
-        <location line="-644"/>
+        <location line="-646"/>
         <source>Marketplace</source>
         <translation>扩展市场</translation>
     </message>
@@ -7400,12 +7441,12 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
     </message>
     <message>
         <location line="+11"/>
-        <location line="+618"/>
+        <location line="+620"/>
         <source>Marketplace diagnostic: %1</source>
         <translation>扩展市场诊断：%1</translation>
     </message>
     <message>
-        <location line="-541"/>
+        <location line="-543"/>
         <source>Update available: v%1</source>
         <translation>有可用更新：v%1</translation>
     </message>
@@ -7430,38 +7471,38 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
         <translation>已安装：v%1</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+20"/>
         <source>Changelog</source>
         <translation>更新日志</translation>
     </message>
     <message>
         <location filename="../../pj_marketplace/include/pj_marketplace/marketplace_window.hpp" line="+186"/>
-        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="+38"/>
+        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="+39"/>
         <source>Installing</source>
         <translation>正在安装</translation>
     </message>
     <message>
-        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="-906"/>
+        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="-915"/>
         <source>Data loaders</source>
         <translation>数据加载器</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+3"/>
         <source>Data streams</source>
         <translation>数据流</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+3"/>
         <source>Message parsers</source>
         <translation>消息解析器</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+3"/>
         <source>Toolboxes</source>
         <translation>工具箱</translation>
     </message>
     <message>
-        <location line="+907"/>
+        <location line="+910"/>
         <source>Needs Restart</source>
         <translation>需要重启</translation>
     </message>
@@ -7669,7 +7710,7 @@ Details: %1</source>
         <translation>某个 MCP 客户端</translation>
     </message>
     <message>
-        <location line="+91"/>
+        <location line="+107"/>
         <source>AI agent (%1)</source>
         <translation>AI 智能体（%1）</translation>
     </message>
@@ -7701,7 +7742,7 @@ Details: %1</source>
     <name>PJ::MessageBox</name>
     <message>
         <location filename="../../pj_custom_widgets/widget/src/CustomWidgetDockWidget.cpp" line="+2"/>
-        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+482"/>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+483"/>
         <location filename="../../pj_widgets/src/MessageBox.cpp" line="+335"/>
         <location line="+6"/>
         <source>OK</source>
@@ -7736,7 +7777,7 @@ Details: %1</source>
 <context>
     <name>PJ::PlotDocker</name>
     <message>
-        <location filename="../../pj_plotting/widget/src/PlotDocker.cpp" line="+622"/>
+        <location filename="../../pj_plotting/widget/src/PlotDocker.cpp" line="+649"/>
         <source>Plugin unavailable</source>
         <translation>插件不可用</translation>
     </message>
@@ -7862,7 +7903,7 @@ Details: %1</source>
 <context>
     <name>PJ::PluginRuntimeCatalog</name>
     <message>
-        <location filename="../../pj_runtime/src/PluginRuntimeCatalog.cpp" line="+716"/>
+        <location filename="../../pj_runtime/src/PluginRuntimeCatalog.cpp" line="+702"/>
         <source>Loaded DataSource %1 from %2</source>
         <translation>已从 %2 加载数据源 %1</translation>
     </message>
@@ -7872,7 +7913,7 @@ Details: %1</source>
         <translation>已从 %2 加载消息解析器 %1</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+43"/>
         <source>Loaded Toolbox %1 from %2</source>
         <translation>已从 %2 加载工具箱 %1</translation>
     </message>
@@ -7885,12 +7926,12 @@ Details: %1</source>
 <context>
     <name>PJ::PreferencesDialog</name>
     <message>
-        <location filename="../src/PreferencesDialog.cpp" line="+106"/>
+        <location filename="../src/PreferencesDialog.cpp" line="+107"/>
         <source>Preferences</source>
         <translation>首选项</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+55"/>
         <source>Appearance</source>
         <translation>外观</translation>
     </message>
@@ -7920,7 +7961,7 @@ Details: %1</source>
         <translation>录制</translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+88"/>
         <source>global</source>
         <translation>全局</translation>
     </message>
@@ -7965,7 +8006,7 @@ Details: %1</source>
         <translation>选择趣图或简洁横幅，两种模式均支持所选界面语言。</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+55"/>
         <source>This folder does not exist.</source>
         <translation>此文件夹不存在。</translation>
     </message>
@@ -8389,14 +8430,14 @@ Details: %1</source>
         <location filename="../../pj_scene3D/widgets/src/Scene3DDockWidget.cpp" line="+250"/>
         <location line="+377"/>
         <location line="+282"/>
-        <location line="+1149"/>
+        <location line="+1160"/>
         <location line="+110"/>
         <location line="+3"/>
         <source>3D View</source>
         <translation>三维视图</translation>
     </message>
     <message>
-        <location line="-1801"/>
+        <location line="-1812"/>
         <source>Orbit</source>
         <translation>环绕</translation>
     </message>
@@ -8423,12 +8464,12 @@ Details: %1</source>
     <message>
         <location line="+245"/>
         <location line="+282"/>
-        <location line="+1262"/>
+        <location line="+1273"/>
         <source>3D View - %1</source>
         <translation>三维视图 - %1</translation>
     </message>
     <message>
-        <location line="-1532"/>
+        <location line="-1543"/>
         <location line="+21"/>
         <source>Robot model</source>
         <translation>机器人模型</translation>
@@ -8449,7 +8490,7 @@ Details: %1</source>
         <translation>跟随此坐标系</translation>
     </message>
     <message>
-        <location line="+701"/>
+        <location line="+712"/>
         <source>Frame &apos;%1&apos; can&apos;t be resolved</source>
         <translation>无法解析坐标系“%1”</translation>
     </message>
@@ -8700,17 +8741,17 @@ Details: %1</source>
 <context>
     <name>PJ::StreamingSourceManager</name>
     <message>
-        <location filename="../src/StreamingSourceManager.cpp" line="+283"/>
+        <location filename="../src/StreamingSourceManager.cpp" line="+286"/>
         <source>No stream source selected.</source>
         <translation>未选择流式数据源。</translation>
     </message>
     <message>
-        <location line="+237"/>
+        <location line="+236"/>
         <source>Stream plugin &apos;%1&apos; not found.</source>
         <translation>未找到流数据插件“%1”。</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-140"/>
         <source>Plugin &apos;%1&apos;: createHandle failed.</source>
         <translation>插件“%1”：createHandle 失败。</translation>
     </message>
@@ -8735,7 +8776,7 @@ Details: %1</source>
         <translation>次级 createDataset 失败：%1</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+55"/>
         <source>Plugin &apos;%1&apos;: service registration failed: %2</source>
         <translation>插件“%1”：服务注册失败：%2</translation>
     </message>
@@ -8803,7 +8844,7 @@ Details: %1</source>
         <translation>%1（副本）</translation>
     </message>
     <message>
-        <location line="+106"/>
+        <location line="+115"/>
         <source>Duplicate tab</source>
         <translation>复制标签页</translation>
     </message>
@@ -8930,9 +8971,20 @@ Details: %1</source>
         <translation>三维</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <location line="+36"/>
         <source>Custom Widget</source>
         <translation>自定义控件</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>No custom widgets installed.</source>
+        <translation>未安装自定义控件。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>No custom widgets installed. Get them from the Marketplace.</source>
+        <translation>未安装自定义控件。请从扩展市场获取。</translation>
     </message>
 </context>
 <context>
@@ -8994,7 +9046,7 @@ Details: %1</source>
 <context>
     <name>PreferencesContent</name>
     <message>
-        <location filename="../src/PreferencesDialog.ui" line="+478"/>
+        <location filename="../src/PreferencesDialog.ui" line="+490"/>
         <source>System file dialog:</source>
         <translation>系统文件对话框：</translation>
     </message>
@@ -9004,7 +9056,7 @@ Details: %1</source>
         <translation>使用系统自带的文件对话框打开和保存文件，而不使用 PlotJuggler 的对话框（保存布局仍使用 PlotJuggler 的对话框）。它不会因断开的网络驱动器而卡住，但也不会跟随应用的主题。</translation>
     </message>
     <message>
-        <location line="-308"/>
+        <location line="-320"/>
         <source>Language:</source>
         <translation>界面语言：</translation>
     </message>
@@ -9044,7 +9096,7 @@ Details: %1</source>
         <translation>浮点数精度：</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+20"/>
         <source>Remove the system window frame and draw PlotJuggler&apos;s own title bar instead. Takes effect the next time PlotJuggler starts.</source>
         <translation>移除系统窗口边框，改用 PlotJuggler 自绘标题栏。下次启动 PlotJuggler 时生效。</translation>
     </message>
@@ -9074,7 +9126,7 @@ Details: %1</source>
         <translation>启动画面：</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+20"/>
         <source>On startup, quietly check GitHub for a newer PlotJuggler release and show a notification if one is available.</source>
         <translation>启动时在后台检查 GitHub 上是否有 PlotJuggler 新版本，并在有更新时显示通知。</translation>
     </message>
@@ -9084,7 +9136,7 @@ Details: %1</source>
         <translation>启动时检查更新：</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+20"/>
         <source>On startup, send one anonymous ping to count daily users: a hashed machine id, OS name and version, CPU architecture, app version, and package type. Never any personal data, file names, paths, or usage behavior.</source>
         <translation>启动时发送一次匿名请求以统计每日用户数，内容包括经过哈希处理的机器标识、操作系统名称和版本、CPU 架构、应用版本及软件包类型。不包含个人数据、文件名、路径或使用行为。</translation>
     </message>
@@ -9094,7 +9146,7 @@ Details: %1</source>
         <translation>匿名使用统计：</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+48"/>
         <source>Serve the Model Context Protocol on this computer only (127.0.0.1, behind a secret token), so AI agents such as Claude Code or Codex can open files, read series, and draw in their own tabs. The status bar names an agent while it is active. Shows whether outside agents may connect now (also when allowed with --mcp); on by default; applies on OK. An agent a toolbox plugin starts itself gets its own private access and does not need this.</source>
         <translation>仅在本机提供模型上下文协议服务（127.0.0.1，使用秘密令牌保护），让 Claude Code 或 Codex 等 AI 智能体能够打开文件、读取序列，并在各自的标签页中绘图。智能体活动时，状态栏会显示其名称。此开关显示当前是否允许外部智能体连接（包括通过 --mcp 允许的连接）；默认开启，点击“确定”后生效。工具箱插件自行启动的智能体拥有独立的私有访问权限，无需开启此项。</translation>
     </message>
@@ -9368,7 +9420,7 @@ Details: %1</source>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../src/DialogPresenter.cpp" line="+76"/>
+        <location filename="../src/DialogPresenter.cpp" line="+77"/>
         <source>File selection failed</source>
         <translation>文件选择失败</translation>
     </message>
@@ -9379,18 +9431,18 @@ Details: %1</source>
     </message>
     <message>
         <location line="+2"/>
-        <location filename="../src/FileLoader.cpp" line="-2115"/>
+        <location filename="../src/FileLoader.cpp" line="-2173"/>
         <location line="+90"/>
         <location line="+7"/>
-        <location filename="../src/MainWindow.cpp" line="-10374"/>
+        <location filename="../src/MainWindow.cpp" line="-10529"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
         <location filename="../src/FileLoader.cpp" line="-92"/>
         <location line="+86"/>
-        <location filename="../tests/wasm_acceptance_probes.inc" line="+245"/>
-        <location line="+283"/>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="+229"/>
+        <location line="+303"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
@@ -9419,12 +9471,12 @@ Details: %1</source>
         <translation>中止</translation>
     </message>
     <message>
-        <location filename="../tests/wasm_acceptance_probes.inc" line="-428"/>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="-436"/>
         <source>File</source>
         <translation>文件</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+130"/>
         <source>Reselect source</source>
         <translation>重新选择数据源</translation>
     </message>
@@ -9434,7 +9486,7 @@ Details: %1</source>
         <translation>选择数据源 </translation>
     </message>
     <message>
-        <location line="+279"/>
+        <location line="+299"/>
         <source>Stop loading?</source>
         <translation>停止加载？</translation>
     </message>
@@ -9449,7 +9501,7 @@ Details: %1</source>
         <translation>停止并保留</translation>
     </message>
     <message>
-        <location line="+416"/>
+        <location line="+378"/>
         <source>Toggle right panel</source>
         <translation>显示或隐藏右侧面板</translation>
     </message>
@@ -9470,16 +9522,21 @@ Details: %1</source>
     </message>
     <message>
         <location line="+4"/>
-        <source>Incremental map update, applied automatically to its occupancy grid. It cannot be displayed on its own.</source>
-        <translation>地图增量更新，会自动应用到对应的占据栅格，无法单独显示。</translation>
+        <source>Incremental map update, applied automatically to its occupancy grid. It cannot be displayed on its own, but a Custom Widget panel can read it.</source>
+        <translation>增量地图更新会自动应用于其占据栅格。它不能单独显示，但自定义控件面板可以读取它。</translation>
     </message>
     <message>
         <location line="+4"/>
-        <source>Incremental mesh map update, applied automatically to its mesh map. It cannot be displayed on its own.</source>
-        <translation>模型网格地图的增量更新，会自动应用到对应的模型网格地图，无法单独显示。</translation>
+        <source>Incremental mesh map update, applied automatically to its mesh map. It cannot be displayed on its own, but a Custom Widget panel can read it.</source>
+        <translation>增量网格地图更新会自动应用于其网格地图。它不能单独显示，但自定义控件面板可以读取它。</translation>
     </message>
     <message>
         <location line="+4"/>
+        <source>Drop it on a Custom Widget panel.</source>
+        <translation>将其拖放到自定义控件面板。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>No view can display this topic type.</source>
         <translation>没有视图能够显示此话题类型。</translation>
     </message>
@@ -9556,20 +9613,20 @@ Details: %1</source>
         <translation>合并选中的数据集</translation>
     </message>
     <message>
-        <location filename="../../pj_dialog_host/src/dialog_engine.cpp" line="+507"/>
-        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="+530"/>
+        <location filename="../../pj_dialog_host/src/dialog_engine.cpp" line="+503"/>
+        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="+531"/>
         <source>Select File</source>
         <translation>选择文件</translation>
     </message>
     <message>
-        <location line="+76"/>
-        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="+20"/>
+        <location line="+61"/>
+        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="+38"/>
         <source>Select Folder</source>
         <translation>选择文件夹</translation>
     </message>
     <message>
         <location line="+43"/>
-        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="-10"/>
+        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="-18"/>
         <source>Save File</source>
         <translation>保存文件</translation>
     </message>
@@ -9629,7 +9686,7 @@ Details: %1</source>
         <translation>在 %1 秒处计算</translation>
     </message>
     <message>
-        <location filename="../../pj_scene3D/widgets/src/channel_coloring.cpp" line="+92"/>
+        <location filename="../../pj_scene3D/widgets/src/channel_coloring.cpp" line="+91"/>
         <source>Colors:</source>
         <translation>配色：</translation>
     </message>
@@ -11389,22 +11446,22 @@ Details: %1</source>
         <translation>无法创建 HDR 呈现管线</translation>
     </message>
     <message>
-        <location filename="../../pj_scene3D/widgets/rhi/passes/meshmap_rhi_pass.cpp" line="+176"/>
+        <location filename="../../pj_scene3D/widgets/rhi/passes/meshmap_rhi_pass.cpp" line="+177"/>
         <source>Could not allocate the mesh-map vertex buffers</source>
         <translation>无法分配模型网格地图顶点缓冲区</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Could not allocate the mesh-map colour buffer</source>
         <translation>无法分配模型网格地图颜色缓冲区</translation>
     </message>
     <message>
-        <location line="+122"/>
+        <location line="+123"/>
         <source>Could not create the mesh-map uniform buffers</source>
         <translation>无法创建模型网格地图 uniform 缓冲区</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+12"/>
         <source>Could not create mesh-map shader bindings</source>
         <translation>无法创建模型网格地图着色器绑定</translation>
     </message>

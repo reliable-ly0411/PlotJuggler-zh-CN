@@ -71,10 +71,15 @@ backends are POSIX-only):
 `plotjuggler-bridge`, `webrtc-client`, `ros-parser`, `protobuf-parser`,
 `json-parser`, `data-tamer-parser`, `toolbox-quaternion`,
 `toolbox-transform-editor`, `toolbox-mosaico`, `arrow-parser`,
-`toolbox-assistant-agent`, `ros2-topic-subscriber`.
+`toolbox-fft`, `toolbox-anomaly-detector`, `toolbox-data-exporter`,
+`influx-parser`, `navmap-parser`, `candump-loader`, `blf-loader`, `mf4-loader`,
+`log-widget`, `toolbox-assistant-agent`, `ros2-topic-subscriber`.
+
+Every plugin of the browser build (`cmake/PjWasmOfficialPlugins.cmake`) is in
+this set.
 
 Not bundled: `toolbox-colormap`, `toolbox-reactive-scripts-editor` (excluded by
-request); `toolbox-fft`, `mqtt-subscriber`, `udp-server`, `zmq-subscriber`,
+request); `mqtt-subscriber`, `udp-server`, `zmq-subscriber`,
 `lerobot-loader` (published, but not curated — installable via the in-app
 marketplace).
 
@@ -156,7 +161,7 @@ info, full DWARF, or DWARF in `.dwo` sidecars kept in the build tree;
 [`cmake/PjDebugInfo.cmake`](../../cmake/PjDebugInfo.cmake).
 
 Linux builds with GNU/Clang compilers use thin archives to avoid copying object
-files, and `resources.qrc` is compiled once as `pj_resources`.
+files, and `resources.qrc` plus the splash memes in `memes.qrc` are compiled once as `pj_resources`.
 [`scripts/build_tree_size.sh`](../../scripts/build_tree_size.sh) `<build-dir>`
 reports bytes by artifact class in decimal GB. Use a fresh build tree when
 measuring the smaller default; disabling targets does not remove artifacts from

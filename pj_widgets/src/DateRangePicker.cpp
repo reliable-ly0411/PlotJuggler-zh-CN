@@ -7,6 +7,7 @@
 // or the from/to hint colors) so they read big and match the rest of the chrome.
 // See DateRangePicker.h.
 
+#include <pj_widgets/AppSettings.h>
 #include <pj_widgets/ComboBox.h>
 #include <pj_widgets/DateRangePicker.h>
 #include <pj_widgets/IntScrubber.h>
@@ -33,7 +34,6 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QPushButton>
-#include <QSettings>
 #include <QSignalBlocker>
 #include <QSize>
 #include <QSpinBox>
@@ -65,7 +65,7 @@ const QColor kToHintColor(0xe7, 0x4c, 0x3c);    // red
 // so palette() resolves to Fusion light-grey on both themes. Sourcing colors
 // from theme tokens chosen by this key is the fix.
 bool pickerThemeIsLight() {
-  return QSettings().value(u"StyleSheet::theme"_s, u"light"_s).toString().contains("light");
+  return appSetting(u"StyleSheet::theme"_s, u"light"_s).toString().contains("light"_L1);
 }
 
 // Theme-token color set for the calendar/overlay. Values mirror the app's QSS
@@ -491,7 +491,7 @@ TimePickerWidget::TimePickerWidget(QWidget* parent) : QWidget(parent) {
                            IntScrubber*& minute) {
     auto* cap = new QLabel(caption);
     QFont cap_font = cap->font();
-    cap_font.setBold(true);
+    cap_font.setWeight(QFont::DemiBold);
     cap->setFont(cap_font);
     date_label = new QLabel("---");
     // App Blender-style scrubbers (drag / arrows / double-click edit) for the

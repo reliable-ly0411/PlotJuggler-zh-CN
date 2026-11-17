@@ -27,6 +27,7 @@
 #endif
 #include "pj_base/plugin_data_api.h"
 #include "pj_marketplace/plugin_compatibility.hpp"
+#include "pj_marketplace/utf8_path.hpp"
 #include "pj_plugins/host/plugin_catalog.hpp"
 using namespace Qt::StringLiterals;
 
@@ -462,7 +463,7 @@ void ExtensionCatalogService::seedBundledPlugins() {
     // The payload is the top-level entry under the bundled dir that contains the
     // DSO — a per-id subdirectory (e.g. csv-loader/, or ros2-topic-subscriber/
     // with its dist/<distro>/ inners) or, for a flat layout, the .so file itself.
-    const std::filesystem::path dst = market_root / descriptor.id;
+    const std::filesystem::path dst = market_root / pathFromUtf8(descriptor.id);
     std::error_code resolve_ec;
     const std::filesystem::path dso = std::filesystem::weakly_canonical(descriptor.dso_path, resolve_ec);
     const std::filesystem::path rel = std::filesystem::relative(dso, root, resolve_ec);
@@ -563,8 +564,8 @@ void ExtensionCatalogService::seedBundledPlugins() {
 
     // Stage the new payload, then swap it into place. Any failure keeps (or
     // restores) the old copy; the next launch retries.
-    const std::filesystem::path stage_new = stage_root / descriptor.id;
-    const std::filesystem::path aside = stage_root / (descriptor.id + ".old");
+    const std::filesystem::path stage_new = stage_root / pathFromUtf8(descriptor.id);
+    const std::filesystem::path aside = stage_root / pathFromUtf8(descriptor.id + ".old");
     bool aside_orphaned = false;
     std::error_code step_ec;
     // Preserve user-added files for an identity-authorized same-version refresh.

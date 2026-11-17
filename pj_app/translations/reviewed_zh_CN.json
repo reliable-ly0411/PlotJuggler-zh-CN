@@ -392,29 +392,20 @@
     },
     {
       "context": "PJ::MainWindow",
-      "source": "Data source '%1' could not be downloaded: %2",
+      "source": "'%1' is not the file its layout was saved with (its content fingerprint differs).",
       "comment": "",
       "numerus": false,
       "translations": [
-        "无法下载数据源“%1”：%2"
+        "'%1' 不是保存此布局时使用的文件（内容指纹不同）。"
       ]
     },
     {
       "context": "PJ::MainWindow",
-      "source": "Data source '%1' is not the file its layout was saved with (its content fingerprint differs).",
+      "source": "'%1' records a malformed content fingerprint.",
       "comment": "",
       "numerus": false,
       "translations": [
-        "数据源“%1”不是保存布局时所用的文件（内容指纹不同）。"
-      ]
-    },
-    {
-      "context": "PJ::MainWindow",
-      "source": "Data source '%1' records a malformed content fingerprint.",
-      "comment": "",
-      "numerus": false,
-      "translations": [
-        "数据源“%1”记录的内容指纹格式错误。"
+        "'%1' 记录的内容指纹格式无效。"
       ]
     },
     {

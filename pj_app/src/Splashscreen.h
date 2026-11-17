@@ -47,8 +47,8 @@ QPixmap localizedMemeForTest(int index);
 
 // Builds the startup splash pixmap honouring Preferences::splash_mode:
 // "serious" → a composed branded banner (logo + wordmark + random subtitle),
-// Otherwise use a localized meme composition or an English bundled meme. Returns a null QPixmap
-// when no image is available (e.g. an empty meme pool).
+// Otherwise use a localized meme composition or an English bundled meme, falling back
+// to the serious banner if no image can be loaded.
 QPixmap makeStartupSplash();
 
 }  // namespace PJ

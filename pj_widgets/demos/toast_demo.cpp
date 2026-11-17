@@ -38,8 +38,8 @@ using pj_widgets_demos::applyTheme;
 // a clickable link the toast label opens through the shared URL helper.
 QString releaseMessage() {
   return QStringLiteral(
-      "New release available: <b>PlotJuggler 3.999.1</b><br>"
-      "<a href=\"https://github.com/PlotJuggler/PJ4/releases/latest\">View on GitHub</a>");
+      "New release available: <span style='font-weight:600;'>PlotJuggler 3.999.1</span><br>"
+      "<a href=\"https://github.com/PlotJuggler/PlotJuggler/releases/latest\">View on GitHub</a>");
 }
 
 // A QMainWindow that keeps the toast stack pinned bottom-right on resize,

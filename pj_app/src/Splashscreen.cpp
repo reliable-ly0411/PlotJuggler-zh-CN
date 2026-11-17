@@ -280,7 +280,13 @@ QPixmap capMemeToSplashBox(const QPixmap& pixmap) {
 QPixmap makeStartupSplash() {
   QSettings settings;
   const QString mode = startupSplashMode(settings);
-  return mode == kSplashModeSerious ? makeSeriousSplashscreen() : getFunnySplashscreen();
+  if (mode != kSplashModeSerious) {
+    // Fall back to the serious splash if no image can be loaded.
+    if (QPixmap meme = getFunnySplashscreen(); !meme.isNull()) {
+      return meme;
+    }
+  }
+  return makeSeriousSplashscreen();
 }
 
 }  // namespace PJ

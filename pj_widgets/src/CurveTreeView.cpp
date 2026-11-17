@@ -199,7 +199,7 @@ class CurveTreeItemDelegate : public QStyledItemDelegate {
     const QRect text_rect = style->subElementRect(QStyle::SE_ItemViewItemText, &opt, widget);
     const int text_margin = style->pixelMetric(QStyle::PM_FocusFrameHMargin, &opt, widget) + 1;
     QFont font = opt.font;
-    font.setBold(true);
+    font.setWeight(QFont::DemiBold);
     font.setLetterSpacing(QFont::PercentageSpacing, 104.0);
     if (font.pointSizeF() > 0) {
       font.setPointSizeF(font.pointSizeF() * 0.85);
@@ -229,6 +229,10 @@ class CurveTreeItemDelegate : public QStyledItemDelegate {
     // its selection is gone. Selection is the only per-row highlight here;
     // keyboard focus stays on the widget, it just is not drawn per cell.
     opt.state &= ~QStyle::State_HasFocus;
+    if (index.column() == kValueColumn) {
+      // The view's left elide keeps a name's tail; a number elided on the left loses its sign and leading digits.
+      opt.textElideMode = Qt::ElideRight;
+    }
 
     // Placeholder/unsubscribed flags live on the Name column's item data (see
     // addCatalogItem); fetch via the row's Name-column sibling so every column

@@ -75,10 +75,18 @@ constexpr int kCategoryTokenRole = Qt::UserRole + 3;
 
 // Registry tokens remain the sorting/filtering identity; only known category labels translate.
 QString displayCategory(const QString& category) {
-  if (category == u"data_loader"_s) return QCoreApplication::translate("PJ::MarketplaceWindow", "Data loaders");
-  if (category == u"data_stream"_s) return QCoreApplication::translate("PJ::MarketplaceWindow", "Data streams");
-  if (category == u"message_parser"_s) return QCoreApplication::translate("PJ::MarketplaceWindow", "Message parsers");
-  if (category == u"toolbox"_s) return QCoreApplication::translate("PJ::MarketplaceWindow", "Toolboxes");
+  if (category == u"data_loader"_s) {
+    return QCoreApplication::translate("PJ::MarketplaceWindow", "Data loaders");
+  }
+  if (category == u"data_stream"_s) {
+    return QCoreApplication::translate("PJ::MarketplaceWindow", "Data streams");
+  }
+  if (category == u"message_parser"_s) {
+    return QCoreApplication::translate("PJ::MarketplaceWindow", "Message parsers");
+  }
+  if (category == u"toolbox"_s) {
+    return QCoreApplication::translate("PJ::MarketplaceWindow", "Toolboxes");
+  }
   return category;
 }
 
@@ -894,7 +902,7 @@ void MarketplaceWindow::updateDetailFooter() {
             ? tr("⚠ Update to v%1 available, but blocked — %2").arg(esc(ext->version), esc(compat.reason))
             : tr("⚠ Incompatible — %1").arg(esc(compat.reason));
     html +=
-        u"<p style='margin:0 0 6px 0; padding:3px 6px; font-weight:700; "
+        u"<p style='margin:0 0 6px 0; padding:3px 6px; font-weight:600; "
         u"background-color:rgba(%1,%2,%3,%4);'>%5</p>"_s.arg(tint.red())
             .arg(tint.green())
             .arg(tint.blue())
@@ -932,7 +940,8 @@ void MarketplaceWindow::updateDetailFooter() {
 
   // Description.
   if (!ext->description.isEmpty()) {
-    html += u"<p style='margin:0 0 6px 0;'>%1</p>"_s.arg(esc(PJ::marketplacePluginText(ext->id, ext->version, ext->description)));
+    html += u"<p style='margin:0 0 6px 0;'>%1</p>"_s.arg(
+        esc(PJ::marketplacePluginText(ext->id, ext->version, ext->description)));
   }
 
   // Changelog: newest version first, matching the marketplace spec's examples.
@@ -943,10 +952,11 @@ void MarketplaceWindow::updateDetailFooter() {
     std::sort(versions.begin(), versions.end(), [](const QString& a, const QString& b) {
       return comparePluginVersions(a.toStdString(), b.toStdString()) > 0;
     });
-    html += u"<p style='margin:0 0 2px 0;'><b>"_s + tr("Changelog").toHtmlEscaped() +
-            u"</b></p><ul style='margin:0 0 0 -20px;'>"_s;
+    html += u"<p style='margin:0 0 2px 0; font-weight:600;'>"_s + tr("Changelog").toHtmlEscaped() +
+            u"</p><ul style='margin:0 0 0 -20px;'>"_s;
     for (const QString& version : versions) {
-      html += u"<li><b>%1</b> — %2</li>"_s.arg(esc(version), esc(ext->changelog.value(version)));
+      html += u"<li><span style='font-weight:600;'>%1</span> — %2</li>"_s.arg(
+          esc(version), esc(ext->changelog.value(version)));
     }
     html += u"</ul>"_s;
   }

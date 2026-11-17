@@ -576,6 +576,25 @@ TEST(GridRunnerTest, WindowBeforeAFindingCannotReadIt) {
   EXPECT_EQ(before.parsed.error, "on-demand: missing input 'owner/crop/cropped'");
 }
 
+// A finding beside a raw object input: the finding's stamp is read from its history, which calls into the store, so it
+// is read before the raw input's timestamp view is taken (a view held across a store call inverts the store's lock
+// order; TSan reports the inversion).
+TEST(GridRunnerTest, PinnedUpstreamBesideARawObjectInputSharesTheWindowGrid) {
+  Fixture fx;
+  pushReferenceData(fx);
+  auto finding = recipe("crop", {"cloud"}, {cloudSpec()});
+  finding.pinned_t = 12 * kSec;
+  fx.install(finding);
+  fx.request("owner/crop", 0);  // computed at its pin: the cloud at 10 s, 3 points
+  const RecipeGraph::Node child = fx.bind(recipe("child", {"owner/crop/cropped", "cloud"}, {numberSpec()}));
+
+  const Evaluated window = fx.evaluate(child, false, 10 * kSec, 25 * kSec);
+  EXPECT_EQ(window.parsed.stopped, Stop::kComplete) << window.parsed.error;
+  EXPECT_EQ(requestedTimes(window.parsed), (std::vector<int64_t>{10 * kSec, 20 * kSec}))
+      << "the start (also the finding's stamp and a cloud) and the cloud at 20 s";
+  EXPECT_EQ(fx.fake.runsOf("crop").size(), 1u) << "the finding never runs again";
+}
+
 // EVAL-04: a window starting before an input's oldest retained sample reports that leading part as a gap and
 // evaluates from its end, the newest of the raw inputs' oldest samples, so inputs that begin at different times still
 // give bundles; a window the gap covers whole evaluates nothing.
@@ -1413,6 +1432,29 @@ TEST(GridRunnerTest, RetainedUpstreamObjectsCountAgainstTheJobsMemory) {
 
   auto reader = recipe("reader", {"owner/first/cropped"}, {numberSpec()});
   reader.script = "local inputs = ...\nreturn inputs['owner/first/cropped']:count()\n";
+  const Evaluated window = fx.evaluate(fx.bind(reader), false, 10 * kSec, 20 * kSec, {.max_bytes = 16u << 20});
+  EXPECT_EQ(window.parsed.stopped, Stop::kComplete) << window.parsed.error;
+  EXPECT_EQ(window.parsed.evaluated, 2u);
+}
+
+// The same rule for a chain of three: when `first` runs again at the next instant, the memo of `second`, which reads
+// it, still holds `first`'s previous crop. It can never serve again (each run has a fresh identity), so it is dropped
+// with `first`'s: the two-instant window of `first -> second -> reader` fits the 8 MiB native share that two crops
+// would not.
+TEST(GridRunnerTest, ADownstreamMemoIsDroppedBeforeItsUpstreamRunsAgain) {
+  Fixture fx(4 * InFlightBudget::kRunBytes, /*real_run=*/true);
+  constexpr size_t kPoints = 330'000;  // 16 bytes each
+  fx.pushCloud(10 * kSec, kPoints);
+  fx.pushCloud(20 * kSec, kPoints);
+  auto first = recipe("first", {"cloud"}, {cloudSpec()});
+  first.script = "local inputs = ...\nreturn inputs['cloud']:crop_box{min={-1e9, -1e9, -1e9}, max={1e9, 1e9, 1e9}}\n";
+  fx.install(first);
+  auto second = recipe("second", {"owner/first/cropped"}, {cloudSpec()});
+  second.script = "local inputs = ...\nreturn inputs['owner/first/cropped']\n";
+  fx.install(second);
+  auto reader = recipe("reader", {"owner/second/cropped"}, {numberSpec()});
+  reader.script = "local inputs = ...\nreturn inputs['owner/second/cropped']:count()\n";
+
   const Evaluated window = fx.evaluate(fx.bind(reader), false, 10 * kSec, 20 * kSec, {.max_bytes = 16u << 20});
   EXPECT_EQ(window.parsed.stopped, Stop::kComplete) << window.parsed.error;
   EXPECT_EQ(window.parsed.evaluated, 2u);

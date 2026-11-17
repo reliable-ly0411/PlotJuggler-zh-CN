@@ -36,6 +36,7 @@
 #include "pj_runtime/ExtensionCatalogService.h"
 #include "pj_runtime/SessionManager.h"
 #include "pj_runtime/TopicDemandTracker.h"
+#include "pj_runtime/TsanAnnotations.h"
 using namespace Qt::StringLiterals;
 
 namespace PJ {
@@ -125,6 +126,7 @@ StreamingSourceManager::~StreamingSourceManager() {
   for (auto& [dataset_id, sess] : sessions_) {
     if (sess->worker != nullptr) {
       sess->worker->wait();
+      tsan::acquire(sess.get());  // see the end of workerLoop
     }
   }
 }
@@ -159,6 +161,7 @@ bool StreamingSourceManager::stopDatasetAndWait(DatasetId dataset_id, const QStr
   requestStopDataset(dataset_id, reason);
   if (sess->worker != nullptr) {
     sess->worker->wait();
+    tsan::acquire(sess);  // see the end of workerLoop
   }
 
   // streamStopped carries only the FAILURE that ended the stream, if the
@@ -461,18 +464,17 @@ std::unique_ptr<StreamingSourceManager::StreamingSession> StreamingSourceManager
   // samplesIngested marshal in workerLoop below. The lambda may run before start()
   // even returns (some plugins advertise everything up front) or repeatedly during
   // poll(), so applyAdvertisedTopics re-checks the session still exists.
-  session->runtime_host->on_available_topics = [this, dataset_id](
-                                                   std::vector<DataSourceRuntimeHost::AdvertisedTopicInfo> topics) {
-    std::vector<AdvertisedTopic> owned;
-    owned.reserve(topics.size());
-    for (auto& topic : topics) {
-      owned.push_back(AdvertisedTopic{QString::fromStdString(topic.topic_name), topic.classification});
-    }
-    QMetaObject::invokeMethod(
-        this,
-        [this, dataset_id, owned = std::move(owned)]() mutable { applyAdvertisedTopics(dataset_id, std::move(owned)); },
-        Qt::QueuedConnection);
-  };
+  session->runtime_host->on_available_topics =
+      [this, dataset_id](std::vector<DataSourceRuntimeHost::AdvertisedTopicInfo> topics) {
+        std::vector<AdvertisedTopic> owned;
+        owned.reserve(topics.size());
+        for (auto& topic : topics) {
+          owned.push_back(AdvertisedTopic{QString::fromStdString(topic.topic_name), topic.classification});
+        }
+        tsan::invokeQueued(this, [this, dataset_id, owned = std::move(owned)]() mutable {
+          applyAdvertisedTopics(dataset_id, std::move(owned));
+        });
+      };
 
   ServiceRegistryBuilder registry;
   if (auto status = session->runtime_host->registerServices(registry); !status) {
@@ -809,8 +811,7 @@ void StreamingSourceManager::workerLoop(StreamingSession& session) {
   while (!sess->runtime_host->stopRequested()) {
     if (auto status = sess->handle.poll(); !status) {
       const QString err = QString::fromStdString(status.error());
-      QMetaObject::invokeMethod(
-          this, [this, dataset_id, err]() { emit streamError(dataset_id, err); }, Qt::QueuedConnection);
+      tsan::invokeQueued(this, [this, dataset_id, err]() { emit streamError(dataset_id, err); });
       sess->runtime_host->requestStop(std::string("plugin poll error: ") + err.toStdString());
       break;
     }
@@ -827,14 +828,18 @@ void StreamingSourceManager::workerLoop(StreamingSession& session) {
     // Retention enforcement piggybacks on the same UI-thread hop so
     // `retention_seconds_` stays UI-thread-only (no atomic needed). Trim
     // runs before notifyIngest so consumers observe the post-trim engine.
-    QMetaObject::invokeMethod(this, [this, dataset_id]() { onIngestTick(dataset_id); }, Qt::QueuedConnection);
+    tsan::invokeQueued(this, [this, dataset_id]() { onIngestTick(dataset_id); });
     QThread::msleep(kPollPeriodMs);
   }
 
   sess->handle.stop();
   sess->runtime_host->flushAll();
 
-  QMetaObject::invokeMethod(this, [this, dataset_id]() { onWorkerFinished(dataset_id); }, Qt::QueuedConnection);
+  tsan::invokeQueued(this, [this, dataset_id]() { onWorkerFinished(dataset_id); });
+  // Last act: the joins acquire this per-session token once wait() returns (QThread::wait() is a
+  // futex inside prebuilt Qt that TSan cannot see), so the GUI thread's teardown of the session is
+  // ordered after flushAll() and everything above.
+  tsan::release(sess);
 }
 
 void StreamingSourceManager::ingestTickForTests(DatasetId dataset_id) {
@@ -906,6 +911,7 @@ void StreamingSourceManager::onWorkerFinished(DatasetId dataset_id) {
   StreamingSession* sess = it->second.get();
   if (sess->worker != nullptr) {
     sess->worker->wait();
+    tsan::acquire(sess);  // see the end of workerLoop
   }
   // Empty for an orderly end — the plugin's own end-of-stream included — and
   // the failure that ended the stream otherwise; a callback failure the plugin

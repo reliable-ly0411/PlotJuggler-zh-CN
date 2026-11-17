@@ -1,17 +1,17 @@
 {
-  "version": "1.0.0-dev.2",
-  "repository": "https://github.com/reliable-ly0411/plotjuggler_sdk",
-  "commit": "a8766632ad50c8ff7183e42ccf78dbde4f90a57a",
+  "version": "1.0.1",
+  "repository": "https://github.com/PlotJuggler/plotjuggler_sdk",
+  "commit": "ffd749ab343c3211b5100f124f6c873667b82629",
   "upstream_repository": "https://github.com/PlotJuggler/plotjuggler_sdk",
-  "upstream_base": "b396484e5399d59f430bdde31c0a77e167f6acf2",
+  "upstream_base": "ffd749ab343c3211b5100f124f6c873667b82629",
   "upstream_pull_request": "https://github.com/PlotJuggler/plotjuggler_sdk/pull/226",
-  "archive_url": "https://codeload.github.com/reliable-ly0411/plotjuggler_sdk/tar.gz/a8766632ad50c8ff7183e42ccf78dbde4f90a57a",
-  "archive_sha256": "33e4f467417b21a79b5564edaa6d883ec953fd424c5ad8adaaff8b9088ac3b66",
-  "recipe_revision": "2c06205a818aa2b0c07984986de51953",
+  "archive_url": "https://codeload.github.com/PlotJuggler/plotjuggler_sdk/tar.gz/ffd749ab343c3211b5100f124f6c873667b82629",
+  "archive_sha256": "d1570047d98d5e582f51cacf354e0072a668c93711abe5e7246ffcb62c079610",
+  "recipe_revision": "5d48da533fc9b2250fb4c682e3d6cf25",
   "license": "Apache-2.0",
-  "distribution": "SDK dev.2 with upstream PR #226 Unicode path fixes and PR #241 null-sample accessors.",
-  "host_contract_version": "1.0.0-dev.2",
-  "upstream_release_commit": "b396484e5399d59f430bdde31c0a77e167f6acf2",
+  "distribution": "Official SDK 1.0.1 with Unicode path fixes and null-sample accessors; source and license bytes verified.",
+  "host_contract_version": "1.0.1",
+  "upstream_release_commit": "ffd749ab343c3211b5100f124f6c873667b82629",
   "license_files_sha256": {
     "LICENSE": "d982c2f8dce28e500f42757cdaf17640e3b0e2c1b8f16a1c5814b890c863e55f",
     "LICENSE-APACHE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
@@ -19,5 +19,7 @@
   "upstream_pull_requests": [
     "https://github.com/PlotJuggler/plotjuggler_sdk/pull/226",
     "https://github.com/PlotJuggler/plotjuggler_sdk/pull/241"
-  ]
+  ],
+  "upstream_tag": "v1.0.1",
+  "upstream_tag_object": "b0e73ef290b1ab590041cde047b7ceadda4360c4"
 }

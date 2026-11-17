@@ -963,6 +963,21 @@ TEST(ObjectStoreTest, EntryTimestampsViewEmpty) {
   EXPECT_EQ(view.size(), 0u);
 }
 
+TEST(ObjectStoreTest, EntryTimestampsOfSeveralTopicsComeOncePerKnownTopicInIdOrder) {
+  ObjectStore store;
+  auto first = registerTestTopic(store, "a");
+  auto second = registerTestTopic(store, "b");
+  store.pushOwned(first, 100, makePayload(4));
+  store.pushOwned(second, 200, makePayload(4));
+  store.pushOwned(second, 300, makePayload(4));
+
+  const auto views = store.entryTimestamps({second, ObjectTopicId{999}, first, second});
+  ASSERT_EQ(views.size(), 2u);
+  EXPECT_EQ(views[0].size(), 1u);
+  EXPECT_EQ(views[1].size(), 2u);
+  EXPECT_EQ(views[1][1], 300);
+}
+
 TEST(ObjectStoreTest, RemoveTopicWaitsForOutstandingTimestampsView) {
   ObjectStore store;
   auto id = registerTestTopic(store, "cam/video");
@@ -1712,7 +1727,7 @@ TEST(ObjectStoreFlushTest, SrcUidOrderClearedAfterFlushAllowsSubsequentPushes) {
   // entries_[0] even if flushTo left a stale uid_order slot, so a one-entry check
   // passes vacuously; only a full walk whose length matches entryCount catches an
   // uncleared uid_order (the debug invariant assert that would otherwise trip is
-  // compiled out under NDEBUG / RelWithDebInfo).
+  // compiled out under NDEBUG / Release).
   ASSERT_TRUE(src.pushOwned(src_id, 400, makePayload(4, 0x77)).has_value());
   ASSERT_TRUE(src.pushOwned(src_id, 500, makePayload(4, 0x88)).has_value());
   auto walked = walkUids(src, src_id);

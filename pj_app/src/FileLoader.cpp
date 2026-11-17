@@ -3,12 +3,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #include <QCoreApplication>
+#include <QDir>
 #include <QElapsedTimer>
 #include <QEventLoop>
 #include <QFileInfo>
 #include <QFontDatabase>
 #include <QFrame>
 #include <QHBoxLayout>
+#include <QHash>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
@@ -25,6 +27,9 @@
 #include <QTimer>
 #include <QUrl>
 #include <QVBoxLayout>
+#if defined(PJ_WASM_ENABLE_INGRESS_PROBE) && defined(__EMSCRIPTEN__)
+#include <emscripten.h>
+#endif
 #include <algorithm>
 #include <chrono>
 #include <coroutine>
@@ -314,6 +319,20 @@ QString normalizeExtension(const QString& path) {
   return suffix.isEmpty() ? QString() : u"."_s + suffix.toLower();
 }
 
+// Logs a load-outcome marker and, in the browser probe build, also appends it
+// to globalThis.pjWasmLoadOutcomes. Firefox can drop a console line before it
+// reaches the test runner (the load completes, its marker never arrives), so
+// the browser tests read the outcome from the page rather than the console.
+void recordProbeOutcome(const QString& line) {
+  qCInfo(lcFileLoader).noquote() << line;
+#if defined(PJ_WASM_ENABLE_INGRESS_PROBE) && defined(__EMSCRIPTEN__)
+  const QByteArray utf8 = line.toUtf8();
+  EM_ASM(
+      { (globalThis.pjWasmLoadOutcomes = globalThis.pjWasmLoadOutcomes || []).push(UTF8ToString($0)); },
+      utf8.constData());
+#endif
+}
+
 #ifdef PJ_WASM_ENABLE_INGRESS_PROBE
 void logSuccessfulLoad(
     const DataEngine& engine, const CatalogModel& catalog, const QString& source_identity, const QString& plugin_name,
@@ -370,11 +389,10 @@ void logSuccessfulLoad(
   }
   scalar_series.sort();
   series_samples.sort();
-  qCInfo(lcFileLoader).noquote() << "PJ_FILE_LOAD_OK" << u"plugin=%1"_s.arg(plugin_name)
-                                 << u"identity=%1"_s.arg(source_identity) << u"catalog_items=%1"_s.arg(catalog_items)
-                                 << u"scalar_count=%1"_s.arg(scalar_count)
-                                 << u"scalar_series=%1"_s.arg(scalar_series.join(u","_s))
-                                 << u"series_samples=%1"_s.arg(series_samples.join(u","_s));
+  recordProbeOutcome(
+      u"PJ_FILE_LOAD_OK plugin="_s + plugin_name + u" identity="_s + source_identity + u" catalog_items="_s +
+      QString::number(catalog_items) + u" scalar_count="_s + QString::number(scalar_count) + u" scalar_series="_s +
+      scalar_series.join(u","_s) + u" series_samples="_s + series_samples.join(u","_s));
 }
 #endif
 #if defined(PJ_WASM_ENABLE_INGRESS_PROBE) && (defined(PJ_WASM_WITH_ROS_PLUGIN) || defined(PJ_WASM_WITH_PROTOBUF_PLUGIN))
@@ -860,6 +878,21 @@ std::string captureSavedConfig(DataSourceHandle& handle, const QString& source_n
   return {};
 }
 
+// The preset with each layout side-file name (hints.side_file_paths) replaced by
+// its path; an empty path resolves the name beside the loaded data file. A config
+// that is not a JSON object is left for the filepath rewrite to judge.
+std::string withSideFilePaths(const std::string& config, const LoadHints& hints, const QString& data_path) {
+  if (hints.side_file_paths.isEmpty()) {
+    return config;
+  }
+  const QDir data_dir = QFileInfo(data_path).dir();
+  QHash<QString, QString> replacements;
+  for (auto it = hints.side_file_paths.cbegin(); it != hints.side_file_paths.cend(); ++it) {
+    replacements.insert(it.key(), it.value().isEmpty() ? data_dir.filePath(it.key()) : it.value());
+  }
+  return detail::replaceConfigStringValues(config, replacements).value_or(config);
+}
+
 }  // namespace
 
 // Default ingest policies the app applies to every DataSourceRuntimeHost it
@@ -938,6 +971,9 @@ struct FileLoader::LoadContext {
   int file_total = 1;
   DataSourceHandle handle;
   std::unique_ptr<DataSourceRuntimeHost> ingest;
+  // Files picked in the plugin's dialog (a DBC, say): the worker's import reads
+  // their browser-staged copies after this prologue's frame is gone.
+  std::vector<std::shared_ptr<void>> dialog_selected_files;
   IngestToken ingest_token{};
   // Worker-owned: started on the GUI before the thread runs, then only the
   // worker touches it (elapsed/restart) to pace flush+notify.
@@ -1135,13 +1171,15 @@ void FileLoader::loadFromBrowserPicker(QWidget* dialog_parent, LoadHints hints) 
 }
 
 void FileLoader::selectBrowserInput(
-    QWidget* dialog_parent, BrowserSelectionCallback callback, FileSelectionService::Fingerprint fingerprint) {
-  const QString filter = extensions_.buildFileFilter([](const RuntimeDataSourcePlugin& source) {
+    QWidget* dialog_parent, BrowserSelectionCallback callback, FileSelectionService::Fingerprint fingerprint,
+    const QString& name_filter) {
+  const QString filter = name_filter.isEmpty() ? extensions_.buildFileFilter([](const RuntimeDataSourcePlugin& source) {
     return bundledPluginText(
                QString::fromStdString(source.id), QString::fromStdString(source.version),
                QString::fromStdString(source.name))
         .toStdString();
-  });
+  })
+                                               : name_filter;
   qCInfo(lcFileLoader).noquote() << "Opening browser file picker with filter:" << filter;
   FileSelectionService::selectAndStageFile(
       dialog_parent, filter, browser_file_store_,
@@ -1158,6 +1196,23 @@ void FileLoader::selectBrowserInput(
 
 QString FileLoader::browserContentSha256(const QString& source_identity) const {
   return browser_content_sha256_.value(source_identity);
+}
+
+void FileLoader::rememberBrowserUpload(const LoadInput& input) {
+  if (!input.content_sha256.isEmpty()) {
+    browser_content_sha256_.insert(input.source_identity, input.content_sha256);
+  }
+  if (isBrowserUploadIdentity(input.source_identity)) {
+    browser_identity_by_path_.insert(input.backing_path, input.source_identity);
+  }
+}
+
+QString FileLoader::browserIdentityForPath(const QString& backing_path) const {
+  return browser_identity_by_path_.value(backing_path);
+}
+
+QString FileLoader::browserPathForIdentity(const QString& source_identity) const {
+  return browser_identity_by_path_.key(source_identity);
 }
 
 FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
@@ -1375,8 +1430,9 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
     // JSON object cannot carry a path and is emitted as it is.
     QString emit_config = hints.preset_config_json;
     if (!emit_config.isEmpty()) {
-      const std::optional<std::string> rewritten =
-          detail::rewriteReplayFilepaths(emit_config.toStdString(), input.backing_path, detail::SavedFilepath::kOmit);
+      const std::optional<std::string> rewritten = detail::rewriteReplayFilepaths(
+          withSideFilePaths(emit_config.toStdString(), hints, input.backing_path), input.backing_path,
+          detail::SavedFilepath::kOmit);
       if (rewritten.has_value()) {
         emit_config = QString::fromStdString(*rewritten);
       }
@@ -1477,7 +1533,8 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
   bool skip_dialog = false;
   // The layout preset's saved bytes — the one materialization both
   // preset-driven policies start from.
-  const std::string preset_bytes = hints.preset_config_json.toStdString();
+  // Its side-file names already point at the files this replay reads.
+  const std::string preset_bytes = withSideFilePaths(hints.preset_config_json.toStdString(), hints, input.backing_path);
 
   if (hints.dialog_policy == DialogPolicy::kNever) {
     // Automated (layout-driven) replay: the dialog is prohibited and the
@@ -1531,6 +1588,11 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
     }
   }
 
+  // Files the user picked in the dialog (a DBC, say) that the plugin reads
+  // during import: their browser-staged copies must outlive the dialog. The
+  // fan-out path awaits its imports in this frame; the single-instance path
+  // hands them to ctx_, which outlives the frame.
+  std::vector<std::shared_ptr<void>> dialog_selected_files;
   if (!skip_dialog) {
     // Extract parser config saved from a previous session so DialogEngine can
     // restore the embedded parser dialog to its last state.
@@ -1557,8 +1619,14 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
         .browser_file_store = browser_file_store_,
         .title_prefix = hints.dialog_title_prefix,
         .on_dialog = hints.on_dialog,
+        .on_browser_file_staged =
+            [self = QPointer<FileLoader>(this)](const LoadInput& picked) {
+              if (self) {
+                self->rememberBrowserUpload(picked);
+              }
+            },
     });
-    const auto dlg = co_await std::move(dialog_awaiter);
+    auto dlg = co_await std::move(dialog_awaiter);
     if (dlg.outcome == dialog_presenter::Outcome::kPluginContractViolation) {
       (void)fail(tr("Plugin contract violation: %1. Reinstall the plugin from the Marketplace.")
                      .arg(QString::fromStdString(dlg.error)));
@@ -1567,8 +1635,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
     if (dlg.outcome == dialog_presenter::Outcome::kRejected) {
       // Diagnostic marker: the reject path completed with no dataset committed
       // (automation greps for it on every platform).
-      qCInfo(lcFileLoader).noquote() << "PJ_FILE_LOAD_REJECTED" << u"plugin=%1"_s.arg(source_name)
-                                     << u"identity=%1"_s.arg(source_identity);
+      recordProbeOutcome(u"PJ_FILE_LOAD_REJECTED plugin="_s + source_name + u" identity="_s + source_identity);
       // The user declined the load: a terminal cancel for the ticket, while
       // the legacy signals stay silent as they always have on this exit.
       // Clean up before emitting so a slot observing the terminal sees the
@@ -1583,6 +1650,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
     }
     if (dlg.payload.has_value()) {
       config = dlg.payload->saved_config;
+      dialog_selected_files = std::move(dlg.payload->selected_files);
       // If the dialog had an embedded parser slot, embed the parser config in the
       // saved config so it survives across sessions and reaches the source via
       // loadConfig(). The source extracts it under the "_parser_config" key.
@@ -1625,6 +1693,12 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
   // opening a layout would silently mutate the global per-plugin pre-fill.
   if (!skip_dialog) {
     persisted_settings.setValue(config_key, QString::fromStdString(config));
+    // The persisted config may still name files picked in earlier dialogs (a
+    // DBC for another channel), so new picks add to the kept ones.
+    // ponytail: every pick stays staged for the session; prune by what the
+    // config still references if large dialog-picked files become common.
+    auto& kept = last_dialog_files_[source_name];
+    kept.insert(kept.end(), dialog_selected_files.begin(), dialog_selected_files.end());
   }
 
   // Detect multi-instance fanout. A DataSource plugin emits a `__pj_fanout`
@@ -1701,6 +1775,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
     // this prologue into the worker. The `ingest_session` reference stays valid
     // (the move transfers ownership without relocating the heap object).
     ctx_ = std::make_unique<LoadContext>(std::move(handle), std::move(ingest_session_ptr));
+    ctx_->dialog_selected_files = std::move(dialog_selected_files);
     ctx_->path = source_identity;
     ctx_->dialog_parent = request.dialog_parent;
     ctx_->source_name = source_name;
@@ -2290,12 +2365,9 @@ LoadRequestId FileLoader::loadFileTicketed(LoadInput input, QWidget* dialog_pare
     emit fileLoadFailed(path, reason);
     return 0;
   }
-  if (!input.content_sha256.isEmpty()) {
-    browser_content_sha256_.insert(input.source_identity, input.content_sha256);
-  }
+  rememberBrowserUpload(input);
 #ifdef PJ_TARGET_WASM
   if (isBrowserUploadIdentity(input.source_identity)) {
-    browser_identity_by_path_.insert(input.backing_path, input.source_identity);
     // Only a lazily read pick arrives unfingerprinted (a copied or downloaded file is hashed as it is written); an
     // empty result means its File changed since the pick, which its reads report.
     if (input.content_sha256.isEmpty()) {
@@ -2694,6 +2766,10 @@ void FileLoader::finishLoadOnGui(bool fully_loaded) {
 
 void FileLoader::logLoadFailure(const QString& identity, const QString& reason, const QString& log_text) const {
   qCWarning(lcFileLoader).noquote() << (log_text.isEmpty() ? reason : log_text);
+#ifdef PJ_WASM_ENABLE_INGRESS_PROBE
+  // So a browser test fails at once with the reason instead of timing out.
+  recordProbeOutcome(u"PJ_FILE_LOAD_FAILED identity="_s + identity + u" reason="_s + reason);
+#endif
   emitDiagnosticTo(
       diagnostic_sink_, DiagnosticLevel::kError, "File Loader", "data-source-load-failed",
       tr("Could not load '%1': %2").arg(identity, reason).toStdString());

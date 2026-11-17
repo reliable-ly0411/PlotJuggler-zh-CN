@@ -6,6 +6,10 @@
 #include <QApplication>
 #include <QDomDocument>
 #include <QFile>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMouseEvent>
 #include <QSettings>
 #include <QSignalBlocker>
 #include <QStandardPaths>
@@ -29,6 +33,7 @@
 #include "MainWindow.h"
 #include "SourceTimelineController.h"
 #include "dataset_test_helpers.h"
+#include "pj_plotting/DockToolbar.h"
 #include "pj_plotting/DockWidget.h"
 #include "pj_plotting/PlotDocker.h"
 #include "pj_plotting/PlotWidget.h"
@@ -388,6 +393,85 @@ TEST_F(MainWindowHistoryFixture, PlaceholderChoiceUndoRedoRestoresChooserAndEmpt
   dock = tabbed->currentTab()->plotAt(0);
   ASSERT_NE(dock, nullptr);
   EXPECT_NE(dock->plotWidget(), nullptr);
+}
+
+TEST_F(MainWindowHistoryFixture, AreaRenameIsItsOwnUndoStepAndLeavesTheEarlierEditAlone) {
+  PJ::MainWindow& window = mainWindow();
+  PJ::PlotWidget* plot = ensureCurrentPlot(window);
+  ASSERT_NE(plot, nullptr);
+  auto* tabbed = window.findChild<PJ::TabbedPlotWidget*>(u"tabbedPlotWidget"_s);
+  ASSERT_NE(tabbed, nullptr);
+  PJ::DockWidget* dock = tabbed->currentTab()->plotAt(0);
+  ASSERT_NE(dock, nullptr);
+
+  PJ::MainWindowHistoryTestPeer::resetHistory(window);
+  const QByteArray baseline_state = PJ::MainWindowHistoryTestPeer::liveState(window);
+  const QString original_title = dock->name();
+
+  plot->setStateId(u"area-rename-earlier-edit"_s);
+  PJ::MainWindowHistoryTestPeer::recordDiscreteState(window);
+  const QByteArray edited_state = PJ::MainWindowHistoryTestPeer::liveState(window);
+  ASSERT_NE(edited_state, baseline_state);
+  ASSERT_EQ(PJ::MainWindowHistoryTestPeer::undoSize(window), 2U);
+
+  // Rename the area the way the user does: double-click the title, type, Return.
+  PJ::DockToolbar* toolbar = dock->toolBar();
+  auto* edit = toolbar->findChild<QLineEdit*>(u"lineEditRename"_s);
+  ASSERT_NE(edit, nullptr);
+  QMouseEvent double_click(
+      QEvent::MouseButtonDblClick, QPointF(1, 1), QPointF(1, 1), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+  ASSERT_TRUE(toolbar->eventFilter(toolbar->label(), &double_click));
+  edit->setText(u"renamed area"_s);
+  QKeyEvent enter(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+  QApplication::sendEvent(edit, &enter);
+  ASSERT_EQ(dock->name(), u"renamed area"_s);
+  const QByteArray renamed_state = PJ::MainWindowHistoryTestPeer::liveState(window);
+  ASSERT_NE(renamed_state, edited_state);
+  EXPECT_EQ(PJ::MainWindowHistoryTestPeer::undoSize(window), 3U) << "the rename must record exactly one step";
+
+  // One undo reverts the rename only; the earlier edit stays.
+  PJ::MainWindowHistoryTestPeer::undo(window);
+  EXPECT_EQ(PJ::MainWindowHistoryTestPeer::liveState(window), edited_state);
+  EXPECT_EQ(tabbed->currentTab()->plotAt(0)->name(), original_title);
+
+  // The next undo reverts the earlier edit.
+  PJ::MainWindowHistoryTestPeer::undo(window);
+  EXPECT_EQ(PJ::MainWindowHistoryTestPeer::liveState(window), baseline_state);
+
+  // Redo replays both, ending on the rename.
+  PJ::MainWindowHistoryTestPeer::redo(window);
+  EXPECT_EQ(PJ::MainWindowHistoryTestPeer::liveState(window), edited_state);
+  PJ::MainWindowHistoryTestPeer::redo(window);
+  EXPECT_EQ(PJ::MainWindowHistoryTestPeer::liveState(window), renamed_state);
+  EXPECT_EQ(tabbed->currentTab()->plotAt(0)->name(), u"renamed area"_s);
+}
+
+TEST_F(MainWindowHistoryFixture, CtrlYAndCtrlShiftZRedoThroughTheKeyboard) {
+  PJ::MainWindow& window = mainWindow();
+  window.show();
+  window.activateWindow();
+  ASSERT_TRUE(QTest::qWaitForWindowActive(&window));
+  auto* tabbed = window.findChild<PJ::TabbedPlotWidget*>(u"tabbedPlotWidget"_s);
+  ASSERT_NE(tabbed, nullptr);
+  PJ::DockWidget* dock = tabbed->currentTab()->plotAt(0);
+  ASSERT_NE(dock, nullptr);
+  dock->setPlaceholderWidget();
+  PJ::MainWindowHistoryTestPeer::resetHistory(window);
+  auto* placeholder = dock->findChild<PJ::VisualizationPlaceholderWidget*>();
+  ASSERT_NE(placeholder, nullptr);
+  auto* plot_button = placeholder->findChild<QToolButton*>(u"buttonVizPlot"_s);
+  ASSERT_NE(plot_button, nullptr);
+  plot_button->click();
+
+  // Redo is keyboard-only: each of its keys must reach it, which a key bound twice to it does not (Qt calls the
+  // overload ambiguous and fires nothing).
+  for (const QKeyCombination redo_key : {Qt::CTRL | Qt::Key_Y, Qt::CTRL | Qt::SHIFT | Qt::Key_Z}) {
+    PJ::MainWindowHistoryTestPeer::undo(window);
+    ASSERT_EQ(tabbed->currentTab()->plotAt(0)->plotWidget(), nullptr);
+    QTest::keyClick(&window, redo_key.key(), redo_key.keyboardModifiers());
+    EXPECT_NE(tabbed->currentTab()->plotAt(0)->plotWidget(), nullptr)
+        << QKeySequence(redo_key).toString().toStdString() << " did not redo";
+  }
 }
 
 TEST_F(MainWindowHistoryFixture, AutomaticGlobalRebasePreservesAbsolutePlayheadAndReframesRange) {

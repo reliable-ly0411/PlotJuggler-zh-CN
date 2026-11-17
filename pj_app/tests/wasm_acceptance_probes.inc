@@ -10,6 +10,7 @@
 #include <emscripten/val.h>
 #include <malloc.h>
 
+#include <QAbstractButton>
 #include <QCheckBox>
 #include <QDirIterator>
 #include <qwt_plot.h>
@@ -36,6 +37,16 @@ void stopWasmFrameTimingProbe() {
   wasm_frame_timing_connection = {};
 }
 
+/// The application's MainWindow (the first top-level one), or nullptr before it exists.
+PJ::MainWindow* wasmTestMainWindow() {
+  for (QWidget* widget : QApplication::topLevelWidgets()) {
+    if (auto* main_window = qobject_cast<PJ::MainWindow*>(widget)) {
+      return main_window;
+    }
+  }
+  return nullptr;
+}
+
 }  // namespace
 
 /// Whether this build has the on-demand Python lane. Unlike the smoke probe it starts no Python work, so a spec can
@@ -45,20 +56,13 @@ extern "C" EMSCRIPTEN_KEEPALIVE int pj_wasm_test_python_available() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_open_load() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* main_window = qobject_cast<PJ::MainWindow*>(widget)) {
-      QMetaObject::invokeMethod(main_window, "onLoadDataRequested", Qt::QueuedConnection);
-      return;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
+    QMetaObject::invokeMethod(main_window, "onLoadDataRequested", Qt::QueuedConnection);
   }
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_open_robot_picker() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    if (main_window == nullptr) {
-      continue;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
     for (QToolButton* button : main_window->findChildren<QToolButton*>(u"scene3dAddRobotModel"_s)) {
       if (button->isVisibleTo(main_window)) {
         QMetaObject::invokeMethod(button, &QToolButton::click, Qt::QueuedConnection);
@@ -70,11 +74,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_open_robot_picker() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_open_layout() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    if (main_window == nullptr) {
-      continue;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
     auto* action = main_window->findChild<QAction*>(u"actionLoadLayout"_s);
     qInfo(
         "PJ_WASM_LAYOUT_ACTION present=%d enabled=%d visible=%d", action != nullptr ? 1 : 0,
@@ -88,11 +88,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_open_layout() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_file_menu() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    if (main_window == nullptr) {
-      continue;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
     for (QMenuBar* menu_bar : main_window->findChildren<QMenuBar*>()) {
       for (QAction* action : menu_bar->actions()) {
         QString label = action->text();
@@ -110,45 +106,35 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_file_menu() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_load_button() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    auto* button = main_window != nullptr ? main_window->findChild<QPushButton*>(u"buttonLoadDatafile"_s) : nullptr;
-    if (button == nullptr) {
-      continue;
-    }
-    const QPoint center = main_window->mapFromGlobal(button->mapToGlobal(button->rect().center()));
-    qInfo(
-        "PJ_WASM_LOAD_BUTTON center=%d,%d enabled=%d visible=%d", center.x(), center.y(), button->isEnabled() ? 1 : 0,
-        button->isVisibleTo(main_window) ? 1 : 0);
+  auto* main_window = wasmTestMainWindow();
+  auto* button = main_window != nullptr ? main_window->findChild<QPushButton*>(u"buttonLoadDatafile"_s) : nullptr;
+  if (button == nullptr) {
+    qWarning("PJ_WASM_LOAD_BUTTON_FAILED not found");
     return;
   }
-  qWarning("PJ_WASM_LOAD_BUTTON_FAILED not found");
+  const QPoint center = main_window->mapFromGlobal(button->mapToGlobal(button->rect().center()));
+  qInfo(
+      "PJ_WASM_LOAD_BUTTON center=%d,%d enabled=%d visible=%d", center.x(), center.y(), button->isEnabled() ? 1 : 0,
+      button->isVisibleTo(main_window) ? 1 : 0);
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_timeline_play() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    auto* button = main_window != nullptr ? main_window->findChild<QPushButton*>(u"buttonPlay"_s) : nullptr;
-    if (button == nullptr || !button->isVisibleTo(main_window)) {
-      continue;
-    }
-    const QPoint center = main_window->mapFromGlobal(button->mapToGlobal(button->rect().center()));
-    qInfo(
-        "PJ_WASM_TIMELINE_PLAY center=%d,%d enabled=%d checked=%d", center.x(), center.y(), button->isEnabled() ? 1 : 0,
-        button->isChecked() ? 1 : 0);
+  auto* main_window = wasmTestMainWindow();
+  auto* button = main_window != nullptr ? main_window->findChild<QPushButton*>(u"buttonPlay"_s) : nullptr;
+  if (button == nullptr || !button->isVisibleTo(main_window)) {
+    qWarning("PJ_WASM_TIMELINE_PLAY_FAILED not found");
     return;
   }
-  qWarning("PJ_WASM_TIMELINE_PLAY_FAILED not found");
+  const QPoint center = main_window->mapFromGlobal(button->mapToGlobal(button->rect().center()));
+  qInfo(
+      "PJ_WASM_TIMELINE_PLAY center=%d,%d enabled=%d checked=%d", center.x(), center.y(), button->isEnabled() ? 1 : 0,
+      button->isChecked() ? 1 : 0);
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_begin_frame_timing() {
   stopWasmFrameTimingProbe();
   wasm_frame_timing_sequence = 0;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    if (main_window == nullptr) {
-      continue;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
     for (auto* canvas : main_window->findChildren<PJ::PlotRhiCanvas*>()) {
       if (!canvas->isVisibleTo(main_window)) {
         continue;
@@ -175,19 +161,16 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_stop_frame_timing() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_recent_button() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    auto* button = main_window != nullptr ? main_window->findChild<QToolButton*>(u"buttonRecentFiles"_s) : nullptr;
-    if (button == nullptr) {
-      continue;
-    }
-    const QPoint center = button->mapToGlobal(button->rect().center());
-    qInfo(
-        "PJ_WASM_RECENT_BUTTON center=%d,%d enabled=%d visible=%d", center.x(), center.y(), button->isEnabled() ? 1 : 0,
-        button->isVisible() ? 1 : 0);
+  auto* main_window = wasmTestMainWindow();
+  auto* button = main_window != nullptr ? main_window->findChild<QToolButton*>(u"buttonRecentFiles"_s) : nullptr;
+  if (button == nullptr) {
+    qWarning("PJ_WASM_RECENT_BUTTON_FAILED not found");
     return;
   }
-  qWarning("PJ_WASM_RECENT_BUTTON_FAILED not found");
+  const QPoint center = button->mapToGlobal(button->rect().center());
+  qInfo(
+      "PJ_WASM_RECENT_BUTTON center=%d,%d enabled=%d visible=%d", center.x(), center.y(), button->isEnabled() ? 1 : 0,
+      button->isVisible() ? 1 : 0);
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_recent_menu() {
@@ -239,8 +222,9 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_source_layout_decision(
   if (dialog != nullptr) {
     for (QPushButton* button : dialog->findChildren<QPushButton*>()) {
       const QPoint center = button->mapToGlobal(button->rect().center());
+      // "Select '<name>'" asks for a side file the layout's sources read.
       if (button->text() == QObject::tr("Reselect source") ||
-          button->text().startsWith(QObject::tr("Select source "))) {
+          button->text().startsWith(QObject::tr("Select source ")) || button->text().startsWith(u"Select '"_s)) {
         qInfo("PJ_WASM_SOURCE_LAYOUT_RESELECT center=%d,%d", center.x(), center.y());
       } else if (button->text() == QObject::tr("Cancel")) {
         qInfo("PJ_WASM_SOURCE_LAYOUT_CANCEL center=%d,%d", center.x(), center.y());
@@ -252,11 +236,9 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_source_layout_decision(
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_supersede_source_layout_picker() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* main_window = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window->wasmProbeSupersedeBrowserReplayPicker();
-      return;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
+    main_window->wasmProbeSupersedeBrowserReplayPicker();
+    return;
   }
   qWarning("PJ_WASM_SOURCE_LAYOUT_SUPERSEDE_FAILED no main window");
 }
@@ -266,32 +248,28 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_supersede_source_layout_picker
 // call on, every layoutUrlLoadProgress is logged as PJ_WASM_LAYOUT_URL_PROGRESS.
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_load_layout_url() {
   const QUrl url(QString::fromStdString(emscripten::val::global("pjWasmProbeLayoutUrl").as<std::string>()));
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* main_window = qobject_cast<PJ::MainWindow*>(widget)) {
-      static bool progress_logged = false;
-      if (!std::exchange(progress_logged, true)) {
-        QObject::connect(
-            main_window, &PJ::MainWindow::layoutUrlLoadProgress, [](const QUrl&, qint64 received, qint64 total) {
-              qInfo(
-                  "PJ_WASM_LAYOUT_URL_PROGRESS received=%lld total=%lld", static_cast<long long>(received),
-                  static_cast<long long>(total));
-            });
-      }
-      QMetaObject::invokeMethod(
-          main_window, [main_window, url]() { main_window->loadLayoutFromUrl(url); }, Qt::QueuedConnection);
-      return;
+  if (auto* main_window = wasmTestMainWindow()) {
+    static bool progress_logged = false;
+    if (!std::exchange(progress_logged, true)) {
+      QObject::connect(
+          main_window, &PJ::MainWindow::layoutUrlLoadProgress, [](const QUrl&, qint64 received, qint64 total) {
+            qInfo(
+                "PJ_WASM_LAYOUT_URL_PROGRESS received=%lld total=%lld", static_cast<long long>(received),
+                static_cast<long long>(total));
+          });
     }
+    QMetaObject::invokeMethod(
+        main_window, [main_window, url]() { main_window->loadLayoutFromUrl(url); }, Qt::QueuedConnection);
+    return;
   }
   qWarning("PJ_WASM_LAYOUT_URL_FAILED no main window");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_cancel_layout_url() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* main_window = qobject_cast<PJ::MainWindow*>(widget)) {
-      QMetaObject::invokeMethod(
-          main_window, [main_window]() { main_window->cancelLayoutFromUrl(); }, Qt::QueuedConnection);
-      return;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
+    QMetaObject::invokeMethod(
+        main_window, [main_window]() { main_window->cancelLayoutFromUrl(); }, Qt::QueuedConnection);
+    return;
   }
   qWarning("PJ_WASM_LAYOUT_URL_FAILED no main window");
 }
@@ -300,13 +278,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_cancel_layout_url() {
 // thumbnail state, Open button center, enabled), then the dialog line with the
 // Cancel, Retry and Upload centers (-1,-1 when hidden) and the status text.
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_presets_dialog() {
-  PJ::MainWindow* main_window = nullptr;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* candidate = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window = candidate;
-      break;
-    }
-  }
+  auto* main_window = wasmTestMainWindow();
   auto* dialog = main_window != nullptr ? main_window->findChild<PJ::WelcomePresetsDialog*>() : nullptr;
   const auto center = [main_window](const QWidget* widget) {
     return widget != nullptr && widget->isVisible()
@@ -344,11 +316,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_presets_dialog() {
 
 // Reports whether File → Presets is offered, and triggers it when it is.
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_open_presets() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    if (main_window == nullptr) {
-      continue;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
     auto* action = main_window->findChild<QAction*>(u"actionPresets"_s);
     qInfo(
         "PJ_WASM_PRESETS_ACTION present=%d visible=%d enabled=%d", action != nullptr ? 1 : 0,
@@ -362,13 +330,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_open_presets() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_dialog_buttons() {
-  PJ::MainWindow* main_window = nullptr;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* candidate = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window = candidate;
-      break;
-    }
-  }
+  auto* main_window = wasmTestMainWindow();
   QWidget* dialog = QApplication::activeModalWidget();
   if (dialog == nullptr) {
     dialog = qobject_cast<QDialog*>(QApplication::activeWindow());
@@ -418,18 +380,66 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_dialog_buttons() {
       cancel != nullptr && cancel->isEnabled() ? 1 : 0);
 }
 
+// Every named, visible button of the active dialog (or, with none open, of the
+// main window and the toolbox panels it hosts) with its canvas center, so a
+// test can press a plugin's own controls (a file picker, a save button).
+extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_dialog_widgets() {
+  auto* main_window = wasmTestMainWindow();
+  QWidget* dialog = QApplication::activeModalWidget();
+  if (dialog == nullptr) {
+    for (QWidget* widget : QApplication::topLevelWidgets()) {
+      if (qobject_cast<QDialog*>(widget) != nullptr && widget->isVisible()) {
+        dialog = widget;
+        break;
+      }
+    }
+  }
+  if (main_window == nullptr) {
+    qWarning("PJ_WASM_DIALOG_WIDGETS_FAILED no main window");
+    return;
+  }
+  if (dialog == nullptr) {
+    // No dialog: a toolbox panel hosted in the main window.
+    dialog = main_window;
+  }
+  QStringList entries;
+  for (auto* button : dialog->findChildren<QAbstractButton*>()) {
+    if (button->objectName().isEmpty()) {
+      continue;
+    }
+    // A radio pair the host shows as a two-segment switch stays in the tree,
+    // hidden: report the center of its segment, where a user clicks.
+    auto* dual = qobject_cast<QWidget*>(button->property("_pj_dual_options_widget").value<QObject*>());
+    QPoint global;
+    if (dual != nullptr && dual->isVisibleTo(dialog)) {
+      const QObjectList radios = dual->property("_pj_dual_options_radios").value<QObjectList>();
+      const auto index = radios.indexOf(button);
+      if (index < 0) {
+        continue;
+      }
+      const QRect rect = dual->rect();
+      const int segment = rect.width() / static_cast<int>(radios.size());
+      global = dual->mapToGlobal(QPoint(rect.left() + segment * static_cast<int>(index) + segment / 2, rect.center().y()));
+    } else if (button->isVisibleTo(dialog)) {
+      global = button->mapToGlobal(button->rect().center());
+    } else {
+      continue;
+    }
+    const QPoint center = main_window->mapFromGlobal(global);
+    entries.push_back(u"%1=%2,%3"_s.arg(button->objectName()).arg(center.x()).arg(center.y()));
+  }
+  const QString report = entries.join(u";"_s);
+  qInfo("PJ_WASM_DIALOG_WIDGETS %s", qPrintable(report));
+  // Read back by the caller in the same evaluate: Firefox can drop the console line.
+  emscripten::val::global().set("pjWasmDialogWidgets", report.toStdString());
+}
+
 // Geometry of the CSV import dialog's delimiter and time-axis controls. The
 // time-axis mode is a combo docked in the "Time Axis" section header; `item1`
 // is the second row of whichever combo popup is open (semicolon in the
 // delimiter list, "Selected Column" in the mode list).
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_csv_dialog_controls() {
-  PJ::MainWindow* main_window = nullptr;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* candidate = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window = candidate;
-      break;
-    }
-  }
+  auto* main_window = wasmTestMainWindow();
   QWidget* dialog = QApplication::activeModalWidget();
   auto* delimiter = dialog != nullptr ? dialog->findChild<QComboBox*>(u"comboBox"_s) : nullptr;
   auto* auto_delimiter = dialog != nullptr ? dialog->findChild<QCheckBox*>(u"checkBoxAutoDelim"_s) : nullptr;
@@ -469,13 +479,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_csv_dialog_controls() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_ingest_controls() {
-  PJ::MainWindow* main_window = nullptr;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* candidate = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window = candidate;
-      break;
-    }
-  }
+  auto* main_window = wasmTestMainWindow();
   QPoint stop_center(-1, -1);
   QPoint remove_center(-1, -1);
   QPoint keep_center(-1, -1);
@@ -537,22 +541,18 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_ingest_controls() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_layout_snapshot() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* main_window = qobject_cast<PJ::MainWindow*>(widget)) {
-      const QByteArray encoded = main_window->wasmProbeLayoutBytes().toBase64();
-      qInfo("PJ_WASM_LAYOUT_SNAPSHOT base64=%s", encoded.constData());
-      return;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
+    const QByteArray encoded = main_window->wasmProbeLayoutBytes().toBase64();
+    qInfo("PJ_WASM_LAYOUT_SNAPSHOT base64=%s", encoded.constData());
+    return;
   }
   qWarning("PJ_WASM_LAYOUT_SNAPSHOT_FAILED no main window");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_dataset_count() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* main_window = qobject_cast<PJ::MainWindow*>(widget)) {
-      qInfo("PJ_WASM_DATASET_COUNT count=%lld", static_cast<long long>(main_window->wasmProbeDatasetCount()));
-      return;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
+    qInfo("PJ_WASM_DATASET_COUNT count=%lld", static_cast<long long>(main_window->wasmProbeDatasetCount()));
+    return;
   }
   qWarning("PJ_WASM_DATASET_COUNT_FAILED no main window");
 }
@@ -573,35 +573,27 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_staged_files() {
 // The wasm heap: the bytes malloc holds now, the linear memory's size (it never
 // shrinks, so it is the peak so far) and the resident payload pool's capacity.
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_heap() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* main_window = qobject_cast<PJ::MainWindow*>(widget)) {
-      const struct mallinfo info = mallinfo();
-      qInfo(
-          "PJ_WASM_HEAP in_use=%lld memory=%lld resident_pool=%lld", static_cast<long long>(info.uordblks),
-          static_cast<long long>(emscripten_get_heap_size()),
-          static_cast<long long>(main_window->wasmProbeResidentPoolCapacity()));
-      return;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
+    const struct mallinfo info = mallinfo();
+    qInfo(
+        "PJ_WASM_HEAP in_use=%lld memory=%lld resident_pool=%lld", static_cast<long long>(info.uordblks),
+        static_cast<long long>(emscripten_get_heap_size()),
+        static_cast<long long>(main_window->wasmProbeResidentPoolCapacity()));
+    return;
   }
   qWarning("PJ_WASM_HEAP_FAILED no main window");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_streaming_state() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* main_window = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window->wasmProbeReportStreamingState();
-      return;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
+    main_window->wasmProbeReportStreamingState();
+    return;
   }
   qWarning("PJ_WASM_STREAM_STATE_FAILED no main window");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_cycle_time_tracker() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    if (main_window == nullptr) {
-      continue;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
     auto* button = main_window->findChild<QToolButton*>(u"buttonTimeTracker"_s);
     if (button != nullptr) {
       button->click();
@@ -612,11 +604,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_cycle_time_tracker() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_show_legend() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    if (main_window == nullptr) {
-      continue;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
     auto* button = main_window->findChild<QToolButton*>(u"buttonLegendPosition"_s);
     if (button != nullptr) {
       if (!button->isChecked()) {
@@ -629,11 +617,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_show_legend() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_toggle_show_point() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    if (main_window == nullptr) {
-      continue;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
     auto* button = main_window->findChild<QToolButton*>(u"buttonShowpoint"_s);
     if (button != nullptr) {
       button->click();
@@ -720,11 +704,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_set_extreme_offscreen_view() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_plot_state() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    if (main_window == nullptr) {
-      continue;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
     for (QShortcut* shortcut : main_window->findChildren<QShortcut*>()) {
       if (shortcut->key() == QKeySequence(Qt::Key_F8)) {
         QMetaObject::invokeMethod(shortcut, "activated", Qt::DirectConnection);
@@ -736,13 +716,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_plot_state() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_filter_editor() {
-  PJ::MainWindow* main_window = nullptr;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* candidate = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window = candidate;
-      break;
-    }
-  }
+  auto* main_window = wasmTestMainWindow();
   auto* panel = main_window != nullptr ? main_window->findChild<PJ::FilterEditorPanel*>() : nullptr;
   auto* transforms = panel != nullptr ? panel->findChild<QListWidget*>(u"transform_list"_s) : nullptr;
   auto* apply = panel != nullptr ? panel->findChild<QPushButton*>(u"save_btn"_s) : nullptr;
@@ -802,23 +776,15 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_filter_editor() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_filter_result() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* main_window = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window->wasmProbeReportFilterResult();
-      return;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
+    main_window->wasmProbeReportFilterResult();
+    return;
   }
   qWarning("PJ_WASM_FILTER_RESULT_FAILED no main window");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_transform_editor() {
-  PJ::MainWindow* main_window = nullptr;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* candidate = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window = candidate;
-      break;
-    }
-  }
+  auto* main_window = wasmTestMainWindow();
   if (main_window == nullptr) {
     qWarning("PJ_WASM_TRANSFORM_EDITOR_FAILED no main window");
     return;
@@ -915,24 +881,24 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_transform_editor() {
   }
 }
 
+extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_open_data_exporter() {
+  if (auto* main_window = wasmTestMainWindow()) {
+    main_window->wasmProbeLaunchToolbox(u"toolbox-data-exporter"_s);
+    return;
+  }
+  qWarning("PJ_WASM_OPEN_DATA_EXPORTER_FAILED no main window");
+}
+
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_toolbox_transform_result() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* main_window = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window->wasmProbeReportToolboxTransformResult();
-      return;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
+    main_window->wasmProbeReportToolboxTransformResult();
+    return;
   }
   qWarning("PJ_WASM_TOOLBOX_TRANSFORM_RESULT_FAILED no main window");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_curve_style_controls() {
-  PJ::MainWindow* main_window = nullptr;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* candidate = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window = candidate;
-      break;
-    }
-  }
+  auto* main_window = wasmTestMainWindow();
   if (main_window == nullptr) {
     qWarning("PJ_WASM_CURVE_STYLE_CONTROLS_FAILED no main window");
     return;
@@ -982,13 +948,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_curve_style_controls() 
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_xy_dialog() {
-  PJ::MainWindow* main_window = nullptr;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* candidate = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window = candidate;
-      break;
-    }
-  }
+  auto* main_window = wasmTestMainWindow();
   for (QWidget* widget : QApplication::allWidgets()) {
     auto* dialog = qobject_cast<PJ::XYCurveDialog*>(widget);
     if (dialog == nullptr || !dialog->isVisible()) {
@@ -1026,13 +986,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_xy_dialog() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_xy_duplicate_warning() {
-  PJ::MainWindow* main_window = nullptr;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* candidate = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window = candidate;
-      break;
-    }
-  }
+  auto* main_window = wasmTestMainWindow();
   for (QWidget* widget : QApplication::allWidgets()) {
     auto* warning = qobject_cast<PJ::MessageBox*>(widget);
     if (warning == nullptr || !warning->isVisible()) {
@@ -1327,11 +1281,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_scene2d_state() {
   };
   static std::vector<ObservedScene2DViewer> observed_viewers;
   static quint64 next_viewer_identity = 1;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    if (main_window == nullptr) {
-      continue;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
     QList<PJ::Scene2DDockWidget*> docks;
     for (auto* dock : main_window->findChildren<PJ::Scene2DDockWidget*>()) {
       if (dock != nullptr && dock->isVisibleTo(main_window)) {
@@ -1409,11 +1359,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_scene2d_state() {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_multi_plot_state() {
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    auto* main_window = qobject_cast<PJ::MainWindow*>(widget);
-    if (main_window == nullptr) {
-      continue;
-    }
+  if (auto* main_window = wasmTestMainWindow()) {
     QList<PJ::DockWidget*> docks;
     for (PJ::DockWidget* dock : main_window->findChildren<PJ::DockWidget*>()) {
       if (dock != nullptr && dock->isVisible() && dock->window() == main_window) {
@@ -1548,13 +1494,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_quit_action() {
 // browser specs drag real rows by NAME instead of hard-coding canvas pixels
 // that break whenever the tree's row pitch or header height changes.
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_curve_rows() {
-  PJ::MainWindow* main_window = nullptr;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* candidate = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window = candidate;
-      break;
-    }
-  }
+  auto* main_window = wasmTestMainWindow();
   QTreeWidget* tree = main_window != nullptr ? main_window->findChild<QTreeWidget*>(u"treeView"_s) : nullptr;
   if (tree == nullptr) {
     qWarning("PJ_WASM_CURVE_ROWS_FAILED no dataset tree");
@@ -1588,13 +1528,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_curve_rows() {
 // coordinates. The placeholder is looked up in the visible tab, so the specs
 // click the icon they mean regardless of how many families the row holds.
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_placeholder_icons() {
-  PJ::MainWindow* main_window = nullptr;
-  for (QWidget* widget : QApplication::topLevelWidgets()) {
-    if (auto* candidate = qobject_cast<PJ::MainWindow*>(widget)) {
-      main_window = candidate;
-      break;
-    }
-  }
+  auto* main_window = wasmTestMainWindow();
   PJ::VisualizationPlaceholderWidget* placeholder = nullptr;
   if (main_window != nullptr) {
     for (auto* candidate : main_window->findChildren<PJ::VisualizationPlaceholderWidget*>()) {
@@ -1713,6 +1647,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_preferences_dialog() {
 // clang-format off
 EM_JS(void, pj_wasm_install_browser_test_probes, (), {
   globalThis.pjWasmOpenLoadProbe = () => Module._pj_wasm_test_open_load();
+  globalThis.pjWasmOpenDataExporterProbe = () => Module._pj_wasm_test_open_data_exporter();
   globalThis.pjWasmOpenRobotPickerProbe = () => Module._pj_wasm_test_open_robot_picker();
   globalThis.pjWasmOpenLayoutProbe = () => Module._pj_wasm_test_open_layout();
   globalThis.pjWasmReportFileMenuProbe = () => Module._pj_wasm_test_report_file_menu();
@@ -1735,6 +1670,7 @@ EM_JS(void, pj_wasm_install_browser_test_probes, (), {
   globalThis.pjWasmReportPresetsDialogProbe = () => Module._pj_wasm_test_report_presets_dialog();
   globalThis.pjWasmOpenPresetsProbe = () => Module._pj_wasm_test_open_presets();
   globalThis.pjWasmReportDialogButtonsProbe = () => Module._pj_wasm_test_report_dialog_buttons();
+  globalThis.pjWasmReportDialogWidgetsProbe = () => Module._pj_wasm_test_report_dialog_widgets();
   globalThis.pjWasmReportPreferencesActionProbe = () => Module._pj_wasm_test_report_preferences_action();
   globalThis.pjWasmReportMenuButtonsProbe = () => Module._pj_wasm_test_report_menu_buttons();
   globalThis.pjWasmReportMessageBoxProbe = () => Module._pj_wasm_test_report_message_box();
@@ -1777,6 +1713,7 @@ EM_JS(void, pj_wasm_install_browser_test_probes, (), {
   globalThis.pjWasmPythonSmokeProbe = () => Module._pj_wasm_test_python_smoke?.();
   globalThis.pjWasmPythonHoldGilProbe = () => Module._pj_wasm_test_python_hold_gil?.();
   globalThis.pjWasmPythonCompileNowProbe = () => Module._pj_wasm_test_python_compile_now?.();
+  globalThis.pjWasmPythonStdlibProbe = (step, arg) => Module._pj_wasm_test_python_stdlib?.(step, arg);
 });
 // clang-format on
 

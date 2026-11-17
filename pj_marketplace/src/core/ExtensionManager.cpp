@@ -23,7 +23,6 @@
 #include <utility>
 
 #include "internal/plugin_display_metadata.hpp"
-#include "internal/utf8_path.hpp"
 #include "pj_marketplace/artifact_store.hpp"
 #include "pj_marketplace/content_manifest.hpp"
 #include "pj_marketplace/download_manager.hpp"
@@ -34,6 +33,7 @@
 #include "pj_marketplace/plugin_check_runner.hpp"
 #include "pj_marketplace/plugin_compatibility.hpp"
 #include "pj_marketplace/store_session.hpp"
+#include "pj_marketplace/utf8_path.hpp"
 #include "pj_marketplace/version_compare.hpp"
 #include "pj_plugins/host/plugin_catalog.hpp"
 using namespace Qt::StringLiterals;
@@ -65,7 +65,7 @@ QString pendingRoot(const QString& pending_dir, const QString& id) {
 // empty result as "not comparable" and never as a match, or two unreadable trees
 // would be taken for the same tree.
 std::string contentDigestOf(const QString& directory) {
-  const auto files = inspectContentManifest(marketplace_internal::pathFromUtf8(directory.toUtf8().toStdString()));
+  const auto files = inspectContentManifest(std::filesystem::path(directory.toStdU16String()));
   if (!files) {
     return {};
   }
@@ -485,7 +485,7 @@ QString validateTransactionContents(const QString& transaction_root, const QStri
 
 DirectoryDiscovery discoverExtensionDirectory(const QString& ext_root) {
   DirectoryDiscovery result;
-  const auto scan = scanPluginDsos(marketplace_internal::pathFromUtf8(ext_root.toUtf8().toStdString()));
+  const auto scan = scanPluginDsos(pathFromUtf8(ext_root.toUtf8().toStdString()));
   if (!scan) {
     result.error = QString::fromStdString(scan.error());
     return result;
@@ -493,8 +493,8 @@ DirectoryDiscovery discoverExtensionDirectory(const QString& ext_root) {
 
   for (const auto& diag : scan->diagnostics) {
     qWarning(
-        "ExtensionManager: plugin discovery diagnostic for '%s': %s",
-        marketplace_internal::genericUtf8(diag.path).c_str(), diag.message.c_str());
+        "ExtensionManager: plugin discovery diagnostic for '%s': %s", genericUtf8(diag.path).c_str(),
+        diag.message.c_str());
   }
 
   if (scan->plugins.empty()) {
@@ -588,7 +588,8 @@ DirectoryDiscovery discoverExtensionDirectoryOutOfProcess(const QString& ext_roo
 
   for (const PluginCheckDiagnostic& diag : check.diagnostics) {
     qWarning(
-        "ExtensionManager: plugin discovery diagnostic for '%s': %s", qPrintable(diag.path), qPrintable(diag.message));
+        "ExtensionManager: plugin discovery diagnostic for '%s': %s", qUtf8Printable(diag.path),
+        qUtf8Printable(diag.message));
   }
 
   if (!check.ok) {
@@ -1901,12 +1902,13 @@ void ExtensionManager::replaceConflictingInstallDirs(const QString& id, const QS
                                .absoluteFilePath(id + "-replaced-" + QUuid::createUuid().toString(QUuid::Id128));
     if (QDir().rename(root, backup)) {
       qWarning(
-          "ExtensionManager: replaced prior install of '%s' at '%s' (backed up to '%s')", qPrintable(id),
-          qPrintable(root), qPrintable(backup));
+          "ExtensionManager: replaced prior install of '%s' at '%s' (backed up to '%s')", qUtf8Printable(id),
+          qUtf8Printable(root), qUtf8Printable(backup));
     } else if (QDir(root).removeRecursively()) {
-      qWarning("ExtensionManager: removed prior install of '%s' at '%s'", qPrintable(id), qPrintable(root));
+      qWarning("ExtensionManager: removed prior install of '%s' at '%s'", qUtf8Printable(id), qUtf8Printable(root));
     } else {
-      qWarning("ExtensionManager: could not remove prior install of '%s' at '%s'", qPrintable(id), qPrintable(root));
+      qWarning(
+          "ExtensionManager: could not remove prior install of '%s' at '%s'", qUtf8Printable(id), qUtf8Printable(root));
     }
     // Drop the record only if it tracks the displaced copy: after a promotion
     // installed_[id] already points at keep_dir, and erasing it here would
@@ -1956,7 +1958,8 @@ void ExtensionManager::applyPendingInstalls() {
 
     auto fail_staged_install = [&](const QString& signal_id, const QString& message) {
       qWarning(
-          "ExtensionManager: staged install '%s' failed validation: %s", qPrintable(staged_dir), qPrintable(message));
+          "ExtensionManager: staged install '%s' failed validation: %s", qUtf8Printable(staged_dir),
+          qUtf8Printable(message));
       QString final_message = message;
       if (!QDir(staged_dir).removeRecursively()) {
         // Removal can fail on Windows when the DSO is still locked by another
@@ -2020,7 +2023,7 @@ void ExtensionManager::applyPendingInstalls() {
                                     .absoluteFilePath(intent.id + "-" + QUuid::createUuid().toString(QUuid::Id128));
 
       if (!QDir().rename(dst, candidate)) {
-        qWarning("ExtensionManager: failed to back up '%s' before promoting staged install", qPrintable(dst));
+        qWarning("ExtensionManager: failed to back up '%s' before promoting staged install", qUtf8Printable(dst));
         emitInstallFailure(
             intent.id, QString(
                            QCoreApplication::translate(
@@ -2035,7 +2038,8 @@ void ExtensionManager::applyPendingInstalls() {
 
     if (!QDir().rename(staged_dir, dst)) {
       qWarning(
-          "ExtensionManager: failed to promote staged install '%s' to '%s'", qPrintable(staged_dir), qPrintable(dst));
+          "ExtensionManager: failed to promote staged install '%s' to '%s'", qUtf8Printable(staged_dir),
+          qUtf8Printable(dst));
       QString message =
           QString(
               QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not promote staged install to \"%1\""))
@@ -2614,7 +2618,8 @@ void ExtensionManager::refreshInstalledFromDisk() {
 
     const DirectoryDiscovery item = discoverExtensionDirectory(root);
     if (!item.found_plugin) {
-      qWarning("ExtensionManager: ignoring extension directory '%s': %s", qPrintable(root), qPrintable(item.error));
+      qWarning(
+          "ExtensionManager: ignoring extension directory '%s': %s", qUtf8Printable(root), qUtf8Printable(item.error));
       continue;
     }
     if (discovered.contains(item.record.id)) {
@@ -2626,12 +2631,12 @@ void ExtensionManager::refreshInstalledFromDisk() {
           0) {
         qWarning(
             "ExtensionManager: duplicate embedded id '%s' in '%s'; keeping higher version already found",
-            qPrintable(item.record.id), qPrintable(root));
+            qUtf8Printable(item.record.id), qUtf8Printable(root));
         continue;
       }
       qWarning(
           "ExtensionManager: duplicate embedded id '%s'; '%s' supersedes the lower-version copy",
-          qPrintable(item.record.id), qPrintable(root));
+          qUtf8Printable(item.record.id), qUtf8Printable(root));
     }
     discovered[item.record.id] = item.record;
   }

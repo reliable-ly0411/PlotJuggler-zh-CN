@@ -58,7 +58,7 @@ When adding files, use the owning module rather than creating new top-level fold
 - `pj_marketplace/`: extension registry, download, install/manage services and UI.
 - `pj_dialog_host/`: host for plugin-provided dialogs. App dialogs stay in `pj_app`; reusable dialog controls in `pj_widgets`.
 - `pj_scripting/`: Luau and embedded-Python engines behind a language-agnostic `ScriptEngine` seam. No scripting code in `pj_app` or widget modules unless strictly UI/editor code.
-- `resources/`: shared resources in `resources.qrc`; module-local test/demo assets stay with their module. `resources/wasm-presets/` is the exception that is not compiled in: the browser sample presets `scripts/package_wasm.mjs --presets` deploys (see [`docs/WASM_PRESETS.md`](./docs/WASM_PRESETS.md)).
+- `resources/`: shared resources in `resources.qrc` and the desktop-only splash memes in `memes.qrc`; module-local test/demo assets stay with their module. `resources/wasm-presets/` is the exception that is not compiled in: the browser sample presets `scripts/package_wasm.mjs --presets` deploys (see [`docs/WASM_PRESETS.md`](./docs/WASM_PRESETS.md)).
 - `3rdparty/`: vendored source deps plus `retro/` (compliance artifacts installed next to `pj-raster-helper`). Conan/system deps do not belong here.
 - `raster/`: `helper/` is the standalone GPL-2.0 `pj-raster-helper`; `ipc/` its header-only MPL-2.0 wire contract (also used by `pj_widgets`). PlotJuggler uses only the contract, never links the helper.
 - `scripts/`: setup/maintenance utilities, `pre-commit/` hooks, `windows/` (PowerShell behind the `.bat` shims). The everyday `build.sh`, `run.sh`, `test.sh` and their shims stay at the root.
@@ -144,7 +144,7 @@ C++20, CMake + Conan, Qt pinned by `PJ_QT_VERSION` in [`versions.env`](./version
 - **Confirm the recompile**: after a rebuild meant to pick up a C++ change, grep the build log for `Building .../<file>.cpp.o` (or check the `.o` mtime) before claiming the fix is live; RCC/QSS rebuilds can mask a stalled C++ recompile.
 - **Never chain `pkill … ; ./build.sh`**: the chained build exits 144 and skips recompiling. Kill the running app in its own command, then run `./build.sh` standalone.
 - **Portability:** Linux, Windows and macOS (arm64) are shipped targets. No Linux-only APIs or POSIX-specific paths in module code; gate platform code behind CMake / `#ifdef`. Pitfalls: [docs/BUILDING.md](./docs/BUILDING.md#portability).
-- **Third-party:** vendored deps live in `3rdparty/` (never take them from Conan or the system); everything else comes from Conan. Qwt is fetched (pinned release), not vendored, and **never patched**: PJ-specific Qwt behavior lives in `pj_plotting` / `pj_dialog_host` ([details](./docs/BUILDING.md#third-party-dependencies)).
+- **Third-party:** vendored deps live in `3rdparty/` (never take them from Conan or the system; only distribution builds opt out, with `PJ_SYSTEM_*`); everything else comes from Conan. Qwt is fetched (pinned release), not vendored, and **never patched**: PJ-specific Qwt behavior lives in `pj_plotting` / `pj_dialog_host` ([details](./docs/BUILDING.md#third-party-dependencies)).
 
 ## UI conventions
 
@@ -177,6 +177,7 @@ Scene3D (wired into `pj_app` via `Scene3DDockWidget`), the plots and the Scene2D
 - Architectural questions → consult the placement rules above and the owning module's `CLAUDE.md` / `docs/`.
 - New modules must respect the dependency rules above.
 - Keep host code (`pj_app`, `pj_runtime`, `conanfile.txt`) **domain-neutral**: no plugin-specific terms (dataset-domain names, "episode") or hardcoded per-plugin policy. Mechanisms/protocols stay generic; the plugin supplies the domain meaning. A genuinely general capability motivated by one plugin is fine (e.g. a standard codec); a plugin-specific reference or branch in the host is not.
+- "Do QA", "test with the QA agent", exploratory QA through the UI (a charter, or a UI bug to reproduce): load the `qa-session` skill and follow it. Its `qa-engineer` agents drive an isolated offscreen desktop app and the browser build (Playwright plus the MCP data tools through `pjqa.py start --browser`), with `scripts/qa/pjqa.py`; never on the user's display. A request without a narrower charter means the skill's "full QA pass": every charter, desktop and browser.
 - Delegating to Codex: run it **harness-tracked with a watchdog** (`codex exec` in a backgrounded, timeout-bounded `Bash`); the companion job model sends no completion notification and Codex can hang silently. Judge liveness by job-log mtime, not the "running" status; on timeout, cancel and take over the build/test yourself. When it finishes, check its findings against the code before acting on them (they are usually high quality).
 
 ### Execution autonomy
@@ -193,13 +194,13 @@ Don't just assert a change works ("I don't see any difference" is a recurring ro
 ### Commit policy
 
 - **Get my explicit go-ahead before each of these actions**, by surfacing the diff (or the exact command) and asking:
-  - `git commit`, and `git push` including any force-push;
+  - force-pushing a branch someone else owns;
   - creating, merging, closing or commenting on a PR or an issue;
   - tags and releases, Conan and plugin-registry uploads, production deploys (`app.plotjuggler.io`);
   - `./scripts/worktree-rm.sh` and deleting a branch.
 - **A go-ahead names the action and comes after I have seen the diff.** One given for an earlier task does not carry over to the next.
 - **Exception, documentation only:** a change that touches nothing but `docs/`, module `docs/` and `CLAUDE.md` files is committed and pushed straight to `main`, with no PR, once `pre-commit` passes on it.
-- **No go-ahead needed:** `git fetch`, new worktrees and branches, builds, `./test.sh`, read-only `git` and `gh` commands, re-running or dispatching CI for an existing branch, deleting build and scratch directories.
+- **No go-ahead needed:** `git commit`, and `git push` to your own branch (force-push included; `main` only for the documentation exception above), `git fetch`, new worktrees and branches, builds, `./test.sh`, read-only `git` and `gh` commands, re-running or dispatching CI for an existing branch, deleting build and scratch directories.
 
 ### Git gotchas (these cost time repeatedly)
 

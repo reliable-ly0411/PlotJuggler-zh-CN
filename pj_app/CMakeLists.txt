@@ -160,7 +160,10 @@ target_sources(pj_app_shell PRIVATE
     src/mcp/McpServer.h
     src/mcp/McpServerTools.cpp)
 if(NOT EMSCRIPTEN)
-    target_sources(pj_app_shell PRIVATE src/mcp/McpBridge.cpp)
+    # The UI tools are desktop only: only a command-line flag turns them on. Qt6::GuiPrivate:
+    # <qpa/qwindowsysteminterface.h>, their real input path.
+    target_sources(pj_app_shell PRIVATE src/mcp/McpBridge.cpp src/mcp/McpUiTools.cpp src/mcp/McpUiTools.h)
+    target_link_libraries(pj_app_shell PRIVATE Qt6::GuiPrivate)
 endif()
 target_link_libraries(pj_app_shell PUBLIC pj_agent_tools)
 
@@ -187,7 +190,7 @@ if(EMSCRIPTEN)
                 tests/wasm_scene3d_acceptance_probes.h)
             target_link_libraries(pj_app_shell PRIVATE pj_scene3d_widgets_testing)
         endif()
-        if(TARGET pj_wasm_mcap_source AND NOT TARGET pj_wasm_ros_parser)
+        if(PJ_WASM_WITH_MCAP AND NOT PJ_WASM_WITH_ROS)
             target_sources(pj_app_shell PRIVATE tests/wasm_mcap_probe_parser.cpp)
             target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_ENABLE_MCAP_PROBE_PARSER)
         endif()
@@ -236,65 +239,17 @@ target_link_libraries(pj_app_shell PUBLIC
     Qt6::Svg
 )
 
-if(TARGET pj_wasm_csv_source)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_csv_source)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_CSV_PLUGIN)
-endif()
-if(TARGET pj_wasm_mcap_source)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_mcap_source)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_MCAP_PLUGIN)
-endif()
-if(TARGET pj_wasm_ros_parser)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_ros_parser)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_ROS_PLUGIN)
-endif()
-if(TARGET pj_wasm_protobuf_parser)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_protobuf_parser)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_PROTOBUF_PLUGIN)
-endif()
-if(TARGET pj_wasm_transform_editor)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_transform_editor)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_TRANSFORM_EDITOR_PLUGIN)
-endif()
-if(TARGET pj_wasm_dummy_stream)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_dummy_stream)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_DUMMY_STREAM_PLUGIN)
-endif()
-if(TARGET pj_wasm_pj_bridge)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_pj_bridge)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_PJ_BRIDGE_PLUGIN)
-endif()
-if(TARGET pj_wasm_json_parser)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_json_parser)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_JSON_PLUGIN)
-endif()
-if(TARGET pj_wasm_data_tamer)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_data_tamer)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_DATA_TAMER_PLUGIN)
-endif()
-if(TARGET pj_wasm_3d_loader)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_3d_loader)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_3D_LOADER_PLUGIN)
-endif()
-if(TARGET pj_wasm_quaternion)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_quaternion)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_QUATERNION_PLUGIN)
-endif()
-if(TARGET pj_wasm_fft)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_fft)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_FFT_PLUGIN)
-endif()
-if(TARGET pj_wasm_anomaly_detector)
-    target_link_libraries(pj_app_shell PUBLIC pj_wasm_anomaly_detector)
-    target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_ANOMALY_DETECTOR_PLUGIN)
-endif()
-
 if(EMSCRIPTEN)
+    # The official plugins built into the module (cmake/PjWasmOfficialPlugins.cmake), registered
+    # by BuiltinPlugins.cpp through the generated include.
+    pj_wasm_register_official_plugins(pj_app_shell "${CMAKE_BINARY_DIR}/generated/pj_wasm_official_plugins.inc")
     qt_add_executable(pj_app
         src/main.cpp
-        ${CMAKE_SOURCE_DIR}/resources/resources.qrc)
+        src/BundledFont.cpp
+        ${CMAKE_SOURCE_DIR}/resources/resources.qrc
+        ${CMAKE_SOURCE_DIR}/resources/memes.qrc)
 else()
-    add_executable(pj_app src/main.cpp src/AppProfile.cpp src/AppProfile.h)
+    add_executable(pj_app src/main.cpp src/AppProfile.cpp src/AppProfile.h src/BundledFont.cpp)
 endif()
 set_target_properties(pj_app PROPERTIES
     # The CMake target id stays `pj_app` (internal module name), but the installed
@@ -345,6 +300,28 @@ if(TARGET pj-plugin-check)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:pj-plugin-check> $<TARGET_FILE_DIR:pj_app>
         COMMENT "Placing pj-plugin-check next to the application binary")
+    install(TARGETS pj-plugin-check RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+# Install layout (`cmake --install`): the app and its admission helper side by
+# side in bin/ (see above); on Linux also the desktop entry and icons. The app
+# seeds bundled plugins from <bindir>/../lib/plotjuggler/plugins (macOS:
+# <bindir>/../Resources/plugins; ExtensionCatalogService), which the install
+# leaves empty. Every other dependency is linked in or comes from the prefix, so
+# a plain configure/build/install (conda, distro packages) gives a working
+# install. The bundled plugins, the CPython runtime and Qt's own files stay with
+# the packaging that bundles them (packaging/appimage, deb, installer, macos).
+if(NOT EMSCRIPTEN)
+    install(TARGETS pj_app RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} BUNDLE DESTINATION .)
+    if(UNIX AND NOT APPLE)
+        install(FILES ${CMAKE_SOURCE_DIR}/packaging/appimage/plotjuggler4.desktop
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+        install(FILES ${CMAKE_SOURCE_DIR}/resources/svg/plotjuggler4.png
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps)
+        install(FILES ${CMAKE_SOURCE_DIR}/resources/svg/plotjuggler.svg
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
+            RENAME plotjuggler4.svg)
+    endif()
 endif()
 
 # App version: single source of truth is versions.env, stamped by the root
@@ -359,6 +336,10 @@ if(DEFINED PJ_WARNING_FLAGS)
     target_compile_options(pj_app_shell PRIVATE ${PJ_WARNING_FLAGS})
     # Resource compilation must not receive C++ compiler warning options.
     target_compile_options(pj_app PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${PJ_WARNING_FLAGS}>")
+endif()
+# MainWindow.cpp outgrows COFF's default section limit (C1128 in the pixi win-64 build).
+if(MSVC)
+    target_compile_options(pj_app_shell PRIVATE /bigobj)
 endif()
 
 # Don't re-export symbols pulled in from static archive members. Without
@@ -396,6 +377,12 @@ if(EMSCRIPTEN)
         # Three more pre-spawned workers: the Python helper, its watchdog and a script lane. A worker created while
         # the main thread waits on it never starts.
         set_target_properties(pj_app PROPERTIES QT_WASM_PTHREAD_POOL_SIZE 7)
+        # The stdlib, beside the module under the name the first Python use downloads (python_sandbox.cpp) and
+        # scripts/package_wasm.mjs packages: not in the startup download.
+        add_custom_command(TARGET pj_app POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PJ_WASM_PYTHON_STDLIB}"
+                "$<TARGET_FILE_DIR:pj_app>/python_stdlib.zip"
+            VERBATIM)
         target_compile_definitions(pj_app_shell PRIVATE PJ_WASM_WITH_PYTHON)
         if(PJ_WASM_ENABLE_INGRESS_PROBE)
             # The stdlib probe runs Python outside the sandbox; the symbols come through pj_scripting's link.
@@ -477,6 +464,7 @@ if(PJ_BUILD_TESTS)
         MAIN gui
         SOURCES
             tests/browser_file_store_test.cpp
+            tests/bundled_font_test.cpp
             tests/browser_persistence_test.cpp
             tests/file_selection_service_test.cpp
             tests/fanout_config_test.cpp
@@ -487,6 +475,7 @@ if(PJ_BUILD_TESTS)
             tests/raster_key_map_test.cpp
             src/BrowserFileStore.cpp
             src/BrowserFileStore.h
+            src/BundledFont.cpp
             src/LoadInput.h
             src/BrowserPersistence.cpp
             src/BrowserPersistence.h
@@ -504,6 +493,8 @@ if(PJ_BUILD_TESTS)
         LIBS Qt6::Widgets Qt6::Xml
     )
     set_target_properties(pj_app_unit_tests PROPERTIES AUTOMOC ON)
+    target_compile_definitions(pj_app_unit_tests PRIVATE
+        PJ_BUNDLED_FONT_DIR="${CMAKE_SOURCE_DIR}/resources/fonts/PlotJugglerSans")
     # The MCP server's HTTP and JSON-RPC gates (desktop only, like the server).
     if(NOT EMSCRIPTEN)
         target_sources(pj_app_unit_tests PRIVATE tests/mcp_protocol_test.cpp src/mcp/McpProtocol.cpp)
@@ -543,7 +534,7 @@ if(PJ_BUILD_TESTS)
     endif()
 
     # Guards the meme splash pool against its two silent failure modes: a meme
-    # present in resources/memes/ but absent from resources.qrc is invisible at
+    # present in resources/memes/ but absent from memes.qrc is invisible at
     # runtime (rcc has no globbing), and an oversized meme must be bounded on
     # both axes, not just width. Links pj_resources so the test inspects the
     # real shipped pool, and is handed the source directory to compare against.
@@ -644,6 +635,11 @@ if(PJ_BUILD_TESTS)
     # cap eviction and Clear, driven straight through a DiagnosticHistory.
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/diagnostics_dialog_test.cpp)
+
+    # Preferences' segmented selectors keep their sizeHint width on every page, so
+    # a long label on a page cannot squeeze one until its option labels overlap.
+    list(APPEND PJ_APP_GUI_TEST_SOURCES
+        tests/preferences_selector_size_test.cpp)
 
     # MR !261 depth guard: a source added while streaming is paused must write
     # into the secondary tail buffer, not the frozen primary. Exercises the
@@ -746,6 +742,11 @@ if(PJ_BUILD_TESTS)
     # seam, MainWindow flags and the toggle's persistence).
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/main_window_frame_test.cpp)
+
+    # Preferences' footer reset button resets only the chrome-metric scrubbers,
+    # which ship hidden outside --debug-mode, so the button follows them.
+    list(APPEND PJ_APP_GUI_TEST_SOURCES
+        tests/preferences_reset_button_test.cpp)
 
     # The first GPU widget does not recreate the main window's native window.
     # Desktop only, like the hidden QRhiWidget that ensures it.
@@ -1223,6 +1224,15 @@ if(PJ_BUILD_TESTS)
     # preset_controller_test serves canned responses with pj_runtime's loopback test server.
     target_include_directories(pj_app_gui_tests PRIVATE ${CMAKE_SOURCE_DIR}/pj_runtime/tests)
     target_include_directories(pj_app_gui_tests PRIVATE ${CMAKE_SOURCE_DIR}/pj_custom_widgets/tests)
+    # The MCP UI tools again at scale 2: the input they queue must land on the same widgets at
+    # native pixels as at logical ones.
+    if(NOT EMSCRIPTEN)
+        gtest_discover_tests(pj_app_gui_tests
+            TEST_PREFIX "pj_app_gui_tests.dpr2."
+            TEST_FILTER "McpServerTest.UiTools*"
+            DISCOVERY_MODE PRE_TEST
+            PROPERTIES TIMEOUT 120 RESOURCE_LOCK pj_app_gui_tests ENVIRONMENT_MODIFICATION "QT_SCALE_FACTOR=set:2")
+    endif()
 
     # QRhiWidgets in ADS docks across float/redock, split, sibling destruction,
     # floating-window close and DPR changes, plus the mixed-API negative case.

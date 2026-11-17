@@ -64,24 +64,38 @@ here) under `presets/`; see [Presets](#presets).
 
 The browser cannot `dlopen` extensions, so a fixed set of official plugins is
 compiled from a pinned `pj-official-plugins` commit (`cmake/PjWasmDependencies.cmake`)
-and registered statically by `pj_app/src/BuiltinPlugins.cpp`. Each has a
-`cmake/PjWasm<Name>.cmake` recipe and an option, all `ON` by default:
+and registered statically by `pj_app/src/BuiltinPlugins.cpp`. Each plugin describes
+its own WebAssembly build in a `wasm.cmake` next to its sources (the contract with this
+build is in that repository's `cmake/PjWasmPlugin.cmake`); `cmake/PjWasmOfficialPlugins.cmake`
+lists the plugins, creates one option per entry, all `ON` by default, and generates
+their registration (the Arrow family builds Apache Arrow C++ through `PjWasmArrowDependencies`):
 
 | Option | Plugin |
 |---|---|
 | `PJ_WASM_WITH_CSV` | `data_load_csv` |
 | `PJ_WASM_WITH_MCAP` | `data_load_mcap` |
+| `PJ_WASM_WITH_ULOG` | `data_load_ulog` (PX4 ULog) |
+| `PJ_WASM_WITH_PARQUET` | `data_load_parquet` (named non-UTC time zones stay unadjusted: the browser has no tz database) |
+| `PJ_WASM_WITH_CANDUMP` | `data_load_candump` (SocketCAN logs) |
+| `PJ_WASM_WITH_BLF` | `data_load_blf` (Vector BLF) |
+| `PJ_WASM_WITH_MF4` | `data_load_mf4` (ASAM MDF4) |
 | `PJ_WASM_WITH_3D_LOADER` | `data_load_3d` (PCD/PLY) |
 | `PJ_WASM_WITH_DUMMY_STREAM` | `data_stream_dummy` |
 | `PJ_WASM_WITH_PJ_BRIDGE` | `data_stream_pj_bridge` (over the browser's WebSocket) |
+| `PJ_WASM_WITH_FOXGLOVE_BRIDGE` | `data_stream_foxglove_bridge` (over the browser's WebSocket; a robot's `ws://` bridge needs TLS in front of it on an `https://` page) |
 | `PJ_WASM_WITH_ROS` | `parser_ros` |
 | `PJ_WASM_WITH_PROTOBUF` | `parser_protobuf` |
 | `PJ_WASM_WITH_JSON` | `parser_json` |
 | `PJ_WASM_WITH_DATA_TAMER` | `parser_data_tamer` |
+| `PJ_WASM_WITH_INFLUX` | `parser_influx` (InfluxDB line protocol) |
+| `PJ_WASM_WITH_NAVMAP` | `parser_navmap` |
+| `PJ_WASM_WITH_ARROW_PARSER` | `parser_arrow` (Arrow IPC) |
 | `PJ_WASM_WITH_TRANSFORM_EDITOR` | `toolbox_transform_editor` |
 | `PJ_WASM_WITH_QUATERNION` | `toolbox_quaternion` |
 | `PJ_WASM_WITH_FFT` | `toolbox_fft` |
+| `PJ_WASM_WITH_DATA_EXPORTER` | `toolbox_data_exporter` (the exported files download from the browser) |
 | `PJ_WASM_WITH_ANOMALY_DETECTOR` | `toolbox_anomaly_detector` (the host runs its rules) |
+| `PJ_WASM_WITH_LOG_WIDGET` | `widget_log` (the log viewer Custom Widget) |
 
 Visualization families are on by default too: `PJ_WASM_WITH_SCENE2D` (images,
 depth, annotations, and with `PJ_WASM_WITH_VIDEO` software H.264/HEVC/AV1 video
@@ -93,11 +107,10 @@ Bridge needs none of them: it connects with the browser's own WebSocket, so a pa
 served over HTTPS reaches only `wss://` bridges (mixed content), and the browser
 reports a failed connection without its cause. Its stream presets are described
 in [`WASM_PRESETS.md`](./WASM_PRESETS.md#streaming-sources). Adding another
-plugin needs a recipe, a link block in `pj_app/CMakeLists.txt` and a
-registration in `BuiltinPlugins.cpp`; its export macros must name an
-unqualified class (or use the `_NAMED` variants) so the static getter symbol is
-valid. Every new static archive also needs the symbol-collision audit described
-in the root `CLAUDE.md`.
+plugin is described in the "WebAssembly build" section of the
+[pj-official-plugins README](https://github.com/PlotJuggler/pj-official-plugins#webassembly-build):
+a `wasm.cmake` in its directory there, one line in `PJ_WASM_OFFICIAL_PLUGIN_DIRS`
+here, and a pin that contains it.
 
 The packaging command refuses missing, invalid, or single-threaded build
 outputs. To prevent a mistyped `--output` from deleting unrelated data, it
@@ -305,15 +318,29 @@ cmake ... -DPJ_WASM_WITH_PYTHON=ON -DPJ_WASM_PYTHON_CACHE_DIR="$HOME/.cache/pj-w
 
 What to know before changing it:
 
-- **Size budget.** It adds about 1.9 MB to the Brotli download (2026-10-21,
-  the acceptance configuration with and without it), about 12 % of the
-  production package's 16.13 MB. CI fails the production package above
+- **Size budget.** At startup it adds the interpreter linked into the module,
+  about 1.2 MB of Brotli download: 1.9 MB measured with and without Python
+  (2026-10-21), less the 0.68 MB the stdlib zip took before it moved out of the
+  module (2026-11-15, production package 15.87 MB -> 15.19 MB). The stdlib is
+  downloaded on demand, below. CI fails the production package above
   16,932,000 B, 5 % over that measurement, raised to 17,090,000 B for the MCP
-  server in the browser (+156 KB, 2026-11-11) (`scripts/wasm_size_budget.mjs`; the
+  server in the browser (+156 KB, 2026-11-11), and set to 20,000,000 B on
+  2026-11-14 to leave room for built-in plugins (`scripts/wasm_size_budget.mjs`; the
   sample `presets/` are fetched on demand and not counted): an absolute budget,
   since both configurations now carry Python and a delta would need a third
-  build. About 0.67 MB of it is the stdlib zip, stored uncompressed
-  so the package's Brotli compresses it with the module.
+  build. The stdlib zip (0.67 MB Brotli, stored uncompressed so the
+  package's Brotli compresses it) is not part of it: it is a separate asset,
+  `python_stdlib.zip` in the content-addressed bundle beside the module, which
+  the first Python use downloads (a synchronous request on the Python worker,
+  `python_sandbox.cpp`) to `/lib/python314.zip` before the interpreter boots.
+  The budget leaves it out. A failed download (the network, an HTTP error,
+  a body that is not a zip; a 404 means the app was redeployed since the page
+  loaded, so it says to reload) fails that use with the reason and is not
+  kept by the script: uses within 10 s of the failure get the same error
+  without a new request (a playback re-runs scripts every frame), the first
+  use after downloads again, the same recipe included; a 404 is answered
+  without a request for the rest of the session. A validate meanwhile reports
+  the script unchecked, not invalid (`tests/wasm/python.spec.js`).
 - **The stdlib zip** holds only the modules that importing the roots in
   `stdlib_zip.py` loads (68 of them). A module the stdlib imports
   lazily is missed unless a root names it, and even one in the zip cannot be
@@ -389,6 +416,25 @@ source-free generic layout recipes owned by `BrowserPersistence`. Source-bound
 layouts are downloaded with logical references and require explicit file
 reselection when replayed. Paths, upload identities, plugin configuration, and
 credentials are intentionally excluded from browser-local persistence.
+
+A source's plugin may also read files picked in its own dialog (a CAN
+dictionary, say). "Save Layout with Sources" saves each such *side file* like
+the data file: every string of the plugin configuration that is a staged
+file other than the data file is replaced by a logical name relative to the
+data file's directory, and listed as
+`<sideFile filename="…" content_sha256="…"/>` under the source's `<fileInfo>`.
+The name is the file's basename, or the first free `pj4-side/<n>/<basename>`
+when that is already the data file's name or a string of the configuration.
+One file staged twice (same name and fingerprint) is one side file. The data
+file's staging folder, if the configuration names it, is saved as an empty
+string. Any other staged path still refuses the save. On replay the page asks
+for every side file after the data files (same name rule as a data file; the
+fingerprint tells same-named files apart), and a layout opened by URL
+downloads each one resolved against its data file's URL, checked against its
+fingerprint like a data file. Every configuration string equal to a
+`filename` is then rewritten to the staged copy before the import. On the
+desktop the same rewrite points each `filename` at that name in the loaded
+data file's folder. `<sideFile>` is optional: older layouts load unchanged.
 
 A layout opened by URL (a preset) replays its `<fileInfo>` sources without a
 picker instead. Each `filename` resolves against the layout's URL — the browser

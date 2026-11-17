@@ -13,6 +13,7 @@
 #include <QGuiApplication>
 #include <QIcon>
 #include <QImage>
+#include <QMainWindow>
 #include <QPixmap>
 #include <QScreen>
 #include <QSettings>
@@ -24,8 +25,12 @@
 #include <QUrlQuery>
 #include <Qt>
 #ifndef PJ_TARGET_WASM
+#include <DockManager.h>
+#include <DockWidget.h>
+
 #include <backward.hpp>
 #else
+#include <emscripten.h>
 #include <emscripten/val.h>
 #endif
 #include <algorithm>
@@ -47,6 +52,7 @@
 #include "AppProfile.h"
 #endif
 #include "BrowserPersistence.h"
+#include "BundledFont.h"
 #include "DebugMode.h"
 #include "WindowsConsole.h"
 #ifndef PJ_TARGET_WASM
@@ -164,6 +170,38 @@ class T:
   return EXIT_SUCCESS;
 }
 
+// Checks the docking library the binary links (the 3rdparty fork, or a system one
+// under PJ_SYSTEM_ADS) keeps a hidden tab parented to its dock area (the fork's
+// "keep inactive tabs parented" patch). Upstream ADS unparents it, which makes a QRhiWidget tab rebuild its
+// GPU resources on every tab switch; nothing else would catch a system ADS
+// without the patch.
+int selftestDocking(int argc, char* argv[]) {
+  if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM")) {
+    qputenv("QT_QPA_PLATFORM", "offscreen");
+  }
+  QApplication app(argc, argv);
+  QMainWindow window;
+  auto* manager = new ads::CDockManager(&window);
+  auto* first = new ads::CDockWidget(manager, u"first"_s);
+  first->setWidget(new QWidget());
+  auto* second = new ads::CDockWidget(manager, u"second"_s);
+  second->setWidget(new QWidget());
+  auto* area = manager->addDockWidget(ads::CenterDockWidgetArea, first);
+  manager->addDockWidgetTabToArea(second, area);
+  window.show();
+  first->setAsCurrentTab();
+  QApplication::processEvents();
+  if (second->parentWidget() == nullptr || second->window() != &window) {
+    std::fprintf(
+        stderr,
+        "[selftest-docking] FAILED: the hidden dock tab lost its parent (ADS without the fork's tab-parenting "
+        "patch)\n");
+    return EXIT_FAILURE;
+  }
+  std::fprintf(stdout, "[selftest-docking] OK\n");
+  return EXIT_SUCCESS;
+}
+
 int validatePlugins(const QString& plugin_dir, const QStringList& expected_specs) {
   if (expected_specs.isEmpty()) {
     std::fprintf(stderr, "[plugin-validation] no --expect-plugin values were provided\n");
@@ -184,11 +222,7 @@ int validatePlugins(const QString& plugin_dir, const QStringList& expected_specs
         diagnostic.id.c_str(), diagnostic.id.empty() ? "" : ": ", diagnostic.message.c_str());
   });
 
-#if defined(_WIN32)
-  catalog.setPluginDir(std::filesystem::path(plugin_dir.toStdWString()));
-#else
-  catalog.setPluginDir(std::filesystem::path(plugin_dir.toStdString()));
-#endif
+  catalog.setPluginDir(std::filesystem::path(plugin_dir.toStdU16String()));
   catalog.scanDirectory();
 
   std::map<std::string, std::string> loaded;
@@ -291,6 +325,9 @@ int main(int argc, char* argv[]) {
 #endif
       return selftestPython();
     }
+    if (std::strcmp(argv[i], "--selftest-docking") == 0) {
+      return selftestDocking(argc, argv);
+    }
     if (std::strcmp(argv[i], "--mcp-bridge") == 0) {  // MCP over stdio for agents, needs no display
       return PJ::mcp::runBridge(argc, argv, QStringLiteral(PJ_VERSION_STRING));
     }
@@ -325,6 +362,21 @@ int main(int argc, char* argv[]) {
   // strtod / printf and expect a decimal point, so a decimal-comma LC_NUMERIC would stop every script from compiling.
   // What the user sees is formatted through QLocale, which this leaves alone.
   std::setlocale(LC_NUMERIC, "C");
+#ifdef PJ_TARGET_WASM
+  // Qt 6.12 (QTBUG-144692) prevents a pointerdown's default only when a widget accepts the press. On any other press
+  // (a rectangle zoom on a plot, for one) the browser moves focus to <body>, and keys stop reaching Qt until the focus
+  // object changes. Upstream 3a3021f80f prevents every pointerdown on the window instead; remove with Qt >= 6.13.
+  // clang-format off
+  EM_ASM({
+    document.addEventListener('pointerdown', event => {
+      const target = event.composedPath()[0];
+      if (target instanceof Element && target.classList.contains('qt-window')) {
+        event.preventDefault();
+      }
+    }, true);
+  });
+  // clang-format on
+#endif
 #if defined(Q_OS_MACOS)
   configureBundledPythonHome();
 #endif
@@ -372,14 +424,13 @@ int main(int argc, char* argv[]) {
   PJ::scripting::prestartPythonHelper();
 #endif
 
-  // Register the bundled Noto Sans and apply it as the application font, before
-  // any window is built so every widget — and every plugin dialog, which
-  // inherits the app font — uses it. The variable font spans the whole weight
-  // axis, so font-weight 400/600/700 resolve to real masters (not synthesized
-  // bold). The QSS never declares a font-family, so this family flows through
-  // untouched; only font-size is styled.
-  if (QFontDatabase::addApplicationFont(u":/resources/fonts/NotoSans/NotoSans-Variable.ttf"_s) < 0) {
-    qWarning("Failed to load bundled Noto Sans font");
+  // Register the bundled PlotJuggler Sans (its Bold is a 600, see resources/fonts/PlotJugglerSans/README.md) and
+  // apply it as the application font, before any window is built so every widget — and every plugin dialog, which
+  // inherits the app font — uses it. The QSS never declares a font-family; only font-size is styled.
+  if (const QString family = PJ::registerBundledFont(u":/resources/fonts/PlotJugglerSans"_s); !family.isEmpty()) {
+    QFont app_font = QApplication::font();
+    app_font.setFamily(family);
+    QApplication::setFont(app_font);
   }
   // Native release bundles carry a separately licensed CJK fallback, so Chinese
   // remains legible on systems without an installed Chinese font collection.
@@ -389,9 +440,6 @@ int main(int argc, char* argv[]) {
     qWarning("Failed to load bundled CJK fallback font");
   }
 #endif
-  QFont app_font = QApplication::font();
-  app_font.setFamily(u"Noto Sans"_s);
-  QApplication::setFont(app_font);
 
   // WidgetTuner: app-wide Polish-event filter that side-steps QSS
   // specificity battles by directly tagging menus and palette-painting
@@ -431,6 +479,8 @@ int main(int argc, char* argv[]) {
   // Registered only so --help lists it; handled at the top of main().
   parser.addOption(
       QCommandLineOption(u"selftest-python"_s, u"Compile and run a Python Data Processor headlessly, then exit."_s));
+  parser.addOption(QCommandLineOption(
+      u"selftest-docking"_s, u"Check that hidden dock tabs keep their parent (offscreen by default), then exit."_s));
 #endif
   const QCommandLineOption layout_option(
       QStringList{u"l"_s, u"layout"_s}, u"Load a layout on startup. Explicit data files replace its saved sources."_s,
@@ -510,6 +560,11 @@ int main(int argc, char* argv[]) {
       u"Let AI agents control this window for this run (MCP server on a free 127.0.0.1 port; see --mcp-bridge), "
       "whatever the Preferences setting."_s);
   parser.addOption(mcp_option);
+  const QCommandLineOption mcp_ui_tools_option(
+      u"mcp-ui-tools"_s,
+      u"With the MCP server on (implies --mcp): also give agents tools that read the widget tree and click and type "
+      "like the user, under the user's dialogs too. For automated QA runs, best in a virtual display."_s);
+  parser.addOption(mcp_ui_tools_option);
   const QCommandLineOption mcp_relay_option(
       u"mcp-relay"_s,
       u"Link this window to an AI agent through the relay at <url>, its secret in the url's key (pj_mcp_relay.py, "
@@ -584,10 +639,10 @@ int main(int argc, char* argv[]) {
   //   return ok ? EXIT_SUCCESS : EXIT_FAILURE;
   // }
 
-  // The funny splashscreen: a random meme that covers the (slow) MainWindow
-  // construction below. Skipped with --nosplash and when launching straight
-  // into a layout (--layout), where the user wants data, not a meme. Shown
-  // before the MainWindow ctor so it's already on screen while the ctor runs.
+  // The startup splash (a random meme, or the serious banner in serious mode
+  // and in the browser build) covers the (slow) MainWindow construction below. Skipped with --nosplash and when
+  // launching straight into a layout (--layout), where the user wants data, not a meme. Shown before the MainWindow
+  // ctor so it's already on screen while the ctor runs.
   std::unique_ptr<QSplashScreen> splash;
   if (!parser.isSet(nosplash_option) && !parser.isSet(layout_option)) {
     const QPixmap pixmap = PJ::makeStartupSplash();
@@ -682,7 +737,9 @@ int main(int argc, char* argv[]) {
   }
   // On by default for an attended run; tests and headless runs open it only with --mcp, so they
   // never show up as an instance an agent could pick.
-  if (parser.isSet(mcp_option) || (attended && QSettings().value(PJ::MainWindow::kMcpServerKey, true).toBool())) {
+  PJ::mcp::setUiToolsEnabled(parser.isSet(mcp_ui_tools_option));
+  if (parser.isSet(mcp_option) || parser.isSet(mcp_ui_tools_option) ||
+      (attended && QSettings().value(PJ::MainWindow::kMcpServerKey, true).toBool())) {
     window.openMcpPublicAccess();
   }
   if (parser.isSet(mcp_relay_option)) {

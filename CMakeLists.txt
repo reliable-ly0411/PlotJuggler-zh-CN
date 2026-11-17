@@ -19,6 +19,20 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# MainWindow.cpp exceeds MSVC's default object section limit (C1128), at least
+# when built with embedded (/Z7) debug info.
+add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/bigobj>)
+
+include(GNUInstallDirs)
+# `cmake --install` finds the prefix's shared libraries (conda, distro prefixes)
+# from the installed binaries; packagers that relocate set their own.
+if(NOT DEFINED CMAKE_INSTALL_RPATH)
+    if(APPLE)
+        set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+    else()
+        set(CMAKE_INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+    endif()
+endif()
 
 # Packaging channel stamped into the anonymous telemetry ping. A channel token
 # (like gcc_64/msvc2022_64), not a version — deliberately NOT in versions.env.
@@ -105,11 +119,17 @@ endif()
 # Compiler warnings
 # ---------------------------------------------------------------------------
 
+# Same option as the plotjuggler_sdk build (an in-tree SDK reads it too). Packagers
+# turn it off: a compiler newer than CI's may add warnings to an otherwise fine build.
+option(PJ_WARNINGS_AS_ERRORS "Treat compiler warnings as errors (-Werror / /WX)" ON)
 if(MSVC)
     # C4702 (unreachable code) is a code-generation warning that Qt's own
     # headers raise once inlined (qnumeric.h's overflow helpers after their
     # intrinsic early return), so it cannot be scoped to our sources.
-    set(PJ_WARNING_FLAGS /W4 /WX /permissive- /wd4702)
+    set(PJ_WARNING_FLAGS /W4 /permissive- /wd4702)
+    if(PJ_WARNINGS_AS_ERRORS)
+        list(APPEND PJ_WARNING_FLAGS /WX)
+    endif()
 else()
     set(PJ_WARNING_FLAGS
         -Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wold-style-cast
@@ -121,10 +141,17 @@ else()
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         list(APPEND PJ_WARNING_FLAGS -Wno-sign-conversion -Wno-unused-const-variable)
     endif()
+    # GCC 12-14 at -O3 (Release, #1561) report false stringop-overflow /
+    # array-bounds errors inside inlined std::vector range inserts (conda's
+    # GCC 14 on depth_pipeline_source.cpp). Keep them visible as warnings, as
+    # pj-official-plugins does; Clang has neither diagnostic.
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        list(APPEND PJ_WARNING_FLAGS -Wno-error=stringop-overflow -Wno-error=array-bounds)
+    endif()
     # wasm32 makes size_t 32-bit and surfaces the SDK's explicitly tracked
     # uint64_t ABI conversions. Keep the warnings visible, but do not turn the
     # cross-compile bring-up into an unrelated warning-cleanup project.
-    if(NOT EMSCRIPTEN)
+    if(PJ_WARNINGS_AS_ERRORS AND NOT EMSCRIPTEN)
         list(APPEND PJ_WARNING_FLAGS -Werror)
     endif()
 endif()
@@ -182,14 +209,14 @@ find_package(fmt REQUIRED)
 
 file(STRINGS conanfile.txt _pj_sdk_require REGEX "^plotjuggler_sdk/")
 string(REGEX REPLACE "^plotjuggler_sdk/([0-9][0-9A-Za-z.-]*).*" "\\1" PJ_SDK_VERSION "${_pj_sdk_require}")
-set(_pj_sdk_url https://codeload.github.com/reliable-ly0411/plotjuggler_sdk/tar.gz/a8766632ad50c8ff7183e42ccf78dbde4f90a57a)
+set(_pj_sdk_url https://codeload.github.com/PlotJuggler/plotjuggler_sdk/tar.gz/ffd749ab343c3211b5100f124f6c873667b82629)
 # Pin the source build to bytes, not to a tag name: a tag can be moved, and the
 # sanitizer lanes compile this tarball instead of the Conan package, so an
 # unpinned fetch would make an instrumented build unreproducible. Update this
 # hash in the same commit as any PJ_SDK_VERSION bump in conanfile.txt — a stale
 # hash aborts the download loudly, which is the intended failure mode.
 set(_pj_sdk_url_hash
-    SHA256=33e4f467417b21a79b5564edaa6d883ec953fd424c5ad8adaaff8b9088ac3b66)  # SDK dev.2 + Unicode path and null-sample fixes
+    SHA256=d1570047d98d5e582f51cacf354e0072a668c93711abe5e7246ffcb62c079610)  # official SDK 1.0.1, immutable commit archive
 include(FetchContent)
 # Timestamps on extracted archives. DOWNLOAD_EXTRACT_TIMESTAMP is a CMake 3.24
 # keyword and the sanctioned builder image ships 3.22, where an unrecognised
@@ -229,13 +256,23 @@ if(PJ_SDK_LOCAL_DIR)
   set(CMAKE_DISABLE_FIND_PACKAGE_Python3 "${_pj_saved_disable_py3}")
   set(plotjuggler_sdk_FOUND TRUE)
 elseif(NOT PJ_SDK_FORCE_SOURCE)
-  find_package(plotjuggler_sdk CONFIG QUIET)
+  # EXACT: another installed SDK (a system or conda one) is passed over for the
+  # pinned release below rather than linked. A pre-release pin is no CMake
+  # version, so only Conan, which installs exactly the pin, vouches for it.
+  if(PJ_SDK_VERSION MATCHES "^[0-9.]+$")
+    find_package(plotjuggler_sdk ${PJ_SDK_VERSION} EXACT CONFIG QUIET)
+  else()
+    find_package(plotjuggler_sdk CONFIG QUIET)
+  endif()
 endif()
 if(PJ_SDK_LOCAL_DIR)
   # Handled above; the blocks below serve the Conan and pinned-release paths.
 elseif(PJ_SDK_FORCE_SOURCE OR NOT plotjuggler_sdk_FOUND)
   if(PJ_SDK_FORCE_SOURCE)
     message(STATUS "PJ_SDK_FORCE_SOURCE=ON: building plotjuggler_sdk v${PJ_SDK_VERSION} sources from GitHub")
+  elseif(plotjuggler_sdk_CONSIDERED_VERSIONS)
+    message(STATUS "plotjuggler_sdk: rejected ${plotjuggler_sdk_CONSIDERED_VERSIONS} at "
+      "${plotjuggler_sdk_CONSIDERED_CONFIGS}, need exactly ${PJ_SDK_VERSION}: building v${PJ_SDK_VERSION} sources from GitHub")
   else()
     message(STATUS "plotjuggler_sdk Conan package not found: building v${PJ_SDK_VERSION} sources from GitHub")
   endif()
@@ -273,20 +310,7 @@ if(NOT TARGET pj_internal_fmt)
     endif()
 endif()
 if(EMSCRIPTEN)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmPluginCommon.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmCsv.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmMcap.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmRos.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmProtobuf.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmTransformEditor.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmDummyStream.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmPjBridge.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmJson.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmDataTamer.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasm3dLoader.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmQuaternion.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmFft.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmAnomalyDetector.cmake)
+    pj_wasm_include_official_plugins()
 endif()
 if(NOT EMSCRIPTEN)
     add_subdirectory(resources)
@@ -326,35 +350,57 @@ endif()
 # ---------------------------------------------------------------------------
 
 add_subdirectory(3rdparty/qwt)
-add_subdirectory(3rdparty/nanocdr)
+# PJ_SYSTEM_NANOCDR / PJ_SYSTEM_ADS: use an installed nanocdr / Qt-Advanced-Docking
+# (e.g. conda-forge's) instead of the vendored copies, as PJ_SYSTEM_QWT does for Qwt.
+option(PJ_SYSTEM_NANOCDR "Use an installed nanocdr (find_package) instead of 3rdparty/nanocdr" OFF)
+# PJ_SYSTEM_ADS needs a Qt-Advanced-Docking 5.x >= 5.1.1 (its package config
+# rejects 6.x) patched with the fork's "keep inactive tabs parented" commit
+# (conda-forge's 5.1.1 from build 3 on). Upstream unparents a hidden tab, so a
+# QRhiWidget tab rebuilds its GPU resources on every switch; upstream #866 only
+# spares widgets with a native window. `plotjuggler4 --selftest-docking` checks
+# it. The default stays the fork, which also carries the WebAssembly guards.
+option(PJ_SYSTEM_ADS "Use an installed Qt-Advanced-Docking >= 5.1.1 carrying the fork's 'keep inactive tabs parented' patch, instead of the 3rdparty/Qt-Advanced-Docking fork" OFF)
+if(PJ_SYSTEM_NANOCDR)
+  find_package(nanocdr CONFIG REQUIRED)
+  add_library(nanocdr ALIAS nanocdr::nanocdr)
+  set(_pj_nanocdr_target nanocdr::nanocdr)
+else()
+  add_subdirectory(3rdparty/nanocdr)
+  set(_pj_nanocdr_target nanocdr)
+endif()
 # nanocdr's constexpr getCurrentEndianness() reads an inactive union member. GCC
 # accepts it; Clang, which the sanitizer lanes use, reports -Winvalid-constexpr as
 # an error by default. The function is never evaluated in a constant context, so
 # its Clang consumers silence the diagnostic instead of patching 3rdparty/.
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  target_compile_options(nanocdr INTERFACE -Wno-invalid-constexpr)
+  target_compile_options(${_pj_nanocdr_target} INTERFACE -Wno-invalid-constexpr)
 endif()
+unset(_pj_nanocdr_target)
 
-# Qt-Advanced-Docking submodule (PlotJuggler/Qt-Advanced-Docking-System fork
-# tracking upstream master + the Wayland fix + WASM Unix guards on
-# feature/wasm-unix-guards). Pin the
-# version to skip the upstream root CMake's git_describe call (which fails in
-# a submodule checkout), build static, and skip examples/demos.
-set(ADS_VERSION "4.5.0" CACHE STRING "" FORCE)
-set(BUILD_STATIC ON CACHE BOOL "" FORCE)
-set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-add_subdirectory(3rdparty/Qt-Advanced-Docking)
-add_library(qt_advanced_docking ALIAS qtadvanceddocking-qt6)
-# Qt 6.12 deprecates Q_ENUMS, which the fork's ads_globals.h still uses; as a
-# system include its warnings stay out of our -Werror targets.
-get_target_property(_pj_ads_includes qtadvanceddocking-qt6 INTERFACE_INCLUDE_DIRECTORIES)
-set_target_properties(qtadvanceddocking-qt6 PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_pj_ads_includes}")
-unset(_pj_ads_includes)
-# Target options follow the directory-inherited sanitizer flags on the command
-# line, so -fno-sanitize=all wins for this library only. See PJ_SANITIZE_QT_ADS.
-if(PJ_SANITIZERS_ACTIVE AND NOT PJ_SANITIZE_QT_ADS AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  target_compile_options(qtadvanceddocking-qt6 PRIVATE -fno-sanitize=all)
-  message(STATUS "Sanitizers: Qt-Advanced-Docking excluded (PJ_SANITIZE_QT_ADS=OFF)")
+if(PJ_SYSTEM_ADS)
+  find_package(qtadvanceddocking-qt6 5.1.1 CONFIG REQUIRED)
+  add_library(qt_advanced_docking ALIAS ads::qtadvanceddocking-qt6)
+else()
+  # Qt-Advanced-Docking submodule (PlotJuggler/Qt-Advanced-Docking-System fork,
+  # branch pj/5.1.1: upstream v5.1.1 + the WASM Unix guards + inactive tabs kept
+  # parented to their dock area). Build static and skip examples/demos.
+  set(BUILD_STATIC ON CACHE BOOL "" FORCE)
+  set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  # EXCLUDE_FROM_ALL: linked statically into the app, so its own install rules
+  # (headers, static library, CMake package) stay out of `cmake --install`.
+  add_subdirectory(3rdparty/Qt-Advanced-Docking EXCLUDE_FROM_ALL)
+  add_library(qt_advanced_docking ALIAS qtadvanceddocking-qt6)
+  # Qt 6.12 deprecates Q_ENUMS, which ADS's ads_globals.h still uses; as a
+  # system include its warnings stay out of our -Werror targets.
+  get_target_property(_pj_ads_includes qtadvanceddocking-qt6 INTERFACE_INCLUDE_DIRECTORIES)
+  set_target_properties(qtadvanceddocking-qt6 PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_pj_ads_includes}")
+  unset(_pj_ads_includes)
+  # Target options follow the directory-inherited sanitizer flags on the command
+  # line, so -fno-sanitize=all wins for this library only. See PJ_SANITIZE_QT_ADS.
+  if(PJ_SANITIZERS_ACTIVE AND NOT PJ_SANITIZE_QT_ADS AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(qtadvanceddocking-qt6 PRIVATE -fno-sanitize=all)
+    message(STATUS "Sanitizers: Qt-Advanced-Docking excluded (PJ_SANITIZE_QT_ADS=OFF)")
+  endif()
 endif()
 
 # ---------------------------------------------------------------------------
@@ -424,7 +470,8 @@ if(PJ_BUILD_RASTER_HELPER)
 endif()
 
 if(TARGET pj-raster-helper)
-    install(TARGETS pj-raster-helper RUNTIME DESTINATION 3rdparty/retro)
+    # Where MainWindow looks for it: applicationDirPath()/3rdparty/retro.
+    install(TARGETS pj-raster-helper RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/3rdparty/retro)
     # GPLv2 / shareware compliance: the helper binary must ship with its license
     # text, the written offer for its corresponding source, and the WAD's
     # shareware terms. These travel next to the binary in the installed bundle.
@@ -433,5 +480,5 @@ if(TARGET pj-raster-helper)
         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/retro/SOURCE-OFFER.txt"
         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/retro/SHAREWARE-LICENSE.txt"
         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/retro/README.md"
-        DESTINATION 3rdparty/retro)
+        DESTINATION ${CMAKE_INSTALL_BINDIR}/3rdparty/retro)
 endif()

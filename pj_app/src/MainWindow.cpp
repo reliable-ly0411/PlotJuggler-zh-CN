@@ -26,6 +26,7 @@
 #include <QProcess>
 #endif
 #include <QDomDocument>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
 #include <QFontMetrics>
@@ -75,6 +76,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <map>
 #include <memory>
@@ -590,6 +592,15 @@ struct MainWindow::BrowserLayoutRuntime {
     DisplaySeconds current_time;
   };
 
+  // One file a replay stages: a source's data file, or a side file its plugin reads (layout_xml::SideFileRef).
+  struct ReplayFile {
+    int source_index = 0;
+    bool side = false;
+    QString logical_path;  // the <fileInfo> or <sideFile> filename
+    QString content_sha256;
+    bool content_sha256_malformed = false;
+  };
+
   struct Replay {
     QDomDocument doc;
     QString layout_name;
@@ -604,7 +615,7 @@ struct MainWindow::BrowserLayoutRuntime {
     // Token of the one selection (picker, or download + staging) this replay
     // waits for; 0 when none. See beginBrowserReplayPickerGeneration.
     quint64 active_picker_generation = 0;
-    // A downloaded layout's sources, in `sources` order; empty for an upload,
+    // A downloaded layout's file URLs, in `files` order; empty for an upload,
     // whose sources are reselected. Their bytes count against one preset cap.
     QList<QUrl> source_urls;
     qint64 staged_bytes = 0;
@@ -620,6 +631,11 @@ struct MainWindow::BrowserLayoutRuntime {
     std::vector<DatasetId> stream_datasets;
     // Captured just before the first stream starts; empty while none has.
     std::optional<Transport> transport_before_streams;
+    // Every file this replay stages, in staging order: each source's data file (files[i] is sources[i]'s), then
+    // every side file. selection_index walks it; a downloaded layout's source_urls follow it.
+    QList<ReplayFile> files = {};
+    // The staged side-file copies, in the order their files appear.
+    std::vector<LoadInput> staged_side_files = {};
   };
 
   // What one preset load brought: its files' source identities (their save-ledger entries) and
@@ -1024,9 +1040,10 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
         // Drop path: build, then populate the first topic and apply view
         // side-effects. Failures here surface as transient toasts (non-blocking,
         // WASM-safe): the empty-kind branch is defensive-only (the curve list
-        // refuses drags of undisplayable types, the dock leaves out panel-only
-        // ones), but the per-dock refusals below
-        // are reachable — the drag veto is type-level and cannot see runtime
+        // refuses drags of undisplayable types; the dock leaves panel-only and
+        // Custom-Widget-only ones out of a drop before it calls this factory,
+        // see CustomWidgetSupport), but the per-dock refusals below are
+        // reachable — the drag veto is type-level and cannot see runtime
         // parser availability.
         IDataWidget* widget = makeSceneDock(resolved_kind, dock_parent);
         if (widget == nullptr) {
@@ -1710,8 +1727,10 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
     ui_->leftPanel->populateCloudToolboxes(session_->extensionCatalog().toolboxes());
     plugin_plot_tabs_->refreshAvailability();
     syncCustomTopicsEditor();
+    refreshCustomWidgetsAvailability();
   });
   syncCustomTopicsEditor();
+  refreshCustomWidgetsAvailability();
 
   file_loader_ = std::make_unique<FileLoader>(
       session_->sessionManager(), session_->extensionCatalog(), session_->catalogModel(), this);
@@ -2024,10 +2043,14 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
   redo_action_ = new QAction(tr("Redo"), this);
   // The platform's standard redo set (Ctrl+Y and/or Ctrl+Shift+Z depending on
   // desktop-theme detection) plus both explicitly, so redo works the same
-  // everywhere regardless of how Qt resolves QKeySequence::Redo.
+  // everywhere regardless of how Qt resolves QKeySequence::Redo. Each key once:
+  // Qt calls a key bound twice to one action ambiguous and fires nothing.
   QList<QKeySequence> redo_shortcuts = QKeySequence::keyBindings(QKeySequence::Redo);
-  redo_shortcuts.append(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Z));
-  redo_shortcuts.append(QKeySequence(Qt::CTRL | Qt::Key_Y));
+  for (const QKeySequence& key : {QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Z), QKeySequence(Qt::CTRL | Qt::Key_Y)}) {
+    if (!redo_shortcuts.contains(key)) {
+      redo_shortcuts.append(key);
+    }
+  }
   redo_action_->setShortcuts(redo_shortcuts);
   connect(redo_action_, &QAction::triggered, this, &MainWindow::onRedo);
   addAction(redo_action_);
@@ -2247,6 +2270,9 @@ IDataWidget* MainWindow::makeSceneDock(const QString& kind, QWidget* parent) {
         &session_->sessionManager(), &session_->catalogModel(), &session_->extensionCatalog(),
         &session_->playbackEngine(), parent);
     widget->setDiagnosticSink(diagnosticSink());
+    widget->setPlaybackTimeMappers(
+        std::bind_front(&MainWindow::displayTimeForTopic, this),
+        std::bind_front(&MainWindow::displayTimeForSource, this));
     if (custom_widgets_ != nullptr) {
       custom_widgets_->attachDock(*widget);
     }
@@ -2724,10 +2750,36 @@ std::optional<QDomDocument> MainWindow::browserSourceLayoutDocument(QString& err
         plugin.setAttribute(u"manifest_id"_s, record.plugin_manifest_id);
       }
       plugin.setAttribute(u"filepath_mode"_s, u"source"_s);
+      // Files the plugin reads besides the data file (one picked in its dialog) are saved like the data file: a
+      // logical name and a fingerprint, reselected on replay.
+      QString side_error;
+      const std::optional<layout_xml::LogicalSideFiles> side_files = layout_xml::logicalBrowserSideFiles(
+          record.plugin_config_json.toStdString(), file_loader_->browserPathForIdentity(source.identity), logical_path,
+          [this](const QString& path) -> std::optional<layout_xml::StagedFileInfo> {
+            const QString identity = file_loader_->browserIdentityForPath(path);
+            if (identity.isEmpty()) {
+              return std::nullopt;
+            }
+            return layout_xml::StagedFileInfo{
+                .name = BrowserFileStore::sanitizedBasename(BrowserFileStore::displayNameForIdentity(identity)),
+                .content_sha256 = file_loader_->browserContentSha256(identity),
+            };
+          },
+          &side_error);
+      if (!side_files.has_value()) {
+        error = side_error;
+        return std::nullopt;
+      }
+      for (const layout_xml::SideFileRef& side_file : side_files->side_files) {
+        QDomElement side = doc.createElement(u"sideFile"_s);
+        side.setAttribute(u"filename"_s, side_file.filename);
+        side.setAttribute(u"content_sha256"_s, side_file.content_sha256);
+        file_info.appendChild(side);
+      }
       // A config that is not a JSON object cannot be rebound; fall back to the
       // minimal `{"filepath": logical}` rather than persist it unrewritten.
-      std::optional<std::string> logical_config = detail::rewriteReplayFilepaths(
-          record.plugin_config_json.toStdString(), logical_path, detail::SavedFilepath::kOmit);
+      std::optional<std::string> logical_config =
+          detail::rewriteReplayFilepaths(side_files->config, logical_path, detail::SavedFilepath::kOmit);
       if (!logical_config.has_value()) {
         logical_config = detail::rewriteReplayFilepaths({}, logical_path, detail::SavedFilepath::kOmit);
       }
@@ -2829,6 +2881,10 @@ void MainWindow::wasmProbeReportFilterResult() const {
     }
   }
   qInfo("PJ_WASM_FILTER_RESULT visible_plots=%d visible_curves=%d", visible_plots, visible_curves);
+}
+
+void MainWindow::wasmProbeLaunchToolbox(const QString& plugin_id) {
+  launchToolbox(plugin_id);
 }
 
 void MainWindow::wasmProbeReportToolboxTransformResult() const {
@@ -3862,7 +3918,8 @@ void MainWindow::checkForUpdates(bool interactive) {
 
   update_available_conn_ =
       connect(update_checker_, &UpdateChecker::updateAvailable, this, [this](const ReleaseInfo& release) {
-        QString message = tr("New release available: <b>%1</b>").arg(release.name.toHtmlEscaped());
+        QString message =
+            tr("New release available: <span style='font-weight:600;'>%1</span>").arg(release.name.toHtmlEscaped());
         switch (release.route) {
           case UpdateRoute::AptUpgrade:
             message += u"<br>"_s + tr("Update with <code>sudo apt update &amp;&amp; sudo apt upgrade</code>");
@@ -4885,6 +4942,14 @@ void MainWindow::forEachCustomWidgetDock(const std::function<void(CustomWidgetDo
   });
 }
 
+void MainWindow::refreshCustomWidgetsAvailability() {
+  const auto& widgets = session_->extensionCatalog().widgets();
+  ui_->tabbedPlotWidget->setCustomWidgetSupport({
+      .available = std::ranges::any_of(widgets, [](const LoadedWidget& library) { return !library.widgets.empty(); }),
+      .shows_only = &isCustomWidgetObjectType,
+  });
+}
+
 void MainWindow::forEachDock(const std::function<void(DockWidget*)>& operation) {
   ui_->tabbedPlotWidget->forEachDocker([&operation](PlotDocker* docker) {
     for (int index = 0; index < docker->plotCount(); ++index) {
@@ -4995,6 +5060,14 @@ void MainWindow::syncWidgetsToCatalog() {
 std::optional<double> MainWindow::displayTimeForSource(PJ_data_source_handle_t source, int64_t absolute_ns) const {
   const auto seconds = session_->sessionManager().displayTimeForSource(source.id, absolute_ns);
   return seconds.has_value() ? std::optional<double>(toAxisDouble(*seconds)) : std::nullopt;
+}
+
+std::optional<double> MainWindow::displayTimeForTopic(std::string_view topic, int64_t absolute_ns) const {
+  const DatasetId dataset_id = topic.empty()
+                                   ? representativeDatasetId()
+                                   : session_->catalogModel().datasetForTopic(
+                                         QString::fromUtf8(topic.data(), static_cast<qsizetype>(topic.size())));
+  return displayTimeForSource({static_cast<uint32_t>(dataset_id)}, absolute_ns);
 }
 
 void MainWindow::linkedZoomOut() {
@@ -5897,6 +5970,27 @@ void MainWindow::beginBrowserSourceReplay(
       });
 
   BrowserLayoutRuntime::Replay& replay = *browser_layout_runtime_->replay;
+  for (int index = 0; index < replay.sources.size(); ++index) {
+    const layout_xml::DataSourceRef& source = replay.sources[index];
+    replay.files.push_back({
+        .source_index = index,
+        .side = false,
+        .logical_path = source.serialized_path,
+        .content_sha256 = source.content_sha256,
+        .content_sha256_malformed = source.content_sha256_malformed,
+    });
+  }
+  for (int index = 0; index < replay.sources.size(); ++index) {
+    for (const layout_xml::SideFileRef& side_file : replay.sources[index].side_files) {
+      replay.files.push_back({
+          .source_index = index,
+          .side = true,
+          .logical_path = side_file.filename,
+          .content_sha256 = side_file.content_sha256,
+          .content_sha256_malformed = side_file.content_sha256_malformed,
+      });
+    }
+  }
   if (replay.sources.isEmpty()) {
     if (replay.streams.empty()) {
       finishBrowserLayoutLoad(browser_name, false, u"source-list"_s);
@@ -5907,7 +6001,6 @@ void MainWindow::beginBrowserSourceReplay(
     return;
   }
   QSet<QString> logical_paths;
-  QHash<QString, int> basename_counts;
   for (const layout_xml::DataSourceRef& source : replay.sources) {
     if (source.serialized_path.isEmpty() || logical_paths.contains(source.serialized_path)) {
       showBrowserLayoutWarning(
@@ -5916,21 +6009,19 @@ void MainWindow::beginBrowserSourceReplay(
       return;
     }
     logical_paths.insert(source.serialized_path);
-    const QString basename = BrowserFileStore::sanitizedBasename(source.serialized_path);
-    basename_counts.insert(basename, basename_counts.value(basename) + 1);
   }
   if (layout_url.isValid()) {
-    // Downloaded: every source is named by its URL, so equal basenames are not
-    // ambiguous. Refuse what cannot be fetched or checked before any request.
-    for (const layout_xml::DataSourceRef& source : replay.sources) {
+    // Downloaded: every file is named by its URL, so equal basenames are not ambiguous. A data file resolves
+    // against the layout, a side file against its data file. Refuse what cannot be fetched or checked before any
+    // request.
+    for (const BrowserLayoutRuntime::ReplayFile& file : replay.files) {
       QString error;
-      const QUrl url = layout_xml::resolveFileSourceUrl(source.serialized_path, layout_url, &error);
-      if (url.isEmpty() || source.content_sha256_malformed) {
+      const QUrl base = file.side ? replay.source_urls[file.source_index] : layout_url;
+      const QUrl url = layout_xml::resolveFileSourceUrl(file.logical_path, base, &error);
+      if (url.isEmpty() || file.content_sha256_malformed) {
         showBrowserLayoutWarning(
             this, tr("Load Layout"),
-            url.isEmpty()
-                ? error
-                : tr("Data source '%1' records a malformed content fingerprint.").arg(source.serialized_path));
+            url.isEmpty() ? error : tr("'%1' records a malformed content fingerprint.").arg(file.logical_path));
         finishBrowserLayoutLoad(browser_name, false, url.isEmpty() ? u"source-url"_s : u"fingerprint"_s);
         return;
       }
@@ -5939,13 +6030,14 @@ void MainWindow::beginBrowserSourceReplay(
     downloadNextReplaySource();
     return;
   }
-  for (const layout_xml::DataSourceRef& source : replay.sources) {
-    const QString basename = BrowserFileStore::sanitizedBasename(source.serialized_path);
-    if (basename_counts.value(basename) > 1 && source.content_sha256.isEmpty()) {
+  // Reselected: the name says which file to pick, and a fingerprint must tell same-named files apart.
+  for (const BrowserLayoutRuntime::ReplayFile& file : replay.files) {
+    const QString basename = BrowserFileStore::sanitizedBasename(file.logical_path);
+    if (isAmbiguousReplayName(basename) && file.content_sha256.isEmpty()) {
       showBrowserLayoutWarning(
           this, tr("Load source-bound layout"),
-          tr("This older layout contains more than one source named '%1', but no content fingerprints to tell "
-             "them apart safely. Open the sources separately and use a newer source-bound layout.")
+          tr("This layout contains more than one file named '%1', but no valid content fingerprints to tell them "
+             "apart safely. Open the sources separately and use a newer source-bound layout.")
               .arg(basename));
       finishBrowserLayoutLoad(browser_name, false, u"ambiguous-source-name"_s);
       return;
@@ -5961,15 +6053,30 @@ void MainWindow::beginBrowserSourceReplay(
       replay.sources.front().plugin_id.isEmpty()
           ? replay.sources.front().serialized_path
           : tr("%1 (plugin: %2)").arg(replay.sources.front().serialized_path, replay.sources.front().plugin_id);
-  dialog->setText(
-      replay.sources.size() == 1
-          ? tr("This layout was saved with data source '%1'. Reselect that file to reload it, or apply the layout "
-               "to compatible data already open in this page.")
-                .arg(first_name)
-          : tr("This layout was saved with %1 data sources. Select source 1 of %1: '%2' for saved slot '%3'. "
-               "Every file will be staged before any import begins.")
-                .arg(replay.sources.size())
-                .arg(first_name, first_context));
+  const int side_count = static_cast<int>(replay.files.size() - replay.sources.size());
+  QString decision_text;
+  if (replay.sources.size() == 1) {
+    decision_text =
+        side_count == 0
+            ? tr("This layout was saved with data source '%1'. Reselect that file to reload it, or apply the layout "
+                 "to compatible data already open in this page.")
+                  .arg(first_name)
+            : tr("This layout was saved with data source '%1', whose plugin also reads %2 more file(s) you select "
+                 "next. Reselect that file to reload it, or apply the layout to compatible data already open in "
+                 "this page.")
+                  .arg(first_name, QString::number(side_count));
+  } else {
+    decision_text =
+        side_count == 0
+            ? tr("This layout was saved with %1 data sources. Select source 1 of %1: '%2' for saved slot '%3'. "
+                 "Every file will be staged before any import begins.")
+                  .arg(QString::number(replay.sources.size()), first_name, first_context)
+            : tr("This layout was saved with %1 data sources, whose plugins also read %4 more file(s) you select "
+                 "after them. Select source 1 of %1: '%2' for saved slot '%3'. Every file will be staged before any "
+                 "import begins.")
+                  .arg(QString::number(replay.sources.size()), first_name, first_context, QString::number(side_count));
+  }
+  dialog->setText(decision_text);
   QPushButton* reselect_button = dialog->addButton(
       replay.sources.size() == 1 ? tr("Reselect source") : tr("Select source 1 of %1").arg(replay.sources.size()),
       MessageBox::kPrimaryRole, /*close_on_click=*/false);
@@ -6129,14 +6236,25 @@ void MainWindow::selectBrowserReplaySource() {
   if (generation == 0) {
     return;
   }
+  // A side file is picked with a filter for its own extension: the data-file filter would hide it.
+  QString filter;
+  const BrowserLayoutRuntime::Replay& replay = *browser_layout_runtime_->replay;
+  if (replay.selection_index < replay.files.size() && replay.files[replay.selection_index].side) {
+    const QString name = BrowserFileStore::sanitizedBasename(replay.files[replay.selection_index].logical_path);
+    const QString suffix = QFileInfo(name).suffix();
+    filter = suffix.isEmpty() ? tr("All files (*)") : u"%1 (*.%2)"_s.arg(name, suffix);
+  }
   QPointer<MainWindow> self(this);
-  file_loader_->selectBrowserInput(this, [self, generation](FileLoader::BrowserSelectionResult selection) mutable {
-    if (self.isNull()) {
-      return;
-    }
-    self->loadBrowserReplaySource(
-        generation, std::move(selection.browser_name), std::move(selection.input), std::move(selection.error));
-  });
+  file_loader_->selectBrowserInput(
+      this,
+      [self, generation](FileLoader::BrowserSelectionResult selection) mutable {
+        if (self.isNull()) {
+          return;
+        }
+        self->loadBrowserReplaySource(
+            generation, std::move(selection.browser_name), std::move(selection.input), std::move(selection.error));
+      },
+      FileSelectionService::Fingerprint::kBeforeSelection, filter);
 #endif
 }
 
@@ -6157,7 +6275,7 @@ void MainWindow::loadBrowserReplaySource(
   // token is stale even if it arrives synchronously before the next click.
   replay.active_picker_generation = 0;
   const QString layout_name = replay.layout_name;
-  if (replay.selection_index < 0 || replay.selection_index >= replay.sources.size()) {
+  if (replay.selection_index < 0 || replay.selection_index >= replay.files.size()) {
     finishBrowserLayoutLoad(layout_name, false, u"selection-index"_s);
     return;
   }
@@ -6171,8 +6289,8 @@ void MainWindow::loadBrowserReplaySource(
     return;
   }
 
-  const layout_xml::DataSourceRef& source = replay.sources[replay.selection_index];
-  const QString expected_name = BrowserFileStore::sanitizedBasename(source.serialized_path);
+  const BrowserLayoutRuntime::ReplayFile& file = replay.files[replay.selection_index];
+  const QString expected_name = BrowserFileStore::sanitizedBasename(file.logical_path);
   const QString selected_name = BrowserFileStore::sanitizedBasename(browser_name);
   if (selected_name != expected_name) {
     showBrowserLayoutWarning(
@@ -6181,48 +6299,25 @@ void MainWindow::loadBrowserReplaySource(
     qInfo("PJ_WASM_SOURCE_LAYOUT_SELECTION_REJECTED index=%d reason=name", replay.selection_index);
     return;
   }
-  const bool basename_is_ambiguous =
-      std::count_if(
-          replay.sources.cbegin(), replay.sources.cend(), [&expected_name](const layout_xml::DataSourceRef& candidate) {
-            return BrowserFileStore::sanitizedBasename(candidate.serialized_path) == expected_name;
-          }) > 1;
-  if (basename_is_ambiguous && input->content_sha256 != source.content_sha256) {
+  if (isAmbiguousReplayName(expected_name) && input->content_sha256 != file.content_sha256) {
     showBrowserLayoutWarning(
         this, tr("Load source-bound layout"),
-        tr("The selected '%1' is not the file saved for source %2 of %3 ('%4'). Select the original file for "
-           "that saved slot.")
-            .arg(expected_name)
-            .arg(replay.selection_index + 1)
-            .arg(replay.sources.size())
-            .arg(source.serialized_path));
+        file.side ? tr("The selected '%1' is not the file saved as '%2'. Select the original file.")
+                        .arg(expected_name, file.logical_path)
+                  : tr("The selected '%1' is not the file saved for source %2 of %3 ('%4'). Select the original "
+                       "file for that saved slot.")
+                        .arg(
+                            expected_name, QString::number(replay.selection_index + 1),
+                            QString::number(replay.sources.size()), file.logical_path));
     qInfo("PJ_WASM_SOURCE_LAYOUT_SELECTION_REJECTED index=%d reason=content", replay.selection_index);
     return;
   }
 
   stageReplayInput(std::move(*input), selected_name);
-
-  if (replay.selection_index < replay.sources.size()) {
-    const layout_xml::DataSourceRef& next_source = replay.sources[replay.selection_index];
-    const QString next_name = BrowserFileStore::sanitizedBasename(next_source.serialized_path);
-    const QString next_context = next_source.plugin_id.isEmpty()
-                                     ? next_source.serialized_path
-                                     : tr("%1 (plugin: %2)").arg(next_source.serialized_path, next_source.plugin_id);
-    if (!browser_layout_runtime_->decision_dialog.isNull()) {
-      browser_layout_runtime_->decision_dialog->setText(
-          tr("Staged %1 of %2 data sources. Select source %3 of %2: '%4' for saved slot '%5'. No import has "
-             "started yet.")
-              .arg(replay.selection_index)
-              .arg(replay.sources.size())
-              .arg(replay.selection_index + 1)
-              .arg(next_name, next_context));
-    }
-    if (!replay.selection_button.isNull()) {
-      replay.selection_button->setText(
-          tr("Select source %1 of %2").arg(replay.selection_index + 1).arg(replay.sources.size()));
-    }
+  if (replay.selection_index < replay.files.size()) {
+    promptBrowserReplayFile();
     return;
   }
-
   if (!browser_layout_runtime_->decision_dialog.isNull()) {
     QPointer<MessageBox> decision = browser_layout_runtime_->decision_dialog;
     browser_layout_runtime_->decision_dialog.clear();
@@ -6231,14 +6326,67 @@ void MainWindow::loadBrowserReplaySource(
   startBrowserReplayImports();
 }
 
+bool MainWindow::isAmbiguousReplayName(const QString& basename) const {
+  const BrowserLayoutRuntime::Replay& replay = *browser_layout_runtime_->replay;
+  return std::count_if(replay.files.cbegin(), replay.files.cend(), [&basename](const auto& file) {
+           return BrowserFileStore::sanitizedBasename(file.logical_path) == basename;
+         }) > 1;
+}
+
+QString MainWindow::browserReplaySideFilePrompt(
+    const QString& name, const QString& source_path, int number, int total) {
+  return tr("Every data source is staged. Select '%1', which data source '%2' reads (file %3 of %4). No import has "
+            "started yet.")
+      .arg(name, source_path, QString::number(number), QString::number(total));
+}
+
+void MainWindow::promptBrowserReplayFile() {
+  BrowserLayoutRuntime::Replay& replay = *browser_layout_runtime_->replay;
+  const BrowserLayoutRuntime::ReplayFile& file = replay.files[replay.selection_index];
+  const QString name = BrowserFileStore::sanitizedBasename(file.logical_path);
+  QString text;
+  QString button;
+  if (file.side) {
+    const int sources = static_cast<int>(replay.sources.size());
+    text = browserReplaySideFilePrompt(
+        name, replay.sources[file.source_index].serialized_path, replay.selection_index - sources + 1,
+        static_cast<int>(replay.files.size()) - sources);
+    button = tr("Select '%1'").arg(name);
+  } else {
+    const layout_xml::DataSourceRef& source = replay.sources[file.source_index];
+    const QString context = source.plugin_id.isEmpty()
+                                ? source.serialized_path
+                                : tr("%1 (plugin: %2)").arg(source.serialized_path, source.plugin_id);
+    const QString total = QString::number(replay.sources.size());
+    text = tr("Staged %1 of %2 data sources. Select source %3 of %2: '%4' for saved slot '%5'. No import has "
+              "started yet.")
+               .arg(
+                   QString::number(replay.selection_index), total, QString::number(replay.selection_index + 1), name,
+                   context);
+    button = tr("Select source %1 of %2").arg(QString::number(replay.selection_index + 1), total);
+  }
+  if (!browser_layout_runtime_->decision_dialog.isNull()) {
+    browser_layout_runtime_->decision_dialog->setText(text);
+  }
+  if (!replay.selection_button.isNull()) {
+    replay.selection_button->setText(button);
+  }
+}
+
 void MainWindow::stageReplayInput(LoadInput input, const QString& name) {
   BrowserLayoutRuntime::Replay& replay = *browser_layout_runtime_->replay;
-  replay.selected_identities.push_back(input.source_identity);
-  replay.staged_inputs.push_back(std::move(input));
+  if (replay.files[replay.selection_index].side) {
+    // A later "Save Layout with Sources" finds this copy's name and fingerprint by its path, as for a dialog pick.
+    file_loader_->rememberBrowserUpload(input);
+    replay.staged_side_files.push_back(std::move(input));
+  } else {
+    replay.selected_identities.push_back(input.source_identity);
+    replay.staged_inputs.push_back(std::move(input));
+  }
   ++replay.selection_index;
   qInfo(
       "PJ_WASM_SOURCE_LAYOUT_STAGED index=%d total=%d name=%s", replay.selection_index,
-      static_cast<int>(replay.sources.size()), qPrintable(name));
+      static_cast<int>(replay.files.size()), qPrintable(name));
 }
 
 void MainWindow::downloadNextReplaySource() {
@@ -6282,7 +6430,7 @@ void MainWindow::downloadNextReplaySource() {
           emit layoutUrlLoadProgress(layout_url, received, total);
         }
       },
-      replay.sources[replay.selection_index].content_sha256);
+      replay.files[replay.selection_index].content_sha256);
 }
 
 bool MainWindow::isActiveReplayDownload(quint64 generation) const {
@@ -6295,8 +6443,7 @@ void MainWindow::failReplayDownload(const QString& error) {
   const QString layout_name = replay.layout_name;  // finishing ends the replay
   showBrowserLayoutWarning(
       this, tr("Load Layout"),
-      tr("Data source '%1' could not be downloaded: %2")
-          .arg(replay.source_urls[replay.selection_index].toString(), error));
+      tr("'%1' could not be downloaded: %2").arg(replay.source_urls[replay.selection_index].toString(), error));
   finishBrowserLayoutLoad(layout_name, false, u"download"_s);
 }
 
@@ -6316,22 +6463,21 @@ void MainWindow::addDownloadedReplaySource(quint64 generation, std::optional<Loa
   BrowserLayoutRuntime::Replay& replay = *browser_layout_runtime_->replay;
   replay.active_picker_generation = 0;
   const QString layout_name = replay.layout_name;  // finishing ends the replay
-  const layout_xml::DataSourceRef& source = replay.sources[replay.selection_index];
+  const BrowserLayoutRuntime::ReplayFile& file = replay.files[replay.selection_index];
   if (!input.has_value()) {
     showBrowserLayoutWarning(this, tr("Load Layout"), error);
     finishBrowserLayoutLoad(layout_name, false, u"staging"_s);
     return;
   }
-  if (!source.content_sha256.isEmpty() && input->content_sha256 != source.content_sha256) {
+  if (!file.content_sha256.isEmpty() && input->content_sha256 != file.content_sha256) {
     showBrowserLayoutWarning(
         this, tr("Load Layout"),
-        tr("Data source '%1' is not the file its layout was saved with (its content fingerprint differs).")
-            .arg(source.serialized_path));
+        tr("'%1' is not the file its layout was saved with (its content fingerprint differs).").arg(file.logical_path));
     finishBrowserLayoutLoad(layout_name, false, u"fingerprint"_s);
     return;
   }
   stageReplayInput(std::move(*input), replay.source_urls[replay.selection_index].fileName());
-  if (replay.selection_index < replay.sources.size()) {
+  if (replay.selection_index < replay.files.size()) {
     downloadNextReplaySource();
     return;
   }
@@ -6353,7 +6499,8 @@ void MainWindow::startBrowserReplayImports() {
   BrowserLayoutRuntime::Replay& replay = *browser_layout_runtime_->replay;
   const QString layout_name = replay.layout_name;
   if (replay.sources.size() != replay.selected_identities.size() ||
-      replay.sources.size() != static_cast<int>(replay.staged_inputs.size())) {
+      replay.sources.size() != static_cast<int>(replay.staged_inputs.size()) ||
+      replay.files.size() - replay.sources.size() != static_cast<qsizetype>(replay.staged_side_files.size())) {
     finishBrowserLayoutLoad(layout_name, false, u"staging-shape"_s);
     return;
   }
@@ -6387,9 +6534,22 @@ void MainWindow::startBrowserReplayImports() {
 
   for (int index = 0; index < replay.sources.size() && !replay.load_failed; ++index) {
     const layout_xml::DataSourceRef& source = replay.sources[index];
-    const LoadHints hints = layoutReplayHints(source, /*prefer_reuse=*/false);
-    const quint64 ticket =
-        file_loader_->loadFileTicketed(std::move(replay.staged_inputs[static_cast<std::size_t>(index)]), this, hints);
+    LoadHints hints = layoutReplayHints(source, /*prefer_reuse=*/false);
+    LoadInput& input = replay.staged_inputs[static_cast<std::size_t>(index)];
+    // Point the saved side-file names at their staged copies, which then live as long as the data file's.
+    std::vector<StorageLease> side_leases;
+    for (qsizetype file = replay.sources.size(), side = 0; file < replay.files.size(); ++file, ++side) {
+      if (replay.files[file].source_index == index) {
+        LoadInput& staged = replay.staged_side_files[static_cast<std::size_t>(side)];
+        hints.side_file_paths.insert(replay.files[file].logical_path, staged.backing_path);
+        side_leases.push_back(std::move(staged.lease));
+      }
+    }
+    if (!side_leases.empty()) {
+      side_leases.push_back(std::move(input.lease));
+      input.lease = std::make_shared<std::vector<StorageLease>>(std::move(side_leases));
+    }
+    const quint64 ticket = file_loader_->loadFileTicketed(std::move(input), this, hints);
     if (ticket == 0) {
       replay.load_failed = true;
       replay.load_failure = tr("A staged source could not be queued for import.");
@@ -6928,7 +7088,13 @@ bool MainWindow::applyBrowserRestoredLayout(
   // kExact turns an unresolved curve/scene into failure. restoreWorkspaceState
   // rolls any failed application back to the captured workspace, so a browser
   // layout can never silently drop incompatible content.
-  if (restoreWorkspaceState(doc, MissingCurvePolicy::kExact) != RestoreResult::kApplied) {
+  // The restore runs as one main-thread task; its duration is logged for the
+  // WASM responsiveness test (tests/wasm/presets.spec.js).
+  QElapsedTimer restore_timer;
+  restore_timer.start();
+  const RestoreResult restored = restoreWorkspaceState(doc, MissingCurvePolicy::kExact);
+  qInfo("PJ_WASM_LAYOUT_RESTORE_MS ms=%lld", static_cast<long long>(restore_timer.elapsed()));
+  if (restored != RestoreResult::kApplied) {
     showBrowserLayoutWarning(
         this, tr("Load Layout"),
         tr("Layout was parsed but could not be applied to the currently loaded data. Open matching data sources "
@@ -10647,17 +10813,8 @@ std::shared_ptr<ToolboxPanelSession> MainWindow::buildToolboxPanelSession(
   // every plugin tool call already runs on the GUI thread, so the lambdas may
   // touch session state and widgets directly.
   session->playback_host = std::make_unique<PlaybackControlHost>(
-      session_->playbackEngine(),
-      [this](std::string_view topic, int64_t absolute_ns) -> std::optional<double> {
-        const DatasetId dataset_id = topic.empty()
-                                         ? representativeDatasetId()
-                                         : session_->catalogModel().datasetForTopic(
-                                               QString::fromUtf8(topic.data(), static_cast<qsizetype>(topic.size())));
-        return displayTimeForSource({static_cast<uint32_t>(dataset_id)}, absolute_ns);
-      },
-      [this](PJ_data_source_handle_t source_handle, int64_t absolute_ns) {
-        return displayTimeForSource(source_handle, absolute_ns);
-      });
+      session_->playbackEngine(), std::bind_front(&MainWindow::displayTimeForTopic, this),
+      std::bind_front(&MainWindow::displayTimeForSource, this));
   if (auto status = session->playback_host->registerServices(*session->builder); !status) {
     report_error(
         source,
