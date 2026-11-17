@@ -44,3 +44,19 @@ job is not a pass, and a dependency failure leaves downstream GUI/package jobs
 unrun. Retain failures and artifacts before preparing any corrective commit;
 ordinary follow-up commits require fresh checks for the new head. No stable or
 development merge, release, tag change or publication is authorized by this plan.
+
+## Retained first-run failure and follow-up
+
+The first published merge `30f844942a2cb45983ec542b180dd360f1b09e71` reached the
+WASM production configure in run `44055148511`, job `133942487025`. The unchanged
+output-hash guard rejected `data_load_csv/CHANGELOG.md`: `git apply` had discovered
+the enclosing host repository from the FetchContent subdirectory and skipped the
+source-relative patch paths. This was reproduced in a nested Git checkout.
+
+The follow-up stops Git discovery at the fetched source's parent and clears
+inherited GIT_DIR/GIT_WORK_TREE/GIT_INDEX_FILE only for the patch commands. It
+keeps every patch and output hash assertion. Real nested-checkout regression
+checks cover correct destination/idempotence, corrupt output rejection and
+patch-hash rejection; the actual upstream patches also apply with matching
+output hashes in that layout. The original failed run remains evidence; only
+new-head CI can establish the corrected candidate's result.

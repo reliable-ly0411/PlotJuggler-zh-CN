@@ -35,13 +35,19 @@ function(pj_apply_official_plugin_compatibility source_dir)
     endif()
 
     find_package(Git REQUIRED)
+    # FetchContent lives under the host checkout. Stop discovery at its parent:
+    # git apply otherwise treats these source-relative paths as outside the host's
+    # current subdirectory and silently skips them, even with --check.
+    get_filename_component(_source_parent "${source_dir}/.." REALPATH)
+    set(_git "${CMAKE_COMMAND}" -E env --unset=GIT_DIR --unset=GIT_WORK_TREE
+        --unset=GIT_INDEX_FILE "GIT_CEILING_DIRECTORIES=${_source_parent}" "${GIT_EXECUTABLE}")
     set(_args "${_patch_dir}/wasm-csv397.patch" "${_patch_dir}/wasm-log391.patch")
-    execute_process(COMMAND "${GIT_EXECUTABLE}" apply --check ${_args}
+    execute_process(COMMAND ${_git} apply --check ${_args}
         WORKING_DIRECTORY "${source_dir}" RESULT_VARIABLE _check ERROR_VARIABLE _error)
     if(NOT _check EQUAL 0)
         message(FATAL_ERROR "Official plugin compatibility input mismatch: ${_error}")
     endif()
-    execute_process(COMMAND "${GIT_EXECUTABLE}" apply ${_args}
+    execute_process(COMMAND ${_git} apply ${_args}
         WORKING_DIRECTORY "${source_dir}" RESULT_VARIABLE _apply ERROR_VARIABLE _error)
     if(NOT _apply EQUAL 0)
         message(FATAL_ERROR "Official plugin compatibility apply failed: ${_error}")
