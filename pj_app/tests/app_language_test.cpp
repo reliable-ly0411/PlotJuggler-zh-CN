@@ -512,18 +512,16 @@ class AppLanguageTest : public QObject {
           QCoreApplication::translate("PJ::MainWindow", "'%1' cannot be loaded: %2", nullptr, -1),
           u"无法加载“%1”：%2"_s);
       QCOMPARE(
-          QCoreApplication::translate(
-              "PJ::MainWindow", "Data source '%1' records a malformed content fingerprint.", nullptr, -1),
-          u"数据源“%1”记录的内容指纹格式错误。"_s);
+          QCoreApplication::translate("PJ::MainWindow", "'%1' records a malformed content fingerprint.", nullptr, -1),
+          u"'%1' 记录的内容指纹格式无效。"_s);
       QCOMPARE(
-          QCoreApplication::translate("PJ::MainWindow", "Data source '%1' could not be downloaded: %2", nullptr, -1),
-          u"无法下载数据源“%1”：%2"_s);
+          QCoreApplication::translate("PJ::MainWindow", "'%1' could not be downloaded: %2", nullptr, -1),
+          u"无法下载“%1”：%2"_s);
       QCOMPARE(
           QCoreApplication::translate(
-              "PJ::MainWindow",
-              "Data source '%1' is not the file its layout was saved with (its content fingerprint differs).", nullptr,
-              -1),
-          u"数据源“%1”不是保存布局时所用的文件（内容指纹不同）。"_s);
+              "PJ::MainWindow", "'%1' is not the file its layout was saved with (its content fingerprint differs).",
+              nullptr, -1),
+          u"'%1' 不是保存此布局时使用的文件（内容指纹不同）。"_s);
       QCOMPARE(
           QCoreApplication::translate("PJ::MainWindow", "'%1' could not be downloaded: %2", nullptr, -1),
           u"无法下载“%1”：%2"_s);
@@ -809,18 +807,16 @@ class AppLanguageTest : public QObject {
           QCoreApplication::translate("PJ::MainWindow", "'%1' cannot be loaded: %2", nullptr, -1),
           u"'%1' cannot be loaded: %2"_s);
       QCOMPARE(
-          QCoreApplication::translate(
-              "PJ::MainWindow", "Data source '%1' records a malformed content fingerprint.", nullptr, -1),
-          u"Data source '%1' records a malformed content fingerprint."_s);
+          QCoreApplication::translate("PJ::MainWindow", "'%1' records a malformed content fingerprint.", nullptr, -1),
+          u"'%1' records a malformed content fingerprint."_s);
       QCOMPARE(
-          QCoreApplication::translate("PJ::MainWindow", "Data source '%1' could not be downloaded: %2", nullptr, -1),
-          u"Data source '%1' could not be downloaded: %2"_s);
+          QCoreApplication::translate("PJ::MainWindow", "'%1' could not be downloaded: %2", nullptr, -1),
+          u"'%1' could not be downloaded: %2"_s);
       QCOMPARE(
           QCoreApplication::translate(
-              "PJ::MainWindow",
-              "Data source '%1' is not the file its layout was saved with (its content fingerprint differs).", nullptr,
-              -1),
-          u"Data source '%1' is not the file its layout was saved with (its content fingerprint differs)."_s);
+              "PJ::MainWindow", "'%1' is not the file its layout was saved with (its content fingerprint differs).",
+              nullptr, -1),
+          u"'%1' is not the file its layout was saved with (its content fingerprint differs)."_s);
       QCOMPARE(
           QCoreApplication::translate("PJ::MainWindow", "'%1' could not be downloaded: %2", nullptr, -1),
           u"'%1' could not be downloaded: %2"_s);

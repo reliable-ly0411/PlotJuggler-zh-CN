@@ -78,3 +78,11 @@ and a real Git/CMake regression checks exact bytes, host-file isolation and
 idempotent reconfiguration under that policy. All hash assertions remain strict.
 The failed package runs completed before cancellation; they were not canceled
 or accepted. These corrections require fresh exact-head acceptance.
+
+The full focused Qt 6.12 language build then exposed three stale test keys in
+`reviewedTranslationBackport`: upstream's source/side-file replay generalized
+the `Data source '%1' ...` diagnostics to `'%1' ...`. Production source and both
+catalogs already match and extraction reports zero missing/stale messages.
+The regression now asserts those actual live fingerprint/download keys and
+their reviewed Chinese translations, plus the corresponding English fallback.
+The original local `i18n-ctest.log` (25/26 suites passed) is retained.
