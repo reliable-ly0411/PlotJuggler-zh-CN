@@ -45,3 +45,52 @@ component catalogs with `lrelease`, check placeholders and markup, embed
 the matching QtBase dictionary, and validate all six language-restart
 directions on Windows. Preserve the upstream license and source offer when
 packaging the modified catalog.
+
+### Experimental stage preparation (not enabled for shipping)
+
+The selected Qt 6.12.0 source contains
+[qtbase_zh_TW.ts](https://github.com/qt/qttranslations/blob/v6.12.0/translations/qtbase_zh_TW.ts),
+Git blob `e9eb453f90d2616d0990797259f56a469fbcef93`.
+Do not substitute a binary from another Qt version. Use
+`<selected-kit>/translations/qtbase_zh_TW.qm` and retain that kit's Qt
+license/provenance materials. Presence of a source file is not evidence that
+the installed kit includes the binary, nor that every QtBase message is translated.
+
+`../prepare_traditional_stage.ps1` provides opt-in preparation for a disposable
+fixture stage. It is deliberately not called by release or default packaging.
+It requires complete 700 + 14 catalogs, the selected kit's QtBase binary and
+`lrelease.exe`; compiles a merged IFW/component dictionary; embeds both
+`ifw_zh_TW.qm` and the QtBase alias `qt_zh_TW.qm` under
+`:/translations_new`; and only then appends the third language entry.
+It records binary hashes and tool version in `traditional-stage.json`.
+The checked-in two-language UI remains unchanged.
+
+Validation sequence on a Windows runner or approved local workspace:
+
+1. Run `python scripts/test_ifw_traditional_catalog.py`.
+2. Create the existing synthetic installer fixture in a disposable stage,
+   using the exact branch commit and selected Qt/IFW tools. Do not use a real
+   installed application's target directory.
+3. Run `prepare_traditional_stage.ps1 -QtBin <kit>/bin -StageDir <fixture-stage>`.
+4. Rebuild the disposable fixture with the same binarycreator, config and
+   packages, passing `-r <fixture-stage>/translations/translations.qrc`.
+5. Launch English, Simplified and Traditional Chinese; inspect welcome,
+   target selection, components, license navigation, ready, installation,
+   completion and maintenance dialogs. Verify QtBase buttons/file dialogs too.
+6. Exercise all six directed language switches, repeated selection/no-op,
+   Back/Cancel and restart failure. Preserve target paths containing spaces,
+   Chinese, quotes and trailing backslashes, plus existing proxy/offline
+   arguments and explicit `--`. Check that no second installer survives and
+   no install/uninstall action occurs merely by switching language.
+7. Capture localized component metadata and screenshots, log the precise
+   source commit/tool versions/hashes, and then decide whether default
+   packaging may enable the third entry.
+
+Locale mapping now distinguishes `zh_TW`, `zh_HK`, `zh_MO` and `zh_Hant`
+from Simplified Chinese; language selection emits canonical `zh_TW`.
+The pure mapping functions were exercised in JavaScript only. PowerShell,
+Qt Linguist, binarycreator and Windows GUI checks have **not** been run in
+the connector-only development environment. These steps are a pending test
+plan, not a recorded pass. The existing restart failure message still offers
+the two established manual fallback languages; update the source and both
+component catalogs together before shipping a fully three-language installer.
