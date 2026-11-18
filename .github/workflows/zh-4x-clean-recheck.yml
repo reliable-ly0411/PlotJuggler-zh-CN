@@ -1,0 +1,169 @@
+name: Chinese 4.x original-package reacceptance
+on:
+  push:
+    branches: ['zh-CN-4.x-ci/clean-inventory-recheck']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: zh4-original-package-reacceptance
+  cancel-in-progress: false
+env:
+  EXPECTED_SOURCE_SHA: c8d9132498de23878741cff3bb2ab2cd8ea1356c
+  SOURCE_PACKAGE_RUN_ID: '44319371982'
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind original successful packaging jobs and unchanged source pins
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/${{ github.repository }}/actions/runs/44319371982 > source-run.json
+          gh api 'repos/${{ github.repository }}/actions/runs/44319371982/jobs?per_page=100' > source-jobs.json
+          python3 - <<'CHECK'
+          import json, os, subprocess
+          run = json.load(open('source-run.json'))
+          assert run['head_sha'] == os.environ['EXPECTED_SOURCE_SHA']
+          jobs = json.load(open('source-jobs.json'))['jobs']
+          for name in ('Package (windows-2022)', 'Package (ubuntu-22.04)'):
+              matching = [j for j in jobs if j['name'] == name]
+              assert len(matching) == 1 and matching[0]['conclusion'] == 'success', name
+          for path in ('versions.env', 'docs/localization/upstream-baseline.json', 'cmake/host-sdk-source.json', 'packaging/localization/registry-lock.json', 'packaging/localization/registry-provenance.json', 'packaging/localization/prepare_payload.py'):
+              original = subprocess.check_output(['git', 'show', os.environ['EXPECTED_SOURCE_SHA'] + ':' + path])
+              assert original == open(path, 'rb').read(), path
+          print('Original product/run and source pins verified; original package SHA256 checks remain mandatory.')
+          CHECK
+      - name: Install capture regression prerequisites
+        run: sudo apt-get update -qq && sudo apt-get install -y xvfb libx11-6 imagemagick xdotool x11-utils
+      - name: Run unchanged acceptance guards and exact inventory regression
+        run: |
+          python3 tests/test_package_inventory.py -v
+          python3 tests/test_registry_inventory.py -v
+          python3 tests/test_release_manifest.py -v
+          python3 tests/test_package_acceptance.py -v
+
+  linux-clean:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['ubuntu:22.04', 'ubuntu:24.04']
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: zh4-candidate-Linux
+          run-id: 44319371982
+          github-token: ${{ github.token }}
+          path: pkg
+      - name: Install and verify both final packages without build dependencies
+        run: |
+          mkdir -p reports
+          source versions.env
+          docker run --rm -e EXPECTED_SOURCE_SHA="$EXPECTED_SOURCE_SHA" -e EXPECTED_VERSION="$PJ_APP_VERSION" -v "$PWD:/src:ro" -v "$PWD/pkg:/pkg:ro" -v "$PWD/reports:/reports"             "${{ matrix.image }}" bash /src/packaging/localization/verify_linux.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zh4-final-linux-${{ strategy.job-index }}
+          path: reports/
+          if-no-files-found: error
+
+  windows-clean:
+    needs: preflight
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: zh4-candidate-Windows
+          run-id: 44319371982
+          github-token: ${{ github.token }}
+          path: pkg
+      - name: Install screenshot helper
+        run: python -m pip install 'Pillow>=11,<12'
+      - name: Install and verify the final installer
+        shell: pwsh
+        run: ./packaging/localization/verify_windows.ps1 -Packages pkg -Output reports
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zh4-final-Windows
+          path: reports/
+          if-no-files-found: error
+
+  windows-portable-clean:
+    needs: preflight
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: zh4-candidate-Windows
+          run-id: 44319371982
+          github-token: ${{ github.token }}
+          path: pkg
+      - name: Install screenshot helper
+        run: python -m pip install 'Pillow>=11,<12'
+      - name: Extract and verify the original portable ZIP
+        shell: pwsh
+        run: ./packaging/localization/verify_windows.ps1 -Packages pkg -Output reports -Format portable
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zh4-final-Windows-portable
+          path: reports/
+          if-no-files-found: error
+
+  release-manifest:
+    needs: [preflight, linux-clean, windows-clean, windows-portable-clean]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: zh4-candidate-*
+          run-id: 44319371982
+          github-token: ${{ github.token }}
+          path: candidate
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: zh4-final-*
+          path: reports
+      - name: Bind exact original packages to all clean acceptance reports
+        run: python3 packaging/localization/create_release_manifest.py --development-candidate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zh4-release-manifest
+          path: release-manifest.json
+          if-no-files-found: error

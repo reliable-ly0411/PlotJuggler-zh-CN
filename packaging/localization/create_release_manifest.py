@@ -9,7 +9,7 @@ from pathlib import Path
 import subprocess
 
 from version_map import package_versions
-from verify_package import ACCEPTANCE_LANGUAGES
+from verify_package import ACCEPTANCE_LANGUAGES, validate_installed_inventory
 
 
 def sha256(path):
@@ -53,8 +53,8 @@ def verify_checksums(root, files):
 
 
 def main(*, development_candidate=False):
-    source = os.environ['GITHUB_SHA']
-    tree = subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip()
+    source = os.environ.get('EXPECTED_SOURCE_SHA', os.environ['GITHUB_SHA'])
+    tree = subprocess.check_output(['git', 'rev-parse', source + '^{tree}'], text=True).strip()
     values = dict(line.split('=', 1) for line in Path('versions.env').read_text(encoding='utf-8').splitlines()
                   if line and not line.startswith('#'))
     version = values['PJ_APP_VERSION']
@@ -69,11 +69,16 @@ def main(*, development_candidate=False):
         assert report['release']['source_commit'] == source
         assert report['release']['source_tree'] == tree
         assert report['release']['version'] == version
-        assert report['plugin_count'] == (19 if platform == 'windows-2022' else 21)
-        if report['plugin_count'] == 19:
-            assert report['loaded_plugin_count'] == 19 and report['unavailable_plugins'] == []
+        windows = platform == 'windows-2022'
+        identities_from_release = [dict(zip(('id', 'version'), value.split('=', 1)))
+                                   for value in report['release']['expected_plugins']]
+        inventory = validate_installed_inventory(identities_from_release, report['release'],
+                                                Path(__file__).resolve().parents[2], windows)
+        assert report['plugin_count'] == len(inventory)
+        if windows:
+            assert report['loaded_plugin_count'] == len(inventory) and report['unavailable_plugins'] == []
         else:
-            assert report['loaded_plugin_count'] == 20
+            assert report['loaded_plugin_count'] == len(inventory) - 1
             assert len(report['unavailable_plugins']) == 1
             unavailable = report['unavailable_plugins'][0]
             assert unavailable['id'] == 'ros2-topic-subscriber'
@@ -85,7 +90,6 @@ def main(*, development_candidate=False):
             png = path.parent / f'gui-{language}.png'
             assert png.stat().st_size > 10000
             screenshots.append({'path': png.as_posix(), 'sha256': sha256(png), 'size': png.stat().st_size})
-    assert sorted(x['plugin_count'] for x in accepted) == [19, 19, 21, 21, 21, 21]
     expected = {f'PlotJuggler-{version}-Windows-x64-zh-CN.exe',
                 f'PlotJuggler-{version}-Windows-x64-portable-zh-CN.zip',
                 f'PlotJuggler-{version}-x86_64-zh-CN.AppImage',
@@ -104,7 +108,9 @@ def main(*, development_candidate=False):
     assert len(screenshots) == 18
 
     result = {'schema_version': 1, 'source_commit': source, 'source_tree': tree,
-              'workflow_sha': os.environ['GITHUB_WORKFLOW_SHA'], 'run_id': os.environ['GITHUB_RUN_ID'],
+              'workflow_sha': os.environ['GITHUB_WORKFLOW_SHA'],
+              'acceptance_control_commit': os.environ['GITHUB_SHA'],
+              'source_package_run_id': os.environ.get('SOURCE_PACKAGE_RUN_ID', os.environ['GITHUB_RUN_ID']), 'run_id': os.environ['GITHUB_RUN_ID'],
               'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
               'version': version, 'tag': package['tag'], 'publishable': package['publishable'],
               'automated_acceptance': 'passed',

@@ -13,6 +13,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'packaging/localization'))
 import create_release_manifest as manifest
+from prepare_payload import CORE_PLUGINS
+from registry_inventory import read_inventory
 
 
 class ReleaseManifestTests(unittest.TestCase):
@@ -76,11 +78,15 @@ class ReleaseManifestTests(unittest.TestCase):
                     path = Path('reports') / relative
                     path.parent.mkdir(parents=True)
                     windows = platform == 'windows-2022'
+                    registry, provenance = read_inventory(ROOT)
+                    ids = set(CORE_PLUGINS) | (set() if windows else {'toolbox-assistant-agent', 'ros2-topic-subscriber'})
+                    bin_version = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text())['ardupilot_plugin']['version']
+                    inventory = [f"{x['id']}={x['version']}" for x in registry['extensions'] if x['id'] in ids] + ['ardupilot-dataflash=' + bin_version]
                     report = {'status': 'automated_checks_passed',
                               'languages': list(manifest.ACCEPTANCE_LANGUAGES),
-                              'release': {'source_commit': 'source', 'source_tree': 'tree', 'version': version},
-                              'plugin_count': 19 if windows else 21,
-                              'loaded_plugin_count': 19 if windows else 20,
+                              'release': {'source_commit': 'source', 'source_tree': 'tree', 'version': version, 'expected_plugins': inventory, 'bin_plugin_version': bin_version, 'registry_sources': provenance['sources']},
+                              'plugin_count': 28 if windows else 30,
+                              'loaded_plugin_count': 28 if windows else 29,
                               'unavailable_plugins': [] if windows else [{
                                   'id': 'ros2-topic-subscriber',
                                   'status': 'not_tested_missing_external_dependency'}], 'checks': []}
@@ -106,6 +112,16 @@ class ReleaseManifestTests(unittest.TestCase):
                     self.assertEqual(len(result['assets']), 4)
                     self.assertEqual(len(result['acceptance_reports']), 6)
                     self.assertEqual(len(result['screenshots']), 18)
+                    report_path = Path('reports/zh4-final-linux-0/deb/acceptance.json')
+                    original_report = json.loads(report_path.read_text())
+                    for key, value in [('plugin_count', 21), ('loaded_plugin_count', 28),
+                                       ('unavailable_plugins', []),
+                                       ('unavailable_plugins', [{'id': 'csv-loader', 'status': 'not_tested_missing_external_dependency'}])]:
+                        changed = dict(original_report, **{key: value})
+                        report_path.write_text(json.dumps(changed))
+                        with self.subTest(key=key, value=value), self.assertRaises(AssertionError):
+                            manifest.main(development_candidate=development_candidate)
+                    report_path.write_text(json.dumps(original_report))
                     integrity = Path('reports/zh4-final-Windows-portable/runtime/package-integrity.json')
                     data = json.loads(integrity.read_text(encoding='utf-8'))
                     data['after'] = '0' * 64

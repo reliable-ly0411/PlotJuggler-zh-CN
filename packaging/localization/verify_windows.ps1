@@ -39,6 +39,7 @@ if ($Format -eq 'portable') {
     if ($installed -ne $release.ifw_package_version) { throw "IFW version mismatch" }
 }
 $version = (Get-Content versions.env | Where-Object { $_ -match "^PJ_APP_VERSION=" }) -replace "^PJ_APP_VERSION=", ""
+$expectedSource = if ($env:EXPECTED_SOURCE_SHA) { $env:EXPECTED_SOURCE_SHA } else { $env:GITHUB_SHA }
 $python = (Get-Command python).Source
 foreach ($key in @('QT_PLUGIN_PATH', 'QML2_IMPORT_PATH', 'QT_QPA_FONTDIR', 'PYTHONHOME', 'PYTHONPATH', 'LD_LIBRARY_PATH')) {
     Remove-Item "Env:$key" -ErrorAction SilentlyContinue
@@ -47,7 +48,7 @@ $env:PATH = "$root/bin;$env:SystemRoot/System32;$env:SystemRoot"
 & $python -X utf8 scripts/verify_windows_application.py "$root/bin/PlotJuggler4.exe" --runtime --expected-version $version
 if ($LASTEXITCODE -ne 0) { throw "Installed Windows executable verification failed" }
 & $python -X utf8 packaging/localization/verify_package.py --prefix $root --executable "$root/bin/PlotJuggler4.exe" `
-    --real-bin 3rdparty/plotjuggler-apbin-plugins/tests/logs/00000001.BIN --output "$outputPath/runtime" --expected-source $env:GITHUB_SHA --expected-version $version --capture
+    --real-bin 3rdparty/plotjuggler-apbin-plugins/tests/logs/00000001.BIN --output "$outputPath/runtime" --expected-source $expectedSource --expected-version $version --capture
 if ($LASTEXITCODE -ne 0) { throw "Installed package acceptance failed" }
 if ($Format -eq 'ifw') {
     $p = Start-Process "$root/maintenancetool.exe" -ArgumentList @("purge", "--confirm-command") `
