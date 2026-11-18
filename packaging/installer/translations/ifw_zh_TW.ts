@@ -1251,54 +1251,54 @@ Downloaded: %2</source>
     <name>QInstaller::FakeStopProcessForUpdateOperation</name>
     <message>
         <source>Cannot get package manager core.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得套件管理器核心。</translation>
     </message>
     <message>
         <source>This process should be stopped before continuing: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>繼續之前應停止此程序：%1</translation>
     </message>
     <message>
         <source>These processes should be stopped before continuing: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>繼續之前應停止下列程序：%1</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::FileTaskObserver</name>
     <message>
         <source>%1 of %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 / %2</translation>
     </message>
     <message>
         <source>%1 received.</source>
-        <translation type="unfinished"></translation>
+        <translation>已接收 %1。</translation>
     </message>
     <message>
         <source>(%1/sec)</source>
-        <translation type="unfinished"></translation>
+        <translation>（%1/秒）</translation>
     </message>
     <message numerus="yes">
         <source>%n day(s), </source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%n 天，</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s), </source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%n 小時，</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%n 分鐘</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%n 秒</numerusform></translation>
     </message>
     <message>
         <source> - %1%2%3%4 remaining.</source>
-        <translation type="unfinished"></translation>
+        <translation> - 剩餘 %1%2%3%4。</translation>
     </message>
     <message>
         <source> - unknown time remaining.</source>
-        <translation type="unfinished"></translation>
+        <translation> - 剩餘時間未知。</translation>
     </message>
 </context>
 <context>
@@ -1352,42 +1352,42 @@ Downloaded: %2</source>
     <name>QInstaller::GlobalSettingsOperation</name>
     <message>
         <source>Settings are not writable.</source>
-        <translation type="unfinished"></translation>
+        <translation>設定無法寫入。</translation>
     </message>
     <message>
         <source>Failed to write settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>寫入設定失敗。</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::InstallIconsOperation</name>
     <message>
         <source>&lt;source path&gt; [vendor prefix]</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;來源路徑&gt; [廠商前綴]</translation>
     </message>
     <message>
         <source>Invalid Argument: source directory must not be empty.</source>
-        <translation type="unfinished"></translation>
+        <translation>引數無效：來源目錄不得為空。</translation>
     </message>
     <message>
         <source>Cannot backup file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法備份檔案「%1」：%2</translation>
     </message>
     <message>
         <source>Failed to overwrite &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法覆寫「%1」：%2</translation>
     </message>
     <message>
         <source>Failed to copy file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法複製檔案「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot create directory &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立目錄「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot prepare to backup file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法準備備份檔案「%1」：%2</translation>
     </message>
 </context>
 <context>
@@ -1473,612 +1473,617 @@ Downloaded: %2</source>
     <name>QInstaller::LicenseOperation</name>
     <message>
         <source>No license files found to copy.</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到要複製的授權檔案。</translation>
     </message>
     <message>
         <source>Needed installer object in %1 operation is empty.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 操作所需的安裝程式物件為空。</translation>
     </message>
     <message>
         <source>Can not write license file &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法寫入授權檔案「%1」。</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::LineReplaceOperation</name>
     <message>
         <source>Invalid argument in %1: Empty search argument is not supported.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 的引數無效：不支援空白的搜尋引數。</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行讀取：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for writing: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行寫入：%2</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::MetadataJob</name>
     <message>
         <source>Missing package manager core engine.</source>
-        <translation type="unfinished"></translation>
+        <translation>缺少套件管理器核心引擎。</translation>
     </message>
     <message>
         <source>Unpacking compressed repositories. This may take a while...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在解壓縮套件庫，可能需要一些時間…</translation>
     </message>
     <message>
         <source>Metadata download canceled.</source>
-        <translation type="unfinished"></translation>
+        <translation>中繼資料下載已取消。</translation>
     </message>
     <message>
         <source>Unknown exception during extracting.</source>
-        <translation type="unfinished"></translation>
+        <translation>解壓縮時發生未知例外。</translation>
     </message>
     <message>
         <source>Missing proxy credentials.</source>
-        <translation type="unfinished"></translation>
+        <translation>缺少代理伺服器認證。</translation>
     </message>
     <message>
         <source>Authentication failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>驗證失敗。</translation>
     </message>
     <message>
         <source>Unknown exception during download.</source>
-        <translation type="unfinished"></translation>
+        <translation>下載時發生未知例外。</translation>
     </message>
     <message>
         <source>Failure to fetch repositories.</source>
-        <translation type="unfinished"></translation>
+        <translation>取得套件庫失敗。</translation>
     </message>
     <message>
         <source>Extracting meta information...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在解壓縮中繼資訊…</translation>
     </message>
     <message>
         <source>Checksum mismatch detected for &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>偵測到「%1」的總和檢查碼不符。</translation>
     </message>
     <message>
         <source>Error while extracting archive &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>解壓縮封存檔「%1」時發生錯誤：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行讀取：%2</translation>
     </message>
     <message>
         <source>Unsupported archive &quot;%1&quot;: no handler registered for file suffix &quot;%2&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>不支援的封存檔「%1」：未註冊可處理副檔名「%2」的處理常式。</translation>
     </message>
     <message>
         <source>Fetching latest update information...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在取得最新更新資訊…</translation>
     </message>
     <message numerus="yes">
         <source>Updating local cache with %n new items...</source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>正在將 %n 個新項目加入本機快取…</numerusform></translation>
     </message>
     <message>
         <source>Clearing the cache directory and restarting the application may solve this.</source>
-        <translation type="unfinished"></translation>
+        <translation>清除快取目錄並重新啟動應用程式可能可以解決此問題。</translation>
     </message>
     <message>
         <source>Unknown exception during updating cache.</source>
-        <translation type="unfinished"></translation>
+        <translation>更新快取時發生未知例外。</translation>
     </message>
     <message>
         <source>Cannot open extracted file &quot;%1&quot; for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟解壓縮後的檔案「%1」進行讀取：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for writing: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行寫入：%2</translation>
     </message>
     <message>
         <source>Retrieving information from remote repositories...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在從遠端套件庫取得資訊…</translation>
     </message>
     <message>
         <source>Retrieving meta information from remote repository...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在從遠端套件庫取得中繼資訊…</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::PackageManagerCore</name>
     <message>
         <source>Error writing Maintenance Tool</source>
-        <translation type="unfinished"></translation>
+        <translation>寫入維護工具時發生錯誤</translation>
     </message>
     <message>
         <source>Downloading packages...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在下載套件…</translation>
     </message>
     <message>
         <source>Installation canceled by user.</source>
-        <translation type="unfinished"></translation>
+        <translation>使用者已取消安裝。</translation>
     </message>
     <message>
         <source>All downloads finished.</source>
-        <translation type="unfinished"></translation>
+        <translation>所有下載已完成。</translation>
     </message>
     <message>
         <source>Canceling the Installer</source>
-        <translation type="unfinished"></translation>
+        <translation>正在取消安裝程式</translation>
     </message>
     <message>
         <source>Authentication Error</source>
-        <translation type="unfinished"></translation>
+        <translation>驗證錯誤</translation>
     </message>
     <message>
         <source>Some components could not be removed completely because administrative rights could not be acquired: %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得系統管理員權限，因此部分元件未能完整移除：%1。</translation>
     </message>
     <message>
         <source>Unknown error.</source>
-        <translation type="unfinished"></translation>
+        <translation>未知錯誤。</translation>
     </message>
     <message>
         <source>Some components could not be removed completely because an unknown error happened.</source>
-        <translation type="unfinished"></translation>
+        <translation>發生未知錯誤，因此部分元件未能完整移除。</translation>
     </message>
     <message>
         <source>The directory you selected already exists and contains an installation. Choose a different target for installation.</source>
-        <translation type="unfinished"></translation>
+        <translation>所選目錄已存在且包含安裝內容。請選擇其他安裝目標。</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation type="unfinished"></translation>
+        <translation>警告</translation>
     </message>
     <message>
         <source>You have selected an existing, non-empty directory for installation.
 Note that it will be completely wiped on uninstallation of this application.
 It is not advisable to install into this directory as installation might fail.
 Do you want to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>您選取了既有且非空白的安裝目錄。
+請注意，解除安裝此應用程式時會完整清除此目錄。
+不建議安裝至此目錄，因為安裝可能失敗。
+是否繼續？</translation>
     </message>
     <message>
         <source>You have selected an existing file or symlink, please choose a different target for installation.</source>
-        <translation type="unfinished"></translation>
+        <translation>您選取了既有的檔案或符號連結，請選擇其他安裝目標。</translation>
     </message>
     <message>
         <source>The installation path cannot be empty, please specify a valid directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>安裝路徑不得為空，請指定有效的目錄。</translation>
     </message>
     <message>
         <source>The installation path cannot be relative, please specify an absolute path.</source>
-        <translation type="unfinished"></translation>
+        <translation>安裝路徑不得為相對路徑，請指定絕對路徑。</translation>
     </message>
     <message>
         <source>The path or installation directory contains non ASCII characters. This is currently not supported! Please choose a different path or installation directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>路徑或安裝目錄包含非 ASCII 字元，目前尚不支援！請選擇其他路徑或安裝目錄。</translation>
     </message>
     <message>
         <source>As the install directory is completely deleted, installing in %1 is forbidden.</source>
-        <translation type="unfinished"></translation>
+        <translation>由於安裝目錄會被完整刪除，因此禁止安裝至 %1。</translation>
     </message>
     <message>
         <source>The path you have entered is too long, please make sure to specify a valid path.</source>
-        <translation type="unfinished"></translation>
+        <translation>輸入的路徑太長，請指定有效的路徑。</translation>
     </message>
     <message>
         <source>The path you have entered is not valid, please make sure to specify a valid target.</source>
-        <translation type="unfinished"></translation>
+        <translation>輸入的路徑無效，請指定有效的目標。</translation>
     </message>
     <message>
         <source>The path you have entered is not valid, please make sure to specify a valid drive.</source>
-        <translation type="unfinished"></translation>
+        <translation>輸入的路徑無效，請指定有效的磁碟機。</translation>
     </message>
     <message>
         <source>The installation path must not end with &apos;.&apos;, please specify a valid directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>安裝路徑不得以「.」結尾，請指定有效的目錄。</translation>
     </message>
     <message>
         <source>The installation path must not contain &quot;%1&quot;, please specify a valid directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>安裝路徑不得包含「%1」，請指定有效的目錄。</translation>
     </message>
     <message>
         <source>Application not running in Package Manager mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>應用程式並未以套件管理器模式執行。</translation>
     </message>
     <message>
         <source>No installed packages found.</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到已安裝的套件。</translation>
     </message>
     <message>
         <source>Application running in Uninstaller mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>應用程式正在以解除安裝模式執行。</translation>
     </message>
     <message>
         <source>There is an important update available, please run the updater first.</source>
-        <translation type="unfinished"></translation>
+        <translation>有重要更新可用，請先執行更新程式。</translation>
     </message>
     <message>
         <source>Cannot resolve all dependencies.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法解決所有相依性。</translation>
     </message>
     <message>
         <source>Cannot install component %1. Component is installed only as automatic dependency to %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法安裝元件 %1。此元件只會作為 %2 的自動相依項目安裝。</translation>
     </message>
     <message>
         <source>Cannot install component %1. Component is not checkable, meaning you have to select one of the subcomponents.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法安裝元件 %1。此元件無法勾選，您必須選取其中一個子元件。</translation>
     </message>
     <message>
         <source>Component %1 already installed</source>
-        <translation type="unfinished"></translation>
+        <translation>元件 %1 已安裝</translation>
     </message>
     <message>
         <source>Cannot install %1. Component is virtual.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法安裝 %1。此元件為虛擬元件。</translation>
     </message>
     <message>
         <source>Cannot install %1. Component not found.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法安裝 %1。找不到此元件。</translation>
     </message>
     <message>
         <source>Cannot elevate access rights while running from command line. Please restart the application as administrator.</source>
-        <translation type="unfinished"></translation>
+        <translation>從命令列執行時無法提升存取權限。請以系統管理員身分重新啟動應用程式。</translation>
     </message>
     <message>
         <source>Error while elevating access rights.</source>
-        <translation type="unfinished"></translation>
+        <translation>提升存取權限時發生錯誤。</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>錯誤</translation>
     </message>
     <message>
         <source>Not enough disk space to store temporary files and the installation. %1 are available, while the minimum required is %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>磁碟空間不足，無法儲存暫存檔和安裝內容。可用空間為 %1，至少需要 %2。</translation>
     </message>
     <message>
         <source>Not enough disk space to store all selected components! %1 are available, while the minimum required is %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>磁碟空間不足，無法儲存所有選取的元件！可用空間為 %1，至少需要 %2。</translation>
     </message>
     <message>
         <source>The volume you selected for installation seems to have sufficient space for installation, but there will be less than 1% of the volume&apos;s space available afterwards.</source>
-        <translation type="unfinished"></translation>
+        <translation>所選磁碟區似乎有足夠的空間供安裝，但安裝後可用空間將少於該磁碟區的 1%。</translation>
     </message>
     <message>
         <source>The volume you selected for installation seems to have sufficient space for installation, but there will be less than 100 MB available afterwards.</source>
-        <translation type="unfinished"></translation>
+        <translation>所選磁碟區似乎有足夠的空間供安裝，但安裝後可用空間將少於 100 MB。</translation>
     </message>
     <message>
         <source>Installation will use %1 of disk space.</source>
-        <translation type="unfinished"></translation>
+        <translation>安裝將使用 %1 磁碟空間。</translation>
     </message>
     <message>
         <source>Invalid</source>
-        <translation type="unfinished"></translation>
+        <translation>無效</translation>
     </message>
     <message>
         <source>User input is required but the output device is not associated with a terminal.</source>
-        <translation type="unfinished"></translation>
+        <translation>需要使用者輸入，但輸出裝置未連接至終端機。</translation>
     </message>
     <message>
         <source>Cannot install %1. Component is a descendant of a virtual component %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法安裝 %1。此元件是虛擬元件 %2 的後代元件。</translation>
     </message>
     <message>
         <source>The estimated installer size %1 would exceed the supported executable size limit of %2. The application may not be able to run.</source>
-        <translation type="unfinished"></translation>
+        <translation>預估的安裝程式大小 %1 將超過支援的執行檔大小上限 %2。應用程式可能無法執行。</translation>
     </message>
     <message>
         <source>Components about to be removed:</source>
-        <translation type="unfinished"></translation>
+        <translation>即將移除的元件：</translation>
     </message>
     <message>
         <source>Cannot install component %1. There was a problem loading this component, so it is marked unstable and cannot be selected.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法安裝元件 %1。載入此元件時發生問題，因此已將其標記為不穩定，無法選取。</translation>
     </message>
     <message>
         <source>Not enough disk space to store temporary files! %1 are available, while the minimum required is %2. You may select another location for the temporary files by modifying the local cache path from the installer settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>磁碟空間不足，無法儲存暫存檔！可用空間為 %1，至少需要 %2。您可以在安裝程式設定中修改本機快取路徑，以選擇其他暫存檔位置。</translation>
     </message>
     <message>
         <source>Cannot resolve components to uninstall.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法判定要解除安裝的元件。</translation>
     </message>
     <message>
         <source>Cannot select alias %1. There was a problem loading this alias, so it is marked unstable and cannot be selected.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法選取別名 %1。載入此別名時發生問題，因此已將其標記為不穩定，無法選取。</translation>
     </message>
     <message>
         <source>Cannot select %1. Alias is marked virtual, meaning it cannot be selected manually.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法選取 %1。此別名已標記為虛擬，不能手動選取。</translation>
     </message>
     <message>
         <source>Created installer will use %1 of disk space.</source>
-        <translation type="unfinished"></translation>
+        <translation>建立的安裝程式將使用 %1 磁碟空間。</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::PackageManagerCorePrivate</name>
     <message>
         <source>Unresolved dependencies</source>
-        <translation type="unfinished"></translation>
+        <translation>未解決的相依性</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>錯誤</translation>
     </message>
     <message>
         <source>Access error</source>
-        <translation type="unfinished"></translation>
+        <translation>存取錯誤</translation>
     </message>
     <message>
         <source>Format error</source>
-        <translation type="unfinished"></translation>
+        <translation>格式錯誤</translation>
     </message>
     <message>
         <source>Cannot write installer configuration to %1: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將安裝程式設定寫入 %1：%2</translation>
     </message>
     <message>
         <source>Stop Processes</source>
-        <translation type="unfinished"></translation>
+        <translation>停止程序</translation>
     </message>
     <message>
         <source>Installation canceled by user</source>
-        <translation type="unfinished"></translation>
+        <translation>使用者已取消安裝</translation>
     </message>
     <message>
         <source>Retry count exceeded</source>
-        <translation type="unfinished"></translation>
+        <translation>已超過重試次數上限</translation>
     </message>
     <message>
         <source>Writing maintenance tool.</source>
-        <translation type="unfinished"></translation>
+        <translation>正在寫入維護工具。</translation>
     </message>
     <message>
         <source>Failed to seek in file %1: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法在檔案 %1 中定位：%2</translation>
     </message>
     <message>
         <source>Maintenance tool is not a bundle</source>
-        <translation type="unfinished"></translation>
+        <translation>維護工具不是套件組合</translation>
     </message>
     <message>
         <source>Cannot remove data file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除資料檔「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot write maintenance tool data to %1: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將維護工具資料寫入 %1：%2</translation>
     </message>
     <message>
         <source>Cannot write maintenance tool to &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將維護工具寫入「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot remove temporary data file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除暫存資料檔「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot write maintenance tool binary data to %1: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將維護工具二進位資料寫入 %1：%2</translation>
     </message>
     <message>
         <source>Writing offline base binary.</source>
-        <translation type="unfinished"></translation>
+        <translation>正在寫入離線基礎二進位檔。</translation>
     </message>
     <message>
         <source>Cannot remove file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除檔案「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot create directory &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立目錄「%1」。</translation>
     </message>
     <message>
         <source>Cannot write offline binary to &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將離線二進位檔寫入「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot remove temporary file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除暫存檔「%1」：%2</translation>
     </message>
     <message>
         <source>Variable &apos;TargetDir&apos; not set.</source>
-        <translation type="unfinished"></translation>
+        <translation>尚未設定變數「TargetDir」。</translation>
     </message>
     <message>
         <source>Preparing the installation...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在準備安裝…</translation>
     </message>
     <message>
         <source>It is not possible to install from network location</source>
-        <translation type="unfinished"></translation>
+        <translation>無法從網路位置安裝</translation>
     </message>
     <message>
         <source>Creating local repository</source>
-        <translation type="unfinished"></translation>
+        <translation>正在建立本機套件庫</translation>
     </message>
     <message>
         <source>Creating Maintenance Tool</source>
-        <translation type="unfinished"></translation>
+        <translation>正在建立維護工具</translation>
     </message>
     <message>
         <source>Installation finished!</source>
-        <translation type="unfinished"></translation>
+        <translation>安裝完成！</translation>
     </message>
     <message>
         <source>Installation aborted!</source>
-        <translation type="unfinished"></translation>
+        <translation>安裝已中止！</translation>
     </message>
     <message>
         <source>It is not possible to run that operation from a network location</source>
-        <translation type="unfinished"></translation>
+        <translation>無法從網路位置執行該操作</translation>
     </message>
     <message>
         <source>Removing deselected components...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在移除已取消選取的元件…</translation>
     </message>
     <message>
         <source>Update finished!</source>
-        <translation type="unfinished"></translation>
+        <translation>更新完成！</translation>
     </message>
     <message>
         <source>Update aborted!</source>
-        <translation type="unfinished"></translation>
+        <translation>更新已中止！</translation>
     </message>
     <message>
         <source>Removal completed successfully.</source>
-        <translation type="unfinished"></translation>
+        <translation>移除成功。</translation>
     </message>
     <message>
         <source>Removal aborted.</source>
-        <translation type="unfinished"></translation>
+        <translation>移除已中止。</translation>
     </message>
     <message>
         <source>Cannot create target directory for installer.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立安裝程式的目標目錄。</translation>
     </message>
     <message>
         <source>Preparing offline generation...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在準備產生離線安裝程式…</translation>
     </message>
     <message>
         <source>Preparing installer configuration...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在準備安裝程式設定…</translation>
     </message>
     <message>
         <source>Creating the installer...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在建立安裝程式…</translation>
     </message>
     <message>
         <source>Failed to create offline installer. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>建立離線安裝程式失敗。%1</translation>
     </message>
     <message>
         <source>Cannot remove temporary directory &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除暫存目錄「%1」。</translation>
     </message>
     <message>
         <source>Offline generation completed successfully.</source>
-        <translation type="unfinished"></translation>
+        <translation>離線安裝程式產生成功。</translation>
     </message>
     <message>
         <source>Offline generation aborted!</source>
-        <translation type="unfinished"></translation>
+        <translation>離線安裝程式產生作業已中止！</translation>
     </message>
     <message>
         <source>Installing component %1</source>
-        <translation type="unfinished"></translation>
+        <translation>正在安裝元件 %1</translation>
     </message>
     <message>
         <source>Installer Error</source>
-        <translation type="unfinished"></translation>
+        <translation>安裝程式錯誤</translation>
     </message>
     <message>
         <source>Error during installation process (%1):
 %2</source>
-        <translation type="unfinished"></translation>
+        <translation>安裝程序中發生錯誤（%1）：
+%2</translation>
     </message>
     <message>
         <source>Done</source>
-        <translation type="unfinished"></translation>
+        <translation>完成</translation>
     </message>
     <message>
         <source>Cannot prepare removal</source>
-        <translation type="unfinished"></translation>
+        <translation>無法準備移除</translation>
     </message>
     <message>
         <source>Cannot start removal</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開始移除</translation>
     </message>
     <message>
         <source>Error during removal process:
 %1</source>
-        <translation type="unfinished"></translation>
+        <translation>移除程序中發生錯誤：
+%1</translation>
     </message>
     <message>
         <source>Unknown error</source>
-        <translation type="unfinished"></translation>
+        <translation>未知錯誤</translation>
     </message>
     <message>
         <source>Cannot retrieve remote tree %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得遠端樹狀結構 %1。</translation>
     </message>
     <message>
         <source>Failure to read packages from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法從 %1 讀取套件。</translation>
     </message>
     <message>
         <source>Cannot retrieve meta information: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得中繼資訊：%1</translation>
     </message>
     <message>
         <source>Cannot find any update source information.</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到任何更新來源資訊。</translation>
     </message>
     <message>
         <source>Dependency cycle between components &quot;%1&quot; and &quot;%2&quot; detected.</source>
-        <translation type="unfinished"></translation>
+        <translation>偵測到元件「%1」和「%2」之間的循環相依性。</translation>
     </message>
     <message>
         <source>Preparing to unpack components...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在準備解壓縮元件…</translation>
     </message>
     <message>
         <source>%1 of %2 operations completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>已完成 %1 / %2 項操作。</translation>
     </message>
     <message>
         <source>Unpacking components...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在解壓縮元件…</translation>
     </message>
     <message>
         <source>%1 of %2 operations rolled back.</source>
-        <translation type="unfinished"></translation>
+        <translation>已回復 %1 / %2 項操作。</translation>
     </message>
     <message>
         <source>Rollbacks complete.</source>
-        <translation type="unfinished"></translation>
+        <translation>回復完成。</translation>
     </message>
     <message>
         <source>%1 of %2 components installed.</source>
-        <translation type="unfinished"></translation>
+        <translation>已安裝 %1 / %2 個元件。</translation>
     </message>
     <message>
         <source>All components installed.</source>
-        <translation type="unfinished"></translation>
+        <translation>所有元件已安裝。</translation>
     </message>
     <message>
         <source>Loading component scripts...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在載入元件指令碼…</translation>
     </message>
     <message>
         <source>Alias declares name that conflicts with an existing component &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>別名宣告的名稱與既有元件「%1」衝突</translation>
     </message>
     <message>
         <source>Unresolved component aliases</source>
-        <translation type="unfinished"></translation>
+        <translation>未解決的元件別名</translation>
     </message>
     <message>
         <source>Cyclic dependency between aliases &quot;%1&quot; and &quot;%2&quot; detected.</source>
-        <translation type="unfinished"></translation>
+        <translation>偵測到別名「%1」和「%2」之間的循環相依性。</translation>
     </message>
     <message>
         <source>These processes need to be terminated to continue setup:&lt;br&gt;&lt;br&gt;%1</source>
-        <translation type="unfinished"></translation>
+        <translation>必須終止下列程序才能繼續安裝：&lt;br&gt;&lt;br&gt;%1</translation>
     </message>
     <message>
         <source>These processes need to be terminated to continue setup:&lt;br&gt;&lt;br&gt;%1&lt;br&gt;&lt;br&gt;Is this ok?</source>
-        <translation type="unfinished"></translation>
+        <translation>必須終止下列程序才能繼續安裝：&lt;br&gt;&lt;br&gt;%1&lt;br&gt;&lt;br&gt;是否同意？</translation>
     </message>
     <message>
         <source>Error during stopping running processes:&lt;br&gt;%1</source>
-        <translation type="unfinished"></translation>
+        <translation>停止執行中的程序時發生錯誤：&lt;br&gt;%1</translation>
     </message>
     <message>
         <source>Error during stopping running processes: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>停止執行中的程序時發生錯誤：%1</translation>
     </message>
 </context>
 <context>
@@ -2231,86 +2236,86 @@ Please copy the installer to a local drive</source>
     <name>QInstaller::RegisterFileTypeOperation</name>
     <message>
         <source>Registering file types is only supported on Windows.</source>
-        <translation type="unfinished"></translation>
+        <translation>只有 Windows 支援註冊檔案類型。</translation>
     </message>
     <message>
         <source>Register File Type: Invalid arguments</source>
-        <translation type="unfinished"></translation>
+        <translation>註冊檔案類型：引數無效</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::RemoteObject</name>
     <message>
         <source>Cannot read all data after sending command: %1. Bytes expected: %2, Bytes received: %3. Error: %4</source>
-        <translation type="unfinished"></translation>
+        <translation>傳送命令 %1 後無法讀取所有資料。預期位元組數：%2，已接收位元組數：%3。錯誤：%4</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::ReplaceOperation</name>
     <message>
         <source>Current search argument calling &quot;%1&quot; with empty search argument is not supported.</source>
-        <translation type="unfinished"></translation>
+        <translation>不支援以空白搜尋引數呼叫「%1」。</translation>
     </message>
     <message>
         <source>Current mode argument calling &quot;%1&quot; with arguments &quot;%2&quot; is not supported. Please use string or regex.</source>
-        <translation type="unfinished"></translation>
+        <translation>不支援以模式引數「%2」呼叫「%1」。請使用 string 或 regex。</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行讀取：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for writing: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行寫入：%2</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::Resource</name>
     <message>
         <source>Cannot open resource %1 for reading.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟資源 %1 進行讀取。</translation>
     </message>
     <message>
         <source>Read failed after %1 bytes: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>讀取 %1 位元組後失敗：%2</translation>
     </message>
     <message>
         <source>Write failed after %1 bytes: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>寫入 %1 位元組後失敗：%2</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::ScriptEngine</name>
     <message>
         <source>Cannot open script file at %1: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟位於 %1 的指令碼檔案：%2</translation>
     </message>
     <message>
         <source>Exception while loading the component script &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>載入元件指令碼「%1」時發生例外：%2</translation>
     </message>
     <message>
         <source>Unknown error.</source>
-        <translation type="unfinished"></translation>
+        <translation>未知錯誤。</translation>
     </message>
     <message>
         <source>on line number: </source>
-        <translation type="unfinished"></translation>
+        <translation>所在行號：</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::SelfRestartOperation</name>
     <message>
         <source>Installer object needed in operation %1 is empty.</source>
-        <translation type="unfinished"></translation>
+        <translation>操作 %1 所需的安裝程式物件為空。</translation>
     </message>
     <message>
         <source>Self Restart: Only valid within updater or package manager mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>自行重新啟動：僅適用於更新程式或套件管理器模式。</translation>
     </message>
     <message>
         <source>Self Restart: Invalid arguments</source>
-        <translation type="unfinished"></translation>
+        <translation>自行重新啟動：引數無效</translation>
     </message>
 </context>
 <context>
@@ -2340,30 +2345,30 @@ Please copy the installer to a local drive</source>
     <name>QInstaller::SettingsOperation</name>
     <message>
         <source>Missing argument(s) &quot;%1&quot; calling %2 with arguments &quot;%3&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>以引數「%3」呼叫 %2 時缺少引數「%1」。</translation>
     </message>
     <message>
         <source>Current method argument calling &quot;%1&quot; with arguments &quot;%2&quot; is not supported. Please use set, remove, add_array_value, or remove_array_value.</source>
-        <translation type="unfinished"></translation>
+        <translation>不支援以方法引數「%2」呼叫「%1」。請使用 set、remove、add_array_value 或 remove_array_value。</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::SimpleMoveFileOperation</name>
     <message>
         <source>None of the arguments can be empty: source &quot;%1&quot;, target &quot;%2&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>所有引數均不得為空：來源「%1」，目標「%2」。</translation>
     </message>
     <message>
         <source>Cannot move file from &quot;%1&quot; to &quot;%2&quot;, because the target path exists and is not removable.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將檔案從「%1」移至「%2」，因為目標路徑已存在且無法移除。</translation>
     </message>
     <message>
         <source>Cannot move file &quot;%1&quot; to &quot;%2&quot;: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將檔案「%1」移至「%2」：%3</translation>
     </message>
     <message>
         <source>Moving file &quot;%1&quot; to &quot;%2&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>正在將檔案「%1」移至「%2」。</translation>
     </message>
 </context>
 <context>
@@ -2398,109 +2403,109 @@ Please copy the installer to a local drive</source>
     <name>QInstaller::TestRepository</name>
     <message>
         <source>Missing package manager core engine.</source>
-        <translation type="unfinished"></translation>
+        <translation>缺少套件管理器核心引擎。</translation>
     </message>
     <message>
         <source>Empty repository URL.</source>
-        <translation type="unfinished"></translation>
+        <translation>套件庫網址為空。</translation>
     </message>
     <message>
         <source>Download canceled.</source>
-        <translation type="unfinished"></translation>
+        <translation>下載已取消。</translation>
     </message>
     <message>
         <source>Timeout while testing repository &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>測試套件庫「%1」逾時。</translation>
     </message>
     <message>
         <source>Cannot parse Updates.xml: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法解析 Updates.xml：%1</translation>
     </message>
     <message>
         <source>Cannot open Updates.xml for reading: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟 Updates.xml 進行讀取：%1</translation>
     </message>
     <message>
         <source>Authentication failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>驗證失敗。</translation>
     </message>
     <message>
         <source>Unknown error while testing repository &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>測試套件庫「%1」時發生未知錯誤。</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Error acquiring admin rights</source>
-        <translation type="unfinished"></translation>
+        <translation>取得系統管理員權限時發生錯誤</translation>
     </message>
     <message>
         <source>Another %1 instance is already running. Wait until it finishes, close it, or restart your system.</source>
-        <translation type="unfinished"></translation>
+        <translation>另一個 %1 執行個體已在執行。請等待其完成、將其關閉，或重新啟動系統。</translation>
     </message>
     <message>
         <source>Cannot start installer binary as updater.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將安裝程式二進位檔以更新程式模式啟動。</translation>
     </message>
     <message>
         <source>Cannot start installer binary as package manager.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將安裝程式二進位檔以套件管理器模式啟動。</translation>
     </message>
     <message>
         <source>Cannot start installer binary as uninstaller.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將安裝程式二進位檔以解除安裝程式模式啟動。</translation>
     </message>
     <message>
         <source>Empty repository list for option &apos;addRepository&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>選項「addRepository」的套件庫清單為空。</translation>
     </message>
     <message>
         <source>Empty repository list for option &apos;addTempRepository&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>選項「addTempRepository」的套件庫清單為空。</translation>
     </message>
     <message>
         <source>Empty repository list for option &apos;setTempRepository&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>選項「setTempRepository」的套件庫清單為空。</translation>
     </message>
     <message>
         <source>Empty repository list for option &apos;installCompressedRepository&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>選項「installCompressedRepository」的套件庫清單為空。</translation>
     </message>
     <message>
         <source>The file %1 does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>檔案 %1 不存在。</translation>
     </message>
     <message>
         <source>Arguments missing for option %1</source>
-        <translation type="unfinished"></translation>
+        <translation>選項 %1 缺少引數</translation>
     </message>
     <message>
         <source>Invalid button value %1 </source>
-        <translation type="unfinished"></translation>
+        <translation>按鈕值 %1 無效 </translation>
     </message>
     <message>
         <source>Incorrect arguments for %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 的引數不正確</translation>
     </message>
     <message>
         <source>Please make sure that the current user has read access to file &quot;%1&quot; or try running %2 as an administrator.</source>
-        <translation type="unfinished"></translation>
+        <translation>請確認目前使用者有檔案「%1」的讀取權限，或嘗試以系統管理員身分執行 %2。</translation>
     </message>
     <message>
         <source>Invalid value for &apos;max-concurrent-operations&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>「max-concurrent-operations」的值無效。</translation>
     </message>
     <message>
         <source>Empty value for option &apos;cache-path&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>選項「cache-path」的值為空。</translation>
     </message>
 </context>
 <context>
     <name>RemoteClient</name>
     <message>
         <source>Cannot get authorization.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得授權。</translation>
     </message>
     <message>
         <source>Cannot get authorization that is needed for continuing the installation.
@@ -2509,32 +2514,40 @@ Please copy the installer to a local drive</source>
 %1
 
 as a user with the appropriate rights and then clicking OK.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得繼續安裝所需的授權。
+請中止安裝，或採用替代方案：以具有適當權限的使用者執行
+
+%1
+
+然後按一下「確定」。</translation>
     </message>
     <message>
         <source>Cannot get authorization that is needed for continuing the installation.
 
 Please start the setup program as a user with the appropriate rights,
 or accept the elevation of access rights if being asked.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得繼續安裝所需的授權。
+
+請以具有適當權限的使用者啟動安裝程式，
+或在系統詢問時同意提升存取權限。</translation>
     </message>
 </context>
 <context>
     <name>ResourceCollectionManager</name>
     <message>
         <source>Cannot open resource %1: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟資源 %1：%2</translation>
     </message>
 </context>
 <context>
     <name>Settings</name>
     <message>
         <source>Cannot open settings file %1 for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟設定檔 %1 進行讀取：%2</translation>
     </message>
     <message>
         <source>Categories</source>
-        <translation type="unfinished"></translation>
+        <translation>類別</translation>
     </message>
 </context>
 <context>
@@ -2700,43 +2713,43 @@ or accept the elevation of access rights if being asked.</source>
     <name>UpdateOperation</name>
     <message>
         <source>Cannot write to registry path %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法寫入登錄路徑 %1。</translation>
     </message>
     <message>
         <source>Registry path %1 is not writable.</source>
-        <translation type="unfinished"></translation>
+        <translation>登錄路徑 %1 無法寫入。</translation>
     </message>
     <message>
         <source>exactly %1</source>
-        <translation type="unfinished"></translation>
+        <translation>恰好 %1</translation>
     </message>
     <message>
         <source>at least %1</source>
-        <translation type="unfinished"></translation>
+        <translation>至少 %1</translation>
     </message>
     <message>
         <source>not more than %1</source>
-        <translation type="unfinished"></translation>
+        <translation>不超過 %1</translation>
     </message>
     <message>
         <source>%1 or %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 或 %2</translation>
     </message>
     <message>
         <source>%1 to %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 至 %2</translation>
     </message>
     <message numerus="yes">
         <source>Invalid arguments in %1: %n arguments given, %2 arguments expected.</source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%1 的引數無效：已提供 %n 個引數，預期為 %2 個。</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>Invalid arguments in %1: %n arguments given, %2 arguments expected in the form: %3.</source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%1 的引數無效：已提供 %n 個引數，預期為 %2 個，格式如下：%3。</numerusform></translation>
     </message>
     <message>
         <source>Renaming file &quot;%1&quot; to &quot;%2&quot; failed: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將檔案「%1」重新命名為「%2」：%3</translation>
     </message>
 </context>
 <context>
@@ -2798,45 +2811,45 @@ or accept the elevation of access rights if being asked.</source>
     <name>QInstaller::ExtractArchiveOperation</name>
     <message>
         <source>Extracting &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>正在解壓縮「%1」</translation>
     </message>
     <message>
         <source>Unsupported archive &quot;%1&quot;: no handler registered for file suffix &quot;%2&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>不支援的封存檔「%1」：未註冊可處理副檔名「%2」的處理常式。</translation>
     </message>
     <message>
         <source>Cannot open archive &quot;%1&quot; for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟封存檔「%1」進行讀取：%2</translation>
     </message>
     <message>
         <source>Error while reading contents of archive &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>讀取封存檔「%1」的內容時發生錯誤：%2</translation>
     </message>
     <message>
         <source>Removing files extracted from &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>正在移除從「%1」解壓縮的檔案</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::QFileDialogProxy</name>
     <message>
         <source>User input is required but the output device is not associated with a terminal.</source>
-        <translation type="unfinished"></translation>
+        <translation>需要使用者輸入，但輸出裝置未連接至終端機。</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::ExtractArchiveOperation::Worker</name>
     <message>
         <source>Could not create handler object for archive &quot;%1&quot;: &quot;%2&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法為封存檔「%1」建立處理常式物件：「%2」。</translation>
     </message>
     <message>
         <source>Cannot open archive &quot;%1&quot; for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟封存檔「%1」進行讀取：%2</translation>
     </message>
     <message>
         <source>Error while extracting archive &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>解壓縮封存檔「%1」時發生錯誤：%2</translation>
     </message>
 </context>
 <context>
@@ -2854,152 +2867,152 @@ or accept the elevation of access rights if being asked.</source>
     <name>QInstaller::ExtractWorker</name>
     <message>
         <source>Cannot open archive for reading: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟封存檔進行讀取：%1</translation>
     </message>
     <message>
         <source>Cannot read entry header: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法讀取項目標頭：%1</translation>
     </message>
     <message>
         <source>Cannot write entry &quot;%1&quot; to disk: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將項目「%1」寫入磁碟：%2</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::LibArchiveArchive</name>
     <message>
         <source>Cannot open archive for reading: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟封存檔進行讀取：%1</translation>
     </message>
     <message>
         <source>Cannot read entry header: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法讀取項目標頭：%1</translation>
     </message>
     <message>
         <source>Cannot write entry &quot;%1&quot; to disk: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將項目「%1」寫入磁碟：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for writing: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行寫入：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行讀取：%2</translation>
     </message>
     <message>
         <source>Cannot write entry header for &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法寫入「%1」的項目標頭：%2</translation>
     </message>
 </context>
 <context>
     <name>UninstallerCalculator</name>
     <message>
         <source>Deselected Components:</source>
-        <translation type="unfinished"></translation>
+        <translation>已取消選取的元件：</translation>
     </message>
     <message>
         <source>Components replaced by &quot;%1&quot;:</source>
-        <translation type="unfinished"></translation>
+        <translation>由「%1」取代的元件：</translation>
     </message>
     <message>
         <source>Removing virtual components without existing dependencies:</source>
-        <translation type="unfinished"></translation>
+        <translation>正在移除無既有相依性的虛擬元件：</translation>
     </message>
     <message>
         <source>Components dependency &quot;%1&quot; removed:</source>
-        <translation type="unfinished"></translation>
+        <translation>已移除元件相依項目「%1」：</translation>
     </message>
     <message>
         <source>Components autodependency &quot;%1&quot; removed:</source>
-        <translation type="unfinished"></translation>
+        <translation>已移除元件自動相依項目「%1」：</translation>
     </message>
 </context>
 <context>
     <name>GenericDataCache</name>
     <message>
         <source>Cannot initialize cache with empty path.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法使用空白路徑初始化快取。</translation>
     </message>
     <message>
         <source>Cannot create directory &quot;%1&quot; for cache.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法為快取建立目錄「%1」。</translation>
     </message>
     <message>
         <source>Cannot initialize cache: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法初始化快取：%1</translation>
     </message>
     <message>
         <source>Cannot clear invalidated cache.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法清除已失效的快取。</translation>
     </message>
     <message>
         <source>Cannot remove manifest file: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除資訊清單檔案：%1</translation>
     </message>
     <message>
         <source>Error while clearing cache: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>清除快取時發生錯誤：%1</translation>
     </message>
     <message>
         <source>Cannot retrieve items from invalidated cache.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法從已失效的快取取得項目。</translation>
     </message>
     <message>
         <source>Cannot retrieve item from invalidated cache.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法從已失效的快取取得項目。</translation>
     </message>
     <message>
         <source>Cannot register item to invalidated cache.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將項目註冊至已失效的快取。</translation>
     </message>
     <message>
         <source>Cannot register null item.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法註冊空項目。</translation>
     </message>
     <message>
         <source>Cannot register invalid item with checksum %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法註冊總和檢查碼為 %1 的無效項目</translation>
     </message>
     <message>
         <source>Cannot register item with checksum %1. An item with the same checksum already exists in cache.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法註冊總和檢查碼為 %1 的項目，快取中已有相同總和檢查碼的項目。</translation>
     </message>
     <message>
         <source>Error while copying item to path &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>將項目複製至路徑「%1」時發生錯誤：%2</translation>
     </message>
     <message>
         <source>Cannot remove item from invalidated cache.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法從已失效的快取移除項目。</translation>
     </message>
     <message>
         <source>Cannot remove item specified by checksum %1: no such item exists.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除總和檢查碼 %1 指定的項目：該項目不存在。</translation>
     </message>
     <message>
         <source>Error while removing directory &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>移除目錄「%1」時發生錯誤：%2</translation>
     </message>
     <message>
         <source>Error while invalidating cache: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>使快取失效時發生錯誤：%1</translation>
     </message>
     <message>
         <source>Cannot open manifest file: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟資訊清單檔案：%1</translation>
     </message>
     <message>
         <source>Cannot write contents for manifest file: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法寫入資訊清單檔案內容：%1</translation>
     </message>
     <message>
         <source>Cannot synchronize invalidated cache.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法同步已失效的快取。</translation>
     </message>
     <message>
         <source>Unknown register mode selected!</source>
-        <translation type="unfinished"></translation>
+        <translation>選取了未知的註冊模式！</translation>
     </message>
 </context>
 <context>
@@ -3118,11 +3131,11 @@ or accept the elevation of access rights if being asked.</source>
     <name>QInstaller::StopProcessForUpdateOperation</name>
     <message>
         <source>Cannot get package manager core.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得套件管理器核心。</translation>
     </message>
     <message>
         <source>Could not terminate process &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>無法終止程序「%1」</translation>
     </message>
 </context>
 </TS>
