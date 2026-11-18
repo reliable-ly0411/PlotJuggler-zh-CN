@@ -425,8 +425,10 @@ jobs:
             -Version $env:PJ_VERSION -PackageVersion $packageVersion `
             -ExtraPrefix build/fork-prefix -NameSuffix '-zh-CN' -CleanReleaseName -OutDir dist -StageDir build/windows-stage `
             -PluginRegistryUrl "packaging/localization/registry-lock.json"
+          if ($LASTEXITCODE -ne 0) { throw "Windows installer staging or packaging failed" }
           ./packaging/installer/build_windows_portable.ps1 -StageDir build/windows-stage `
             -OutFile "dist/PlotJuggler-$env:PJ_VERSION-Windows-x64-portable-zh-CN.zip"
+          if ($LASTEXITCODE -ne 0) { throw "Windows portable packaging failed" }
       - name: Record original package hashes
         run: |
           python packaging/localization/hash_packages.py dist --output "SHA256SUMS-${RUNNER_OS}.txt"

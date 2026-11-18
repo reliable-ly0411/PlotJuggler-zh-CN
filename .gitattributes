@@ -49,3 +49,6 @@ resources/feature_catalog.json text eol=lf
 
 # These third-party notice originals are source-hashed without rewriting bytes.
 packaging/localization/windows-mesa-notices/* -text whitespace=-blank-at-eol
+
+# Keep reviewed original plugin notices byte-identical on Windows.
+packaging/localization/registry-notices/**/LICENSE text eol=lf

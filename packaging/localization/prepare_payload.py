@@ -13,6 +13,7 @@ from version_map import package_versions
 from collect_licenses import collect
 from host_versions import read_host_versions
 from linux_tools import prepare_linux_tools
+from registry_inventory import read_inventory
 
 ROOT = Path(__file__).resolve().parents[2]
 FONT_REV = '523d033d6cb47f4a80c58a35753646f5c3608a78'
@@ -23,7 +24,9 @@ CORE_PLUGINS = ['mcap-loader', 'csv-loader', 'parquet-loader', 'ulog-loader',
                 'mp4-loader', 'pointcloud-3d-loader', 'dummy-streamer', 'foxglove-bridge',
                 'plotjuggler-bridge', 'webrtc-client', 'ros-parser', 'protobuf-parser',
                 'json-parser', 'data-tamer-parser', 'toolbox-quaternion',
-                'toolbox-transform-editor', 'toolbox-mosaico', 'arrow-parser']
+                'toolbox-transform-editor', 'toolbox-mosaico', 'arrow-parser',
+                'toolbox-fft', 'toolbox-anomaly-detector', 'toolbox-data-exporter',
+                'influx-parser', 'navmap-parser', 'candump-loader', 'blf-loader', 'mf4-loader', 'log-widget']
 
 
 def download(url, target, expected):
@@ -94,7 +97,8 @@ def stage(build, prefix, config, linux_tools, *, development_candidate=False):
               'ifw_package_version': package['ifw'], 'debian_version': package['deb'],
               'publishable': package['publishable']}
     record['host_sdk_source'] = json.loads((ROOT / 'cmake/host-sdk-source.json').read_text(encoding='utf-8'))
-    locked = json.loads((ROOT / 'packaging/localization/registry-lock.json').read_text(encoding='utf-8'))
+    locked, provenance = read_inventory(ROOT)
+    record['registry_sources'] = provenance['sources']
     ids = CORE_PLUGINS + (['toolbox-assistant-agent', 'ros2-topic-subscriber'] if linux_tools else [])
     record['expected_plugins'] = [f"{x['id']}={x['version']}" for x in locked['extensions'] if x['id'] in ids]
     assert len(record['expected_plugins']) == len(ids)

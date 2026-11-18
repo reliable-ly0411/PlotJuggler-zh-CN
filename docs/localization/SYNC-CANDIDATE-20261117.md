@@ -198,3 +198,54 @@ lines, checkout SHA-256 `2e12fb4a5615c723c0bd30d12715414870b8c0034cda4f2ad1cbcb3
 Preflight accepts only the original blob or its uniform LF-to-CRLF checkout;
 the file CMake consumes must otherwise match exactly. Real Git fixture tests
 cover both forms and reject changed identity bytes and a wrong source hash.
+
+## e44a1a53 native packaging failure and registry repair
+
+Run `44178541842`, Windows job `134421027558`, completed native tests with
+5,859 passed, 103 skipped and zero failures/errors (5,962 total), staged the
+font/license payload, rebuilt localized official plugins, and passed the real
+CSV/FileLoader gate in all three languages (3/3 CTest). It then failed installer
+packaging: `plugin registry must contain exactly one 'influx-parser' entry
+(found 0)`. The workflow subsequently attempted portable packaging against the
+incomplete installer stage and reported a missing `license_mpl.txt`. No Windows
+original package, clean installation or final manifest was accepted.
+
+The old registry lock lacked four IDs already selected by the upstream bundle.
+The repair adds only those four immutable registry entries, aligns the expected
+payload inventory with all upstream bundle IDs, stages their complete source
+MIT notices, and checks the exit code after each Windows packaging command.
+Existing registry entries, package identity, SDK pin, screenshots, original PNGs,
+image functionality and WASM budgets are unchanged. Full source attribution and
+original ZIP hashes are retained in the registry lock/provenance files.
+
+Local focused Python validation passed 50 cases with three explicit skips for
+missing PowerShell (53 total). All four supplementary original Linux DSOs were
+admitted by the SDK 1.0.1 helper with no diagnostics. Eight original ZIP hashes
+and manifest identities match their registry and release asset records. These
+checks do not establish Windows loading, native clean installation or complete
+GUI behavior. The previous failed run remains evidence; a new exact candidate
+must pass the original native package/clean-install gates.
+
+The user's later authorization permits normal project merges after the relevant
+acceptance checks pass. It supersedes the initial no-merge plan, but does not
+make these unaccepted candidates eligible for promotion or publication.
+
+The same e44 run's Linux job `134421028119` completed 6,154 native tests with
+103 skips and zero failures (6,257 total), both X11/Wayland lifetime checks, and
+three-language CSV/FileLoader acceptance (3/3). Packaging then exited after the
+last resolvable registry item, `toolbox-data-exporter`; its next requested ID,
+`influx-parser`, is absent from the old lock. The script's `read` under `set -e`
+exits before its explicit empty-URL diagnostic. Both platform package jobs are
+failed, and every clean-install job and final release manifest are skipped.
+The Linux report archive SHA-256 is
+`c9a72eaa77d161a8c4a83e20754832808f287ceb45c83689cf193664cfe809a4`;
+the Windows report archive is
+`6d12e1cae0e91df25775f6fce983caf72eb3ab364f1fd8c9a6a2691988da3a5d`.
+
+The broader local Python run executed 813 cases with 32 skips and two environment
+failures: the capture fixture could not find Xvfb on PATH, and the Debian fixture
+failed under the cloud shell's restrictive umask. Both affected tests then passed
+with the existing sysroot tools on PATH and umask 022. Original failure logs are
+retained; no test was removed or weakened. Actionlint, pre-commit and diff checks
+passed. Remote Windows PowerShell and exact new-head package acceptance remain
+required.
