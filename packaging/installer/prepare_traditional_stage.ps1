@@ -6,6 +6,9 @@ param(
   [Parameter(Mandatory=$true)][string]$StageDir
 )
 $ErrorActionPreference = 'Stop'
+# Resolve against PowerShell's working directory before XML/.NET APIs consume paths.
+$QtBin = (Resolve-Path -LiteralPath $QtBin -ErrorAction Stop).ProviderPath
+$StageDir = (Resolve-Path -LiteralPath $StageDir -ErrorAction Stop).ProviderPath
 $root = $PSScriptRoot
 $meta = Join-Path $StageDir 'packages/io.plotjuggler.application/meta'
 $translations = Join-Path $StageDir 'translations'
@@ -19,6 +22,17 @@ if ([IO.Path]::GetFullPath($meta).TrimEnd('/','\') -eq [IO.Path]::GetFullPath($s
 foreach ($path in @($lrelease, $qtBase, $qrcPath, (Join-Path $meta 'languagewidget.ui'), (Join-Path $meta 'installscript.qs'))) {
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing prerequisite: $path" }
 }
+# Use the version selected by this checkout. Merely finding a different Qt kit
+# on disk is not sufficient for reproducible dictionary preparation.
+$versions = Get-Content -LiteralPath (Join-Path $root '../../versions.env') -Encoding UTF8
+$versionLines = @($versions | Where-Object { $_ -match '^PJ_QT_VERSION=' })
+if ($versionLines.Count -ne 1) { throw 'Expected one pinned Qt version' }
+$qtVersion = $versionLines[0].Substring('PJ_QT_VERSION='.Length).Trim()
+$lreleaseVersion = ((& $lrelease -version 2>&1) | Out-String).Trim()
+if ($LASTEXITCODE -ne 0 -or $lreleaseVersion -notmatch ('(?<![0-9.])' + [regex]::Escape($qtVersion) + '(?![0-9.])')) {
+  throw "lrelease does not match pinned Qt $qtVersion"
+}
+if ((Get-Item -LiteralPath $qtBase).Length -eq 0) { throw 'Empty QtBase Traditional Chinese dictionary' }
 $catalogs = @(
   (Join-Path $root 'translations/ifw_zh_TW.ts'),
   (Join-Path $sourceMeta 'zh_TW.ts')
@@ -62,6 +76,13 @@ $script = Get-Content -LiteralPath (Join-Path $meta 'installscript.qs') -Raw -En
 if (-not $script.Contains('function installerLanguageForIndex') -or -not $script.Contains('function installerLanguageIndex')) {
   throw 'Stage lacks three-language restart mapping'
 }
+# Real/synthetic builders substitute only this supervisor payload. An older
+# staged script must not be paired with a newer component dictionary.
+$sourceScript = Get-Content -LiteralPath (Join-Path $sourceMeta 'installscript.qs') -Raw -Encoding UTF8
+$guardPattern = '(?m)^var replacementGuard = "[^"]*";'
+$normalizedSource = [regex]::Replace($sourceScript.Replace("`r`n","`n"), $guardPattern, 'var replacementGuard = "STAGED";')
+$normalizedStage = [regex]::Replace($script.Replace("`r`n","`n"), $guardPattern, 'var replacementGuard = "STAGED";')
+if ($normalizedStage -cne $normalizedSource) { throw 'Staged installer script differs from the selected source' }
 [xml]$qrc = Get-Content -LiteralPath $qrcPath -Raw -Encoding UTF8
 $resource = $qrc.SelectSingleNode('/RCC/qresource[@prefix="/translations_new"]')
 if ($null -eq $resource -or $resource.SelectSingleNode('file[text()="ifw_zh_TW.qm"]')) { throw 'Unexpected or already prepared translation resources' }
@@ -93,7 +114,8 @@ $ui.Save((Join-Path $meta 'languagewidget.ui'))
   qtBaseSource = $qtBase
   qtBaseSHA256 = (Get-FileHash -LiteralPath $qtBase -Algorithm SHA256).Hash
   ifwSHA256 = (Get-FileHash -LiteralPath $out -Algorithm SHA256).Hash
-  lreleaseVersion = ((& $lrelease -version 2>&1) | Out-String).Trim()
+  qtVersion = $qtVersion
+  lreleaseVersion = $lreleaseVersion
   note = 'Prepared only; no GUI or restart validation is implied.'
 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $translations 'traditional-stage.json') -Encoding UTF8
 Write-Host 'Prepared experimental Traditional Chinese resources; rebuild the disposable installer using its translations.qrc.'
