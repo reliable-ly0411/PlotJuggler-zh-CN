@@ -55,7 +55,7 @@
     </message>
     <message>
       <source>The previous installation could not be safely removed. Setup will close without installing. Its uninstaller may still be running in the background. Do not reinstall into this directory until it has fully finished. Automatic replacement supports verified current-user installations only. For an all-users installation, uninstall it manually and confirm that removal has fully finished.</source>
-      <translation>無法安全移除舊安裝。安裝程式將關閉，不會安裝新版本。舊解除安裝程式可能仍在背景執行，請等待其完全結束後再使用此目錄安裝。自動取代僅支援經過驗證的目前使用者安裝；所有使用者安裝請先手動解除安裝，並確認已完全移除。</translation>
+      <translation>無法安全移除舊安裝。安裝程式將關閉，不會安裝新版本。舊解除安裝程式可能仍在背景執行，請等待其完全結束後再使用此目錄安裝。自動取代僅支援經過驗證、僅供目前使用者使用的安裝。若安裝供所有使用者共用，請先手動解除安裝，並確認已完全移除。</translation>
     </message>
 </context>
 </TS>
