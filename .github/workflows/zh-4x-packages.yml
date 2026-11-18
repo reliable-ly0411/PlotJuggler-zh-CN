@@ -401,7 +401,7 @@ jobs:
       - name: Package Linux artifacts
         if: runner.os == 'Linux'
         run: |
-          registry="https://raw.githubusercontent.com/PlotJuggler/pj-plugin-registry/2696403e106c6960541b8da19987ece35a24597e/registry.json"
+          registry="packaging/localization/registry-lock.json"
           bash packaging/appimage/build_appimage.sh --plugins-registry "$registry"             --extra-prefix build/fork-prefix --name-suffix -zh-CN
           # Every directly loaded ELF must respect the Ubuntu 22.04 floor.
           python packaging/localization/audit_glibc.py build/AppDir

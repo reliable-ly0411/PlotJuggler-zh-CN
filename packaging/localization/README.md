@@ -396,3 +396,7 @@ failed installer stage cannot fall through into portable packaging. Missing or
 duplicate registry entries, download hashes and final plugin inventory assertions
 remain fatal. PowerShell propagation tests run under a real PowerShell runtime;
 local platforms without it explicitly skip those tests.
+
+Both native package jobs consume `registry-lock.json`, including its four
+supplemental entries. AppImage registry input accepts either a local JSON path
+or an HTTP(S) URL; relative paths resolve from the invocation directory.
