@@ -101,3 +101,20 @@ rich-text tags agree. Cryptographic hashes are described as 密碼學雜湊值, 
 password hashes. The six direction argument-construction cases and locale aliases
 passed 35 assertions in a JavaScript sandbox. The checked-in Node wrapper and
 PowerShell staging validation have not yet been run on an executor.
+
+### Actual Qt script-engine regression target
+
+The existing `InstallerScriptQtEngine` CTest target now includes the same
+35 language-direction/locale assertions in addition to its original restart
+and replacement guards. This is preferable to treating a Node result as IFW
+evidence: IFW uses QJSEngine and its JavaScript bindings differ.
+In an existing Qt test build, build target `installer_script_test`, then run:
+
+```text
+ctest --test-dir <build> -C Release -R ^InstallerScriptQtEngine$ --output-on-failure --no-tests=error
+```
+
+Use the configuration actually built (for example RelWithDebInfo instead of
+Release). The test uses production script source and mocked process/UI calls;
+even a passing Qt result must not substitute for the disposable Windows wizard
+and real restart matrix above. No new build has been dispatched for this edit.
