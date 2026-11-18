@@ -71,7 +71,7 @@ their Qt boundary before interpolating paths and IDs. The Qt-free archive policy
 keeps its original diagnostics; DownloadManager translates only recognized
 complete templates. Unknown plugin, system and library details remain verbatim.
 
-All 30 entries in the pinned official registry have display-only name and description
+All 34 entries in the pinned official registry have display-only name and description
 translations, including uninstalled plugins. The exact ID and English source text
 select the translation independently of version; unknown/changed metadata falls
 back unchanged. `marketplace_text.hpp` uses the same display mapping in

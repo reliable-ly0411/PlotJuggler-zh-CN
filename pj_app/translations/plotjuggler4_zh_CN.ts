@@ -27,7 +27,7 @@
 <context>
     <name>AppLanguage</name>
     <message>
-        <location filename="../src/main.cpp" line="+468"/>
+        <location filename="../src/main.cpp" line="+467"/>
         <source>Interface language for this session (zh_CN, zh_TW or en_US).</source>
         <translation>本次会话的界面语言（zh_CN、zh_TW 或 en_US）。</translation>
     </message>
@@ -4481,12 +4481,13 @@ from %2</source>
         <translation>粘贴</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="+1490"/>
+        <location filename="../../pj_plotting/widget/src/DockWidget.cpp" line="+5"/>
         <source>Split Horizontally</source>
         <translation>水平拆分</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location filename="../../pj_plotting/widget/src/DockWidget.cpp" line="+3"/>
         <source>Split Vertically</source>
         <translation>垂直拆分</translation>
     </message>
@@ -6762,6 +6763,46 @@ for example when the stream is already rectified.</source>
         <source>Real-time data streaming via ZeroMQ. High-performance messaging for distributed systems.</source>
         <translation>通过 ZeroMQ 实时传输数据，为分布式系统提供高性能消息传递。</translation>
     </message>
+    <message>
+        <location line="+3"/>
+        <source>candump Loader</source>
+        <translation>candump 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for Linux SocketCAN candump captures (log and screen format), decoded to signals via DBC or an ARUS-style CSV dictionary.</source>
+        <translation>加载 Linux SocketCAN candump 捕获文件（日志和屏幕格式），通过 DBC 或 ARUS 风格的 CSV 字典将数据解码为信号。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>InfluxDB Line Protocol Parser</source>
+        <translation>InfluxDB 行协议解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for InfluxDB line protocol, the text format Telegraf and InfluxDB clients send.</source>
+        <translation>解析 InfluxDB 行协议消息，即 Telegraf 和 InfluxDB 客户端发送的文本格式。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Log Widget</source>
+        <translation>日志控件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Dock widget that lists log messages (such as ROS /rosout) next to the playback tracker.</source>
+        <translation>在播放时间指示器旁列出日志消息（例如 ROS /rosout）的停靠控件。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>NavMap Parser</source>
+        <translation>NavMap 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Shows EasyNavigation NavMap maps (navmap_ros_interfaces/msg/NavMap), the triangle-mesh navigation maps, in the 3D scene with their per-cell layers, and applies the NavMapLayer updates published beside them.</source>
+        <translation>在三维场景中显示 EasyNavigation NavMap 三角网格导航地图（navmap_ros_interfaces/msg/NavMap）及其各单元图层，并应用随附发布的 NavMapLayer 更新。</translation>
+    </message>
 </context>
 <context>
     <name>PJ::MarketplaceDiagnostics</name>
@@ -7855,12 +7896,13 @@ Details: %1</source>
         <translation>将两条曲线拖放到空白图表中，即可创建 XY 图。</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="-1"/>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+57"/>
         <source>Split &amp;Horizontally</source>
         <translation>水平拆分(&amp;H)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+3"/>
         <source>Split &amp;Vertically</source>
         <translation>垂直拆分(&amp;V)</translation>
     </message>
@@ -7875,22 +7917,25 @@ Details: %1</source>
         <translation>垂直缩小至全范围</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="-10"/>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="-16"/>
         <source>&amp;Remove ALL curves</source>
         <translation>移除全部曲线(&amp;R)</translation>
     </message>
     <message>
         <location line="+4"/>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+4"/>
         <source>&amp;Zoom Out</source>
         <translation>缩小至全范围(&amp;Z)</translation>
     </message>
     <message>
-        <location line="+200"/>
+        <location line="+20"/>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+200"/>
         <source>Apply Filter...</source>
         <translation>应用滤波器…</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+7"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
@@ -9441,8 +9486,7 @@ Details: %1</source>
     <message>
         <location filename="../src/FileLoader.cpp" line="-92"/>
         <location line="+86"/>
-        <location filename="../tests/wasm_acceptance_probes.inc" line="+239"/>
-        <location line="+303"/>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="-960"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
@@ -9471,17 +9515,7 @@ Details: %1</source>
         <translation>中止</translation>
     </message>
     <message>
-        <location filename="../tests/wasm_acceptance_probes.inc" line="-306"/>
-        <source>Reselect source</source>
-        <translation type="vanished">重新选择数据源</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Select source </source>
-        <translation type="vanished">选择数据源 </translation>
-    </message>
-    <message>
-        <location line="+299"/>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="-6"/>
         <source>Stop loading?</source>
         <translation>停止加载？</translation>
     </message>
@@ -9609,7 +9643,7 @@ Details: %1</source>
     </message>
     <message>
         <location filename="../../pj_dialog_host/src/dialog_engine.cpp" line="+503"/>
-        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="+531"/>
+        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="+533"/>
         <source>Select File</source>
         <translation>选择文件</translation>
     </message>
