@@ -1519,7 +1519,7 @@ Downloaded: %2</source>
     </message>
     <message>
         <source>Missing proxy credentials.</source>
-        <translation>缺少代理伺服器認證。</translation>
+        <translation>缺少代理伺服器驗證資訊。</translation>
     </message>
     <message>
         <source>Authentication failed.</source>
@@ -2039,11 +2039,11 @@ Do you want to continue?</source>
     </message>
     <message>
         <source>%1 of %2 operations rolled back.</source>
-        <translation>已回復 %1 / %2 項操作。</translation>
+        <translation>已復原 %1 / %2 項操作。</translation>
     </message>
     <message>
         <source>Rollbacks complete.</source>
-        <translation>回復完成。</translation>
+        <translation>復原完成。</translation>
     </message>
     <message>
         <source>%1 of %2 components installed.</source>
@@ -2229,7 +2229,7 @@ Please copy the installer to a local drive</source>
     </message>
     <message>
         <source>Proxy Credentials</source>
-        <translation>代理伺服器認證</translation>
+        <translation>代理伺服器驗證資訊</translation>
     </message>
 </context>
 <context>
@@ -2505,7 +2505,7 @@ Please copy the installer to a local drive</source>
     <name>RemoteClient</name>
     <message>
         <source>Cannot get authorization.</source>
-        <translation>無法取得授權。</translation>
+        <translation>無法取得所需權限。</translation>
     </message>
     <message>
         <source>Cannot get authorization that is needed for continuing the installation.
@@ -2514,7 +2514,7 @@ Please copy the installer to a local drive</source>
 %1
 
 as a user with the appropriate rights and then clicking OK.</source>
-        <translation>無法取得繼續安裝所需的授權。
+        <translation>無法取得繼續安裝所需的權限。
 請中止安裝，或採用替代方案：以具有適當權限的使用者執行
 
 %1
@@ -2526,7 +2526,7 @@ as a user with the appropriate rights and then clicking OK.</source>
 
 Please start the setup program as a user with the appropriate rights,
 or accept the elevation of access rights if being asked.</source>
-        <translation>無法取得繼續安裝所需的授權。
+        <translation>無法取得繼續安裝所需的權限。
 
 請以具有適當權限的使用者啟動安裝程式，
 或在系統詢問時同意提升存取權限。</translation>
