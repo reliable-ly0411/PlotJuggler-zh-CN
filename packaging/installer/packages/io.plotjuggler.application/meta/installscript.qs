@@ -301,7 +301,8 @@ Component.prototype.languageRestartFailed = function(reason)
 {
     console.log("PJ_LANGUAGE_RESTART_FAILED:" + reason);
     QMessageBox.warning("language.restart", qsTranslate("PlotJugglerInstaller", "Language selection"),
-        qsTranslate("PlotJugglerInstaller", "Could not restart the installer. Close it and run it with --lang zh_CN or --lang en_US."));
+        qsTranslate("PlotJugglerInstaller", "Could not restart the installer. Close it and run it with --lang followed by one of: %1.").replace("%1",
+            component.userInterface("LanguageWidget").language.count >= 3 ? "zh_CN, en_US, zh_TW" : "zh_CN, en_US"));
 }
 
 // IFW 4.10 xml:lang metadata uses the OS QLocale, independently of --lang.
