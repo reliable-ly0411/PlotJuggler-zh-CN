@@ -225,7 +225,7 @@
     </message>
     <message>
         <source>Cryptographic hashes do not match.</source>
-        <translation>密碼雜湊值不符。</translation>
+        <translation>密碼學雜湊值不符。</translation>
     </message>
     <message>
         <source>Download canceled.</source>
