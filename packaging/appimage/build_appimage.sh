@@ -3,9 +3,9 @@
 # Build a relocatable PlotJuggler 4 AppImage.
 #
 # Bundles the plotjuggler4 shell and its Qt 6 + Conan runtime into a single
-# self-contained AppImage. Unlike PJ3 (system Qt 5), PJ4 links Qt from ./.qt and
-# most external deps from Conan, so linuxdeploy must be pointed at both — that is
-# the bulk of the env setup here.
+# self-contained AppImage. PJ4 links Qt from ./.qt and most external deps from
+# Conan, so linuxdeploy must be pointed at both — that is the bulk of the env
+# setup here.
 #
 # Prerequisites (run these first, they are NOT done here):
 #   ./scripts/install_qt6.sh      # Qt into ./.qt/<ver>/gcc_64
@@ -101,8 +101,7 @@ REGISTRY_URL="https://raw.githubusercontent.com/PlotJuggler/pj-plugin-registry/r
 # ros2-topic-subscriber and toolbox-assistant-agent: the assistant's CLI
 # backends are POSIX-only, so it ships in the AppImage/.deb but not in the
 # Windows installer). It includes every plugin of the browser build
-# (cmake/PjWasmOfficialPlugins.cmake). Excluded by request: toolbox-colormap,
-# toolbox-reactive-scripts-editor.
+# (cmake/PjWasmOfficialPlugins.cmake).
 BUNDLE_IDS=(
   csv-loader
   mcap-loader
@@ -187,8 +186,8 @@ done
 
 # Keep -asan BEFORE the architecture: the baked container entrypoint chowns
 # PlotJuggler-*-${PJ_APPIMAGE_ARCH}.AppImage; a trailing -asan would miss that glob
-# and leave the artifact root-owned on the host. For ASan, keep the optional CI
-# hash with the version too; normal artifacts retain their existing hash naming.
+# and leave the artifact root-owned on the host. For ASan, the optional CI hash
+# also goes with the version; normal artifacts keep <version>-<arch>.<hash>.
 if [[ "${PJ_SANITIZE}" == asan ]]; then
   OUTPUT_NAME="PlotJuggler-${VERSION}${COMMIT_HASH:+.${COMMIT_HASH}}${SANITIZE_INFIX}-${ARCH}.AppImage"
 else
@@ -308,17 +307,16 @@ collect_plugins_registry() {
 
   local id url checksum want got zip dest
   for id in "${BUNDLE_IDS[@]}"; do
-    # Resolve this extension's url + checksum for our platform from the registry.
+    # Resolve this extension's url + checksum for our platform from the registry. The registry
+    # keeps older releases of an id for older hosts, so take the newest one that ships our platform.
     read -r url checksum < <(python3 - "${registry_json}" "${id}" "${PLATFORM}" <<'PY'
 import json, sys
 reg, want_id, plat = sys.argv[1], sys.argv[2], sys.argv[3]
 data = json.load(open(reg))
-for ext in data.get("extensions", []):
-    if ext.get("id") == want_id:
-        p = ext.get("platforms", {}).get(plat)
-        if p:
-            print(p.get("url", ""), p.get("checksum", ""))
-        break
+found = [e for e in data.get("extensions", []) if e.get("id") == want_id and plat in e.get("platforms", {})]
+if found:
+    p = max(found, key=lambda e: tuple(int(x) for x in e["version"].split(".")))["platforms"][plat]
+    print(p.get("url", ""), p.get("checksum", ""))
 PY
 )
     [[ -n "${url}" ]] || { echo "ERROR: registry has no '${id}' for ${PLATFORM}"; exit 1; }
@@ -485,7 +483,7 @@ case "${PLUGINS_MODE}" in
 esac
 
 # ---------------------------------------------------------------------------
-# 5a-bis. Plugin-admission helper.
+# 5a. Plugin-admission helper.
 #     The marketplace runs the first dlopen of a downloaded plugin inside
 #     pj-plugin-check instead of the application process. ExtensionManager fails
 #     closed when the helper cannot be started, so a bundle without it rejects

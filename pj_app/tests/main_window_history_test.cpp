@@ -47,6 +47,7 @@
 #include "pj_runtime/PlaybackEngine.h"
 #include "pj_runtime/SessionManager.h"
 #include "pj_runtime/Time.h"
+#include "pj_runtime/UsageCounters.h"
 #include "pj_runtime/XmlCdata.h"
 #include "pj_widgets/Timeline.h"
 #include "pj_widgets/VisualizationPlaceholderWidget.h"
@@ -81,7 +82,7 @@ class MainWindowHistoryTestPeer {
   }
 
   static void beginProgressiveRestore(MainWindow& window, QDomDocument doc) {
-    // kPrompt = the interactive-load policy this scenario always modeled.
+    // kPrompt: the interactive-load policy.
     window.beginProgressiveLayoutRestore(
         std::move(doc), u"/tmp/progressive-test.pj4.xml"_s, MainWindow::MissingCurvePolicy::kPrompt);
   }
@@ -492,7 +493,7 @@ TEST_F(MainWindowHistoryFixture, AutomaticGlobalRebasePreservesAbsolutePlayheadA
   ASSERT_DOUBLE_EQ(playback.currentTime().value, 5.0);
 
   // The shared origin moves from 100 s to 50 s. Preserve the absolute 105 s
-  // playhead while reframing the complete range in the new relative domain.
+  // playhead while reframing the complete range in the moved origin's relative domain.
   ASSERT_NE(addScalarDataset(app_session, "earlier.mcap", "/earlier", 50 * kSecond, 60 * kSecond), 0U);
 
   EXPECT_EQ(session.globalTimeReference(), 50 * kSecond);
@@ -780,6 +781,38 @@ TEST_F(MainWindowHistoryFixture, InvalidSceneElementFailsExactUndoTransactionall
   EXPECT_EQ(PJ::MainWindowHistoryTestPeer::redoSize(window), 0U);
 }
 
+// The usage report counts a panel once per session: undo and redo rebuild it, and every rebuild is the same use.
+TEST_F(MainWindowHistoryFixture, UndoAndRedoCountAScenePanelOncePerSession) {
+  PJ::MainWindow& window = mainWindow();
+  PJ::PlotWidget* plot = ensureCurrentPlot(window);
+  ASSERT_NE(plot, nullptr);
+  plot->setStateId(u"usage-before"_s);
+  PJ::MainWindowHistoryTestPeer::resetHistory(window);
+  plot->setStateId(u"usage-after"_s);
+  PJ::MainWindowHistoryTestPeer::recordDiscreteState(window);
+  const QByteArray live_before_undo = PJ::MainWindowHistoryTestPeer::liveState(window);
+
+  QDomDocument target;
+  ASSERT_TRUE(static_cast<bool>(target.setContent(live_before_undo)));
+  QDomElement area = target.elementsByTagName(u"DockArea"_s).at(0).toElement();
+  ASSERT_FALSE(area.isNull());
+  area.removeChild(area.firstChildElement());
+  area.appendChild(target.createElement(u"scene3d"_s));
+  PJ::MainWindowHistoryTestPeer::replaceUndoTarget(window, target.toByteArray(2));
+
+  PJ::UsageCounters& counters = PJ::usageCounters();
+  counters.configure({}, u"test"_s);
+  counters.setEnabled(true);
+  for (int cycle = 0; cycle < 3; ++cycle) {
+    PJ::MainWindowHistoryTestPeer::undo(window);
+    ASSERT_TRUE(PJ::MainWindowHistoryTestPeer::liveState(window).contains("<scene3d")) << "cycle " << cycle;
+    PJ::MainWindowHistoryTestPeer::redo(window);
+    ASSERT_FALSE(PJ::MainWindowHistoryTestPeer::liveState(window).contains("<scene3d")) << "cycle " << cycle;
+  }
+  EXPECT_EQ(counters.today().features.at("panel.scene3d"), 1);
+  counters.setEnabled(false);
+}
+
 TEST_F(MainWindowHistoryFixture, ProgressiveFileCompletionLeavesHistoryTransactionOwnedByDrain) {
   PJ::MainWindow& window = mainWindow();
   PJ::AppSession& app_session = PJ::MainWindowHistoryTestPeer::appSession(window);
@@ -1029,7 +1062,7 @@ PJ::BatchEngine::GeneratorRecipe sensorRule(PJ::DatasetId dataset, bool first_on
 }
 
 // The sequential uid of the set `owner` last published for `output` on `dataset`:
-// a republish or a tombstone mints a new one.
+// a republish or a tombstone mints another.
 std::optional<std::uint64_t> publishUid(
     PJ::AppSession& app, PJ::DatasetId dataset, std::string_view output, std::string_view owner) {
   const PJ::ObjectStore& store = app.sessionManager().objectStore();

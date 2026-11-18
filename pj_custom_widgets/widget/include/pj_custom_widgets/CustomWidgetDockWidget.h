@@ -47,7 +47,7 @@ class SessionManager;
 /// element. A widget that cannot be created, or that was disabled after an error, shows a
 /// placeholder with the reason (isMissing(), missingReason()) and keeps its layout element as it
 /// was. Every widget is offered `pj.playback.v1` over the session's PlaybackEngine. GUI thread only.
-/// Lifetime and error policy: pj_custom_widgets/CLAUDE.md.
+/// Lifetime and error policy: pj_custom_widgets/docs/ARCHITECTURE.md.
 class CustomWidgetDockWidget : public QWidget, public IDataWidget {
   Q_OBJECT
  public:
@@ -165,14 +165,15 @@ class CustomWidgetDockWidget : public QWidget, public IDataWidget {
   void bindingsChanged();
   /// The widget's input list changed (after load_config or inputs_changed).
   void inputsChanged();
-  /// Persisted state changed through a user gesture or a reconciliation that dropped wires; the
-  /// shell debounces it into an undo snapshot.
+  /// Persisted state changed through a user gesture (in the side panel, or in the widget's own UI as
+  /// the plugin reports with notify_config_changed) or a reconciliation that dropped wires; the shell
+  /// debounces it into an undo snapshot.
   void workspaceChanged();
 
  private:
-  /// Marks a call into the plugin; inputs_changed arriving meanwhile is deferred.
-  /// Runs `call` (one call into the plugin) inside a PluginCallScope and a catch. Returns the
-  /// message of an exception that escaped it, nullopt when it returned normally.
+  /// Runs `call` (one call into the plugin) with the call depth raised, so inputs_changed arriving meanwhile is
+  /// deferred, inside a catch. Returns the message of an exception that escaped it, nullopt when it returned
+  /// normally. A push asked for during the call is delivered when the outermost call returns.
   template <typename Call>
   std::optional<QString> callPlugin(Call&& call) const;
   /// callPlugin that disables the panel when the call threw. False then: the handle is gone.
@@ -211,6 +212,10 @@ class CustomWidgetDockWidget : public QWidget, public IDataWidget {
   std::optional<std::vector<WidgetInput>> readInputs();
   void reconcileInputs();
   void onInputsChangedFromPlugin();
+  /// The widget's own state changed in its UI (notify_config_changed): a workspace change. Dropped when it
+  /// arrives from inside one of the plugin's own calls: what load_config or on_update brings is the host's
+  /// doing, and reporting it would turn an undo into a new step.
+  void onConfigChangedFromPlugin();
   /// Runs `task` once from the event loop, however many times it is asked before it ran: `scheduled`
   /// is the latch. Used for what must not run inside a call into the plugin.
   template <typename Task>

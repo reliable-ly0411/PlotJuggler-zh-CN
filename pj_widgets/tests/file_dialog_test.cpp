@@ -38,9 +38,8 @@ namespace {
 
 class FileDialogTest : public ::testing::Test {};
 
-// The dialog is modal — we close it from a single-shot timer so the test
-// doesn't hang. We verify the embedded extras checkbox state is reported
-// back to the caller, which is the whole reason the overload exists.
+// The dialog is modal: it is closed from a single-shot timer so the test does not hang. The embedded extras checkbox
+// state is reported back to the caller, the reason the overload exists.
 TEST_F(FileDialogTest, GetSaveFileNameWithOptionsReportsCheckboxState) {
   PJ::FileDialog::ExtraOption opt{u"Save Data Source"_s, /*default_checked=*/true};
   QTemporaryDir temp;
@@ -274,9 +273,8 @@ TEST_F(FileDialogStartFolderTest, ReachableFolderIsUsedAndNoticeHidden) {
   });
 }
 
-// The folder answers only once the test lets it, after the dialog closed (or
-// after 10 s): a dialog that waits for the folder opens after it answered, so
-// the check needs no wall-clock bound on how long a dialog takes to open.
+// The folder answers only once the test lets it, after the dialog closed (or after 10 s): a dialog that waits for the
+// folder opens after it answered, so the check needs no wall-clock bound on how long a dialog takes to open.
 TEST_F(FileDialogStartFolderTest, SlowFolderFallsBackToHomeWithoutBlocking) {
   QTemporaryDir temp;
   ASSERT_TRUE(temp.isValid());

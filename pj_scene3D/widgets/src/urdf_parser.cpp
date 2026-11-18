@@ -16,15 +16,12 @@ namespace pj::scene3d {
 
 namespace {
 
-// Bound on the synchronous GUI-thread DOM parse. Real URDFs are well under 10 MB
-// of text; 32 MB is a generous safety margin. QDomDocument::setContent blocks the
-// UI for the full parse duration, so we reject anything above this before handing
-// it to Qt. (Entity-expansion and external-entity risks are already mitigated by
-// Qt 6's QXmlStreamReader layer, so the residual risk is only UI-freeze.)
+// Bound on the synchronous GUI-thread DOM parse: real URDFs are well under 10 MB of text and 32 MB leaves a margin.
+// QDomDocument::setContent blocks the UI for the whole parse, so anything above is rejected before it reaches Qt
+// (entity expansion and external entities are already mitigated by Qt 6's QXmlStreamReader layer: the residual risk is
+// UI freeze).
 constexpr std::size_t kMaxUrdfBytes = 32u * 1024u * 1024u;
 
-// Parse a whitespace-separated list of doubles ("x y z") into a fixed array.
-// Returns false if fewer than N tokens parse.
 template <std::size_t N>
 bool parseDoubles(const QString& text, std::array<double, N>& out) {
   const QStringList toks = text.simplified().split(' ', Qt::SkipEmptyParts);
@@ -50,8 +47,8 @@ double attrDouble(const QDomElement& el, const QString& name, double fallback) {
   return ok ? v : fallback;
 }
 
-// Read <origin xyz="..." rpy="..."/> into any target with origin_xyz/origin_rpy
-// (LinkGeom or RobotJoint). Missing attributes leave the target's defaults.
+// Reads <origin xyz rpy> into any target with origin_xyz/origin_rpy (LinkGeom or RobotJoint); missing attributes leave
+// the target's defaults.
 template <typename T>
 void parseOriginInto(const QDomElement& parent, T& out) {
   const QDomElement origin = parent.firstChildElement(u"origin"_s);
@@ -68,8 +65,6 @@ void parseOriginInto(const QDomElement& parent, T& out) {
   }
 }
 
-// Read <geometry> into a GeomShape. Mesh refs are dispatched to the resolver.
-// Returns false if no recognized child geometry is present.
 bool parseGeometry(
     const QDomElement& parent, UrdfPackageResolver* resolver, const std::string& urdf_dir, bool source_is_url,
     const QMap<QString, QUrl>& package_url_roots, bool remote_only, const UrdfParseLimits* limits, GeomShape& out,
@@ -129,9 +124,8 @@ bool parseGeometry(
   return false;
 }
 
-// Read a <color rgba="r g b a"/> element into a vec4. Returns nullopt when the
-// element is null or "rgba" fails to parse; default {0.7,0.7,0.7,1.0} lives
-// here so both callers share the same fallback.
+// Reads a <color rgba> element; nullopt when the element is null or "rgba" fails to parse. The default
+// {0.7,0.7,0.7,1.0} lives here so both callers share the same fallback.
 std::optional<glm::vec4> readColorRgba(const QDomElement& color_el) {
   if (color_el.isNull()) {
     return std::nullopt;
@@ -145,8 +139,6 @@ std::optional<glm::vec4> readColorRgba(const QDomElement& color_el) {
       static_cast<float>(rgba[3])};
 }
 
-// Fills geom.color and sets geom.has_color when an inline or named color is
-// found; otherwise leaves the LinkGeom defaults.
 void parseMaterial(
     const QDomElement& parent, const UrdfParseLimits* limits,
     const std::unordered_map<std::string, glm::vec4>& materials, LinkGeom& geom, std::string& error) {
@@ -159,7 +151,6 @@ void parseMaterial(
     geom.has_color = true;
     return;
   }
-  // Named material reference: <material name="Foo"/> with no inline color.
   const QByteArray name_bytes = mat.attribute(u"name"_s).toUtf8();
   if (limits != nullptr && limits->max_string_bytes != 0U &&
       static_cast<std::size_t>(name_bytes.size()) > limits->max_string_bytes) {
@@ -178,8 +169,6 @@ void parseMaterial(
   }
 }
 
-// Parse a single <visual> or <collision> into a LinkGeom. Returns false if it
-// has no recognizable geometry.
 bool parseGeomElement(
     const QDomElement& el, UrdfPackageResolver* resolver, const std::string& urdf_dir, bool source_is_url,
     const QMap<QString, QUrl>& package_url_roots, bool remote_only, const UrdfParseLimits* limits,
@@ -192,7 +181,6 @@ bool parseGeomElement(
   return error.empty();
 }
 
-// Map a URDF joint `type` attribute to JointType (unknown/empty ⇒ kOther).
 JointType jointTypeFromString(const QString& type) {
   if (type == "fixed"_L1) {
     return JointType::kFixed;
@@ -277,7 +265,6 @@ std::pair<std::optional<RobotModel>, std::string> parseUrdf(
         std::nullopt,
         QCoreApplication::translate("pj::scene3d::UrdfParser", "Parse error: empty document").toStdString()};
   }
-  // Format inference from the root element.
   const QString root_tag = root.tagName();
   if (root_tag != "robot"_L1) {
     return {
@@ -288,7 +275,6 @@ std::pair<std::optional<RobotModel>, std::string> parseUrdf(
 
   RobotModel model;
 
-  // Pass 1 — collect top-level named materials (<robot><material name color>).
   std::unordered_map<std::string, glm::vec4> materials;
   std::size_t material_count = 0;
   for (QDomElement mat = root.firstChildElement(u"material"_s); !mat.isNull();
@@ -316,7 +302,7 @@ std::pair<std::optional<RobotModel>, std::string> parseUrdf(
     }
   }
 
-  // Pass 2 — links. <joint> is intentionally skipped.
+  // Links; <joint> is intentionally skipped here.
   std::size_t geometry_count = 0;
   for (QDomElement link_el = root.firstChildElement(u"link"_s); !link_el.isNull();
        link_el = link_el.nextSiblingElement(u"link"_s)) {

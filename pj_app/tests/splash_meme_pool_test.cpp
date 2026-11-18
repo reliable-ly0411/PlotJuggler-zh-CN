@@ -144,9 +144,8 @@ TEST(SplashMemePool, CapNeverUpscalesAPoolMeme) {
   }
 }
 
-// A width-only cap leaves a tall image at full height, which is what put an
-// 883px-tall meme on screen. Synthetic sizes pin both orientations regardless of
-// what the pool happens to contain today.
+// A width-only cap would leave a tall image at full height. Synthetic sizes pin both orientations whatever the
+// pool holds.
 TEST(SplashMemePool, CapBoundsPortraitAndLandscapeAlike) {
   QPixmap landscape(1200, 300);
   landscape.fill(Qt::red);

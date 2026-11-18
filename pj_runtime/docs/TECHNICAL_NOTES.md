@@ -1,6 +1,7 @@
 # pj_runtime technical notes
 
-Hard-won lessons behind code in this module, written as the current state of the code.
+What was observed, measured or tried behind the current code, with the conditions and when to look again. How the
+code works is in [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Catalog success diagnostics and startup language
 
@@ -19,33 +20,38 @@ name/path arguments and unchanged discovery failures.
 
 ## Qt's browser network backend keeps every response body (Qt 6.12.0)
 
-**What happens.** In the WebAssembly build, `QNetworkAccessManager` runs each request
-through `emscripten_fetch()` with `EMSCRIPTEN_FETCH_LOAD_TO_MEMORY`.
-`QNetworkReplyWasmImplPrivate::downloadSucceeded()` (and `downloadFailed()`) in
-`qtbase/src/network/access/qnetworkreplywasmimpl.cpp` copy `fetch->data` into the reply
-and then set `reply->m_fetch = nullptr` without calling `emscripten_fetch_close()`.
-`QNetworkReplyWasmImpl::close()`, the only caller of `emscripten_fetch_close()`, then
-finds no fetch, so the `emscripten_fetch_t` and its body buffer stay in the wasm heap
-for the rest of the session. A download also peaks at three copies of its body:
-`fetch->data`, the reply's buffer and the caller's `readAll()`.
+- **Observed (Qt 6.12.0, WebAssembly build):** `QNetworkAccessManager` runs each request through `emscripten_fetch()`
+  with `EMSCRIPTEN_FETCH_LOAD_TO_MEMORY`. `QNetworkReplyWasmImplPrivate::downloadSucceeded()` and `downloadFailed()`
+  (`qtbase/src/network/access/qnetworkreplywasmimpl.cpp`) copy `fetch->data` into the reply and then set
+  `reply->m_fetch = nullptr` without calling `emscripten_fetch_close()`. `QNetworkReplyWasmImpl::close()`, the only
+  caller of `emscripten_fetch_close()`, then finds no fetch, so the `emscripten_fetch_t` and its body stay in the wasm
+  heap for the rest of the session. A download also peaks at three copies of its body: `fetch->data`, the reply's
+  buffer and the caller's `readAll()`.
+- **Measured:** opening a preset with a 261 MB recording left the wasm heap at 1084 MiB; a 96 MiB recording downloaded
+  and then refused left 96 MiB more in use (`tests/wasm/presets.spec.js`, "a preset recording downloads without
+  passing through the wasm heap"); a robot mesh kept its whole body (`tests/wasm/scene3d_url_models.spec.js`, "a URL
+  robot mesh leaves no copy in the wasm heap").
+- **What the code does:** `browserFetchToFile()` (`BrowserFetch.h`) bypasses Qt: the page's `fetch()` writes each
+  chunk into a MEMFS file, which MEMFS keeps as a JavaScript array outside the wasm heap; the SHA-256 is one
+  `crypto.subtle.digest` over that array once the body is complete. `pj_app`'s `PresetController` streams preset
+  recordings through it (a picked data file is not copied at all: `pj_app`'s `BrowserPickedFile` reads it lazily,
+  where Qt's `getOpenFileContent` would hold it whole in a `QByteArray`). Every download that wants the bytes (the
+  other preset files; Scene3D's `UrlFetcher` for robot URDFs, meshes and textures) goes through `HttpGet.h`'s
+  `fetchBytesWithLimit()`, whose browser side is `browserFetchToBytes()`: no hashing, a scratch file read back into a
+  `QByteArray`.
+- **Re-test** on every Qt bump: once `downloadSucceeded()` closes the fetch, a `QNetworkAccessManager` download stops
+  leaking (it still peaks at the extra copies).
 
-**Measured.** Opening a preset with a 261 MB recording left the wasm heap at 1084 MiB;
-a 96 MiB recording downloaded and then refused left 96 MiB more in use (`tests/wasm/presets.spec.js`,
-"a preset recording downloads without passing through the wasm heap"), and a robot mesh kept its
-whole body (`tests/wasm/scene3d_url_models.spec.js`, "a URL robot mesh leaves no copy in the wasm heap").
+## Browser resident payload pool
 
-**What the code does.** `browserFetchToFile()` (`BrowserFetch.h`) bypasses Qt: the
-page's `fetch()` writes each chunk into a MEMFS file, which MEMFS keeps as a JavaScript
-array outside the wasm heap; the SHA-256 is one `crypto.subtle.digest` over that array once the body is complete.
-`pj_app`'s `PresetController` streams preset recordings through it (a picked data file is not copied at all:
-`pj_app`'s `BrowserPickedFile` reads it lazily; Qt's `getOpenFileContent` would hold it whole in a
-`QByteArray`); every download that
-wants the bytes (the other preset files, Scene3D's `UrlFetcher` for robot URDFs, meshes and
-textures) goes through `HttpGet.h`'s `fetchBytesWithLimit()`, whose browser side is
-`browserFetchToBytes()`: no hashing, a scratch file read back into a `QByteArray`.
+- **Observed:** on a 261 MB recording in the browser, playback and seeking cost the same with a 64 MiB pool of resident
+  object payloads as with the desktop's 256 MiB.
+- **What the code does:** `SessionManager` sizes the browser pool at a quarter of the desktop one, because the wasm
+  heap never shrinks and also holds everything else. A single payload larger than the pool is never admitted, so every
+  read of it re-fetches it lazily from its source.
+- **Re-test** when browser recordings grow well past that size or seeking in the browser is reported slow.
 
-**Re-test** on every Qt bump: once `downloadSucceeded()` closes the fetch, a
-`QNetworkAccessManager` download stops leaking (it still peaks at the extra copies).
+## Time-sliced replay in the browser
 
 ## The browser's resident payload pool is 64 MiB
 

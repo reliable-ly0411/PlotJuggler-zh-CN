@@ -22,6 +22,7 @@
 #include "PreferencesDialog.h"
 #include "Theme.h"
 #include "TitleBar.h"
+#include "pj_widgets/ToggleSwitch.h"
 #include "support/gui_test_env.h"
 #include "support/isolated_main_window.h"
 
@@ -320,3 +321,41 @@ class LanguageSettingsEnvironment : public ::testing::Environment {
 static auto* const kLanguageEnv = ::testing::AddGlobalTestEnvironment(new LanguageSettingsEnvironment);
 
 }  // namespace
+
+TEST(PreferencesLanguageTest, TelemetryDefaultsOffAndCancelDoesNotConsent) {
+  QSettings settings;
+  settings.remove(u"Preferences::send_anonymous_stats"_s);
+  settings.remove(PJ::MainWindow::kUsageStatsKey);
+  PJ::Theme theme;
+  PJ::PreferencesDialog dialog(theme);
+  auto* ping = dialog.findChild<PJ::ToggleSwitch*>(u"telemetryToggle"_s);
+  auto* usage = dialog.findChild<PJ::ToggleSwitch*>(u"usageStatsToggle"_s);
+  ASSERT_NE(ping, nullptr);
+  ASSERT_NE(usage, nullptr);
+  EXPECT_FALSE(ping->isChecked());
+  EXPECT_FALSE(usage->isChecked());
+  ping->setChecked(true, false);
+  usage->setChecked(true, false);
+  dialog.reject();
+  EXPECT_FALSE(settings.value(u"Preferences::send_anonymous_stats"_s, false).toBool());
+  EXPECT_FALSE(settings.value(PJ::MainWindow::kUsageStatsKey, false).toBool());
+}
+
+TEST(PreferencesLanguageTest, TelemetryConsentPersistsOnlyAfterAcceptAndCanBeRevoked) {
+  PJ::Theme theme;
+  for (const bool consent : {true, false}) {
+    PJ::PreferencesDialog dialog(theme);
+    auto* ping = dialog.findChild<PJ::ToggleSwitch*>(u"telemetryToggle"_s);
+    auto* usage = dialog.findChild<PJ::ToggleSwitch*>(u"usageStatsToggle"_s);
+    ASSERT_NE(ping, nullptr);
+    ASSERT_NE(usage, nullptr);
+    ping->setChecked(consent, false);
+    usage->setChecked(consent, false);
+    dialog.accept();
+    EXPECT_EQ(QSettings().value(u"Preferences::send_anonymous_stats"_s).toBool(), consent);
+    EXPECT_EQ(QSettings().value(PJ::MainWindow::kUsageStatsKey).toBool(), consent);
+    PJ::PreferencesDialog reopened(theme);
+    EXPECT_EQ(reopened.findChild<PJ::ToggleSwitch*>(u"telemetryToggle"_s)->isChecked(), consent);
+    EXPECT_EQ(reopened.findChild<PJ::ToggleSwitch*>(u"usageStatsToggle"_s)->isChecked(), consent);
+  }
+}

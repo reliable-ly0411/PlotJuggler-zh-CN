@@ -276,8 +276,7 @@ if ($RepoOutDir) {
 
 # --- locate the built app --------------------------------------------------
 # Prefer Release (CI default), then RelWithDebInfo, then any config. The CMake
-# target 'pj_app' has OUTPUT_NAME plotjuggler4 on main, but older builds still
-# ship as pj_app.exe — accept either.
+# target 'pj_app' has OUTPUT_NAME plotjuggler4; a pj_app.exe is accepted too.
 function Find-AppExe {
   foreach ($cfg in @("Release","RelWithDebInfo","*")) {
     foreach ($name in @("plotjuggler4.exe","pj_app.exe")) {
@@ -351,17 +350,21 @@ function Download-RegistryPlugins {
     if ($seen.ContainsKey($id)) { Die "duplicate plugin registry id '$id'" }
     $seen[$id] = $true
 
-    $registryMatches = @($registry.extensions | Where-Object { $_.id -eq $id })
-    if ($registryMatches.Count -ne 1) {
-      Die "plugin registry must contain exactly one '$id' entry (found $($registryMatches.Count))"
-    }
-    $extension = $registryMatches[0]
-    $extensionVersion = [string]$extension.version
-    if (-not $extensionVersion) { Die "plugin '$id' has an empty registry version" }
-    $platformProperty = $extension.platforms.PSObject.Properties[$PluginPlatform]
-    if (-not $platformProperty) {
+    # The registry keeps older releases of an id for older hosts: take the newest that ships our platform.
+    $registryMatches = @($registry.extensions | Where-Object {
+        $_.id -eq $id -and $_.platforms -and $_.platforms.PSObject.Properties[$PluginPlatform]
+      })
+    if ($registryMatches.Count -eq 0) {
       Die "plugin '$id' has no '$PluginPlatform' artifact in the registry"
     }
+    foreach ($match in $registryMatches) {
+      if (-not [string]$match.version) { Die "plugin '$id' has an empty registry version" }
+    }
+    $extension = $registryMatches |
+      Sort-Object { Convert-Semver ([string]$_.version) "plugin '$id' registry version" } -Descending |
+      Select-Object -First 1
+    $extensionVersion = [string]$extension.version
+    $platformProperty = $extension.platforms.PSObject.Properties[$PluginPlatform]
     $artifact = $platformProperty.Value
     $url = [string]$artifact.url
     $checksum = [string]$artifact.checksum
@@ -607,8 +610,8 @@ Render-Template $packageXmlSrc (Join-Path $stageMeta "package.xml")
 
 # --- remote updates (optional) ---------------------------------------------
 # Injected here rather than templated into config.xml so that a build without
-# -UpdateUrl stays byte-identical to one from before this existed: an empty
-# <Url/> would leave every maintenance tool polling nothing on each launch.
+# -UpdateUrl carries no <RemoteRepositories>: an empty <Url/> would leave every
+# maintenance tool polling nothing on each launch.
 if ($UpdateUrl) {
   $cfgPath = Join-Path $StageDir "config.xml"
   $closing = "</Installer>"

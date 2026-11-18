@@ -698,7 +698,7 @@ test('a recording without a pin is downloaded on every visit', async ({ page }) 
 });
 
 // The cache is a convenience: a browser that has none (or refuses to store, e.g. over its quota) loads the
-// recording from the network as before, and nothing is kept.
+// recording from the network, and nothing is kept.
 test('a recording loads when the browser cannot keep it', async ({ page }) => {
   test.setTimeout(240000);
   const errors = [];
@@ -753,10 +753,9 @@ test('keeping a recording drops the longest-kept ones past the cache budget', as
   }
 });
 
-// The deployed samples (resources/wasm-presets) in the acceptance package that
-// carries them (scripts/package_wasm.mjs --presets), served like production
-// from presets/ beside the page. Every other spec boots the plain package, so
-// no welcome dialog sits over its window.
+// The deployed samples (resources/wasm-presets) in the acceptance package that carries them
+// (scripts/package_wasm.mjs --presets), served like production from presets/ beside the page. Every other
+// spec boots the plain package, so no welcome dialog sits over its window.
 const SAMPLES_PACKAGE = path.resolve(
   process.env.PJ_WASM_PRESETS_PACKAGE_DIR || path.join(__dirname, '..', '..', 'build-wasm-probe', 'deploy-presets'));
 const SAMPLE_DIRECTORY = path.join(__dirname, '..', '..', 'resources', 'wasm-presets');
@@ -1045,14 +1044,14 @@ test('anymal sample stays responsive through load and reopen', { tag: '@serial' 
       if (task !== null) {
         expect(task, pass).toBeLessThan(MAX_MAIN_THREAD_TASK_MS);
       }
-      // The open ANYmal recording keeps its staged file for its lazy MCAP reader; a
-      // replaced sample releases its own, so nothing else is left behind.
+      // The open ANYmal recording keeps its staged file for its lazy MCAP reader; a replaced sample releases
+      // its own.
       expect(await stagedFiles(run.page, run.messages), pass).toBe(staged);
     };
 
     await openAnymal('load', 1);
-    // Switching to another sample brings its views and replaces the one it
-    // switched from; reopening ANYmal brings its robot back.
+    // Switching to another sample brings its views and replaces the previous sample's; reopening ANYmal
+    // brings its robot back.
     expect(await pickSample(run, samples, 'builtin_filters')).toContain('PJ_WASM_LAYOUT_LOAD_OK');
     await expectFiltersViews(run);
     expect(await datasetCount(run.page, run.messages)).toBe(1);
@@ -1118,12 +1117,11 @@ test('a sample that fails releases what it staged and leaves the open sample as 
   }
 });
 
-// A recording streams from the network into its staged file, never through the
-// wasm heap: the download leaves no copy behind and peaks at no copy on the way.
-// Served the wrong bytes, a recording takes the whole download and staging path
-// and is refused before any import, so no parsed data blurs the figures. The
-// bounds sit far below one copy of the recording, yet above allocator noise and
-// one 20 % growth step of the linear memory.
+// A recording streams from the network into its staged file, never through the wasm heap: the download
+// leaves no copy behind and peaks at no copy on the way. Served the wrong bytes, a recording takes the whole
+// download and staging path and is refused before any import, so no parsed data blurs the figures. The
+// bounds sit far below one copy of the recording, yet above allocator noise and one 20 % growth step of the
+// linear memory.
 test('a preset recording downloads without passing through the wasm heap', async ({ page }) => {
   test.setTimeout(180000);
   const errors = [];

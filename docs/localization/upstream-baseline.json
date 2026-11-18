@@ -1,9 +1,9 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
   "upstream_branch": "main",
-  "upstream_commit": "5002da40a6499cb99c1073d5b8c611f1e825cb4b",
+  "upstream_commit": "aa365846c3e5f5f1ed4f17fb54845ad6413c8de3",
   "upstream_version_file": "versions.env",
-  "baseline_recorded_utc": "2026-11-17",
+  "baseline_recorded_utc": "2026-11-18",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
   "localization_source_branch": "zh-CN",
   "localization_source_commit": "766a88d8e689c7803f32acb315ac872a0a67a57b",
@@ -33,7 +33,7 @@
     "tag_object": "da079f6670d3a1873ed1011dedc15556e6f838de",
     "commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
     "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.1.0",
-    "relationship": "Development snapshot with 134 upstream commits after official 4.1.0; upstream target declares 4.2.0, not a localized accepted release."
+    "relationship": "Development snapshot after official 4.1.0; upstream target declares 4.2.0, not a localized accepted release."
   },
   "csv_path_fix": {
     "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
@@ -55,12 +55,12 @@
     "license": "MIT",
     "strategy": "Host display mapping for the unchanged official binary; no plugin rebuild or SDK change."
   },
-  "host_sdk_version": "1.0.1",
+  "host_sdk_version": "1.1.0",
   "qt_version": "6.12.0",
-  "previous_upstream_commit": "904c48bfbb5371033ecc104e48e11bb442aa61a9",
+  "previous_upstream_commit": "5002da40a6499cb99c1073d5b8c611f1e825cb4b",
   "integration_parents": {
-    "development": "1613eaec28e7c4aee13f7efc72f5e2b2d73a35ae",
-    "upstream": "5002da40a6499cb99c1073d5b8c611f1e825cb4b"
+    "development": "56d552ddd0906a4f1da2768c377bd7c7349a58bf",
+    "upstream": "aa365846c3e5f5f1ed4f17fb54845ad6413c8de3"
   },
   "published_localization_release": {
     "version": "4.0.0-zh.1.rc.4",
