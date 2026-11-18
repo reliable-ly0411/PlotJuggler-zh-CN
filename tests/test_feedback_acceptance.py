@@ -585,9 +585,15 @@ class PackageLanguagesTests(unittest.TestCase):
                 for relative, (platform, kind) in manifest.REPORT_IDENTITIES.items():
                     i = 0 if platform == 'windows-2022' else 1
                     directory = (root/'reports'/relative).parent; directory.mkdir(parents=True)
+                    from prepare_payload import CORE_PLUGINS
+                    from registry_inventory import read_inventory
+                    registry, provenance = read_inventory(ROOT)
+                    ids = set(CORE_PLUGINS) | (set() if i == 0 else {'toolbox-assistant-agent', 'ros2-topic-subscriber'})
+                    bin_version = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))['ardupilot_plugin']['version']
+                    inventory = [f"{x['id']}={x['version']}" for x in registry['extensions'] if x['id'] in ids] + ['ardupilot-dataflash=' + bin_version]
                     report = {'status': 'automated_checks_passed', 'languages': languages,
-                              'release': {'source_commit': 'a'*40, 'source_tree': 'b'*40, 'version': '4.0.0-zh.1.rc.4'},
-                              'plugin_count': 19 if i==0 else 21, 'loaded_plugin_count': 19 if i==0 else 20,
+                              'release': {'source_commit': 'a'*40, 'source_tree': 'b'*40, 'version': '4.0.0-zh.1.rc.4', 'expected_plugins': inventory, 'bin_plugin_version': bin_version, 'registry_sources': provenance['sources']},
+                              'plugin_count': 28 if i==0 else 30, 'loaded_plugin_count': 28 if i==0 else 29,
                               'unavailable_plugins': [] if i==0 else [{'id': 'ros2-topic-subscriber', 'status': 'not_tested_missing_external_dependency'}],
                               'checks': ['synthetic test']}
                     (directory/'acceptance.json').write_text(json.dumps(report), encoding='utf-8')
@@ -607,7 +613,7 @@ class PackageLanguagesTests(unittest.TestCase):
                     (Path('candidate')/name).write_bytes(b'synthetic package')
                 (Path('candidate')/'SHA256SUMS-test.txt').write_text(''.join(
                     f'{manifest.sha256(p)}  {p.name}\n' for p in sorted(Path('candidate').iterdir())), encoding='utf-8')
-                with mock.patch.dict(os.environ, {'GITHUB_SHA':'a'*40,'GITHUB_WORKFLOW_SHA':'c'*40,'GITHUB_RUN_ID':'1','GITHUB_RUN_ATTEMPT':'1'}), \
+                with mock.patch.dict(os.environ, {'EXPECTED_SOURCE_SHA':'a'*40,'GITHUB_SHA':'d'*40,'GITHUB_WORKFLOW_SHA':'c'*40,'GITHUB_RUN_ID':'1','GITHUB_RUN_ATTEMPT':'1'}), \
                      mock.patch.object(manifest.subprocess, 'check_output', return_value='b'*40):
                     manifest.main()
                 return json.loads(Path('release-manifest.json').read_text(encoding='utf-8'))

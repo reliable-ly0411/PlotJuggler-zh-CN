@@ -16,7 +16,7 @@ class PackageInventoryTests(unittest.TestCase):
         lock, provenance = read_inventory(ROOT)
         ids = set(CORE_PLUGINS) | (set() if windows else {'toolbox-assistant-agent', 'ros2-topic-subscriber'})
         plugins = [{'id': x['id'], 'version': x['version']} for x in lock['extensions'] if x['id'] in ids]
-        version = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text())['ardupilot_plugin']['version']
+        version = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))['ardupilot_plugin']['version']
         plugins.append({'id': 'ardupilot-dataflash', 'version': version})
         record = {'bin_plugin_version': version, 'expected_plugins': [f"{x['id']}={x['version']}" for x in plugins], 'registry_sources': provenance['sources']}
         return plugins, record

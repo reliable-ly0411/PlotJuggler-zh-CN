@@ -80,7 +80,7 @@ class ReleaseManifestTests(unittest.TestCase):
                     windows = platform == 'windows-2022'
                     registry, provenance = read_inventory(ROOT)
                     ids = set(CORE_PLUGINS) | (set() if windows else {'toolbox-assistant-agent', 'ros2-topic-subscriber'})
-                    bin_version = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text())['ardupilot_plugin']['version']
+                    bin_version = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))['ardupilot_plugin']['version']
                     inventory = [f"{x['id']}={x['version']}" for x in registry['extensions'] if x['id'] in ids] + ['ardupilot-dataflash=' + bin_version]
                     report = {'status': 'automated_checks_passed',
                               'languages': list(manifest.ACCEPTANCE_LANGUAGES),
@@ -98,7 +98,7 @@ class ReleaseManifestTests(unittest.TestCase):
                         digest = manifest.sha256(candidate / name)
                         (path.parent / 'package-integrity.json').write_text(json.dumps({
                             'format': kind, 'name': name, 'before': digest, 'after': digest}), encoding='utf-8')
-                env = {'GITHUB_SHA': 'source', 'GITHUB_WORKFLOW_SHA': 'workflow',
+                env = {'EXPECTED_SOURCE_SHA': 'source', 'GITHUB_SHA': 'control', 'GITHUB_WORKFLOW_SHA': 'workflow',
                        'GITHUB_RUN_ID': '1', 'GITHUB_RUN_ATTEMPT': '1'}
                 with mock.patch.dict(os.environ, env), mock.patch.object(
                         manifest.subprocess, 'check_output', return_value='tree'):
@@ -113,15 +113,15 @@ class ReleaseManifestTests(unittest.TestCase):
                     self.assertEqual(len(result['acceptance_reports']), 6)
                     self.assertEqual(len(result['screenshots']), 18)
                     report_path = Path('reports/zh4-final-linux-0/deb/acceptance.json')
-                    original_report = json.loads(report_path.read_text())
+                    original_report = json.loads(report_path.read_text(encoding='utf-8'))
                     for key, value in [('plugin_count', 21), ('loaded_plugin_count', 28),
                                        ('unavailable_plugins', []),
                                        ('unavailable_plugins', [{'id': 'csv-loader', 'status': 'not_tested_missing_external_dependency'}])]:
                         changed = dict(original_report, **{key: value})
-                        report_path.write_text(json.dumps(changed))
+                        report_path.write_text(json.dumps(changed), encoding='utf-8')
                         with self.subTest(key=key, value=value), self.assertRaises(AssertionError):
                             manifest.main(development_candidate=development_candidate)
-                    report_path.write_text(json.dumps(original_report))
+                    report_path.write_text(json.dumps(original_report), encoding='utf-8')
                     integrity = Path('reports/zh4-final-Windows-portable/runtime/package-integrity.json')
                     data = json.loads(integrity.read_text(encoding='utf-8'))
                     data['after'] = '0' * 64
