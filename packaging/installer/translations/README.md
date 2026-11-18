@@ -29,9 +29,9 @@ https://doc.qt.io/qtinstallerframework/ifw-customizing-installers.html .
 `ifw_zh_TW.ts` is a downstream translation derived from the same pinned
 4.10.0 catalog, not an official Qt Traditional Chinese catalog. It retains
 all 700 context/source entries and the accompanying upstream license.
-Modifications dated 2026-11-18 translate 177 wizard, component-selection,
-maintenance, authentication, settings and summary messages into Traditional
-Chinese. The other 523 translations are explicitly unfinished and empty.
+Modifications dated 2026-11-18 translate all 700 messages into Traditional
+Chinese, including 16 singular/plural entries. This completes the text catalog,
+not the installer integration or runtime validation.
 
 The pinned upstream tree has no `ifw_zh_TW.ts`; the official
 [Qt translation index](https://l10n-files.qt.io/l10n-files/) also lists no
@@ -40,7 +40,7 @@ Traditional Chinese catalog and must be included separately from the selected
 Qt kit when this feature is enabled.
 
 This catalog is not yet wired into packaging or the language selector.
-Before enabling it, finish the untranslated entries, compile both IFW and
+Before enabling it, run `python scripts/test_ifw_traditional_catalog.py`, compile both IFW and
 component catalogs with `lrelease`, check placeholders and markup, embed
 the matching QtBase dictionary, and validate all six language-restart
 directions on Windows. Preserve the upstream license and source offer when
