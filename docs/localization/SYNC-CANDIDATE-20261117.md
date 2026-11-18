@@ -249,3 +249,51 @@ with the existing sysroot tools on PATH and umask 022. Original failure logs are
 retained; no test was removed or weakened. Actionlint, pre-commit and diff checks
 passed. Remote Windows PowerShell and exact new-head package acceptance remain
 required.
+
+## Integrated native/Firefox repair candidate (2026-11-18)
+
+Registry repair `acc9350ba0d1e8c54d7debaea41ba6f822d2c135` passed source run
+`44206279993`: Linux 813 cases, 24 skips, zero failures; Windows 811 cases,
+33 skips, zero failures. The real PowerShell installer/portable exit propagation
+regression passed on Windows (and on the Linux CI PowerShell installation).
+Both 2,151-message catalogs remain complete. The first publication used an
+invalid issue-less `fix/` branch and Linux correctly failed its branch-name guard
+in run `44206024428`; that failure is retained. The identical commit was then
+published normally to the validated `zh-CN-4.x-ci/native-registry-inventory`
+branch without changing any guard.
+
+The timer/panel candidate `88813bebbf324561a7485446d89153740350e785` passed
+source run `44201914632`. Its WASM run `44201914555` actually ran and passed
+Chromium functional 96/96, log/layout/glyph 5/5, JPEG drawing 1/1, and each of
+English, Simplified and Traditional Chinese 4/4. Firefox functional shards
+passed 50 and 42 cases (seven existing skips in shard two); shard one passed
+both editor cases and all three language groups (4 each). The original
+materialization completion, full preview-data and 100 ms heartbeat assertions
+ran successfully; the successful report does not print an exact maximum gap.
+
+Chromium serial acceptance remains FAILED: Anymal load longest task 2,456 ms
+exceeded the unchanged 2,000 ms limit, with restore 751 ms and frame gap
+2,467 ms. The other four serial cases passed. The separate sampled diagnostic
+replay passed at 1,358 ms, restore 783 ms, frame gap 1,617 ms. It does not replace
+or invalidate the original failure. This is not whole-browser acceptance.
+The retained Chromium evidence ZIP SHA-256 is
+`3546b34f04c563e3a40806ce7f322661d6b264842c841e3ae63e20420051534c`;
+Firefox shard-one evidence is
+`14d6895c0eef22286cf55d221e1052587fd7d73e5d9a5f0f10faece2add03ef9`.
+
+The complete localized production package measures 25,337,652 B against
+26,000,000 B; its actual startup size is 24,580,430 B. All 40 manifest files and
+both full OFL copies were verified. Original failed runs, all resources and
+both budget scopes remain unchanged. This merge combines the reviewed repairs
+only into the candidate worktree so exact-head native original-package and
+clean-install validation can proceed; development and stable promotion remain
+blocked by incomplete package acceptance and the Anymal performance failure.
+Both independent acceptance builds now retain receipt-bound symbol maps for
+continued offline profiling. Production flags and artifacts are unaffected.
+
+Local integration checks: 24 focused Python cases and 17 JavaScript cases passed;
+branch, catalog-only translation, provenance, Actionlint, pre-commit and diff
+checks passed. No full application rebuild was repeated locally. Exact merged
+head CI must still validate all native binaries, packages, installed licenses,
+clean installations and browser gates; antecedent branch results do not replace
+that acceptance.

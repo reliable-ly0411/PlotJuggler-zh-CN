@@ -42,6 +42,7 @@ jobs:
       role: upstream
       source_repository: PlotJuggler/PlotJuggler
       source_sha: ${{ needs.identity.outputs.upstream_sha }}
+      acceptance_symbol_map: true
   localized:
     needs: identity
     uses: ./.github/workflows/zh-4x-wasm-lane.yml
@@ -49,3 +50,4 @@ jobs:
       role: localized
       source_repository: ${{ github.repository }}
       source_sha: ${{ needs.identity.outputs.candidate_sha }}
+      acceptance_symbol_map: true

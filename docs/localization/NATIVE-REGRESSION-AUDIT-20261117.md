@@ -347,3 +347,140 @@ same binary's symbol map. No timer or runtime behavior is changed on this basis.
 Sampling changes timing and cannot replace the original 179.34/206.42 ms failures
 or the original unsampled pending timeout. Future failure-only diagnostics retain
 the original JSON result and all assertions before the separate sampled replay.
+
+## Isolated WASM zero-timer follow-up
+
+The pinned Qt 6.12.0 sources expose a concrete continuation hazard:
+`QTimerInfoList::activateTimers()` delivers a zero-interval callback but excludes
+it from its returned activation count. `QEventDispatcherWasm::sendTimerEvents()`
+rearms its native timer only when that count is positive. A native executable
+linked to the actual Qt 6.12.0 private timer-list implementation, with the same
+WASM rearm predicate, measured:
+
+- 0 ms: one callback, returned count zero, timer still pending, no rearm; the
+  three-callback progress assertion failed with exit 1.
+- 1 ms: three callbacks, returned count one, timer pending and rearmed; the same
+  progress assertion passed with exit 0.
+
+This is a native mechanism probe, not a compiled-WASM/browser reproduction.
+The isolated change gives only the WASM materialization timer a positive 1 ms
+interval. It does not alter per-slice budgets, data, notification intervals or
+the existing 100 ms/60-second browser assertions. The native unit test explicitly
+pumps `processEvents`, so its success alone cannot cover the browser's need to
+rearm a native wakeup. The initial >100 ms WASM work remains a separate issue.
+
+The timer probe compiled with `-Wall -Wextra -Werror`. A separate strict syntax
+attempt for both branches of the whole `DataProcessorService.cpp` stopped on
+its pre-existing `Dependent::transform_key` missing-field-initializer warning
+at the unchanged processor-removal code. That failure is retained, not suppressed;
+it is not evidence of a successful whole-file compile or browser validation.
+Pre-commit passes. The isolated change is not in published candidate e44a1a53
+or its running CI and still requires exact-head browser validation.
+
+The strict compile blocker is resolved separately by explicitly initializing the
+filter-dependent record's unused `transform_key` to its existing empty value.
+Both native and `PJ_TARGET_WASM` branches of the actual full translation unit now
+compile with `-Wall -Wextra -Werror`; no warning flag was disabled. These are
+native-compiler object checks, not an Emscripten link or runtime result. The first
+strict failure log is retained alongside the passing compile log.
+
+The independent `zh-4x-wasm-timer-validation.yml` entry builds this branch as one
+complete localized source/controller identity through the existing reusable
+WASM lane. It preserves the production total budget, production cold boot,
+acceptance probes, Chromium serial/functional cases and Firefox suites, including
+the existing editor failure reporting and failure-only sampling. It neither
+patches the upstream reference checkout nor cancels the e44a1a53 candidate runs.
+This isolates the product change while the baseline candidate continues. Browser
+results must be read from the new exact run; the timer probe does not establish
+that the 100 ms first-task gate passes.
+
+## Exact timer candidate browser result and remaining long task
+
+Independent source `19cd52c895203e8ae3618dfe578f2e0758771348` passed both
+source-check platforms in run `44179927537`. WASM run `44179927751` rebuilt
+`DataProcessorService.cpp` in both production and acceptance configurations.
+Its production receipt and all 40 actual package files were rehashed: startup
+24,580,407 B, complete total 25,337,629 B below 26,000,000 B. The full UI font
+OFL is present. This does not replace the separate upstream startup gate.
+
+Chromium passed 96 functional, five layout/glyph, one 64-image JPEG, five serial
+and four cases in each of English, Simplified and Traditional Chinese. Anymal
+load/reopen longest tasks were 1,313/1,375 ms, below the unchanged 2,000 ms limit.
+Firefox passed 50/42 functional cases (seven existing skips) and four cases per
+language. The editor suite passed one and failed one: the transform completed
+within its existing deadline but its heartbeat gap was **194.78 ms**, above the
+unchanged 100 ms bound. Its later full-output assertions were therefore not
+executed. The workflow's success conclusion reflects its existing non-blocking
+editor policy and is not whole-suite acceptance.
+
+Failure-only sampling on the same acceptance package also completed the replay:
+the before-OK/materialized marks were 1,011.98 ms apart, with a 234.52 ms maximum
+heartbeat gap. Of 233 samples in that gap, 231 contain WASM frames. This is no
+longer evidence of a pending replay idling for 60 seconds. The stripped binary
+contains no function-name section, so the sampled indices do not yet identify
+the responsible C++ functions. Original and diagnostic failures remain separate.
+The Firefox evidence ZIP has SHA-256
+`9d029610d2a65b4516ae7628b28b9a402c2ca3446bb672734211d49b32588d76`.
+
+The independent timer workflow opts into an acceptance-only Emscripten
+`--emit-symbol-map` link. Production configuration and both budget scripts are
+unchanged. The sidecar is retained outside deployed packages, hashed with the
+exact acceptance binary in the receipt, checked after download in every browser
+job, and preserved with Firefox evidence. Missing or changed maps fail receipt
+validation. This is diagnostic evidence, not a performance fix or a deduction
+from measured package sizes. Pinned Emscripten 5.0.5 supports the option in
+[`emcc.py`](https://github.com/emscripten-core/emscripten/blob/5.0.5/emcc.py) and
+emits the final function-index map in
+[`tools/link.py`](https://github.com/emscripten-core/emscripten/blob/5.0.5/tools/link.py).
+
+Candidate `e44a1a53` remains unchanged. Its native run `44178541842` has started
+on both platforms; new-head CSV FileLoader and clean-install results are still
+pending. Previous f4 native run `44166480802` ended with zero native XML failures
+(Linux 6,154 passed/103 skipped; Windows 5,859 passed/103 skipped), then failed
+both real CSV validation steps on the old warning introduction. Both original
+package and clean-install stages were skipped. That old failure is preserved;
+e44 contains the exact three-language expectation correction, awaiting execution.
+
+
+## Retained symbolized replay and panel parsing candidate
+
+WASM run `44193448684` at 31746852 passed Chromium 96 functional/five serial,
+five layout/glyph, one JPEG64 and four cases per language, plus Firefox 50/42
+functional, two editors and four cases per language. Original Anymal load/reopen
+longest tasks were 1,305/1,279 ms. The original editor JSON and byte hashes are
+retained; the failure-only profile correctly skipped this passed suite.
+
+Independent diagnostic controller `ced01083af7316e93a10158c0cac72de9d989fc5`
+(run `44200970606`, job `134454623588`) reused the exact 31746852 acceptance
+archive and original passed report, verifying archive and per-file receipt hashes
+before serving. Its explicitly labeled single sampled replay failed the unchanged
+100 ms heartbeat assertion at **158.78 ms**, after materialization completed.
+This diagnostic does not replace the normal run or erase prior 19cd52c8 failures.
+Its archive SHA-256 is
+`a5c3c854972ac562be8e354692d66920907c0402fa79e5ba9cfe9ad81aa0b62e`.
+
+The exact receipt-bound symbol map resolves 155 samples in the longest gap:
+92 include `PanelEngine::Impl::runTick`, 63 include `applyAndDiff`, 36 include
+`QWidgetRepaintManager::paintAndFlush`, and 16 include incremental materialization.
+These inclusive stack counts are not disjoint timings. Parsing stacks in
+`applyAndDiff` reach nlohmann's number lexer and libc's `strtod`/`__floatscan`.
+The positive materialization timer fixed the observed pending-replay symptom;
+this evidence identifies additional panel/paint work on the same main-thread task.
+
+The host-only candidate reuses SDK 1.0.1's existing `WidgetDataView::raw()` tree
+for the owned diff copy instead of parsing a complete numeric preview twice.
+Malformed data still returns without replacing the previous typed view: only the
+SDK's ambiguous empty-object fallback needs a separate validity check. The diff
+copy can consume commands without changing the full typed view. SDK pin, plugin
+ABI, every preview sample, one-shot handling, tick intervals and budgets remain
+unchanged. Other painting and parsing costs remain to be measured on the new head.
+
+Four focused native tests pass: malformed inputs (including numeric overflow),
+valid empty/non-object JSON, command/view independence, and all 2,000 preview
+samples with exact integer-range preservation. Both actual `panel_engine.cpp`
+conditional branches compile with `-Wall -Wextra -Werror`. These are native GCC
+object builds with/without `PJ_TARGET_WASM`, not an Emscripten link or a full GUI
+runner pass. The first local focused build stopped because its scratch CMake
+harness linked an undefined gtest_main target; its failure log is retained. The
+corrected harness uses the installed pinned gtest archive and passes. Browser
+performance and the complete panel GUI suite remain unverified for this fix.

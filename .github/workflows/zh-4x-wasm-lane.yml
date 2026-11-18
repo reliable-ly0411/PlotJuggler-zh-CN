@@ -13,6 +13,10 @@ on:
       source_sha:
         required: true
         type: string
+      acceptance_symbol_map:
+        description: Retain an exact acceptance-binary function map for profiling
+        default: false
+        type: boolean
 permissions:
   contents: read
 env:
@@ -20,6 +24,7 @@ env:
   PJ_SOURCE_REPOSITORY: ${{ inputs.source_repository }}
   PJ_SOURCE_SHA: ${{ inputs.source_sha }}
   PJ_CONTROLLER_SHA: ${{ github.sha }}
+  PJ_ACCEPTANCE_SYMBOL_MAP: ${{ inputs.acceptance_symbol_map }}
 jobs:
   wasm:
     runs-on: ubuntu-22.04
@@ -239,7 +244,12 @@ jobs:
         run: |
           set -euo pipefail
           source .emsdk/emsdk_env.sh >/dev/null
+          diagnostic_link_flags=()
+          if [[ "$PJ_ACCEPTANCE_SYMBOL_MAP" == true ]]; then
+            diagnostic_link_flags+=(-DCMAKE_EXE_LINKER_FLAGS=--emit-symbol-map)
+          fi
           cmake -S . -B build-wasm-probe -G Ninja \
+            "${diagnostic_link_flags[@]}" \
             -DCMAKE_TOOLCHAIN_FILE="${PWD}/.qt-wasm/${PJ_QT_VERSION}/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
             -DQT_HOST_PATH="${PWD}/.qt-wasm/${PJ_QT_VERSION}/gcc_64" \
             -DCMAKE_BUILD_TYPE=Release \
@@ -298,7 +308,12 @@ jobs:
 
       - name: Record acceptance identity and actual sizes
         run: |
+          diagnostic_extras=()
+          if [[ "$PJ_ACCEPTANCE_SYMBOL_MAP" == true ]]; then
+            diagnostic_extras+=(--extra 'build-wasm-probe/pj_app/plotjuggler4*.symbols')
+          fi
           python3 .ci-controller/packaging/localization/wasm_receipt.py capture \
+            "${diagnostic_extras[@]}" \
             --role "$PJ_VALIDATION_ROLE" --source-repository "$PJ_SOURCE_REPOSITORY" \
             --source-sha "$PJ_SOURCE_SHA" --controller-sha "$PJ_CONTROLLER_SHA" --kind acceptance \
             --cache build-wasm-probe/CMakeCache.txt \
@@ -321,6 +336,7 @@ jobs:
             build-wasm-probe/pj_app/scene3d_capability_probe.*
             build-wasm-probe/pj_app/qtloader.js
             build-wasm-probe/pj_app/qtlogo.svg
+            build-wasm-probe/pj_app/plotjuggler4*.symbols
             .emsdk/upstream/emscripten/emrun.py
           include-hidden-files: true
           # The package is already .br/.gz compressed.
@@ -342,6 +358,7 @@ jobs:
             build-wasm-probe/CMakeCache.txt
             build-wasm-probe/CMakeFiles/CMakeConfigureLog.yaml
             build-wasm-probe/deploy/manifest.json
+            build-wasm-probe/pj_app/plotjuggler4*.symbols
           if-no-files-found: error
           retention-days: 14
 
@@ -398,7 +415,12 @@ jobs:
       - name: Verify downloaded acceptance identity and bytes
         id: artifact
         run: |
+          diagnostic_extras=()
+          if [[ "$PJ_ACCEPTANCE_SYMBOL_MAP" == true ]]; then
+            diagnostic_extras+=(--extra 'build-wasm-probe/pj_app/plotjuggler4*.symbols')
+          fi
           python3 .ci-controller/packaging/localization/wasm_receipt.py verify \
+            "${diagnostic_extras[@]}" \
             --role "$PJ_VALIDATION_ROLE" --source-repository "$PJ_SOURCE_REPOSITORY" \
             --source-sha "$PJ_SOURCE_SHA" --controller-sha "$PJ_CONTROLLER_SHA" --kind acceptance \
             --package build-wasm-probe/deploy --package build-wasm-probe/deploy-presets \
@@ -590,7 +612,12 @@ jobs:
       - name: Verify downloaded acceptance identity and bytes
         id: artifact
         run: |
+          diagnostic_extras=()
+          if [[ "$PJ_ACCEPTANCE_SYMBOL_MAP" == true ]]; then
+            diagnostic_extras+=(--extra 'build-wasm-probe/pj_app/plotjuggler4*.symbols')
+          fi
           python3 .ci-controller/packaging/localization/wasm_receipt.py verify \
+            "${diagnostic_extras[@]}" \
             --role "$PJ_VALIDATION_ROLE" --source-repository "$PJ_SOURCE_REPOSITORY" \
             --source-sha "$PJ_SOURCE_SHA" --controller-sha "$PJ_CONTROLLER_SHA" --kind acceptance \
             --package build-wasm-probe/deploy --package build-wasm-probe/deploy-presets \
@@ -707,6 +734,7 @@ jobs:
             tests/wasm/firefox-editors-report.json
             firefox-editors.log
             firefox-editor-profile-results/
+            build-wasm-probe/pj_app/plotjuggler4*.symbols
             tests/wasm/language-*-firefox.log
             tests/wasm/language-*-firefox-results/
             validation-receipts/

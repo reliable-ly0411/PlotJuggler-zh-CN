@@ -1224,7 +1224,13 @@ void DataProcessorService::armMaterializationTimer() {
   }
   if (!materialize_timer_) {
     materialize_timer_ = std::make_unique<QTimer>();
+#ifdef PJ_TARGET_WASM
+    // Qt 6.12's WASM dispatcher rearms only for counted timer activations;
+    // zero-interval callbacks are delivered but excluded from that count.
+    materialize_timer_->setInterval(1);
+#else
     materialize_timer_->setInterval(0);
+#endif
     QObject::connect(materialize_timer_.get(), &QTimer::timeout, materialize_timer_.get(), [this]() {
       if (stepMaterialization()) {
         materialize_timer_->stop();
@@ -1599,7 +1605,8 @@ Status DataProcessorService::removeProcessorsDependingOn(const std::vector<Topic
   forEachDependentProcessor(
       affected, /*include_ephemeral_transforms=*/true,
       [&dependents, &dependent_outputs](TopicId output, const FilterRecipe& recipe) {
-        dependents.push_back(Dependent{.kind = Dependent::Kind::kFilter, .filter_node = recipe.node_id});
+        dependents.push_back(
+            Dependent{.kind = Dependent::Kind::kFilter, .filter_node = recipe.node_id, .transform_key = {}});
         dependent_outputs.push_back(output);
       },
       [&dependents, &dependent_outputs](const std::string& key, const TransformRecipe& recipe) {

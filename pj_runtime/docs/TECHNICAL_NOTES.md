@@ -116,3 +116,20 @@ real DLL assertions remain in the child. Ordinary fixtures retain immediate
 cleanup; invalid leases, changed markers, links, child failures, and cleanup
 failures remain failures. `tests/test_widget_child_cleanup.py` exercises the
 actual Qt helper with `PJ_QT_PREFIX` pointing at a Qt installation.
+
+## WebAssembly materialization wakeups
+
+`DataProcessorService` uses a positive one-millisecond timer interval on WASM so
+each replay slice can schedule a subsequent browser wakeup. In Qt 6.12.0,
+[`QEventDispatcherWasm::sendTimerEvents`](https://github.com/qt/qtbase/blob/v6.12.0/src/corelib/kernel/qeventdispatcher_wasm.cpp)
+rearms the native timer only when the activation count is positive, whereas
+[`QTimerInfoList::activateTimers`](https://github.com/qt/qtbase/blob/v6.12.0/src/corelib/kernel/qtimerinfo_unix.cpp)
+delivers zero-interval callbacks without adding them to that count. A replay
+must not depend on unrelated UI events or timers to resume it. Desktop scheduling
+continues to use its zero interval. Slice budgets, notifications, output samples
+and the browser heartbeat/completion assertions are independent of this interval.
+
+The native timer-driven unit test explicitly pumps `processEvents`; this does
+not demonstrate browser native-timer rearming. Keep the real browser test that
+waits for all 30,000 output samples without pumping Qt, including its original
+100 ms heartbeat bound and 60-second completion timeout.

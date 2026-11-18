@@ -118,7 +118,7 @@ def run(args):
             raise ValueError('Tracked source changed during validation')
         receipt = {'format': 'org.plotjuggler.wasm-validation.v1', 'identity': expected,
                    'packages': packages, 'extras': extras, 'cmake_cache_sha256': sha256(args.cache),
-                   'configuration': [line for line in cache.splitlines() if line.startswith(('PJ_', 'CMAKE_BUILD_TYPE:', 'CMAKE_CXX_FLAGS'))],
+                   'configuration': [line for line in cache.splitlines() if line.startswith(('PJ_', 'CMAKE_BUILD_TYPE:', 'CMAKE_CXX_FLAGS', 'CMAKE_EXE_LINKER_FLAGS'))],
                    'submodules': git(args.source_root, 'submodule', 'status', '--recursive'),
                    'versions_env_sha256': sha256(args.source_root / 'versions.env'),
                    'versions_env': (args.source_root / 'versions.env').read_text(encoding='utf-8'),
