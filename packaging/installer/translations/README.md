@@ -118,3 +118,19 @@ Use the configuration actually built (for example RelWithDebInfo instead of
 Release). The test uses production script source and mocked process/UI calls;
 even a passing Qt result must not substitute for the disposable Windows wizard
 and real restart matrix above. No new build has been dispatched for this edit.
+
+### Fixture prerequisites and negative cases
+
+Preparation resolves stage/tool paths to absolute filesystem paths before
+using .NET XML APIs, checks `lrelease -version` against this checkout's
+`PJ_QT_VERSION`, rejects an empty QtBase dictionary, and requires the staged
+installer script to match the current source except for the encoded replacement
+supervisor payload and CRLF/LF differences. This avoids silently combining a
+new dictionary with an old script or unrelated Qt kit.
+
+Add negative fixture checks for missing/empty QtBase, wrong lrelease version,
+an old staged script, incomplete/placeholder-mismatched catalogs and repeated
+preparation. Run from a working directory different from the repository with
+relative input paths as well as absolute paths. These cases have been specified
+and source-reviewed, not executed in PowerShell. Successful source checks still
+do not establish a working binarycreator package.
