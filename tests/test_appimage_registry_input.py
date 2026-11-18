@@ -2,6 +2,7 @@
 """Exercise AppImage registry staging without Qt, network or a native rebuild."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -13,7 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / 'packaging/appimage/build_appimage.sh'
 
 
-@unittest.skipUnless(shutil.which('bash') and shutil.which('unzip'), 'bash and unzip required')
+@unittest.skipUnless(os.name != 'nt' and shutil.which('bash') and shutil.which('unzip'),
+                     'POSIX AppImage shell tooling required')
 class AppImageRegistryTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
