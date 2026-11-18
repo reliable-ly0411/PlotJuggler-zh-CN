@@ -15,20 +15,20 @@ class LocalizedTelemetryPolicyTests(unittest.TestCase):
                 'value(MainWindow::kUsageStatsKey, false)'],
         }
         for name, expressions in defaults.items():
-            source = (ROOT / name).read_text()
+            source = (ROOT / name).read_text(encoding="utf-8")
             for expression in expressions:
                 self.assertIn(expression, source)
                 self.assertNotIn(expression.replace(', false)', ', true)'), source)
 
     def test_opt_out_precedes_registry_and_network_initialization(self):
-        source = (ROOT / "pj_app/src/MainWindow.cpp").read_text()
+        source = (ROOT / "pj_app/src/MainWindow.cpp").read_text(encoding="utf-8")
         body = source.split("void MainWindow::startUsageReporting", 1)[1].split("void MainWindow::resizeEvent", 1)[0]
         self.assertLess(body.index('value(kUsageStatsKey, false)'), body.index('new UsageReporter'))
         self.assertLess(body.index('counters.setEnabled(false)'), body.index('return;'))
         self.assertIn('!may_report || !UsageReporter::canUpload(installation)', body)
 
     def test_automation_exclusions_remain(self):
-        source = (ROOT / "pj_app/src/main.cpp").read_text()
+        source = (ROOT / "pj_app/src/main.cpp").read_text(encoding="utf-8")
         for token in ['parser.isSet(screenshot_option)', 'qEnvironmentVariableIsSet("CI")',
                       'qEnvironmentVariableIsSet("PJ_DISABLE_TELEMETRY")', '/*may_report=*/!automated']:
             self.assertIn(token, source)
