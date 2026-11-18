@@ -48,7 +48,7 @@
             <translation>繼續操作將先解除安裝舊版本，再安裝新版本。是否繼續？</translation>
         </message>
         <message><source>Language selection</source><translation>語言選擇</translation></message>
-        <message><source>Could not restart the installer. Close it and run it with --lang zh_CN or --lang en_US.</source><translation>無法重新啟動安裝程式。請關閉後使用 --lang zh_CN 或 --lang en_US 參數執行。</translation></message>
+        <message><source>Could not restart the installer. Close it and run it with --lang followed by one of: %1.</source><translation>無法重新啟動安裝程式。請關閉安裝程式，再執行它，並在 --lang 後指定下列其中一種語言：%1。</translation></message>
         <message>
       <source>Replacement stopped</source>
       <translation>已停止取代</translation>
