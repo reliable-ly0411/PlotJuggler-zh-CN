@@ -23,3 +23,25 @@ standard wizard pages. `config.xml` must not force a `<Translations>` list:
 IFW interprets it as a fixed set to load, not available languages, and bypasses
 `--lang` selection in that case. See upstream `src/sdk/sdkapp.h` and
 https://doc.qt.io/qtinstallerframework/ifw-customizing-installers.html .
+
+## Traditional Chinese work in progress
+
+`ifw_zh_TW.ts` is a downstream translation derived from the same pinned
+4.10.0 catalog, not an official Qt Traditional Chinese catalog. It retains
+all 700 context/source entries and the accompanying upstream license.
+Modifications dated 2026-11-18 translate 177 wizard, component-selection,
+maintenance, authentication, settings and summary messages into Traditional
+Chinese. The other 523 translations are explicitly unfinished and empty.
+
+The pinned upstream tree has no `ifw_zh_TW.ts`; the official
+[Qt translation index](https://l10n-files.qt.io/l10n-files/) also lists no
+Traditional Chinese IFW catalog in its 4.11 section. QtBase has its own
+Traditional Chinese catalog and must be included separately from the selected
+Qt kit when this feature is enabled.
+
+This catalog is not yet wired into packaging or the language selector.
+Before enabling it, finish the untranslated entries, compile both IFW and
+component catalogs with `lrelease`, check placeholders and markup, embed
+the matching QtBase dictionary, and validate all six language-restart
+directions on Windows. Preserve the upstream license and source offer when
+packaging the modified catalog.
