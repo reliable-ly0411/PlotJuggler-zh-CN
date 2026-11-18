@@ -67,7 +67,8 @@ The checked-in two-language UI remains unchanged.
 
 Validation sequence on a Windows runner or approved local workspace:
 
-1. Run `python scripts/test_ifw_traditional_catalog.py`.
+1. Run `python scripts/test_ifw_traditional_catalog.py` and
+   `node scripts/test_installer_language.js` (35 pure-script assertions).
 2. Create the existing synthetic installer fixture in a disposable stage,
    using the exact branch commit and selected Qt/IFW tools. Do not use a real
    installed application's target directory.
@@ -91,6 +92,12 @@ from Simplified Chinese; language selection emits canonical `zh_TW`.
 The pure mapping functions were exercised in JavaScript only. PowerShell,
 Qt Linguist, binarycreator and Windows GUI checks have **not** been run in
 the connector-only development environment. These steps are a pending test
-plan, not a recorded pass. The existing restart failure message still offers
-the two established manual fallback languages; update the source and both
-component catalogs together before shipping a fully three-language installer.
+plan, not a recorded pass. The restart failure message now lists only the languages present in the
+staged selector, with matching English, Simplified and Traditional source keys.
+
+Review checkpoint: all 714 messages retain exact source/context inventories;
+16 plural messages each have one Traditional Chinese form; placeholders and
+rich-text tags agree. Cryptographic hashes are described as 密碼學雜湊值, not
+password hashes. The six direction argument-construction cases and locale aliases
+passed 35 assertions in a JavaScript sandbox. The checked-in Node wrapper and
+PowerShell staging validation have not yet been run on an executor.
