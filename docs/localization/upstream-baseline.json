@@ -19,14 +19,15 @@
     "branch": "plotjuggler-4.x-sdk",
     "commit": "fc6065fd64305479946552a757d78e6afdd2c506",
     "path": "3rdparty/plotjuggler-apbin-plugins",
-    "sdk_version": "1.0.1",
-    "sdk_source_commit": "ffd749ab343c3211b5100f124f6c873667b82629",
+    "sdk_version": "1.1.0",
+    "sdk_source_commit": "d65923cd11ab7a822ef7b802523e2fc7b281f515",
     "license": "LGPL-3.0-only",
     "linkage": "Separate native shared library; no static embedding in the application.",
     "version": "1.3.0-pj4.rc.1",
     "release_tag": "v1.3.0-pj4.rc.1",
     "release_commit": "55f75c4214deabda952b9114c7cb4c3005593158",
-    "source_manifest_sha256": "f2ef42dc0d80405dbeb7e2d23cf6831f2c5f2a1c846d39b8643af3fff4b5901d"
+    "source_manifest_sha256": "f2ef42dc0d80405dbeb7e2d23cf6831f2c5f2a1c846d39b8643af3fff4b5901d",
+    "sdk_scope": "Host source rebuild; standalone release remains SDK 0.34.1 with unchanged tag, source manifest and assets."
   },
   "upstream_release": {
     "tag": "4.1.0",

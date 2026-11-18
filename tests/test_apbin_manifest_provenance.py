@@ -80,6 +80,20 @@ class ApbinManifestProvenanceTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('BIN checkout manifest differs from pinned source', result.stderr)
 
+    def test_stale_rebuild_sdk_version_is_rejected(self):
+        self.plugin['sdk_version'] = '0.0.0'
+        self.save_record()
+        result = self.check()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('BIN rebuild SDK differs from host baseline', result.stderr)
+
+    def test_wrong_rebuild_sdk_source_is_rejected(self):
+        self.plugin['sdk_source_commit'] = '0' * 40
+        self.save_record()
+        result = self.check()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('BIN rebuild SDK source differs from locked host SDK', result.stderr)
+
     def test_wrong_blob_hash_is_rejected(self):
         self.plugin['source_manifest_sha256'] = '0' * 64
         self.save_record()
