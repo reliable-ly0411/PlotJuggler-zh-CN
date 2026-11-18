@@ -5,41 +5,41 @@
     <name>AuthenticationRequiredException</name>
     <message>
         <source>%1 at %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%2 的 %1</translation>
     </message>
     <message>
         <source>Proxy requires authentication.</source>
-        <translation type="unfinished"></translation>
+        <translation>代理伺服器需要驗證。</translation>
     </message>
 </context>
 <context>
     <name>BinaryContent</name>
     <message>
         <source>Cannot seek to %1 to read the operation data.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法定位至 %1 以讀取操作資料。</translation>
     </message>
     <message>
         <source>Cannot seek to %1 to read the resource collection block.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法定位至 %1 以讀取資源集合區塊。</translation>
     </message>
     <message>
         <source>Cannot open meta resource %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟中繼資源 %1。</translation>
     </message>
 </context>
 <context>
     <name>BinaryLayout</name>
     <message>
         <source>Cannot seek to %1 to read the embedded meta data count.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法定位至 %1 以讀取內嵌中繼資料數量。</translation>
     </message>
     <message>
         <source>Cannot seek to %1 to read the resource collection segment.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法定位至 %1 以讀取資源集合區段。</translation>
     </message>
     <message>
         <source>Unexpected mismatch of meta resources. Read %1, expected: %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>中繼資源不符。讀取到 %1，預期為 %2。</translation>
     </message>
 </context>
 <context>
@@ -69,726 +69,732 @@
     <name>DirectoryGuard</name>
     <message>
         <source>Path &quot;%1&quot; exists but is not a directory.</source>
-        <translation type="unfinished"></translation>
+        <translation>路徑「%1」已存在，但不是目錄。</translation>
     </message>
     <message>
         <source>Cannot create directory &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立目錄「%1」。</translation>
     </message>
 </context>
 <context>
     <name>ExtractCallbackImpl</name>
     <message>
         <source>Cannot retrieve path of archive item %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得封存項目 %1 的路徑。</translation>
     </message>
     <message>
         <source>Cannot remove already existing symlink %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除既有符號連結 %1。</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for writing: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行寫入：%2</translation>
     </message>
     <message>
         <source>Cannot create symlink at &quot;%1&quot;. Another one is already existing.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法在「%1」建立符號連結，該處已有其他符號連結。</translation>
     </message>
     <message>
         <source>Cannot read symlink target from file &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法從檔案「%1」讀取符號連結的目標。</translation>
     </message>
     <message>
         <source>Cannot create symlink at %1: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法在 %1 建立符號連結：%2</translation>
     </message>
 </context>
 <context>
     <name>InstallerBase</name>
     <message>
         <source>Unable to start installer</source>
-        <translation type="unfinished"></translation>
+        <translation>無法啟動安裝程式</translation>
     </message>
 </context>
 <context>
     <name>InstallerCalculator</name>
     <message>
         <source>Components added as automatic dependencies:</source>
-        <translation type="unfinished"></translation>
+        <translation>自動作為相依項目加入的元件：</translation>
     </message>
     <message>
         <source>Components added as dependency for &quot;%1&quot;:</source>
-        <translation type="unfinished"></translation>
+        <translation>作為「%1」的相依項目加入的元件：</translation>
     </message>
     <message>
         <source>Components that have resolved dependencies:</source>
-        <translation type="unfinished"></translation>
+        <translation>已解決相依性的元件：</translation>
     </message>
     <message>
         <source>Selected components without dependencies:</source>
-        <translation type="unfinished"></translation>
+        <translation>所選且無相依性的元件：</translation>
     </message>
     <message>
         <source>Recursion detected, component &quot;%1&quot; already added with reason: &quot;%2&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>偵測到遞迴，元件「%1」已因下列原因加入：「%2」</translation>
     </message>
     <message>
         <source>Cannot find missing dependency &quot;%1&quot; for &quot;%2&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到「%2」缺少的相依項目「%1」。</translation>
     </message>
     <message>
         <source>Impossible dependency resolution detected. Forced install component &quot;%1&quot; would be uninstalled because its dependency &quot;%2&quot; is marked for uninstallation with reason: &quot;%3&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>偵測到無法解決的相依性。必須安裝的元件「%1」將被解除安裝，因為其相依項目「%2」已標記為解除安裝，原因為：「%3」。</translation>
     </message>
     <message>
         <source>Components selected by alias &quot;%1&quot;:</source>
-        <translation type="unfinished"></translation>
+        <translation>由別名「%1」選取的元件：</translation>
     </message>
     <message>
         <source>Recursion detected, component alias &quot;%1&quot; already added.</source>
-        <translation type="unfinished"></translation>
+        <translation>偵測到遞迴，元件別名「%1」已加入。</translation>
     </message>
 </context>
 <context>
     <name>Job</name>
     <message>
         <source>Canceled</source>
-        <translation type="unfinished"></translation>
+        <translation>已取消</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::AppendFileOperation</name>
     <message>
         <source>Cannot backup file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法備份檔案「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for writing: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行寫入：%2</translation>
     </message>
     <message>
         <source>Cannot find backup file for &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到「%1」的備份檔案。</translation>
     </message>
     <message>
         <source>Cannot restore backup file for &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法還原「%1」的備份檔案。</translation>
     </message>
     <message>
         <source>Cannot restore backup file for &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法還原「%1」的備份檔案：%2</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::CopyOperation</name>
     <message>
         <source>Cannot backup file &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法備份檔案「%1」。</translation>
     </message>
     <message>
         <source>Cannot copy a non-existent file: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法複製不存在的檔案：%1</translation>
     </message>
     <message>
         <source>Cannot remove file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除檔案「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot copy file &quot;%1&quot; to &quot;%2&quot;: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將檔案「%1」複製至「%2」：%3</translation>
     </message>
     <message>
         <source>Cannot delete file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法刪除檔案「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot restore backup file into &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將備份檔案還原至「%1」：%2</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::DeleteOperation</name>
     <message>
         <source>Cannot create backup of file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立檔案「%1」的備份：%2</translation>
     </message>
     <message>
         <source>Cannot restore backup file for &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法還原「%1」的備份檔案：%2</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::FileDownloader</name>
     <message>
         <source>Download finished.</source>
-        <translation type="unfinished"></translation>
+        <translation>下載完成。</translation>
     </message>
     <message>
         <source>Cryptographic hashes do not match.</source>
-        <translation type="unfinished"></translation>
+        <translation>密碼雜湊值不符。</translation>
     </message>
     <message>
         <source>Download canceled.</source>
-        <translation type="unfinished"></translation>
+        <translation>下載已取消。</translation>
     </message>
     <message>
         <source>%1 of %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 / %2</translation>
     </message>
     <message>
         <source>%1 downloaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>已下載 %1。</translation>
     </message>
     <message>
         <source>(%1/sec)</source>
-        <translation type="unfinished"></translation>
+        <translation>（%1/秒）</translation>
     </message>
     <message numerus="yes">
         <source>%n day(s), </source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%n 天，</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s), </source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%n 小時，</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%n 分鐘</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%n 秒</numerusform></translation>
     </message>
     <message>
         <source> - %1%2%3%4 remaining.</source>
-        <translation type="unfinished"></translation>
+        <translation> - 剩餘 %1%2%3%4。</translation>
     </message>
     <message>
         <source> - unknown time remaining.</source>
-        <translation type="unfinished"></translation>
+        <translation> - 剩餘時間未知。</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::HttpDownloader</name>
     <message>
         <source>Cannot download %1. Writing to file &quot;%2&quot; failed: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>無法下載 %1。寫入檔案「%2」失敗：%3</translation>
     </message>
     <message>
         <source>Cannot download %1. Cannot create file &quot;%2&quot;: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>無法下載 %1。無法建立檔案「%2」：%3</translation>
     </message>
     <message>
         <source>%1 at %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%2 的 %1</translation>
     </message>
     <message>
         <source>Authentication request canceled.</source>
-        <translation type="unfinished"></translation>
+        <translation>驗證要求已取消。</translation>
     </message>
     <message>
         <source>Secure Connection Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>安全連線失敗</translation>
     </message>
     <message>
         <source>There was an error during connection to: %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>連線至 %1 時發生錯誤。</translation>
     </message>
     <message>
         <source>This could be a problem with the server&apos;s configuration, or it could be someone trying to impersonate the server.</source>
-        <translation type="unfinished"></translation>
+        <translation>這可能是伺服器設定有問題，也可能有人試圖冒充該伺服器。</translation>
     </message>
     <message>
         <source>If you have connected to this server successfully in the past or trust this server, the error may be temporary and you can try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>如果您過去曾成功連線至此伺服器，或信任此伺服器，這可能是暫時性錯誤，您可以重試。</translation>
     </message>
     <message>
         <source>Try again</source>
-        <translation type="unfinished"></translation>
+        <translation>重試</translation>
     </message>
     <message>
         <source>Cannot download %1. Cannot create directory for &quot;%2&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>無法下載 %1。無法為「%2」建立目錄</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::LocalFileDownloader</name>
     <message>
         <source>Cannot open file &quot;%1&quot; for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行讀取：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for writing: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行寫入：%2</translation>
     </message>
     <message>
         <source>Writing to file &quot;%1&quot; failed: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>寫入檔案「%1」失敗：%2</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::MkdirOperation</name>
     <message>
         <source>Cannot create directory &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立目錄「%1」：%2</translation>
     </message>
     <message>
         <source>Unknown error.</source>
-        <translation type="unfinished"></translation>
+        <translation>未知錯誤。</translation>
     </message>
     <message>
         <source>Cannot remove directory &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除目錄「%1」：%2</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::MoveOperation</name>
     <message>
         <source>Cannot backup file &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法備份檔案「%1」。</translation>
     </message>
     <message>
         <source>Cannot remove file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除檔案「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot copy file &quot;%1&quot; to &quot;%2&quot;: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將檔案「%1」複製至「%2」：%3</translation>
     </message>
     <message>
         <source>Cannot remove file &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除檔案「%1」。</translation>
     </message>
     <message>
         <source>Cannot restore backup file for &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法還原「%1」的備份檔案：%2</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::PrependFileOperation</name>
     <message>
         <source>Cannot backup file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法備份檔案「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行讀取：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for writing: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行寫入：%2</translation>
     </message>
     <message>
         <source>Cannot find backup file for &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到「%1」的備份檔案。</translation>
     </message>
     <message>
         <source>Cannot restore backup file for &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法還原「%1」的備份檔案。</translation>
     </message>
     <message>
         <source>Cannot restore backup file for &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法還原「%1」的備份檔案：%2</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::ResourceFileDownloader</name>
     <message>
         <source>Cannot read resource file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法讀取資源檔案「%1」：%2</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::RmdirOperation</name>
     <message>
         <source>Cannot remove directory &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除目錄「%1」：%2</translation>
     </message>
     <message>
         <source>The directory does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>目錄不存在。</translation>
     </message>
     <message>
         <source>Cannot recreate directory &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法重新建立目錄「%1」：%2</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::Task</name>
     <message>
         <source>%1 started</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 已啟動</translation>
     </message>
     <message>
         <source>%1 cannot be stopped</source>
-        <translation type="unfinished"></translation>
+        <translation>無法停止 %1</translation>
     </message>
     <message>
         <source>Cannot stop task %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法停止工作 %1</translation>
     </message>
     <message>
         <source>%1 cannot be paused</source>
-        <translation type="unfinished"></translation>
+        <translation>無法暫停 %1</translation>
     </message>
     <message>
         <source>Cannot pause task %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法暫停工作 %1</translation>
     </message>
     <message>
         <source>Cannot resume task %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法繼續工作 %1</translation>
     </message>
     <message>
         <source>%1 done</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 已完成</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::UpdateFinder</name>
     <message>
         <source>Cannot access the package information of this application.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法存取此應用程式的套件資訊。</translation>
     </message>
     <message>
         <source>No package sources set for this application.</source>
-        <translation type="unfinished"></translation>
+        <translation>此應用程式尚未設定套件來源。</translation>
     </message>
     <message numerus="yes">
         <source>%n update(s) found.</source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>找到 %n 項更新。</numerusform></translation>
     </message>
     <message>
         <source>Downloading Updates.xml from update sources.</source>
-        <translation type="unfinished"></translation>
+        <translation>正在從更新來源下載 Updates.xml。</translation>
     </message>
     <message>
         <source>Cannot download package source %1 from &quot;%2&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法從「%2」下載套件來源 %1。</translation>
     </message>
     <message>
         <source>Updates.xml file(s) downloaded from update sources.</source>
-        <translation type="unfinished"></translation>
+        <translation>已從更新來源下載 Updates.xml 檔案。</translation>
     </message>
     <message>
         <source>Computing applicable updates.</source>
-        <translation type="unfinished"></translation>
+        <translation>正在判定適用的更新。</translation>
     </message>
     <message>
         <source>Application updates computed.</source>
-        <translation type="unfinished"></translation>
+        <translation>應用程式更新已判定完成。</translation>
     </message>
 </context>
 <context>
     <name>KDUpdater::UpdatesInfoData</name>
     <message>
         <source>Updates.xml contains invalid content: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Updates.xml 包含無效內容：%1</translation>
     </message>
     <message>
         <source>Cannot read &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>無法讀取「%1」</translation>
     </message>
     <message>
         <source>Root element %1 unexpected, should be &quot;Updates&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>非預期的根元素 %1，應為「Updates」。</translation>
     </message>
     <message>
         <source>ApplicationName element is missing.</source>
-        <translation type="unfinished"></translation>
+        <translation>缺少 ApplicationName 元素。</translation>
     </message>
     <message>
         <source>ApplicationVersion element is missing.</source>
-        <translation type="unfinished"></translation>
+        <translation>缺少 ApplicationVersion 元素。</translation>
     </message>
     <message>
         <source>PackageUpdate element without Name</source>
-        <translation type="unfinished"></translation>
+        <translation>PackageUpdate 元素缺少 Name</translation>
     </message>
     <message>
         <source>PackageUpdate element without Version</source>
-        <translation type="unfinished"></translation>
+        <translation>PackageUpdate 元素缺少 Version</translation>
     </message>
     <message>
         <source>PackageUpdate element without ReleaseDate</source>
-        <translation type="unfinished"></translation>
+        <translation>PackageUpdate 元素缺少 ReleaseDate</translation>
     </message>
 </context>
 <context>
     <name>Lib7z</name>
     <message>
         <source>Internal code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>內部代碼：%1</translation>
     </message>
     <message>
         <source>Not enough memory</source>
-        <translation type="unfinished"></translation>
+        <translation>記憶體不足</translation>
     </message>
     <message>
         <source>Error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>錯誤：%1</translation>
     </message>
     <message>
         <source>Cannot retrieve property %1 for item %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得項目 %2 的屬性 %1。</translation>
     </message>
     <message>
         <source>Property %1 for item %2 not of type VT_FILETIME but %3.</source>
-        <translation type="unfinished"></translation>
+        <translation>項目 %2 的屬性 %1 型別不是 VT_FILETIME，而是 %3。</translation>
     </message>
     <message>
         <source>Cannot convert UTC file time to system time.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將 UTC 檔案時間轉換為系統時間。</translation>
     </message>
     <message>
         <source>Cannot load codecs.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法載入編解碼器。</translation>
     </message>
     <message>
         <source>Cannot open archive &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟封存檔「%1」。</translation>
     </message>
     <message>
         <source>Cannot retrieve number of items in archive.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得封存檔的項目數量。</translation>
     </message>
     <message>
         <source>Cannot retrieve path of archive item &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得封存項目「%1」的路徑。</translation>
     </message>
     <message>
         <source>Unknown exception caught (%1).</source>
-        <translation type="unfinished"></translation>
+        <translation>捕捉到未知例外（%1）。</translation>
     </message>
     <message>
         <source>Cannot create temporary file: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立暫存檔：%1</translation>
     </message>
     <message>
         <source>Unsupported archive type.</source>
-        <translation type="unfinished"></translation>
+        <translation>不支援的封存檔類型。</translation>
     </message>
     <message>
         <source>Cannot create archive &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立封存檔「%1」</translation>
     </message>
     <message>
         <source>Cannot create archive &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立封存檔「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot remove old archive &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除舊封存檔「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot rename temporary archive &quot;%1&quot; to &quot;%2&quot;: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將暫存封存檔「%1」重新命名為「%2」：%3</translation>
     </message>
     <message>
         <source>Unknown exception caught (%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>捕捉到未知例外（%1）</translation>
     </message>
 </context>
 <context>
     <name>LocalPackageHub</name>
     <message>
         <source>%1 contains invalid content: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 包含無效內容：%2</translation>
     </message>
     <message>
         <source>The file %1 does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>檔案 %1 不存在。</translation>
     </message>
     <message>
         <source>Cannot open %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟 %1。</translation>
     </message>
     <message>
         <source>Parse error in %1 at %2, %3: %4</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 在 %2，%3 處發生解析錯誤：%4</translation>
     </message>
     <message>
         <source>Root element %1 unexpected, should be &apos;Packages&apos;.</source>
-        <translation type="unfinished"></translation>
+        <translation>非預期的根元素 %1，應為「Packages」。</translation>
     </message>
 </context>
 <context>
     <name>LockFile</name>
     <message>
         <source>Cannot create lock file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立鎖定檔「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot write PID to lock file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將 PID 寫入鎖定檔「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot obtain the lock for file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得檔案「%1」的鎖定：%2</translation>
     </message>
     <message>
         <source>Cannot release the lock for file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法釋放檔案「%1」的鎖定：%2</translation>
     </message>
 </context>
 <context>
     <name>QInstaller</name>
     <message>
         <source>No marker found, stopped after %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到標記，在 %1 後停止。</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行讀取：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for writing: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行寫入：%2</translation>
     </message>
     <message>
         <source>Read failed after %1 bytes: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>讀取 %1 位元組後失敗：%2</translation>
     </message>
     <message>
         <source>Copy failed: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>複製失敗：%1</translation>
     </message>
     <message>
         <source>Write failed after %1 bytes: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>寫入 %1 位元組後失敗：%2</translation>
     </message>
     <message>
         <source>bytes</source>
-        <translation type="unfinished"></translation>
+        <translation>位元組</translation>
     </message>
     <message>
         <source>KB</source>
-        <translation type="unfinished"></translation>
+        <translation>KB</translation>
     </message>
     <message>
         <source>MB</source>
-        <translation type="unfinished"></translation>
+        <translation>MB</translation>
     </message>
     <message>
         <source>GB</source>
-        <translation type="unfinished"></translation>
+        <translation>GB</translation>
     </message>
     <message>
         <source>TB</source>
-        <translation type="unfinished"></translation>
+        <translation>TB</translation>
     </message>
     <message>
         <source>PB</source>
-        <translation type="unfinished"></translation>
+        <translation>PB</translation>
     </message>
     <message>
         <source>EB</source>
-        <translation type="unfinished"></translation>
+        <translation>EB</translation>
     </message>
     <message>
         <source>ZB</source>
-        <translation type="unfinished"></translation>
+        <translation>ZB</translation>
     </message>
     <message>
         <source>YB</source>
-        <translation type="unfinished"></translation>
+        <translation>YB</translation>
     </message>
     <message>
         <source>Cannot remove file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除檔案「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot remove directory &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除目錄「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot create directory &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立目錄「%1」。</translation>
     </message>
     <message>
         <source>Cannot copy file from &quot;%1&quot; to &quot;%2&quot;: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將檔案從「%1」複製至「%2」：%3</translation>
     </message>
     <message>
         <source>Cannot move file from &quot;%1&quot; to &quot;%2&quot;: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將檔案從「%1」移至「%2」：%3</translation>
     </message>
     <message>
         <source>Cannot create directory &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立目錄「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot open temporary file: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟暫存檔：%1</translation>
     </message>
     <message>
         <source>Cannot open temporary file for template %1: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟範本 %1 的暫存檔：%2</translation>
     </message>
     <message>
         <source>Cannot copy file &quot;%1&quot; to &quot;%2&quot;: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將檔案「%1」複製至「%2」：%3</translation>
     </message>
     <message>
         <source>Cannot copy file &quot;%1&quot; to &quot;%2&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將檔案「%1」複製至「%2」。</translation>
     </message>
     <message>
         <source>The specified module could not be found.</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到指定的模組。</translation>
     </message>
     <message>
         <source>Invalid content in &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>「%1」中有無效內容。</translation>
     </message>
     <message>
         <source>This may be solved by restarting the application after clearing the cache from:</source>
-        <translation type="unfinished"></translation>
+        <translation>您可以清除下列位置的快取，然後重新啟動應用程式，以嘗試解決此問題：</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::Component</name>
     <message>
         <source>Components cannot have children in updater mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>在更新模式中，元件不能有子元件。</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>錯誤</translation>
     </message>
     <message>
         <source>Error: Operation %1 does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>錯誤：操作 %1 不存在。</translation>
     </message>
     <message>
         <source>Cannot resolve isDefault in %1</source>
-        <translation type="unfinished"></translation>
+        <translation>無法解析 %1 中的 isDefault</translation>
     </message>
     <message>
         <source>Update Info: </source>
-        <translation type="unfinished"></translation>
+        <translation>更新資訊：</translation>
     </message>
     <message>
         <source>There was an error loading the selected component. This component cannot be installed.</source>
-        <translation type="unfinished"></translation>
+        <translation>載入所選元件時發生錯誤。無法安裝此元件。</translation>
     </message>
     <message>
         <source>Cannot open the requested UI file &quot;%1&quot;: %2.
 
 %3 &quot;%4&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟所要求的 UI 檔案「%1」：%2。
+
+%3「%4」</translation>
     </message>
     <message>
         <source>Cannot load the requested UI file &quot;%1&quot;: %2.
 
 %3 &quot;%4&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>無法載入所要求的 UI 檔案「%1」：%2。
+
+%3「%4」</translation>
     </message>
     <message>
         <source>Cannot open the requested license file &quot;%1&quot;: %2.
 
 %3 &quot;%4&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟所要求的授權檔案「%1」：%2。
+
+%3「%4」</translation>
     </message>
 </context>
 <context>
@@ -893,346 +899,352 @@
     <name>QInstaller::ConsumeOutputOperation</name>
     <message>
         <source>&lt;to be saved installer key name&gt; &lt;executable&gt; [argument1] [argument2] [...]</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;要儲存的安裝程式鍵名&gt; &lt;執行檔&gt; [引數1] [引數2] […]</translation>
     </message>
     <message>
         <source>Needed installer object in %1 operation is empty.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 操作所需的安裝程式物件為空。</translation>
     </message>
     <message>
         <source>Cannot save the output of &quot;%1&quot; to an empty installer key value.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將「%1」的輸出儲存至空白的安裝程式鍵值。</translation>
     </message>
     <message>
         <source>Failed to run command: &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>執行命令「%1」失敗：%2</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::CopyDirectoryOperation</name>
     <message>
         <source>&lt;source&gt; &lt;target&gt; [&quot;forceOverwrite&quot;]</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;來源&gt; &lt;目標&gt; [&quot;forceOverwrite&quot;]</translation>
     </message>
     <message>
         <source>Invalid argument in %1: Third argument needs to be forceOverwrite, if specified.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 的引數無效：若指定第三個引數，其值必須為 forceOverwrite。</translation>
     </message>
     <message>
         <source>Invalid argument in %1: Directory &quot;%2&quot; is invalid.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 的引數無效：目錄「%2」無效。</translation>
     </message>
     <message>
         <source>Cannot create directory &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立目錄「%1」。</translation>
     </message>
     <message>
         <source>Failed to overwrite &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法覆寫「%1」。</translation>
     </message>
     <message>
         <source>Cannot copy file &quot;%1&quot; to &quot;%2&quot;: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將檔案「%1」複製至「%2」：%3</translation>
     </message>
     <message>
         <source>Cannot remove file &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除檔案「%1」。</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::CopyFileTask</name>
     <message>
         <source>Invalid task item count.</source>
-        <translation type="unfinished"></translation>
+        <translation>工作項目數量無效。</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行讀取：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for writing: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行寫入：%2</translation>
     </message>
     <message>
         <source>Writing to file &quot;%1&quot; failed: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>寫入檔案「%1」失敗：%2</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::CreateDesktopEntryOperation</name>
     <message>
         <source>Cannot backup file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法備份檔案「%1」：%2</translation>
     </message>
     <message>
         <source>Failed to overwrite file &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法覆寫檔案「%1」。</translation>
     </message>
     <message>
         <source>Cannot write desktop entry to &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將桌面項目寫入「%1」。</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::CreateLinkOperation</name>
     <message>
         <source>Cannot create link from &quot;%1&quot; to &quot;%2&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立從「%1」到「%2」的連結。</translation>
     </message>
     <message>
         <source>Cannot remove link from &quot;%1&quot; to &quot;%2&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除從「%1」到「%2」的連結。</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::CreateLocalRepositoryOperation</name>
     <message>
         <source>Cannot set permissions for file &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法設定檔案「%1」的權限。</translation>
     </message>
     <message>
         <source>Cannot remove file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除檔案「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot move file &quot;%1&quot; to &quot;%2&quot;: %3</source>
-        <translation type="unfinished"></translation>
+        <translation>無法將檔案「%1」移至「%2」：%3</translation>
     </message>
     <message>
         <source>Installer at &quot;%1&quot; needs to be an offline one.</source>
-        <translation type="unfinished"></translation>
+        <translation>「%1」中的安裝程式必須是離線安裝程式。</translation>
     </message>
     <message>
         <source>Cannot create path &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立路徑「%1」。</translation>
     </message>
     <message>
         <source>Cannot remove directory &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除目錄「%1」。</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for reading.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行讀取。</translation>
     </message>
     <message>
         <source>Cannot read file &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法讀取檔案「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for reading: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行讀取：%2</translation>
     </message>
     <message>
         <source>Cannot create target directory: &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立目標目錄：「%1」。</translation>
     </message>
     <message>
         <source>Unknown exception caught: %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>捕捉到未知例外：%1。</translation>
     </message>
     <message>
         <source>Removing file &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>正在移除檔案「%1」。</translation>
     </message>
     <message>
         <source>Cannot remove file &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除檔案「%1」。</translation>
     </message>
     <message>
         <source>Cannot remove directory &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法移除目錄「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot create archive &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立封存檔「%1」：%2</translation>
     </message>
     <message>
         <source>Unsupported archive &quot;%1&quot;: no handler registered for file suffix &quot;%2&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>不支援的封存檔「%1」：未註冊可處理副檔名「%2」的處理常式。</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::CreateShortcutOperation</name>
     <message>
         <source>&lt;target&gt; &lt;link location&gt; [target arguments] [&quot;workingDirectory=...&quot;] [&quot;iconPath=...&quot;] [&quot;iconId=...&quot;] [&quot;description=...&quot;]</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;目標&gt; &lt;捷徑位置&gt; [目標引數] [&quot;workingDirectory=...&quot;] [&quot;iconPath=...&quot;] [&quot;iconId=...&quot;] [&quot;description=...&quot;]</translation>
     </message>
     <message>
         <source>Cannot create directory &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立目錄「%1」：%2</translation>
     </message>
     <message>
         <source>Failed to overwrite &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法覆寫「%1」：%2</translation>
     </message>
     <message>
         <source>Cannot create link &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法建立連結「%1」：%2</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::DownloadArchivesJob</name>
     <message>
         <source>Canceled</source>
-        <translation type="unfinished"></translation>
+        <translation>已取消</translation>
     </message>
     <message>
         <source>Downloading hash signature failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>下載雜湊簽章失敗。</translation>
     </message>
     <message>
         <source>Download Error</source>
-        <translation type="unfinished"></translation>
+        <translation>下載錯誤</translation>
     </message>
     <message>
         <source>Cannot download archive %1: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法下載封存檔 %1：%2</translation>
     </message>
     <message>
         <source>Cannot fetch archives: %1
 Error while loading %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法取得封存檔：%1
+載入 %2 時發生錯誤</translation>
     </message>
     <message>
         <source>Downloading archive &quot;%1&quot; for component %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>正在下載元件 %2 的封存檔「%1」。</translation>
     </message>
     <message>
         <source>Scheme %1 not supported (URL: %2).</source>
-        <translation type="unfinished"></translation>
+        <translation>不支援通訊協定 %1（網址：%2）。</translation>
     </message>
     <message>
         <source>Cannot find component for %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>找不到 %1 的元件。</translation>
     </message>
     <message>
         <source>%1 of %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 / %2</translation>
     </message>
     <message>
         <source>%1 downloaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>已下載 %1。</translation>
     </message>
     <message numerus="yes">
         <source>%n day(s), </source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%n 天，</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s), </source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%n 小時，</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%n 分鐘</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation type="unfinished"></translation>
+        <translation><numerusform>%n 秒</numerusform></translation>
     </message>
     <message>
         <source> - %1%2%3%4 remaining.</source>
-        <translation type="unfinished"></translation>
+        <translation> - 剩餘 %1%2%3%4。</translation>
     </message>
     <message>
         <source> - unknown time remaining.</source>
-        <translation type="unfinished"></translation>
+        <translation> - 剩餘時間未知。</translation>
     </message>
     <message>
         <source>Archive: </source>
-        <translation type="unfinished"></translation>
+        <translation>封存檔：</translation>
     </message>
     <message>
         <source>Total: </source>
-        <translation type="unfinished"></translation>
+        <translation>總計：</translation>
     </message>
     <message>
         <source>Retry count (%1) exceeded</source>
-        <translation type="unfinished"></translation>
+        <translation>已超過重試次數上限（%1）</translation>
     </message>
     <message>
         <source>Hash verification while downloading failed. This is a temporary error, please retry.
 
 Expected: %1 
 Downloaded: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>下載時雜湊驗證失敗。這是暫時性錯誤，請重試。
+
+預期：%1 
+已下載：%2</translation>
     </message>
     <message>
         <source>Cannot verify Hash
 Expected: %1 
 Downloaded: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法驗證雜湊值
+預期：%1 
+已下載：%2</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::Downloader</name>
     <message>
         <source>Target file &quot;%1&quot; already exists but is not a file.</source>
-        <translation type="unfinished"></translation>
+        <translation>目標檔案「%1」已存在，但不是檔案。</translation>
     </message>
     <message>
         <source>Cannot open file &quot;%1&quot; for writing: %2</source>
         <extracomment>%2 is a sentence describing the error</extracomment>
         <translatorcomment>%2 is a sentence describing the error</translatorcomment>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟檔案「%1」進行寫入：%2</translation>
     </message>
     <message>
         <source>File &quot;%1&quot; not open for writing: %2</source>
         <extracomment>%2 is a sentence describing the error.</extracomment>
         <translatorcomment>%2 is a sentence describing the error.</translatorcomment>
-        <translation type="unfinished"></translation>
+        <translation>檔案「%1」未開啟供寫入：%2</translation>
     </message>
     <message>
         <source>Writing to file &quot;%1&quot; failed: %2</source>
         <extracomment>%2 is a sentence describing the error.</extracomment>
         <translatorcomment>%2 is a sentence describing the error.</translatorcomment>
-        <translation type="unfinished"></translation>
+        <translation>寫入檔案「%1」失敗：%2</translation>
     </message>
     <message>
         <source>Redirect loop detected for &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>偵測到「%1」的重新導向迴圈。</translation>
     </message>
     <message>
         <source>Network error while downloading &apos;%1&apos;: %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>下載「%1」時發生網路錯誤：%2。</translation>
     </message>
     <message>
         <source>Unknown network error while downloading &quot;%1&quot;.</source>
         <extracomment>%1 is a sentence describing the error</extracomment>
         <translatorcomment>%1 is a sentence describing the error</translatorcomment>
-        <translation type="unfinished"></translation>
+        <translation>下載「%1」時發生未知網路錯誤。</translation>
     </message>
     <message>
         <source>Network transfers canceled.</source>
-        <translation type="unfinished"></translation>
+        <translation>網路傳輸已取消。</translation>
     </message>
     <message>
         <source>Pause and resume not supported by network transfers.</source>
-        <translation type="unfinished"></translation>
+        <translation>網路傳輸不支援暫停和繼續。</translation>
     </message>
     <message>
         <source>Invalid source URL &quot;%1&quot;: %2</source>
         <extracomment>%2 is a sentence describing the error</extracomment>
         <translatorcomment>%2 is a sentence describing the error</translatorcomment>
-        <translation type="unfinished"></translation>
+        <translation>來源網址「%1」無效：%2</translation>
     </message>
 </context>
 <context>
     <name>QInstaller::ElevatedExecuteOperation</name>
     <message>
         <source>Cannot start detached: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>無法以獨立程序啟動：「%1」</translation>
     </message>
     <message>
         <source>Cannot start: &quot;%1&quot;: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>無法啟動「%1」：%2</translation>
     </message>
     <message>
         <source>Program crashed: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>程式當機：「%1」</translation>
     </message>
     <message>
         <source>Execution failed (Unexpected exit code: %1): &quot;%2&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>執行失敗（非預期的結束代碼：%1）：「%2」</translation>
     </message>
 </context>
 <context>
