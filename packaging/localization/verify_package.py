@@ -603,6 +603,30 @@ def capture_gui(process, prefix, executable, profile, png):
     return record
 
 
+def validate_installed_inventory(plugin_records, record, root, windows):
+    """Bind installed identities to the source lock, not a stale plugin count."""
+    from prepare_payload import CORE_PLUGINS
+    from registry_inventory import read_inventory
+    locked, provenance = read_inventory(root)
+    ids = set(CORE_PLUGINS)
+    if not windows:
+        ids.update(('toolbox-assistant-agent', 'ros2-topic-subscriber'))
+    platform = 'windows-x86_64' if windows else 'linux-x86_64'
+    entries = {item['id']: item for item in locked['extensions']}
+    assert ids <= entries.keys(), 'curated plugins missing from source registry'
+    assert all(platform in entries[key]['platforms'] for key in ids), 'missing locked platform'
+    baseline = json.loads((root / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
+    bin_version = baseline['ardupilot_plugin']['version']
+    assert record['bin_plugin_version'] == bin_version, 'BIN version differs from source pin'
+    expected = sorted([f"{key}={entries[key]['version']}" for key in ids] +
+                      ['ardupilot-dataflash=' + bin_version])
+    actual = sorted(f"{item['id']}={item['version']}" for item in plugin_records)
+    assert actual == expected, f'installed plugin inventory differs from source lock: {actual}'
+    assert sorted(record['expected_plugins']) == expected, 'release inventory differs from source lock'
+    assert record['registry_sources'] == provenance['sources'], 'registry provenance differs from source lock'
+    return expected
+
+
 def verify(prefix, executable, log, output, expected_source, expected_version, capture=False, work_dir=None):
     """Check provenance, plugins, Python and synthetic CSV/real BIN restoration."""
     from host_versions import read_host_versions
@@ -667,7 +691,7 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
     expected = [f"{m['id']}={m['version']}" for m in plugin_records]
     assert f"ardupilot-dataflash={record['bin_plugin_version']}" in expected
     assert sorted(expected) == sorted(record['expected_plugins']), expected
-    assert len(expected) == (19 if os.name == 'nt' else 21), expected
+    validate_installed_inventory(plugin_records, record, Path(__file__).resolve().parents[2], os.name == 'nt')
     env = acceptance_environment(os.environ)
     # Use the installed DLLs plus the operating system, never a Qt/Conan tree.
     if os.name == 'nt':

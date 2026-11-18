@@ -365,6 +365,7 @@ jobs:
           python tests/test_bundled_translations.py -v
           python tests/test_localized_plugin_build.py -v
           python tests/test_package_acceptance.py -v
+          python tests/test_package_inventory.py -v
           if [[ "$RUNNER_OS" == Linux ]]; then python tests/test_deb_dependencies.py -v; fi
           python packaging/localization/version_map.py "$PJ_VERSION" --development-candidate
       - name: Stage pinned BIN, licenses and CJK fallback
