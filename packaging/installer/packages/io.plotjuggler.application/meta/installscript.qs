@@ -65,7 +65,7 @@ Component.prototype.installerLoaded = function()
     // language page last so it appears before directory selection, after welcome.
     installer.addWizardPage(component, "LanguageWidget", QInstaller.TargetDirectory);
     var languageWidget = component.userInterface("LanguageWidget");
-    languageWidget.language.currentIndex = installer.value("UILanguage").indexOf("zh") === 0 ? 0 : 1;
+    languageWidget.language.currentIndex = installerLanguageIndex(installer.value("UILanguage"), languageWidget.language.count);
     languageWidget.applyLanguage.clicked.connect(this, this.applyLanguage);
 
     targetDirectoryPage = gui.pageWidgetByObjectName("DynamicTargetWidget");
@@ -207,13 +207,30 @@ function encodePowerShellCommand(command)
     return encoded;
 }
 
+// The third entry is added only to a fully prepared experimental stage.
+// Traditional locales must never silently select Simplified Chinese.
+function installerLanguageIndex(locale, count)
+{
+    var normalized = String(locale).replace(/-/g, "_");
+    if (/^zh_(TW|HK|MO|Hant)(_|$)/i.test(normalized))
+        return count >= 3 ? 2 : 1;
+    return /^zh(_|$)/i.test(normalized) ? 0 : 1;
+}
+
+function installerLanguageForIndex(index, count)
+{
+    if (index === 0) return "zh_CN";
+    if (index === 2 && count >= 3) return "zh_TW";
+    return "en_US";
+}
+
 // IFW's documented <key=value> positional arguments restore TargetDir. Other
 // real startup arguments are retained, including proxy/offline options.
 Component.prototype.applyLanguage = function()
 {
     console.log("PJ_LANGUAGE_RESTART:clicked");
     var widget = component.userInterface("LanguageWidget");
-    var language = widget.language.currentIndex === 0 ? "zh_CN" : "en_US";
+    var language = installerLanguageForIndex(widget.language.currentIndex, widget.language.count);
     if (installer.value("UILanguage") === language)
         return;
     var executable = installer.value("InstallerFilePath").replace(/'/g, "''");
