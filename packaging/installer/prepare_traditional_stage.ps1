@@ -28,10 +28,30 @@ for ($i=0; $i -lt $catalogs.Count; ++$i) {
   [xml]$ts = Get-Content -LiteralPath $catalogs[$i] -Raw -Encoding UTF8
   $messages = @($ts.SelectNodes('/TS/context/message'))
   if ($ts.TS.language -ne 'zh_TW' -or $messages.Count -ne $expected[$i]) { throw 'Unexpected Traditional Chinese inventory' }
-  foreach ($message in $messages) {
+  [xml]$original = Get-Content -LiteralPath (Join-Path (Split-Path $catalogs[$i] -Parent) ([IO.Path]::GetFileName($catalogs[$i]).Replace('zh_TW.ts','zh_CN.ts'))) -Raw -Encoding UTF8
+  $originalMessages = @($original.SelectNodes('/TS/context/message'))
+  if ($originalMessages.Count -ne $messages.Count) { throw 'Source inventory differs' }
+  for ($j=0; $j -lt $messages.Count; ++$j) {
+    $message = $messages[$j]
+    $source = $originalMessages[$j]
+    foreach ($field in @('source','comment')) {
+      if ([string]$source.SelectSingleNode($field).InnerText -cne [string]$message.SelectSingleNode($field).InnerText) { throw "Source key differs: $field" }
+    }
+    if ($source.ParentNode.SelectSingleNode('name').InnerText -cne $message.ParentNode.SelectSingleNode('name').InnerText -or
+        $source.GetAttribute('numerus') -cne $message.GetAttribute('numerus')) { throw 'Source context or numerus differs' }
     $translation = $message.SelectSingleNode('translation')
     if ($null -eq $translation -or $translation.GetAttribute('type') -in @('unfinished','obsolete','vanished') -or [string]::IsNullOrWhiteSpace($translation.InnerText)) {
       throw 'Incomplete Traditional Chinese catalog'
+    }
+    $forms = @($translation.SelectNodes('numerusform'))
+    if ($message.GetAttribute('numerus') -eq 'yes') {
+      if ($forms.Count -ne 1) { throw 'Traditional Chinese requires one plural form' }
+    } elseif ($forms.Count -ne 0) { throw 'Unexpected plural form' }
+    foreach ($form in $(if ($forms.Count) { $forms } else { @($translation) })) {
+      $pattern = '%(?:L?[1-9][0-9]*|n)'
+      $expectedTokens = @([regex]::Matches($source.SelectSingleNode('source').InnerText, $pattern) | ForEach-Object { $_.Value } | Sort-Object)
+      $actualTokens = @([regex]::Matches($form.InnerText, $pattern) | ForEach-Object { $_.Value } | Sort-Object)
+      if ([string]::IsNullOrWhiteSpace($form.InnerText) -or ($expectedTokens -join '|') -cne ($actualTokens -join '|')) { throw 'Empty translation or placeholder mismatch' }
     }
   }
 }
