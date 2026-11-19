@@ -179,6 +179,10 @@ class PlotWidget : public PlotWidgetBase {
   // visibility flags. A test seam.
   [[nodiscard]] std::vector<MarkerTarget> markerTargets() const;
 
+  /// `zoomOut(false)` for a fit the zoom link must never hear about, now or when the first rows complete it: an agent's
+  /// or a plugin's plot in its own tab. Any other `zoomOut` call re-arms the announcement.
+  void zoomOutUnlinked();
+
  public slots:
   void zoomOut(bool emit_signal = true);
   void onZoomOutHorizontalTriggered(bool emit_signal = true);
@@ -188,7 +192,8 @@ class PlotWidget : public PlotWidgetBase {
   // Per-curve mutators (the plot-wide ones are setLineWidth / overrideCurvesStyle).
   void setCurveLineWidth(const QString& curve_name, double width);
   void setCurveStyle(const QString& curve_name, CurveStyle style);
-  void setCurveVisible(const QString& curve_name, bool visible);
+  // No-op, with no replot or undo step, if the visibility does not change.
+  void setCurveVisible(const QString& curve_name, bool visible) override;
   // Whether this curve contributes plot markers to the overlay (CurveInfo::show_markers); independent of
   // setCurveVisible.
   void setCurveShowMarkers(const QString& curve_name, bool show);
@@ -242,6 +247,9 @@ class PlotWidget : public PlotWidgetBase {
   void splitHorizontal();
   void splitVertical();
   void curveColorChanged(QString curve_name, QColor color);
+  // A curve was shown or hidden through setCurveVisible (`curve_name` is its source_name): the curve editor's eye
+  // follows without a rebuild.
+  void curveVisibilityChanged(QString curve_name, bool visible);
   // "Apply Filter…" was chosen for this plot's curves: the host opens the Filter Editor panel scoped to `sources` and,
   // on Apply, calls `origin->replaceCurve()` so each filtered output replaces its source in place.
   void filterEditorRequested(std::vector<CurveDescriptor> sources, PlotWidget* origin);
@@ -264,8 +272,12 @@ class PlotWidget : public PlotWidgetBase {
   void onDropEvent(QDropEvent* event);
 
  private:
-  // Re-samples both trackers at their current positions against the current curves and view.
+  // Re-samples both trackers at their current positions against the current curves and view; on an XY plot, which has
+  // no tracker line, the markers at the last tracker time.
   void redrawTrackers();
+  // XY plots: puts each curve's marker on its sample at `display_time_sec`, shown only for a visible curve and filled
+  // with the curve's current colour. Does not replot.
+  void updateXYMarkers(double display_time_sec);
   void beforeCanvasReplot() override;
   // Vertical-only auto-fit when a curve is added or removed, gated by Preferences::auto_zoom_plots: rescales Y to the
   // data over the current X window; the shared time axis (and sibling plots) is never touched. No-op during layout
@@ -370,6 +382,9 @@ class PlotWidget : public PlotWidgetBase {
   // window (zoom link) narrows it to Y. Never armed when data existed at fit time.
   enum class PendingFit : std::uint8_t { kNone, kFull, kVertical };
   PendingFit pending_fit_ = PendingFit::kNone;
+  // Set by zoomOutUnlinked: the refit of pending_fit_ stays off the zoom link. Otherwise the refit announces its
+  // window, because linked peers took this plot's empty one and the first plot to receive rows must line them up again.
+  bool pending_fit_unlinked_ = false;
   // Trailing-edge coalescer for gesture history snapshots: wheel zoom and pan emit per input event, and serializing the
   // workspace each time is wasteful, so one undoableChange fires when the gesture goes quiet.
   QTimer gesture_undo_debounce_;

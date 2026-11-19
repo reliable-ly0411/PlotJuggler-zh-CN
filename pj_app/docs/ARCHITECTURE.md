@@ -184,6 +184,22 @@ so every start that does not launch (cancel, a plugin contract violation, a refu
 count in the catalog's duplicate-label ordinals and suffix the next start's name. `streamError` is emitted only after
 the dataset is gone (a cancel reports nothing), so its consumer cannot rely on that dataset existing.
 
+**Source and buffer selection.** The manager keeps no copy of the selected source: Start carries the combo's canonical item data
+(`LeftPanel::streamingStartRequested`), so whatever set the combo (a user, a repopulation, a layout), Start starts
+what it shows. Only a user's pick (`QComboBox::activated`) becomes the remembered default. The retention window
+is a copy: `StreamingSourceManager` reads it from QSettings once, at construction, then only from
+`LeftPanel::streamingBufferChanged`, which a restore emits by hand, because running sessions must hear the new
+window.
+
+A layout's `<left_panel_state streaming_buffer>` belongs to the streams it restarts: it is saved only into a
+stream-bound layout (one with `<previouslyLoaded_StreamingSources>` records), and a load ignores it in any other
+layout, older files that carry it included. It never shrinks a stream that ran before the open: such a stream keeps
+a wider window and the scrubber shows it. The streams the layout starts itself do not count, so whether a stream ran,
+and its window, is taken when the open begins (`snapshotStreamWindowAtLayoutOpen`), before they start; otherwise a
+buffer smaller than the user's default would never apply. `MainWindow::restoreLeftPanelState` decides the buffer and
+runs at `commitRestoredLayout`, so a progressive restore that aborts changes neither the streams nor the panel.
+Streams the layout starts itself run with the previous window until that commit.
+
 **Pause and resume.** While paused, each session writes to the secondary engine and object store. Resume swaps the
 write targets back first (a push already in flight finishes on the secondary, the next lands on the primary; flushing
 first would race new arrivals), then moves the secondary chunks and entries into the primary without copying,
@@ -598,3 +614,18 @@ glibc's read-only `_IO_stdin_used` and GNU ld's `__bss_start`, `_edata`, `_end`
 data/BSS markers. The CRT/linker markers still count toward the ceiling.
 `tests/test_exported_symbols_guard.py` exercises the script with synthetic `nm`
 output and a Linux ELF fixture linked both with and without `--exclude-libs,ALL`.
+
+- The title-bar ingest strip is wired but hidden (`kShowTitleBarIngestStrip`); its keep/discard prompt path is
+  exercised only when the flag is turned on.
+- `StreamingSourceManager` supports several sessions, but the left panel drives one active stream at a time.
+- A stream started after Record is pressed is not recorded (taps attach at capture start).
+- Streaming sources do not report through the load diagnostic sink.
+- A stream's layout record stores the plugin's configuration verbatim, credentials included.
+- The curve list does not mark pending items (an advertised placeholder before its first sample, an unresolved wire)
+  or scene views embedded in a toolbox panel as displayed.
+- Removing curves rebuilds the whole curve tree (`CurveListPanel::onCatalogItemsRemoved`); expansion and scroll are
+  restored, the selection is not.
+- In-band embedded assets are not routed to Scene3D docks on load.
+- Restoring a layout whose `<pinned_toolboxes>` names a plugin that is missing or fails to bind goes through
+  `launchToolbox`'s error path, which opens a modal `MessageBox::warning` even in an unattended run (suspected from
+  the code, not reproduced).

@@ -189,7 +189,9 @@ LeftPanel::LeftPanel(QWidget* parent) : QWidget(parent), ui_(new Ui::LeftPanel) 
     adapt_stack_to_current_page();
   });
 
-  connect(ui_->buttonStreamingOptions, &QPushButton::clicked, this, &LeftPanel::streamingStartRequested);
+  connect(ui_->buttonStreamingOptions, &QPushButton::clicked, this, [this]() {
+    emit streamingStartRequested(ui_->comboStreaming->currentData().toString());
+  });
   connect(ui_->buttonStreamingPause, &QPushButton::toggled, this, &LeftPanel::streamingPauseToggled);
   connect(
       ui_->buttonStreamingPause, &QPushButton::toggled, this, [this](bool) { applyPauseButtonState(currentTheme()); });
@@ -200,13 +202,10 @@ LeftPanel::LeftPanel(QWidget* parent) : QWidget(parent), ui_(new Ui::LeftPanel) 
   // The label's width is known only after layout: re-elide whenever it moves.
   ui_->labelStreamingRecordStatus->installEventFilter(this);
   applyRecordingStatusMinimumWidth();
-  // Persist the user's choice so it is restored next session. The signal only
-  // fires on genuine user selection — setStreamingSources() blocks it while
-  // repopulating — so this never re-saves a programmatic restore.
-  connect(ui_->comboStreaming, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) {
-    const QString source = ui_->comboStreaming->currentData().toString();
+  // Only a user's pick becomes the default; use canonical data, not the translated text.
+  connect(ui_->comboStreaming, &QComboBox::activated, this, [this](int index) {
+    const QString source = ui_->comboStreaming->itemData(index).toString();
     QSettings().setValue(kStreamingSourceKey, source);
-    emit streamingSourceChanged(source);
   });
 
   // On editingFinished, not on every drag tick: the value matters only once the user settles.
@@ -271,13 +270,6 @@ void LeftPanel::setStreamingSources(const QList<QPair<QString, QString>>& source
     if (idx >= 0) {
       ui_->comboStreaming->setCurrentIndex(idx);
     }
-  }
-  // QComboBox auto-selects index 0 on the first addItem(), but the blocker
-  // above swallows the corresponding currentIndexChanged; emit once so the
-  // visible selection matches what listeners (StreamingSourceManager) hold.
-  const QString current = ui_->comboStreaming->currentData().toString();
-  if (current != previous) {
-    emit streamingSourceChanged(current);
   }
 }
 
@@ -355,7 +347,7 @@ bool LeftPanel::eventFilter(QObject* watched, QEvent* event) {
   return QWidget::eventFilter(watched, event);
 }
 
-QDomElement LeftPanel::saveSourcesState(QDomDocument& doc) const {
+QDomElement LeftPanel::saveSourcesState(QDomDocument& doc, bool stream_bound) const {
   QDomElement element = doc.createElement(u"left_panel_state"_s);
 
   if (ui_->tabFile->isChecked()) {
@@ -367,11 +359,13 @@ QDomElement LeftPanel::saveSourcesState(QDomDocument& doc) const {
   }
 
   element.setAttribute(u"streaming_source"_s, ui_->comboStreaming->currentData().toString());
-  element.setAttribute(u"streaming_buffer"_s, QString::number(ui_->streamingSpinBox->value()));
+  if (stream_bound) {
+    element.setAttribute(u"streaming_buffer"_s, QString::number(ui_->streamingSpinBox->value()));
+  }
   return element;
 }
 
-void LeftPanel::restoreSourcesState(const QDomElement& element) {
+void LeftPanel::restoreSourcesState(const QDomElement& element, std::optional<int> streaming_buffer_s) {
   if (element.isNull() || element.tagName() != "left_panel_state"_L1) {
     return;
   }
@@ -388,27 +382,22 @@ void LeftPanel::restoreSourcesState(const QDomElement& element) {
     }
   }
 
-  // streaming_source: pick the combo entry by canonical name. -1 from
-  // findData means the source isn't currently in the combo (plugin
-  // not installed) -> silent no-op. Block signals so we don't emit
-  // streamingSourceChanged during restore.
+  // Pick by canonical name; a source that is not installed is skipped.
   if (element.hasAttribute(u"streaming_source"_s)) {
     const QString src = element.attribute(u"streaming_source"_s);
     const int idx = ui_->comboStreaming->findData(src);
     if (idx >= 0) {
-      const QSignalBlocker blocker(ui_->comboStreaming);
       ui_->comboStreaming->setCurrentIndex(idx);
     }
   }
 
-  // setValue does not emit editingFinished, so this neither writes QSettings nor emits streamingBufferChanged.
-  if (element.hasAttribute(u"streaming_buffer"_s)) {
-    bool ok = false;
-    const int seconds = element.attribute(u"streaming_buffer"_s).toInt(&ok);
-    if (ok) {
+  // Emitted by hand: setValue does not emit editingFinished, which is what writes QSettings.
+  if (streaming_buffer_s.has_value()) {
+    {
       const QSignalBlocker blocker(ui_->streamingSpinBox);
-      ui_->streamingSpinBox->setValue(seconds);
+      ui_->streamingSpinBox->setValue(*streaming_buffer_s);
     }
+    emit streamingBufferChanged(ui_->streamingSpinBox->value());
   }
 }
 

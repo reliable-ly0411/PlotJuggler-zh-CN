@@ -1,7 +1,7 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
   "upstream_branch": "main",
-  "upstream_commit": "690f2c5066991eb3c624d863705528c006ad68ac",
+  "upstream_commit": "1877b40120414b8590349cb9ef66ae7a5878f63a",
   "upstream_version_file": "versions.env",
   "baseline_recorded_utc": "2026-11-19",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
@@ -58,7 +58,7 @@
   },
   "host_sdk_version": "1.1.0",
   "qt_version": "6.12.0",
-  "previous_upstream_commit": "5002da40a6499cb99c1073d5b8c611f1e825cb4b",
+  "previous_upstream_commit": "690f2c5066991eb3c624d863705528c006ad68ac",
   "integration_parents": {
     "development": "56d552ddd0906a4f1da2768c377bd7c7349a58bf",
     "upstream": "aa365846c3e5f5f1ed4f17fb54845ad6413c8de3"
@@ -147,6 +147,13 @@
     "commit": "7f089a2271600c632f24c6f082dabec2d8295704",
     "upstream_commit": "7ed9067d003fdf8f15decf5995651488d8bb937f",
     "status": "Source translations synchronized; existing binary registry and legacy rebuild locks unchanged pending per-plugin package acceptance."
+  },
+  "incremental_sync": {
+    "candidate_parent": "9906bd9df491643a9302e5986fb0eb931eaf2928",
+    "upstream_parent": "1877b40120414b8590349cb9ef66ae7a5878f63a",
+    "previous_upstream_parent": "690f2c5066991eb3c624d863705528c006ad68ac",
+    "upstream_commit_count": 8,
+    "status": "Independent source integration candidate; no promotion or release."
   },
   "candidate_validation": {
     "branch": "zh-CN-4.x-feat/upstream-main-audit-20261117",

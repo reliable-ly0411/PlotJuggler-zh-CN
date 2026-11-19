@@ -808,6 +808,11 @@ class MainWindow : public QMainWindow {
   [[nodiscard]] BrowserLayoutLoadResult loadBrowserParsedLayout(
       QDomDocument doc, const QString& browser_name, const QUrl& layout_url);
   void restoreBrowserChromeAndPanels(const QDomDocument& doc, const QString& browser_name);
+  // Called first by every layout open, before the layout starts its own streams: those must not count as running.
+  void snapshotStreamWindowAtLayoutOpen();
+  // <left_panel_state>. A stream-bound `doc` brings its streaming buffer, which never shrinks the window of a stream
+  // that ran before the open (stream_window_at_layout_open_s_); any other layout leaves the buffer alone.
+  void restoreLeftPanelState(const QDomDocument& doc);
   void beginBrowserSourceReplay(
       QDomDocument doc, const QString& browser_name, QList<layout_xml::DataSourceRef> sources, const QUrl& layout_url);
   [[nodiscard]] quint64 beginBrowserReplayPickerGeneration();
@@ -1251,7 +1256,8 @@ class MainWindow : public QMainWindow {
   bool restorePinnedToolboxes(const QDomElement& root, MissingCurvePolicy policy);
 
   // The one commit boundary of a layout open, after every abort and rollback path: replaces the pinned toolbox
-  // set and re-baselines undo. Both restore legs end here. restoreChromeAndPanels must not take commit-only
+  // set, restores the left panel (its streaming buffer reaches running streams) and re-baselines undo. Both restore
+  // legs end here. restoreChromeAndPanels must not take commit-only
   // steps: it also runs while the restore can still abort.
   void commitRestoredLayout(const QDomDocument& doc, MissingCurvePolicy policy);
 
@@ -1326,6 +1332,9 @@ class MainWindow : public QMainWindow {
 #endif
   std::unique_ptr<FileLoader> file_loader_;
   std::unique_ptr<StreamingSourceManager> streaming_manager_;
+  // The retention window, in seconds, of the streams running when the current layout open began; empty when none ran.
+  // Only those streams are protected from a smaller layout buffer at the commit.
+  std::optional<int> stream_window_at_layout_open_s_;
   // Declared after streaming_manager_, so the runtime hosts holding its taps outlive it; closeEvent and
   // ~MainWindow still stop() it explicitly before any widget or host is gone. Created even where isSupported()
   // is false: only the UI affordances go away there.
@@ -1460,6 +1469,9 @@ class MainWindow : public QMainWindow {
   // Trailing edge for scene docks' workspaceChanged: scrubbers emit per drag tick, and each undo push serializes
   // the whole workspace.
   QTimer scene_undo_debounce_;
+  // Trailing edge, from the event loop, for a plugin's change to a history-owned derived node: one undo step per
+  // burst, so an Apply that creates several nodes is undone at once.
+  QTimer plugin_history_step_;
   // A progressive restore's timeline state, applied at the drain once the reloaded datasets' paths are
   // registered. Empty outside a progressive restore.
   QList<layout_xml::DataSourceRef> pending_timeline_sources_;
