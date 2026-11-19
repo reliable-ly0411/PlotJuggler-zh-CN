@@ -203,6 +203,40 @@ class MirrorSyncTests(unittest.TestCase):
                 api.request("GET", f"/repos/{sync.REPOSITORY}/git/ref/heads/main")
         self.assertEqual(opener.call_count, 1)
 
+
+    def test_http_error_diagnostics_are_bounded_and_do_not_echo_server_data(self):
+        cases = (
+            (403, {}, {"message": "Resource not accessible by integration"}, "integration_access_denied"),
+            (403, {}, {"message": "tool output: secret-example"}, "forbidden_unspecified"),
+            (403, {}, {"message": "refusing to update a workflow without Workflows permission; secret-example"},
+             "workflow_permission"),
+            (403, {}, {"message": "API rate limit exceeded for secret-example"}, "rate_limit"),
+            (403, {"X-RateLimit-Remaining": "0"}, {}, "rate_limit"),
+            (422, {}, {"message": "Repository rule violations found; secret-example"}, "branch_rule"),
+            (429, {}, {}, "rate_limit"),
+            (403, {}, {"message": "A" * 5000 + " without Workflows permission for workflow"}, "forbidden_unspecified"),
+        )
+        path = f"/repos/{sync.REPOSITORY}/git/refs/heads/main"
+        for status, headers, payload, kind in cases:
+            with self.subTest(status=status, kind=kind):
+                api = sync.GitHub("synthetic-test-token")
+                payload["extra"] = "::error::secret-example"
+                body = io.BytesIO(json.dumps(payload).encode("utf-8"))
+                error = urllib.error.HTTPError("https://api.github.com", status, "secret-example", headers, body)
+                with patch.object(api.opener, "open", side_effect=error) as opener:
+                    with self.assertRaises(sync.SyncError) as raised:
+                        api.request("PATCH", path, {"sha": NEW, "force": False})
+                self.assertEqual(opener.call_count, 1)
+                self.assertLessEqual(body.tell(), 4097)
+                self.assertEqual(str(raised.exception), f"GitHub PATCH {path}: HTTP {status} [{kind}]; no request retried")
+                self.assertNotIn("secret-example", str(raised.exception))
+                self.assertNotIn("synthetic-test-token", str(raised.exception))
+
+    def test_malformed_error_diagnostic_does_not_hide_forbidden(self):
+        fp = io.BytesIO(b"<html>secret-example</html>")
+        exc = urllib.error.HTTPError("https://api.github.com", 403, "forbidden", {}, fp)
+        self.assertEqual(sync.http_failure_kind(exc), "forbidden_unspecified")
+
     def test_workflow_safety_contract(self):
         workflow = (Path(__file__).parents[1] / "workflows/upstream-mirrors.yml").read_text(encoding="utf-8")
         self.assertIn("cron: '13 */6 * * *'", workflow)
