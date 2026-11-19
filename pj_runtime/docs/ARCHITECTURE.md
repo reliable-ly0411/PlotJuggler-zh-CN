@@ -47,7 +47,17 @@ does not link it.
   display-min, which `seedPlaybackFromSession()` reuses for the first-load playhead snap.
   When no visible data remains it collapses the transport with `resetPlaybackToEmpty()`
   (pause, `[0,0]` range, cursor 0), the same reset the `CatalogModel::cleared()` hook runs
-  on a full wipe: this is what stops playback when the last dataset is removed. Both scans
+  on a full wipe: this is what stops playback when the last dataset is removed. While a
+  replacing reload's `RefillGuard` is open, the emptied dataset counts with the visible
+  extent it had when the refill began (`datasetRawTimeRange`, captured on
+  `SessionManager::refillStarting`; dropped once the catalog no longer shows the dataset),
+  and its earliest-sample pin is held so the time origin does not move (a static
+  reference's pin is dropped instead, as it never sets the origin). Otherwise the range
+  shrinks to the other datasets and the playhead is clamped there, or the origin jumps and
+  the shell shifts the playhead with it. Commit and rollback re-pin the origin from the data
+  left and emit `refillClosed`, on which `AppSession` recomputes the range (a rollback
+  restoring only object topics notifies no ingest); `FileLoader` rebuilds the catalog before
+  the commit, since its write host notifies nothing. Both scans
   share the private `forEachVisibleRawRange`, so the visibility and dedup rules live in one
   place. The playback range skips host-published topics (`isOffClockTopic`).
   Zero-time reference geometry is also outside the clock: a dataset containing a point
@@ -96,9 +106,19 @@ does not link it.
   the `DataEngine` and invalidates the time-origin caches, so `globalTimeReference()`
   re-bases to the survivors; when the origin actually moves it emits
   `displayOffsetChanged()` so surviving curve adapters drop stale offsets and re-fit. It
-  also drops the dataset's source-path, source-record and loader-metadata entries and runs
-  `BatchEngine::clearGeneratorsForDataset`. Calling `dataEngine().removeDataset` directly
-  leaves the memoized earliest-sample origin stale.
+  also drops the dataset's source-path, source-record and loader-metadata entries, runs
+  `BatchEngine::clearGeneratorsForDataset`, and removes the filters and transforms reading the
+  dataset (`DataProcessorService::removeProcessorsDependingOn` over `datasetTopicIds`, retired
+  topics included, before the storage goes), so the `pj.data_processors.v1` `list` and a
+  re-created name agree with the emptied catalog. Only the shell's explicit removals (the
+  "Remove dataset" prompt, MCP `unload_file`) ask about those dependents first, counting the
+  same `datasetTopicIds`; "Remove all Datasets", a load's cleanup, a stream discard and a
+  preset or layout-import rollback remove them silently. A removed output can live in a
+  surviving dataset (a transform's output lives in its first input's dataset), so
+  `removeDataset` returns whether it removed any and the caller then calls
+  `CatalogModel::rebuildIfChanged`. A fan-out reload erases the dataset it replaces with the
+  cascade off: the workspace restore that follows rebinds those processors. Calling
+  `dataEngine().removeDataset` directly leaves the memoized earliest-sample origin stale.
 - **Dataset identity registry.** `DatasetId` → normalized full path
   (`setDatasetSourcePath` / `datasetSourcePath`, written by `pj_app`'s `FileLoader`;
   `DatasetInfo::source_name` is only a display label and cannot tell same-basename files

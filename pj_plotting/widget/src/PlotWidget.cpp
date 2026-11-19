@@ -210,6 +210,12 @@ PlotWidget::PlotWidget(SessionManager* session, CatalogModel* catalog, QWidget* 
   connect(
       qwtPlot()->axisWidget(QwtPlot::xBottom), &QwtScaleWidget::scaleDivChanged, this,
       &PlotWidget::visibleXRangeChanged);
+  // A tracker hides the samples outside the view only when it is positioned: re-sample after every axis change, or a
+  // zoom back over the tracker leaves its box hidden until the next seek. Not here: the curves still serve the
+  // previous window when the signal fires (see beforeCanvasReplot).
+  for (const QwtAxisId axis : {QwtAxisId(QwtPlot::xBottom), QwtAxisId(QwtPlot::yLeft)}) {
+    connect(qwtPlot()->axisWidget(axis), &QwtScaleWidget::scaleDivChanged, this, [this]() { trackers_stale_ = true; });
+  }
   gesture_undo_debounce_.setSingleShot(true);
   gesture_undo_debounce_.setInterval(kGestureUndoDebounceMs);
   connect(&gesture_undo_debounce_, &QTimer::timeout, this, [this]() {
@@ -221,11 +227,16 @@ PlotWidget::PlotWidget(SessionManager* session, CatalogModel* catalog, QWidget* 
     if (curveList().empty()) {
       pending_fit_ = PendingFit::kNone;
     }
-    updateMaximumZoomArea();
+    if (!restoring_curves_) {
+      updateMaximumZoomArea();
+    }
     autoZoomPlotVertically();
     pruneHiddenMarkerScopes();
     (void)refreshMarkerScopeRowSet();  // curveListChanged itself is the rebuild trigger
     emit markerTargetsChanged();
+    // A removed curve's row and dot leave the tracker at the next replot, not the next seek. Not now: a curve just
+    // added has no window yet, and sampling it would copy its whole series.
+    trackers_stale_ = true;
   });
   connect(this, &PlotWidgetBase::dragEnterSignal, this, &PlotWidget::onDragEnterEvent);
   connect(this, &PlotWidgetBase::dragLeaveSignal, this, &PlotWidget::onDragLeaveEvent);
@@ -307,7 +318,6 @@ PlotWidget::CurveInfo* PlotWidget::addCurve(const QString& name, QColor color) {
   if (tracker_ != nullptr) {
     tracker_->setEnabled(tracker_enabled_);
   }
-  updateMaximumZoomArea();
   replot();
   return info;
 }
@@ -388,8 +398,8 @@ PlotWidget::CurveInfo* PlotWidget::addCurveXY(
   // stale deltas without a blue line.
   setReferenceLine(std::nullopt);
   // Style and width are plot-level: addCurve() above applied the plot's current ones. XY plots are not forced to Dots;
-  // they inherit the plot-level style, which the Curve Style toolbar controls.
-  updateMaximumZoomArea();
+  // they inherit the plot-level style, which the Curve Style toolbar controls. The curveListChanged handler has
+  // already recomputed the max zoom area.
   // Reveal the ride-along marker at the current cursor at once, not on the next seek or tick (setTrackerPosition
   // replots).
   setTrackerPosition(last_tracker_time_sec_);
@@ -595,6 +605,26 @@ CurveTracker::Parameter PlotWidget::trackerParameter() const noexcept {
 
 bool PlotWidget::trackerValueBoxVisible() const noexcept {
   return tracker_ != nullptr && tracker_->valueBoxVisible();
+}
+
+void PlotWidget::beforeCanvasReplot() {
+  if (trackers_stale_) {
+    trackers_stale_ = false;
+    redrawTrackers();
+  }
+}
+
+void PlotWidget::redrawTrackers() {
+  if (tracker_ != nullptr) {
+    tracker_->redraw();
+  }
+  if (reference_tracker_ != nullptr) {
+    reference_tracker_->redraw();
+  }
+}
+
+QString PlotWidget::trackerValueBoxText() const {
+  return tracker_ != nullptr ? tracker_->valueBoxText() : QString();
 }
 
 void PlotWidget::setShowPoints(bool show) {
@@ -918,25 +948,30 @@ bool PlotWidget::xmlLoadState(const QDomElement& plot_element, bool autozoom) {
 
   const bool was_loading_state = loading_state_;
   loading_state_ = true;
+  // A wheel or pan armed just before the restore must not publish the restored state as a new undo step.
+  gesture_undo_debounce_.stop();
   const bool intents_changing = !pending_curve_intents_.empty() || !parsed_pending_curves.empty();
   pending_curve_intents_ = std::move(parsed_pending_curves);
   if (intents_changing) {
     emit pendingCurveIntentsChanged();
   }
 
-  std::set<QString> desired_keys;
+  std::vector<QString> desired_order;
   for (QDomElement curve_element = plot_element.firstChildElement(u"curve"_s); !curve_element.isNull();
        curve_element = curve_element.nextSiblingElement(u"curve"_s)) {
     if (isXYPlot() && curve_element.hasAttribute(u"curve_x"_s) && curve_element.hasAttribute(u"curve_y"_s)) {
-      desired_keys.insert(curveKey(
+      desired_order.push_back(curveKey(
           curve_element.attribute(u"name"_s), curve_element.attribute(u"curve_x"_s),
           curve_element.attribute(u"curve_y"_s)));
     } else {
-      desired_keys.insert(curveKey(curve_element.attribute(u"name"_s)));
+      desired_order.push_back(curveKey(curve_element.attribute(u"name"_s)));
     }
   }
+  const std::set<QString> desired_keys(desired_order.begin(), desired_order.end());
 
   QStringList remove_titles;
+  QStringList kept_titles;
+  std::vector<QString> kept_keys;
   for (const CurveInfo& info : curveList()) {
     if (info.curve == nullptr) {
       continue;
@@ -947,16 +982,29 @@ bool PlotWidget::xmlLoadState(const QDomElement& plot_element, bool autozoom) {
     }
     if (desired_keys.find(existing_key) == desired_keys.end()) {
       remove_titles.push_back(info.curve->title().text());
+    } else {
+      kept_titles.push_back(info.curve->title().text());
+      kept_keys.push_back(existing_key);
     }
   }
-  for (const QString& title : remove_titles) {
-    removeCurve(title);
+  // Missing curves are appended after the kept ones, so the saved order (legend, editor rows, draw order) holds only
+  // when the kept curves are its leading entries; otherwise rebuild this plot's curves from the XML.
+  if (kept_keys.size() > desired_order.size() ||
+      !std::equal(kept_keys.begin(), kept_keys.end(), desired_order.begin())) {
+    remove_titles += kept_titles;
   }
-
-  for (QDomElement curve_element = plot_element.firstChildElement(u"curve"_s); !curve_element.isNull();
-       curve_element = curve_element.nextSiblingElement(u"curve"_s)) {
-    applyCurveElement(curve_element);
+  {
+    // Each recompute reads every sample of every curve: once per plot, not once per curve change.
+    const QScopedValueRollback defer(restoring_curves_, true);
+    for (const QString& title : remove_titles) {
+      removeCurve(title);
+    }
+    for (QDomElement curve_element = plot_element.firstChildElement(u"curve"_s); !curve_element.isNull();
+         curve_element = curve_element.nextSiblingElement(u"curve"_s)) {
+      applyCurveElement(curve_element);
+    }
   }
+  updateMaximumZoomArea();
 
   loadHiddenMarkerScopes(plot_element);
 
@@ -1752,7 +1800,7 @@ void PlotWidget::copyWidgetToClipboard() {
   if (plot_element.isNull()) {
     return;
   }
-  stampClipboardCurveKeys(plot_element);
+  stampLiveCurveKeys(plot_element);
   doc.appendChild(plot_element);
   widget_clipboard::setXml(doc.toString(2));
 }
@@ -1797,7 +1845,7 @@ void PlotWidget::stampDatasetPath(QDomElement& element, DatasetId dataset_id, co
   }
 }
 
-void PlotWidget::stampClipboardCurveKeys(QDomElement& plot_element) const {
+void PlotWidget::stampLiveCurveKeys(QDomElement& plot_element) const {
   // Full-path qualifier so a clipboard paste in a later session can validate a reminted id (rebindClipboardCurveKeys).
   // xmlSaveState already stamped dataset_id and dataset_source; the path is the tiebreak for same-basename files.
   QDomElement curve_element = plot_element.firstChildElement(u"curve"_s);
@@ -1821,7 +1869,11 @@ void PlotWidget::stampClipboardCurveKeys(QDomElement& plot_element) const {
   for (QDomElement marker_scope_element = plot_element.firstChildElement(u"marker_scope"_s);
        !marker_scope_element.isNull();
        marker_scope_element = marker_scope_element.nextSiblingElement(u"marker_scope"_s)) {
-    stampDatasetPath(marker_scope_element, readDatasetIdentity(marker_scope_element).id);
+    // A pending scope's saved id can name a live dataset of another source: its path would never resolve the scope.
+    const SavedDatasetIdentity saved = readDatasetIdentity(marker_scope_element);
+    if (catalog_ != nullptr && catalog_->resolveDatasetIdentity(saved.id, saved.source).id == saved.id) {
+      stampDatasetPath(marker_scope_element, saved.id);
+    }
   }
 }
 
@@ -1830,7 +1882,7 @@ void PlotWidget::rebindClipboardCurveKeys(QDomElement& plot_element) const {
     return;
   }
   // Clipboard XML carries the dataset qualifiers of any snapshot (dataset_id, dataset_source, full dataset_path,
-  // written by xmlSaveState / stampClipboardCurveKeys), and the clipboard outlives undo-history epochs: a pasted id may
+  // written by xmlSaveState / stampLiveCurveKeys), and the clipboard outlives undo-history epochs: a pasted id may
   // be stale or reminted. Three-way result:
   //   value   = resolved concrete key: set it;
   //   empty   = the curve was qualified but resolution failed: clear the concrete key, so a stale opaque key from
@@ -2248,12 +2300,7 @@ void PlotWidget::reconnectDataSignals() {
     // against the old data and view rect: re-sample them at their positions against the re-fit curves.
     // Order-independent with the app's reference re-projection: whichever of {reposition, this redraw} runs last
     // re-samples against re-fit data, so the blue line keeps its dots across the toggle.
-    if (tracker_ != nullptr) {
-      tracker_->redraw();
-    }
-    if (reference_tracker_ != nullptr) {
-      reference_tracker_->redraw();
-    }
+    redrawTrackers();
     replot();
   });
 

@@ -395,6 +395,80 @@ TEST(DataProcessorTransformTest, RemovingTransformCascadesDownstreamFilter) {
   EXPECT_FALSE(fx.listed(child->output_topic_id));
 }
 
+// "Remove all Datasets" reaches SessionManager::removeDataset without the shell's cascade prompt: the processors
+// reading the dataset must go with it, or the bridge's `list` keeps them and their names stay taken.
+TEST(DataProcessorTransformTest, RemovingTheInputDatasetRemovesItsProcessors) {
+  Fixture fx;
+  fx.seed("speed", {1.0, 2.0});
+  const auto parent = fx.service.upsertTransform("pluginA", "negate", {"speed"}, {"mid"}, kNegate, "{}");
+  ASSERT_TRUE(parent.has_value()) << parent.error();
+  auto catalogue = std::make_shared<scripting::FilterCatalogue>(scripting::makeLuauEngine());
+  ASSERT_TRUE(catalogue->addBundledSource(kScale, "test").has_value());
+  fx.service.setFilterCatalogue(std::move(catalogue));
+  ASSERT_TRUE(fx.service.applyFilter(parent->output_topic_ids.front(), fx.ds, "scale", "final").has_value());
+
+  fx.session.removeDataset(fx.ds);
+  EXPECT_TRUE(fx.service.transformIdsForPlugin("pluginA").empty());
+  EXPECT_TRUE(fx.service.transformRecipes().empty());
+  EXPECT_TRUE(fx.service.recipes().empty());
+
+  fx.seed("speed", {3.0});
+  const auto again = fx.service.upsertTransform("pluginA", "negate", {"speed"}, {"mid"}, kNegate, "{}");
+  EXPECT_TRUE(again.has_value()) << again.error();
+}
+
+// A merge or a reload can retire a topic a processor still reads; listTopics() hides it, the erase does not.
+TEST(DataProcessorTransformTest, RemovingTheDatasetRemovesAProcessorReadingARetiredTopic) {
+  Fixture fx;
+  fx.seed("speed", {1.0, 2.0});
+  ASSERT_TRUE(fx.service.upsertTransform("pluginA", "negate", {"speed"}, {"mid"}, kNegate, "{}").has_value());
+  fx.engine.retireTopic(fx.input);
+
+  EXPECT_TRUE(fx.session.removeDataset(fx.ds));
+  EXPECT_TRUE(fx.service.transformRecipes().empty());
+}
+
+// The fan-out reload erases the dataset it replaces before the layout restore rebinds its processors.
+TEST(DataProcessorTransformTest, RemovingTheDatasetCanKeepItsProcessors) {
+  Fixture fx;
+  fx.seed("speed", {1.0, 2.0});
+  ASSERT_TRUE(fx.service.upsertTransform("pluginA", "negate", {"speed"}, {"mid"}, kNegate, "{}").has_value());
+
+  EXPECT_FALSE(fx.session.removeDataset(fx.ds, /*remove_dependent_processors=*/false));
+  EXPECT_EQ(fx.service.transformRecipes().size(), 1U);
+}
+
+// A leaf that cannot be removed (here its node is already gone from the engine) must not keep its parent: leaf-first,
+// the leaf fails before the parent is reached.
+TEST(DataProcessorTransformTest, RemovingDependentsContinuesPastAFailedRemoval) {
+  Fixture fx;
+  fx.seed("speed", {1.0, 2.0});
+  const auto parent = fx.service.upsertTransform("pluginA", "negate", {"speed"}, {"mid"}, kNegate, "{}");
+  ASSERT_TRUE(parent.has_value()) << parent.error();
+  const auto leaf = fx.service.upsertTransform("pluginA", "split", {"mid"}, {"leaf_a", "leaf_b"}, kSplit, "{}");
+  ASSERT_TRUE(leaf.has_value()) << leaf.error();
+  ASSERT_TRUE(fx.service.incrementalEngine().removeNode(leaf->node_id).has_value());
+
+  EXPECT_FALSE(fx.service.removeProcessorsDependingOn({fx.input}).has_value());
+  EXPECT_EQ(fx.service.transformIdsForPlugin("pluginA"), std::vector<std::string>{"split"});
+}
+
+// The output of a transform lives in its first input's dataset, which can outlive the dataset removed.
+TEST(DataProcessorTransformTest, RemovingASecondInputsDatasetRetiresTheOutputInTheSurvivingDataset) {
+  Fixture fx;
+  fx.seed("other", {1.0, 2.0});
+  const DatasetId surviving = fx.ds;
+  fx.seed("speed", {3.0, 4.0});
+  const auto sum = fx.service.upsertTransform("pluginA", "sum", {"other", "speed"}, {"sum"}, kSum, "{}");
+  ASSERT_TRUE(sum.has_value()) << sum.error();
+  ASSERT_EQ(sum->dataset_id, surviving);
+  const TopicId output = sum->output_topic_ids.front();
+
+  EXPECT_TRUE(fx.session.removeDataset(fx.ds));
+  const auto topics = fx.engine.listTopics(surviving);
+  EXPECT_EQ(std::find(topics.begin(), topics.end(), output), topics.end());
+}
+
 TEST(DataProcessorTransformTest, RemoveRetiresTopic) {
   Fixture fx;
   fx.seed("speed", {1.0});
@@ -1743,6 +1817,51 @@ TEST(DataProcessorTransformTest, ReloadRunsARuleOverTheRecomputedTransformOutput
   }
 
   EXPECT_EQ(first_value(), 50.0);
+}
+
+// One reload of the seedMultiColumn("data", {"time", "a"}) topic that writes only "a", as a CSV reloaded with "time"
+// as the X axis does: the "time" column is left without a value and retired by the prune.
+void reloadWithoutTime(Fixture& fx) {
+  RefillGuard guard = fx.session.beginRefill(fx.ds);
+  DataWriter writer = fx.engine.createWriter();
+  for (int row = 0; row < 2; ++row) {
+    ASSERT_TRUE(writer.beginRow(fx.input, static_cast<Timestamp>(row) * 1'000'000'000LL).has_value());
+    writer.set<double>(fx.input, 1, 7.0);
+    ASSERT_TRUE(writer.finishRow(fx.input).has_value());
+  }
+  ASSERT_FALSE(fx.engine.commitChunks(writer.flushAll()).empty());
+  ASSERT_TRUE(guard.recomputeProcessors().has_value());
+  guard.pruneVanishedTopics();
+  guard.commit();
+}
+
+// A processor reading a column a reload lost behaves as one whose input topic a reload lost: it stays bound, its output
+// goes empty, and no later reload or rollback replay fails on it.
+TEST(DataProcessorTransformTest, TransformOnAColumnALoadLostStaysBoundAndEmpty) {
+  Fixture fx;
+  fx.seedMultiColumn("data", {"time", "a"}, {{0.0, 0.1}, {1.0, 2.0}});
+  const auto on_time = fx.service.upsertTransform("pluginA", "negate", {"data/time"}, {"neg_time"}, kNegate, "{}");
+  ASSERT_TRUE(on_time.has_value()) << on_time.error();
+  const TopicId output = on_time->output_topic_ids.front();
+  ASSERT_EQ(readValues(fx.engine, output).size(), 2U);
+
+  reloadWithoutTime(fx);
+  EXPECT_TRUE(readValues(fx.engine, output).empty()) << "its input holds no value any more";
+  const auto replay = fx.service.rebindAndRecomputeForReplacedSources({fx.input});
+  EXPECT_TRUE(replay.has_value()) << "a rollback's repair replay: " << replay.error();
+  reloadWithoutTime(fx);
+  EXPECT_TRUE(readValues(fx.engine, output).empty());
+}
+
+// The whole-topic name of a topic whose first column a reload lost resolves to its first column still listed.
+TEST(DataProcessorTransformTest, WholeTopicInputSkipsAColumnALoadLost) {
+  Fixture fx;
+  fx.seedMultiColumn("data", {"time", "a"}, {{0.0, 0.1}, {1.0, 2.0}});
+  reloadWithoutTime(fx);
+
+  const auto whole = fx.service.upsertTransform("pluginA", "negate", {"data"}, {"neg_data"}, kNegate, "{}");
+  ASSERT_TRUE(whole.has_value()) << whole.error();
+  EXPECT_EQ(readValues(fx.engine, whole->output_topic_ids.front()), (std::vector<double>{-7.0, -7.0}));
 }
 
 }  // namespace

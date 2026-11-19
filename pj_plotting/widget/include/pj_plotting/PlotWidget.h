@@ -118,6 +118,7 @@ class PlotWidget : public PlotWidgetBase {
   [[nodiscard]] CurveTracker::Parameter trackerParameter() const noexcept;
   // Whether the playback tracker's floating value box is visible (always hidden in line-only mode).
   [[nodiscard]] bool trackerValueBoxVisible() const noexcept;
+  [[nodiscard]] QString trackerValueBoxText() const;
   // Sets, or clears with nullopt, a blue reference line; while set, the red playback tracker shows values as deltas
   // from this X. No-op on XY plots.
   void setReferenceLine(std::optional<double> reference_x_sec);
@@ -136,6 +137,10 @@ class PlotWidget : public PlotWidgetBase {
   void setStateId(QString id);
   [[nodiscard]] QDomElement xmlSaveState(QDomDocument& doc) const;
   bool xmlLoadState(const QDomElement& plot_element, bool autozoom = true);
+  /// Adds this session's opaque curve keys (and dataset paths) to `plot_element`, this plot's xmlSaveState output, so
+  /// xmlLoadState binds its curves without the shell's stable-path rebind: a same-session copy (clipboard, duplicated
+  /// tab).
+  void stampLiveCurveKeys(QDomElement& plot_element) const;
 
   /// Retains one unresolved ordinary <curve pending_intent="true"> element as workspace state until the pending binder
   /// fulfills it.
@@ -259,6 +264,9 @@ class PlotWidget : public PlotWidgetBase {
   void onDropEvent(QDropEvent* event);
 
  private:
+  // Re-samples both trackers at their current positions against the current curves and view.
+  void redrawTrackers();
+  void beforeCanvasReplot() override;
   // Vertical-only auto-fit when a curve is added or removed, gated by Preferences::auto_zoom_plots: rescales Y to the
   // data over the current X window; the shared time axis (and sibling plots) is never touched. No-op during layout
   // restore (the saved range wins), when empty and for XY plots (no shared time axis).
@@ -283,8 +291,6 @@ class PlotWidget : public PlotWidgetBase {
   // Adds the `<prefix>dataset_path` tiebreak (same-basename files) when the catalog knows a file path: clipboard only,
   // layouts stay path-free.
   void stampDatasetPath(QDomElement& element, DatasetId dataset_id, const QString& prefix = {}) const;
-  // Adds current opaque curve keys + dataset paths to copied XML for same-session paste.
-  void stampClipboardCurveKeys(QDomElement& plot_element) const;
   // Resolves copied stable topic/field paths to this session's curve keys.
   void rebindClipboardCurveKeys(QDomElement& plot_element) const;
   // Opens the Filter Editor scoped to this plot's curves; on Save the filtered curves are added to this plot.
@@ -354,6 +360,11 @@ class PlotWidget : public PlotWidgetBase {
   double last_tracker_time_sec_ = 0.0;
   bool show_points_ = true;
   bool loading_state_ = false;
+  // True while xmlLoadState swaps the curve set: the curveListChanged handler leaves the max zoom area to the single
+  // recompute that follows.
+  bool restoring_curves_ = false;
+  // An axis scale or the curve list changed since the trackers last sampled the curves.
+  bool trackers_stale_ = false;
   // A zoomOut that found no curve data (an on-demand series computes only once shown) stays armed and re-runs on every
   // non-live ingest, so a series computed in chunks stays framed whole until the user frames the view. An external X
   // window (zoom link) narrows it to Y. Never armed when data existed at fit time.

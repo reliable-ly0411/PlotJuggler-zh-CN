@@ -2,14 +2,18 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #include <gtest/gtest.h>
+#include <qwt_plot_curve.h>
 
 #include <QApplication>
 #include <QDomDocument>
+#include <QElapsedTimer>
 #include <QFile>
+#include <QGuiApplication>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMouseEvent>
+#include <QPointer>
 #include <QSettings>
 #include <QSignalBlocker>
 #include <QStandardPaths>
@@ -18,21 +22,32 @@
 #include <QThread>
 #include <QTimer>
 #include <QToolButton>
+#include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <limits>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 #include "LayoutXml.h"
 #include "MainWindow.h"
 #include "SourceTimelineController.h"
 #include "dataset_test_helpers.h"
+#include "pj_base/builtin/point_cloud.hpp"
+#include "pj_base/builtin/point_cloud_codec.hpp"
+#include "pj_base/sdk/platform.hpp"
+#include "pj_datastore/object_store.hpp"
+#include "pj_datastore/writer.hpp"
+#include "pj_marketplace/qt_diagnostic_bridge.hpp"
+#include "pj_plotting/CurveEditor.h"
 #include "pj_plotting/DockToolbar.h"
 #include "pj_plotting/DockWidget.h"
 #include "pj_plotting/PlotDocker.h"
@@ -53,6 +68,9 @@
 #include "pj_widgets/VisualizationPlaceholderWidget.h"
 #include "support/gui_test_env.h"
 #include "support/isolated_main_window.h"
+#ifdef PJ_WITH_SCENE3D
+#include "pj_scene3d_widgets/Scene3DDockWidget.h"
+#endif
 
 using namespace Qt::StringLiterals;
 
@@ -172,6 +190,11 @@ class MainWindowHistoryTestPeer {
 
   static void saveGenericLayout(MainWindow& window, const QString& path) {
     window.saveLayoutToPath(path, /*include_data_source=*/false);
+  }
+
+  [[nodiscard]] static bool restoreLayout(MainWindow& window, QDomDocument& doc) {
+    return window.restoreWorkspaceState(doc, MainWindow::MissingCurvePolicy::kSilentDrop) ==
+           MainWindow::RestoreResult::kApplied;
   }
 };
 
@@ -565,6 +588,55 @@ TEST_F(MainWindowHistoryFixture, RemintedDatasetCompletionRebaselinesStaleHistor
   EXPECT_FALSE(PJ::MainWindowHistoryTestPeer::undoEnabled(window));
 }
 
+// A reload that loses a column shrinks the data universe as losing a topic does: the history from before it, which
+// may plot that column, is dropped instead of failing every undo.
+TEST_F(MainWindowHistoryFixture, ReloadThatLosesAColumnRebaselinesHistory) {
+  PJ::MainWindow& window = mainWindow();
+  PJ::AppSession& app_session = PJ::MainWindowHistoryTestPeer::appSession(window);
+  PJ::SessionManager& session = app_session.sessionManager();
+  PJ::PlotWidget* plot = ensureCurrentPlot(window);
+  ASSERT_NE(plot, nullptr);
+
+  const PJ::DatasetId dataset = pj_test::createDataset(app_session, "lost-column.csv", /*own_time_domain=*/true);
+  ASSERT_NE(dataset, 0U);
+  PJ::TopicId topic = 0;
+  const auto write_rows = [&](bool with_time) {
+    PJ::DataWriter writer = session.dataEngine().createWriter();
+    if (topic == 0) {
+      topic = *writer.registerTopic(dataset, PJ::TopicDescriptor{.name = "data"});
+    }
+    const auto time = writer.ensureColumn(topic, "time", PJ::PrimitiveType::kFloat64);
+    const auto a = writer.ensureColumn(topic, "a", PJ::PrimitiveType::kFloat64);
+    ASSERT_TRUE(time.has_value() && a.has_value());
+    for (int row = 0; row < 3; ++row) {
+      ASSERT_TRUE(writer.beginRow(topic, 1'000'000'000LL * row).has_value());
+      if (with_time) {
+        writer.set<double>(topic, *time, 0.5 * row);
+      }
+      writer.set<double>(topic, *a, 1.5 * row);
+      ASSERT_TRUE(writer.finishRow(topic).has_value());
+    }
+    ASSERT_FALSE(session.commitChunks(writer.flushAll()).empty());
+  };
+  write_rows(/*with_time=*/true);
+  PJ::MainWindowHistoryTestPeer::completeFileLoad(window, u"/tmp/lost-column.csv"_s);
+
+  PJ::MainWindowHistoryTestPeer::resetHistory(window);
+  plot->setStateId(u"history-before-lost-column"_s);
+  PJ::MainWindowHistoryTestPeer::recordDiscreteState(window);
+  ASSERT_EQ(PJ::MainWindowHistoryTestPeer::undoSize(window), 2U);
+
+  {
+    PJ::RefillGuard guard = session.beginRefill(dataset);
+    write_rows(/*with_time=*/false);
+    guard.pruneVanishedTopics();
+    guard.commit();
+  }
+  PJ::MainWindowHistoryTestPeer::completeFileLoad(window, u"/tmp/lost-column.csv"_s);
+  EXPECT_EQ(PJ::MainWindowHistoryTestPeer::undoSize(window), 1U);
+  EXPECT_FALSE(PJ::MainWindowHistoryTestPeer::undoEnabled(window));
+}
+
 TEST_F(MainWindowHistoryFixture, AdvertisedCurveIntentSurvivesUndoRedoAndMaterializesWithoutNewEdit) {
   PJ::MainWindow& window = mainWindow();
   PJ::AppSession& app_session = PJ::MainWindowHistoryTestPeer::appSession(window);
@@ -811,6 +883,431 @@ TEST_F(MainWindowHistoryFixture, UndoAndRedoCountAScenePanelOncePerSession) {
   }
   EXPECT_EQ(counters.today().features.at("panel.scene3d"), 1);
   counters.setEnabled(false);
+}
+
+// An undo restores into the live plots whose ids match: a tab the edit did not touch keeps its plot widget (and with it
+// the curves' sample caches), while the edited tab returns to its saved state.
+TEST_F(MainWindowHistoryFixture, UndoKeepsThePlotOfAnUntouchedTab) {
+  PJ::MainWindow& window = mainWindow();
+  QDomDocument doc;
+  ASSERT_TRUE(
+      static_cast<bool>(doc.setContent(
+          u"<root binding=\"generic\" format=\"PlotJuggler\" pj4_version=\"4\">"
+          u"<tabbed_widget id=\"\" name=\"main\" parent=\"main_window\">"
+          u"<Tab containers=\"1\" id=\"tab-edited\" tab_name=\"edited\"><Container><DockSplitter count=\"1\" "
+          u"orientation=\"-\" sizes=\"1\"><DockArea id=\"area-edited\" name=\"...\"><plot id=\"plot-edited\" "
+          u"mode=\"TimeSeries\" style=\"Lines\" tracker_enabled=\"true\"/></DockArea></DockSplitter></Container></Tab>"
+          u"<Tab containers=\"1\" id=\"tab-kept\" tab_name=\"kept\"><Container><DockSplitter count=\"1\" "
+          u"orientation=\"-\" sizes=\"1\"><DockArea id=\"area-kept\" name=\"...\"><plot id=\"plot-kept\" "
+          u"mode=\"TimeSeries\" style=\"Lines\"/></DockArea></DockSplitter></Container></Tab>"
+          u"<currentTabIndex index=\"0\"/></tabbed_widget></root>"_s)));
+  ASSERT_TRUE(PJ::MainWindowHistoryTestPeer::restoreLayout(window, doc));
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+  auto* tabbed = window.findChild<PJ::TabbedPlotWidget*>(u"tabbedPlotWidget"_s);
+  ASSERT_NE(tabbed, nullptr);
+  ASSERT_EQ(tabbed->dockerCount(), 2);
+  const auto plot_in = [tabbed](int tab) -> PJ::PlotWidget* {
+    PJ::PlotDocker* docker = tabbed->dockerAt(tab);
+    return docker != nullptr && docker->plotCount() > 0 && docker->plotAt(0) != nullptr
+               ? docker->plotAt(0)->plotWidget()
+               : nullptr;
+  };
+  PJ::PlotWidget* edited = plot_in(0);
+  const QPointer<PJ::PlotWidget> kept = plot_in(1);
+  ASSERT_NE(edited, nullptr);
+  ASSERT_NE(kept, nullptr);
+
+  PJ::MainWindowHistoryTestPeer::resetHistory(window);
+  edited->setTrackerEnabled(false);
+  PJ::MainWindowHistoryTestPeer::recordDiscreteState(window);
+  PJ::MainWindowHistoryTestPeer::undo(window);
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+  ASSERT_NE(plot_in(0), nullptr);
+  EXPECT_TRUE(plot_in(0)->trackerEnabled());
+  EXPECT_FALSE(kept.isNull()) << "the untouched tab's plot was destroyed and rebuilt";
+  EXPECT_EQ(plot_in(1), kept.data());
+
+  // The restore re-wires the reused plot: its status message still reaches the diagnostics once.
+  int reports = 0;
+  const QMetaObject::Connection counter = QObject::connect(
+      window.diagnosticBridge(), &PJ::QtDiagnosticBridge::diagnosticReported, &window,
+      [&reports](int /*level*/, const QString& /*source*/, const QString& id, const QString& message) {
+        reports += id == u"status"_s && message == u"reused"_s ? 1 : 0;
+      });
+  ASSERT_FALSE(kept.isNull());
+  emit kept->statusMessageRequested(u"reused"_s);
+  QCoreApplication::processEvents();
+  QObject::disconnect(counter);
+  EXPECT_EQ(reports, 1);
+}
+
+// The toolbar's Dots toggle restyles the plots when pressed; a restore (layout load, progressive load, undo, redo)
+// keeps each plot's saved style, whichever way the toggle stands.
+TEST_F(MainWindowHistoryFixture, RestoreKeepsEachPlotsStyleWhateverTheDotsToggle) {
+  PJ::MainWindow& window = mainWindow();
+  auto* dots = window.findChild<QToolButton*>(u"buttonDots"_s);
+  ASSERT_NE(dots, nullptr);
+  dots->setChecked(false);
+  QDomDocument doc;
+  ASSERT_TRUE(
+      static_cast<bool>(doc.setContent(
+          u"<root binding=\"generic\" format=\"PlotJuggler\" pj4_version=\"4\">"
+          u"<tabbed_widget id=\"\" name=\"main\" parent=\"main_window\">"
+          u"<Tab containers=\"1\" id=\"tab-style\" tab_name=\"style\"><Container><DockSplitter count=\"2\" "
+          u"orientation=\"-\" sizes=\"0.5;0.5\">"
+          u"<DockArea id=\"area-dots\" name=\"...\"><plot id=\"plot-dots\" mode=\"TimeSeries\" "
+          u"style=\"LinesAndDots\"/></DockArea>"
+          u"<DockArea id=\"area-lines\" name=\"...\"><plot id=\"plot-lines\" mode=\"TimeSeries\" "
+          u"style=\"Lines\"/></DockArea>"
+          u"</DockSplitter></Container></Tab><currentTabIndex index=\"0\"/></tabbed_widget></root>"_s)));
+  auto* tabbed = window.findChild<PJ::TabbedPlotWidget*>(u"tabbedPlotWidget"_s);
+  ASSERT_NE(tabbed, nullptr);
+  const auto style_of = [tabbed](int index) {
+    PJ::PlotDocker* docker = tabbed->currentTab();
+    const bool present =
+        docker != nullptr && docker->plotCount() > index && docker->plotAt(index)->plotWidget() != nullptr;
+    EXPECT_TRUE(present);
+    return present ? docker->plotAt(index)->plotWidget()->defaultCurveStyle() : PJ::PlotWidgetBase::kSteps;
+  };
+  const auto restore = [&window, &doc]() {
+    QDomDocument copy = doc.cloneNode(true).toDocument();
+    ASSERT_TRUE(PJ::MainWindowHistoryTestPeer::restoreLayout(window, copy));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  };
+
+  restore();
+  EXPECT_EQ(style_of(0), PJ::PlotWidgetBase::kLinesAndDots) << "a layout load with Dots off";
+  EXPECT_EQ(style_of(1), PJ::PlotWidgetBase::kLines);
+
+  PJ::MainWindowHistoryTestPeer::resetHistory(window);
+  tabbed->currentTab()->plotAt(1)->plotWidget()->setTrackerEnabled(false);
+  PJ::MainWindowHistoryTestPeer::recordDiscreteState(window);
+  PJ::MainWindowHistoryTestPeer::undo(window);
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  EXPECT_EQ(style_of(0), PJ::PlotWidgetBase::kLinesAndDots) << "an undo with Dots off";
+  PJ::MainWindowHistoryTestPeer::redo(window);
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  EXPECT_EQ(style_of(0), PJ::PlotWidgetBase::kLinesAndDots) << "a redo with Dots off";
+
+  dots->setChecked(true);
+  EXPECT_EQ(style_of(1), PJ::PlotWidgetBase::kLinesAndDots) << "pressing Dots restyles a Lines plot";
+  restore();
+  EXPECT_EQ(style_of(0), PJ::PlotWidgetBase::kLinesAndDots);
+  EXPECT_EQ(style_of(1), PJ::PlotWidgetBase::kLines) << "a layout load with Dots on";
+
+  PJ::MainWindowHistoryTestPeer::resetHistory(window);
+  tabbed->currentTab()->plotAt(0)->plotWidget()->setTrackerEnabled(false);
+  PJ::MainWindowHistoryTestPeer::recordDiscreteState(window);
+  PJ::MainWindowHistoryTestPeer::undo(window);
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  EXPECT_EQ(style_of(1), PJ::PlotWidgetBase::kLines) << "an undo with Dots on";
+  PJ::MainWindowHistoryTestPeer::redo(window);
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  EXPECT_EQ(style_of(1), PJ::PlotWidgetBase::kLines) << "a redo with Dots on";
+
+  PJ::MainWindowHistoryTestPeer::beginProgressiveRestore(window, doc.cloneNode(true).toDocument());
+  PJ::MainWindowHistoryTestPeer::drainProgressiveRestore(window);
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  ASSERT_FALSE(PJ::MainWindowHistoryTestPeer::progressiveRestoreInFlight(window));
+  EXPECT_EQ(style_of(0), PJ::PlotWidgetBase::kLinesAndDots) << "a progressive layout load with Dots on";
+  EXPECT_EQ(style_of(1), PJ::PlotWidgetBase::kLines) << "a progressive layout load with Dots on";
+
+  dots->setChecked(false);
+  EXPECT_EQ(style_of(0), PJ::PlotWidgetBase::kLines) << "pressing Dots off restyles a Lines and Dots plot";
+}
+
+// A reused plot comes back exactly as saved: curve order, and the curve editor bound to it shows the restored rows.
+TEST_F(MainWindowHistoryFixture, UndoOnAReusedPlotRestoresCurveOrderAndTheEditorRows) {
+  PJ::MainWindow& window = mainWindow();
+  PJ::AppSession& app = PJ::MainWindowHistoryTestPeer::appSession(window);
+  const PJ::DatasetId dataset = pj_test::createDataset(app, "order");
+  ASSERT_NE(dataset, 0U);
+  QStringList keys;
+  for (const char* topic : {"/a", "/b", "/c"}) {
+    const PJ::TopicId id = pj_test::addScalarTopic(app, dataset, topic);
+    ASSERT_NE(id, 0U);
+    keys << catalogKeyForTopic(app.catalogModel(), id);
+  }
+  PJ::PlotWidget* plot = ensureCurrentPlot(window);
+  ASSERT_NE(plot, nullptr);
+  for (const QString& key : keys) {
+    ASSERT_NE(plot->addCurve(key), nullptr);
+  }
+  auto* editor = window.findChild<PJ::CurveEditor*>();
+  ASSERT_NE(editor, nullptr);
+  editor->setPlot(plot);
+  PJ::MainWindowHistoryTestPeer::resetHistory(window);
+
+  plot->curveFromTitle(keys[1])->curve->setVisible(false);
+  plot->removeCurve(keys[0]);
+  PJ::MainWindowHistoryTestPeer::recordDiscreteState(window);
+  PJ::MainWindowHistoryTestPeer::undo(window);
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  QCoreApplication::processEvents();
+
+  PJ::PlotWidget* restored = ensureCurrentPlot(window);
+  ASSERT_NE(restored, nullptr);
+  QStringList order;
+  for (const auto& info : restored->curveList()) {
+    order << info.source_name;
+  }
+  EXPECT_EQ(order, keys);
+  ASSERT_EQ(editor->plot(), restored);
+  const auto toggles = editor->findChildren<QToolButton*>(u"curveVisibilityToggle"_s);
+  ASSERT_EQ(toggles.size(), 3);
+  for (const QToolButton* toggle : toggles) {
+    EXPECT_TRUE(toggle->isChecked()) << "an editor row kept the undone visibility";
+  }
+}
+
+// The curve editor follows the copy "Duplicate tab" selects, with rows that show the copied visibility.
+TEST_F(MainWindowHistoryFixture, DuplicateTabBindsTheEditorToTheCopyRows) {
+  PJ::MainWindow& window = mainWindow();
+  PJ::AppSession& app = PJ::MainWindowHistoryTestPeer::appSession(window);
+  const PJ::DatasetId dataset = pj_test::createDataset(app, "dup");
+  ASSERT_NE(dataset, 0U);
+  QStringList keys;
+  for (const char* topic : {"/a", "/b"}) {
+    const PJ::TopicId id = pj_test::addScalarTopic(app, dataset, topic);
+    ASSERT_NE(id, 0U);
+    keys << catalogKeyForTopic(app.catalogModel(), id);
+  }
+  PJ::PlotWidget* plot = ensureCurrentPlot(window);
+  ASSERT_NE(plot, nullptr);
+  for (const QString& key : keys) {
+    ASSERT_NE(plot->addCurve(key), nullptr);
+  }
+  plot->curveFromTitle(keys[1])->curve->setVisible(false);
+  auto* tabbed = window.findChild<PJ::TabbedPlotWidget*>(u"tabbedPlotWidget"_s);
+  ASSERT_NE(tabbed, nullptr);
+  auto* editor = window.findChild<PJ::CurveEditor*>();
+  ASSERT_NE(editor, nullptr);
+
+  PJ::PlotDocker* copy = tabbed->duplicateTab(tabbed->currentTab());
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  QCoreApplication::processEvents();
+
+  ASSERT_NE(copy, nullptr);
+  ASSERT_EQ(tabbed->currentTab(), copy);
+  ASSERT_EQ(editor->plot(), ensureCurrentPlot(window));
+  const auto toggles = editor->findChildren<QToolButton*>(u"curveVisibilityToggle"_s);
+  ASSERT_EQ(toggles.size(), 2);
+  EXPECT_TRUE(toggles[0]->isChecked());
+  EXPECT_FALSE(toggles[1]->isChecked()) << "the hidden curve's row shows it visible";
+}
+
+// A dock the user focused is replaced by the restore: the curve editor must follow the plot, not the removed dock.
+TEST_F(MainWindowHistoryFixture, UndoKeepsTheFocusedPlotBoundToTheCurveEditor) {
+  PJ::MainWindow& window = mainWindow();
+  window.show();
+  PJ::PlotWidget* plot = ensureCurrentPlot(window);
+  ASSERT_NE(plot, nullptr);
+  auto* tabbed = window.findChild<PJ::TabbedPlotWidget*>(u"tabbedPlotWidget"_s);
+  ASSERT_NE(tabbed, nullptr);
+  PJ::PlotDocker* docker = tabbed->currentTab();
+  ASSERT_NE(docker, nullptr);
+  docker->focusDock(docker->plotAt(0));
+  QCoreApplication::processEvents();
+  auto* editor = window.findChild<PJ::CurveEditor*>();
+  ASSERT_NE(editor, nullptr);
+  ASSERT_EQ(editor->plot(), plot);
+
+  PJ::MainWindowHistoryTestPeer::resetHistory(window);
+  plot->setTrackerEnabled(!plot->trackerEnabled());
+  PJ::MainWindowHistoryTestPeer::recordDiscreteState(window);
+  PJ::MainWindowHistoryTestPeer::undo(window);
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  QCoreApplication::processEvents();
+
+  EXPECT_NE(editor->plot(), nullptr) << "the editor was bound to the removed dock";
+  EXPECT_EQ(editor->plot(), ensureCurrentPlot(window));
+}
+
+// PJ_BENCH=1: how long one undo and one redo block the GUI thread on a heavy workspace. Every history restore
+// re-applies every non-exempt dock from the saved XML, so the cost grows with the workspace. Reports the median of
+// kRounds undo and redo calls for: one plot; 16 plots of 5 curves over 100k-sample series; the same plus two Scene3D
+// docks each showing a 1M-point cloud. "settled" adds the event-loop turns the restore queues (deferred
+// rebinds, layout passes; rendering only where the platform renders).
+TEST_F(MainWindowHistoryFixture, UndoRedoLatencyBenchmark) {
+  if (!PJ::sdk::getEnv("PJ_BENCH")) {
+    GTEST_SKIP() << "set PJ_BENCH=1";
+  }
+  constexpr int kSeries = 80;
+  constexpr int kSamples = 100'000;
+  constexpr int kRounds = 7;
+  PJ::MainWindow& window = mainWindow();
+  window.resize(1600, 1000);
+  window.show();
+  PJ::AppSession& app = PJ::MainWindowHistoryTestPeer::appSession(window);
+
+  const PJ::DatasetId dataset = pj_test::createDataset(app, "bench.mcap");
+  ASSERT_NE(dataset, 0U);
+  {
+    PJ::DataWriter writer = app.sessionManager().dataEngine().createWriter();
+    for (int s = 0; s < kSeries; ++s) {
+      auto handle = writer.registerScalarSeries(dataset, "sig" + std::to_string(s), PJ::NumericType::kFloat64);
+      ASSERT_TRUE(handle.has_value());
+      for (int i = 0; i < kSamples; ++i) {
+        writer.appendScalar(*handle, PJ::Timestamp{i} * 1'000'000, std::sin(0.001 * i + s));
+      }
+    }
+    ASSERT_FALSE(app.sessionManager().commitChunks(writer.flushAll()).empty());
+  }
+#ifdef PJ_WITH_SCENE3D
+  {
+    std::vector<float> xyz;
+    constexpr int kSide = 100;  // 1M points
+    xyz.reserve(std::size_t{kSide} * kSide * kSide * 3);
+    for (int i = 0; i < kSide; ++i) {
+      for (int j = 0; j < kSide; ++j) {
+        for (int k = 0; k < kSide; ++k) {
+          xyz.insert(
+              xyz.end(), {static_cast<float>(i) * 0.01F, static_cast<float>(j) * 0.01F, static_cast<float>(k) * 0.01F});
+        }
+      }
+    }
+    using DT = PJ::sdk::PointField::Datatype;
+    PJ::sdk::PointCloud cloud;
+    cloud.frame_id = "map";
+    cloud.fields = {{"x", 0, DT::kFloat32, 1}, {"y", 4, DT::kFloat32, 1}, {"z", 8, DT::kFloat32, 1}};
+    cloud.point_step = 12;
+    cloud.width = static_cast<uint32_t>(xyz.size() / 3);
+    cloud.height = 1;
+    cloud.row_step = cloud.point_step * cloud.width;
+    cloud.data = PJ::Span<const uint8_t>(reinterpret_cast<const uint8_t*>(xyz.data()), xyz.size() * sizeof(float));
+    cloud.timestamp_ns = 1'000'000;
+    auto& store = app.sessionManager().objectStore();
+    const auto points = store.registerTopic(
+        PJ::ObjectTopicDescriptor{
+            .dataset_id = dataset,
+            .topic_name = "/points",
+            .metadata_json = R"({"builtin_object_type":"kPointCloud"})"});
+    ASSERT_TRUE(points.has_value());
+    ASSERT_TRUE(store.pushOwned(*points, 1'000'000, PJ::serializePointCloud(cloud)).has_value());
+  }
+#endif
+  app.catalogModel().rebuildFromDatastore();
+
+  // One tab per row of docks: `plots` plots of 5 curves each (4 per tab) and `scenes` Scene3D docks on a tab of
+  // their own.
+  const auto workspace = [](int plots, int scenes) {
+    QString xml =
+        u"<root binding=\"generic\" format=\"PlotJuggler\" pj4_version=\"4\">"
+        u"<tabbed_widget id=\"\" name=\"main\" parent=\"main_window\">"_s;
+    const auto tab = [&xml](const QString& name, const QStringList& areas) {
+      QStringList sizes;
+      for (int i = 0; i < areas.size(); ++i) {
+        sizes << QString::number(1.0 / static_cast<double>(areas.size()), 'f', 8);
+      }
+      xml +=
+          u"<Tab containers=\"1\" tab_name=\"%1\"><Container><DockSplitter count=\"%2\" orientation=\"|\" "
+          u"sizes=\"%3\">"_s.arg(name)
+              .arg(areas.size())
+              .arg(sizes.join(u';'));
+      for (const QString& area : areas) {
+        xml += u"<DockArea name=\"...\">"_s + area + u"</DockArea>"_s;
+      }
+      xml += u"</DockSplitter></Container></Tab>"_s;
+    };
+    QStringList areas;
+    for (int p = 0; p < plots; ++p) {
+      QString plot = u"<plot mode=\"TimeSeries\" style=\"Lines\" tracker_enabled=\"true\">"_s;
+      for (int c = 0; c < 5; ++c) {
+        plot +=
+            u"<curve color=\"#1f77b4\" field=\"value\" topic=\"sig%1\" visible=\"true\"/>"_s.arg((p * 5 + c) % kSeries);
+      }
+      areas << plot + u"</plot>"_s;
+      if (areas.size() == 4 || p + 1 == plots) {
+        tab(u"plots%1"_s.arg(p / 4), areas);
+        areas.clear();
+      }
+    }
+    for (int s = 0; s < scenes; ++s) {
+      areas << u"<scene3d fixed_frame=\"map\" fixed_frame_mode=\"auto_root\" version=\"1\"><layer "
+               u"display_name=\"points\" "
+               u"object_type=\"kPointCloud\" order=\"0\" topic_name=\"/points\" visible=\"true\"/></scene3d>"_s;
+    }
+    if (!areas.isEmpty()) {
+      tab(u"scenes"_s, areas);
+    }
+    return xml + u"<currentTabIndex index=\"0\"/></tabbed_widget></root>"_s;
+  };
+
+  const auto settle = []() {
+    QElapsedTimer idle;
+    idle.start();
+    while (idle.elapsed() < 30) {  // until 30 ms pass in which no event-loop pass did work (> 0.5 ms)
+      QElapsedTimer pass;
+      pass.start();
+      QCoreApplication::processEvents(QEventLoop::AllEvents);
+      // A running event loop deletes the replaced docks; processEvents() from here never would.
+      QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+      if (pass.nsecsElapsed() > 500'000) {
+        idle.restart();
+      } else {
+        QThread::msleep(1);
+      }
+    }
+  };
+  const auto median = [](std::vector<double> v) {
+    std::sort(v.begin(), v.end());
+    return v[v.size() / 2];
+  };
+
+  struct Case {
+    const char* name;
+    int plots;
+    int scenes;
+  };
+  for (const Case& bench_case :
+       {Case{"1 plot", 1, 0}, Case{"16 plots x 5 curves x 100k", 16, 0},
+        Case{"16 plots + 2 Scene3D x 1M points", 16, 2}}) {
+#ifndef PJ_WITH_SCENE3D
+    if (bench_case.scenes > 0) {
+      continue;
+    }
+#endif
+    QDomDocument doc;
+    ASSERT_TRUE(static_cast<bool>(doc.setContent(workspace(bench_case.plots, bench_case.scenes))));
+    ASSERT_TRUE(PJ::MainWindowHistoryTestPeer::restoreLayout(window, doc)) << bench_case.name;
+    settle();
+    PJ::PlotWidget* plot = ensureCurrentPlot(window);
+    ASSERT_NE(plot, nullptr);
+    plot->setStateId(u"bench-before"_s);
+    PJ::MainWindowHistoryTestPeer::resetHistory(window);
+    plot->setStateId(u"bench-after"_s);
+    PJ::MainWindowHistoryTestPeer::recordDiscreteState(window);
+    ASSERT_EQ(PJ::MainWindowHistoryTestPeer::undoSize(window), 2U);
+
+    std::vector<double> undo_ms, redo_ms, undo_settled_ms, redo_settled_ms;
+    QElapsedTimer timer;
+    for (int round = 0; round < kRounds; ++round) {
+      timer.start();
+      PJ::MainWindowHistoryTestPeer::undo(window);
+      undo_ms.push_back(static_cast<double>(timer.nsecsElapsed()) / 1e6);
+      settle();
+      undo_settled_ms.push_back(static_cast<double>(timer.nsecsElapsed()) / 1e6 - 30.0);
+      ASSERT_EQ(PJ::MainWindowHistoryTestPeer::redoSize(window), 1U) << bench_case.name;
+      timer.start();
+      PJ::MainWindowHistoryTestPeer::redo(window);
+      redo_ms.push_back(static_cast<double>(timer.nsecsElapsed()) / 1e6);
+      settle();
+      redo_settled_ms.push_back(static_cast<double>(timer.nsecsElapsed()) / 1e6 - 30.0);
+    }
+    int scene_views = 0;
+#ifdef PJ_WITH_SCENE3D
+    for (auto* scene : window.findChildren<PJ::Scene3DDockWidget*>()) {
+      scene_views += scene->sceneView() != nullptr ? 1 : 0;
+    }
+#endif
+    std::printf(
+        "[PJ_BENCH] undo/redo, %s (platform %s, %d live scene views): undo %.1f ms (settled %.1f), "
+        "redo %.1f ms (settled %.1f); median of %d\n",
+        bench_case.name, qPrintable(QGuiApplication::platformName()), scene_views, median(undo_ms),
+        median(undo_settled_ms), median(redo_ms), median(redo_settled_ms), kRounds);
+  }
 }
 
 TEST_F(MainWindowHistoryFixture, ProgressiveFileCompletionLeavesHistoryTransactionOwnedByDrain) {

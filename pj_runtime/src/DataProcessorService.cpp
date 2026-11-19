@@ -705,7 +705,8 @@ std::optional<DataProcessorService::ResolvedInput> DataProcessorService::resolve
   // Exact whole-topic name → the topic's first leaf column.
   bool topic_ambiguous = false;
   if (const auto topic = resolveInputTopic(name, only_dataset, &topic_ambiguous)) {
-    return ResolvedInput{topic->first, topic->second, 0};
+    const TopicStorage* storage = engine_.getTopicStorage(topic->first);
+    return ResolvedInput{topic->first, topic->second, storage != nullptr ? storage->firstLiveColumn() : 0};
   }
   if (topic_ambiguous) {
     if (ambiguous != nullptr) {
@@ -733,7 +734,13 @@ std::optional<DataProcessorService::ResolvedInput> DataProcessorService::resolve
         const std::string wanted = normalizedFieldPath(name.substr(tn.size() + 1));
         const std::vector<std::string> paths = inputFieldPaths(engine_, *storage);
         bool ambiguous_field = false;
-        const std::optional<std::size_t> column = uniqueColumnForFieldPath(paths, wanted, ambiguous_field);
+        std::optional<std::size_t> column = uniqueColumnForFieldPath(paths, wanted, ambiguous_field);
+        // A column a reload lost is not offered to a new binding by name, as a topic a reload lost is not; a live
+        // binding to it keeps it (resolveInputBinding).
+        if (column.has_value() && *column < storage->columnDescriptors().size() &&
+            storage->isColumnRetired(storage->columnDescriptors()[*column].field_id)) {
+          column.reset();
+        }
         if (!column.has_value()) {
           if (ambiguous_field && ambiguous != nullptr) {
             *ambiguous = true;
@@ -1611,14 +1618,15 @@ Status DataProcessorService::removeProcessorsDependingOn(const std::vector<Topic
   // The visitor discovers parents before children (a processor is visited only
   // after one of its inputs joined the affected set), so reverse order removes
   // leaf-first — no dependent ever outlives one of its inputs' producers.
+  Status first_failure = PJ::okStatus();
   for (auto it = dependents.rbegin(); it != dependents.rend(); ++it) {
     Status removed = it->kind == Dependent::Kind::kFilter ? removeFilterOnly(it->filter_node)
                                                           : removeTransformOnly(it->transform_key);
-    if (!removed.has_value()) {
-      return removed;
+    if (!removed.has_value() && first_failure.has_value()) {
+      first_failure = std::move(removed);
     }
   }
-  return PJ::okStatus();
+  return first_failure;
 }
 
 void DataProcessorService::removeEphemerals(const std::unordered_set<std::string>& keys) {

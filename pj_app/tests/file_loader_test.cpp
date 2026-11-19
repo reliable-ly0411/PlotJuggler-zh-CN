@@ -49,11 +49,13 @@
 #include "pj_base/sdk/data_source_plugin_base.hpp"
 #include "pj_datastore/engine.hpp"
 #include "pj_datastore/reader.hpp"
+#include "pj_datastore/topic_storage.hpp"
 #include "pj_marketplace/qt_diagnostic_bridge.hpp"
 #include "pj_plugins/sdk/object_ingest_policy.hpp"
 #include "pj_plotting/PlotWidget.h"
 #include "pj_runtime/AppSession.h"
 #include "pj_runtime/CatalogModel.h"
+#include "pj_runtime/DataProcessorService.h"
 #include "pj_runtime/ExtensionCatalogService.h"
 #include "pj_runtime/PlaybackEngine.h"
 #include "pj_runtime/SessionManager.h"
@@ -500,6 +502,7 @@ class ReloadProbeSource final : public PJ::DataSourcePluginBase {
     first_value_ = object.value(u"first_value"_s).toDouble(10.0);
     rows_ = object.value(u"rows"_s).toInt(3);
     park_ = object.value(u"park"_s).toBool(false);
+    extra_rows_ = object.value(u"extra_rows"_s).toInt(0);
     return PJ::okStatus();
   }
 
@@ -536,6 +539,20 @@ class ReloadProbeSource final : public PJ::DataSourcePluginBase {
       }
       if (!runtimeHost().progressUpdate(static_cast<uint64_t>(index))) {
         return fail("cancelled via progress");
+      }
+    }
+
+    if (extra_rows_ > 0) {
+      auto extra = writeHost().ensureTopic("reload_probe/extra");
+      if (!extra) {
+        return fail(extra.error());
+      }
+      for (int index = 1; index <= extra_rows_; ++index) {
+        if (auto status = writeHost().appendRecord(
+                *extra, PJ::Timestamp{static_cast<int64_t>(index) * 100}, {{.name = "value", .value = 1.0}});
+            !status) {
+          return fail(status.error());
+        }
       }
     }
 
@@ -576,6 +593,7 @@ class ReloadProbeSource final : public PJ::DataSourcePluginBase {
   double first_value_ = 10.0;
   int rows_ = 3;
   bool park_ = false;
+  int extra_rows_ = 0;  // rows of a second topic, "reload_probe/extra", at the same stamps
   PJ::DataSourceState state_ = PJ::DataSourceState::kIdle;
 };
 
@@ -1273,6 +1291,22 @@ TEST_F(FileLoaderTest, ReloadWithMultipleDatasetsLeavesOthersIntact) {
   EXPECT_EQ(catalog().items().size(), 2u) << "curve tree must keep both datasets' curves";
 }
 
+// The refill's commit recomputes the playback range, and the write host notifies nothing: the catalog must already
+// show a topic the reload added, or the recompute clamps the playhead to the shortened topic.
+TEST_F(FileLoaderTest, ReloadThatAddsALongerTopicKeepsThePlayhead) {
+  ASSERT_TRUE(installReloadProbe());
+  const QString path = makeMockFile(u"grows.reloadprobe"_s);
+  ASSERT_TRUE(loadAndWait(path, reloadProbeHints(uR"({"rows":10})"_s)));
+  ASSERT_TRUE(app_session_->seedPlaybackFromSession());
+  PJ::PlaybackEngine& engine = app_session_->playbackEngine();
+  engine.setCurrentTime(PJ::DisplaySeconds{500.0e-9});
+
+  ASSERT_TRUE(loadAndWait(path, reloadProbeHints(uR"({"rows":3,"extra_rows":10})"_s)));
+  ASSERT_TRUE(app_session_->seedPlaybackFromSession());
+  EXPECT_DOUBLE_EQ(engine.rangeMax().value, 1000.0e-9);
+  EXPECT_DOUBLE_EQ(engine.currentTime().value, 500.0e-9);
+}
+
 // Two files that share a basename but live in different directories (e.g. run1/log.mcap and run2/log.mcap, common
 // for per-run robotics logs) must load as TWO distinct datasets. The same-source match keys on full-path identity,
 // not basename; otherwise the second file would be taken for a reload of the first, aliasing its data and losing
@@ -1426,6 +1460,31 @@ TEST_F(FileLoaderTest, FanoutReloadErasesOldDatasetBeforePreferReuseReload) {
   EXPECT_NE(reloaded, 0u) << "prefer_reuse after fanout reload must ingest a fresh dataset";
   EXPECT_NE(reloaded, old_id) << "the old fanout-replaced DatasetId must not be reused";
   EXPECT_EQ(singleTopicRowCount(reloaded), 3) << "fresh prefer_reuse load must ingest rows";
+}
+
+// The replaced dataset's transforms survive its erase: the shell restores the workspace it captured before the
+// reload onto the fan-out children, and an erase that cascaded first would delete them without a prompt or undo.
+TEST_F(FileLoaderTest, FanoutReloadKeepsTheReplacedDatasetsTransforms) {
+  const QString path = makeMockFile(u"fanout.mock"_s);
+  ASSERT_TRUE(load(path));
+  const PJ::DatasetId old_id = datasetNamed("fanout.mock");
+  ASSERT_NE(old_id, 0u);
+  const auto topics = session().dataEngine().listTopics(old_id);
+  ASSERT_EQ(topics.size(), 1u);
+  const std::string input = session().dataEngine().getTopicStorage(topics.front())->descriptor().name;
+  constexpr const char* kNegate = R"LUAU(-- pj-script: luau
+return { id="negate", name="Negate", output="same",
+  create = function(p) return { calculate = function(t, v) return -v end } end }
+)LUAU";
+  PJ::DataProcessorService& processors = session().dataProcessorService();
+  ASSERT_TRUE(processors.upsertTransform("pluginA", "negate", {input}, {"negated"}, kNegate, "{}").has_value());
+
+  PJ::LoadHints fanout_hints =
+      loadHints(uR"({"__pj_fanout":["{\"display_suffix\":\"left\"}","{\"display_suffix\":\"right\"}"]})"_s);
+  ASSERT_TRUE(loadAndWait(path, fanout_hints));
+
+  ASSERT_FALSE(engineHasDataset(old_id));
+  EXPECT_EQ(processors.transformRecipes().size(), 1u);
 }
 
 // A replacing fan-out tombstones the dataset it is replacing and real-deletes it only once the replacement has

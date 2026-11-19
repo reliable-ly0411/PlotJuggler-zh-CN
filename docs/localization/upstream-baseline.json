@@ -1,9 +1,9 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
   "upstream_branch": "main",
-  "upstream_commit": "aa365846c3e5f5f1ed4f17fb54845ad6413c8de3",
+  "upstream_commit": "690f2c5066991eb3c624d863705528c006ad68ac",
   "upstream_version_file": "versions.env",
-  "baseline_recorded_utc": "2026-11-18",
+  "baseline_recorded_utc": "2026-11-19",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
   "localization_source_branch": "zh-CN",
   "localization_source_commit": "766a88d8e689c7803f32acb315ac872a0a67a57b",

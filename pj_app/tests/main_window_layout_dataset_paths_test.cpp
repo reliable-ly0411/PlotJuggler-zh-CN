@@ -927,6 +927,30 @@ TEST_F(LayoutDatasetPathsTest, TransformInputResolvesByPathAmongSameNamedDataset
       << "must follow the path data/two/run.csv, not the saved id";
 }
 
+// A transform's output lives in its first input's dataset: removing the second input's dataset retires it there, and
+// the surviving dataset's catalog must drop the row (removeDatasetData also serves paths that never prompt).
+TEST_F(LayoutDatasetPathsTest, RemovingASecondInputsDatasetDropsTheOutputFromTheCatalog) {
+  const PJ::DatasetId surviving = addPathlessDataset("keep.csv", "keep");
+  const PJ::DatasetId removed = addPathlessDataset("gone.csv", "gone");
+  ASSERT_NE(surviving, 0U);
+  ASSERT_NE(removed, 0U);
+  constexpr const char* kSum = R"LUAU(-- pj-script: luau
+return { id="sum", name="Sum",
+  create = function(p) return { calculate = function(t, a, b) return a + b end } end }
+)LUAU";
+  const auto sum = app().sessionManager().dataProcessorService().upsertTransform(
+      "pluginA", "sum", {"keep", "gone"}, {"sum"}, kSum, "{}");
+  ASSERT_TRUE(sum.has_value()) << sum.error();
+  app().catalogModel().rebuildFromDatastore();
+  ASSERT_FALSE(curveKey(surviving, u"sum"_s).isEmpty());
+
+  Peer::removeDatasetData(window, removed);
+
+  EXPECT_TRUE(app().sessionManager().dataProcessorService().transformRecipes().empty());
+  EXPECT_TRUE(curveKey(surviving, u"sum"_s).isEmpty());
+  EXPECT_FALSE(curveKey(surviving, u"keep"_s).isEmpty());
+}
+
 TEST_F(LayoutDatasetPathsTest, GenericLayoutCarriesNoTransformDatasetAndBindsToTheLoadedRecording) {
   ASSERT_TRUE(folders.create());
   const PJ::DatasetId dataset = addDataset("run.csv", folders.saved + u"/data/one/run.csv"_s);
@@ -1139,10 +1163,9 @@ void LayoutDatasetPathsTest::checkBundledUrdfFollowsLayout(bool include_data_sou
   const QString moved_layout = folders.moved + u"/layout.pj4.xml"_s;
   ASSERT_TRUE(QFile::copy(saved_layout, moved_layout));
 
-  QPointer<PJ::PlotDocker> old(docker);
   Peer::loadLayout(window, moved_layout);
   QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-  ASSERT_TRUE(old.isNull());
+  ASSERT_EQ(robotLayers().size(), 2U);
 
   std::map<std::string, QString> source_by_link;
   for (auto* robot : robotLayers()) {

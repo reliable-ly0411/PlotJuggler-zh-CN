@@ -295,7 +295,7 @@ std::optional<std::pair<TopicId, std::size_t>> SessionManager::scalarInput(
     for (const TopicId topic : data_engine_.listTopics(dataset)) {
       const TopicStorage* storage = data_engine_.getTopicStorage(topic);
       if (storage != nullptr && storage->descriptor().name == name) {
-        return std::pair<TopicId, std::size_t>{topic, 0};
+        return std::pair<TopicId, std::size_t>{topic, storage->firstLiveColumn()};
       }
     }
   }
@@ -832,8 +832,11 @@ std::unordered_set<DatasetId> SessionManager::refreshDatasetMinTimestampsForTopi
 }
 
 void SessionManager::invalidateDatasetMinTimestamp(DatasetId dataset_id) const {
-  dataset_min_cache_.erase(dataset_id);
   global_min_cache_.reset();
+  if (refillOpen(dataset_id)) {
+    return;
+  }
+  dataset_min_cache_.erase(dataset_id);
 }
 
 void SessionManager::setUseTimeOffset(bool use) {
@@ -1117,6 +1120,37 @@ void SessionManager::notifyDatasetAboutToBeReplaced(DatasetId dataset_id) {
   emit datasetAboutToBeReplaced(dataset_id);
 }
 
+void SessionManager::announceRefill(DatasetId dataset_id) {
+  // Emptied, a static reference no longer reads as one, and its pin would drag the origin to 0.
+  if (isStaticReferenceDataset(dataset_id)) {
+    invalidateDatasetMinTimestamp(dataset_id);
+  } else {
+    (void)datasetMinTimestamp(dataset_id);  // pins it while the data is still there
+  }
+  emit refillStarting(dataset_id);
+  emit datasetAboutToBeReplaced(dataset_id);
+}
+
+void SessionManager::openRefill(DatasetId dataset_id) {
+  ++open_refills_[dataset_id];
+}
+
+void SessionManager::closeRefill(DatasetId dataset_id) {
+  const auto it = open_refills_.find(dataset_id);
+  if (it == open_refills_.end() || --it->second > 0) {
+    return;
+  }
+  open_refills_.erase(it);
+  // The held pin described the prior data: re-pin from what the refill or the rollback left.
+  invalidateDatasetMinTimestamp(dataset_id);
+  notifyGlobalTimeReferenceIfChanged();
+  emit refillClosed(dataset_id);
+}
+
+bool SessionManager::refillOpen(DatasetId dataset_id) const {
+  return open_refills_.contains(dataset_id);
+}
+
 RefillGuard SessionManager::beginRefill(DatasetId dataset_id) {
   return RefillGuard(*this, dataset_id);  // guaranteed copy elision (move-only)
 }
@@ -1148,10 +1182,12 @@ RefillGuard::RefillGuard(SessionManager& session, DatasetId dataset_id) : sessio
   //     served from detached or partial data until commit or rollback.
   session.suspendOnDemand(dataset_id);
   // (1) Adapters drop cached TopicChunk* before any deque moves.
-  session.notifyDatasetAboutToBeReplaced(dataset_id);
+  session.announceRefill(dataset_id);
   // (2) Detach, not free, keeping the ids registered for the refill.
   scalar_snapshot_ = session.dataEngine().detachDatasetChunks(dataset_id);
   object_snapshot_ = session.objectStore().detachDataset(dataset_id);
+  // Before (3), whose pin refresh must find the refill open.
+  session.openRefill(dataset_id);
   // (3) The UI shows the dataset empty.
   session.notifyIngest(QVector<TopicId>(scalar_topics.begin(), scalar_topics.end()), /*live=*/false);
 }
@@ -1214,6 +1250,7 @@ void RefillGuard::commit() {
     // The new load's document, if any, is published at its own commit seam.
     session_->clearDatasetMetadata(dataset_id_);
     session_->resumeOnDemandLater(dataset_id_);
+    session_->closeRefill(dataset_id_);
   }
 }
 
@@ -1310,9 +1347,15 @@ void RefillGuard::pruneVanishedTopics() {
       if (processor_output_topic_ids_.count(topic_id) != 0) {
         continue;
       }
-      const TopicStorage* storage = session_->dataEngine().getTopicStorage(topic_id);
-      if (storage != nullptr && storage->empty()) {
+      TopicStorage* storage = session_->dataEngine().getTopicStorage(topic_id);
+      if (storage == nullptr) {
+        continue;
+      }
+      if (storage->empty()) {
         vanished_scalar.push_back(topic_id);
+      } else {
+        // The refill kept the prior layout and padded the columns it no longer writes with nulls.
+        storage->retireValuelessColumns();
       }
     }
   }
@@ -1383,6 +1426,7 @@ void RefillGuard::rollback() {
     qCWarning(lcSession).noquote() << "RefillGuard rollback processor replay failed:"
                                    << QString::fromStdString(replayed.error());
   }
+  session_->closeRefill(dataset_id_);
   const std::vector<TopicId> current = session_->dataEngine().listTopics(dataset_id_);
   session_->notifyIngest(QVector<TopicId>(current.begin(), current.end()), /*live=*/false);
   session_->resumeOnDemandLater(dataset_id_);  // the rollback's hold
@@ -1693,7 +1737,17 @@ void SessionManager::evictDatasetObjects(DatasetId dataset_id) {
   evictObjectTopics(object_store_.listTopics(dataset_id));
 }
 
-void SessionManager::removeDataset(DatasetId dataset_id) {
+bool SessionManager::removeDataset(DatasetId dataset_id, bool remove_dependent_processors) {
+  bool removed_processors = false;
+  if (remove_dependent_processors) {
+    // Before the erase: an eager node must not outlive its input storage.
+    const std::vector<TopicId> topics = datasetTopicIds(dataset_id);
+    removed_processors = !processor_service_->dependentProcessorOutputs(topics).empty();
+    if (const Status removed = processor_service_->removeProcessorsDependingOn(topics); !removed.has_value()) {
+      qCWarning(lcSession).noquote() << "removeDataset: dependent processors:"
+                                     << QString::fromStdString(removed.error());
+    }
+  }
   data_engine_.removeDataset(dataset_id);
   dataset_source_paths_.erase(dataset_id);
   // A removed dataset's record must not resolve a future query (a reminted id could collide).
@@ -1722,6 +1776,13 @@ void SessionManager::removeDataset(DatasetId dataset_id) {
   invalidateDatasetMinTimestamp(dataset_id);
   // A pure origin shift reaches no per-topic signal: emit the global reframe.
   notifyGlobalTimeReferenceIfChanged();
+  return removed_processors;
+}
+
+std::vector<TopicId> SessionManager::datasetTopicIds(DatasetId dataset_id) const {
+  const auto lock = data_engine_.lockEngine();
+  const DatasetInfo* info = data_engine_.getDataset(dataset_id);
+  return info != nullptr ? info->topic_ids : std::vector<TopicId>{};
 }
 
 void SessionManager::refreshDatasetTimeReference(DatasetId dataset_id) {

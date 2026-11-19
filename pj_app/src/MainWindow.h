@@ -150,6 +150,7 @@ class MainWindow : public QMainWindow {
   friend class MainWindowLayoutImportTestPeer;
   friend class MainWindowMarkerGeneratorTestPeer;
   friend class MainWindowMarkerStatusTestPeer;
+  friend class MainWindowValuePrecisionTestPeer;
   friend class MainWindowLayoutDatasetPathsTestPeer;
   friend class MainWindowReloadButtonTestPeer;
   friend class MainWindowHistoryExemptTestPeer;
@@ -624,7 +625,8 @@ class MainWindow : public QMainWindow {
 
   // Pushes the Plotting page's derived-markers mode and reload rate to the batch engine.
   void applyDerivedBatchPreferences();
-  // On OK: applyDerivedBatchPreferences and applyTimeLabelFormat.
+  // On OK: applyDerivedBatchPreferences, applyTimeLabelFormat, and a precision change re-seeds both tracker lines and
+  // the Value column at the current times, the only places the text is formatted.
   void bindPlottingPreferences(PreferencesDialog& dialog);
 
   // PlotWidget::setMarkerStatus on BatchEngine::runningChanged. "Computing" shows only after a rule has run for
@@ -633,6 +635,9 @@ class MainWindow : public QMainWindow {
   // The standing marker status, once wireMarkerPlotStatus has run.
   void reportMarkerStatus(PlotWidget* plot);
   void onPlotMarkerTargetsChanged();
+  // Member slots, not lambdas, so a restore that re-wires a reused plot or tab can connect them uniquely.
+  void onPlotStatusMessage(const QString& message);
+  void onTopicRefused(const QString& reason);
   std::function<void(PlotWidget*)> push_marker_status_;
   // PlotWidget::setSeriesStatus to `only`, or every plot when null.
   void pushSeriesStatus(PlotWidget* only);
@@ -650,7 +655,8 @@ class MainWindow : public QMainWindow {
   // Persists `position` (kHidden hides), updates the legend button and applies to every plot.
   void setLegendStatus(LegendStatus position);
 
-  // The global toolbar toggles, for a new plot.
+  // The global toolbar toggles, for a new plot. Dots is skipped while applying_state_: a restored plot keeps the
+  // style it was saved with.
   void applyGlobalToggles(PlotWidget* plot);
   void applyShowPointsToDock(DockWidget* dock);
   void applyShowPointsTo2DWidgets();
@@ -1345,6 +1351,9 @@ class MainWindow : public QMainWindow {
   int timeline_name_column_width_ = 0;
   // 0 = none. Scopes the playback range to the stream's data, so unrelated file timestamps do not stretch it.
   DatasetId active_streaming_dataset_id_ = 0;
+  // The running streams in launch order, the order live-follow is handed back in when the followed one stops. Not
+  // DatasetId order: an interactive start owns its dataset from the moment its dialog opens.
+  std::vector<DatasetId> streams_in_launch_order_;
   // Set by the first drop of a streaming topic into a view, which seeds the playback range and playhead once per
   // session: subscribing in the source dialog does not move the slider, and a later drop cannot re-snap a
   // paused, scrubbed-back cursor. While set, live ingest follows the live edge until the user pauses.

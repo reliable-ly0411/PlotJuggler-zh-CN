@@ -1354,6 +1354,7 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
   // must be enough). Playing is following live: the engine holds at rangeMax between ingests instead of pausing;
   // pause unlocks scrubbing within the retained window, play snaps back to the newest sample.
   connect(streaming_manager_.get(), &StreamingSourceManager::streamStarted, this, [this](DatasetId id) {
+    streams_in_launch_order_.push_back(id);
     active_streaming_dataset_id_ = id;
     session_->setActiveStreamingDataset(id);  // scope recomputeRange to the live tip while playing
     streaming_playback_seeded_ = false;
@@ -1374,13 +1375,25 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
       });
   connect(
       streaming_manager_.get(), &StreamingSourceManager::streamStopped, this,
-      [this](DatasetId id, const QString& reason) {
+      [this, snap_streaming_playback_to_live_edge](DatasetId id, const QString& reason) {
         session_->sessionManager().notifyStreamEnded(id);
+        std::erase(streams_in_launch_order_, id);
         if (active_streaming_dataset_id_ == id) {
-          active_streaming_dataset_id_ = 0;
-          session_->setActiveStreamingDataset(0);
+          // The last stream launched that has a live edge takes over, as a start would have handed it; with none,
+          // live-follow ends, since following a stream with no data would hold a frozen cursor.
+          const auto has_data = [this](DatasetId stream) {
+            return session_->sessionManager().datasetDisplayRange(stream).has_value();
+          };
+          const auto found = std::find_if(streams_in_launch_order_.rbegin(), streams_in_launch_order_.rend(), has_data);
+          const DatasetId next = found == streams_in_launch_order_.rend() ? 0 : *found;
+          active_streaming_dataset_id_ = next;
+          session_->setActiveStreamingDataset(next);
           streaming_playback_seeded_ = false;
-          session_->playbackEngine().setHoldAtRangeMax(false);
+          if (next == 0) {
+            session_->playbackEngine().setHoldAtRangeMax(false);
+          } else if (session_->playbackEngine().isPlaying()) {
+            (void)snap_streaming_playback_to_live_edge();
+          }
           refreshStreamingSeekLock();
         }
         // Finalizes only that source's file; the capture ends with its last live source. Taps attach at start()
@@ -2925,6 +2938,10 @@ QSet<QString> MainWindow::captureHistoryDataUniverse() const {
         const auto& columns = storage->columnDescriptors();
         for (std::size_t column = 0; column < columns.size(); ++column) {
           const ColumnDescriptor& column_descriptor = columns[column];
+          // A column a reload lost leaves the universe as a lost topic does, so history plotting it is dropped.
+          if (storage->isColumnRetired(column_descriptor.field_id)) {
+            continue;
+          }
           QStringList column_identity{u"scalar-column"_s};
           column_identity.append(dataset_identity);
           column_identity.append(
@@ -3207,7 +3224,9 @@ void MainWindow::removeDatasetData(DatasetId dataset_id) {
 #endif
   session_->sessionManager().evictDatasetObjects(dataset_id);
   session_->catalogModel().removeDataset(dataset_id, /*tombstone=*/false);
-  session_->sessionManager().removeDataset(dataset_id);
+  if (session_->sessionManager().removeDataset(dataset_id)) {
+    session_->catalogModel().rebuildIfChanged();
+  }
   // loadedSources() stays whole for quick reload; appendDataSourceElement's liveness filter keeps the removed
   // source out of a saved layout.
   file_loader_->untrackDataset(dataset_id);
@@ -3244,7 +3263,7 @@ void MainWindow::onRemoveDatasetsRequested(const QList<DatasetId>& dataset_ids) 
         // Cancelling the cascade prompt aborts the whole removal.
         std::vector<TopicId> removed_topics;
         for (const DatasetId dataset_id : dataset_ids) {
-          const std::vector<TopicId> dataset_topics = session_->sessionManager().dataEngine().listTopics(dataset_id);
+          const std::vector<TopicId> dataset_topics = session_->sessionManager().datasetTopicIds(dataset_id);
           removed_topics.insert(removed_topics.end(), dataset_topics.begin(), dataset_topics.end());
         }
         confirmAndRemoveDependentTransforms(removed_topics, [this, dataset_ids]() { removeDatasets(dataset_ids); });
@@ -3431,6 +3450,10 @@ void MainWindow::pushSeriesStatus(PlotWidget* only) {
 void MainWindow::bindPlottingPreferences(PreferencesDialog& dialog) {
   connect(&dialog, &PreferencesDialog::derivedBatchSettingsChanged, this, &MainWindow::applyDerivedBatchPreferences);
   connect(&dialog, &PreferencesDialog::timeLabelSettingsChanged, this, &MainWindow::applyTimeLabelFormat);
+  connect(&dialog, &PreferencesDialog::valuePrecisionChanged, this, [this]() {
+    broadcastReferenceLine();
+    broadcastTrackerTime(toAxisDouble(session_->playbackEngine().currentTime()));
+  });
 }
 
 void MainWindow::onShowAboutDialog() {
@@ -3865,7 +3888,7 @@ void MainWindow::onPlotTabAdded(PlotDocker* docker) {
   connect(docker, &PlotDocker::firstObjectTopicAdded, this, &MainWindow::onFirstObjectTopicAdded, Qt::UniqueConnection);
   connect(
       docker, &PlotDocker::placeholderTopicDropped, this, &MainWindow::onPlaceholderTopicDropped, Qt::UniqueConnection);
-  connect(docker, &PlotDocker::topicRefused, this, [this](const QString& reason) { showToast(reason); });
+  connect(docker, &PlotDocker::topicRefused, this, &MainWindow::onTopicRefused, Qt::UniqueConnection);
   for (int index = 0; index < docker->plotCount(); ++index) {
     if (DockWidget* dock = docker->plotAt(index)) {
       onPlotAdded(dock->plotWidget());
@@ -3889,9 +3912,7 @@ void MainWindow::onPlotAdded(PlotWidget* plot) {
   connect(
       plot, &PlotWidget::pendingCurveIntentsChanged, this, &MainWindow::schedulePendingDisplayBindingRebuild,
       Qt::UniqueConnection);
-  connect(plot, &PlotWidget::statusMessageRequested, this, [this](const QString& message) {
-    emitDiagnostic(DiagnosticLevel::kInfo, "Plot", "status", message);
-  });
+  connect(plot, &PlotWidget::statusMessageRequested, this, &MainWindow::onPlotStatusMessage, Qt::UniqueConnection);
   // Idempotent: layout load and undo re-run onPlotAdded for live plots.
   topic_demand_controller_->registerPlot(plot);
   plot->setTrackerPosition(toAxisDouble(session_->playbackEngine().currentTime()));
@@ -3902,6 +3923,14 @@ void MainWindow::onPlotAdded(PlotWidget* plot) {
   if (curve_editor_ != nullptr && curve_editor_->plot() == nullptr) {
     bindEditorToPlot(plot);
   }
+}
+
+void MainWindow::onPlotStatusMessage(const QString& message) {
+  emitDiagnostic(DiagnosticLevel::kInfo, "Plot", "status", message);
+}
+
+void MainWindow::onTopicRefused(const QString& reason) {
+  showToast(reason);
 }
 
 void MainWindow::onPlotMarkerTargetsChanged() {
@@ -4085,7 +4114,9 @@ void MainWindow::applyGlobalToggles(PlotWidget* plot) {
   }
   plot->setShowPoints(show_points_);
   plot->setGridVisible(activate_grid_);
-  applyDots(plot);
+  if (!applying_state_) {
+    applyDots(plot);
+  }
   plot->setReferenceLine(referenceDisplaySeconds());
   plot->setKeepRatioXY(keep_ratio_);
   applyLegendStatus(plot);
@@ -6225,8 +6256,8 @@ void MainWindow::rollbackBrowserReplayImports() {
   }
   const std::optional<BrowserLayoutRuntime::Transport> transport = replay.transport_before_streams;
   PlaybackEngine& engine = session_->playbackEngine();
-  // Removing the replay's streams unfollowed whichever had become the followed
-  // one; follow the previous stream again first, so the range below is its window.
+  // Removing the replay's streams handed live-follow to another stream, or ended it; follow the previous stream
+  // again first, so the range below is its window.
   if (transport.has_value() && transport->followed_stream != 0 &&
       !streaming_manager_->layoutSourceId(transport->followed_stream).isEmpty()) {
     active_streaming_dataset_id_ = transport->followed_stream;
@@ -8656,7 +8687,7 @@ bool MainWindow::xmlLoadState(const QDomDocument& state_document, RestoreIntent 
   wireExistingPlots();
 
   // The global toggles are QSettings preferences, not in the document (xmlSaveState): restored plots adopt the
-  // current ones.
+  // current ones, except Dots, whose effect is the plot's saved style.
   forEachPlot([this](PlotWidget* plot) { applyGlobalToggles(plot); });
   applyShowPointsTo2DWidgets();
   return true;
@@ -8727,11 +8758,16 @@ void MainWindow::updateUndoRedoActions() {
 
 void MainWindow::bindEditorToPlot(PlotWidget* plot) {
   if (curve_editor_ != nullptr) {
-    curve_editor_->setPlot(plot);
+    // A restore keeps a plot and re-binds it: setPlot ignores the plot it already holds, so refresh the rows, which the
+    // restore may have changed without a curve-list signal (colour, visibility, markers).
+    if (plot != nullptr && curve_editor_->plot() == plot) {
+      curve_editor_->refresh();
+    } else {
+      curve_editor_->setPlot(plot);
+    }
   }
   const bool enable = plot != nullptr;
-  // The group ids are the LineWidth index and the CurveStyle value. An in-place state swap on the bound plot
-  // (xmlLoadState, paste) does not resync, since the bound plot does not change.
+  // The group ids are the LineWidth index and the CurveStyle value; every bind resyncs them.
   if (width_button_group_ != nullptr) {
     for (auto* btn : width_button_group_->buttons()) {
       btn->setEnabled(enable);

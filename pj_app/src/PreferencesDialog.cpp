@@ -46,8 +46,9 @@
 #ifndef __EMSCRIPTEN__
 #include "pj_marketplace/platform_utils.hpp"
 #include "pj_runtime/SourceCacheStore.h"
-#include "pj_runtime/UsageCounters.h"
 #endif
+#include "pj_runtime/UsageCounters.h"
+#include "pj_widgets/AppSettings.h"
 #include "pj_widgets/DoubleScrubber.h"
 #include "pj_widgets/DualOptionsWidget.h"
 #include "pj_widgets/FileDialog.h"
@@ -215,7 +216,7 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
   ui_->layoutSpacingScrubber->setSuffix(u" px"_s);
   ui_->layoutSpacingScrubber->setValue(original_metrics_.layout_spacing);
 
-  // Committed on OK. When each applies: precision on its readers' next redraw; the frameless window at the next
+  // Committed on OK. When each applies: precision at once (valuePrecisionChanged); the frameless window at the next
   // launch (MainWindow reads it once); the GPU canvas to plots created later (--disable-opengl overrides it
   // for a session without touching it).
   ui_->scrubberFloatPrecision->setRange(1, 6);
@@ -239,7 +240,7 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
   {
     QSettings settings;
     ui_->languageCombo->setCurrentIndex(ui_->languageCombo->findData(AppLanguage::preferredLanguage(settings)));
-    ui_->scrubberFloatPrecision->setValue(settings.value(u"Preferences::precision"_s, 3).toInt());
+    ui_->scrubberFloatPrecision->setValue(valuePrecision());
     ui_->curveColorMode->setSelectedIndex(settings.value(u"Preferences::curve_color_global"_s, true).toBool() ? 0 : 1);
     ui_->clockTimeZone->setSelectedIndex(settings.value(MainWindow::kClockUtcKey, false).toBool() ? 1 : 0);
     const BatchEngine::Settings batch = BatchEngine::loadSettings();
@@ -539,7 +540,8 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
     }
     QSettings settings;
     settings.setValue(AppLanguage::kPreferenceKey, ui_->languageCombo->currentData().toString());
-    settings.setValue(u"Preferences::precision"_s, ui_->scrubberFloatPrecision->value());
+    const bool precision_changed = ui_->scrubberFloatPrecision->value() != valuePrecision();
+    settings.setValue(QString::fromLatin1(kPrecisionSettingsKey), ui_->scrubberFloatPrecision->value());
     settings.setValue(u"Preferences::use_opengl"_s, ui_->openglToggle->isChecked());
     settings.setValue(MainWindow::kCustomTitleBarKey, ui_->customTitleBarToggle->isChecked());
     settings.setValue(MainWindow::kSystemFileDialogKey, ui_->systemFileDialogToggle->isChecked());
@@ -560,6 +562,9 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
     emit derivedBatchSettingsChanged();
     settings.setValue(MainWindow::kClockUtcKey, ui_->clockTimeZone->selectedIndex() == 1);
     emit timeLabelSettingsChanged();
+    if (precision_changed) {
+      emit valuePrecisionChanged();
+    }
 #ifndef PJ_TARGET_WASM
     // Applies only when it differs from the current state: access opened with --mcp stays open, the stored
     // setting untouched, unless turned off here.

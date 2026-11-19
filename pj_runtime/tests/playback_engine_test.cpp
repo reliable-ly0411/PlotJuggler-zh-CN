@@ -3,9 +3,14 @@
 
 #include <gtest/gtest.h>
 
+#include <QMetaObject>
+#include <QSignalSpy>
+#include <cmath>
+#include <limits>
 #include <vector>
 
 #include "pj_runtime/PlaybackEngine.h"
+#include "pj_runtime/PlaybackRate.h"
 
 namespace {
 
@@ -64,6 +69,35 @@ TEST(PlaybackEngineTest, ClampTickTimeHoldAtTipBeatsLoop) {
   EXPECT_DOUBLE_EQ(PJ::PlaybackEngine::clampTickTime(-3.0, 0.0, 10.0, false, false, nullptr), 0.0);
 }
 
+// Whatever asks for a rate (the scrubber, a plugin, the MCP tool), the engine plays at one inside the range the speed
+// scrubber can show, so the two never disagree.
+TEST(PlaybackEngineTest, RateIsClampedToTheSharedRange) {
+  PJ::PlaybackEngine engine;
+
+  engine.setPlaybackRate(PJ::kMaxPlaybackRate * 2.0);
+  EXPECT_DOUBLE_EQ(engine.playbackRate(), PJ::kMaxPlaybackRate);
+
+  engine.setPlaybackRate(PJ::kMinPlaybackRate / 2.0);
+  EXPECT_DOUBLE_EQ(engine.playbackRate(), PJ::kMinPlaybackRate);
+
+  engine.setPlaybackRate(2.5);
+  EXPECT_DOUBLE_EQ(engine.playbackRate(), 2.5);
+}
+
+// The speed scrubber shows one decimal and commits what it shows, so the engine plays at a multiple of its step.
+TEST(PlaybackEngineTest, RateIsRoundedToTheScrubberStep) {
+  PJ::PlaybackEngine engine;
+
+  engine.setPlaybackRate(0.25);
+  EXPECT_DOUBLE_EQ(engine.playbackRate(), 0.3);
+
+  engine.setPlaybackRate(2.34);
+  EXPECT_DOUBLE_EQ(engine.playbackRate(), 2.3);
+
+  engine.setPlaybackRate(0.04);  // rounds to 0, then clamps up to the minimum
+  EXPECT_DOUBLE_EQ(engine.playbackRate(), PJ::kMinPlaybackRate);
+}
+
 // Pressing Play with the cursor already at the end of a finite range rewinds to the start and replays instead of a
 // no-op (the first tick would pause again before moving).
 TEST(PlaybackEngineTest, PlayAtEndRewindsToStart) {
@@ -100,6 +134,66 @@ TEST(PlaybackEngineTest, PlayFromMiddleDoesNotRewind) {
   engine.play();
 
   EXPECT_DOUBLE_EQ(engine.currentTime().value, 4.0) << "play() mid-range must not move the cursor";
+}
+
+// A non-finite rate (typed "nan" into the speed scrubber) must not be stored: next tick would turn the cursor into NaN
+// and playback would run forever with no time.
+TEST(PlaybackEngineTest, NonFiniteRateIsIgnored) {
+  PJ::PlaybackEngine engine;
+  engine.setPlaybackRate(2.0);
+  QSignalSpy rate_spy(&engine, &PJ::PlaybackEngine::playbackRateChanged);
+
+  for (const double v :
+       {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity(),
+        -std::numeric_limits<double>::infinity()}) {
+    engine.setPlaybackRate(v);
+    EXPECT_DOUBLE_EQ(engine.playbackRate(), 2.0);
+  }
+  EXPECT_EQ(rate_spy.count(), 0);
+}
+
+TEST(PlaybackEngineTest, TickAfterNonFiniteRateKeepsTimeFinite) {
+  PJ::PlaybackEngine engine;
+  engine.setRange(PJ::displayRange(0.0, 10.0));
+  engine.setCurrentTime(PJ::displaySeconds(3.0));
+  engine.setPlaybackRate(std::numeric_limits<double>::quiet_NaN());
+
+  engine.play();
+  QMetaObject::invokeMethod(&engine, "onTick", Qt::DirectConnection);
+  engine.pause();
+
+  EXPECT_TRUE(std::isfinite(engine.currentTime().value));
+}
+
+// std::clamp passes NaN through, so a non-finite cursor or range would survive every later clamp and stick.
+TEST(PlaybackEngineTest, NonFiniteCursorAndRangeAreIgnored) {
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  const double inf = std::numeric_limits<double>::infinity();
+  PJ::PlaybackEngine engine;
+  engine.setRange(PJ::displayRange(0.0, 10.0));
+  engine.setCurrentTime(PJ::displaySeconds(4.0));
+
+  engine.setCurrentTime(PJ::displaySeconds(nan));
+  engine.setCurrentTime(PJ::displaySeconds(inf));
+  engine.setRange(PJ::displayRange(0.0, nan));
+  engine.setRange(PJ::displayRange(-inf, 5.0));
+  engine.setRangeAndCurrentTime(PJ::displayRange(nan, 20.0), PJ::displaySeconds(7.0));
+  engine.setRangeAndCurrentTime(PJ::displayRange(0.0, 20.0), PJ::displaySeconds(nan));
+
+  EXPECT_DOUBLE_EQ(engine.currentTime().value, 4.0);
+  EXPECT_DOUBLE_EQ(engine.rangeMin().value, 0.0);
+  EXPECT_DOUBLE_EQ(engine.rangeMax().value, 10.0);
+}
+
+// A looping tick whose step overflows (a huge rate after a long stall) must not wrap through fmod(inf) into NaN.
+TEST(PlaybackEngineTest, LoopingTickWithOverflowingStepStaysFinite) {
+  bool reached_end = false;
+  const double next = PJ::PlaybackEngine::clampTickTime(
+      std::numeric_limits<double>::infinity(), 0.0, 10.0, /*hold_at_max=*/false, /*looping=*/true, &reached_end);
+
+  EXPECT_TRUE(std::isfinite(next));
+  EXPECT_GE(next, 0.0);
+  EXPECT_LE(next, 10.0);
 }
 
 }  // namespace

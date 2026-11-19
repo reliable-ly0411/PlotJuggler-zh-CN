@@ -159,6 +159,15 @@ class PlotWidgetBase::QwtPlotPimpl : public QwtPlot {
     canvas()->installEventFilter(parent);
   }
 
+  // QwtPlot::updateAxes announces each new axis scale (scaleDivChanged) before it hands the curves their new window, so
+  // a hook on that signal reads the previous window. Update the axes first: QwtPlot::replot's own pass then finds
+  // nothing to change (DatastoreCurveAdapter::setRectOfInterest returns early on the same window).
+  void replot() override {
+    updateAxes();
+    parent->beforeCanvasReplot();
+    QwtPlot::replot();
+  }
+
   ~QwtPlotPimpl() override {
     axisWidget(QwtPlot::xBottom)->removeEventFilter(parent);
     axisWidget(QwtPlot::yLeft)->removeEventFilter(parent);
@@ -810,7 +819,9 @@ QwtPlot* PlotWidgetBase::qwtPlot() {
 }
 
 void PlotWidgetBase::installHoverFilter(QObject* filter) {
-  if (filter == nullptr || plot_ == nullptr) {
+  // A restore re-announces a reused plot to its docker: install once.
+  if (filter == nullptr || plot_ == nullptr ||
+      std::find(hover_filters_.begin(), hover_filters_.end(), filter) != hover_filters_.end()) {
     return;
   }
   hover_filters_.emplace_back(filter);
