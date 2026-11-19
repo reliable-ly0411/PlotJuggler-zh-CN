@@ -314,11 +314,38 @@ void PlotWidgetBase::fallBackToRasterCanvas() {
   if (!std::exchange(logged, true)) {
     qWarning("PlotWidgetBase: the GPU plot canvas failed; falling back to the raster canvas");
   }
-  QwtPlotCanvas* canvas = newRasterCanvas(failed->palette());
-  canvas->setObjectName(failed->objectName());
-  canvas->setMouseTracking(failed->hasMouseTracking());
-  canvas->setAcceptDrops(failed->acceptDrops());
-  canvas->setFocusPolicy(failed->focusPolicy());
+  replacePlotCanvas(newRasterCanvas(failed->palette()));
+}
+
+#ifdef PJ_TARGET_WASM
+void PlotWidgetBase::suspendCanvasForDockRestore() {
+  auto* canvas = qobject_cast<PlotRhiCanvas*>(plot_->canvas());
+  if (canvas == nullptr) {
+    return;
+  }
+  // Qt 6.12's early window-change handler unregisters its cleanup callback but keeps the QRhi pointer.
+  // ADS takeWidget() reparents the plot to no window. Retire the GPU canvas synchronously while it still
+  // belongs to the live window, rather than taking Qt's window-change path repeatedly during rollback.
+  restore_rhi_canvas_after_dock_restore_ = true;
+  replacePlotCanvas(newRasterCanvas(canvas->palette()));
+}
+
+void PlotWidgetBase::resumeCanvasAfterDockRestore() {
+  if (!std::exchange(restore_rhi_canvas_after_dock_restore_, false)) {
+    return;
+  }
+  auto* canvas = new PlotRhiCanvas(plot_);
+  canvas->setPalette(plot_->canvas()->palette());
+  replacePlotCanvas(canvas);
+}
+#endif
+
+void PlotWidgetBase::replacePlotCanvas(QWidget* canvas) {
+  QWidget* previous = plot_->canvas();
+  canvas->setObjectName(previous->objectName());
+  canvas->setMouseTracking(previous->hasMouseTracking());
+  canvas->setAcceptDrops(previous->acceptDrops());
+  canvas->setFocusPolicy(previous->focusPolicy());
   // The interaction tools are children of the canvas and setCanvas() deletes the old one: move them over disabled, then
   // re-enable them after the plot's own filter so every canvas event filter keeps its original order (the legend's
   // Ctrl+wheel in eventFilter() must run before the magnifier).

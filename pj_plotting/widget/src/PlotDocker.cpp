@@ -759,6 +759,16 @@ bool PlotDocker::xmlLoadState(const QDomElement& tab_element) {
   // them.
   exitFullscreen();
 
+#ifdef PJ_TARGET_WASM
+  // Retire live GPU canvases before either hiding the docker or detaching any plots from the original window.
+  for (int index = 0; index < plotCount(); ++index) {
+    DockWidget* dock = plotAt(index);
+    if (dock != nullptr && dock->plotWidget() != nullptr) {
+      dock->plotWidget()->suspendCanvasForDockRestore();
+    }
+  }
+#endif
+
   const bool was_hidden = isHidden();
   if (!was_hidden) {
     hide();
@@ -799,6 +809,16 @@ bool PlotDocker::xmlLoadState(const QDomElement& tab_element) {
     root_widget = addDockWithPlot(root_plot, ads::TopDockWidgetArea);
   }
   const bool restored = restoreNode(root_node, root_widget, pool, object_widget_factory_);
+#ifdef PJ_TARGET_WASM
+  // Even a failed restore can leave moved plots for the outer transaction to roll back. Recreate their
+  // GPU canvases only once the replacement dock hierarchy is in place.
+  for (int index = 0; index < plotCount(); ++index) {
+    DockWidget* dock = plotAt(index);
+    if (dock != nullptr && dock->plotWidget() != nullptr) {
+      dock->plotWidget()->resumeCanvasAfterDockRestore();
+    }
+  }
+#endif
   watchSplitters();
   pool.deleteUnused();
 

@@ -371,6 +371,7 @@ test('browser layouts open transactionally and download with exact round-trip st
 
   // This layout passes curve rebinding, replaces the plot dock during xmlLoadState, and only then fails scene
   // validation: the restore transaction must reconstruct the original plot, not leave a partial workspace.
+  // The next valid file also exercises the reopened browser's QRhi canvas cleanup after this rollback.
   const lateFailureLayout = makeInvalidSceneLayout(customizeLayout(canonicalLayout, 0.75, 1.5));
   expect(lateFailureLayout.toString('utf8')).toContain('<scene3d>');
   const lateFailureChooser = await openLayoutChooser(page);
@@ -418,7 +419,8 @@ test('browser layouts open transactionally and download with exact round-trip st
   expect(Number(elementAttribute(restoredDocument, 'right_panel_state', 'width'))).toBe(3);
   expect(elementAttribute(restoredDocument, 'right_panel_state', 'style')).toBe('1');
   expect(elementAttribute(restoredDocument, 'left_panel_state', 'sources_tab')).toBe('stream');
-  expect(elementAttribute(restoredDocument, 'left_panel_state', 'streaming_buffer')).toBe('37');
+  // This fixture has only a file source; do not persist an unrelated live-stream retention setting.
+  expect(elementAttributes(restoredDocument, 'left_panel_state', 'streaming_buffer')).toEqual([]);
   expect(elementAttribute(restoredDocument, 'curve_list_state', 'show_topics')).toBe('false');
   expect(elementAttribute(restoredDocument, 'curve_list_state', 'show_values')).toBe('true');
   expect(elementAttribute(restoredDocument, 'curve_list_state', 'datasets_filter')).toBe('workspace-one-filter');
@@ -452,7 +454,8 @@ test('browser layouts open transactionally and download with exact round-trip st
   snapshotMessages += 1;
   expect(Number(elementAttribute(reopenedDocument, 'right_panel_state', 'width'))).toBe(1.5);
   expect(elementAttribute(reopenedDocument, 'right_panel_state', 'style')).toBe('0');
-  expect(elementAttribute(reopenedDocument, 'left_panel_state', 'streaming_buffer')).toBe('52');
+  // This fixture has only a file source; do not persist an unrelated live-stream retention setting.
+  expect(elementAttributes(reopenedDocument, 'left_panel_state', 'streaming_buffer')).toEqual([]);
   expect(elementAttribute(reopenedDocument, 'curve_list_state', 'show_topics')).toBe('true');
   expect(elementAttribute(reopenedDocument, 'curve_list_state', 'show_values')).toBe('false');
   expect(elementAttribute(reopenedDocument, 'curve_list_state', 'datasets_filter')).toBe('workspace-two-filter');
