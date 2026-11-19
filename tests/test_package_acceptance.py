@@ -5,10 +5,13 @@ import importlib.util
 import copy
 import json
 import os
+import re
+import sys
 import shutil
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 import xml.etree.ElementTree as ET
 
 spec = importlib.util.spec_from_file_location('verify_package', Path(__file__).parents[1] / 'packaging/localization/verify_package.py')
@@ -127,6 +130,48 @@ class CleanAcceptanceTests(unittest.TestCase):
     def test_duplicate_loaded_plugin_rejected(self):
         with self.assertRaises(AssertionError):
             module.validate_plugin_result(1, MISSING_ROS + '[plugin-validation][info] csv-loader: Loaded duplicate\n', EXPECTED, True)
+
+
+class SourceLockedPluginInventoryTests(unittest.TestCase):
+    root = Path(__file__).resolve().parents[1]
+
+    def inventory(self, platform):
+        local = str(self.root / 'packaging/localization')
+        with mock.patch.object(sys, 'path', [local, *sys.path]):
+            return module.expected_plugin_inventory(self.root, platform)
+
+    def test_platform_policy_matches_both_packagers_and_source_locked_versions(self):
+        linux = self.inventory('linux-x86_64')
+        windows = self.inventory('windows-x86_64')
+        appimage = (self.root / 'packaging/appimage/build_appimage.sh').read_text(encoding='utf-8')
+        installer = (self.root / 'packaging/installer/build_windows_installer.ps1').read_text(encoding='utf-8')
+        appimage_ids = re.findall(r'^  ([a-z][a-z0-9-]+)$',
+                                  appimage.split('BUNDLE_IDS=(\n', 1)[1].split('\n)', 1)[0], re.M)
+        installer_ids = re.findall(r'"([a-z][a-z0-9-]+)"',
+                                   installer.split('$PluginIds = @(\n', 1)[1].split('\n  ),', 1)[0])
+        self.assertEqual(sorted(linux), sorted([*appimage_ids, 'ardupilot-dataflash']))
+        self.assertEqual(sorted(windows), sorted([*installer_ids, 'ardupilot-dataflash']))
+        self.assertEqual(set(linux) - set(windows), {'toolbox-assistant-agent', 'ros2-topic-subscriber'})
+        self.assertFalse(set(windows) - set(linux))
+        self.assertEqual({identifier: linux[identifier] for identifier in windows}, windows)
+
+    def test_declaring_the_same_bad_inventory_cannot_bypass_source_lock(self):
+        expected = {'loader-a': '1.0.0', 'loader-b': '2.0.0'}
+        valid = [{'id': identifier, 'version': version} for identifier, version in expected.items()]
+        specs = [f'{identifier}={version}' for identifier, version in expected.items()]
+        self.assertEqual(module.validate_plugin_inventory(valid[::-1], specs[::-1], expected), specs)
+        for bad in (valid[1:], [*valid, valid[0]],
+                    [valid[0], {'id': 'unapproved', 'version': '2.0.0'}],
+                    [valid[0], {'id': 'loader-b', 'version': '2.1.0'}]):
+            with self.subTest(bad=bad), self.assertRaises(AssertionError):
+                module.validate_plugin_inventory(bad, [f"{item['id']}={item['version']}" for item in bad], expected)
+
+    def test_valid_installed_metadata_with_tampered_package_declaration_fails(self):
+        expected = {'loader-a': '1.0.0'}
+        actual = [{'id': 'loader-a', 'version': '1.0.0'}]
+        for bad in ([], ['loader-a=2.0.0'], ['loader-a=1.0.0', 'loader-a=1.0.0']):
+            with self.subTest(bad=bad), self.assertRaises(AssertionError):
+                module.validate_plugin_inventory(actual, bad, expected)
 
 
 class BinPlotStateTests(unittest.TestCase):
