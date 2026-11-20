@@ -1,0 +1,66 @@
+name: Traditional IFW disposable six-direction wizard
+on:
+  push:
+    branches: ['zh-CN-4.x-ci/55-installer-traditional-live']
+    paths: ['.github/workflows/zh-4x-traditional-ifw-live.yml']
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: 0e9db5a137c313247c63271541f3f2cf9085d7bd
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Verify commit, catalogs and actual Node harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = '0e9db5a137c313247c63271541f3f2cf9085d7bd'
+          test "$(git rev-parse 'HEAD^{tree}')" = 'b7ffbbfdd2e2dec02930ab69e8c77eb4c138ad92'
+          python -X utf8 scripts/test_ifw_traditional_catalog.py
+          node scripts/test_installer_language.js
+          source versions.env
+          printf 'PJ_QT_VERSION=%s\n' "$PJ_QT_VERSION" >> "$GITHUB_ENV"
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: actions/cache@v5
+        with:
+          path: .qt
+          key: zh4-qt-windows-2022-${{ env.PJ_QT_VERSION }}
+      - name: Obtain pinned Qt with the repository bootstrap
+        shell: pwsh
+        run: ./scripts/windows/install_qt6.ps1
+      - name: Checkout exact diagnostic launcher, fixture helper only
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          path: .ifw-controller
+          persist-credentials: false
+      - name: Exercise six real Windows language directions; never install a payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C .ifw-controller rev-parse HEAD)" = '${{ github.sha }}'
+          qt="$PWD/.qt/$PJ_QT_VERSION/msvc2022_64"
+          test -f "$qt/bin/lrelease.exe"
+          test -s "$qt/translations/qtbase_zh_TW.qm"
+          python -X utf8 .ifw-controller/.github/scripts/installer_traditional_matrix.py --qt-bin "$qt/bin" --evidence evidence
+          git diff --exit-code
+      - name: Retain diagnostic reports only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: traditional-ifw-six-direction-evidence
+          path: evidence/
+          if-no-files-found: warn
+          retention-days: 14
