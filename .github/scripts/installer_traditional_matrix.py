@@ -20,7 +20,7 @@ TRANSITIONS = (
 INTRO = {
     "en_US": ("Welcome", "Welcome to the PlotJuggler 4 zh-CN Setup.", "Next", "Cancel"),
     "zh_CN": ("欢迎", "欢迎使用 PlotJuggler 4 zh-CN 安装向导。", "下一步", "取消"),
-    "zh_TW": ("歡迎", "歡迎使用 PlotJuggler 4 zh-CN 安裝程式。", "下一步", "取消"),
+    "zh_TW": ("歡迎", "歡迎使用 PlotJuggler 4 zh-CN 安裝程式。", "下一個", "取消"),
 }
 CUSTOM = {
     "en_US": ("Choose Installation Directory", "Please select where PlotJuggler 4 will be installed:"),

@@ -2,7 +2,7 @@ name: Traditional IFW disposable six-direction wizard
 on:
   push:
     branches: ['zh-CN-4.x-ci/55-installer-traditional-live']
-    paths: ['.github/workflows/zh-4x-traditional-ifw-live.yml']
+    paths: ['.github/workflows/zh-4x-traditional-ifw-live.yml', '.github/scripts/installer_traditional_matrix.py']
 permissions:
   contents: read
 jobs:
