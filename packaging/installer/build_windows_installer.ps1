@@ -332,6 +332,15 @@ function Read-PluginRegistry([string]$source) {
   }
 }
 
+function Convert-Semver([string]$value, [string]$label) {
+  $numeric = ($value -split '[-+]', 2)[0]
+  try {
+    return [System.Version]::Parse($numeric)
+  } catch {
+    Die "$label is not a numeric semantic version: '$value'"
+  }
+}
+
 function Download-RegistryPlugins {
   Info "fetching plugin registry: $PluginRegistryUrl"
   $registry = Read-PluginRegistry $PluginRegistryUrl
