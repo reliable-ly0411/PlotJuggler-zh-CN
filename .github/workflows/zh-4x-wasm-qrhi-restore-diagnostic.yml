@@ -1,0 +1,807 @@
+# SPDX-License-Identifier: MPL-2.0
+# Diagnostic only, not a standard release-wrapper run. Build logic and gates
+# are from the frozen product's reusable WASM lane. The receipt controller
+# denotes the pinned validation scripts; the actual launcher is recorded
+# separately. No publication, deployment, release, or credentials.
+name: Diagnostic WASM QRhi rollback (exact localized product)
+on:
+  push:
+    branches: ['zh-CN-4.x-ci/upstream-1877b401-combined-gates']
+    paths: ['.github/workflows/zh-4x-wasm-qrhi-restore-diagnostic.yml']
+permissions:
+  contents: read
+env:
+  PJ_VALIDATION_ROLE: localized
+  PJ_SOURCE_REPOSITORY: reliable-ly0411/PlotJuggler-zh-CN
+  PJ_SOURCE_SHA: 3b5ccf535aa1550e506ee9a9438f618dc3134a85
+  PJ_CONTROLLER_SHA: 3b5ccf535aa1550e506ee9a9438f618dc3134a85
+  PJ_ACCEPTANCE_SYMBOL_MAP: 'true'
+  PJ_DIAGNOSTIC_LAUNCHER_SHA: ${{ github.sha }}
+  PJ_DIAGNOSTIC_WORKFLOW_SHA: ${{ github.workflow_sha }}
+jobs:
+  wasm:
+    runs-on: ubuntu-22.04
+    # Generous first-run ceiling (cold Qt+emsdk+ccache); warm runs are expected
+    # in the 20-30 minute band. Tighten once real timings accumulate.
+    timeout-minutes: 180
+
+    steps:
+      - name: Use HTTPS for github.com submodules
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          repository: reliable-ly0411/PlotJuggler-zh-CN
+          ref: 3b5ccf535aa1550e506ee9a9438f618dc3134a85
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Checkout validation controller
+        uses: actions/checkout@v6
+        with:
+          ref: 3b5ccf535aa1550e506ee9a9438f618dc3134a85
+          path: .ci-controller
+          persist-credentials: false
+
+      - name: Record exact candidate identity
+        run: |
+          mkdir -p candidate-evidence
+          test "$(git rev-parse HEAD)" = '3b5ccf535aa1550e506ee9a9438f618dc3134a85'
+          test "$(git rev-parse HEAD^{tree})" = 'b98627c9c60694992a750bf07b7162de241942d3'
+          printf 'diagnostic launcher: %s; workflow definition: %s\n' "$PJ_DIAGNOSTIC_LAUNCHER_SHA" "$PJ_DIAGNOSTIC_WORKFLOW_SHA" | tee candidate-evidence/diagnostic-launcher.txt
+          printf 'receipt controller is the exact product validation scripts, not the launcher; not a release receipt\n' | tee -a candidate-evidence/diagnostic-launcher.txt
+          git rev-parse HEAD > candidate-evidence/commit.txt
+          git rev-parse HEAD^{tree} > candidate-evidence/tree.txt
+          git submodule status --recursive > candidate-evidence/submodules.txt
+          python3 .ci-controller/packaging/localization/wasm_receipt.py identity \
+            --role "$PJ_VALIDATION_ROLE" --source-repository "$PJ_SOURCE_REPOSITORY" \
+            --source-sha "$PJ_SOURCE_SHA" --controller-sha "$PJ_CONTROLLER_SHA" --kind production \
+            > candidate-evidence/identity.json
+
+      - name: Read toolchain versions
+        id: versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          source ./versions.env
+          for name in PJ_QT_VERSION PJ_EMSCRIPTEN_VERSION PJ_WASM_NODE_VERSION; do
+            echo "${name}=${!name}" >> "${GITHUB_ENV}"
+          done
+          echo "wasm_qt=${PJ_QT_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "emscripten=${PJ_EMSCRIPTEN_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "node=${PJ_WASM_NODE_VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Install pinned packaging runtime
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ steps.versions.outputs.node }}
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ccache ninja-build python3-pip make pkg-config
+          # Scene2D video cross-compiles dav1d, whose build system is meson.
+          python3 -m pip install --user meson
+          # Runtime libraries for the desktop host Qt tools (qsb bakes the QRhi
+          # shaders offline and transitively links the full Qt GUI stack, even
+          # headless). The lean runner ships none of these, so qsb would die at
+          # load time with exit 127.
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libegl1 libfontconfig1 libfreetype6 libxkbcommon0 \
+            libx11-6 libxcb1 libglib2.0-0 libdbus-1-3
+
+      - name: Cache Qt WebAssembly and host kits
+        id: qt-cache
+        uses: actions/cache@v5
+        with:
+          path: .qt-wasm
+          key: qt-wasm-${{ steps.versions.outputs.wasm_qt }}-multithread-shadertools-v1
+
+      - name: Install Qt WebAssembly and host kits
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --user 'aqtinstall==3.3.0'
+          "${HOME}/.local/bin/aqt" install-qt linux desktop \
+            "${PJ_QT_VERSION}" linux_gcc_64 --outputdir .qt-wasm \
+            -m qtshadertools
+          "${HOME}/.local/bin/aqt" install-qt all_os wasm \
+            "${PJ_QT_VERSION}" wasm_multithread --outputdir .qt-wasm \
+            -m qtshadertools
+
+      - name: Cache Emscripten SDK
+        id: emsdk-cache
+        uses: actions/cache@v5
+        with:
+          path: .emsdk
+          key: emsdk-${{ steps.versions.outputs.emscripten }}-linux-x64-v1
+
+      - name: Install Emscripten SDK
+        if: steps.emsdk-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch "${PJ_EMSCRIPTEN_VERSION}" \
+            https://github.com/emscripten-core/emsdk.git .emsdk
+          .emsdk/emsdk install "${PJ_EMSCRIPTEN_VERSION}"
+          .emsdk/emsdk activate "${PJ_EMSCRIPTEN_VERSION}"
+
+      - name: Restore WebAssembly compiler cache
+        # restore/save split rather than actions/cache: the implicit post-job
+        # save fires on every run and the SHA-keyed entry is never an exact
+        # hit, so each run persisted a new blob of up to max_size (4 G below)
+        # into billed Depot Cache storage. See linux-ci.yml's "Save ccache".
+        id: ccache_restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.cache/ccache
+          key: ccache-zh4-localized-3b5ccf535aa1550e506ee9a9438f618dc3134a85
+          restore-keys: |
+            ccache-zh4-localized-
+
+      - name: Configure compiler cache
+        run: |
+          ccache --set-config=max_size=4G
+          ccache --set-config=compression=true
+          ccache --set-config=compiler_check=content
+          ccache --set-config=hash_dir=false
+          ccache --set-config=base_dir="${GITHUB_WORKSPACE}"
+          ccache --zero-stats
+
+      - name: Cache the WebAssembly CPython build
+        # A content key (the recipe with its pinned tarball hash, the Emscripten
+        # release): an exact hit or a cold ~4 minute build, so the plain action,
+        # which saves only on a miss, adds one entry per recipe change.
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pj-wasm-cpython
+          key: wasm-cpython-${{ hashFiles('cmake/PjWasmPython.cmake', 'cmake/wasm_python/**') }}-emsdk-${{ steps.versions.outputs.emscripten }}
+
+      - name: Build production package (shipped defaults, probes off)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .emsdk/emsdk_env.sh >/dev/null
+          # Scene2D's find_package(ZLIB 1.3.1 EXACT) resolves against Emscripten's
+          # lazily materialized sysroot zlib port; build it before configuring.
+          embuilder build zlib
+          cmake -S . -B build-wasm-prod -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE="${PWD}/.qt-wasm/${PJ_QT_VERSION}/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
+            -DQT_HOST_PATH="${PWD}/.qt-wasm/${PJ_QT_VERSION}/gcc_64" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DPJ_BUILD_TESTS=OFF \
+            -DPJ_BUILD_DEMOS=OFF \
+            -DPJ_WASM_ENABLE_INGRESS_PROBE=OFF \
+            -DPJ_WASM_PYTHON_CACHE_DIR="${HOME}/.cache/pj-wasm-cpython"
+          cmake --build build-wasm-prod --target pj_app --parallel 2
+
+      - name: Package production build and verify packaging scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Language probe unit tests import the pinned Playwright assertions.
+          npm --prefix tests/wasm ci
+          npm --prefix tests/wasm run test:package
+          node scripts/package_wasm.mjs --presets resources/wasm-presets \
+            --source build-wasm-prod/pj_app --output build-wasm-prod/deploy
+          node scripts/package_wasm.mjs --presets resources/wasm-presets \
+            --source build-wasm-prod/pj_app --output build-wasm-prod/deploy-b
+          diff -qr build-wasm-prod/deploy build-wasm-prod/deploy-b
+
+      - name: Record production identity and actual sizes
+        run: |
+          python3 .ci-controller/packaging/localization/wasm_receipt.py capture \
+            --role "$PJ_VALIDATION_ROLE" --source-repository "$PJ_SOURCE_REPOSITORY" \
+            --source-sha "$PJ_SOURCE_SHA" --controller-sha "$PJ_CONTROLLER_SHA" --kind production \
+            --cache build-wasm-prod/CMakeCache.txt --package build-wasm-prod/deploy \
+            --output validation-receipts/production.json
+
+      - name: Preserve exact production package
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-wasm-localized-production-3b5ccf535aa1550e506ee9a9438f618dc3134a85-${{ github.run_attempt }}
+          path: |
+            build-wasm-prod/deploy
+            validation-receipts/production.json
+            candidate-evidence/diagnostic-launcher.txt
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Unlocalized reference startup budget
+        if: env.PJ_VALIDATION_ROLE == 'upstream'
+        run: node scripts/wasm_size_budget.mjs build-wasm-prod/deploy/manifest.json 16932000
+
+      - name: Complete localized total budget
+        if: env.PJ_VALIDATION_ROLE == 'localized'
+        run: node scripts/wasm_localized_size_budget.mjs build-wasm-prod/deploy/manifest.json
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ hashFiles('tests/wasm/package-lock.json') }}
+
+      - name: Install browser gate
+        working-directory: tests/wasm
+        run: npx playwright install --with-deps chromium
+
+      - name: Deployment contract and cold threaded boot (production package)
+        working-directory: tests/wasm
+        env:
+          PJ_WASM_PACKAGE_DIR: ${{ github.workspace }}/build-wasm-prod/deploy
+        run: npm run test:deployment
+
+      - name: Build acceptance configuration (shipped defaults, ingress probe on)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .emsdk/emsdk_env.sh >/dev/null
+          diagnostic_link_flags=()
+          if [[ "$PJ_ACCEPTANCE_SYMBOL_MAP" == true ]]; then
+            diagnostic_link_flags+=(-DCMAKE_EXE_LINKER_FLAGS=--emit-symbol-map)
+          fi
+          cmake -S . -B build-wasm-probe -G Ninja \
+            "${diagnostic_link_flags[@]}" \
+            -DCMAKE_TOOLCHAIN_FILE="${PWD}/.qt-wasm/${PJ_QT_VERSION}/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
+            -DQT_HOST_PATH="${PWD}/.qt-wasm/${PJ_QT_VERSION}/gcc_64" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DPJ_BUILD_TESTS=OFF \
+            -DPJ_BUILD_DEMOS=OFF \
+            -DPJ_WASM_ENABLE_INGRESS_PROBE=ON \
+            -DPJ_WASM_SCENE3D_CAPABILITY_PROBE=ON \
+            -DPJ_WASM_WITH_SCENE2D=ON \
+            -DPJ_WASM_WITH_SCENE3D=ON \
+            -DPJ_WASM_WITH_PYTHON=ON \
+            -DPJ_WASM_PYTHON_CACHE_DIR="${HOME}/.cache/pj-wasm-cpython"
+          cmake --build build-wasm-probe \
+            --target pj_app pj_scene3d_wasm_capability_probe --parallel 2
+          ccache --show-stats
+
+      - name: Save WebAssembly compiler cache
+        # Re-seed only when the restore found nothing at all. This workflow has
+        # no push trigger, so a push-only gate would let the cache decay to
+        # permanently cold; conversely saving every run persisted a fresh blob
+        # of up to 4 G into billed Depot Cache storage. Cold-only bounds it to
+        # roughly one blob per Depot retention period while staying
+        # self-healing: whichever run finds an empty cache repopulates it.
+        # always(): the browser suites below are irrelevant to object validity.
+        if: always() && steps.ccache_restore.outputs.cache-matched-key == ''
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.cache/ccache
+          key: ccache-zh4-localized-3b5ccf535aa1550e506ee9a9438f618dc3134a85
+
+      - name: Retained Scene3D capability probe (Chromium)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .emsdk/emsdk_env.sh >/dev/null
+          emrun --no-browser --serve-after-exit --port 6932 \
+            build-wasm-probe/pj_app/scene3d_capability_probe.html &
+          server_pid=$!
+          trap 'kill "${server_pid}" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 50); do
+            curl -fsS -o /dev/null http://127.0.0.1:6932/scene3d_capability_probe.html && break
+            sleep 0.2
+          done
+          PJ_WASM_SCENE3D_CAP_URL="http://127.0.0.1:6932/scene3d_capability_probe.html" \
+            npm --prefix tests/wasm run test:scene3d-capability
+
+      - name: Package acceptance build
+        # deploy/ boots without a welcome dialog over every spec; the samples'
+        # own cases (presets.spec.js) serve deploy-presets/.
+        run: |
+          node scripts/package_wasm.mjs \
+            --source build-wasm-probe/pj_app --output build-wasm-probe/deploy
+          node scripts/package_wasm.mjs --presets resources/wasm-presets \
+            --source build-wasm-probe/pj_app --output build-wasm-probe/deploy-presets
+
+      - name: Record acceptance identity and actual sizes
+        run: |
+          diagnostic_extras=()
+          if [[ "$PJ_ACCEPTANCE_SYMBOL_MAP" == true ]]; then
+            diagnostic_extras+=(--extra 'build-wasm-probe/pj_app/plotjuggler4*.symbols')
+          fi
+          python3 .ci-controller/packaging/localization/wasm_receipt.py capture \
+            "${diagnostic_extras[@]}" \
+            --role "$PJ_VALIDATION_ROLE" --source-repository "$PJ_SOURCE_REPOSITORY" \
+            --source-sha "$PJ_SOURCE_SHA" --controller-sha "$PJ_CONTROLLER_SHA" --kind acceptance \
+            --cache build-wasm-probe/CMakeCache.txt \
+            --package build-wasm-probe/deploy --package build-wasm-probe/deploy-presets \
+            --extra 'build-wasm-probe/pj_app/scene3d_capability_probe.*' \
+            --extra build-wasm-probe/pj_app/qtloader.js --extra build-wasm-probe/pj_app/qtlogo.svg \
+            --extra .emsdk/upstream/emscripten/emrun.py \
+            --output validation-receipts/acceptance.json
+
+      - name: Upload acceptance package for the browser jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-wasm-localized-acceptance-3b5ccf535aa1550e506ee9a9438f618dc3134a85-${{ github.run_attempt }}
+          # emrun.py is stdlib-only Python: the Firefox job serves the
+          # capability probe exactly as below without installing emsdk.
+          path: |
+            validation-receipts/acceptance.json
+            candidate-evidence/diagnostic-launcher.txt
+            build-wasm-probe/deploy
+            build-wasm-probe/deploy-presets
+            build-wasm-probe/pj_app/scene3d_capability_probe.*
+            build-wasm-probe/pj_app/qtloader.js
+            build-wasm-probe/pj_app/qtlogo.svg
+            build-wasm-probe/pj_app/plotjuggler4*.symbols
+            .emsdk/upstream/emscripten/emrun.py
+          include-hidden-files: true
+          # The package is already .br/.gz compressed.
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Preserve candidate build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-wasm-localized-build-evidence-3b5ccf535aa1550e506ee9a9438f618dc3134a85-${{ github.run_attempt }}
+          path: |
+            candidate-evidence/
+            validation-receipts/
+            build-wasm-prod/CMakeCache.txt
+            build-wasm-prod/CMakeFiles/CMakeConfigureLog.yaml
+            build-wasm-prod/deploy/manifest.json
+            build-wasm-probe/CMakeCache.txt
+            build-wasm-probe/CMakeFiles/CMakeConfigureLog.yaml
+            build-wasm-probe/deploy/manifest.json
+            build-wasm-probe/pj_app/plotjuggler4*.symbols
+          if-no-files-found: error
+          retention-days: 14
+
+  wasm-chromium:
+    # The acceptance package of the wasm job, in Chromium (SwiftShader WebGL),
+    # including the robot hosting spec, which runs docs/wasm/Caddyfile in Caddy.
+    # Skipped, like wasm-firefox, on PRs into release-* while the repo variable
+    # PJ_CI_RELEASE_PR_LITE is 'true'; the wasm build itself still runs.
+    needs: wasm
+    # Explicit result check: the implicit success() also fails on the skipped
+    # `changed` gate two levels up, which would skip this job on every PR run.
+    if: ${{ !cancelled() && needs.wasm.result == 'success' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    env:
+      PJ_WASM_URL: http://127.0.0.1:6931/
+      PJ_WASM_BUILD_DIR: build-wasm-probe
+      PJ_WASM_PYTHON: '1'  # the acceptance package has Python: python.spec.js must not skip
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          repository: reliable-ly0411/PlotJuggler-zh-CN
+          ref: 3b5ccf535aa1550e506ee9a9438f618dc3134a85
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Checkout validation controller
+        uses: actions/checkout@v6
+        with:
+          ref: 3b5ccf535aa1550e506ee9a9438f618dc3134a85
+          path: .ci-controller
+          persist-credentials: false
+
+      - name: Read toolchain versions
+        id: versions
+        run: |
+          source ./versions.env
+          echo "node=${PJ_WASM_NODE_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "PJ_CADDY_VERSION=${PJ_CADDY_VERSION}" >> "${GITHUB_ENV}"
+          echo "PJ_CADDY_LINUX_AMD64_SHA512=${PJ_CADDY_LINUX_AMD64_SHA512}" >> "${GITHUB_ENV}"
+
+      - name: Install pinned packaging runtime
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ steps.versions.outputs.node }}
+
+      - name: Download acceptance package
+        uses: actions/download-artifact@v4
+        with:
+          name: diagnostic-wasm-localized-acceptance-3b5ccf535aa1550e506ee9a9438f618dc3134a85-${{ github.run_attempt }}
+
+      - name: Verify downloaded acceptance identity and bytes
+        id: artifact
+        run: |
+          diagnostic_extras=()
+          if [[ "$PJ_ACCEPTANCE_SYMBOL_MAP" == true ]]; then
+            diagnostic_extras+=(--extra 'build-wasm-probe/pj_app/plotjuggler4*.symbols')
+          fi
+          python3 .ci-controller/packaging/localization/wasm_receipt.py verify \
+            "${diagnostic_extras[@]}" \
+            --role "$PJ_VALIDATION_ROLE" --source-repository "$PJ_SOURCE_REPOSITORY" \
+            --source-sha "$PJ_SOURCE_SHA" --controller-sha "$PJ_CONTROLLER_SHA" --kind acceptance \
+            --package build-wasm-probe/deploy --package build-wasm-probe/deploy-presets \
+            --extra 'build-wasm-probe/pj_app/scene3d_capability_probe.*' \
+            --extra build-wasm-probe/pj_app/qtloader.js --extra build-wasm-probe/pj_app/qtlogo.svg \
+            --extra .emsdk/upstream/emscripten/emrun.py \
+            --output validation-receipts/acceptance.json
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ hashFiles('tests/wasm/package-lock.json') }}
+
+      - name: Install browser gate
+        working-directory: tests/wasm
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Install the fake bridge's Python
+        # bridge.spec.js serves tests/wasm/support/bridge_server.py, whose data
+        # frames need zstd: the standard library has it from Python 3.14.
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Install Caddy for the robot hosting spec
+        # robot_deployment.spec.js serves the package through docs/wasm/Caddyfile,
+        # using the official release pinned with its sha512 in versions.env.
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="caddy_${PJ_CADDY_VERSION}_linux_amd64.tar.gz"
+          curl -fsSL --retry 3 -o "${RUNNER_TEMP}/${archive}" \
+            "https://github.com/caddyserver/caddy/releases/download/v${PJ_CADDY_VERSION}/${archive}"
+          echo "${PJ_CADDY_LINUX_AMD64_SHA512}  ${RUNNER_TEMP}/${archive}" | sha512sum -c -
+          mkdir -p "${RUNNER_TEMP}/caddy"
+          tar -xzf "${RUNNER_TEMP}/${archive}" -C "${RUNNER_TEMP}/caddy" caddy
+          echo "PJ_CADDY=${RUNNER_TEMP}/caddy/caddy" >> "${GITHUB_ENV}"
+          # The guide's example configuration (Caddy's local CA, default ports) stays valid too.
+          PJ_ROBOT_HOST=robot.local PJ_WASM_ROOT="${PWD}/build-wasm-probe/deploy" \
+            XDG_DATA_HOME="${RUNNER_TEMP}/caddy-state" XDG_CONFIG_HOME="${RUNNER_TEMP}/caddy-state" \
+            "${RUNNER_TEMP}/caddy/caddy" validate --config docs/wasm/Caddyfile --adapter caddyfile
+
+      - name: Mirror the hosted sample assets
+        # The suites never reach the network (tests/wasm/support/browser.js): the
+        # samples that load from assets.plotjuggler.io are served from this mirror,
+        # each file checked against tests/wasm/fixtures/hosted_assets.json.
+        uses: actions/cache@v5
+        with:
+          path: build-wasm-assets
+          key: wasm-hosted-assets-${{ hashFiles('tests/wasm/fixtures/hosted_assets.json') }}
+
+      - name: Fetch the hosted sample assets the cache lacks
+        run: npm --prefix tests/wasm run fetch:assets
+
+      - name: Serve acceptance package
+        id: serve
+        # The background server outlives this step; the runner reaps it at job end.
+        run: |
+          node scripts/serve_wasm.mjs --root build-wasm-probe/deploy --port 6931 > /dev/null 2>&1 &
+          for _ in $(seq 1 50); do
+            curl -fsS -o /dev/null "${PJ_WASM_URL}" && break
+            sleep 0.2
+          done
+          curl -fsS -o /dev/null "${PJ_WASM_URL}" || { echo "wasm server failed to start"; exit 1; }
+
+      - name: Checkout exact diagnostic launcher (browser test fixtures only)
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          path: .ci-diagnostic-launcher
+          persist-credentials: false
+
+      - name: Set explicit test preconditions and require actual fresh rollback frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PJ_SOURCE_SHA"
+          test "$(git rev-parse HEAD^{tree})" = 'b98627c9c60694992a750bf07b7162de241942d3'
+          test "$(git -C .ci-diagnostic-launcher rev-parse HEAD)" = "$PJ_DIAGNOSTIC_LAUNCHER_SHA"
+          python3 .ci-diagnostic-launcher/.github/scripts/wasm_qrhi_restore_diagnostic.py
+          git diff --check
+          test -z "$(git diff --name-only -- . ':!tests/wasm/persistence_layout.spec.js' ':!tests/wasm/plotting.spec.js')"
+          git diff --exit-code -- 'tests/wasm/*-snapshots/*'
+          mkdir -p tests/wasm/qrhi-restore-evidence
+          git diff -- tests/wasm/persistence_layout.spec.js tests/wasm/plotting.spec.js > tests/wasm/qrhi-restore-evidence/diagnostic-fixtures.diff
+
+      - name: Functional browser suite (acceptance package)
+        # Three workers (playwright.config.js); the @serial cases run alone below.
+        run: npm --prefix tests/wasm run test
+
+      - name: Exact targeted browser rollback and QRhi interaction regressions (chromium)
+        shell: bash
+        if: ${{ !cancelled() && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
+        working-directory: tests/wasm
+        run: |
+          set -o pipefail
+          xvfb-run -a npx playwright test persistence_layout.spec.js plotting.spec.js --project=chromium --workers=1 \
+            --grep 'browser layouts open transactionally|Shift-drag seeks|rasterizes legend and tracker text|two split QRhi plots' \
+            --reporter=line --trace=retain-on-failure --output=qrhi-restore-evidence/targeted \
+            2>&1 | tee qrhi-restore-evidence/targeted.log
+
+      - name: Localized log layout, Chinese glyphs and JPEG pixel probes
+        shell: bash
+        if: ${{ !cancelled() && env.PJ_VALIDATION_ROLE == 'localized' && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
+        working-directory: tests/wasm
+        run: |
+          status=0
+          npx playwright test --config log_widget.playwright.config.js --output localized-log-results 2>&1 | tee localized-log.log || status=1
+          npx playwright test --config jpeg_visual.playwright.config.js --output localized-jpeg-results 2>&1 | tee localized-jpeg.log || status=1
+          exit "$status"
+
+      - name: Serial cases (acceptance package)
+        id: serial
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: serial-report.json
+        shell: bash
+        if: ${{ !cancelled() && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
+        run: npm --prefix tests/wasm run test:serial -- --reporter=line,json --output serial-results 2>&1 | tee serial-browser.log
+
+      - name: Diagnose failed Anymal using the same local package and fixtures
+        if: ${{ !cancelled() && steps.serial.outcome == 'failure' }}
+        shell: bash
+        run: node .ci-controller/tests/wasm/profile_anymal.cjs "$PWD" 2>&1 | tee cpu-profile.log
+
+      - name: Same functional assertions in English, Simplified and Traditional Chinese
+        if: ${{ !cancelled() && env.PJ_VALIDATION_ROLE == 'localized' && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
+        working-directory: tests/wasm
+        shell: bash
+        run: |
+          status=0
+          for language in en_US zh_CN zh_TW; do
+            PJ_WASM_TEST_LANGUAGE="$language" npx playwright test \
+              dialogs.spec.js plotting.spec.js scene3d_models.spec.js \
+              --project=chromium --workers=1 --reporter=line \
+              --grep 'dataset removal|Preferences opens|right-drag creates XY|a local URDF renders' \
+              --output "language-${language}-chromium-results" \
+              2>&1 | tee "language-${language}-chromium.log" || status=1
+          done
+          exit "$status"
+
+      - name: Preserve localized browser assertions and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-wasm-localized-chromium-evidence-3b5ccf535aa1550e506ee9a9438f618dc3134a85-${{ github.run_attempt }}
+          path: |
+            serial-browser.log
+            cpu-profile.log
+            tests/wasm/serial-report.json
+            cpu-profile-results/
+            tests/wasm/serial-results/
+            tests/wasm/test-results/
+            tests/wasm/playwright-report/
+            tests/wasm/qrhi-restore-evidence/
+            validation-receipts/
+            tests/wasm/localized-log.log
+            tests/wasm/localized-jpeg.log
+            tests/wasm/localized-log-results/
+            tests/wasm/localized-jpeg-results/
+            tests/wasm/language-*-chromium.log
+            tests/wasm/language-*-chromium-results/
+          if-no-files-found: warn
+          retention-days: 14
+
+  wasm-firefox:
+    # The acceptance package of the wasm job, in Firefox. Firefox has no
+    # SwiftShader: WebGL comes from Mesa's llvmpipe on the GPU-less runner,
+    # and headless Firefox gets no WebGL at all without a display (Xvfb).
+    # One Playwright worker (playwright.config.js), so the suite is split
+    # across two jobs instead.
+    needs: wasm
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    # Explicit result check: the implicit success() also fails on the skipped
+    # `changed` gate two levels up, which would skip this job on every PR run.
+    if: ${{ !cancelled() && needs.wasm.result == 'success' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    env:
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      PJ_WASM_URL: http://127.0.0.1:6931/
+      PJ_WASM_PYTHON: '1'
+      PJ_WASM_SCENE3D_CAP_URL: http://127.0.0.1:6932/scene3d_capability_probe.html
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          repository: reliable-ly0411/PlotJuggler-zh-CN
+          ref: 3b5ccf535aa1550e506ee9a9438f618dc3134a85
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Checkout validation controller
+        uses: actions/checkout@v6
+        with:
+          ref: 3b5ccf535aa1550e506ee9a9438f618dc3134a85
+          path: .ci-controller
+          persist-credentials: false
+
+      - name: Read toolchain versions
+        id: versions
+        run: |
+          source ./versions.env
+          echo "node=${PJ_WASM_NODE_VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Install pinned packaging runtime
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ steps.versions.outputs.node }}
+
+      - name: Download acceptance package
+        uses: actions/download-artifact@v4
+        with:
+          name: diagnostic-wasm-localized-acceptance-3b5ccf535aa1550e506ee9a9438f618dc3134a85-${{ github.run_attempt }}
+
+      - name: Verify downloaded acceptance identity and bytes
+        id: artifact
+        run: |
+          diagnostic_extras=()
+          if [[ "$PJ_ACCEPTANCE_SYMBOL_MAP" == true ]]; then
+            diagnostic_extras+=(--extra 'build-wasm-probe/pj_app/plotjuggler4*.symbols')
+          fi
+          python3 .ci-controller/packaging/localization/wasm_receipt.py verify \
+            "${diagnostic_extras[@]}" \
+            --role "$PJ_VALIDATION_ROLE" --source-repository "$PJ_SOURCE_REPOSITORY" \
+            --source-sha "$PJ_SOURCE_SHA" --controller-sha "$PJ_CONTROLLER_SHA" --kind acceptance \
+            --package build-wasm-probe/deploy --package build-wasm-probe/deploy-presets \
+            --extra 'build-wasm-probe/pj_app/scene3d_capability_probe.*' \
+            --extra build-wasm-probe/pj_app/qtloader.js --extra build-wasm-probe/pj_app/qtlogo.svg \
+            --extra .emsdk/upstream/emscripten/emrun.py \
+            --output validation-receipts/acceptance.json
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-firefox-${{ hashFiles('tests/wasm/package-lock.json') }}
+
+      - name: Install browser gate
+        # --with-deps installs xvfb (Playwright's ubuntu22.04 tool list); Firefox's
+        # own dependency list has no Mesa, so llvmpipe's GL/EGL come from here.
+        working-directory: tests/wasm
+        run: |
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libegl1 libgl1-mesa-dri libegl-mesa0
+          npm ci
+          npx playwright install --with-deps firefox
+
+      - name: Install the fake bridge's Python
+        # bridge.spec.js serves tests/wasm/support/bridge_server.py, whose data
+        # frames need zstd: the standard library has it from Python 3.14.
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Mirror the hosted sample assets
+        # The suites never reach the network (tests/wasm/support/browser.js): the
+        # samples that load from assets.plotjuggler.io are served from this mirror,
+        # each file checked against tests/wasm/fixtures/hosted_assets.json.
+        uses: actions/cache@v5
+        with:
+          path: build-wasm-assets
+          key: wasm-hosted-assets-${{ hashFiles('tests/wasm/fixtures/hosted_assets.json') }}
+
+      - name: Fetch the hosted sample assets the cache lacks
+        run: npm --prefix tests/wasm run fetch:assets
+
+      - name: Serve acceptance package and capability probe
+        id: serve
+        # Background servers outlive this step; the runner reaps them at job end.
+        run: |
+          python3 .emsdk/upstream/emscripten/emrun.py --no-browser --serve-after-exit \
+            --port 6932 build-wasm-probe/pj_app/scene3d_capability_probe.html > /dev/null 2>&1 &
+          node scripts/serve_wasm.mjs --root build-wasm-probe/deploy --port 6931 > /dev/null 2>&1 &
+          for url in "${PJ_WASM_URL}" "${PJ_WASM_SCENE3D_CAP_URL}"; do
+            for _ in $(seq 1 50); do
+              curl -fsS -o /dev/null "${url}" && break
+              sleep 0.2
+            done
+            curl -fsS -o /dev/null "${url}" || { echo "server for ${url} failed to start"; exit 1; }
+          done
+
+      - name: Retained Scene3D capability probe (Firefox)
+        if: matrix.shard == 1
+        run: xvfb-run -a npm --prefix tests/wasm run test:scene3d-capability:firefox
+
+      - name: Checkout exact diagnostic launcher (browser test fixtures only)
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          path: .ci-diagnostic-launcher
+          persist-credentials: false
+
+      - name: Set explicit test preconditions and require actual fresh rollback frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PJ_SOURCE_SHA"
+          test "$(git rev-parse HEAD^{tree})" = 'b98627c9c60694992a750bf07b7162de241942d3'
+          test "$(git -C .ci-diagnostic-launcher rev-parse HEAD)" = "$PJ_DIAGNOSTIC_LAUNCHER_SHA"
+          python3 .ci-diagnostic-launcher/.github/scripts/wasm_qrhi_restore_diagnostic.py
+          git diff --check
+          test -z "$(git diff --name-only -- . ':!tests/wasm/persistence_layout.spec.js' ':!tests/wasm/plotting.spec.js')"
+          git diff --exit-code -- 'tests/wasm/*-snapshots/*'
+          mkdir -p tests/wasm/qrhi-restore-evidence
+          git diff -- tests/wasm/persistence_layout.spec.js tests/wasm/plotting.spec.js > tests/wasm/qrhi-restore-evidence/diagnostic-fixtures.diff
+
+      - name: Functional browser suite (Firefox)
+        run: >-
+          xvfb-run -a npm --prefix tests/wasm run test:firefox --
+          --grep-invert editors.spec.js --shard=${{ matrix.shard }}/2 --output firefox-functional-results
+
+      - name: Exact targeted browser rollback and QRhi interaction regressions (firefox)
+        shell: bash
+        if: ${{ !cancelled() && matrix.shard == 1 && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
+        working-directory: tests/wasm
+        run: |
+          set -o pipefail
+          xvfb-run -a npx playwright test persistence_layout.spec.js plotting.spec.js --project=firefox --workers=1 \
+            --grep 'browser layouts open transactionally|Shift-drag seeks|rasterizes legend and tracker text|two split QRhi plots' \
+            --reporter=line --trace=retain-on-failure --output=qrhi-restore-evidence/targeted \
+            2>&1 | tee qrhi-restore-evidence/targeted.log
+
+      - name: Editors suite (Firefox, non-blocking)
+        id: editors
+        # Non-blocking until the time-sliced first Luau materialization is
+        # proven to hold the 100 ms main-thread heartbeat budget in Firefox
+        # on CI runners.
+        if: ${{ !cancelled() && matrix.shard == 1 && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/tests/wasm/firefox-editors-report.json
+        run: |
+          set -o pipefail
+          xvfb-run -a npm --prefix tests/wasm run test:firefox -- \
+            --grep editors.spec.js --reporter=line,json --output firefox-editors-results \
+            2>&1 | tee firefox-editors.log
+
+      - name: Diagnose failed Firefox transform on the same acceptance package
+        if: ${{ !cancelled() && matrix.shard == 1 && steps.editors.outcome == 'failure' }}
+        continue-on-error: true
+        run: xvfb-run -a node .ci-controller/tests/wasm/profile_firefox_editor.cjs "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/.ci-controller"
+
+      - name: Same functional assertions in three languages (Firefox)
+        if: ${{ !cancelled() && env.PJ_VALIDATION_ROLE == 'localized' && matrix.shard == 1 && steps.artifact.outcome == 'success' && steps.serve.outcome == 'success' }}
+        working-directory: tests/wasm
+        shell: bash
+        run: |
+          status=0
+          for language in en_US zh_CN zh_TW; do
+            PJ_WASM_TEST_LANGUAGE="$language" xvfb-run -a npx playwright test \
+              dialogs.spec.js plotting.spec.js scene3d_models.spec.js \
+              --project=firefox --workers=1 --reporter=line \
+              --grep 'dataset removal|Preferences opens|right-drag creates XY|a local URDF renders' \
+              --output "language-${language}-firefox-results" \
+              2>&1 | tee "language-${language}-firefox.log" || status=1
+          done
+          exit "$status"
+
+      - name: Preserve Firefox browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-wasm-localized-firefox-${{ matrix.shard }}-evidence-3b5ccf535aa1550e506ee9a9438f618dc3134a85-${{ github.run_attempt }}
+          path: |
+            tests/wasm/test-results/
+            tests/wasm/playwright-report/
+            tests/wasm/qrhi-restore-evidence/
+            tests/wasm/firefox-functional-results/
+            tests/wasm/firefox-editors-results/
+            tests/wasm/firefox-editors-report.json
+            firefox-editors.log
+            firefox-editor-profile-results/
+            build-wasm-probe/pj_app/plotjuggler4*.symbols
+            tests/wasm/language-*-firefox.log
+            tests/wasm/language-*-firefox-results/
+            validation-receipts/
+          if-no-files-found: warn
+          retention-days: 14

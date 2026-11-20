@@ -1,0 +1,451 @@
+name: Scoped Windows package smoke 1877b401 installer repair
+
+on:
+  push:
+    branches: ['zh-CN-4.x-ci/upstream-1877b401-combined-gates']
+    paths: ['.github/workflows/zh-4x-package-smoke-1877b401-windows.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zh-4x-package-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: Package (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            qt_arch: msvc2022_64
+            generator: Ninja Multi-Config
+            installation: windows
+    defaults:
+      run:
+        shell: bash
+    env:
+      PJ_DISABLE_TELEMETRY: '1'
+      APPIMAGE_EXTRACT_AND_RUN: '1'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: 3b5ccf535aa1550e506ee9a9438f618dc3134a85
+          submodules: recursive
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Bind exact product source and tree
+        run: |
+          test "$(git rev-parse HEAD)" = 3b5ccf535aa1550e506ee9a9438f618dc3134a85
+          test "$(git rev-parse 'HEAD^{tree}')" = b98627c9c60694992a750bf07b7162de241942d3
+          git rev-parse HEAD 'HEAD^{tree}'
+          python scripts/check_branch_name.py "$GITHUB_REF_NAME"
+      - name: Exercise exact installer registry version parser
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          $ast = [System.Management.Automation.Language.Parser]::ParseFile(
+            "$PWD/packaging/installer/build_windows_installer.ps1", [ref]$tokens, [ref]$parseErrors)
+          if ($parseErrors.Count -ne 0) { throw "Installer parser errors: $parseErrors" }
+          $definition = @($ast.FindAll({ param($n)
+            $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Convert-Semver'
+          }, $true))
+          if ($definition.Count -ne 1) { throw "Registry semantic version parser not defined exactly once" }
+          . ([ScriptBlock]::Create($definition[0].Extent.Text))
+          $parsed = @('1.9.9','1.10.0','1.2.3-dev.1+meta') |
+            ForEach-Object { Convert-Semver $_ 'fixture registry version' } |
+            Sort-Object -Descending
+          $got = ($parsed | ForEach-Object { $_.ToString() }) -join ','
+          if ($got -ne '1.10.0,1.9.9,1.2.3') { throw "Registry version order unexpected: $got" }
+          function Die($message) { throw $message }
+          $rejected = $false
+          try { Convert-Semver 'not-a-version' 'fixture malformed version' | Out-Null }
+          catch { if ($_.Exception.Message -like 'fixture malformed version is not a numeric semantic version:*') { $rejected = $true } else { throw } }
+          if (-not $rejected) { throw "Malformed registry version not rejected" }
+          Write-Host "Registry numeric version ordering, suffix handling and rejection passed"
+      - name: Linux capture test dependencies before preflight
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb xdotool x11-utils imagemagick
+      - name: Lightweight release preflight before dependencies
+        env:
+          PYTHONUTF8: '0'
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py' -v
+          python -m unittest discover -s .github/release_policy -p 'test_*.py' -v
+          python tests/check_translations_4x.py --catalog-only
+          python tests/check_localization_provenance.py
+      - name: Windows native path and PowerShell preflight
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          PYTHONUTF8: '0'
+        run: ./tests/check_windows_packaging.ps1
+      - name: Read pinned versions
+        id: versions
+        run: |
+          source ./versions.env
+          echo "PJ_VERSION=$PJ_APP_VERSION" >> "$GITHUB_ENV"
+          echo "PJ_QT_VERSION=$PJ_QT_VERSION" >> "$GITHUB_ENV"
+          echo "qt_version=$PJ_QT_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Verify locked Linux packaging assets before dependencies
+        if: runner.os == 'Linux'
+        run: python packaging/localization/linux_tools.py --directory packaging/appimage
+      - name: Build tools
+        run: python -m pip install 'conan>=2,<3' 'cmake>=3.28,<4' 'ninja!=1.13.0' 'aqtinstall>=3.3'
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev \
+            mesa-vulkan-drivers libvulkan-dev \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 \
+            libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 libva-dev libdrm-dev \
+            xvfb weston libegl-mesa0 zstd pkg-config ccache fonts-noto-cjk patchelf file unzip wget libfuse2 imagemagick
+          # Resolve the installed software Vulkan driver before configuring or testing.
+          VK_ICD_FILENAMES="$(ls /usr/share/vulkan/icd.d/lvp_icd*.json | head -n1)"
+          test -f "${VK_ICD_FILENAMES}"
+          printf 'VK_ICD_FILENAMES=%s\n' "$VK_ICD_FILENAMES" >> "$GITHUB_ENV"
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+        with:
+          arch: x64
+      - uses: actions/cache@v5
+        with:
+          path: .qt
+          key: zh4-qt-${{ matrix.os }}-${{ steps.versions.outputs.qt_version }}
+      - name: Install pinned Linux Qt
+        if: runner.os == 'Linux'
+        run: ./scripts/install_qt6.sh
+      - name: Install pinned Windows Qt
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/windows/install_qt6.ps1
+      - name: Provide pinned fonts for Windows offscreen tests
+        if: runner.os == 'Windows'
+        # Qt's offscreen QFreeTypeFontDatabase uses QT_QPA_FONTDIR rather than
+        # the native Windows font database. Keep this test-only dependency out
+        # of the application and pin both its upstream revision and bytes.
+        run: |
+          python - <<'PYFONT'
+          from pathlib import Path
+          import hashlib
+          import os
+          import urllib.request
+          base = 'https://raw.githubusercontent.com/notofonts/noto-cjk/523d033d6cb47f4a80c58a35753646f5c3608a78/'
+          target = Path('build/ci-fonts').resolve()
+          target.mkdir(parents=True, exist_ok=True)
+          files = {
+              'Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf':
+                  '2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b',
+              'LICENSE': '6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2',
+          }
+          for path, expected in files.items():
+              with urllib.request.urlopen(base + path, timeout=120) as response:
+                  data = response.read()
+              if hashlib.sha256(data).hexdigest() != expected:
+                  raise SystemExit(f'CI font checksum mismatch: {path}')
+              (target / Path(path).name).write_bytes(data)
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as output:
+              output.write(f'QT_QPA_FONTDIR={target.as_posix()}\n')
+          PYFONT
+      - name: Focused language build and tests
+        run: |
+          qt_dir="$PWD/.qt/$PJ_QT_VERSION/${{ matrix.qt_arch }}"
+          export PATH="$qt_dir/bin:$PATH"
+          python tests/check_translations_4x.py --lupdate "$qt_dir/bin/lupdate"
+          cmake -S pj_app/tests/i18n -B build-i18n -G "${{ matrix.generator }}" \
+            -DCMAKE_PREFIX_PATH="$qt_dir" -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          cmake --build build-i18n --config RelWithDebInfo --parallel 2
+          ctest --test-dir build-i18n --build-config RelWithDebInfo --output-on-failure --timeout 60
+      - uses: actions/cache/restore@v5
+        id: conan-cache
+        with:
+          path: ~/.conan2
+          key: zh4-conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt', 'conan.lock') }}
+          restore-keys: |
+            zh4-conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt', 'conan.lock') }}-partial-
+            zh4-conan-${{ matrix.os }}-
+      - name: Prepare Conan sources
+        timeout-minutes: 12
+        run: |
+          conan profile detect --force
+          ./scripts/configure_conan_remote.sh
+          cache_dir="$(python -c 'import os; print(os.path.abspath(".conan-source-cache").replace(chr(92), "/"))')"
+          conan_home="$(conan config home)"
+          mkdir -p "$conan_home"
+          python - "$conan_home/global.conf" "$cache_dir" <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import re
+          import shutil
+          import sys
+          # Conan 2.34 trusts local cache hits without rehashing. Validate every
+          # repository seed before copying any bytes into that trusted cache.
+          seeds = Path('.github/conan/source-backup')
+          blobs = sorted(p for p in seeds.iterdir() if re.fullmatch(r'[0-9a-f]{64}', p.name))
+          for blob in blobs:
+              if hashlib.sha256(blob.read_bytes()).hexdigest() != blob.name:
+                  raise SystemExit(f'Conan source backup SHA256 mismatch: {blob.name}')
+              metadata = json.loads(blob.with_suffix('.json').read_text(encoding='utf-8'))
+              if not metadata.get('references'):
+                  raise SystemExit(f'Conan source backup metadata missing references: {blob.name}')
+          target = Path(sys.argv[2]) / 's'
+          target.mkdir(parents=True, exist_ok=True)
+          for blob in blobs:
+              shutil.copy2(blob, target / blob.name)
+              shutil.copy2(blob.with_suffix('.json'), target / (blob.name + '.json'))
+          p = Path(sys.argv[1])
+          lines = p.read_text(encoding='utf-8').splitlines() if p.exists() else []
+          lines = [s for s in lines if not s.startswith(('core.sources:download_cache=', 'core.sources:download_urls='))]
+          lines += [f'core.sources:download_cache={sys.argv[2]}',
+                    'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources/"]']
+          p.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+          python scripts/prefetch_assimp_source.py --cache-dir "$cache_dir"
+      - name: Resolve exact Linux SDK and dependencies
+        if: runner.os == 'Linux'
+        id: conan-linux
+        run: |
+          python scripts/bootstrap_host_sdk.py
+          conan install . --output-folder=build --build=missing \
+            -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial \
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 \
+            --format=json --out-file=build/conan-graph.json
+      - name: Resolve exact Windows SDK and dependencies
+        if: runner.os == 'Windows'
+        id: conan-windows
+        # Invoke Conan outside Git Bash. Its FFmpeg recipe launches its own
+        # MSYS shell; nested shells can corrupt pkg-config's native path list.
+        # https://github.com/conan-io/conan-center-index/issues/30348
+        shell: pwsh
+        run: |
+          # setup-python injects a native path which conflicts with Conan's
+          # MSYS pkg-config search path. Let the locked dependency graph own it.
+          # https://github.com/conan-io/setup-conan#using-setup-python-action-alongside-setup-conan
+          Remove-Item Env:PKG_CONFIG_PATH -ErrorAction SilentlyContinue
+          python scripts/bootstrap_host_sdk.py
+          conan install . --output-folder=build --build=missing `
+            -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial `
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 `
+            -o 'cpython/*:shared=True' -s 'cpython/*:build_type=Release' `
+            -s compiler.version=194 -c 'tools.cmake.cmaketoolchain:generator=Ninja Multi-Config' `
+            --format=json --out-file=build/conan-graph.json
+          exit $LASTEXITCODE
+      - name: Preserve FFmpeg dav1d probe diagnostics
+        if: failure() && (steps.conan-linux.outcome == 'failure' || steps.conan-windows.outcome == 'failure')
+        run: |
+          python - <<'PYLOG'
+          from pathlib import Path
+          import subprocess
+          home = Path(subprocess.check_output(['conan', 'config', 'home'], text=True).strip())
+          output = Path('build/diagnostics')
+          output.mkdir(parents=True, exist_ok=True)
+          for index, path in enumerate(home.glob('p/b/ffmpe*/b/build-*/ffbuild/config.log')):
+              # configure starts this log with `set`, including the complete
+              # process environment. Never publish that preamble as an artifact.
+              lines = path.read_text(encoding='utf-8', errors='replace').splitlines()
+              probes = [i for i, line in enumerate(lines)
+                        if line.startswith(('require_pkg_config libdav1d ',
+                                            'check_pkg_config libdav1d '))]
+              if not probes:
+                  print('No dav1d probe found; the environment-bearing log is omitted.')
+                  continue
+              diagnostic = '\n'.join(lines[probes[-1]:][:400]) + '\n'
+              (output / f'ffmpeg-{index}-dav1d-probe.log').write_text(diagnostic, encoding='utf-8')
+              print(f'--- {path.name}: {path.parent.parent.name} ---')
+              print(diagnostic)
+          PYLOG
+      - name: Trim incomplete Conan cache
+        if: failure() && (steps.conan-linux.outcome == 'failure' || steps.conan-windows.outcome == 'failure')
+        run: conan cache clean "*" --build --source --temp
+      - name: Retain completed dependency packages for retry
+        if: failure() && (steps.conan-linux.outcome == 'failure' || steps.conan-windows.outcome == 'failure')
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.conan2
+          # Never mark an incomplete graph as the exact, successful closure.
+          key: ${{ steps.conan-cache.outputs.cache-primary-key }}-partial-${{ github.run_id }}-${{ github.run_attempt }}
+      # Save resolved packages before application compilation/tests. A failing
+      # regression must not discard a successful, expensive dependency build.
+      - name: Trim Conan build cache
+        if: steps.conan-cache.outputs.cache-hit != 'true'
+        run: conan cache clean "*" --build --source --temp
+      - uses: actions/cache/save@v5
+        if: steps.conan-cache.outputs.cache-hit != 'true'
+        with:
+          path: ~/.conan2
+          key: ${{ steps.conan-cache.outputs.cache-primary-key }}
+      - name: Build package application and ArduPilot import test
+        run: |
+          cmake -S . -B build -G "${{ matrix.generator }}" \
+            -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+            -DCMAKE_PREFIX_PATH="$PWD/.qt/$PJ_QT_VERSION/${{ matrix.qt_arch }}" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPJ_BUILD_TESTS=ON -DPJ_BUILD_DEMOS=OFF \
+            -DPJ_PLUGIN_FEEDBACK_ACCEPTANCE=OFF \
+            -DPJ_INSTALLATION=${{ matrix.installation }} \
+            -DCMAKE_POLICY_DEFAULT_CMP0141=NEW -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+          cmake --build build --config RelWithDebInfo --target ardupilot_import_test --parallel 2
+          export PATH="$PWD/.qt/$PJ_QT_VERSION/${{ matrix.qt_arch }}/bin:$PATH"
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            for list in build/pj_ffmpeg_bin_dirs.txt build/pj_python_bin_dirs.txt; do
+              if [[ -f "$list" ]]; then
+                while IFS= read -r dir; do
+                  [[ -z "$dir" ]] || export PATH="$(cygpath -u "$dir"):$PATH"
+                done < "$list"
+              fi
+            done
+          fi
+          QT_QPA_PLATFORM=offscreen ctest --test-dir build --build-config RelWithDebInfo \
+            --output-on-failure --no-tests=error --test-output-size-passed 262144 -R '^ArduPilotFileLoaderTest$' \
+            --output-junit "$PWD/build/ardupilot-import-first.xml"
+          cmake --build build --config RelWithDebInfo --target pj_app --parallel 2
+      - name: Validate candidate package identity
+        run: |
+          python tests/check_localization_provenance.py
+          python tests/test_release_versions.py -v
+          python tests/test_installer_translations.py -v
+          python tests/test_bundled_translations.py -v
+          python tests/test_localized_plugin_build.py -v
+          python tests/test_package_acceptance.py -v
+          if [[ "$RUNNER_OS" == Linux ]]; then python tests/test_deb_dependencies.py -v; fi
+          python packaging/localization/version_map.py "$PJ_VERSION" --development-candidate
+      - name: Stage pinned BIN, licenses and CJK fallback
+        run: |
+          args=()
+          if [[ "$RUNNER_OS" == Linux ]]; then args+=(--linux-tools); fi
+          python packaging/localization/prepare_payload.py --development-candidate --prefix build/fork-prefix "${args[@]}"
+      - name: Rebuild pinned display-localized official plugins
+        id: localized-plugins
+        shell: pwsh
+        run: python packaging/localization/build_localized_plugins.py --work build/localized-plugins --prefix build/fork-prefix
+      - name: Validate rebuilt CSV through real FileLoader
+        run: python packaging/localization/run_csv_runtime_acceptance.py --build build --prefix build/fork-prefix
+      - name: Retain completed localized plugin dependencies
+        if: always() && steps.localized-plugins.outcome != 'skipped'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.conan2
+          key: zh4-conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt', 'conan.lock') }}-localized-${{ hashFiles('packaging/localization/plugin-patches/source-lock.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Package Linux artifacts
+        if: runner.os == 'Linux'
+        run: |
+          # The exact candidate inventory combines upstream and four reviewed supplements.
+          # Preserve the packager's native URL, per-extension checksum and inventory checks.
+          fixture="$(mktemp -d)"
+          cp packaging/localization/registry-lock.json "$fixture/registry.json"
+          test "$(git hash-object "$fixture/registry.json")" = "$(git rev-parse HEAD:packaging/localization/registry-lock.json)"
+          export no_proxy="${no_proxy:+$no_proxy,}127.0.0.1"
+          export NO_PROXY="${NO_PROXY:+$NO_PROXY,}127.0.0.1"
+          python -m http.server 18771 --bind 127.0.0.1 --directory "$fixture" >"$RUNNER_TEMP/pj-registry-fixture.log" 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true; rm -r -- "$fixture"' EXIT
+          registry="http://127.0.0.1:18771/registry.json"
+          curl --noproxy '*' --fail --silent --show-error --retry 10 --retry-delay 1 --retry-connrefused "$registry" -o "$fixture/received.json"
+          cmp "$fixture/registry.json" "$fixture/received.json"
+          bash packaging/appimage/build_appimage.sh --plugins-registry "$registry"             --extra-prefix build/fork-prefix --name-suffix -zh-CN
+          # Every directly loaded ELF must respect the Ubuntu 22.04 floor.
+          python packaging/localization/audit_glibc.py build/AppDir
+          # Only the channel stamp changes; each final package is verified separately.
+          cmake -S . -B build -DPJ_INSTALLATION=deb
+          cmake --build build --target pj_app --parallel 2
+          bash packaging/deb/build_deb.sh --binary build/pj_app/plotjuggler4 --name-suffix -zh-CN
+          mkdir -p dist
+          cp packaging/appimage/PlotJuggler-*.AppImage packaging/deb/plotjuggler4_*.deb dist/
+      - name: Install pinned Windows IFW
+        if: runner.os == 'Windows'
+        run: aqt install-tool --outputdir .qt windows desktop tools_ifw qt.tools.ifw.47
+      - name: Package Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $packageVersion = python packaging/localization/version_map.py $env:PJ_VERSION --development-candidate --format ifw
+          if ($LASTEXITCODE -ne 0) { throw "Candidate version mapping failed" }
+          ./packaging/installer/build_windows_installer.ps1 `
+            -QtDir ".qt/$env:PJ_QT_VERSION/msvc2022_64" `
+            -Version $env:PJ_VERSION -PackageVersion $packageVersion `
+            -ExtraPrefix build/fork-prefix -NameSuffix '-zh-CN' -CleanReleaseName -OutDir dist -StageDir build/windows-stage `
+            -PluginRegistryUrl "packaging/localization/registry-lock.json"
+          if ($LASTEXITCODE -ne 0) { throw "Windows installer staging or packaging failed" }
+          ./packaging/installer/build_windows_portable.ps1 -StageDir build/windows-stage `
+            -OutFile "dist/PlotJuggler-$env:PJ_VERSION-Windows-x64-portable-zh-CN.zip"
+          if ($LASTEXITCODE -ne 0) { throw "Windows portable packaging failed" }
+      - name: Record original package hashes
+        run: |
+          python packaging/localization/hash_packages.py dist --output "SHA256SUMS-${RUNNER_OS}.txt"
+          git diff --exit-code
+      - name: Confirm artifact manifest is nonpublishable and source-bound
+        run: |
+          python -c 'import json; m=json.load(open("build/fork-prefix/share/plotjuggler4/release.json", encoding="utf-8")); assert m["publishable"] is False; assert m["source_commit"] == "3b5ccf535aa1550e506ee9a9438f618dc3134a85"; assert m["source_tree"] == "b98627c9c60694992a750bf07b7162de241942d3"'
+          test -s "dist/SHA256SUMS-${RUNNER_OS}.txt"
+          # Preserve the producer's CRLF manifest; normalize only the verification stream.
+          (cd dist && sed 's/\r$//' "SHA256SUMS-${RUNNER_OS}.txt" | sha256sum --strict --check -)
+      - name: Verify Ubuntu 22.04 in a clean runtime container
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p smoke-reports
+          source versions.env
+          docker run --rm -e EXPECTED_SOURCE_SHA="3b5ccf535aa1550e506ee9a9438f618dc3134a85" -e EXPECTED_VERSION="$PJ_APP_VERSION" -v "$PWD:/src:ro" -v "$PWD/dist:/pkg:ro" -v "$PWD/smoke-reports:/reports" ubuntu:22.04 bash /src/packaging/localization/verify_linux.sh
+      - name: Stage and record the separate Windows acceptance verifier
+        if: runner.os == 'Windows'
+        run: |
+          mkdir -p smoke-reports
+          verifier_commit='c848f8267c2511aa71c5edaf14ee8664c1b397a4'
+          verifier_path='packaging/localization/verify_package.py'
+          staged_verifier='packaging/localization/.verify_package_ci.py'
+          staged_wrapper="$RUNNER_TEMP/pj4-verify-windows-ci.ps1"
+          test "$(git rev-parse "$verifier_commit^")" = '8b1fdc6cd157e267203605199ae80be5d1e5bf94'
+          git merge-base --is-ancestor '8b1fdc6cd157e267203605199ae80be5d1e5bf94' HEAD
+          test ! -e "$staged_verifier" && test ! -e "$staged_wrapper"
+          git show "$verifier_commit:$verifier_path" > "$staged_verifier"
+          hash="$(git hash-object --no-filters "$staged_verifier")"
+          test "$hash" = '709e1089e2c91ab9c9e03651e4f6b01c70b65aa9'
+          test "$(git rev-parse HEAD:packaging/localization/verify_windows.ps1)" = 'be07574311d42e3d22cc23576d66d78c09b2acf2'
+          python - "$staged_wrapper" "$verifier_path" "$staged_verifier" <<'PY'
+          from pathlib import Path
+          import subprocess
+          import sys
+          path, original, alternate = sys.argv[1:]
+          data = subprocess.check_output(['git', 'show', 'HEAD:packaging/localization/verify_windows.ps1'])
+          assert data.count(original.encode()) == 1
+          with open(path, 'xb') as f:
+              f.write(data.replace(original.encode(), alternate.encode()))
+          PY
+          printf 'product=%s\nproduct_tree=%s\nverifier_commit=%s\nverifier_blob=%s\nlauncher=%s\n' \
+            "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$verifier_commit" "$hash" "${{ github.sha }}" | tee smoke-reports/identity.txt
+          git diff --exit-code
+      - name: Verify Windows portable executable and plugins without build paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          python -m pip install 'Pillow>=11,<12'
+          if ($LASTEXITCODE -ne 0) { throw "Screenshot helper install failed" }
+          $env:GITHUB_SHA = '3b5ccf535aa1550e506ee9a9438f618dc3134a85'
+          try {
+            & "$env:RUNNER_TEMP/pj4-verify-windows-ci.ps1" -Packages dist -Output smoke-reports -Format portable
+          } finally {
+            Remove-Item -LiteralPath 'packaging/localization/.verify_package_ci.py', "$env:RUNNER_TEMP/pj4-verify-windows-ci.ps1"
+          }
+      - name: Retain reports only; do not publish product archives
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zh4-smoke-reports-${{ runner.os }}
+          path: |
+            dist/SHA256SUMS-*.txt
+            build/ardupilot-import-first.xml
+            build/csv-runtime.xml
+            build/localized-plugins/completed.json
+            build/fork-prefix/share/plotjuggler4/release.json
+            smoke-reports/
+          if-no-files-found: warn
+          retention-days: 14
