@@ -88,11 +88,12 @@ class ArduPilotFileLoaderTest : public ::testing::Test {
       const auto metadata = reader.getMetadata(scalar->topic_id);
       ASSERT_TRUE(metadata.has_value());
       EXPECT_EQ(metadata->time_range_max, timestamp);
-      const auto latest =
-          reader.latestNumericAt({scalar->topic_id, std::numeric_limits<PJ::Timestamp>::max()}, scalar->column_index);
+      const auto series = reader.series(scalar->topic_id, scalar->column_index);
+      ASSERT_TRUE(series.has_value());
+      const auto latest = series->sampleAtOrBeforeTime(std::numeric_limits<PJ::Timestamp>::max());
       ASSERT_TRUE(latest.has_value());
-      ASSERT_TRUE(latest->has_value());
-      EXPECT_DOUBLE_EQ(**latest, value);
+      EXPECT_EQ(latest->timestamp, timestamp);
+      EXPECT_DOUBLE_EQ(latest->value, value);
       return;
     }
     FAIL() << "Missing catalog field " << topic.toStdString() << '/' << field.toStdString();

@@ -27,6 +27,8 @@ packages. Use this fork's release page, not upstream downloads.
 
 ![](docs/plotjuggler_banner.svg)
 
+[![Linux CI](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/linux-ci.yml/badge.svg?branch=main)](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/linux-ci.yml?query=branch%3Amain) [![Windows CI](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/windows-ci.yml/badge.svg?branch=main)](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/windows-ci.yml?query=branch%3Amain) [![macOS CI](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/macos-ci.yml/badge.svg?branch=main)](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/macos-ci.yml?query=branch%3Amain) [![WASM CI](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/wasm-ci.yml/badge.svg?branch=main)](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/wasm-ci.yml?query=branch%3Amain) [![Pixi CI](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/pixi-ci.yml/badge.svg?branch=main)](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/pixi-ci.yml?query=branch%3Amain)
+
 
 PlotJuggler 4 is an extensible, performant and open-source multi-modal visualization platform.
 
@@ -39,7 +41,7 @@ in a single application.
 
 ![Robot model, camera feeds, depth images and joint torque plots in a shared PJ4 workspace](docs/images/workspace.jpg)
 
-## Analyze signals interactively
+# From data to insight
 
 - **Drag and drop your data.** Drag signals into time-series and XY plots, zoom into events, and inspect individual samples.
 - **Validate changes across runs.** Load several recordings, align their timelines, and overlay signals to compare behavior.
@@ -47,7 +49,7 @@ in a single application.
 - **Add your own functions.** Create derived series with custom transforms in Lua and Python, alongside the built-in filters.
 - **Reuse your analysis.** Arrange plots in tabs and dockable panels, then save your layout and transforms for the next investigation.
 
-## Multimodal data, synchronized in time
+## Multimodal visualization
 
 Efficient data storage, GPU-accelerated rendering and on-demand media decoding
 help keep large recordings responsive as you explore.
@@ -76,7 +78,7 @@ help keep large recordings responsive as you explore.
   </tr>
 </table>
 
-## Work with the data you already have
+## Whatever your data is, we've got you covered
 
 Open supported formats directly and connect to your existing sensor and messaging
 systems. Install ready-to-use loaders, streamers and tools through

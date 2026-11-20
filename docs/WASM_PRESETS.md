@@ -42,10 +42,15 @@ The layout is what **File → Save Layout with sources** writes
   pinned recording is also kept by each visitor's browser, so a revisit loads
   it without the network (`docs/WASM_DEPLOYMENT.md`); an unpinned one downloads
   on every visit.
+- `<sideFile filename="…" content_sha256="…">` — a file the source's plugin read
+  besides its data (a dictionary picked in its dialog), written by a browser
+  save ([`WASM_DEPLOYMENT.md`](./WASM_DEPLOYMENT.md#browser-local-state)). A preset
+  downloads it from beside its data file (`filename` is relative to the data
+  file's URL) and checks its fingerprint like a data file's.
 - `<plugin ID="…" manifest_id="…" filepath_mode="source">` — every replay rewrites
   the plugin configuration's `filepath` to the file it loads (here, the downloaded
-  file), so the same layout also opens on the desktop next to its data. The marker
-  itself exists for older 4.x builds, which rewrite only when it is present.
+  file), so the same layout also opens on the desktop next to its data. Earlier
+  4.x releases rewrite only when the marker is present.
 - A robot whose URDF arrives on a topic resolves `package://` meshes through
   `<robot_model package_url_roots='{"pkg":"rel/dir/"}'>`, relative to the
   layout, or an absolute `https://` root on an asset host. Keep each package's
@@ -174,13 +179,15 @@ forwards `/bridge` on its own HTTPS origin, so `{"url":"${deployment.ws_origin}/
 works on every robot.
 
 In the browser build, **File → Save Layout with sources** writes one record per
-running stream (the desktop save writes none), with the template it started
+running stream, with the template it started
 from (an interactively started stream gets the configuration its dialog
 produced, under the id `stream`), its Source Timeline offset and slot, and
 `pj-stream://<id>` on everything drawn from it. The plain
 **Save Layout**, browser storage and undo/redo never contain stream records, and
-undo/redo never starts a stream. On the desktop, only a layout opened by URL
-starts its streams; a layout file opened from disk warns and ignores them.
+undo/redo never starts a stream. The desktop writes the same records when
+**Save Layout** keeps "Bind to this data source" checked, and starts them when it
+opens the file: see `pj_app/docs/ARCHITECTURE.md` "Streaming sources in a layout
+file".
 
 ## Packaging
 
@@ -260,7 +267,8 @@ built-in filters sample's raw and moving-average plots, its filter restored from
 the layout), check that seeking
 between two points inside the recording changes what the 3D view draws (a scene
 drawn once and then frozen fails), reopen ANYmal after switching sample while
-watching the page's longest frame gap, and make loads fail after staging
+bounding the page's longest main-thread task (Chromium; Firefox, which has no
+Long Tasks API, only logs its timings), and make loads fail after staging
 and after importing to check that the staged files are released and the open
 sample is left as it was. The suites never reach the network, so the samples get
 their hosted recordings and models from a local mirror of
@@ -283,15 +291,14 @@ The package is a static site with the response contract of
 `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy:
 require-corp`, `Cross-Origin-Resource-Policy: same-origin`, `nosniff`, the
 manifest's MIME types and cache classes, and ideally the precompressed `.br` /
-`.gz` representations chosen by `Accept-Encoding`. **No public host is selected**;
-account provisioning, DNS, credentials and publication are outside this feature. A robot
-serving the app beside its bridge uses the Caddy recipe in
-[`WASM_HOSTING.md`](./WASM_HOSTING.md).
+`.gz` representations chosen by `Accept-Encoding`. PlotJuggler's own deployment,
+`app.plotjuggler.io`, is a Cloudflare Worker serving the package from R2
+([`packaging/web/README.md`](../packaging/web/README.md)). A robot serving the app
+beside its bridge uses the Caddy recipe in [`WASM_HOSTING.md`](./WASM_HOSTING.md).
 
-### Cloudflare Pages (reference candidate)
+### Cloudflare Pages
 
-Cloudflare Pages is the reference candidate because it reads the generated
-`_headers`. Its published limits
+Cloudflare Pages reads the generated `_headers`. Its published limits
 ([Pages limits](https://developers.cloudflare.com/pages/platform/limits/),
 [headers](https://developers.cloudflare.com/pages/configuration/headers/); re-check
 them before publishing) are 25 MiB per file, 20,000 files per deployment on the

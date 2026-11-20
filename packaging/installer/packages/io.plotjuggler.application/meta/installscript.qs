@@ -8,8 +8,8 @@
 //   installation's undo history may still require additional rights; those
 //   administrator scenarios are not guaranteed by per-user registration.
 // - Creates Start Menu + Desktop shortcuts on Windows.
-// - Prompts before purging a previous installation in the same directory
-//   (the earlier PJ3-inherited flow ran maintenancetool purge silently).
+// - Prompts before running maintenancetool purge on a previous installation in the
+//   same directory.
 
 var targetDirectoryPage = null;
 var replacementAttempted = false;

@@ -97,8 +97,7 @@ Expected<DataProcessorService::FilterHandle> DataProcessorService::applyFilter(
         "its panel. Create that transform as a persistent one first.");
   }
 
-  // Shared so the host could later keep its own handle (preview/reconfigure);
-  // the engine owns the adapter, the adapter shares the processor.
+  // The engine owns the adapter; the adapter shares the processor.
   std::shared_ptr<proc::DataProcessor> shared = std::move(processor);
   auto node = derived_->addSisoTransform(
       input_topic_id, output_name, dataset_id, std::make_unique<proc::ProcessorSisoAdapter>(shared),
@@ -147,7 +146,7 @@ Expected<DataProcessorService::FilterHandle> DataProcessorService::applyFilter(
   recipe.output_name = output_name;
   recipe.processor = shared;
   // Capture the filter's defining module source from the LIVE processor so a saved
-  // layout embeds it as <source_fallback> (M7) and reopens on a machine without this
+  // layout embeds it as <source_fallback> and reopens on a machine without this
   // filter installed. Reading it off the processor (not re-deriving from the
   // catalogue) keeps it authoritative even for a filter restored from an embedded
   // source whose id is absent from this machine's catalogue — so re-saving keeps it.
@@ -596,12 +595,9 @@ std::unique_ptr<proc::DataProcessor> DataProcessorService::makeRestoredProcessor
   return nullptr;
 }
 
-// --- Plugin-created transforms (pj.data_processors.v1 host side) ---
-
 namespace {
-// Infer the backend from the payload's leading bytes / first-line directive
-// (data-only ABI: nothing executable crosses, so the host picks the backend from
-// the bytes). WASM/Python are recognized but diagnosed as unavailable in this build.
+// Infers the backend from the payload's leading bytes or first-line directive (data-only ABI: nothing executable
+// crosses, so the host picks the backend from the bytes): `-- pj-script: luau|lua|python`. A WASM magic is refused.
 Expected<std::string> inferTransformBackend(const std::string& script) {
   if (script.size() >= 4 && script.compare(0, 4, "\0asm", 4) == 0) {
     return PJ::unexpected("pj.data_processors: WASM backend is reserved for a future host build");
@@ -709,7 +705,8 @@ std::optional<DataProcessorService::ResolvedInput> DataProcessorService::resolve
   // Exact whole-topic name → the topic's first leaf column.
   bool topic_ambiguous = false;
   if (const auto topic = resolveInputTopic(name, only_dataset, &topic_ambiguous)) {
-    return ResolvedInput{topic->first, topic->second, 0};
+    const TopicStorage* storage = engine_.getTopicStorage(topic->first);
+    return ResolvedInput{topic->first, topic->second, storage != nullptr ? storage->firstLiveColumn() : 0};
   }
   if (topic_ambiguous) {
     if (ambiguous != nullptr) {
@@ -737,7 +734,13 @@ std::optional<DataProcessorService::ResolvedInput> DataProcessorService::resolve
         const std::string wanted = normalizedFieldPath(name.substr(tn.size() + 1));
         const std::vector<std::string> paths = inputFieldPaths(engine_, *storage);
         bool ambiguous_field = false;
-        const std::optional<std::size_t> column = uniqueColumnForFieldPath(paths, wanted, ambiguous_field);
+        std::optional<std::size_t> column = uniqueColumnForFieldPath(paths, wanted, ambiguous_field);
+        // A column a reload lost is not offered to a new binding by name, as a topic a reload lost is not; a live
+        // binding to it keeps it (resolveInputBinding).
+        if (column.has_value() && *column < storage->columnDescriptors().size() &&
+            storage->isColumnRetired(storage->columnDescriptors()[*column].field_id)) {
+          column.reset();
+        }
         if (!column.has_value()) {
           if (ambiguous_field && ambiguous != nullptr) {
             *ambiguous = true;
@@ -883,14 +886,11 @@ Status DataProcessorService::validateScript(
 
 namespace {
 
-// A grouped MIMO output is requested EXPLICITLY as a single structured `outputs`
-// entry "<topic>:<field1>,<field2>,...,<fieldN>": the host then materializes ONE
-// topic named <topic> with those N named columns (column k = the script's k-th
-// result), instead of N separate scalar topics. Returns {topic, [fields]} when the
-// single output entry has that shape (non-empty topic + >= 1 non-empty field);
-// otherwise {"", {}} and each output stays its own scalar topic. This keeps the
-// intent unambiguous (unlike inferring a shared prefix) and entirely host-side —
-// the plugin opts in by naming, e.g. outputs = {"rpy:roll,pitch,yaw"}.
+// A grouped MIMO output is requested EXPLICITLY as a single structured `outputs` entry "<topic>:<f1>,<f2>,...,<fN>":
+// the host then materializes ONE topic named <topic> with those N named columns (column k = the script's k-th result)
+// instead of N scalar topics. Returns {topic, [fields]} when the single output entry has that shape (non-empty topic
+// and >= 1 non-empty field), else {"", {}} and each output stays its own scalar topic. Explicit naming keeps the
+// intent unambiguous (unlike inferring a shared prefix); the plugin opts in, e.g. outputs = {"rpy:roll,pitch,yaw"}.
 std::pair<std::string, std::vector<std::string>> parseGroupedOutput(const std::vector<std::string>& outputs) {
   if (outputs.size() != 1) {
     return {"", {}};
@@ -934,9 +934,8 @@ std::vector<std::string> DataProcessorService::materializedTopicNames(const Tran
 
 Expected<DataProcessorService::TransformRecipe> DataProcessorService::installTransform(
     TransformRecipe recipe, bool time_sliced) {
-  // 1. Shape: N inputs -> M outputs (SISO is the 1->1 case). Field-level binding
-  //    (a column within a multi-column input) is still a follow-up: inputs resolve
-  //    to whole scalar topics here.
+  // 1. Shape: N inputs -> M outputs (SISO is the 1->1 case). Inputs resolve to whole
+  //    scalar topics: no binding to a column within a multi-column input.
   if (recipe.inputs.empty() || recipe.outputs.empty()) {
     return PJ::unexpected("pj.data_processors: transform requires at least one input and one output");
   }
@@ -1224,7 +1223,13 @@ void DataProcessorService::armMaterializationTimer() {
   }
   if (!materialize_timer_) {
     materialize_timer_ = std::make_unique<QTimer>();
+#ifdef PJ_TARGET_WASM
+    // Qt 6.12's WASM dispatcher rearms only for counted timer activations;
+    // zero-interval callbacks are delivered but excluded from that count.
+    materialize_timer_->setInterval(1);
+#else
     materialize_timer_->setInterval(0);
+#endif
     QObject::connect(materialize_timer_.get(), &QTimer::timeout, materialize_timer_.get(), [this]() {
       if (stepMaterialization()) {
         materialize_timer_->stop();
@@ -1599,7 +1604,8 @@ Status DataProcessorService::removeProcessorsDependingOn(const std::vector<Topic
   forEachDependentProcessor(
       affected, /*include_ephemeral_transforms=*/true,
       [&dependents, &dependent_outputs](TopicId output, const FilterRecipe& recipe) {
-        dependents.push_back(Dependent{.kind = Dependent::Kind::kFilter, .filter_node = recipe.node_id});
+        dependents.push_back(
+            Dependent{.kind = Dependent::Kind::kFilter, .filter_node = recipe.node_id, .transform_key = {}});
         dependent_outputs.push_back(output);
       },
       [&dependents, &dependent_outputs](const std::string& key, const TransformRecipe& recipe) {
@@ -1612,14 +1618,15 @@ Status DataProcessorService::removeProcessorsDependingOn(const std::vector<Topic
   // The visitor discovers parents before children (a processor is visited only
   // after one of its inputs joined the affected set), so reverse order removes
   // leaf-first — no dependent ever outlives one of its inputs' producers.
+  Status first_failure = PJ::okStatus();
   for (auto it = dependents.rbegin(); it != dependents.rend(); ++it) {
     Status removed = it->kind == Dependent::Kind::kFilter ? removeFilterOnly(it->filter_node)
                                                           : removeTransformOnly(it->transform_key);
-    if (!removed.has_value()) {
-      return removed;
+    if (!removed.has_value() && first_failure.has_value()) {
+      first_failure = std::move(removed);
     }
   }
-  return PJ::okStatus();
+  return first_failure;
 }
 
 void DataProcessorService::removeEphemerals(const std::unordered_set<std::string>& keys) {

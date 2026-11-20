@@ -22,6 +22,7 @@
 #include "PreferencesDialog.h"
 #include "Theme.h"
 #include "TitleBar.h"
+#include "pj_widgets/ToggleSwitch.h"
 #include "support/gui_test_env.h"
 #include "support/isolated_main_window.h"
 
@@ -247,10 +248,15 @@ TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReacha
     EXPECT_EQ(running.catalogLoaded(), requested != u"en_US"_s);
     PJ::Theme theme;
     PJ::PreferencesDialog dialog(theme);
+    // The upstream width floor follows the widest page's controls. Exercise
+    // the actual minimum while retaining the 300 px scrolling-height contract.
+    const QSize minimum = dialog.minimumSize();
+    ASSERT_GE(minimum.width(), 420);
+    ASSERT_EQ(minimum.height(), 300);
     dialog.resize(420, 300);
     dialog.show();
     QTest::qWait(20);
-    ASSERT_EQ(dialog.size(), QSize(420, 300));
+    ASSERT_EQ(dialog.size(), minimum);
     auto* pages = dialog.findChild<QStackedWidget*>(u"pagesStack"_s);
     auto* scroll = dialog.findChild<QScrollArea*>(u"appearanceScrollArea"_s);
     auto* label = dialog.findChild<QLabel*>(u"labelLanguage"_s);
@@ -283,9 +289,9 @@ TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReacha
       EXPECT_TRUE(control->isVisible());
       const QRect visible_rect(control->mapTo(scroll->viewport(), QPoint(0, 0)), control->size());
       EXPECT_TRUE(scroll->viewport()->rect().contains(visible_rect))
-          << control->objectName().toStdString() << " rect=" << visible_rect.x() << "," << visible_rect.y()
-          << "," << visible_rect.width() << "x" << visible_rect.height() << " viewport="
-          << scroll->viewport()->width() << "x" << scroll->viewport()->height();
+          << control->objectName().toStdString() << " rect=" << visible_rect.x() << "," << visible_rect.y() << ","
+          << visible_rect.width() << "x" << visible_rect.height() << " viewport=" << scroll->viewport()->width() << "x"
+          << scroll->viewport()->height();
     }
     dialog.reject();
   }
@@ -315,3 +321,41 @@ class LanguageSettingsEnvironment : public ::testing::Environment {
 static auto* const kLanguageEnv = ::testing::AddGlobalTestEnvironment(new LanguageSettingsEnvironment);
 
 }  // namespace
+
+TEST(PreferencesLanguageTest, TelemetryDefaultsOffAndCancelDoesNotConsent) {
+  QSettings settings;
+  settings.remove(u"Preferences::send_anonymous_stats"_s);
+  settings.remove(PJ::MainWindow::kUsageStatsKey);
+  PJ::Theme theme;
+  PJ::PreferencesDialog dialog(theme);
+  auto* ping = dialog.findChild<PJ::ToggleSwitch*>(u"telemetryToggle"_s);
+  auto* usage = dialog.findChild<PJ::ToggleSwitch*>(u"usageStatsToggle"_s);
+  ASSERT_NE(ping, nullptr);
+  ASSERT_NE(usage, nullptr);
+  EXPECT_FALSE(ping->isChecked());
+  EXPECT_FALSE(usage->isChecked());
+  ping->setChecked(true, false);
+  usage->setChecked(true, false);
+  dialog.reject();
+  EXPECT_FALSE(settings.value(u"Preferences::send_anonymous_stats"_s, false).toBool());
+  EXPECT_FALSE(settings.value(PJ::MainWindow::kUsageStatsKey, false).toBool());
+}
+
+TEST(PreferencesLanguageTest, TelemetryConsentPersistsOnlyAfterAcceptAndCanBeRevoked) {
+  PJ::Theme theme;
+  for (const bool consent : {true, false}) {
+    PJ::PreferencesDialog dialog(theme);
+    auto* ping = dialog.findChild<PJ::ToggleSwitch*>(u"telemetryToggle"_s);
+    auto* usage = dialog.findChild<PJ::ToggleSwitch*>(u"usageStatsToggle"_s);
+    ASSERT_NE(ping, nullptr);
+    ASSERT_NE(usage, nullptr);
+    ping->setChecked(consent, false);
+    usage->setChecked(consent, false);
+    dialog.accept();
+    EXPECT_EQ(QSettings().value(u"Preferences::send_anonymous_stats"_s).toBool(), consent);
+    EXPECT_EQ(QSettings().value(PJ::MainWindow::kUsageStatsKey).toBool(), consent);
+    PJ::PreferencesDialog reopened(theme);
+    EXPECT_EQ(reopened.findChild<PJ::ToggleSwitch*>(u"telemetryToggle"_s)->isChecked(), consent);
+    EXPECT_EQ(reopened.findChild<PJ::ToggleSwitch*>(u"usageStatsToggle"_s)->isChecked(), consent);
+  }
+}

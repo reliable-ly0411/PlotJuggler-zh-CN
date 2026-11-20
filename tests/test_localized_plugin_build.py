@@ -128,7 +128,7 @@ class LocalizedPluginBuildTest(unittest.TestCase):
         """Exercise the real builder up to dispatch, without fetching or compiling sources."""
         lock = json.loads((PATCHES / 'source-lock.json').read_text(encoding='utf-8'))
         item = next(entry for entry in lock['plugins'] if entry['id'] == 'csv-loader')
-        expected = {'csv_parser_test', 'csv_file_paths_test', 'LocalizedDisplay_zh_CN',
+        expected = {'csv_parser_test', 'csv_file_paths_test', 'csv_source_test', 'LocalizedDisplay_zh_CN',
                     'LocalizedDisplay_zh_TW', 'LocalizedDisplay_en_US',
                     'LocalizedDisplay_unknown', 'LocalizedDisplay_empty'}
         expected |= {'CsvRuntimeLanguage_' + name for name in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']}
@@ -139,6 +139,7 @@ class LocalizedPluginBuildTest(unittest.TestCase):
         cases = [('complete', expected, TestsDispatched),
                  ('missing-traditional', expected - {'LocalizedDisplay_zh_TW'}, AssertionError),
                  ('missing-paths', expected - {'csv_file_paths_test'}, AssertionError),
+                 ('missing-empty-import', expected - {'csv_source_test'}, AssertionError),
                  ('missing-runtime', expected - {'CsvRuntimeLanguage_zh_TW'}, AssertionError),
                  ('unexpected', expected | {'LocalizedDisplay_unexpected'}, AssertionError)]
         for name, selected, outcome in cases:
@@ -158,7 +159,7 @@ class LocalizedPluginBuildTest(unittest.TestCase):
                 def listing(args, **kwargs):
                     self.assertEqual(args[0], 'ctest')
                     self.assertIn('--show-only=json-v1', args)
-                    self.assertEqual(args[-2:], ['-R', '^(LocalizedDisplay_.*|CsvRuntimeLanguage_.*|csv_(parser|file_paths)_test)$'])
+                    self.assertEqual(args[-2:], ['-R', '^(LocalizedDisplay_.*|CsvRuntimeLanguage_.*|csv_(parser|file_paths|source)_test)$'])
                     generated = (source / 'CMakeLists.txt').read_text(encoding='utf-8')
                     for language in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']:
                         self.assertIn('add_test(NAME LocalizedDisplay_' + language + ' ', generated)
@@ -167,7 +168,7 @@ class LocalizedPluginBuildTest(unittest.TestCase):
                 def run(args, **kwargs):
                     if args[0] == 'ctest':
                         self.assertIn('--no-tests=error', args)
-                        self.assertEqual(args[-2:], ['-R', '^(LocalizedDisplay_.*|CsvRuntimeLanguage_.*|csv_(parser|file_paths)_test)$'])
+                        self.assertEqual(args[-2:], ['-R', '^(LocalizedDisplay_.*|CsvRuntimeLanguage_.*|csv_(parser|file_paths|source)_test)$'])
                         raise TestsDispatched()
 
                 with mock.patch.object(builder, 'checkout', side_effect=checkout), \

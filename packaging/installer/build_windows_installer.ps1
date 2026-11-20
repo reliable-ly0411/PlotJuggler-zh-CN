@@ -27,13 +27,13 @@
   This does NOT build the app or any plugins. Run it AFTER a Windows build of
   the app, e.g.
     conan install . --output-folder=build --build=missing \
-        -s build_type=RelWithDebInfo -s compiler.cppstd=20 \
-        -o "cpython/*:shared=True" -s "cpython/*:build_type=Release"
-    cmake --preset ... && cmake --build build --config RelWithDebInfo
+        -s build_type=Release -s compiler.cppstd=20 \
+        -o "cpython/*:shared=True"
+    cmake --preset ... && cmake --build build --config Release
 
 .PARAMETER BuildDir
   The PJ4 build directory (default: build). Searched for plotjuggler4.exe /
-  pj_app.exe under RelWithDebInfo/ (preferred) then Release/.
+  pj_app.exe under Release/ (preferred) then RelWithDebInfo/.
 
 .PARAMETER QtDir
   Qt kit dir that owns windeployqt.exe, e.g. C:\Qt\6.12.0\msvc2022_64.
@@ -119,7 +119,11 @@ param(
     "dummy-streamer", "foxglove-bridge", "plotjuggler-bridge", "webrtc-client",
     "ros-parser", "protobuf-parser", "json-parser", "data-tamer-parser",
     "toolbox-quaternion", "toolbox-transform-editor", "toolbox-mosaico",
-    "arrow-parser"
+    "arrow-parser",
+    # Also in the browser build (cmake/PjWasmOfficialPlugins.cmake).
+    "toolbox-fft", "toolbox-anomaly-detector", "toolbox-data-exporter",
+    "influx-parser", "navmap-parser", "candump-loader", "blf-loader", "mf4-loader",
+    "log-widget"
   ),
   [string]$PluginPlatform = "windows-x86_64",
   [string]$ConanHome  = "$env:USERPROFILE\.conan2",
@@ -271,11 +275,10 @@ if ($RepoOutDir) {
 }
 
 # --- locate the built app --------------------------------------------------
-# Prefer RelWithDebInfo (CI default), then Release, then any config. The CMake
-# target 'pj_app' has OUTPUT_NAME plotjuggler4 on main, but older builds still
-# ship as pj_app.exe — accept either.
+# Prefer Release (CI default), then RelWithDebInfo, then any config. The CMake
+# target 'pj_app' has OUTPUT_NAME plotjuggler4; a pj_app.exe is accepted too.
 function Find-AppExe {
-  foreach ($cfg in @("RelWithDebInfo","Release","*")) {
+  foreach ($cfg in @("Release","RelWithDebInfo","*")) {
     foreach ($name in @("plotjuggler4.exe","pj_app.exe")) {
       $glob = if ($cfg -eq "*") { $name } else { "$cfg\$name" }
       $hit = Get-ChildItem -LiteralPath $BuildDir -Recurse -Filter $name -ErrorAction SilentlyContinue |
@@ -287,7 +290,7 @@ function Find-AppExe {
   return $null
 }
 $appExe = Find-AppExe
-if (-not $appExe) { Die "plotjuggler4.exe / pj_app.exe not found under '$BuildDir'. Build PJ4 first (cmake --build build --config RelWithDebInfo)." }
+if (-not $appExe) { Die "plotjuggler4.exe / pj_app.exe not found under '$BuildDir'. Build PJ4 first (cmake --build build --config Release)." }
 Info "app binary  : $($appExe.FullName)"
 
 # --- stage the data payload ------------------------------------------------
@@ -329,6 +332,15 @@ function Read-PluginRegistry([string]$source) {
   }
 }
 
+function Convert-Semver([string]$value, [string]$label) {
+  $numeric = ($value -split '[-+]', 2)[0]
+  try {
+    return [System.Version]::Parse($numeric)
+  } catch {
+    Die "$label is not a numeric semantic version: '$value'"
+  }
+}
+
 function Download-RegistryPlugins {
   Info "fetching plugin registry: $PluginRegistryUrl"
   $registry = Read-PluginRegistry $PluginRegistryUrl
@@ -347,17 +359,21 @@ function Download-RegistryPlugins {
     if ($seen.ContainsKey($id)) { Die "duplicate plugin registry id '$id'" }
     $seen[$id] = $true
 
-    $registryMatches = @($registry.extensions | Where-Object { $_.id -eq $id })
-    if ($registryMatches.Count -ne 1) {
-      Die "plugin registry must contain exactly one '$id' entry (found $($registryMatches.Count))"
-    }
-    $extension = $registryMatches[0]
-    $extensionVersion = [string]$extension.version
-    if (-not $extensionVersion) { Die "plugin '$id' has an empty registry version" }
-    $platformProperty = $extension.platforms.PSObject.Properties[$PluginPlatform]
-    if (-not $platformProperty) {
+    # The registry keeps older releases of an id for older hosts: take the newest that ships our platform.
+    $registryMatches = @($registry.extensions | Where-Object {
+        $_.id -eq $id -and $_.platforms -and $_.platforms.PSObject.Properties[$PluginPlatform]
+      })
+    if ($registryMatches.Count -eq 0) {
       Die "plugin '$id' has no '$PluginPlatform' artifact in the registry"
     }
+    foreach ($match in $registryMatches) {
+      if (-not [string]$match.version) { Die "plugin '$id' has an empty registry version" }
+    }
+    $extension = $registryMatches |
+      Sort-Object { Convert-Semver ([string]$_.version) "plugin '$id' registry version" } -Descending |
+      Select-Object -First 1
+    $extensionVersion = [string]$extension.version
+    $platformProperty = $extension.platforms.PSObject.Properties[$PluginPlatform]
     $artifact = $platformProperty.Value
     $url = [string]$artifact.url
     $checksum = [string]$artifact.checksum
@@ -603,8 +619,8 @@ Render-Template $packageXmlSrc (Join-Path $stageMeta "package.xml")
 
 # --- remote updates (optional) ---------------------------------------------
 # Injected here rather than templated into config.xml so that a build without
-# -UpdateUrl stays byte-identical to one from before this existed: an empty
-# <Url/> would leave every maintenance tool polling nothing on each launch.
+# -UpdateUrl carries no <RemoteRepositories>: an empty <Url/> would leave every
+# maintenance tool polling nothing on each launch.
 if ($UpdateUrl) {
   $cfgPath = Join-Path $StageDir "config.xml"
   $closing = "</Installer>"

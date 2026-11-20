@@ -1,21 +1,39 @@
 # pj_marketplace
 
-## Purpose
+Extension marketplace for PlotJuggler 4: registry fetching, package download, the installed-extension lifecycle
+(install, sideload, update, uninstall, enable/disable) and the marketplace UI. Targets: `pj_marketplace` (core),
+`pj_marketplace_ui` (`MarketplaceWindow`), the Qt-free `pj-plugin-check` admission helper and the standalone
+`pj_marketplace_app` harness. Embedded-manifest discovery comes from the SDK (`plotjuggler_sdk::plugin_host`). The app
+consumes it through `pj_runtime`'s `ExtensionCatalogService`, which also seeds the bundled (core) plugins. How it works:
+[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
-Extension marketplace for PlotJuggler 4 — registry fetching, package download,
-and installed-extension lifecycle management, plus the marketplace UI. Two
-library targets (`pj_marketplace` core, `pj_marketplace_ui`), the Qt-free
-`pj-plugin-check` admission helper, and a standalone `pj_marketplace_app` harness.
-Embedded-manifest discovery comes from the SDK (`plotjuggler_sdk::plugin_host`).
+## Invariants
 
-**Core (bundled) extensions**: plugins shipped with the app are seeded into the
-extensions dir by the host (`pj_runtime`'s `ExtensionCatalogService` — the
-bundled dir is a seed source, never a load path); the marketplace receives the
-bundled id → version map (`setBundledVersions`), locks their uninstall in
-default sessions, and offers downgrade-to-bundled. See
-`docs/ARCHITECTURE.md` §4.4 and `docs/REQUIREMENTS.md` §4.4.
+- Updates, uninstalls and downgrades are staged to the next launch on every platform; a loaded DSO is never replaced or
+  deleted in place. dlopen resolves by path name and glibc keeps the first image of a path, so reusing a name inside a
+  process serves stale bytes (docs/TECHNICAL_NOTES.md "dlopen pins the first image").
+- Never open an extension or staging directory in-process before the startup drain that may replace it, and admit fresh
+  bytes through `PluginCheckRunner`, or the process pins the old image and reports old versions.
+- One writer per store across processes: every store mutation checks `hasStoreWriteAccess()`; staging siblings (install
+  transactions, removal journal, lease, content-addressed store) derive from `PlatformUtils::canonicalStoreRoot()` and
+  sit beside the extensions dir, never inside it, or the plugin scan finds scratch and two aliases of one store take two
+  leases.
+- A removal-journal record authorises a recursive delete: validate it fully, confine it to a direct child of the
+  canonical store root, and never let the drain enable an id (the uninstall tombstone stays), or a corrupt record can
+  delete outside the store or make a removed plugin loadable.
+- The disabled list is persisted and its sync checked before a removal is journalled, on one `QSettings` instance
+  (`writeDisabledState`), or a failed deletion lets the removed plugin load again.
+- The registry pruning rule in `pj-plugin-registry` depends on admission being monotonic in `min_sdk_required` (no upper
+  bound, no ABI check on registry records, platform filter first): change admission rules there first, or released hosts
+  lose releases they could load (ARCHITECTURE, "Registry and compatibility").
+- `min_plotjuggler_version` is displayed and never gates; the gate is the ABI major plus `min_sdk_required`, evaluated by
+  the one `evaluatePluginCompatibility`.
+- Paths in messages, logs and JSON go through `utf8_path.hpp`, never `path::string()` or `path(qstring.toStdString())`
+  (the Windows code page throws or mangles).
+- Build it only as part of the PJ4 tree: `pj_marketplace_ui` links `pj_widgets`, which a standalone configure of this
+  directory does not provide.
 
-## Layout
+## Key headers (`include/pj_marketplace/`)
 
 `PlatformUtils::initializeProfile` is the native host's opt-in startup seam for
 an absolute dedicated test root. It validates/probes paths before installing
@@ -36,7 +54,7 @@ a filesystem sandbox for arbitrary plugin code or the IFW installer.
   (`.ui`-driven); `tests/` — manager and store suites share
   the `pj_marketplace_tests` gtest runner and its offscreen-capable `QApplication` main.
 
-Consumed by the app through `pj_runtime`'s `ExtensionCatalogService`.
+## Tests
 
 `gtest_discover_tests` registers each runner case as
 `pj_marketplace_tests.<suite>.<case>` and runs it in its own process.
@@ -54,7 +72,7 @@ else lets the loader find `libQt6Widgets`, and a failed load there reads as a re
 `extension_manager_check_plugin_management` remains
 a standalone, network-dependent harness excluded from CTest.
 
-## Read deeper
+## Docs
 
 | For | Read |
 |---|---|
@@ -71,7 +89,7 @@ their Qt boundary before interpolating paths and IDs. The Qt-free archive policy
 keeps its original diagnostics; DownloadManager translates only recognized
 complete templates. Unknown plugin, system and library details remain verbatim.
 
-All 30 entries in the pinned official registry have display-only name and description
+All 34 entries in the pinned official registry have display-only name and description
 translations, including uninstalled plugins. The exact ID and English source text
 select the translation independently of version; unknown/changed metadata falls
 back unchanged. `marketplace_text.hpp` uses the same display mapping in

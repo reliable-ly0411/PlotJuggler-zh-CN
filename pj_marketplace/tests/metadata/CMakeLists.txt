@@ -41,6 +41,7 @@ target_link_libraries(plugin_display_metadata_test PRIVATE
   pj_marketplace_ui pj_app_language pj_resources Qt6::Test nlohmann_json::nlohmann_json)
 target_include_directories(plugin_display_metadata_test PRIVATE ../../src)
 target_compile_definitions(plugin_display_metadata_test PRIVATE
+  PJ_UPSTREAM_BASELINE_PATH="${CMAKE_CURRENT_LIST_DIR}/../../../docs/localization/upstream-baseline.json"
   PJ_METADATA_FIXTURE="$<TARGET_FILE:metadata_fixture>"
   PJ_PLUGIN_CHECK_HELPER_PATH="$<TARGET_FILE:pj-plugin-check>")
 target_compile_options(plugin_display_metadata_test PRIVATE ${PJ_WARNING_FLAGS})

@@ -134,3 +134,10 @@ Independent SDK v0.1.0 redistribution license evidence has not been established;
 this is not a conclusion that redistribution is prohibited. The proposed source
 patch is deferred until evidence or a typed safe localization interface exists.
 Track [issue #20](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/20).
+
+The product-sync candidate additionally backports upstream CSV #397 without
+changing the independent SDK 0.34.1 pin. The combined CSV patch rejects an
+all-invalid import before prompting or committing empty data; its strict native
+preflight requires the two real-DSO source regressions. See
+[the exact validation report](../../../docs/localization/SDK101-CANDIDATE-VALIDATION-20261117.md).
+The WASM-source CSV/Log fixes remain separately hashed in `compatibility-candidates/`.

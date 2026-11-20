@@ -46,6 +46,9 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - name: Linux capture test dependencies before preflight
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb xdotool x11-utils imagemagick
       - name: Lightweight release preflight before dependencies
         env:
           PYTHONUTF8: '0'
@@ -266,6 +269,20 @@ jobs:
             -DPJ_PLUGIN_FEEDBACK_ACCEPTANCE=ON \
             -DPJ_INSTALLATION=${{ matrix.installation }} \
             -DCMAKE_POLICY_DEFAULT_CMP0141=NEW -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+          cmake --build build --config RelWithDebInfo --target ardupilot_import_test --parallel 2
+          export PATH="$PWD/.qt/$PJ_QT_VERSION/${{ matrix.qt_arch }}/bin:$PATH"
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            for list in build/pj_ffmpeg_bin_dirs.txt build/pj_python_bin_dirs.txt; do
+              if [[ -f "$list" ]]; then
+                while IFS= read -r dir; do
+                  [[ -z "$dir" ]] || export PATH="$(cygpath -u "$dir"):$PATH"
+                done < "$list"
+              fi
+            done
+          fi
+          QT_QPA_PLATFORM=offscreen ctest --test-dir build --build-config RelWithDebInfo \
+            --output-on-failure --no-tests=error --test-output-size-passed 262144 -R '^ArduPilotFileLoaderTest$' \
+            --output-junit "$PWD/build/ardupilot-import-first.xml"
           cmake --build build --config RelWithDebInfo --parallel 2
       - name: Prepare verified native feedback inputs
         run: python -X utf8 packaging/localization/prepare_feedback_tests.py --build build --config RelWithDebInfo --output build/feedback-plugins
@@ -340,7 +357,7 @@ jobs:
           [[ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]] || { cat build/wayland-compositor.log; exit 1; }
           env -u DISPLAY QT_QPA_PLATFORM=wayland ctest --test-dir build -R "$suite" \
             --no-tests=error --output-on-failure --timeout 120 --output-junit "$PWD/build/rhi-window-wayland.xml"
-      - name: Validate release identity
+      - name: Validate candidate package identity
         run: |
           python tests/check_localization_provenance.py
           python tests/test_release_versions.py -v
@@ -349,12 +366,12 @@ jobs:
           python tests/test_localized_plugin_build.py -v
           python tests/test_package_acceptance.py -v
           if [[ "$RUNNER_OS" == Linux ]]; then python tests/test_deb_dependencies.py -v; fi
-          python packaging/localization/version_map.py "$PJ_VERSION"
+          python packaging/localization/version_map.py "$PJ_VERSION" --development-candidate
       - name: Stage pinned BIN, licenses and CJK fallback
         run: |
           args=()
           if [[ "$RUNNER_OS" == Linux ]]; then args+=(--linux-tools); fi
-          python packaging/localization/prepare_payload.py --prefix build/fork-prefix "${args[@]}"
+          python packaging/localization/prepare_payload.py --development-candidate --prefix build/fork-prefix "${args[@]}"
       - name: Rebuild pinned display-localized official plugins
         id: localized-plugins
         shell: pwsh
@@ -401,14 +418,17 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $packageVersion = python packaging/localization/version_map.py $env:PJ_VERSION --format ifw
+          $packageVersion = python packaging/localization/version_map.py $env:PJ_VERSION --development-candidate --format ifw
+          if ($LASTEXITCODE -ne 0) { throw "Candidate version mapping failed" }
           ./packaging/installer/build_windows_installer.ps1 `
             -QtDir ".qt/$env:PJ_QT_VERSION/msvc2022_64" `
             -Version $env:PJ_VERSION -PackageVersion $packageVersion `
             -ExtraPrefix build/fork-prefix -NameSuffix '-zh-CN' -CleanReleaseName -OutDir dist -StageDir build/windows-stage `
             -PluginRegistryUrl "packaging/localization/registry-lock.json"
+          if ($LASTEXITCODE -ne 0) { throw "Windows installer staging or packaging failed" }
           ./packaging/installer/build_windows_portable.ps1 -StageDir build/windows-stage `
             -OutFile "dist/PlotJuggler-$env:PJ_VERSION-Windows-x64-portable-zh-CN.zip"
+          if ($LASTEXITCODE -ne 0) { throw "Windows portable packaging failed" }
       - name: Record original package hashes
         run: |
           python packaging/localization/hash_packages.py dist --output "SHA256SUMS-${RUNNER_OS}.txt"
@@ -428,6 +448,12 @@ jobs:
           name: zh4-candidate-reports-${{ runner.os }}
           path: |
             build/Testing/Temporary/
+            build/ardupilot-import-first.xml
+            build/ardupilot-dataflash/ardupilot_source_plugin.pjmanifest.json
+            build/ardupilot-package-path-*.txt
+            docs/localization/upstream-baseline.json
+            cmake/host-sdk-source.json
+            3rdparty/plotjuggler-apbin-plugins/sdk4/manifest.json
             build/native-tests.xml
             build/native-headless.xml
             build/native-qrhi.xml
@@ -551,7 +577,7 @@ jobs:
           pattern: zh4-final-*
           path: reports
       - name: Bind exact original packages to all clean acceptance reports
-        run: python3 packaging/localization/create_release_manifest.py
+        run: python3 packaging/localization/create_release_manifest.py --development-candidate
       - uses: actions/upload-artifact@v4
         with:
           name: zh4-release-manifest

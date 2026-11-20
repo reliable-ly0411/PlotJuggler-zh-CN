@@ -149,10 +149,10 @@ def build_one(item, lock, work, prefix, platform):
         expected |= {'LocalizedDisplay_' + name for name in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']}
         assert selected == expected, (selected, expected)
     if identifier == 'csv-loader':
-        test_selection = ['-R', '^(LocalizedDisplay_.*|CsvRuntimeLanguage_.*|csv_(parser|file_paths)_test)$']
+        test_selection = ['-R', '^(LocalizedDisplay_.*|CsvRuntimeLanguage_.*|csv_(parser|file_paths|source)_test)$']
         listing = subprocess.check_output(['ctest', '--test-dir', build / 'native', '--show-only=json-v1', *test_selection], env=env, text=True, encoding='utf-8')
         selected = {test['name'] for test in json.loads(listing)['tests']}
-        expected = {'csv_parser_test', 'csv_file_paths_test'}
+        expected = {'csv_parser_test', 'csv_file_paths_test', 'csv_source_test'}
         expected |= {'CsvRuntimeLanguage_' + name for name in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']}
         expected |= {'LocalizedDisplay_' + name for name in ['zh_CN', 'zh_TW', 'en_US', 'unknown', 'empty']}
         assert selected == expected, (selected, expected)

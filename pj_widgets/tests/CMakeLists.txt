@@ -45,14 +45,16 @@ pj_add_test_runner(pj_widgets_tests
         # the stylesheets are readable as `:/resources/...` at runtime.
         framework_tokens_test.cpp
         scrollbar_test.cpp
+        app_settings_test.cpp
         search_test.cpp
         section_header_band_test.cpp
         header_divider_highlight_test.cpp
         header_resize_policy_test.cpp
         visualization_placeholder_test.cpp
-    # The layout margins/spacing + button wrap budget now resolve from the framework
-    # palette (pj_widgets FrameworkTokens), so the stylesheet resource must be linked.
-    LIBS pj_widgets pj_resources Qt6::Test Qt6::GuiPrivate
+    # Layout margins, spacing and the button wrap budget resolve from the framework palette (FrameworkTokens), so the
+    # stylesheet resource is linked. app_settings_test reaches the plugin settings service (pj_runtime QSettingsBackend):
+    # the library itself links no other PJ module.
+    LIBS pj_widgets pj_resources pj_runtime Qt6::Test Qt6::GuiPrivate
 )
 set_target_properties(pj_widgets_tests PROPERTIES AUTOMOC ON)
 if(WIN32)

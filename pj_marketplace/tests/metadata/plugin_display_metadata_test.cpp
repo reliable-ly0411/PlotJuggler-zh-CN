@@ -103,9 +103,10 @@ void PluginDisplayMetadataTest::installedMetadata() {
   QVERIFY(temp.isValid());
   const auto plugin_dir = temp.path() + u"/extensions/metadata-fixture"_s;
   QVERIFY(QDir().mkpath(plugin_dir));
-  QVERIFY(QFile::copy(
-      QString::fromUtf8(PJ_METADATA_FIXTURE),
-      plugin_dir + "/" + QFileInfo(QString::fromUtf8(PJ_METADATA_FIXTURE)).fileName()));
+  QVERIFY(
+      QFile::copy(
+          QString::fromUtf8(PJ_METADATA_FIXTURE),
+          plugin_dir + "/" + QFileInfo(QString::fromUtf8(PJ_METADATA_FIXTURE)).fileName()));
   QFile sidecar(plugin_dir + u"/manifest.json"_s);
   QVERIFY(sidecar.open(QIODevice::WriteOnly));
   sidecar.write(
@@ -127,16 +128,17 @@ void PluginDisplayMetadataTest::installedMetadata() {
 
   QJsonArray entries;
   if (registry_entry) {
-    entries.append(QJsonObject{
-        {"id", "metadata-fixture"},
-        {"name", "Registry fixture"},
-        {"version", "1.2.3"},
-        {"category", "toolbox"},
-        {"author", "Registry author"},
-        {"platforms",
-         QJsonObject{
-             {PJ::PlatformUtils::currentPlatform(),
-              QJsonObject{{"url", "https://example.org/unrequested.zip"}, {"checksum", "sha256:unused"}}}}}});
+    entries.append(
+        QJsonObject{
+            {"id", "metadata-fixture"},
+            {"name", "Registry fixture"},
+            {"version", "1.2.3"},
+            {"category", "toolbox"},
+            {"author", "Registry author"},
+            {"platforms",
+             QJsonObject{
+                 {PJ::PlatformUtils::currentPlatform(),
+                  QJsonObject{{"url", "https://example.org/unrequested.zip"}, {"checksum", "sha256:unused"}}}}}});
   }
   QFile registry(temp.path() + u"/registry.json"_s);
   QVERIFY(registry.open(QIODevice::WriteOnly));
@@ -243,19 +245,20 @@ void PluginDisplayMetadataTest::websiteFallback() {
   installed.repository = local_repository;
   QJsonArray entries;
   if (registry_entry) {
-    entries.append(QJsonObject{
-        {"id", installed.id},
-        {"name", "Registry fallback fixture"},
-        {"version", installed.version},
-        {"category", installed.category},
-        {"author", "Registry <author> & contributors"},
-        {"license", "Apache-2.0"},
-        {"website", registry_website},
-        {"repository", registry_repository},
-        {"platforms",
-         QJsonObject{
-             {PJ::PlatformUtils::currentPlatform(),
-              QJsonObject{{"url", "https://example.org/unrequested.zip"}, {"checksum", "sha256:unused"}}}}}});
+    entries.append(
+        QJsonObject{
+            {"id", installed.id},
+            {"name", "Registry fallback fixture"},
+            {"version", installed.version},
+            {"category", installed.category},
+            {"author", "Registry <author> & contributors"},
+            {"license", "Apache-2.0"},
+            {"website", registry_website},
+            {"repository", registry_repository},
+            {"platforms",
+             QJsonObject{
+                 {PJ::PlatformUtils::currentPlatform(),
+                  QJsonObject{{"url", "https://example.org/unrequested.zip"}, {"checksum", "sha256:unused"}}}}}});
   }
   QFile registry(temp.path() + u"/registry.json"_s);
   QVERIFY(registry.open(QIODevice::WriteOnly));
@@ -287,6 +290,14 @@ void PluginDisplayMetadataTest::installedApbin() {
   if (source.isEmpty()) {
     QSKIP("Set PJ_APBIN_TEST_DIR to test an existing APBIN package copy");
   }
+  QFile baseline(QString::fromUtf8(PJ_UPSTREAM_BASELINE_PATH));
+  QVERIFY(baseline.open(QIODevice::ReadOnly));
+  QJsonParseError parse_error;
+  const auto document = QJsonDocument::fromJson(baseline.readAll(), &parse_error);
+  QCOMPARE(parse_error.error, QJsonParseError::NoError);
+  const auto plugin = document.object().value(u"ardupilot_plugin"_s).toObject();
+  const QString expected_version = plugin.value(u"version"_s).toString();
+  QVERIFY(!expected_version.isEmpty());
   for (const auto& language : {u"zh_CN"_s, u"zh_TW"_s, u"en_US"_s}) {
     PJ::AppLanguage translator(*qApp, language);
     QTemporaryDir temp;
@@ -306,7 +317,7 @@ void PluginDisplayMetadataTest::installedApbin() {
     QCOMPARE(admitted.plugins.size(), 1);
     const auto& record = admitted.plugins.front();
     QCOMPARE(record.id, u"ardupilot-dataflash"_s);
-    QCOMPARE(record.version, u"1.2.0-pj4.rc.1"_s);
+    QCOMPARE(record.version, expected_version);
     QVERIFY(!record.author.isEmpty());
     QCOMPARE(record.license, u"LGPL-3.0-only"_s);
     QCOMPARE(record.repository, u"https://github.com/reliable-ly0411/plotjuggler-apbin-plugins"_s);

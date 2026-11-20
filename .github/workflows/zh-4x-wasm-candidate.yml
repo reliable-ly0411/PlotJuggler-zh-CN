@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: MPL-2.0
+# Two complete source builds, never a subtraction from one localized binary.
+name: Chinese 4.x WASM candidate
+on:
+  push:
+    branches: ['zh-CN-4.x-feat/upstream-main-audit-20261117']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: zh4-wasm-candidate-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  identity:
+    runs-on: ubuntu-22.04
+    outputs:
+      upstream_sha: ${{ steps.identity.outputs.upstream_sha }}
+      candidate_sha: ${{ steps.identity.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: identity
+        run: |
+          python3 - <<'PY_IDENTITY'
+          import json, os, re, subprocess
+          baseline = json.load(open('docs/localization/upstream-baseline.json', encoding='utf-8'))
+          assert baseline['upstream_repository'] == 'https://github.com/PlotJuggler/PlotJuggler'
+          upstream = baseline['upstream_commit']
+          assert re.fullmatch('[0-9a-f]{40}', upstream)
+          subprocess.run(['git', 'merge-base', '--is-ancestor', upstream, 'HEAD'], check=True)
+          head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert head == os.environ['GITHUB_SHA']
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write(f'upstream_sha={upstream}\ncandidate_sha={head}\n')
+          PY_IDENTITY
+  upstream:
+    needs: identity
+    uses: ./.github/workflows/zh-4x-wasm-lane.yml
+    with:
+      role: upstream
+      source_repository: PlotJuggler/PlotJuggler
+      source_sha: ${{ needs.identity.outputs.upstream_sha }}
+      acceptance_symbol_map: true
+  localized:
+    needs: identity
+    uses: ./.github/workflows/zh-4x-wasm-lane.yml
+    with:
+      role: localized
+      source_repository: ${{ github.repository }}
+      source_sha: ${{ needs.identity.outputs.candidate_sha }}
+      acceptance_symbol_map: true

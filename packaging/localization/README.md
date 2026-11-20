@@ -334,7 +334,7 @@ the packaged provenance/license directories.
 `windows-portable-clean` is a separate Windows 2022 runner, with no native build
 or IFW installation. `verify_windows.ps1 -Format portable` extracts the downloaded
 original ZIP into a fresh unique directory and runs its PE/embedded-version,
-19-plugin, Python, three-language CSV/BIN and captured GUI acceptance. Runtime
+exact curated-plugin inventory, Python, three-language CSV/BIN and captured GUI acceptance. Runtime
 search paths exclude build Qt/Conan and test fonts. Both Windows assets must have
 unique complete checksum entries matching their actual names and bytes before
 and after acceptance; the tested format's integrity record binds those hashes
@@ -365,3 +365,34 @@ Candidate gates include the real CSV ABI/runtime regressions and the
 post-staging FileLoader gate. A new candidate needs all original package checks
 and visual acceptance again; previous candidate evidence does not transfer.
 See [the fixed source patch contract](plugin-patches/README.md#csv-utf-8-paths-and-runtime-display).
+
+## Native registry supplementation (2026-11-18)
+
+The upstream native bundle now selects 27 common plugins, plus two Linux-only
+plugins. The payload's expected inventory includes those same IDs and the
+separately pinned ArduPilot plugin (28 on Windows, 30 on Linux). No original
+bundle entry is dropped. `registry-provenance.json` attributes every locked
+entry to an immutable registry snapshot and its canonical entry SHA-256.
+The original 30 entries from `2696403e106c6960541b8da19987ece35a24597e`
+remain unchanged. Only `candump-loader` 0.1.1, `influx-parser` 0.1.0,
+`navmap-parser` 0.1.0 and `log-widget` 1.0.1 come from supplementary snapshot
+`1fd3df7de604fa6490a67d510e5cf34c03be2364`. `release.json` retains the original
+primary registry commit and records both sources explicitly.
+
+All eight Linux/Windows original ZIPs were checked against the registry's
+SHA-256 and the release asset digest. They contain no separate LICENSE file;
+complete MIT notices are retained from each exact tagged source commit, checked
+by hash and copied to `share/licenses/registry-plugins/<id>/LICENSE`.
+The complete provenance file is also included in the dependency notice inventory.
+Linux SDK 1.0.1 DSO admission passes for these four original plugins. This is
+neither a full GUI test nor Windows binary admission. The `log-widget` source
+commit is the same `66d6e544` Log #391 fix recorded in the compatibility audit;
+its original package still requires the normal packaged runtime acceptance.
+`min_plotjuggler_version` remains upstream display metadata; actual admission
+uses the SDK/ABI contract. This repair does not change the product version.
+
+The Windows workflow checks each packaging script's exit code immediately, so a
+failed installer stage cannot fall through into portable packaging. Missing or
+duplicate registry entries, download hashes and final plugin inventory assertions
+remain fatal. PowerShell propagation tests run under a real PowerShell runtime;
+local platforms without it explicitly skip those tests.

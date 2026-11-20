@@ -6,6 +6,7 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "pj_runtime/CatalogModel.h"
@@ -26,18 +27,19 @@ std::function<std::optional<std::string>(DatasetId)> sourceNameOf(CatalogModel& 
 
 }  // namespace
 
-DerivedRuntimeHosts::DerivedRuntimeHosts(SessionManager& session, CatalogModel& catalog, const std::string& plugin_id)
+DerivedRuntimeHosts::DerivedRuntimeHosts(
+    SessionManager& session, CatalogModel& catalog, const std::string& plugin_id,
+    std::function<void()> on_history_change)
     : session_(session),
       source_name_of_(sourceNameOf(catalog)),
       markers_(
           session.batchEngine(), plugin_id,
           [&catalog, this](std::vector<std::string>& inputs, std::vector<std::string>& outputs) -> Expected<DatasetId> {
-            // Bind the generator to the dataset its keys name (qualified keys pick it
-            // explicitly and are normalized to bare form); an unqualified input that
-            // exists in several datasets is refused with the qualified candidates —
-            // landing on the first-loaded dataset silently stranded generators on the
-            // wrong data. Policy lives in DatasetQualifiedName so it is testable and
-            // stays in step with the series resolver AppSession installs.
+            // Bind the generator to the dataset its keys name (qualified keys pick it explicitly and are normalized to
+            // bare form); an unqualified input that exists in several datasets is refused with the qualified
+            // candidates, since landing on the first-loaded dataset would strand the generator on the wrong data. The
+            // policy lives in DatasetQualifiedName so it is testable and stays in step with the series resolver
+            // AppSession installs.
             std::vector<DatasetId> datasets;
             for (const auto& [id, label] : catalog.datasets()) {
               datasets.push_back(id);
@@ -48,7 +50,7 @@ DerivedRuntimeHosts::DerivedRuntimeHosts(SessionManager& session, CatalogModel& 
       transforms_(session.dataProcessorService(), plugin_id),
       on_demand_(
           session.onDemandService(), session.objectStore(), plugin_id, [&catalog] { catalog.rebuildIfChanged(); }),
-      router_(markers_, transforms_, on_demand_) {}
+      router_(markers_, transforms_, on_demand_, std::move(on_history_change)) {}
 
 DerivedRuntimeHosts::~DerivedRuntimeHosts() {
   session_.removeEphemerals(transforms_.previews(), markers_.previews(), on_demand_.previews());

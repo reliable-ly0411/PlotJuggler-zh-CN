@@ -6,21 +6,29 @@
 // serialization contract (never saved, always survive xmlLoadState).
 
 #include <gtest/gtest.h>
+#include <qwt_plot_curve.h>
 
 #include <QApplication>
+#include <QColor>
 #include <QDomDocument>
 #include <QFrame>
 #include <QLabel>
+#include <QPen>
 #include <QPointer>
 #include <QPushButton>
 #include <QScopeGuard>
 #include <QTranslator>
 #include <QtGlobal>
+#include <string>
+#include <string_view>
 
+#include "pj_datastore/writer.hpp"
 #include "pj_plotting/DockWidget.h"
 #include "pj_plotting/PlotDocker.h"
 #include "pj_plotting/PlotWidget.h"
 #include "pj_plotting/TabbedPlotWidget.h"
+#include "pj_runtime/CatalogModel.h"
+#include "pj_runtime/SessionManager.h"
 using namespace Qt::StringLiterals;
 
 namespace {
@@ -44,6 +52,9 @@ TEST(TabbedWidgetTab, LocalizedDefaultsPreserveExplicitNamesAndStableState) {
   PJ::TabbedPlotWidget tabbed;
   EXPECT_EQ(tabbed.dockerAt(0)->name(), u"标签页1"_s);
   auto* custom = tabbed.addTab(u"tab1 User_%1"_s);
+  tabbed.addTab(u"标签页7"_s);
+  tabbed.addTab(u"tab9"_s);
+  EXPECT_EQ(tabbed.addTab({})->name(), u"标签页10"_s);
   const QString identity = custom->stateId();
   QDomDocument doc;
   const auto saved = tabbed.xmlSaveState(doc);
@@ -229,6 +240,39 @@ QStringList stripLabels(const PJ::TabbedPlotWidget& tabbed) {
   return labels;
 }
 
+// A new tab's default name is never one an open tab already shows, also after a restore brought the names back
+// (an undo, a layout load) and after a rename; a closed tab's name is not handed out again either.
+TEST(TabbedWidgetTab, DefaultTabNameIsNeverAnOpenTabsName) {
+  PJ::TabbedPlotWidget tabbed;  // starts with tab1
+  tabbed.addTab({})->setStateId(u"tab-second"_s);
+  QDomDocument doc;
+  const QDomElement saved = tabbed.xmlSaveState(doc, PJ::SnapshotScope::kHistory);
+  ASSERT_TRUE(tabbed.xmlLoadState(saved, PJ::RestoreIntent::kHistory));
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  ASSERT_EQ(stripLabels(tabbed), QStringList({u"tab1"_s, u"tab2"_s}));
+
+  EXPECT_EQ(tabbed.addTab({})->name(), u"tab3"_s) << stripLabels(tabbed).join(u',').toStdString();
+  tabbed.renameTab(tabbed.addTab({}), u"tab7"_s);
+  PJ::PlotDocker* after_rename = tabbed.addTab({});
+  EXPECT_EQ(after_rename->name(), u"tab8"_s);
+  tabbed.closeTab(after_rename);
+  EXPECT_EQ(tabbed.addTab({})->name(), u"tab9"_s) << "a closed tab's name comes back only with an undo";
+}
+
+// A layout load starts the numbering again from what it opened: the default tab it replaces uses up no name.
+TEST(TabbedWidgetTab, LayoutLoadRestartsTheDefaultTabNames) {
+  PJ::TabbedPlotWidget tabbed;  // starts with tab1
+  tabbed.renameTab(tabbed.dockerAt(0), u"Signals"_s);
+  QDomDocument doc;
+  const QDomElement layout = tabbed.xmlSaveState(doc, PJ::SnapshotScope::kFull);
+  tabbed.addTab({});
+  tabbed.addTab({});
+  ASSERT_TRUE(tabbed.xmlLoadState(layout, PJ::RestoreIntent::kReplace));
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  ASSERT_EQ(stripLabels(tabbed), QStringList({u"Signals"_s}));
+  EXPECT_EQ(tabbed.addTab({})->name(), u"tab1"_s);
+}
+
 TEST(TabbedWidgetTab, RenameTabUpdatesDockerAndStripLabel) {
   PJ::TabbedPlotWidget tabbed;
   PJ::PlotDocker* docker = tabbed.addTab(u"Before"_s);
@@ -367,9 +411,12 @@ TEST(TabbedWidgetTab, HistoryExemptTabRoundTripsThroughFullLayout) {
   EXPECT_EQ(owned_element.attribute(u"owner_plugin"_s), u"assistant"_s);
   EXPECT_EQ(owned_element.attribute(u"tab_id"_s), u"run"_s);
 
+  // The restore reuses the page with the same id: change what it must bring back.
+  owned->setHistoryExempt(false);
+  owned->setOwnerMetadata(u"other"_s, u"other-run"_s);
   ASSERT_TRUE(tabbed.xmlLoadState(saved, PJ::RestoreIntent::kReplace));
   QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-  EXPECT_TRUE(original.isNull());
+  EXPECT_EQ(tabbed.currentTab(), original.data());
   PJ::PlotDocker* restored = tabbed.currentTab();
   ASSERT_NE(restored, nullptr);
   EXPECT_EQ(restored->stateId(), u"assistant/run"_s);
@@ -408,6 +455,70 @@ TEST(TabbedWidgetTab, HistoryRestorePreservesExactExemptPageAndSkipsPersistedCop
     }
   }
   EXPECT_EQ(owned_count, 1);
+}
+
+// Selecting a tab is not an undo step, so a snapshot's current tab is the one shown when it was taken. An undo or
+// redo keeps the tab the user is on when it still exists; a layout load, or an undo that removes that tab, selects
+// the saved one.
+TEST(TabbedWidgetTab, HistoryRestoreKeepsTheTabTheUserIsOn) {
+  PJ::TabbedPlotWidget tabbed;
+  PJ::PlotDocker* first = tabbed.addTab(u"one"_s);
+  first->setStateId(u"tab-one"_s);
+  PJ::PlotDocker* second = tabbed.addTab(u"two"_s);
+  second->setStateId(u"tab-two"_s);
+  tabbed.focusTab(second);
+  ASSERT_EQ(tabbed.currentTab(), second);
+  QDomDocument doc;
+  const QDomElement saved = tabbed.xmlSaveState(doc, PJ::SnapshotScope::kHistory);
+
+  tabbed.focusTab(first);
+  ASSERT_TRUE(tabbed.xmlLoadState(saved, PJ::RestoreIntent::kHistory));
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  ASSERT_NE(tabbed.currentTab(), nullptr);
+  EXPECT_EQ(tabbed.currentTab()->stateId(), u"tab-one"_s);
+
+  ASSERT_TRUE(tabbed.xmlLoadState(saved, PJ::RestoreIntent::kReplace));
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  ASSERT_NE(tabbed.currentTab(), nullptr);
+  EXPECT_EQ(tabbed.currentTab()->stateId(), u"tab-two"_s) << "a layout load selects the saved tab";
+}
+
+TEST(TabbedWidgetTab, HistoryRestoreKeepsACurrentWidgetTab) {
+  PJ::TabbedPlotWidget tabbed;
+  PJ::PlotDocker* plot_tab = tabbed.addTab(u"plots"_s);
+  plot_tab->setStateId(u"tab-plots"_s);
+  tabbed.focusTab(plot_tab);
+  QDomDocument doc;
+  const QDomElement saved = tabbed.xmlSaveState(doc, PJ::SnapshotScope::kHistory);
+
+  auto* panel = new QWidget;
+  QPointer<QWidget> panel_guard(panel);
+  tabbed.addWidgetTab(u"toolbox"_s, panel, [] {});
+  ASSERT_EQ(tabbed.currentTab(), nullptr) << "the widget tab is current";
+  ASSERT_TRUE(tabbed.xmlLoadState(saved, PJ::RestoreIntent::kHistory));
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  ASSERT_FALSE(panel_guard.isNull());
+  EXPECT_EQ(tabbed.currentTab(), nullptr) << "the undo switched away from the widget tab";
+  EXPECT_TRUE(panel_guard->isVisibleTo(&tabbed));
+}
+
+TEST(TabbedWidgetTab, HistoryRestoreThatRemovesTheCurrentTabSelectsTheSavedOne) {
+  PJ::TabbedPlotWidget tabbed;
+  PJ::PlotDocker* first = tabbed.addTab(u"one"_s);
+  first->setStateId(u"tab-one"_s);
+  PJ::PlotDocker* second = tabbed.addTab(u"two"_s);
+  second->setStateId(u"tab-two"_s);
+  tabbed.focusTab(second);
+  QDomDocument doc;
+  const QDomElement saved = tabbed.xmlSaveState(doc, PJ::SnapshotScope::kHistory);
+
+  PJ::PlotDocker* added = tabbed.addTab(u"three"_s);
+  added->setStateId(u"tab-three"_s);
+  tabbed.focusTab(added);
+  ASSERT_TRUE(tabbed.xmlLoadState(saved, PJ::RestoreIntent::kHistory));
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+  ASSERT_NE(tabbed.currentTab(), nullptr);
+  EXPECT_EQ(tabbed.currentTab()->stateId(), u"tab-two"_s);
 }
 
 TEST(TabbedWidgetTab, ClosingLastOrdinaryTabCreatesOneWhenExemptTabRemains) {
@@ -536,12 +647,201 @@ TEST(TabbedPlotDuplicate, CopiesLayoutNextToSourceWithFreshIdsAndOneUndoStep) {
   EXPECT_EQ(idFreeXml(*copy), idFreeXml(*source));
 }
 
+// A session with data and a tab widget bound to it.
+struct DuplicateFixture {
+  PJ::SessionManager session;
+  PJ::CatalogModel catalog{&session};
+  PJ::TabbedPlotWidget tabbed;
+
+  DuplicateFixture() {
+    tabbed.setDataServices(&session, &catalog);
+  }
+
+  // A dataset from `source`, registered as loaded from `path` when that is not empty; 0 on failure.
+  PJ::DatasetId addDataset(const std::string& source, const QString& path = {}) {
+    auto domain = session.dataEngine().createTimeDomain(source);
+    if (!domain.has_value()) {
+      return 0;
+    }
+    auto dataset =
+        session.dataEngine().createDataset(PJ::DatasetDescriptor{.source_name = source, .time_domain_id = *domain});
+    if (!dataset.has_value()) {
+      return 0;
+    }
+    if (!path.isEmpty()) {
+      session.setDatasetSourcePath(*dataset, path);
+    }
+    return *dataset;
+  }
+
+  // The catalog key of a new two-sample scalar series, empty on failure.
+  QString addSeries(PJ::DatasetId dataset, std::string_view topic) {
+    PJ::DataWriter writer = session.dataEngine().createWriter();
+    auto handle = writer.registerScalarSeries(dataset, topic, PJ::NumericType::kFloat64);
+    if (!handle.has_value()) {
+      return {};
+    }
+    writer.appendScalar(*handle, 0, 0.0);
+    writer.appendScalar(*handle, 1'000'000'000, 1.0);
+    if (session.commitChunks(writer.flushAll()).empty()) {
+      return {};
+    }
+    for (const auto& curve : catalog.curves()) {
+      if (const auto descriptor = catalog.curveDescriptor(curve.name);
+          descriptor && descriptor->topic_id == handle->topic_id) {
+        return curve.name;
+      }
+    }
+    return {};
+  }
+};
+
+// The plot's curve keys, comma-joined (a readable gtest failure).
+std::string curveNames(const PJ::PlotWidget& plot) {
+  QStringList names;
+  for (const auto& info : plot.curveList()) {
+    names << info.source_name;
+  }
+  return names.join(u',').toStdString();
+}
+
+// The copy shows the source's curves (time series and XY) in the source's colours, not empty plots.
+TEST(TabbedPlotDuplicate, CopiesCurvesOnCatalogSeries) {
+  DuplicateFixture fixture;
+  PJ::TabbedPlotWidget& tabbed = fixture.tabbed;
+  const PJ::DatasetId dataset = fixture.addDataset("run.csv");
+  ASSERT_NE(dataset, 0U);
+  const QStringList keys{fixture.addSeries(dataset, "/sine"), fixture.addSeries(dataset, "/cosine")};
+  ASSERT_FALSE(keys[0].isEmpty());
+  ASSERT_FALSE(keys[1].isEmpty());
+
+  PJ::PlotDocker* source = tabbed.dockerAt(0);
+  QDomDocument layout;
+  ASSERT_TRUE(
+      layout.setContent(uR"(
+      <Tab id="src" containers="1"><Container>
+      <DockSplitter orientation="|" count="2" sizes="0.5;0.5">
+      <DockArea id="a" name="ts"><plot id="p" mode="TimeSeries"/></DockArea>
+      <DockArea id="b" name="xy"><plot id="q" mode="XYPlot"/></DockArea>
+      </DockSplitter></Container></Tab>)"_s));
+  ASSERT_TRUE(source->xmlLoadState(layout.documentElement()));
+  PJ::PlotWidget* source_ts = source->plotAt(0)->plotWidget();
+  PJ::PlotWidget* source_xy = source->plotAt(1)->plotWidget();
+  ASSERT_NE(source_ts, nullptr);
+  ASSERT_NE(source_xy, nullptr);
+  ASSERT_NE(source_ts->addCurve(keys[0], QColor(u"#ff0000"_s)), nullptr);
+  ASSERT_NE(source_ts->addCurve(keys[1], QColor(u"#00ff00"_s)), nullptr);
+  ASSERT_NE(source_xy->addCurveXY(keys[1], keys[0], u"phase"_s, QColor(u"#0000ff"_s)), nullptr);
+
+  int undo_steps = 0;
+  QObject::connect(&tabbed, &PJ::TabbedPlotWidget::undoableChange, [&undo_steps]() { ++undo_steps; });
+
+  PJ::PlotDocker* copy = tabbed.duplicateTab(source);
+
+  ASSERT_NE(copy, nullptr);
+  EXPECT_EQ(undo_steps, 1);
+  ASSERT_EQ(copy->plotCount(), 2);
+  for (int index = 0; index < 2; ++index) {
+    const PJ::PlotWidget* from = source->plotAt(index)->plotWidget();
+    const PJ::PlotWidget* to = copy->plotAt(index)->plotWidget();
+    ASSERT_NE(to, nullptr);
+    ASSERT_EQ(to->curveList().size(), from->curveList().size()) << "plot " << index;
+    auto from_it = from->curveList().begin();
+    for (const auto& info : to->curveList()) {
+      EXPECT_EQ(info.source_name, from_it->source_name);
+      EXPECT_EQ(info.curve->pen().color(), from_it->curve->pen().color());
+      ++from_it;
+    }
+  }
+  EXPECT_EQ(idFreeXml(*copy), idFreeXml(*source));
+}
+
+// Two plots sharing one id (a hand-edited layout) each keep their own curves in the copy.
+TEST(TabbedPlotDuplicate, PlotsSharingAnIdKeepTheirOwnCurves) {
+  DuplicateFixture fixture;
+  const PJ::DatasetId dataset = fixture.addDataset("run.csv");
+  ASSERT_NE(dataset, 0U);
+  const std::string first = fixture.addSeries(dataset, "/first").toStdString();
+  const std::string second = fixture.addSeries(dataset, "/second").toStdString();
+  ASSERT_FALSE(first.empty());
+  ASSERT_FALSE(second.empty());
+  PJ::PlotDocker* source = fixture.tabbed.dockerAt(0);
+  QDomDocument layout;
+  ASSERT_TRUE(
+      layout.setContent(uR"(
+      <Tab id="src" containers="1"><Container>
+      <DockSplitter orientation="|" count="2" sizes="0.5;0.5">
+      <DockArea id="a" name="one"><plot id="p" mode="TimeSeries"/></DockArea>
+      <DockArea id="b" name="two"><plot id="p" mode="TimeSeries"/></DockArea>
+      </DockSplitter></Container></Tab>)"_s));
+  ASSERT_TRUE(source->xmlLoadState(layout.documentElement()));
+  ASSERT_EQ(source->plotCount(), 2);
+  ASSERT_NE(source->plotAt(0)->plotWidget()->addCurve(QString::fromStdString(first)), nullptr);
+  ASSERT_NE(source->plotAt(1)->plotWidget()->addCurve(QString::fromStdString(second)), nullptr);
+
+  PJ::PlotDocker* copy = fixture.tabbed.duplicateTab(source);
+
+  ASSERT_NE(copy, nullptr);
+  ASSERT_EQ(copy->plotCount(), 2);
+  EXPECT_EQ(curveNames(*copy->plotAt(0)->plotWidget()), first);
+  EXPECT_EQ(curveNames(*copy->plotAt(1)->plotWidget()), second);
+}
+
+// A hidden marker scope still waiting for its dataset, whose saved id now names another source's dataset, must not
+// take that dataset's path in the copy: the path would then never resolve, and a layout save would persist it.
+TEST(TabbedPlotDuplicate, PendingMarkerScopeGetsNoForeignDatasetPath) {
+  DuplicateFixture fixture;
+  const PJ::DatasetId live = fixture.addDataset("a.csv", u"/data/a.csv"_s);
+  ASSERT_NE(live, 0U);
+  ASSERT_NE(fixture.addDataset("b.csv", u"/data/b.csv"_s), 0U);
+  PJ::PlotDocker* source = fixture.tabbed.dockerAt(0);
+  QDomDocument layout;
+  ASSERT_TRUE(
+      layout.setContent(uR"(
+      <Tab id="src" containers="1"><Container>
+      <DockArea id="a" name="one"><plot id="p" mode="TimeSeries">
+      <marker_scope dataset_id="%1" dataset_source="other.csv" scope="dataset" visible="false"/>
+      </plot></DockArea></Container></Tab>)"_s.arg(live)));
+  ASSERT_TRUE(source->xmlLoadState(layout.documentElement()));
+
+  PJ::PlotDocker* copy = fixture.tabbed.duplicateTab(source);
+
+  ASSERT_NE(copy, nullptr);
+  QDomDocument doc;
+  const QDomElement scope = copy->xmlSaveState(doc).elementsByTagName(u"marker_scope"_s).at(0).toElement();
+  ASSERT_FALSE(scope.isNull()) << "the pending scope was dropped";
+  EXPECT_EQ(scope.attribute(u"dataset_source"_s), u"other.csv"_s);
+  EXPECT_FALSE(scope.hasAttribute(u"dataset_path"_s)) << scope.attribute(u"dataset_path"_s).toStdString();
+}
+
 TEST(TabbedPlotDuplicate, IgnoresWidgetTabsAndForeignDockers) {
   PJ::TabbedPlotWidget tabbed;
   PJ::PlotDocker foreign(u"foreign"_s);
   EXPECT_EQ(tabbed.duplicateTab(&foreign), nullptr);
   EXPECT_EQ(tabbed.duplicateTab(nullptr), nullptr);
   EXPECT_EQ(tabbed.dockerCount(), 1);
+}
+
+// A tab whose content fails to load must not leave the live page it would have reused renamed or re-owned.
+TEST(TabbedWidgetTab, FailedTabLoadKeepsTheReusedPageMetadata) {
+  PJ::TabbedPlotWidget tabbed;
+  PJ::PlotDocker* page = tabbed.currentTab();
+  ASSERT_NE(page, nullptr);
+  page->setStateId(u"page"_s);
+  tabbed.renameTab(page, u"live"_s);
+
+  QDomDocument doc;
+  ASSERT_TRUE(
+      static_cast<bool>(doc.setContent(
+          u"<tabbed_widget id=\"\" name=\"main\"><Tab id=\"page\" tab_name=\"rejected\" owner_plugin=\"x\" "
+          u"tab_id=\"y\">"
+          u"<NotAContainer/></Tab><currentTabIndex index=\"0\"/></tabbed_widget>"_s)));
+  EXPECT_FALSE(tabbed.xmlLoadState(doc.documentElement(), PJ::RestoreIntent::kReplace));
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+  ASSERT_EQ(tabbed.dockerAt(0), page);
+  EXPECT_EQ(page->name(), u"live"_s);
+  EXPECT_TRUE(page->ownerPlugin().isEmpty());
 }
 
 }  // namespace

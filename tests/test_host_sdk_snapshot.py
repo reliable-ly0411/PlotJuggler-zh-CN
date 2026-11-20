@@ -26,9 +26,11 @@ class HostSdkSnapshotTests(unittest.TestCase):
         self.assertIn('SHA256=' + pin['archive_sha256'], cmake)
         self.assertIn(pin['commit'], pin['archive_url'])
         self.assertEqual(pin['license'], 'Apache-2.0')
-        self.assertEqual(pin['version'], '0.40.0')
-        self.assertEqual(pin['host_contract_version'], '0.40.0')
-        self.assertEqual(pin['upstream_base'], '9fc42b1a81867da812d7f1880bf67b1c74f3f813')
+        self.assertEqual(pin['repository'], 'https://github.com/PlotJuggler/plotjuggler_sdk')
+        self.assertEqual(pin['commit'], pin['upstream_release_commit'])
+        self.assertEqual(pin['version'], '1.1.0')
+        self.assertEqual(pin['host_contract_version'], '1.1.0')
+        self.assertEqual(pin['upstream_base'], 'd65923cd11ab7a822ef7b802523e2fc7b281f515')
 
     def test_source_version_and_license_bytes(self):
         with tempfile.TemporaryDirectory() as temporary:

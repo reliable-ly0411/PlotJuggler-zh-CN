@@ -1,0 +1,205 @@
+--- a/data_load_csv/csv_source.cpp
++++ b/data_load_csv/csv_source.cpp
+@@ -136,12 +136,21 @@
+                     (warn.localized_detail.empty() ? warn.detail : warn.localized_detail) + "\n";
+         }
+       }
++      // A failed reload must keep the prior dataset instead of committing an empty refill.
++      if (result.lines_processed == 0) {
++        return PJ::unexpected(
++            pj_zh_localization::text("No rows imported, ", "未导入任何行，跳过 ", "未匯入任何資料列，略過 ") +
++            std::to_string(result.lines_skipped) + pj_zh_localization::text(" skipped", " 行", " 列") +
++            (detail.empty() ? std::string{}
++                            : pj_zh_localization::text(" (first: ", "（首条：", "（第一筆：") +
++                                  detail.substr(0, detail.find('\n')) + pj_zh_localization::text(")", "）", "）")));
++      }
+       if (!detail.empty()) {
+         if (!runtimeHost().askContinue(
+                 pj_zh_localization::text("Rows Skipped", "跳过行", "略過資料列"),
+                 pj_zh_localization::text(
+-                    "Some rows have an incorrect number of columns and will be skipped:\n\n",
+-                    "部分行的列数不正确，将被跳过：\n\n", "部分資料列的欄數不正確，將被略過：\n\n") +
++                    "Some rows were not parsed as expected and will be skipped:\n\n",
++                    "部分行未按预期解析，将被跳过：\n\n", "部分資料列未如預期解析，將被略過：\n\n") +
+                     detail + pj_zh_localization::text("\nContinue loading?", "\n是否继续加载？", "\n是否繼續載入？"))) {
+           return PJ::unexpected(std::string("Loading aborted by user"));
+         }
+--- a/data_load_csv/CMakeLists.txt
++++ b/data_load_csv/CMakeLists.txt
+@@ -88,3 +88,13 @@
+ include(${CMAKE_CURRENT_LIST_DIR}/../cmake/HardenPluginExports.cmake)
+ pj_harden_plugin_exports(csv_source_plugin
+   REQUIRED_EXPORTS PJ_get_data_source_vtable PJ_get_dialog_vtable)
++
++# Upstream #397 regressions run against the actual localized source DSO.
++add_executable(csv_source_test tests/csv_source_test.cpp)
++target_compile_features(csv_source_test PRIVATE cxx_std_20)
++target_compile_options(csv_source_test PRIVATE ${PJ_WARNING_FLAGS})
++target_compile_definitions(csv_source_test PRIVATE CSV_SOURCE_PLUGIN_PATH="$<TARGET_FILE:csv_source_plugin>")
++target_link_libraries(csv_source_test PRIVATE plotjuggler_sdk::plugin_host GTest::gtest_main)
++add_dependencies(csv_source_test csv_source_plugin)
++add_test(NAME csv_source_test COMMAND csv_source_test)
++set_tests_properties(csv_source_test PROPERTIES ENVIRONMENT "PLOTJUGGLER_UI_LANGUAGE=en_US")
+--- a/data_load_csv/tests/csv_runtime_language_test.cpp
++++ b/data_load_csv/tests/csv_runtime_language_test.cpp
+@@ -215,8 +215,8 @@
+     EXPECT_EQ(message.title, expected("Rows Skipped", "跳过行", "略過資料列"));
+     EXPECT_EQ(
+         message.body, expected(
+-                          "Some rows have an incorrect number of columns and will be skipped:\n\n",
+-                          "部分行的列数不正确，将被跳过：\n\n", "部分資料列的欄數不正確，將被略過：\n\n") +
++                          "Some rows were not parsed as expected and will be skipped:\n\n",
++                          "部分行未按预期解析，将被跳过：\n\n", "部分資料列未如預期解析，將被略過：\n\n") +
+                           detail + expected("\nContinue loading?", "\n是否继续加载？", "\n是否繼續載入？"));
+     EXPECT_EQ(message.buttons, PJ_MSG_BTN_CONTINUE | PJ_MSG_BTN_ABORT);
+   }
+@@ -283,6 +283,20 @@
+                                       "' 中有 1 個非數值儲存格已略過。"));
+   EXPECT_EQ(data_.fields, (std::vector<std::string>{"time", name}));
+   EXPECT_EQ(data_.rows, (std::vector<std::vector<double>>{{0, 10}, {1, 0}, {2, 12}}));
++}
++
++TEST_F(CsvRuntimeLanguage, AllRowsSkippedFailsWithoutOfferingContinue) {
++  const auto result =
++      import("time,value\nnot_a_time,1\nalso_bad,2\n", {{"time_mode", "column"}, {"time_column_index", 0}});
++  ASSERT_FALSE(result);
++  EXPECT_NE(
++      result.error().find(
++          expected("No rows imported, 2 skipped", "未导入任何行，跳过 2 行", "未匯入任何資料列，略過 2 列")),
++      std::string::npos);
++  EXPECT_NE(result.error().find(expected("Invalid timestamp", "无效的时间戳", "無效的時間戳記")), std::string::npos);
++  EXPECT_NE(result.error().find("not_a_time"), std::string::npos);
++  EXPECT_TRUE(data_.rows.empty());
++  EXPECT_TRUE(data_.messages.empty());
+ }
+ 
+ TEST_F(CsvRuntimeLanguage, InvalidTimestampRetainsRawInputAndCanonicalWarning) {
+--- /dev/null
++++ b/data_load_csv/tests/csv_source_test.cpp
+@@ -0,0 +1,126 @@
++// Drives the built CSV plugin end to end through a minimal recording host.
++#include <gtest/gtest.h>
++
++#include <filesystem>
++#include <fstream>
++#include <pj_base/sdk/plugin_data_api.hpp>
++#include <pj_base/sdk/service_traits.hpp>
++#include <pj_plugins/host/data_source_library.hpp>
++#include <pj_plugins/host/service_registry_builder.hpp>
++#include <string>
++#include <vector>
++
++namespace {
++
++struct RecordingHost {
++  int records = 0;
++  std::vector<std::string> prompts;  // "title|message" of every message box, answered with Continue
++
++  static bool ensureTopic(void*, PJ_string_view_t, PJ_topic_handle_t* out, PJ_error_t*) noexcept {
++    *out = PJ_topic_handle_t{1};
++    return true;
++  }
++  static bool ensureField(
++      void*, PJ_topic_handle_t topic, PJ_string_view_t, PJ_primitive_type_t, PJ_field_handle_t* out,
++      PJ_error_t*) noexcept {
++    *out = PJ_field_handle_t{topic, 1};
++    return true;
++  }
++  static bool appendBoundRecord(
++      void* ctx, PJ_topic_handle_t, int64_t, const PJ_bound_field_value_t*, uint64_t, PJ_error_t*) noexcept {
++    ++static_cast<RecordingHost*>(ctx)->records;
++    return true;
++  }
++};
++
++struct ImportOutcome {
++  bool ok = false;
++  std::string error;
++};
++
++/// Writes `csv` to a temp file and imports it with `config` (filepath added) into `host`.
++ImportOutcome importCsv(const std::string& csv, std::string config, RecordingHost& host) {
++  const auto path =
++      std::filesystem::temp_directory_path() /
++      ("csv_source_test_" + std::string(::testing::UnitTest::GetInstance()->current_test_info()->name()) + ".csv");
++  std::ofstream(path) << csv;
++
++  static const PJ_source_write_host_vtable_t kWrite = [] {
++    PJ_source_write_host_vtable_t vtable{};
++    vtable.abi_version = PJ_PLUGIN_DATA_API_VERSION;
++    vtable.struct_size = sizeof(vtable);
++    vtable.ensure_topic = &RecordingHost::ensureTopic;
++    vtable.ensure_field = &RecordingHost::ensureField;
++    vtable.append_bound_record = &RecordingHost::appendBoundRecord;
++    return vtable;
++  }();
++  static const PJ_data_source_runtime_host_vtable_t kRuntime = [] {
++    PJ_data_source_runtime_host_vtable_t vtable{};
++    vtable.protocol_version = 1;
++    vtable.struct_size = sizeof(vtable);
++    vtable.report_message = [](void*, PJ_data_source_message_level_t, PJ_string_view_t) noexcept {};
++    vtable.progress_start = [](void*, PJ_string_view_t, uint64_t, bool, PJ_error_t*) noexcept { return true; };
++    vtable.progress_update = [](void*, uint64_t) noexcept { return true; };
++    vtable.progress_finish = [](void*) noexcept {};
++    vtable.is_stop_requested = [](void*) noexcept { return false; };
++    vtable.notify_state = [](void*, PJ_data_source_state_t) noexcept {};
++    vtable.show_message_box = [](void* ctx, PJ_message_box_type_t, PJ_string_view_t title, PJ_string_view_t message,
++                                 int) noexcept -> int {
++      static_cast<RecordingHost*>(ctx)->prompts.push_back(
++          std::string(title.data, title.size) + "|" + std::string(message.data, message.size));
++      return PJ_MSG_BTN_CONTINUE;
++    };
++    return vtable;
++  }();
++
++  ImportOutcome outcome;
++  auto library = PJ::DataSourceLibrary::load(std::string(CSV_SOURCE_PLUGIN_PATH));
++  if (!library) {
++    outcome.error = "load: " + library.error();
++    return outcome;
++  }
++  auto handle = library->createHandle();
++  PJ::ServiceRegistryBuilder registry;
++  registry.registerService<PJ::sdk::SourceWriteHostService>(PJ_source_write_host_t{.ctx = &host, .vtable = &kWrite});
++  registry.registerService<PJ::sdk::DataSourceRuntimeHostService>(
++      PJ_data_source_runtime_host_t{.ctx = &host, .vtable = &kRuntime});
++  config.insert(1, R"("filepath":")" + path.generic_string() + R"(",)");
++  if (auto status = handle.bind(registry.view()); !status) {
++    outcome.error = "bind: " + status.error();
++  } else if (status = handle.loadConfig(config); !status) {
++    outcome.error = "loadConfig: " + status.error();
++  } else if (status = handle.start(); !status) {
++    outcome.error = status.error();
++  } else {
++    outcome.ok = true;
++  }
++  std::filesystem::remove(path);
++  return outcome;
++}
++
++// QA repro: a custom time format no row matches. Reporting success with zero rows
++// made the host commit an empty dataset over the one being reloaded.
++TEST(CsvSourceTest, ImportWithEveryRowSkippedFails) {
++  RecordingHost host;
++  const auto outcome = importCsv(
++      "time,a\n0.00,1\n0.01,2\n",
++      R"({"time_mode":"column","time_column_index":0,"use_custom_format":true,)"
++      R"("custom_time_format":"yyyy-MM-dd hh:mm:ss"})",
++      host);
++  EXPECT_FALSE(outcome.ok);
++  EXPECT_NE(outcome.error.find("Invalid timestamp"), std::string::npos) << outcome.error;
++  EXPECT_EQ(host.records, 0);
++}
++
++TEST(CsvSourceTest, RowsSkippedPromptDoesNotBlameColumnCountForBadTimestamps) {
++  RecordingHost host;
++  const auto outcome =
++      importCsv("time,a\n0.0,1\nnot_a_time,2\n0.2,3\n", R"({"time_mode":"column","time_column_index":0})", host);
++  ASSERT_TRUE(outcome.ok) << outcome.error;
++  EXPECT_EQ(host.records, 2);
++  ASSERT_EQ(host.prompts.size(), 1u);
++  EXPECT_NE(host.prompts[0].find("Invalid timestamp"), std::string::npos) << host.prompts[0];
++  EXPECT_EQ(host.prompts[0].find("incorrect number of columns"), std::string::npos) << host.prompts[0];
++}
++
++}  // namespace

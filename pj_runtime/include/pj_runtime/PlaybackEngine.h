@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <memory>
 
+#include "pj_runtime/PlaybackRate.h"
 #include "pj_runtime/Time.h"
 
 namespace PJ {
@@ -36,6 +37,8 @@ class PlaybackEngine : public QObject {
   [[nodiscard]] DisplaySeconds rangeMax() const {
     return DisplaySeconds{range_max_};
   }
+  /// The applied rate: `setPlaybackRate` snaps what it is given to what the speed scrubber can show
+  /// (`snapPlaybackRate`).
   double playbackRate() const {
     return rate_;
   }
@@ -63,9 +66,12 @@ class PlaybackEngine : public QObject {
       double next, double range_min, double range_max, bool hold_at_max, bool looping, bool* reached_end);
 
  public slots:
+  /// `setRange`, `setRangeAndCurrentTime` and `setCurrentTime` ignore a non-finite range or time: NaN survives every
+  /// clamp, so the cursor would stay NaN.
   void setRange(DisplayRange range);
   void setRangeAndCurrentTime(DisplayRange range, DisplaySeconds t);
   void setCurrentTime(DisplaySeconds t);
+  /// Non-finite rates are ignored.
   void setPlaybackRate(double rate);
   void setStep(double step);
   void setLooping(bool looping);
@@ -77,6 +83,8 @@ class PlaybackEngine : public QObject {
  signals:
   void currentTimeChanged(double t);
   void rangeChanged(double min, double max);
+  /// Emitted for every request that differs from the current rate, even when it snaps to the same rate, so a control
+  /// still holding the raw request (the speed scrubber after a typed 0.25) shows the applied one.
   void playbackRateChanged(double rate);
   void playingChanged(bool playing);
   void loopingChanged(bool looping);

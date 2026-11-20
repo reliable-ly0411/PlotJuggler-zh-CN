@@ -81,8 +81,8 @@ class CsvRuntimeFileLoader : public ::testing::Test {
                 expected(": Expected 3 columns, got 2\n", ": 预期 3 列，实际 2\n", ": 預期 3 欄，實際 2\n");
     }
     const QString body = expected(
-                             "Some rows have an incorrect number of columns and will be skipped:\n\n",
-                             "部分行的列数不正确，将被跳过：\n\n", "部分資料列的欄數不正確，將被略過：\n\n") +
+                             "Some rows were not parsed as expected and will be skipped:\n\n",
+                             "部分行未按预期解析，将被跳过：\n\n", "部分資料列未如預期解析，將被略過：\n\n") +
                          detail + expected("\nContinue loading?", "\n是否继续加载？", "\n是否繼續載入？");
     QWidget parent;
     bool inspected = false;

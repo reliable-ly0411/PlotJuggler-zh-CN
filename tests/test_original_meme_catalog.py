@@ -27,6 +27,22 @@ class OriginalMemeCatalogTest(unittest.TestCase):
                 source = (MEMES / f"meme_{e['id']:02}.jpg").read_bytes()
                 self.assertEqual(hashlib.sha256(source).hexdigest(), e['original_sha256'])
 
+    def test_reviewed_jpeg_derivatives_preserve_sources_and_resource_aliases(self):
+        manifest = json.loads((MEMES / 'jpeg-q90-manifest.json').read_text(encoding='utf-8'))
+        mapping = {e.get('alias'): e.text for e in ET.parse(ROOT / 'resources/resources.qrc').iter('file')}
+        self.assertEqual(len(manifest['images']), 31)
+        self.assertEqual(manifest['quality'], 90)
+        self.assertEqual(manifest['chroma_subsampling'], '4:4:4')
+        for item in manifest['images']:
+            with self.subTest(source=item['source']):
+                source = (ROOT / 'resources' / item['source']).read_bytes()
+                jpeg = (ROOT / 'resources' / item['jpeg']).read_bytes()
+                self.assertEqual(hashlib.sha256(source).hexdigest(), item['source_sha256'])
+                self.assertEqual(hashlib.sha256(jpeg).hexdigest(), item['jpeg_sha256'])
+                self.assertEqual(source[:8], b'\x89PNG\r\n\x1a\n')
+                self.assertEqual(jpeg[:2], b'\xff\xd8')
+                self.assertEqual(mapping[item['source']], item['jpeg'])
+
     def test_variants_are_packaged_and_bounded(self):
         for e in self.images:
             variant = e.get('variant', {})

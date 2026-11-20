@@ -15,6 +15,8 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QHostAddress>
+#include <QLineEdit>
+#include <QMenu>
 #include <QPointer>
 #include <QPushButton>
 #include <QRectF>
@@ -25,6 +27,7 @@
 #include <QTemporaryDir>
 #include <QTimer>
 #include <QToolButton>
+#include <QWidgetAction>
 #include <QtEndian>
 #include <algorithm>
 #include <array>
@@ -34,6 +37,7 @@
 #include <cstdio>
 #include <cstring>
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <nlohmann/json.hpp>
@@ -67,6 +71,7 @@
 #include "pj_runtime/ExtensionCatalogService.h"
 #include "pj_runtime/PluginRuntimeCatalog.h"
 #include "pj_runtime/SessionManager.h"
+#include "pj_runtime/Time.h"
 #include "pj_widgets/Dialog.h"
 #include "pj_widgets/MessageBox.h"
 #include "pj_widgets/ToggleSwitch.h"
@@ -434,7 +439,6 @@ TEST_F(McpServerTest, UnderTheUsersDialogOnlyReadsRun) {
     boxes.front()->reject();
   });
   probe.start(50);
-  // The user's own prompt, modal like every desktop question.
   openUsersDialog();
   ASSERT_TRUE(pumpUntil([&] { return change.has_value() && visible<PJ::MessageBox>().empty(); }));
   const auto [status_text, status_error] = result(*status);
@@ -443,6 +447,195 @@ TEST_F(McpServerTest, UnderTheUsersDialogOnlyReadsRun) {
   const auto [change_text, change_error] = result(*change);
   EXPECT_TRUE(change_error);
   EXPECT_NE(change_text.find("'Hold on' open"), std::string::npos) << change_text;
+}
+
+// ui_plot reads what the canvas shows, which ui_tree cannot (the canvas is painted): a replay script asserts on it.
+TEST_F(McpServerTest, UiPlotReadsTheVisiblePlots) {
+  PJ::mcp::setUiToolsEnabled(true);
+  window_->show();
+  ASSERT_NE(loadMock(), 0);
+  for (const json& args :
+       {json{{"action", "create"}, {"tab", "mine"}},
+        json{{"action", "add"}, {"tab", "mine"}, {"curves", {"mock/file_data/value"}}},
+        json{{"action", "zoom"}, {"tab", "mine"}, {"start_s", 10.0}, {"end_s", 20.0}}}) {
+    const auto [text, error] = result(call("plot_tab", args));
+    ASSERT_FALSE(error) << text;
+  }
+  QCoreApplication::processEvents();
+  const auto [text, failed] = result(call("ui_plot", json::object()));
+  ASSERT_FALSE(failed) << text;
+  const json plots = json::parse(text, nullptr, false);
+  ASSERT_TRUE(plots.is_array() && !plots.empty()) << text;
+  const json& plot = plots.front();
+  for (const char* key : {"title", "x", "y", "curves", "tracker"}) {
+    EXPECT_TRUE(plot.contains(key)) << key << " in " << text;
+  }
+  EXPECT_EQ(plot["x"], json({"10.000", "20.000"})) << text;
+  ASSERT_EQ(plot["curves"].size(), 1U) << text;
+  EXPECT_TRUE(plot["curves"][0].value("visible", false)) << text;
+
+  const auto [missing, missing_failed] = result(call("ui_plot", {{"title", "no such plot"}}));
+  EXPECT_TRUE(missing_failed) << missing;
+  EXPECT_TRUE(PJ::mcp::isReadOnlyTool("ui_plot"));
+  EXPECT_EQ(PJ::mcp::uiSettleMs("ui_plot", {{"wait_ms", 500}}), 0);
+  PJ::mcp::setUiToolsEnabled(false);
+}
+
+TEST_F(McpServerTest, UiToolsClickTheUsersDialogOnlyWhenTheRunAskedForThem) {
+  const auto listed = [this] {
+    const Answer answer = rpcAs(token_, {{"jsonrpc", "2.0"}, {"id", 1}, {"method", "tools/list"}}, "test");
+    return answer.body.dump().find("\"ui_click\"") != std::string::npos;
+  };
+  EXPECT_FALSE(listed());
+  EXPECT_TRUE(result(call("ui_tree", json::object())).second);
+
+  PJ::mcp::setUiToolsEnabled(true);
+  EXPECT_TRUE(listed());
+  window_->show();
+  std::pair<std::string, bool> tree{"", true};
+  std::pair<std::string, bool> clicked{"", true};
+  std::pair<std::string, bool> by_name{"", true};
+  bool closed_by_click = false;
+  bool busy = false;
+  // The user's prompt runs its own modal loop: the calls go from a timer inside it.
+  QTimer probe;
+  QObject::connect(&probe, &QTimer::timeout, [&] {
+    const std::vector<PJ::MessageBox*> boxes = visible<PJ::MessageBox>();
+    if (busy || boxes.empty()) {
+      return;
+    }
+    busy = true;
+    // A name the main window behind the dialog also uses names only the dialog's widget.
+    auto* behind = new QLineEdit(window_.get());
+    behind->setObjectName(QStringLiteral("uiToolsTwin"));
+    behind->show();
+    auto* in_dialog = new QLineEdit(boxes.front());
+    in_dialog->setObjectName(QStringLiteral("uiToolsTwin"));
+    in_dialog->setReadOnly(true);
+    in_dialog->show();
+    (new QPushButton(QStringLiteral("&Mnemonic"), boxes.front()))->show();
+    by_name = result(call("ui_click", {{"name", "uiToolsTwin"}}));
+    tree = result(call("ui_tree", json::object()));
+    const QRegularExpressionMatch ok =
+        QRegularExpression(uR"(\[(w\d+)\] [^\n]*"OK")"_s).match(QString::fromStdString(tree.first));
+    if (ok.hasMatch()) {
+      clicked = result(call("ui_click", {{"ref", ok.captured(1).toStdString()}}));
+      closed_by_click = pumpUntil([] { return visible<PJ::MessageBox>().empty(); }, 5000);
+    }
+    for (PJ::MessageBox* box : visible<PJ::MessageBox>()) {
+      box->reject();  // never leave the test inside the prompt's loop
+    }
+  });
+  probe.start(50);
+  openUsersDialog();
+  ASSERT_TRUE(pumpUntil([&] { return busy && visible<PJ::MessageBox>().empty(); }));
+
+  EXPECT_FALSE(by_name.second) << by_name.first;
+  ASSERT_FALSE(tree.second) << tree.first;
+  // What typing cannot change says so, and a button reads without its mnemonic marker.
+  EXPECT_NE(tree.first.find("#uiToolsTwin (read-only)"), std::string::npos) << tree.first;
+  EXPECT_NE(tree.first.find("QPushButton \"Mnemonic\""), std::string::npos) << tree.first;
+  // The user's dialog comes first, and its button has a ref.
+  const std::string first_line = tree.first.substr(0, tree.first.find('\n'));
+  EXPECT_NE(first_line.find("\"Hold on\""), std::string::npos) << tree.first;
+  EXPECT_NE(first_line.find("modal"), std::string::npos) << tree.first;
+  // The window it blocks is one line, not its whole tree.
+  EXPECT_NE(tree.first.find("PJ::MainWindow#MainWindow \"PlotJuggler 4\" (behind the modal dialog)"), std::string::npos)
+      << tree.first;
+  // A UI tool runs under the user's dialog, and its click goes through the window system as a mouse's would.
+  ASSERT_FALSE(clicked.second) << clicked.first << "\n" << tree.first;
+  EXPECT_NE(clicked.first.find("\"OK\""), std::string::npos) << clicked.first;
+  EXPECT_TRUE(closed_by_click);
+  EXPECT_TRUE(result(call("ui_click", {{"ref", "w999999"}})).second);
+  PJ::mcp::setUiToolsEnabled(false);
+}
+
+// A popup is a top-level window and also a child of the widget that owns it: a name in it still names one widget.
+TEST_F(McpServerTest, UiToolsFindAWidgetInAnOpenPopupByName) {
+  PJ::mcp::setUiToolsEnabled(true);
+  window_->show();
+  QMenu menu(window_.get());
+  menu.setObjectName(QStringLiteral("uiToolsPopup"));
+  const auto add_button = [&menu](const QString& name) {
+    auto* button = new QPushButton(QStringLiteral("Pick"), &menu);
+    button->setObjectName(name);
+    auto* action = new QWidgetAction(&menu);
+    action->setDefaultWidget(button);
+    menu.addAction(action);
+    return button;
+  };
+  int picked = 0;
+  QObject::connect(add_button(QStringLiteral("uiToolsPopupPick")), &QPushButton::clicked, [&] { ++picked; });
+  menu.popup(window_->mapToGlobal(QPoint(20, 20)));
+  ASSERT_TRUE(pumpUntil([&] { return QApplication::activePopupWidget() == &menu; }));
+
+  // A QWidgetAction's button leaves the menu open: both clicks land on it, by its own name and by the menu's.
+  const auto [by_name, by_name_error] = result(call("ui_click", {{"name", "uiToolsPopupPick"}}));
+  EXPECT_FALSE(by_name_error) << by_name;
+  EXPECT_TRUE(pumpUntil([&] { return picked == 1; })) << by_name;
+  const auto [by_menu, by_menu_error] = result(call("ui_click", {{"name", "uiToolsPopup"}}));
+  EXPECT_FALSE(by_menu_error) << by_menu;
+  EXPECT_TRUE(pumpUntil([&] { return picked == 2; })) << by_menu;
+
+  const auto [tree, tree_error] = result(call("ui_tree", json::object()));
+  ASSERT_FALSE(tree_error) << tree;
+  const std::string listed = "#uiToolsPopup (popup)";
+  EXPECT_NE(tree.find(listed), std::string::npos) << tree;
+  EXPECT_EQ(tree.find(listed, tree.find(listed) + 1), std::string::npos) << tree;
+
+  // Two different visible widgets with one name are still refused.
+  QPushButton* twin = add_button(QStringLiteral("uiToolsPopupPick"));
+  ASSERT_TRUE(pumpUntil([&] { return twin->isVisible(); }));
+  const auto [twins, twins_error] = result(call("ui_click", {{"name", "uiToolsPopupPick"}}));
+  EXPECT_TRUE(twins_error) << twins;
+  EXPECT_NE(twins.find("2 visible widgets"), std::string::npos) << twins;
+  menu.hide();
+  PJ::mcp::setUiToolsEnabled(false);
+}
+
+TEST_F(McpServerTest, UiToolsAnswerAClickThatOpensAModalDialogWhileItIsOpen) {
+  PJ::mcp::setUiToolsEnabled(true);
+  window_->show();
+  QPushButton opener(QStringLiteral("Open"));
+  opener.setObjectName(QStringLiteral("uiToolsOpener"));
+  QObject::connect(&opener, &QPushButton::clicked, window_.get(), [this] {
+    PJ::MessageBox::questionAsync(
+        window_.get(), QStringLiteral("Hold on"), QStringLiteral("Opened by a click."),
+        {{QStringLiteral("OK"), PJ::MessageBox::kPrimaryRole}}, {});
+  });
+  opener.show();
+
+  const std::unique_ptr<QTcpSocket> click = post("ui_click", {{"name", "uiToolsOpener"}});
+  bool answered_while_open = false;
+  std::pair<std::string, bool> escaped{"", true};
+  bool closed_by_key = false;
+  bool busy = false;
+  // The dialog's modal loop runs inside the click's delivery: the checks go from a timer inside it.
+  QTimer probe;
+  QObject::connect(&probe, &QTimer::timeout, [&] {
+    if (busy || visible<PJ::MessageBox>().empty()) {
+      return;
+    }
+    busy = true;
+    answered_while_open = pumpUntil([&] { return click->bytesAvailable() > 0; }, 5000);
+    escaped = result(call("ui_key", {{"keys", "Escape"}}));
+    closed_by_key = pumpUntil([] { return visible<PJ::MessageBox>().empty(); }, 5000);
+    for (PJ::MessageBox* box : visible<PJ::MessageBox>()) {
+      box->reject();  // never leave the test inside the dialog's loop
+    }
+  });
+  probe.start(50);
+  const Answer clicked = exchange(*click);
+  ASSERT_TRUE(pumpUntil([&] { return busy && visible<PJ::MessageBox>().empty(); }));
+
+  const auto [click_text, click_error] = result(clicked);
+  ASSERT_FALSE(click_error) << click_text;
+  EXPECT_NE(click_text.find("uiToolsOpener"), std::string::npos) << click_text;
+  EXPECT_TRUE(answered_while_open) << "the click's answer waited for the dialog it opened to close";
+  // With no target, keys go to the user's modal dialog.
+  EXPECT_FALSE(escaped.second) << escaped.first;
+  EXPECT_TRUE(closed_by_key);
+  PJ::mcp::setUiToolsEnabled(false);
 }
 
 TEST_F(McpServerTest, ADialogAnAgentOpensSaysSo) {
@@ -2466,6 +2659,13 @@ class McpEndpointTest : public McpServerTest {
     return window_->pluginPlotTabs().ownedTab(QString::fromLatin1(owner), QString::fromLatin1(tab));
   }
 
+  /// The first plot of `owner`'s plot tab `tab`, or null.
+  [[nodiscard]] PJ::PlotWidget* plotOf(const char* owner, const char* tab) const {
+    PJ::PlotDocker* docker = window_->pluginPlotTabs().ownedTab(QString::fromLatin1(owner), QString::fromLatin1(tab));
+    PJ::DockWidget* dock = docker == nullptr || docker->plotCount() == 0 ? nullptr : docker->plotAt(0);
+    return dock == nullptr ? nullptr : dock->plotWidget();
+  }
+
   void createTab(const std::string& token, const std::string& tab) const {
     const auto [text, error] = result(callAs(token, "plot_tab", {{"action", "create"}, {"tab", tab}}));
     EXPECT_FALSE(error) << text;
@@ -2613,6 +2813,113 @@ TEST_F(McpEndpointTest, PlotTabZoomFramesOnlyTheNamedTab) {
   const auto [refused, refused_error] = result(call("plot_tab", {{"action", "zoom"}, {"tab", "c"}}));
   EXPECT_TRUE(refused_error);
   EXPECT_NE(refused.find("a, b"), std::string::npos) << refused;
+}
+
+// A zoom range the axis cannot hold is refused and the plot keeps its window: a width that overflows Qwt's scale
+// division, bounds beyond what the nanosecond time base can hold, a range so narrow the axis collapses. A range of
+// epoch seconds still applies.
+TEST_F(McpEndpointTest, PlotTabZoomRefusesARangeThatCannotBeDrawn) {
+  openPublic();
+  ASSERT_NE(loadMock(), 0);
+  for (const json& args :
+       {json{{"action", "create"}, {"tab", "a"}},
+        json{{"action", "add"}, {"tab", "a"}, {"curves", {"mock/file_data/value"}}}}) {
+    const auto [text, error] = result(call("plot_tab", args));
+    ASSERT_FALSE(error) << text;
+  }
+  PJ::PlotDocker* docker = window_->pluginPlotTabs().ownedTab(u"agent-test"_s, u"a"_s);
+  ASSERT_NE(docker, nullptr);
+  PJ::PlotWidget* plot = docker->plotAt(0)->plotWidget();
+  ASSERT_NE(plot, nullptr);
+  const QRectF before = plot->currentBoundingRect();
+
+  for (const auto& [start, end] :
+       {std::pair{-1.7e308, 1.7e308}, std::pair{0.0, 1e10}, std::pair{-1.7976931348623157e308, 1e291},
+        std::pair{0.0, 5e-324}}) {
+    const auto [refused, refused_error] =
+        result(call("plot_tab", {{"action", "zoom"}, {"tab", "a"}, {"start_s", start}, {"end_s", end}}));
+    EXPECT_TRUE(refused_error) << start << ".." << end << ": " << refused;
+    EXPECT_NE(refused.find("zoom range"), std::string::npos) << refused;
+    EXPECT_EQ(plot->currentBoundingRect(), before) << start << ".." << end;
+  }
+
+  // The viewport service refuses non-finite values before they get here and the tool's JSON cannot carry them, so this
+  // only guards the controller.
+  const double inf = std::numeric_limits<double>::infinity();
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  for (const auto& [t0, t1] : {std::pair{0.0, inf}, std::pair{-inf, 0.0}, std::pair{nan, 1.0}, std::pair{0.0, nan}}) {
+    EXPECT_FALSE(window_->pluginPlotTabs().zoomToTimeRange(u"agent-test"_s, t0, t1, u"a"_s).has_value())
+        << t0 << ".." << t1;
+    EXPECT_EQ(plot->currentBoundingRect(), before);
+  }
+
+  const auto [applied, applied_error] =
+      result(call("plot_tab", {{"action", "zoom"}, {"tab", "a"}, {"start_s", 1.7e9}, {"end_s", 1.7e9 + 60.0}}));
+  ASSERT_FALSE(applied_error) << applied;
+  EXPECT_NEAR(plot->currentBoundingRect().left(), 1.7e9, 1e-3);
+  EXPECT_NEAR(plot->currentBoundingRect().right(), 1.7e9 + 60.0, 1e-3);
+}
+
+// The first curve in a plot_tab frames the plot to its data: the empty plot's 0..1 window shows none of it (nothing at
+// all for epoch-time series). A curve added to a plot that has curves leaves the view where the caller put it.
+TEST_F(McpEndpointTest, PlotTabAddFitsAnEmptyPlotAndKeepsAZoomedOne) {
+  openPublic();
+  ASSERT_NE(loadMock(), 0);  // samples 100 ns apart: the data spans far less than the empty plot's 1 s
+  const auto [created, create_error] = result(call("plot_tab", {{"action", "create"}, {"tab", "a"}}));
+  ASSERT_FALSE(create_error) << created;
+  const auto [added, add_error] =
+      result(call("plot_tab", {{"action", "add"}, {"tab", "a"}, {"curves", {"mock/file_data/value"}}}));
+  ASSERT_FALSE(add_error) << added;
+  PJ::PlotWidget* plot = plotOf("agent-test", "a");  // the plot is built by the first curve
+  ASSERT_NE(plot, nullptr);
+  const QRectF fitted = plot->currentBoundingRect();
+  EXPECT_GT(fitted.right(), fitted.left());
+  EXPECT_LT(fitted.right() - fitted.left(), 1e-3) << "X is still the empty plot's 0..1";
+  EXPECT_NEAR(fitted.left(), plot->maxZoomRect().left(), 1e-12);
+  EXPECT_NEAR(fitted.right(), plot->maxZoomRect().right(), 1e-12);
+
+  const auto [zoomed, zoom_error] =
+      result(call("plot_tab", {{"action", "zoom"}, {"tab", "a"}, {"start_s", 10.0}, {"end_s", 20.0}}));
+  ASSERT_FALSE(zoom_error) << zoomed;
+  const auto [derived, derived_error] = result(call(
+      "create_derived_series",
+      {{"name", "tripled"}, {"inputs", {"mock/file_data/value"}}, {"expression", "value * 3"}}));
+  ASSERT_FALSE(derived_error) << derived;
+  const auto [more, more_error] = result(call(
+      "plot_tab",
+      {{"action", "add"}, {"tab", "a"}, {"curves", {json::parse(derived, nullptr, false).value("series", "")}}}));
+  ASSERT_FALSE(more_error) << more;
+  EXPECT_EQ(plot->curveList().size(), 2U) << "the second curve must have landed for the view to be tested";
+  EXPECT_NEAR(plot->currentBoundingRect().left(), 10.0, 1e-9);
+  EXPECT_NEAR(plot->currentBoundingRect().right(), 20.0, 1e-9);
+}
+
+// One call adding several curves to an empty tab frames all of them, not only the first: here the second dataset is
+// shifted a thousand seconds from the first.
+TEST_F(McpEndpointTest, PlotTabAddFramesEveryCurveOfTheCall) {
+  openPublic();
+  ASSERT_NE(loadMock(), 0);
+  const auto [opened, open_error] =
+      result(call("open_file", {{"path", pj_app_test::makeMockFile(data_, "b.mock").toStdString()}}));
+  ASSERT_FALSE(open_error) << opened;
+  const int second = json::parse(opened, nullptr, false).value("dataset_id", 0);
+  ASSERT_NE(second, 0);
+  window_->appSession().sessionManager().setDisplayOffset(
+      static_cast<PJ::DatasetId>(second), PJ::DisplayOffset{PJ::Duration{-1'000'000'000'000}});
+
+  const auto [created, create_error] = result(call("plot_tab", {{"action", "create"}, {"tab", "a"}}));
+  ASSERT_FALSE(create_error) << created;
+  const auto [added, add_error] = result(call(
+      "plot_tab",
+      {{"action", "add"}, {"tab", "a"}, {"curves", {"a.mock:mock/file_data/value", "b.mock:mock/file_data/value"}}}));
+  ASSERT_FALSE(add_error) << added;
+  PJ::PlotWidget* plot = plotOf("agent-test", "a");
+  ASSERT_NE(plot, nullptr);
+  ASSERT_EQ(plot->curveList().size(), 2U);
+  const QRectF view = plot->currentBoundingRect();
+  EXPECT_GT(view.right() - view.left(), 900.0) << "the view frames only the first curve";
+  EXPECT_NEAR(view.left(), plot->maxZoomRect().left(), 1e-6);
+  EXPECT_NEAR(view.right(), plot->maxZoomRect().right(), 1e-6);
 }
 
 TEST_F(McpEndpointTest, TearingDownTheSessionRevokesAndDropsItsEvaluation) {

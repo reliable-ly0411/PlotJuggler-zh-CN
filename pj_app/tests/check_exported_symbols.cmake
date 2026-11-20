@@ -1,14 +1,10 @@
 # Copyright 2026 Davide Faconti
 # SPDX-License-Identifier: MPL-2.0
 #
-# Guards the anti-interposition protection in pj_app/CMakeLists.txt.
-#
-# pj_app links --exclude-libs,ALL so that symbols pulled in from static archive
-# members (Conan's libpng, zstd, bzip2, CPython, …) stay out of its dynamic symbol
-# table. Without it the loader can interpose them ahead of the system copies that
-# GTK/glib load — the libpng 1.6.43-vs-1.6.58 ABI skew that crashed
-# QGtk3Interface::fileIcon during QFileDialog. That fix shipped with no test, so
-# nothing would notice a future link-option change quietly undoing it.
+# Guards the --exclude-libs,ALL link option in pj_app/CMakeLists.txt, which keeps symbols from static archive
+# members (Conan's libpng, zstd, bzip2, CPython, ...) out of pj_app's dynamic symbol table. Without it the loader
+# can interpose them ahead of the system copies GTK/glib load (libpng 1.6.43 vs 1.6.58 ABI skew crashed
+# QGtk3Interface::fileIcon during QFileDialog).
 #
 # Run standalone as:
 #   cmake -DTARGET=<path/to/plotjuggler4> -DNM=<path/to/nm> -P check_exported_symbols.cmake
@@ -99,10 +95,8 @@ foreach(_sym IN LISTS _exported)
   list(APPEND _leaked "${_sym}")
 endforeach()
 
-# Backstop for a mass leak of C++ symbols, which the structural rule alone would
-# wave through (Luau, assimp and friends are C++ too). Deliberately generous: this
-# must never fire on ordinary growth, only on --exclude-libs having stopped
-# working. The measured baseline is 40.
+# Backstop for a mass leak of C++ symbols (Luau, assimp and friends are C++ too), which the structural rule
+# waves through. Generous on purpose: it must fire only when --exclude-libs has stopped working (baseline 40).
 set(_ceiling 200)
 
 if(_leaked)

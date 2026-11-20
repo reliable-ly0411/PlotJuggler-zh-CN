@@ -1,0 +1,102 @@
+[
+  {
+    "identity": {
+      "role": "localized",
+      "kind": "production",
+      "source_repository": "reliable-ly0411/PlotJuggler-zh-CN",
+      "source_sha": "2459f63bf38dc0b7eddc2e8588197672afdd0ad8",
+      "source_tree": "db8ccaacffd76bf8e97b911af86e93e08ddc3852",
+      "controller_sha": "2459f63bf38dc0b7eddc2e8588197672afdd0ad8"
+    },
+    "receipt_sha256": "7b722fa9265f473ed259b4806898e1a4eabc324b8af2fee71ca4ce21b0f3d5bb",
+    "archive_sha256": "b22bb9b59df67ab7097b82d7199321700cdc1599c418971f26720f8f36663ae8",
+    "packages": [
+      {
+        "path": "build-wasm-prod/deploy",
+        "startup_bytes": 24578988,
+        "total_bytes": 25336210,
+        "files": 40
+      }
+    ],
+    "extra_files": 0,
+    "all_recorded_bytes_verified": true
+  },
+  {
+    "identity": {
+      "role": "upstream",
+      "kind": "production",
+      "source_repository": "PlotJuggler/PlotJuggler",
+      "source_sha": "5002da40a6499cb99c1073d5b8c611f1e825cb4b",
+      "source_tree": "683180b54173a1761ec021330a90bc5e0feba120",
+      "controller_sha": "2459f63bf38dc0b7eddc2e8588197672afdd0ad8"
+    },
+    "receipt_sha256": "22c18a793ea3eb3472f2387f47237304c3b87c4f7efda8c00c4e76ddef18f403",
+    "archive_sha256": "1d5eb07a4632b716172092b0f0317ea0526344d5847897a9cfcb8b59ce2e9441",
+    "packages": [
+      {
+        "path": "build-wasm-prod/deploy",
+        "startup_bytes": 15064636,
+        "total_bytes": 15821858,
+        "files": 40
+      }
+    ],
+    "extra_files": 0,
+    "all_recorded_bytes_verified": true
+  },
+  {
+    "identity": {
+      "role": "localized",
+      "kind": "acceptance",
+      "source_repository": "reliable-ly0411/PlotJuggler-zh-CN",
+      "source_sha": "2459f63bf38dc0b7eddc2e8588197672afdd0ad8",
+      "source_tree": "db8ccaacffd76bf8e97b911af86e93e08ddc3852",
+      "controller_sha": "2459f63bf38dc0b7eddc2e8588197672afdd0ad8"
+    },
+    "receipt_sha256": "63563fd8a7d3ff9071430a702f7abb760861233e40f63c5ccf25f0a2f905fb6b",
+    "archive_sha256": "3ea38d98b7f88935d52ead3bfbc16cf42f2e78ab11021d9cbfba2c37f0300b1e",
+    "packages": [
+      {
+        "path": "build-wasm-probe/deploy",
+        "startup_bytes": 24657367,
+        "total_bytes": 25324475,
+        "files": 24
+      },
+      {
+        "path": "build-wasm-probe/deploy-presets",
+        "startup_bytes": 24657367,
+        "total_bytes": 25414589,
+        "files": 40
+      }
+    ],
+    "extra_files": 6,
+    "all_recorded_bytes_verified": true
+  },
+  {
+    "identity": {
+      "role": "upstream",
+      "kind": "acceptance",
+      "source_repository": "PlotJuggler/PlotJuggler",
+      "source_sha": "5002da40a6499cb99c1073d5b8c611f1e825cb4b",
+      "source_tree": "683180b54173a1761ec021330a90bc5e0feba120",
+      "controller_sha": "2459f63bf38dc0b7eddc2e8588197672afdd0ad8"
+    },
+    "receipt_sha256": "e67513f795f9a25135d337499a68e11e695b6ea01169428c870bc0353c7b05b6",
+    "archive_sha256": "eb271d3cdbfdbc306fc5e33f8b99de5149afeaa5022641380a336202f1e9fa70",
+    "packages": [
+      {
+        "path": "build-wasm-probe/deploy",
+        "startup_bytes": 15138095,
+        "total_bytes": 15805203,
+        "files": 24
+      },
+      {
+        "path": "build-wasm-probe/deploy-presets",
+        "startup_bytes": 15138095,
+        "total_bytes": 15895317,
+        "files": 40
+      }
+    ],
+    "extra_files": 6,
+    "all_recorded_bytes_verified": true
+  }
+]
