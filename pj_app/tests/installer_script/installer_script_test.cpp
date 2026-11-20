@@ -33,6 +33,33 @@ equal(restartArguments(['setup.exe', '--lang=en_US', '-t=old', '--', 'literal'],
       ['--lang', 'zh_CN', '-t=C:/chosen', '--', 'literal', 'TargetDir=C:/chosen']);
 equal(restartArguments(['setup.exe'], 'zh_CN', 'C:/new'),
       ['--lang', 'zh_CN', 'TargetDir=C:/new']);
+// #55: all six directed language changes and Traditional locale aliases.
+
+var languages = ['zh_CN', 'en_US', 'zh_TW'];
+for (var source = 0; source < 3; source++) {
+  for (var destination = 0; destination < 3; destination++) {
+    if (source === destination) continue;
+    var target = 'C:\\測試 space\\new target\\';
+    var language = installerLanguageForIndex(destination, 3);
+    equal(language, languages[destination]);
+    equal(restartArguments(['setup.exe','--lang',languages[source],
+      '--offline-only','--root','old target','TargetDir=obsolete','--proxy','http://localhost:8080'],
+      language,target),
+      ['--lang',language,'--offline-only','--root',target,'--proxy','http://localhost:8080','TargetDir='+target]);
+  }
+}
+for (var locale of ['zh_TW','zh-Hant-TW','zh_HK','zh_MO','ZH_tw']) {
+  equal(installerLanguageIndex(locale,3),2);
+  equal(installerLanguageIndex(locale,2),1);
+}
+for (var locale of ['zh_CN','zh-Hans-CN','zh_SG','zh']) equal(installerLanguageIndex(locale,3),0);
+for (var locale of ['en_US','de_DE','']) equal(installerLanguageIndex(locale,3),1);
+for (var index=0; index<3; index++) equal(installerLanguageForIndex(index,3),languages[index]);
+equal(installerLanguageForIndex(2,2),'en_US');
+equal(installerLanguageForIndex(-1,3),'en_US');
+equal(restartArguments(['setup.exe','--lang=en_US','-t=old','--','literal'], 'zh_TW','new'),
+      ['--lang','zh_TW','-t=new','--','literal','TargetDir=new']);
+
 // Mock only official GuiProxy APIs. In particular, rejectPage does not exist;
 // the old production branch throws TypeError here before it closes the dialog.
 var events = [], targetExists = true, answer = 1;
@@ -68,6 +95,6 @@ for (var choice = 1; choice <= 2; ++choice) {
     qCritical().noquote() << result.toString();
     return 1;
   }
-  qInfo() << "PASS: production restart argv and fail-closed replacement in Qt QJSEngine (not Node)";
+  qInfo() << "PASS: production language mapping, restart argv and fail-closed replacement in Qt QJSEngine";
   return 0;
 }
