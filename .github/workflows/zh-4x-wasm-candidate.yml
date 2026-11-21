@@ -28,7 +28,8 @@ jobs:
     if: >-
       (github.event_name == 'workflow_dispatch' && !inputs.artifact_only && !inputs.artifact_luau) ||
       (github.event_name == 'push' && github.event.head_commit.message != 'Replay verified #71 WASM acceptance artifact only' &&
-       github.event.head_commit.message != 'Probe verified #71 Firefox Luau heartbeat only')
+       github.event.head_commit.message != 'Probe verified #71 Firefox Luau heartbeat only' &&
+       github.event.head_commit.message != 'Compare pinned Firefox Luau baseline with close-only candidate')
     runs-on: ubuntu-22.04
     outputs:
       upstream_sha: ${{ steps.identity.outputs.upstream_sha }}
@@ -113,9 +114,10 @@ jobs:
     if: >-
       (github.event_name == 'workflow_dispatch' && (inputs.artifact_only || inputs.artifact_luau)) ||
       (github.event_name == 'push' && github.event.head_commit.message == 'Replay verified #71 WASM acceptance artifact only') ||
-      (github.event_name == 'push' && github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only')
+      (github.event_name == 'push' && github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only') ||
+      (github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with close-only candidate')
     runs-on: ubuntu-22.04
-    timeout-minutes: 40
+    timeout-minutes: 180
     permissions:
       actions: read
       contents: read
@@ -123,13 +125,15 @@ jobs:
       fail-fast: false
       matrix:
         browser: >-
-          ${{ fromJSON((inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only') && '["firefox"]' || '["chromium","firefox"]') }}
+          ${{ fromJSON((inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with close-only candidate') && '["firefox"]' || '["chromium","firefox"]') }}
     env:
       PJ_WASM_URL: http://127.0.0.1:6931/
       PJ_WASM_BUILD_DIR: build-wasm-probe
       PJ_WASM_PYTHON: '1'
       REPLAY_LUAU_ONLY: >-
-        ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only') }}
+        ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with close-only candidate') }}
+      COMPARE_LUAU_ONLY: >-
+        ${{ github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with close-only candidate' }}
       PROFILE_FAILED_LUAU: ${{ github.event_name == 'push' || inputs.profile_failed_luau }}
     steps:
       - uses: actions/checkout@v6
@@ -176,10 +180,158 @@ jobs:
           REPLAY_BROWSER: ${{ matrix.browser }}
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/replay.sh test
       - name: Replay sole Firefox Luau acceptance case and retain independent diagnostic
-        if: env.REPLAY_LUAU_ONLY == 'true'
+        if: env.REPLAY_LUAU_ONLY == 'true' && env.COMPARE_LUAU_ONLY != 'true'
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/luau.sh
+      - name: Materialize and verify distinct close-only product B
+        if: env.COMPARE_LUAU_ONLY == 'true'
+        run: bash .replay-controller/scripts/ci/pj71-wasm-replay/ab.sh materialize
+
+      - name: Read toolchain versions
+        if: env.COMPARE_LUAU_ONLY == 'true'
+        id: versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          source ./versions.env
+          for name in PJ_QT_VERSION PJ_EMSCRIPTEN_VERSION PJ_WASM_NODE_VERSION; do
+            echo "${name}=${!name}" >> "${GITHUB_ENV}"
+          done
+          echo "wasm_qt=${PJ_QT_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "emscripten=${PJ_EMSCRIPTEN_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "node=${PJ_WASM_NODE_VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Install build tools
+        if: env.COMPARE_LUAU_ONLY == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ccache ninja-build python3-pip make pkg-config
+          # Scene2D video cross-compiles dav1d, whose build system is meson.
+          python3 -m pip install --user meson
+          # Runtime libraries for the desktop host Qt tools (qsb bakes the QRhi
+          # shaders offline and transitively links the full Qt GUI stack, even
+          # headless). The lean runner ships none of these, so qsb would die at
+          # load time with exit 127.
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libegl1 libfontconfig1 libfreetype6 libxkbcommon0 \
+            libx11-6 libxcb1 libglib2.0-0 libdbus-1-3
+
+      - name: Cache Qt WebAssembly and host kits
+        if: env.COMPARE_LUAU_ONLY == 'true'
+        id: qt-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .qt-wasm
+          key: qt-wasm-${{ steps.versions.outputs.wasm_qt }}-multithread-shadertools-v1
+
+      - name: Install Qt WebAssembly and host kits
+        if: env.COMPARE_LUAU_ONLY == 'true' && steps.qt-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --user 'aqtinstall==3.3.0'
+          "${HOME}/.local/bin/aqt" install-qt linux desktop \
+            "${PJ_QT_VERSION}" linux_gcc_64 --outputdir .qt-wasm \
+            -m qtshadertools
+          "${HOME}/.local/bin/aqt" install-qt all_os wasm \
+            "${PJ_QT_VERSION}" wasm_multithread --outputdir .qt-wasm \
+            -m qtshadertools
+
+      - name: Cache Emscripten SDK
+        if: env.COMPARE_LUAU_ONLY == 'true'
+        id: emsdk-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .emsdk
+          key: emsdk-${{ steps.versions.outputs.emscripten }}-linux-x64-v1
+
+      - name: Install Emscripten SDK
+        if: env.COMPARE_LUAU_ONLY == 'true' && steps.emsdk-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch "${PJ_EMSCRIPTEN_VERSION}" \
+            https://github.com/emscripten-core/emsdk.git .emsdk
+          .emsdk/emsdk install "${PJ_EMSCRIPTEN_VERSION}"
+          .emsdk/emsdk activate "${PJ_EMSCRIPTEN_VERSION}"
+
+      - name: Restore WebAssembly compiler cache
+        if: env.COMPARE_LUAU_ONLY == 'true'
+        # restore/save split rather than actions/cache: the implicit post-job
+        # save fires on every run and the SHA-keyed entry is never an exact
+        # hit, so each run persisted a new blob of up to max_size (4 G below)
+        # into billed Depot Cache storage. See linux-ci.yml's "Save ccache".
+        id: ccache_restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.cache/ccache
+          key: ccache-zh4-localized-857bd12b935579458914de18b59d8950b8bf71bd
+          restore-keys: |
+            ccache-zh4-localized-
+
+      - name: Configure compiler cache
+        if: env.COMPARE_LUAU_ONLY == 'true'
+        run: |
+          ccache --set-config=max_size=4G
+          ccache --set-config=compression=true
+          ccache --set-config=compiler_check=content
+          ccache --set-config=hash_dir=false
+          ccache --set-config=base_dir="${GITHUB_WORKSPACE}"
+          ccache --zero-stats
+
+      - name: Cache the WebAssembly CPython build
+        if: env.COMPARE_LUAU_ONLY == 'true'
+        # A content key (the recipe with its pinned tarball hash, the Emscripten
+        # release): an exact hit or a cold ~4 minute build, so the plain action,
+        # which saves only on a miss, adds one entry per recipe change.
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.cache/pj-wasm-cpython
+          key: wasm-cpython-${{ hashFiles('cmake/PjWasmPython.cmake', 'cmake/wasm_python/**') }}-emsdk-${{ steps.versions.outputs.emscripten }}
+
+      - name: Build acceptance configuration (shipped defaults, ingress probe on)
+        if: env.COMPARE_LUAU_ONLY == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .emsdk/emsdk_env.sh >/dev/null
+          cmake -S . -B build-wasm-probe -G Ninja \
+            -DCMAKE_EXE_LINKER_FLAGS=--emit-symbol-map \
+            -DCMAKE_TOOLCHAIN_FILE="${PWD}/.qt-wasm/${PJ_QT_VERSION}/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
+            -DQT_HOST_PATH="${PWD}/.qt-wasm/${PJ_QT_VERSION}/gcc_64" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DPJ_BUILD_TESTS=OFF \
+            -DPJ_BUILD_DEMOS=OFF \
+            -DPJ_WASM_ENABLE_INGRESS_PROBE=ON \
+            -DPJ_WASM_SCENE3D_CAPABILITY_PROBE=ON \
+            -DPJ_WASM_WITH_SCENE2D=ON \
+            -DPJ_WASM_WITH_SCENE3D=ON \
+            -DPJ_WASM_WITH_PYTHON=ON \
+            -DPJ_WASM_PYTHON_CACHE_DIR="${HOME}/.cache/pj-wasm-cpython"
+          cmake --build build-wasm-probe \
+            --target pj_app --parallel 2
+          ccache --show-stats
+
+      - name: Verify B acceptance package and run one exact same-runner A/B pair
+        if: env.COMPARE_LUAU_ONLY == 'true'
+        run: bash .replay-controller/scripts/ci/pj71-wasm-replay/ab.sh pair
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: pj71-wasm-artifact-replay-${{ matrix.browser }}-${{ github.run_attempt }}
           path: replay-evidence/
+
+      - name: Preserve distinct B acceptance package for follow-up, not distribution
+        if: ${{ !cancelled() && env.COMPARE_LUAU_ONLY == 'true' && hashFiles('replay-evidence/B-acceptance-receipt.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pj71-luau-B-bd456883-acceptance-${{ github.run_attempt }}
+          path: |
+            build-wasm-probe/deploy/
+            replay-evidence/B-acceptance-receipt.json
+            replay-evidence/B-identity.txt
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
