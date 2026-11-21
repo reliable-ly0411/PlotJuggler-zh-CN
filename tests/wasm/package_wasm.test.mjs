@@ -507,3 +507,47 @@ test('packaging remains deterministic', async t => {
     assert.deepEqual(await readFile(path.join(second, relative)), await readFile(path.join(first, relative)), relative);
   }
 });
+
+test('keeps default Q9 immutable URLs and uses a distinct reproducible localized Q10 profile', async t => {
+  const { root, source } = await fixture(t);
+  const options = { source, version: 'identity-test' };
+  const originalRoot = path.join(root, 'original');
+  const explicitRoot = path.join(root, 'explicit');
+  const localizedRoot = path.join(root, 'localized');
+  const localizedRootB = path.join(root, 'localized-b');
+  const simple = await packageWasm({ ...options, output: originalRoot });
+  const explicit = await packageWasm({ ...options, output: explicitRoot, compressionProfile: 'default' });
+  const compressed = await packageWasm({ ...options, output: localizedRoot, compressionProfile: 'localized' });
+  const repeated = await packageWasm({ ...options, output: localizedRootB, compressionProfile: 'localized' });
+
+  const legacyHash = createHash('sha256');
+  for (const fileName of ['plotjuggler4.js', 'plotjuggler4.wasm', 'qtloader.js', 'THIRD_PARTY_NOTICES.txt', 'plotjuggler.svg']) {
+    const bytes = await readFile(fileName === 'plotjuggler.svg'
+      ? path.join(ROOT, 'resources', fileName)
+      : path.join(source, fileName));
+    legacyHash.update(fileName + '\0' + bytes.length + '\0' + createHash('sha256').update(bytes).digest('hex') + '\n');
+  }
+  assert.equal(simple.bundleId, 'sha256-' + legacyHash.digest('hex').slice(0, 32));
+  assert.deepEqual(simple.packagingRuntime.brotli, { quality: 9, window: 22 });
+  assert.deepEqual(simple, explicit);
+  assert.deepEqual(compressed.packagingRuntime.brotli, { quality: 10, window: 22 });
+  assert.notEqual(compressed.bundleId, simple.bundleId);
+  assert.deepEqual(compressed, repeated);
+  const normalized = name => name.replace(/^assets\/sha256-[a-f0-9]+\//, 'assets/{bundle}/');
+  assert.deepEqual(compressed.files.map(f => normalized(f.path)), simple.files.map(f => normalized(f.path)));
+  for (let i = 0; i < simple.files.length; i++) {
+    const base = simple.files[i];
+    const localized = compressed.files[i];
+    if (base.path === 'index.html') continue;
+    assert.equal(localized.representations.identity.sha256, base.representations.identity.sha256, base.path);
+    assert.equal(localized.representations.gzip?.sha256, base.representations.gzip?.sha256, base.path);
+    if (!localized.representations.br) continue;
+    const bytes = await readFile(path.join(localizedRoot, localized.representations.br.path));
+    assert.deepEqual(bytes, await readFile(path.join(localizedRootB, localized.representations.br.path)));
+    assert.deepEqual(brotliDecompressSync(bytes), await readFile(path.join(originalRoot, base.path)));
+  }
+  await assert.rejects(
+    packageWasm({ ...options, output: path.join(root, 'invalid'), compressionProfile: 'q11' }),
+    /Unknown compression profile/,
+  );
+});

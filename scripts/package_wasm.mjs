@@ -81,7 +81,10 @@ export const COMPRESSIBLE_TYPES = new Set([
   '.zip',
 ]);
 const MINIMUM_COMPRESSED_SIZE = 1024;
-const BROTLI_QUALITY = 9;
+const BROTLI_PROFILES = new Map([
+  ['default', 9],
+  ['localized', 10],
+]);
 const BROTLI_WINDOW = 22;
 const GZIP_LEVEL = 9;
 const DEPLOYMENT_FORMAT = 'org.plotjuggler.wasm-deployment.v1';
@@ -100,6 +103,7 @@ Options:
   --output <dir>   Deployment package directory (default: build-wasm/deploy)
   --version <text> Application version (default: PJ_VERSION or versions.env)
   --presets <dir>  Preset tree to deploy under presets/ (default: none)
+  --compression-profile <default|localized>  Brotli profile (default: default)
   --help           Show this help
 `;
 }
@@ -117,14 +121,14 @@ function parseArguments(argv) {
       process.stdout.write(usage());
       process.exit(0);
     }
-    if (!['--source', '--output', '--version', '--presets'].includes(argument)) {
+    if (!['--source', '--output', '--version', '--presets', '--compression-profile'].includes(argument)) {
       throw new Error(`Unknown argument: ${argument}\n\n${usage()}`);
     }
     const value = argv[index + 1];
     if (!value || value.startsWith('--')) {
       throw new Error(`${argument} requires a value`);
     }
-    options[argument.slice(2)] = value;
+    options[argument === '--compression-profile' ? 'compressionProfile' : argument.slice(2)] = value;
     index += 1;
   }
 
@@ -164,15 +168,14 @@ function fillTemplate(template, values) {
   });
 }
 
-async function compressedRepresentations(contents) {
+async function compressedRepresentations(contents, brotliQuality) {
   const [brotli, gzipContents] = await Promise.all([
     brotliCompressAsync(contents, {
       params: {
         [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_GENERIC,
-        // Quality 9 keeps release packaging practical for the 250+ MiB module;
-        // quality 11 took more than five CPU-minutes without completing on the
-        // reference host. Binary-size work is measured separately from delivery.
-        [zlibConstants.BROTLI_PARAM_QUALITY]: BROTLI_QUALITY,
+        // Preserve Q9 for the default/upstream profile. Localized delivery
+        // keeps the same identity bytes and uses Q10 for its existing total cap.
+        [zlibConstants.BROTLI_PARAM_QUALITY]: brotliQuality,
         [zlibConstants.BROTLI_PARAM_LGWIN]: BROTLI_WINDOW,
       },
     }),
@@ -186,7 +189,7 @@ async function compressedRepresentations(contents) {
   return { brotli, gzip: gzipContents };
 }
 
-async function writeAsset(stagingRoot, logicalPath, contents, compress) {
+async function writeAsset(stagingRoot, logicalPath, contents, compress, brotliQuality) {
   const destination = path.join(stagingRoot, logicalPath);
   await mkdir(path.dirname(destination), { recursive: true });
   await writeFile(destination, contents, { mode: 0o644 });
@@ -195,7 +198,7 @@ async function writeAsset(stagingRoot, logicalPath, contents, compress) {
     identity: representation(logicalPath, contents),
   };
   if (compress && contents.length >= MINIMUM_COMPRESSED_SIZE) {
-    const encoded = await compressedRepresentations(contents);
+    const encoded = await compressedRepresentations(contents, brotliQuality);
     const brotliPath = `${logicalPath}.br`;
     const gzipPath = `${logicalPath}.gz`;
     await writeFile(path.join(stagingRoot, brotliPath), encoded.brotli, { mode: 0o644 });
@@ -381,6 +384,11 @@ async function validateReplaceableOutput(outputRoot) {
 }
 
 export async function packageWasm(options) {
+  const compressionProfile = options.compressionProfile ?? 'default';
+  const brotliQuality = BROTLI_PROFILES.get(compressionProfile);
+  if (brotliQuality === undefined) {
+    throw new Error(`Unknown compression profile: ${JSON.stringify(compressionProfile)}`);
+  }
   const sourceRoot = path.resolve(options.source);
   const outputRoot = path.resolve(options.output);
   const presetsRoot = options.presets ? path.resolve(options.presets) : undefined;
@@ -412,6 +420,13 @@ export async function packageWasm(options) {
     readFile(path.join(REPOSITORY_ROOT, 'resources', LOGO)).then(contents => ({ fileName: LOGO, contents })),
   ]);
   const bundleDigest = createHash('sha256');
+  if (compressionProfile === 'localized') {
+    // Immutable assets include negotiated representation bytes. Keep the
+    // historical default digest unchanged but separate the localized profile
+    // and encoder versions, so Q10 never replaces cached Q9 representations.
+    bundleDigest.update(`pj-wasm/localized-compression/v1/q${brotliQuality}-w${BROTLI_WINDOW}/`);
+    bundleDigest.update(`${process.version}/${process.versions.brotli}/${process.versions.zlib}\n`);
+  }
   for (const asset of sourceAssets) {
     bundleDigest.update(asset.fileName);
     bundleDigest.update('\0');
@@ -434,11 +449,12 @@ export async function packageWasm(options) {
         logicalPath,
         asset.contents,
         isCompressible(asset.fileName),
+        brotliQuality,
       ));
     }
 
     const notices = sourceAssets.find(asset => asset.fileName === NOTICES);
-    files.push(await writeAsset(stagingRoot, NOTICES, notices.contents, true));
+    files.push(await writeAsset(stagingRoot, NOTICES, notices.contents, true, brotliQuality));
 
     const wasm = files.find(file => file.path === `${bundlePath}/plotjuggler4.wasm`).representations;
     const entrypoint = fillTemplate(await readFile(ENTRY_TEMPLATE, 'utf8'), {
@@ -453,6 +469,7 @@ export async function packageWasm(options) {
       'index.html',
       Buffer.from(entrypoint),
       false,
+      brotliQuality,
     ));
     // Revalidated: a sample may change under the same name. The identity bytes are the tree's own, and
     // every encoding decodes to them, so a source's content_sha256 holds whichever one is served.
@@ -462,6 +479,7 @@ export async function packageWasm(options) {
         `presets/${relative}`,
         await readFile(path.join(presetsRoot, relative)),
         isCompressible(relative),
+        brotliQuality,
       ));
     }
     // Code-unit order, as presetFiles walks: localeCompare would follow the locale.
@@ -477,7 +495,7 @@ export async function packageWasm(options) {
       packagingRuntime: {
         node: process.version,
         zlib: process.versions.zlib,
-        brotli: { quality: BROTLI_QUALITY, window: BROTLI_WINDOW },
+        brotli: { quality: brotliQuality, window: BROTLI_WINDOW },
         gzip: { level: GZIP_LEVEL, mtime: 0, os: 255 },
       },
       deploymentConfiguration: {

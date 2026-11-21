@@ -40,10 +40,12 @@ test.afterAll(async () => {
 test('deployment server negotiates exact compressed bytes, MIME, isolation, and cache policy', async () => {
   expect(manifest.format).toBe('org.plotjuggler.wasm-deployment.v1');
   expect(manifest.bundleId).toMatch(/^sha256-[0-9a-f]{32}$/);
+  const profile = process.env.PJ_WASM_EXPECTED_COMPRESSION_PROFILE ?? 'default';
+  expect(['default', 'localized']).toContain(profile);
   expect(manifest.packagingRuntime).toEqual({
     node: process.version,
     zlib: process.versions.zlib,
-    brotli: { quality: 9, window: 22 },
+    brotli: { quality: profile === 'localized' ? 10 : 9, window: 22 },
     gzip: { level: 9, mtime: 0, os: 255 },
   });
   const headersBytes = await readFile(path.join(packageRoot, '_headers'));
