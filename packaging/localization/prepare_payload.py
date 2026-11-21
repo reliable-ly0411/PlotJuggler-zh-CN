@@ -29,6 +29,29 @@ CORE_PLUGINS = ['mcap-loader', 'csv-loader', 'parquet-loader', 'ulog-loader',
                 'influx-parser', 'navmap-parser', 'candump-loader', 'blf-loader', 'mf4-loader']
 
 
+def native_registry_ids(platform):
+    if platform == 'windows-x86_64':
+        return CORE_PLUGINS
+    if platform == 'linux-x86_64':
+        return [*CORE_PLUGINS, 'toolbox-assistant-agent', 'ros2-topic-subscriber']
+    raise ValueError('Unsupported native package platform: ' + platform)
+
+
+def expected_plugin_versions(registry, platform, bin_version):
+    """Construct the curated bundle from a validated lock and the separate BIN pin."""
+    entries = {entry['id']: entry for entry in registry['extensions']}
+    versions = {}
+    for identifier in native_registry_ids(platform):
+        if identifier in versions or identifier == 'ardupilot-dataflash':
+            raise ValueError(f'Duplicate curated plugin identity: {identifier}')
+        entry = entries.get(identifier)
+        if entry is None or platform not in entry['platforms']:
+            raise ValueError(f'Plugin {identifier} has no locked payload for {platform}')
+        versions[identifier] = entry['version']
+    versions['ardupilot-dataflash'] = bin_version
+    return versions
+
+
 def download(url, target, expected):
     """Fail closed if a pinned upstream payload changes."""
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -84,7 +107,8 @@ def stage(build, prefix, config, linux_tools, *, development_candidate=False):
              prefix / 'bin/fonts/NotoSansCJKsc-Regular.otf', FONT_SHA)
     download(base + 'LICENSE', licenses / 'NotoSansCJK-OFL.txt', FONT_LICENSE_SHA)
     qt = ROOT / '.qt' / host['qt_version'] / ('gcc_64' if linux_tools else 'msvc2022_64')
-    ids = CORE_PLUGINS + (['toolbox-assistant-agent', 'ros2-topic-subscriber'] if linux_tools else [])
+    platform = 'linux-x86_64' if linux_tools else 'windows-x86_64'
+    ids = native_registry_ids(platform)
     collect(ROOT, build, qt, licenses, download, windows=not linux_tools, registry_plugin_ids=ids)
     baseline = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
     plugin_manifest = json.loads(manifest.read_text(encoding='utf-8'))
@@ -100,13 +124,11 @@ def stage(build, prefix, config, linux_tools, *, development_candidate=False):
     record['host_sdk_source'] = json.loads((ROOT / 'cmake/host-sdk-source.json').read_text(encoding='utf-8'))
     locked, provenance = read_inventory(ROOT)
     record['registry_sources'] = provenance['sources']
-    record['expected_plugins'] = [f"{x['id']}={x['version']}" for x in locked['extensions'] if x['id'] in ids]
-    assert len(record['expected_plugins']) == len(ids)
-    record['expected_plugins'].append('ardupilot-dataflash=' + record['bin_plugin_version'])
+    versions = expected_plugin_versions(locked, platform, record['bin_plugin_version'])
+    record['expected_plugins'] = [f'{identifier}={version}' for identifier, version in sorted(versions.items())]
     originals = json.loads((ROOT / 'packaging/localization/preserved-upstream-plugins.json').read_text(encoding='utf-8'))
-    original = originals['linux-x86_64' if linux_tools else 'windows-x86_64']
+    original = originals[platform]
     upstream = next(item for item in locked['extensions'] if item['id'] == original['id'])
-    platform = 'linux-x86_64' if linux_tools else 'windows-x86_64'
     assert upstream['version'] == original['version']
     assert upstream['platforms'][platform]['checksum'] == 'sha256:' + original['archive_sha256']
     record['preserved_upstream_plugins'] = [original]

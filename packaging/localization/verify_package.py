@@ -74,6 +74,62 @@ def windows_system_root(environment):
     return Path(roots[0])
 
 
+def validate_release_inventory(record, root, platform):
+    """Read the exact source pins independently of the package's declaration."""
+    from prepare_payload import expected_plugin_versions
+    from registry_inventory import read_inventory
+    locked, provenance = read_inventory(root)
+    baseline = json.loads((root / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
+    binary = baseline['ardupilot_plugin']
+    expected = expected_plugin_versions(locked, platform, binary['version'])
+    specs = [f'{identifier}={version}' for identifier, version in sorted(expected.items())]
+    declared = record.get('expected_plugins')
+    if not isinstance(declared, list) or not all(isinstance(item, str) for item in declared) or sorted(declared) != specs:
+        raise ValueError('Package declared plugin inventory differs from source lock')
+    for key, value in (('bin_plugin_version', binary['version']), ('bin_plugin_commit', binary['commit']),
+                       ('bin_plugin_license', binary['license'])):
+        if record.get(key) != value:
+            raise ValueError(f'Package {key} differs from source pin')
+    if record.get('registry_sources') != provenance['sources']:
+        raise ValueError('Package registry sources differ from pinned provenance')
+    return expected, provenance
+
+
+def verify_registry_notices(licenses, provenance, expected):
+    """Bind shipped registry provenance and bundled supplements to source bytes."""
+    recorded = json.loads((licenses / 'registry-provenance.json').read_text(encoding='utf-8'))
+    if recorded != provenance:
+        raise ValueError('Shipped registry provenance differs from source')
+    for notice in provenance['supplement_notices']:
+        if notice['id'] not in expected:
+            continue
+        shipped = licenses / 'registry-plugins' / notice['id'] / 'LICENSE'
+        if hashlib.sha256(shipped.read_bytes()).hexdigest() != notice['sha256']:
+            raise ValueError('Shipped registry notice differs from source: ' + notice['id'])
+
+
+def validate_installed_plugins(manifests, expected):
+    """Require exact IDs, versions and locations; declared counts are not evidence."""
+    actual = {}
+    for path in manifests:
+        entry = json.loads(path.read_text(encoding='utf-8'))
+        identifier = entry['id']
+        if identifier in actual:
+            raise ValueError('Duplicate installed plugin: ' + identifier)
+        if path.parent.name != identifier:
+            raise ValueError('Plugin manifest identity differs from its directory: ' + identifier)
+        if identifier == 'ardupilot-dataflash' and entry['license'] != 'LGPL-3.0-only':
+            raise ValueError('Installed BIN plugin license differs from its pinned license')
+        actual[identifier] = entry['version']
+    missing = sorted(expected.keys() - actual.keys())
+    extra = sorted(actual.keys() - expected.keys())
+    wrong = sorted(key for key in actual.keys() & expected.keys() if actual[key] != expected[key])
+    if missing or extra or wrong:
+        raise ValueError(f'Installed plugin inventory differs from source lock: '
+                         f'missing={missing}, extra={extra}, version_mismatches={wrong}')
+    return [f'{identifier}={version}' for identifier, version in sorted(expected.items())]
+
+
 def plugin_validation_arguments(prefix, expected):
     """Use a stable diagnostic language without changing per-language GUI tests."""
     args = ['--language', 'en_US', '--validate-plugins', str(prefix / 'lib/plotjuggler/plugins')]
@@ -606,7 +662,8 @@ def capture_gui(process, prefix, executable, profile, png):
 def verify(prefix, executable, log, output, expected_source, expected_version, capture=False, work_dir=None):
     """Check provenance, plugins, Python and synthetic CSV/real BIN restoration."""
     from host_versions import read_host_versions
-    host = read_host_versions(Path(__file__).resolve().parents[2])
+    root = Path(__file__).resolve().parents[2]
+    host = read_host_versions(root)
     prefix, executable, output = prefix.resolve(), executable.resolve(), output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     record = json.loads((prefix / 'share/plotjuggler4/release.json').read_text(encoding='utf-8'))
@@ -660,14 +717,11 @@ def verify(prefix, executable, log, output, expected_source, expected_version, c
     assert original_files == {entry['path'] for entry in originals[0]['files']}
     for entry in originals[0]['files']:
         assert hashlib.sha256((prefix / entry['path']).read_bytes()).hexdigest() == entry['sha256'], entry['path']
+    platform = 'windows-x86_64' if os.name == 'nt' else 'linux-x86_64'
+    pinned, provenance = validate_release_inventory(record, root, platform)
+    verify_registry_notices(prefix / 'share/licenses', provenance, pinned)
     manifests = sorted((prefix / 'lib/plotjuggler/plugins').glob('*/manifest.json'))
-    plugin_records = [json.loads(p.read_text(encoding='utf-8')) for p in manifests]
-    bin_manifest = next(m for m in plugin_records if m['id'] == 'ardupilot-dataflash')
-    assert bin_manifest['license'] == record['bin_plugin_license'] == 'LGPL-3.0-only'
-    expected = [f"{m['id']}={m['version']}" for m in plugin_records]
-    assert f"ardupilot-dataflash={record['bin_plugin_version']}" in expected
-    assert sorted(expected) == sorted(record['expected_plugins']), expected
-    assert len(expected) == (19 if os.name == 'nt' else 21), expected
+    expected = validate_installed_plugins(manifests, pinned)
     env = acceptance_environment(os.environ)
     # Use the installed DLLs plus the operating system, never a Qt/Conan tree.
     if os.name == 'nt':

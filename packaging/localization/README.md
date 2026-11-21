@@ -381,6 +381,15 @@ remain unchanged. Only `candump-loader` 0.1.1, `influx-parser` 0.1.0,
 `1fd3df7de604fa6490a67d510e5cf34c03be2364`. `release.json` retains the original
 primary registry commit and records both sources explicitly.
 
+Both native candidate packagers consume the checked-in `registry-lock.json`;
+DEB reuses the AppImage staging tree. Final clean acceptance checks installed
+plugin IDs and versions against the source lock and independent BIN pin, not
+against counts or the package's own declaration alone. It checks the shipped
+registry provenance and supplemental notice bytes. The release manifest also
+revalidates the declared inventory for each of the six clean reports. All
+Windows plugins must load; clean Linux runners allow only the explicitly
+diagnosed missing external ROS 2 runtime.
+
 All eight Linux/Windows original ZIPs were checked against the registry's
 SHA-256 and the release asset digest. They contain no separate LICENSE file;
 complete MIT notices are retained from each exact tagged source commit, checked

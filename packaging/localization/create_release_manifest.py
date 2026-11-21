@@ -9,7 +9,9 @@ from pathlib import Path
 import subprocess
 
 from version_map import package_versions
-from verify_package import ACCEPTANCE_LANGUAGES
+from verify_package import ACCEPTANCE_LANGUAGES, validate_release_inventory
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def sha256(path):
@@ -69,11 +71,14 @@ def main(*, development_candidate=False):
         assert report['release']['source_commit'] == source
         assert report['release']['source_tree'] == tree
         assert report['release']['version'] == version
-        assert report['plugin_count'] == (19 if platform == 'windows-2022' else 21)
-        if report['plugin_count'] == 19:
-            assert report['loaded_plugin_count'] == 19 and report['unavailable_plugins'] == []
+        windows = platform == 'windows-2022'
+        native_platform = 'windows-x86_64' if windows else 'linux-x86_64'
+        expected_plugins, _ = validate_release_inventory(report['release'], ROOT, native_platform)
+        assert report['plugin_count'] == len(expected_plugins)
+        if windows:
+            assert report['loaded_plugin_count'] == len(expected_plugins) and report['unavailable_plugins'] == []
         else:
-            assert report['loaded_plugin_count'] == 20
+            assert report['loaded_plugin_count'] == len(expected_plugins) - 1
             assert len(report['unavailable_plugins']) == 1
             unavailable = report['unavailable_plugins'][0]
             assert unavailable['id'] == 'ros2-topic-subscriber'
@@ -85,7 +90,6 @@ def main(*, development_candidate=False):
             png = path.parent / f'gui-{language}.png'
             assert png.stat().st_size > 10000
             screenshots.append({'path': png.as_posix(), 'sha256': sha256(png), 'size': png.stat().st_size})
-    assert sorted(x['plugin_count'] for x in accepted) == [19, 19, 21, 21, 21, 21]
     expected = {f'PlotJuggler-{version}-Windows-x64-zh-CN.exe',
                 f'PlotJuggler-{version}-Windows-x64-portable-zh-CN.zip',
                 f'PlotJuggler-{version}-x86_64-zh-CN.AppImage',

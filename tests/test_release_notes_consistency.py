@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
 """Check source catalogs while preserving the scope of published release prose."""
-import ast
 import json
 from pathlib import Path
 import re
+import sys
 import unittest
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'packaging/localization'))
+from prepare_payload import native_registry_ids
 
 
 class ReleaseNotesConsistencyTest(unittest.TestCase):
@@ -60,15 +62,11 @@ class ReleaseNotesConsistencyTest(unittest.TestCase):
         self.assertIn('Mosaico 1.3.0 明确保留官方原始二进制', self.notes)
 
     def test_packaged_plugin_counts_match_staging(self):
-        source = (ROOT / 'packaging/localization/prepare_payload.py').read_text(encoding='utf-8')
-        tree = ast.parse(source)
-        core = next(ast.literal_eval(node.value) for node in tree.body
-                    if isinstance(node, ast.Assign) and
-                    any(isinstance(t, ast.Name) and t.id == 'CORE_PLUGINS' for t in node.targets))
-        # These are the explicit Linux-only additions in the staging recipe.
-        self.assertIn("['toolbox-assistant-agent', 'ros2-topic-subscriber'] if linux_tools else []", source)
-        self.assertEqual(len(core), len(set(core)))
-        self.assertTrue(set(self.scope['core_plugins']) <= set(core))
+        windows = native_registry_ids('windows-x86_64')
+        linux = native_registry_ids('linux-x86_64')
+        self.assertEqual(len(windows), len(set(windows)))
+        self.assertCountEqual(linux, [*windows, 'toolbox-assistant-agent', 'ros2-topic-subscriber'])
+        self.assertTrue(set(self.scope['core_plugins']) <= set(windows))
         # Counts in published prose belong to its recorded staging recipe.
         core = self.scope['core_plugins']
         self.assertIn(f'Windows 包含 {len(core)} 个官方插件和 BIN', self.notes)

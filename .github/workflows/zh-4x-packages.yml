@@ -365,6 +365,9 @@ jobs:
           python tests/test_bundled_translations.py -v
           python tests/test_localized_plugin_build.py -v
           python tests/test_package_acceptance.py -v
+          python tests/test_registry_inventory.py -v
+          python tests/test_appimage_registry_input.py -v
+          python tests/test_release_manifest.py -v
           if [[ "$RUNNER_OS" == Linux ]]; then python tests/test_deb_dependencies.py -v; fi
           python packaging/localization/version_map.py "$PJ_VERSION" --development-candidate
       - name: Stage pinned BIN, licenses and CJK fallback
@@ -401,7 +404,7 @@ jobs:
       - name: Package Linux artifacts
         if: runner.os == 'Linux'
         run: |
-          registry="https://raw.githubusercontent.com/PlotJuggler/pj-plugin-registry/2696403e106c6960541b8da19987ece35a24597e/registry.json"
+          registry="packaging/localization/registry-lock.json"
           bash packaging/appimage/build_appimage.sh --plugins-registry "$registry"             --extra-prefix build/fork-prefix --name-suffix -zh-CN
           # Every directly loaded ELF must respect the Ubuntu 22.04 floor.
           python packaging/localization/audit_glibc.py build/AppDir

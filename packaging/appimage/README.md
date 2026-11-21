@@ -51,11 +51,12 @@ There are two ways to bundle them (and a no-plugin default):
   `usr/lib/plotjuggler/plugins/`. Use this for local/offline builds; the folder
   must contain ready-to-run (self-contained) plugins, e.g. unpacked marketplace
   zips, each in its own subdirectory.
-- **`--plugins-registry [url]`** — download the curated set (`BUNDLE_IDS` in
-  `build_appimage.sh`) from the plugin registry, verify each `sha256` checksum,
-  and unpack into `usr/lib/plotjuggler/plugins/<id>/`. Defaults to the registry's
-  `development` branch (its default branch — the same ref the Windows installer
-  uses); pass a URL to pin a specific ref. This is what the release CI uses.
+- **`--plugins-registry [url|path]`** — download the curated set (`BUNDLE_IDS` in
+  `build_appimage.sh`), verify each archive's SHA-256, and unpack into
+  `usr/lib/plotjuggler/plugins/<id>/`. Defaults to the registry's `development`
+  branch. Pass an HTTP(S) URL to pin a remote ref or the path to a local JSON
+  snapshot with one entry per plugin ID. Relative paths use the caller's working
+  directory. Localized candidates use the same checked-in lock as Windows.
 - **(no flag)** — app-only AppImage. Users add plugins later via the in-app
   marketplace or `--plugin-dir`.
 

@@ -20,6 +20,8 @@ import urllib.error
 import xml.etree.ElementTree as ET
 import zipfile
 
+from test_release_manifest import release_inventory_fixture
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'packaging/localization'))
 
@@ -585,9 +587,12 @@ class PackageLanguagesTests(unittest.TestCase):
                 for relative, (platform, kind) in manifest.REPORT_IDENTITIES.items():
                     i = 0 if platform == 'windows-2022' else 1
                     directory = (root/'reports'/relative).parent; directory.mkdir(parents=True)
+                    inventory = release_inventory_fixture(i == 0)
+                    count = len(inventory['expected_plugins'])
                     report = {'status': 'automated_checks_passed', 'languages': languages,
-                              'release': {'source_commit': 'a'*40, 'source_tree': 'b'*40, 'version': '4.0.0-zh.1.rc.4'},
-                              'plugin_count': 19 if i==0 else 21, 'loaded_plugin_count': 19 if i==0 else 20,
+                              'release': {'source_commit': 'a'*40, 'source_tree': 'b'*40,
+                                          'version': '4.0.0-zh.1.rc.4', **inventory},
+                              'plugin_count': count, 'loaded_plugin_count': count - i,
                               'unavailable_plugins': [] if i==0 else [{'id': 'ros2-topic-subscriber', 'status': 'not_tested_missing_external_dependency'}],
                               'checks': ['synthetic test']}
                     (directory/'acceptance.json').write_text(json.dumps(report), encoding='utf-8')

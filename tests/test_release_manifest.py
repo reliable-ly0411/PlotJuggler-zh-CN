@@ -13,6 +13,19 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'packaging/localization'))
 import create_release_manifest as manifest
+from prepare_payload import expected_plugin_versions
+from registry_inventory import read_inventory
+
+
+def release_inventory_fixture(windows):
+    registry, provenance = read_inventory(ROOT)
+    baseline = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
+    binary = baseline['ardupilot_plugin']
+    platform = 'windows-x86_64' if windows else 'linux-x86_64'
+    expected = expected_plugin_versions(registry, platform, binary['version'])
+    return {'bin_plugin_commit': binary['commit'], 'bin_plugin_license': binary['license'],
+            'bin_plugin_version': binary['version'], 'registry_sources': provenance['sources'],
+            'expected_plugins': [f'{identifier}={version}' for identifier, version in expected.items()]}
 
 
 class ReleaseManifestTests(unittest.TestCase):
@@ -76,11 +89,14 @@ class ReleaseManifestTests(unittest.TestCase):
                     path = Path('reports') / relative
                     path.parent.mkdir(parents=True)
                     windows = platform == 'windows-2022'
+                    inventory = release_inventory_fixture(windows)
+                    count = len(inventory['expected_plugins'])
                     report = {'status': 'automated_checks_passed',
                               'languages': list(manifest.ACCEPTANCE_LANGUAGES),
-                              'release': {'source_commit': 'source', 'source_tree': 'tree', 'version': version},
-                              'plugin_count': 19 if windows else 21,
-                              'loaded_plugin_count': 19 if windows else 20,
+                              'release': {'source_commit': 'source', 'source_tree': 'tree', 'version': version,
+                                          **inventory},
+                              'plugin_count': count,
+                              'loaded_plugin_count': count if windows else count - 1,
                               'unavailable_plugins': [] if windows else [{
                                   'id': 'ros2-topic-subscriber',
                                   'status': 'not_tested_missing_external_dependency'}], 'checks': []}
@@ -106,6 +122,24 @@ class ReleaseManifestTests(unittest.TestCase):
                     self.assertEqual(len(result['assets']), 4)
                     self.assertEqual(len(result['acceptance_reports']), 6)
                     self.assertEqual(len(result['screenshots']), 18)
+                    self.assertEqual(sorted(r['plugin_count'] for r in result['acceptance_reports']),
+                                     [27, 27, 29, 29, 29, 29])
+                    report_path = Path('reports/zh4-final-linux-0/appimage/acceptance.json')
+                    original = report_path.read_text(encoding='utf-8')
+                    for key, value in [('plugin_count', 28), ('loaded_plugin_count', 29), ('unavailable_plugins', []),
+                                       ('unavailable_plugins', [{'id': 'csv-loader',
+                                                                 'status': 'not_tested_missing_external_dependency'}])]:
+                        changed = json.loads(original)
+                        changed[key] = value
+                        report_path.write_text(json.dumps(changed), encoding='utf-8')
+                        with self.subTest(key=key), self.assertRaises(AssertionError):
+                            manifest.main(development_candidate=development_candidate)
+                    changed = json.loads(original)
+                    changed['release']['expected_plugins'][0] = 'log-widget=1.0.0'
+                    report_path.write_text(json.dumps(changed), encoding='utf-8')
+                    with self.assertRaisesRegex(ValueError, 'inventory differs from source lock'):
+                        manifest.main(development_candidate=development_candidate)
+                    report_path.write_text(original, encoding='utf-8')
                     integrity = Path('reports/zh4-final-Windows-portable/runtime/package-integrity.json')
                     data = json.loads(integrity.read_text(encoding='utf-8'))
                     data['after'] = '0' * 64
