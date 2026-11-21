@@ -203,6 +203,17 @@ class MirrorSyncTests(unittest.TestCase):
                 api.request("GET", f"/repos/{sync.REPOSITORY}/git/ref/heads/main")
         self.assertEqual(opener.call_count, 1)
 
+    def test_http_reason_is_retained_without_credentials(self):
+        api = sync.GitHub("synthetic-secret")
+        body = io.BytesIO(json.dumps({"message": "Resource not accessible: synthetic-secret"}).encode())
+        error = urllib.error.HTTPError("https://api.github.com", 403, "forbidden", {}, body)
+        with patch.object(api.opener, "open", side_effect=error) as opener:
+            with self.assertRaises(sync.SyncError) as caught:
+                api.request("PATCH", f"/repos/{sync.REPOSITORY}/git/refs/heads/main")
+        self.assertIn("Resource not accessible", str(caught.exception))
+        self.assertNotIn("synthetic-secret", str(caught.exception))
+        self.assertEqual(opener.call_count, 1)
+
     def test_workflow_safety_contract(self):
         workflow = (Path(__file__).parents[1] / "workflows/upstream-mirrors.yml").read_text(encoding="utf-8")
         self.assertIn("cron: '13 */6 * * *'", workflow)
