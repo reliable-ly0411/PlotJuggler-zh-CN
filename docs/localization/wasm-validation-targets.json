@@ -13,8 +13,8 @@
   },
   "localized": {
     "repository": "reliable-ly0411/PlotJuggler-zh-CN",
-    "sha": "c1cd36528c1464aecbcfb91426242adf5f2215fe",
-    "tree": "ee6525cc0ea115eda43243f76c9c0e3221f23e39",
+    "sha": "187e696e0a5a8335d6b376b2050fd282bbe11f3d",
+    "tree": "0c961b2eadb2656c8c96c706f315961fa0731fc7",
     "budget_scope": "localized total <= 26000000; startup observed only"
   }
 }

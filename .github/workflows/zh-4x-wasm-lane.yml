@@ -189,9 +189,13 @@ jobs:
           # Language probe unit tests import the pinned Playwright assertions.
           npm --prefix tests/wasm ci
           npm --prefix tests/wasm run test:package
-          node scripts/package_wasm.mjs --presets resources/wasm-presets \
+          profile=()
+          if [[ "$PJ_VALIDATION_ROLE" == 'localized' ]]; then
+            profile=(--compression-profile localized)
+          fi
+          node scripts/package_wasm.mjs "${profile[@]}" --presets resources/wasm-presets \
             --source build-wasm-prod/pj_app --output build-wasm-prod/deploy
-          node scripts/package_wasm.mjs --presets resources/wasm-presets \
+          node scripts/package_wasm.mjs "${profile[@]}" --presets resources/wasm-presets \
             --source build-wasm-prod/pj_app --output build-wasm-prod/deploy-b
           diff -qr build-wasm-prod/deploy build-wasm-prod/deploy-b
 
@@ -241,6 +245,7 @@ jobs:
         working-directory: tests/wasm
         env:
           PJ_WASM_PACKAGE_DIR: ${{ github.workspace }}/build-wasm-prod/deploy
+          PJ_WASM_EXPECTED_COMPRESSION_PROFILE: ${{ inputs.role == 'localized' && 'localized' || 'default' }}
         run: npm run test:deployment
 
       - name: Build acceptance configuration (shipped defaults, ingress probe on)
@@ -305,9 +310,13 @@ jobs:
         # deploy/ boots without a welcome dialog over every spec; the samples'
         # own cases (presets.spec.js) serve deploy-presets/.
         run: |
-          node scripts/package_wasm.mjs \
+          profile=()
+          if [[ "$PJ_VALIDATION_ROLE" == 'localized' ]]; then
+            profile=(--compression-profile localized)
+          fi
+          node scripts/package_wasm.mjs "${profile[@]}" \
             --source build-wasm-probe/pj_app --output build-wasm-probe/deploy
-          node scripts/package_wasm.mjs --presets resources/wasm-presets \
+          node scripts/package_wasm.mjs "${profile[@]}" --presets resources/wasm-presets \
             --source build-wasm-probe/pj_app --output build-wasm-probe/deploy-presets
 
       - name: Record acceptance identity and actual sizes
