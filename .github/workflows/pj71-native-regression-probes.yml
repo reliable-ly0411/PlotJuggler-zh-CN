@@ -9,7 +9,7 @@ on:
         description: Run exactly one native regression lane
         type: choice
         required: true
-        options: [windows-fixtures, mac-apbin]
+        options: [windows-fixtures, mac-apbin, panel-c]
 
 permissions:
   contents: read
@@ -381,3 +381,142 @@ jobs:
       - name: Require APBIN actual plugin ABI and Unicode test to pass
         shell: bash
         run: python3 probe-control/scripts/ci/pj71-native/select_and_verify.py test mac
+
+  panel-c:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.lane == 'panel-c') ||
+      (github.event_name == 'push' && !github.event.created &&
+       github.event.head_commit.message == 'Validate exact PanelEngine candidate C only')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+    env:
+      PJ_DISABLE_TELEMETRY: '1'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: 857bd12b935579458914de18b59d8950b8bf71bd
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          path: probe-control
+          sparse-checkout-cone-mode: false
+          sparse-checkout: /scripts/ci/pj71-native/
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Materialize exact distinct product C
+        run: python3 probe-control/scripts/ci/pj71-native/panel-c.py source
+      - name: Read pinned versions
+        id: versions
+        run: |
+          source ./versions.env
+          echo "PJ_VERSION=$PJ_APP_VERSION" >> "$GITHUB_ENV"
+          echo "PJ_QT_VERSION=$PJ_QT_VERSION" >> "$GITHUB_ENV"
+          echo "qt_version=$PJ_QT_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Build tools
+        run: python -m pip install 'conan>=2,<3' 'cmake>=3.28,<4' 'ninja!=1.13.0' 'aqtinstall>=3.3'
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev \
+            mesa-vulkan-drivers libvulkan-dev \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 \
+            libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 libva-dev libdrm-dev \
+            xvfb weston libegl-mesa0 zstd pkg-config ccache fonts-noto-cjk patchelf file unzip wget libfuse2 imagemagick
+          # Resolve the installed software Vulkan driver before configuring or testing.
+          VK_ICD_FILENAMES="$(ls /usr/share/vulkan/icd.d/lvp_icd*.json | head -n1)"
+          test -f "${VK_ICD_FILENAMES}"
+          printf 'VK_ICD_FILENAMES=%s\n' "$VK_ICD_FILENAMES" >> "$GITHUB_ENV"
+      - uses: actions/cache/restore@v5
+        with:
+          path: .qt
+          key: zh4-qt-ubuntu-22.04-${{ steps.versions.outputs.qt_version }}
+      - name: Install pinned Linux Qt
+        if: runner.os == 'Linux'
+        run: ./scripts/install_qt6.sh
+      - uses: actions/cache/restore@v5
+        id: conan-cache
+        with:
+          path: ~/.conan2
+          key: zh4-conan-ubuntu-22.04-${{ hashFiles('conanfile.txt', 'conan.lock') }}
+          restore-keys: |
+            zh4-conan-ubuntu-22.04-${{ hashFiles('conanfile.txt', 'conan.lock') }}-partial-
+            zh4-conan-ubuntu-22.04-
+      - name: Prepare Conan sources
+        timeout-minutes: 12
+        run: |
+          conan profile detect --force
+          ./scripts/configure_conan_remote.sh
+          cache_dir="$(python -c 'import os; print(os.path.abspath(".conan-source-cache").replace(chr(92), "/"))')"
+          conan_home="$(conan config home)"
+          mkdir -p "$conan_home"
+          python - "$conan_home/global.conf" "$cache_dir" <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import re
+          import shutil
+          import sys
+          # Conan 2.34 trusts local cache hits without rehashing. Validate every
+          # repository seed before copying any bytes into that trusted cache.
+          seeds = Path('.github/conan/source-backup')
+          blobs = sorted(p for p in seeds.iterdir() if re.fullmatch(r'[0-9a-f]{64}', p.name))
+          for blob in blobs:
+              if hashlib.sha256(blob.read_bytes()).hexdigest() != blob.name:
+                  raise SystemExit(f'Conan source backup SHA256 mismatch: {blob.name}')
+              metadata = json.loads(blob.with_suffix('.json').read_text(encoding='utf-8'))
+              if not metadata.get('references'):
+                  raise SystemExit(f'Conan source backup metadata missing references: {blob.name}')
+          target = Path(sys.argv[2]) / 's'
+          target.mkdir(parents=True, exist_ok=True)
+          for blob in blobs:
+              shutil.copy2(blob, target / blob.name)
+              shutil.copy2(blob.with_suffix('.json'), target / (blob.name + '.json'))
+          p = Path(sys.argv[1])
+          lines = p.read_text(encoding='utf-8').splitlines() if p.exists() else []
+          lines = [s for s in lines if not s.startswith(('core.sources:download_cache=', 'core.sources:download_urls='))]
+          lines += [f'core.sources:download_cache={sys.argv[2]}',
+                    'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources/"]']
+          p.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+          python scripts/prefetch_assimp_source.py --cache-dir "$cache_dir"
+      - name: Resolve exact Linux SDK and dependencies
+        if: runner.os == 'Linux'
+        id: conan-linux
+        run: |
+          python scripts/bootstrap_host_sdk.py
+          conan install . --output-folder=build --build=missing \
+            -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial \
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 \
+            --format=json --out-file=build/conan-graph.json
+
+      - name: Configure and build only the PanelEngine runner
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 982a614372d7fda3b20ba3e31f246850f2ab6f82
+          qt="$PWD/.qt/$PJ_QT_VERSION/gcc_64"
+          test "$("$qt/bin/qmake" -query QT_VERSION)" = '6.12.0'
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+            -DCMAKE_PREFIX_PATH="$qt" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPJ_BUILD_TESTS=ON -DPJ_BUILD_DEMOS=OFF \
+            -DPJ_INSTALLATION=appimage
+          cmake --build build --target pj_dialog_host_panel_tests --parallel 2
+      - name: Require all exact PanelEngine and parsed-data tests to execute
+        env:
+          QT_QPA_PLATFORM: xcb
+        run: xvfb-run -a python3 probe-control/scripts/ci/pj71-native/panel-c.py test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pj71-panel-C-native-982a6143-${{ github.run_attempt }}
+          path: panel-c-evidence/
+          retention-days: 7
