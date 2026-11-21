@@ -94,12 +94,17 @@ class AppSession : public QObject {
   // per dataset): the engine keeps removed/trashed topics' data as append-only tombstones, which must not stretch the
   // timeline. Recomputed from scratch, so the range also shrinks. Rebuild the catalog first (the load/ingest paths do).
   //
-  // The first seed after the session starts (or the catalog empties) also snaps currentTime to the new minimum; later
-  // seeds keep the scrub position (setRange re-clamps it). Returns false when no visible topic has data.
+  // The playhead is seeded on the datasets present when it last snapped to the data minimum. A seed snaps currentTime
+  // to the new minimum again once none of them is in the catalog (the first load, a cleared catalog, or data replaced
+  // dataset by dataset: removed after the next data loaded); otherwise it keeps the scrub position (setRange re-clamps
+  // it). A dataset under refill stays in the catalog, so a reload keeps the playhead. Returns false when no visible
+  // topic has data.
   bool seedPlaybackFromSession();
 
-  // FOCUSES playback on specific datasets (a toolbox bulk import, e.g. a cloud fetch): sets the range to THEIR bounds
-  // and snaps currentTime to their start. Unlike seedPlaybackFromSession it REPLACES the range, so a 10 s snippet shows
+  // FOCUSES playback on specific datasets (a toolbox bulk import, e.g. a cloud fetch): sets the range to THEIR bounds.
+  // currentTime goes to their start on the first focus and when datasets not yet focused find it outside that range;
+  // re-focusing the same growing import keeps it, clamped into the range. Unlike seedPlaybackFromSession it REPLACES
+  // the range, so a 10 s snippet shows
   // a 10 s timeline even when older datasets span hours. Scalar series bound the range; object topics count only when
   // the datasets have no scalar data (a 3D-only import), since latched/static objects (tf_static, stale markers) must
   // not stretch it. Returns false when no data was found (callers fall back to seedPlaybackFromSession).
@@ -121,8 +126,14 @@ class AppSession : public QObject {
 
   // Sets the active live-stream dataset (0 = none). While set AND playing, recomputeRange() scopes the range to this
   // dataset's tip, so a far-away file dataset cannot widen range_max past the live edge and jolt the tip-pinned cursor.
+  // A followed stream joins the playhead's seeding (live-follow drives the playhead, and the shell does not re-seed on
+  // a removal while following), so removing the data seeded before it does not re-snap; a stream-only session stays
+  // unseeded.
   void setActiveStreamingDataset(PJ::DatasetId id) {
     active_streaming_dataset_id_ = id;
+    if (id != 0 && !seeded_datasets_.empty()) {
+      seeded_datasets_.insert(id);
+    }
   }
   [[nodiscard]] PJ::DatasetId activeStreamingDataset() const {
     return active_streaming_dataset_id_;
@@ -188,9 +199,11 @@ class AppSession : public QObject {
   // session-owned plugin handles die before loaded plugin libraries unload.
   std::unique_ptr<ExtensionCatalogService> extension_catalog_;
 
-  // Set by the first successful seedPlaybackFromSession(), cleared by the CatalogModel::cleared() hook; tells a first
-  // load (snap currentTime) from an additional load (keep it).
-  bool playback_seeded_ = false;
+  // The datasets the playhead was seeded on (seedPlaybackFromSession, or focusPlaybackOnDatasets, which adds the
+  // focused ones and replaces the set when it snaps); empty = not seeded. Never grown by an added
+  // file dataset, so data replaced without the catalog emptying re-seeds; a merge's anchor inherits its consumed
+  // datasets, and a followed stream joins (setActiveStreamingDataset).
+  std::set<PJ::DatasetId> seeded_datasets_;
 };
 
 }  // namespace PJ

@@ -105,9 +105,8 @@ add_library(pj_app_shell OBJECT
     src/ui/CustomWidgetConfigPanel.cpp
     src/ui/CustomWidgetConfigPanel.h
     src/ui/CustomWidgetConfigPanel.ui
-    src/ui/CustomWidgetPickerPanel.cpp
-    src/ui/CustomWidgetPickerPanel.h
-    src/ui/CustomWidgetPickerPanel.ui
+    src/ui/CustomWidgetPickerMenu.cpp
+    src/ui/CustomWidgetPickerMenu.h
     src/ui/LeftPanel.cpp
     src/ui/LeftPanel.h
     src/ui/LeftPanel.ui
@@ -120,6 +119,9 @@ add_library(pj_app_shell OBJECT
     src/ui/AboutDialog.cpp
     src/ui/AboutDialog.h
     src/ui/AboutDialog.ui
+    src/ui/LayoutDatasetDialog.cpp
+    src/ui/LayoutDatasetDialog.h
+    src/ui/LayoutDatasetDialog.ui
     src/ui/McpJobsDialog.cpp
     src/ui/McpJobsDialog.h
     src/ui/McpJobsDialog.ui
@@ -220,6 +222,7 @@ target_link_libraries(pj_app_shell PUBLIC
     pj_widgets
     pj_plotting
     pj_custom_widgets
+    pj_log
     pj_scripting
     pj_scene_common
     $<$<TARGET_EXISTS:pj_scene2d_widgets>:pj_scene2d_widgets>
@@ -652,6 +655,12 @@ if(PJ_BUILD_TESTS)
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/main_window_layout_dataset_paths_test.cpp)
 
+    # A layout aimed at one dataset over several matching ones: asked, duplicated per dataset, or the first one.
+    list(APPEND PJ_APP_GUI_TEST_SOURCES
+        tests/main_window_layout_dataset_choice_test.cpp)
+    set_source_files_properties(tests/main_window_layout_dataset_choice_test.cpp PROPERTIES
+        COMPILE_DEFINITIONS PJ_MOCK_FILE_SOURCE_PLUGIN_PATH="$<TARGET_FILE:mock_file_source_plugin>")
+
     # The Custom Series list is derived from DataProcessorService, not accumulated
     # from plugin announcements — the paths that announce nothing are a layout
     # restore and a withdrawal through the data-processors ABI.
@@ -695,6 +704,10 @@ if(PJ_BUILD_TESTS)
     # restored layout keeps its saved fixed frame and camera.
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/main_window_scene3d_drop_framing_test.cpp)
+
+    # The Log panel through the shell: the placeholder button, a drop on an empty area, the time format, layouts.
+    list(APPEND PJ_APP_GUI_TEST_SOURCES
+        tests/main_window_log_panel_test.cpp)
 
     # The 2D scene panel's layer rows carry each layer's warning from the start.
     list(APPEND PJ_APP_GUI_TEST_SOURCES
@@ -763,6 +776,9 @@ if(PJ_BUILD_TESTS)
         tests/main_window_layout_import_policy_test.cpp)
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/main_window_layout_apply_reason_test.cpp)
+    # Keyboard focus after a workspace rebuild deletes the focused plot.
+    list(APPEND PJ_APP_GUI_TEST_SOURCES
+        tests/main_window_restore_focus_test.cpp)
     add_executable(main_window_layout_import_cancel_test tests/main_window_layout_import_cancel_test.cpp)
     target_include_directories(main_window_layout_import_cancel_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(main_window_layout_import_cancel_test PRIVATE pj_app_shell pj_resources GTest::gtest)

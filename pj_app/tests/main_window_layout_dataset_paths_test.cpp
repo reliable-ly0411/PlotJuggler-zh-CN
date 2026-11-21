@@ -90,6 +90,11 @@ class MainWindowLayoutDatasetPathsTestPeer {
     window.loadLayoutFromPath(path, MainWindow::LayoutLoadInteractivity::kAutomated);
   }
 
+  /// A load the way startup applies a layout to its explicit `-d` files.
+  static void loadLayoutOnFiles(MainWindow& window, const QString& path, const QStringList& files) {
+    window.loadLayoutFromPath(path, MainWindow::LayoutLoadInteractivity::kAutomated, files);
+  }
+
   static void removeDatasetData(MainWindow& window, DatasetId dataset_id) {
     window.removeDatasetData(dataset_id);
   }
@@ -927,6 +932,41 @@ TEST_F(LayoutDatasetPathsTest, TransformInputResolvesByPathAmongSameNamedDataset
       << "must follow the path data/two/run.csv, not the saved id";
 }
 
+// Startup keeps a transform input whose saved path is one of the explicit files. Its saved label is the file name it
+// was saved under (a symlink's here), and the resolver compares labels exactly: the kept qualifier must carry the
+// explicit file's name, or the input binds nowhere.
+TEST_F(LayoutDatasetPathsTest, StartupKeptTransformInputTakesTheExplicitFileName) {
+  ASSERT_TRUE(folders.create());
+  const QString one = folders.saved + u"/data/one/run.csv"_s;
+  const QString two = folders.saved + u"/data/two/run.csv"_s;
+  const QString link = folders.saved + u"/data/two/link.csv"_s;
+  for (const QString& path : {one, two}) {
+    QFile file(path);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+  }
+  ASSERT_TRUE(QFile::link(two, link));
+  const PJ::DatasetId first = addDataset("run.csv", one);
+  const PJ::DatasetId second = addDataset("run.csv", two);
+  ASSERT_NE(first, 0U);
+  ASSERT_NE(second, 0U);
+
+  QDomDocument doc = processorLayout(Processor::kTransform, 77, u"link.csv"_s);
+  firstElement(doc, u"transform"_s).firstChildElement(u"input"_s).setAttribute(u"dataset_path"_s, link);
+  QDomDocument tabs;
+  ASSERT_TRUE(tabs.setContent(
+      u"<tabbed_widget parent=\"main_window\"><Tab id=\"t1\" containers=\"1\"><Container>"
+      u"<DockArea id=\"a1\" name=\"View\"><plot id=\"plot1\" mode=\"TimeSeries\"/></DockArea>"
+      u"</Container></Tab></tabbed_widget>"_s));
+  doc.documentElement().appendChild(doc.importNode(tabs.documentElement(), true));
+  writeXml(folders.saved + u"/layout.pj4.xml"_s, doc);
+  Peer::loadLayoutOnFiles(window, folders.saved + u"/layout.pj4.xml"_s, {one, two});
+
+  const auto restored = transforms();
+  ASSERT_EQ(restored.size(), 1U);
+  ASSERT_EQ(restored.front().input_bindings.size(), 1U);
+  EXPECT_EQ(restored.front().input_bindings.front().dataset_id, second);
+}
+
 // A transform's output lives in its first input's dataset: removing the second input's dataset retires it there, and
 // the surviving dataset's catalog must drop the row (removeDatasetData also serves paths that never prompt).
 TEST_F(LayoutDatasetPathsTest, RemovingASecondInputsDatasetDropsTheOutputFromTheCatalog) {
@@ -1232,5 +1272,43 @@ TEST_F(LayoutDatasetPathsTest, PackageRootFollowsACopiedLayoutFolder) {
   EXPECT_EQ(live.value(u"outside"_s).toString(), outside);
 }
 #endif  // PJ_WITH_SCENE3D
+
+// One filter applied to two runs, with only one run loaded: the binding on the missing run is kept and saved back,
+// with its dataset path made layout-relative like a live one, while the live binding saves as itself; undo snapshots
+// never carry the kept entry.
+TEST_F(LayoutDatasetPathsTest, FilterBindingOnAnUnloadedRunIsSavedBack) {
+  ASSERT_TRUE(folders.create());
+  const PJ::DatasetId loaded = addDataset("one.csv", folders.saved + u"/data/one/one.csv"_s);
+  ASSERT_NE(loaded, 0U);
+  app().catalogModel().rebuildFromDatastore();
+  const auto binding = [](const QString& source, const QString& path) {
+    return uR"(<processor input_topic="sensor" input_field="value" input_dataset_source="%1" input_dataset_path="%2" )"
+           uR"(processor_id="absolute" output_name="sensor[Absolute]"><![CDATA[{}]]></processor>)"_s.arg(source, path);
+  };
+  QDomDocument layout;
+  ASSERT_TRUE(
+      static_cast<bool>(layout.setContent(
+          uR"(<root binding="source" format="PlotJuggler" pj4_version="4"><tabbed_widget parent="main_window">)"
+          uR"(<Tab id="t1" containers="1"><Container><DockArea id="a1" name="A"><plot id="p1" mode="TimeSeries"/>)"
+          uR"(</DockArea></Container></Tab></tabbed_widget><data_processors>)"_s +
+          binding(u"one.csv"_s, u"data/one/one.csv"_s) + binding(u"two.csv"_s, u"data/two/two.csv"_s) +
+          u"</data_processors></root>"_s)));
+  const QString layout_path = folders.saved + u"/multi-run.pj4.xml"_s;
+  writeXml(layout_path, layout);
+
+  Peer::loadLayout(window, layout_path);
+  ASSERT_EQ(app().sessionManager().dataProcessorService().recipes().size(), 1U);
+  EXPECT_EQ(Peer::historySnapshot(window).count("<processor "), 1) << "undo snapshots carry only live recipes";
+
+  const QString saved_path = folders.saved + u"/resaved.pj4.xml"_s;
+  Peer::saveLayout(window, saved_path, /*include_data_source=*/true);
+  QStringList paths;
+  const QDomNodeList processors = readXml(saved_path).elementsByTagName(u"processor"_s);
+  for (int index = 0; index < processors.size(); ++index) {
+    paths.push_back(processors.at(index).toElement().attribute(u"input_dataset_path"_s));
+  }
+  paths.sort();
+  EXPECT_EQ(paths, (QStringList{u"data/one/one.csv"_s, u"data/two/two.csv"_s})) << paths.join(u", "_s).toStdString();
+}
 
 }  // namespace

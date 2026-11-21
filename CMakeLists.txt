@@ -79,6 +79,14 @@ if(EMSCRIPTEN)
     add_compile_options(-fexceptions)
     add_link_options(-fexceptions)
 
+    # WASM SIMD lets LLVM vectorize loops. One SIMD instruction anywhere already makes the whole module fail to load
+    # without WASM SIMD (Safari before 16.4), so it costs no further browser support; packaging/web/loading.html.in
+    # checks for it before the download. Not -msse*: that would switch every library's __SSE2__ code paths to
+    # emulated x86 intrinsics. Dependencies built by ExternalProject configure separately and get only the flags they
+    # pass themselves.
+    add_compile_options(-msimd128)
+    add_link_options(-msimd128)
+
     # Conan packages in the desktop graph are native binaries. The wasm build
     # resolves its cross-compiled subset through a pinned FetchContent provider.
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjWasmDependencies.cmake)
@@ -449,6 +457,7 @@ add_subdirectory(pj_widgets)
 add_subdirectory(pj_scene_common)
 add_subdirectory(pj_plotting)
 add_subdirectory(pj_custom_widgets)
+add_subdirectory(pj_log)
 
 if(PJ4_BUILD_APP)
     add_subdirectory(pj_app)

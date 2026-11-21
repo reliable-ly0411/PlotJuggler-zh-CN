@@ -155,6 +155,13 @@
     "upstream_commit_count": 8,
     "status": "Independent source integration candidate; no promotion or release."
   },
+  "development_checkpoint_20261121": {
+    "development": "b5832136100b7b4ce15b5587a506ac69bfe335bb",
+    "upstream": "9671c907aa11210832987cb6eac5419b07c44b12",
+    "observed_upstream_tip": "55caa38bcfb19a9a9d1b8f92970981cd97c99686",
+    "status": "Development integration candidate; not promoted or released.",
+    "evidence": "docs/localization/UPSTREAM-CHECKPOINT-20261121.md"
+  },
   "candidate_validation": {
     "branch": "zh-CN-4.x-feat/upstream-main-audit-20261117",
     "report": "docs/localization/SDK101-CANDIDATE-VALIDATION-20261117.md",

@@ -62,6 +62,8 @@ Pitfalls seen in practice:
 - `ui_tree` lists dock areas and tabs in creation order, not screen order: check which plot is which by its title,
   and the order of the tabs on screen, with a screenshot. A name that every plot repeats (`qwtCanvas`, `buttonClose`) is refused while two plots show; scripts
   that need one use a single-plot layout.
+- Under `--xvfb` the app counts as attended: `-d a -d b -l <layout>` with both files carrying the layout's topics
+  opens the which-datasets question at startup; answer it with the UI tools. Offscreen it takes the first dataset.
 - Plots fall back to the raster canvas offscreen (no GPU): the GPU plot path is not exercised.
 - No tool reports marker rules or the marker regions on a plot: a bug there shows only in a screenshot, so it
   cannot get a regression script. Say so in the fix PR.
@@ -147,6 +149,11 @@ Name widgets by objectName in scripts, never by ref (refs change between runs). 
 `ui_tree` for widgets, `ui_plot` for a plot's ranges, curves and tracker value box, the data tools for data. A
 screenshot is evidence for a human, not an assertion.
 
+`ui_tree` clips a row to 80 characters, and a list shows only the rows in its viewport: filter before asserting
+`absent` on long or scrolled text. `expect` / `absent` match the text literally, quotes included: `until ui_tree {}
+"Scene3DDockWidget"` never matches `PJ::Scene3DDockWidget`. Check an `absent` once against a state that holds the
+text, or it may pass for the wrong reason.
+
 ## Regression scripts
 
 `scripts/qa/regressions/*.pjqa` is the suite. Each script starts with its instance's arguments, paths relative to
@@ -212,6 +219,13 @@ When asked to do QA or to test with the QA agent, without a narrower charter:
 - **One PR per bug, test first:** a unit or GUI test that fails before the fix, and a script in
   `scripts/qa/regressions/` that asserts the user-visible result (`expect` / `absent` on `ui_plot`, `ui_tree` or a
   data tool) and fails on the build before the fix. When no tool can see the state, the PR says so.
+- **Screenshots in the PR** whenever the bug or the fix shows on screen (skip it, and say so, for a tool reply or a
+  data value): "before" is the QA agent's screenshot of the bug, "after" a `screenshot` on the fixed build replaying
+  the same steps. Point at the problem in each one with `scripts/qa/shots.py annotate`: a rectangle around it, an
+  arrow to it, a short label ("time column picked: b", "markers gone after undo"); crop to the area that matters.
+  Read the PNG first to get pixel coordinates, and read the result to check that nothing important is covered.
+  `scripts/qa/shots.py publish <fix-branch> "Before: ...=before.png" "After: ...=after.png"` puts them on the
+  `qa-screenshots` branch and prints the Markdown for the PR body (`gh` cannot upload images).
 - **Fix the root cause in the shared mechanism**, not where the symptom showed, and say in the PR which other paths
   the fix covers. Skip contrived inputs: they get a line in the report, not a PR.
 - **Host or plugin:** when either could hold the fix, count who each one reaches. A plugin fix reaches every

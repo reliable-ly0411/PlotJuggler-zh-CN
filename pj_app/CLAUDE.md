@@ -31,6 +31,9 @@ to `pj_widgets`; business logic and data services go to `pj_runtime`. How the su
 - `applyWorkspace` restores in order: read-only preflight, display offsets, processors, curve rebind. A processor
   restored before the offsets reads an unsettled display frame; a preflight after any mutation can no longer refuse
   cleanly. `syncCustomTopicsPanel` runs after every restore.
+- The `<data_processors>` entries a layout load skipped (`kept_derived_`, exactly the elements
+  `DerivedRestoreReport::skipped` names) are written back only by `saveLayoutToPath`; in `xmlSaveState` they would
+  reach undo snapshots and `kExact` rollback targets, which then fail on the same missing input.
 - Layout import (`LayoutImportBatch`, `HeadlessDescriptorProviderSession`, `SourcePromotionHost`, the
   rewrite-then-classify load path, the growing-import binder) implements host-side invariants defined in
   `docs/layout-import-architecture.md` of the `pj-mcap-server` repository; read it before changing them.
@@ -58,7 +61,7 @@ to `pj_widgets`; business logic and data services go to `pj_runtime`. How the su
 
 - `MainWindow.{h,cpp,ui}`, `main.cpp`: the window and its wiring; startup, CLI flags, crash handler.
 - `ui/`: embedded sub-widgets and app dialogs (`LeftPanel`, `CurveListPanel`, `TimelineWidget`, `DiagnosticsDialog`,
-  the Scene2D/Scene3D config panels, the Custom Widget picker and config pages, `McpJobsDialog`).
+  the Scene2D/Scene3D config panels, the Custom Widget picker menu and config page, `McpJobsDialog`).
 - `FileLoader`, `LoadInput.h`, `FanoutConfig`, `DialogPresenter`, `DialogWatch.h`: file loading and plugin dialogs.
 - `IngestProgressController`, `IngestProgressWiring.h`, `SeriesProgressController`: progress rows in the curve tree.
 - `StreamingSourceManager`, `TopicDemandController`, `PendingDisplayBinder`: streaming sessions and topic demand.
@@ -66,7 +69,7 @@ to `pj_widgets`; business logic and data services go to `pj_runtime`. How the su
   `SourcePromotionHost`, `LayoutExitWatch`: the cloud layout import.
 - `ToolboxPresenter`, `ToolboxChrome`, `ToolboxHostWiring.h`, `PluginPlotTabsController`,
   `PluginSceneViewsController`: toolbox presentation and plugin-owned views.
-- `CustomWidgetController`: the Custom Widget pages and the startup crash review.
+- `CustomWidgetController`: the Custom Widget picker menu, its config page and the startup crash review.
 - `SourceTimelineController`, `DatasetMergeActions`: Source Timeline binding and dataset merge.
 - `BrowserFileStore`, `FileSelectionService`, `BrowserPickedFile` (+ `browser_picked_file.js`), `BrowserPersistence`,
   `PresetController`, `WelcomePresetsDialog`: the WebAssembly boundary and presets.
@@ -84,6 +87,15 @@ to `pj_widgets`; business logic and data services go to `pj_runtime`. How the su
 - The shared GUI main (`cmake/test_mains/pj_test_main_gui.cpp`) gives every test process an application name of its own, so its settings file and data folder are its alone and are removed when it ends. A window opens and locks the default extension store in that folder whatever plugin folder it was given: a test must not assume it shares settings or data with another test process.
 
 ## Native opt-in profile boundary
+
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): threads and teardown, startup, file loading and progress, streaming,
+  recording, layouts, cloud import, owned views, toolbox presentation, Custom Topics, Custom Widgets, Log panels,
+  browser boundary and presets, MCP, tests, known gaps.
+- [docs/TECHNICAL_NOTES.md](./docs/TECHNICAL_NOTES.md): the measurements and incidents behind browser, linking, export
+  and packaging choices.
+- Cross-module: [derived objects](../docs/derived_objects/ARCHITECTURE.md),
+  [recording](../docs/RECORDING_AND_CACHING.md), [MCP server](../docs/MCP_SERVER.md),
+  [browser presets](../docs/WASM_PRESETS.md), [browser deployment](../docs/WASM_DEPLOYMENT.md).
 
 `AppProfile` pre-parses `--profile-dir` immediately after the app identity is set,
 before WidgetTuner, any app-owned QSettings, or marketplace startup. It delegates

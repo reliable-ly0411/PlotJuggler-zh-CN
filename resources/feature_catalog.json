@@ -12,7 +12,7 @@
     {
       "id": "command_line_data",
       "name": "Command-line data loading",
-      "summary": "Open data with repeatable -d / --datafile options or positional file paths. Files finish loading before an optional layout; explicit files replace the sources saved in that layout.",
+      "summary": "Open data with repeatable -d / --datafile options or positional file paths. Files finish loading before an optional layout; explicit files replace the sources saved in that layout, and each dataset the layout names maps to one of them (the same file, then the same file name, then by position within each file format when the counts match), so its plots and derived series stay bound.",
       "entry_point": "Desktop command line: plotjuggler4 -d first.csv -d second.csv -l shared.pj4.xml; plotjuggler4 recording.csv",
       "evidence": "pj_app/src/main.cpp#datafile_option; pj_app/src/MainWindow.cpp#void MainWindow::loadAtStartup",
       "verified": "MainWindowStartupTest: multi-file ordering, source replacement, failure settlement and data-only startup"
@@ -44,10 +44,10 @@
     {
       "id": "layouts",
       "name": "Layouts",
-      "summary": "Save and reload the whole workspace: tabs, plots, custom topics and markers. When saving, the layout can be bound to the loaded data so that loading it opens the same files again and restarts the same streaming sources, without their connection dialog.",
+      "summary": "Save and reload the whole workspace: tabs, plots, custom topics and markers. When saving, the layout can be bound to the loaded data so that loading it opens the same files again and restarts the same streaming sources, without their connection dialog. A layout made for one dataset, loaded while several loaded datasets fit it, asks which ones to show; choosing several duplicates its tabs, one copy per dataset named after it, each curve in the same colour in every copy, the runs aligned to start together.",
       "entry_point": "File → Save Layout... / Load Layout...; recent layouts: Sources panel → Recent layouts & files",
-      "evidence": "pj_app/src/MainWindow.cpp#tr(\"Load Layout...\"); pj_app/src/MainWindow.cpp#tr(\"Save Layout with Sources...\"); pj_app/src/ui/LeftPanel.ui#buttonRecentFiles",
-      "verified": "2026-10-21 in-app on release-4.1 e275111c: File → Save Layout... / Load Layout... and Recent layouts & files"
+      "evidence": "pj_app/src/MainWindow.cpp#tr(\"Load Layout...\"); pj_app/src/MainWindow.cpp#tr(\"Save Layout with Sources...\"); pj_app/src/ui/LeftPanel.ui#buttonRecentFiles; pj_app/src/MainWindow.cpp#void MainWindow::chooseLayoutDatasets; pj_app/src/ui/LayoutDatasetDialog.ui#listDatasets",
+      "verified": "2026-10-21 in-app on release-4.1 e275111c: File → Save Layout... / Load Layout... and Recent layouts & files; 2026-11-19 the dataset question and duplicated tabs: LayoutDatasetChoiceTest and the layout_dataset_choice QA regression"
     },
     {
       "id": "extensions",
@@ -126,8 +126,16 @@
       "name": "Custom Widget panels",
       "summary": "Show values in a panel provided by a widget extension, for example a gauge, a numeric indicator or a value table. Each widget declares the series it takes and its settings, which appear in the side panel. Widget extensions are installed from the Marketplace.",
       "entry_point": "Empty plot area: click the Custom Widget button and pick a widget, then drag the series from the Datasets panel onto it",
-      "evidence": "pj_widgets/src/VisualizationPlaceholderWidget.cpp#buttonVizCustomWidget; pj_app/src/ui/CustomWidgetPickerPanel.ui#CustomWidgetPickerPanel; pj_custom_widgets/CLAUDE.md#CustomWidgetDockWidget",
+      "evidence": "pj_widgets/src/VisualizationPlaceholderWidget.cpp#buttonVizCustomWidget; pj_app/src/ui/CustomWidgetPickerMenu.cpp#CustomWidgetPickerMenu; pj_custom_widgets/CLAUDE.md#CustomWidgetDockWidget",
       "verified": "not checked by hand in the app; pj_app GUI tests and the headless CustomWidgetE2E runs cover the button, the picker and the restored widget"
+    },
+    {
+      "id": "log_panel",
+      "name": "Log panel",
+      "summary": "Show log messages (for example ROS /rosout) as a list in time order, several topics merged. Filter by level, source, category and text; the message at the playback time is highlighted, later ones are greyed or hidden, and a double click jumps the playback to a message.",
+      "entry_point": "Empty plot area: click the Log button, then drag a log topic from the Datasets panel onto it; or drop a log topic straight onto an empty plot area",
+      "evidence": "pj_widgets/src/VisualizationPlaceholderWidget.cpp#buttonVizLog; pj_log/widget/src/LogView.ui#Filter messages...; pj_log/CLAUDE.md#LogDockWidget",
+      "verified": "not checked by hand in the app; pj_app GUI tests cover the button and the drop onto an empty plot area"
     },
     {
       "id": "plot_tabs",

@@ -14,6 +14,15 @@ from the SDK, so it knows nothing of Qt, plugins being loaded, rendering or time
 - **Dataset → topic → chunk → column.** A dataset is one source (a file, a live connection) bound to a time domain. A
   topic is one stream: typed columns sharing one timestamp column. A topic either has a schema (a type tree registered
   in the `TypeRegistry`) or is schemaless and gets columns as they appear.
+- **Labels.** Each dataset carries a label (`DataEngine::datasetLabel`) beside the SDK's `DatasetInfo`: its source
+  name (`/` read as `_`, `Dataset` when empty) or a display name (`setDatasetLabel`), with the lowest free ` (N)` when
+  another dataset holds it. Assigned at creation and held until `removeDataset()`, so another dataset coming or going
+  never renames one, and a freed label names a later dataset, never a survivor; a relabel from the base the label was
+  made from (a reload naming the dataset after its file again) keeps it. A merge source keeps its label but is listed
+  nowhere (`isMergedAway()`), and `datasetByLabel()` maps that label to the anchor holding its data. The app's tree,
+  the plugin catalog snapshot and every `label:topic/field` qualifier read it. Only the primary engine's labels are
+  read: a staging or streaming mirror labels its datasets on its own. A label is a session name: layouts persist the
+  id and `source_name`.
 - **Timestamps** are absolute int64 nanoseconds. Nothing in this module subtracts a display base.
 - **Types.** Each logical `PrimitiveType` maps to a storage kind (narrow integers are widened); 64-bit integers are
   never stored as double.
@@ -235,7 +244,7 @@ it missed evicted entries or that the dataset was replaced.
 | A time window | `rangeByTime()`, then `at(uid)` per entry; a UID walk would skip an out-of-order entry |
 | A time-window cursor's high-water mark | `maxUidAtOrBefore()`, not `latestAt()`'s UID |
 | "Did anything arrive behind what I evaluated?" | `oldestArrivalAfter()` |
-| "Did the topic change?" | `contentIdentity()` |
+| "Did the topic change?" | `contentIdentity()`: `content` on any change; `rewrite` unless the change was an append or a front eviction (time-ordered caches rebuild); `removal` only when entries were removed, replaced, shifted or re-UIDed, not on any insert nor a front eviction (an arrival-order reader keeps its cursor; one that must drop evicted entries checks them with `indexOf()`) |
 
 **Payloads.** An owned payload is a shared buffer charged to the topic's memory budget. A lazy payload is a closure the
 store runs on read, returning bytes plus an anchor that keeps them alive; the producer anchors on whatever already owns
@@ -280,6 +289,8 @@ and parser object write, and toolbox object read.
 - Each host turns ABI calls into `DataWriter`, `DataEngine` and `ObjectStore` operations. The host seals and commits
   (`flushPending()`); plugins never do.
 - An exception must not cross the ABI: entry points catch it and return an error status.
+- The catalog snapshot names each data source by its label, not by the name it was created with: the handle is the
+  identity, `PJ_data_source_info_t.name` a session label unique within one snapshot.
 - The write hosts collapse repeated slashes in topic and field names (and drop a field's leading slash). A parser
   binding names its scalar topic through the same rule (`normalizeTopicName()`), so it reaches the topic the
   direct-write path made; object topic names are not normalized.

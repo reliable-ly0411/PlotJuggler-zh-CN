@@ -10,37 +10,10 @@ async function customState(page, messages) {
   return messages.slice(before);
 }
 
-// This is the first feature-level case, not a replacement for data/drop/restore tests.
-test('custom-widget picker mounts the shipped log viewer through real canvas clicks', async ({ page }) => {
-  test.setTimeout(120000);
-  const { messages, errors, screen } = await bootApp(page);
-  const center = await placeholderIconCenter(page, screen, messages, 'custom');
-  expect(center.x).toBeGreaterThanOrEqual(screen.x);
-  expect(center.y).toBeGreaterThanOrEqual(screen.y);
-  await page.mouse.click(center.x, center.y);
-  let choice;
-  let previousChoice = "";
-  let stableChoice = 0;
-  await expect.poll(async () => {
-    const lines = await customState(page, messages);
-    choice = lines.map(line => line.match(/PJ_WASM_CUSTOM_PICK plugin=log-widget type=log_viewer x=(\d+) y=(\d+) enabled=1/)).find(Boolean);
-    const coordinates = choice ? `${choice[1]},${choice[2]}` : '';
-    const inside = choice && Number(choice[1]) > 0 && Number(choice[2]) > 0
-      && Number(choice[1]) < screen.width && Number(choice[2]) < screen.height;
-    stableChoice = inside && coordinates === previousChoice ? stableChoice + 1 : 0;
-    previousChoice = coordinates;
-    return stableChoice >= 2;
-  }).toBe(true);
-  await page.mouse.click(screen.x + Number(choice[1]), screen.y + Number(choice[2]));
-  await expect.poll(async () => (await customState(page, messages)).some(line =>
-    /PJ_WASM_CUSTOM_DOCK plugin=log-widget type=log_viewer missing=0 bindings=0 pending=0 rows=0/.test(line))).toBe(true);
-  expect(errors).toEqual([]);
-});
-
-
-// Use the real MCAP importer, ROS parser, topic tree and shipped log plugin.
-// Epoch timestamps ensure a mistaken zero-based history request cannot pass.
-test('a log dock added after import accepts a real topic drag and reads epoch history', async ({ page }) => {
+// Exercise real canvas clicks, import, topic drop and epoch history for both
+// native layouts and equivalent layouts saved by the retired official plugin.
+for (const legacy of [false, true]) {
+test(`a native Log restores ${legacy ? 'legacy official widget' : 'native'} layout and epoch history`, async ({ page }) => {
   test.setTimeout(240000);
   const fs = require('fs');
   const path = require('path');
@@ -58,28 +31,23 @@ test('a log dock added after import accepts a real topic drag and reads epoch hi
   await clickActiveDialogButton(page, screen, messages, 'ok');
   await expect.poll(() => messages.some(line => line.includes('PJ_FILE_LOAD_OK') && line.includes('ros2_log_epoch.mcap')),
     { timeout: 60000 }).toBe(true);
-  const center = await placeholderIconCenter(page, screen, messages, 'custom');
+  const center = await placeholderIconCenter(page, screen, messages, 'log');
+  expect(center.x).toBeGreaterThanOrEqual(screen.x);
+  expect(center.y).toBeGreaterThanOrEqual(screen.y);
   await page.mouse.click(center.x, center.y);
-  let choice;
-  let previousChoice = "";
-  let stableChoice = 0;
-  await expect.poll(async () => {
-    choice = (await customState(page, messages)).map(line =>
-      line.match(/PJ_WASM_CUSTOM_PICK plugin=log-widget type=log_viewer x=(\d+) y=(\d+) enabled=1/)).find(Boolean);
-    const coordinates = choice ? `${choice[1]},${choice[2]}` : '';
-    const inside = choice && Number(choice[1]) > 0 && Number(choice[2]) > 0
-      && Number(choice[1]) < screen.width && Number(choice[2]) < screen.height;
-    stableChoice = inside && coordinates === previousChoice ? stableChoice + 1 : 0;
-    previousChoice = coordinates;
-    return stableChoice >= 2;
-  }).toBe(true);
-  await page.mouse.click(screen.x + Number(choice[1]), screen.y + Number(choice[2]));
   let dock;
   await expect.poll(async () => {
     dock = (await customState(page, messages)).map(line =>
-      line.match(/PJ_WASM_CUSTOM_DOCK plugin=log-widget type=log_viewer missing=0 bindings=0 pending=0 rows=0 x=(\d+) y=(\d+)/)).find(Boolean);
+      line.match(/PJ_WASM_LOG_DOCK bindings=0 pending=0 rows=0 x=(\d+) y=(\d+)/)).find(Boolean);
     return Boolean(dock);
   }, { message: "log dock must mount after the real picker click" }).toBe(true);
+  // The native dock hides future entries by default. Show all six using its actual button, not a test mutation.
+  const future = (await customState(page, messages)).map(line =>
+    line.match(/PJ_WASM_LOG_FUTURE x=(\d+) y=(\d+) checked=0/)).find(Boolean);
+  expect(future).toBeTruthy();
+  await page.mouse.click(screen.x + Number(future[1]), screen.y + Number(future[2]));
+  await expect.poll(async () => (await customState(page, messages)).some(line =>
+    /PJ_WASM_LOG_FUTURE x=\d+ y=\d+ checked=1/.test(line))).toBe(true);
   let row;
   await expect.poll(async () => {
     const before = messages.length;
@@ -93,7 +61,7 @@ test('a log dock added after import accepts a real topic drag and reads epoch hi
     { x: screen.x + Number(row[2]), y: screen.y + Number(row[3]) },
     { x: screen.x + Number(dock[1]), y: screen.y + Number(dock[2]) });
   await expect.poll(async () => (await customState(page, messages)).some(line =>
-    /PJ_WASM_CUSTOM_DOCK plugin=log-widget type=log_viewer missing=0 bindings=1 pending=0 rows=6 x=\d+ y=\d+ resolved=1/.test(line)),
+    /PJ_WASM_LOG_DOCK bindings=1 pending=0 rows=6 x=\d+ y=\d+ resolved=1/.test(line)),
     { timeout: 30000 }).toBe(true);
   // Save actual widget wiring, start a new runtime with no dataset, then load
   // the saved layout before asynchronously picking its source file.
@@ -103,12 +71,22 @@ test('a log dock added after import accepts a real topic drag and reads epoch hi
   const saved = await downloadLayoutFromFileMenu(page, screen, messages);
   const xml = saved.bytes.toString('utf8');
   fs.writeFileSync(test.info().outputPath('saved-log-layout.xml'), saved.bytes);
-  expect(xml).toContain('<CustomWidget');
-  expect(xml).toContain('log-widget');
+  expect(xml).toMatch(/<log\b/);
+  expect(xml).toContain('/rosout');
+  expect(xml).toContain('future_rows="grey"');
   // Layout-only restore: retain all CustomWidget source identity/wire fields.
   // No automatic file recipe is used; the file arrives through the real picker later.
-  const layoutOnly = xml.replace(/<fileInfo\b[^>]*>[\s\S]*?<\/fileInfo>/g, '')
+  let layoutOnly = xml.replace(/<fileInfo\b[^>]*>[\s\S]*?<\/fileInfo>/g, '')
     .replace(/<fileInfo\b[^>]*\/>/g, '');
+  if (legacy) {
+    layoutOnly = layoutOnly.replace(/<log\b[^>]*>([\s\S]*?)<\/log>/, (_log, topics) => {
+      const wires = topics.replace(/<topic\b([^>]*)\/>/g,
+        (_topic, attrs) => `<input name="logs" kind="object" slot="0" ${attrs}/>`);
+      return `<CustomWidget plugin="log-widget" type="log_viewer">${wires}<config><![CDATA[{"future_rows":"grey"}]]></config></CustomWidget>`;
+    });
+    expect(layoutOnly).toContain('<CustomWidget plugin="log-widget" type="log_viewer">');
+    expect(layoutOnly).toContain('<input name="logs" kind="object"');
+  }
   fs.writeFileSync(test.info().outputPath('restored-log-layout.xml'), layoutOnly);
   const beforeReady = messages.filter(line => line.includes('PJ_WASM_APP_READY')).length;
   await page.reload();
@@ -117,7 +95,7 @@ test('a log dock added after import accepts a real topic drag and reads epoch hi
   await layoutChooser.setFiles({ name: 'late-log-layout.pj4.xml', mimeType: 'application/xml', buffer: Buffer.from(layoutOnly) });
   await expect.poll(() => messages.some(line => line.includes('PJ_WASM_LAYOUT_LOAD_OK name=late-log-layout.pj4.xml'))).toBe(true);
   await expect.poll(async () => (await customState(page, messages)).some(line =>
-    /PJ_WASM_CUSTOM_DOCK plugin=log-widget type=log_viewer missing=0 bindings=1 pending=1 rows=0 x=\d+ y=\d+ resolved=0/.test(line))).toBe(true);
+    /PJ_WASM_LOG_DOCK bindings=1 pending=1 rows=0 x=\d+ y=\d+ resolved=0/.test(line))).toBe(true);
   // bindings() retains the saved unresolved wire; resolved=0 proves it is not
   // falsely bound before the source arrives (the native dock contract).
   const laterChooser = await openFileChooser(page, screen);
@@ -127,14 +105,14 @@ test('a log dock added after import accepts a real topic drag and reads epoch hi
   });
   await clickActiveDialogButton(page, screen, messages, 'ok');
   await expect.poll(async () => (await customState(page, messages)).some(line =>
-    /PJ_WASM_CUSTOM_DOCK plugin=log-widget type=log_viewer missing=0 bindings=1 pending=0 rows=6 x=\d+ y=\d+ resolved=1/.test(line)),
+    /PJ_WASM_LOG_DOCK bindings=1 pending=0 rows=6 x=\d+ y=\d+ resolved=1/.test(line)),
     { timeout: 30000 }).toBe(true);
   expect(errors).toEqual([]);
 });
-
+}
 
 for (const [language, preferences] of [['zh_CN', '首选项…'], ['zh_TW', '偏好設定…']]) {
-  test(`real browser starts the log picker with ${language} main-program UI`, async ({ page }, testInfo) => {
+  test(`real browser starts with the ${language} built-in Log tooltip`, async ({ page }, testInfo) => {
     // Standard shipped command-line language option; no translator substitution.
     await page.route('**/qtloader.js', async route => {
       const response = await route.fetch();
@@ -145,8 +123,10 @@ for (const [language, preferences] of [['zh_CN', '首选项…'], ['zh_TW', '偏
       await route.fulfill({ response, headers, body: source + `\nconst originalQtLoad = qtLoad; qtLoad = config => originalQtLoad({...config, arguments: ['--language', '${language}']});\n` });
     });
     const { messages, errors, screen } = await bootApp(page);
-    const center = await placeholderIconCenter(page, screen, messages, 'custom');
-    await page.mouse.click(center.x, center.y);
+    const center = await placeholderIconCenter(page, screen, messages, 'log');
+    const tooltip = messages.map(line => line.match(/PJ_WASM_LOG_TOOLTIP value=(\S+)/)).find(Boolean);
+    expect(tooltip).toBeTruthy();
+    expect(Buffer.from(tooltip[1], 'base64').toString('utf8')).toBe(language === 'zh_CN' ? '日志' : '日誌');
     const lines = await customState(page, messages);
     const ui = lines.map(line => line.match(/PJ_WASM_CUSTOM_UI language=(\S+) actions=(\S+)/)).find(Boolean);
     expect(ui).toBeTruthy();
@@ -160,7 +140,9 @@ for (const [language, preferences] of [['zh_CN', '首选项…'], ['zh_TW', '偏
     await page.screenshot({ path: screenshotPath });
     await testInfo.attach(`${language}-rendered-picker`, { path: screenshotPath, contentType: 'image/png' });
     expect(Buffer.from(ui[2], 'base64').toString('utf8')).toContain(preferences);
-    expect(lines.some(line => /PJ_WASM_CUSTOM_PICK plugin=log-widget type=log_viewer .* enabled=1/.test(line))).toBe(true);
+    await page.mouse.click(center.x, center.y);
+    await expect.poll(async () => (await customState(page, messages)).some(line =>
+      /PJ_WASM_LOG_DOCK bindings=0 pending=0 rows=0 .* resolved=0/.test(line))).toBe(true);
     expect(errors).toEqual([]);
   });
 }

@@ -5,6 +5,7 @@ const { browserProjects } = require('./support/browser');
 module.exports = defineConfig({
   // The one list of functional specs, shared by both browser projects.
   testMatch: [
+    'log_widget_targeted.spec.js',
     'ingress_file_selection.spec.js',
     'official_loaders.spec.js',
     'persistence_layout.spec.js',

@@ -13,7 +13,8 @@ Everything in the shell lives on the GUI thread. Two kinds of worker exist:
 - `FileLoader` runs only each import's blocking `start()` on a worker thread; every other plugin call, the fan-out
   control and the queue run on the GUI thread, and the worker reaches it only through queued calls. Every accepted
   request ends in exactly one `loadFinished`, delivered through the event loop even when the request resolves inside
-  the enqueuing call. `cancelLoadAsync` is the one entry callable from another thread.
+  the enqueuing call. A `kFailed` terminal carries the failure's reason: a prologue failure on an idle loader emits
+  `fileLoadFailed` before `loadFileTicketed` returns, so a caller holding a ticket reads the reason from its terminal. `cancelLoadAsync` is the one entry callable from another thread.
 - `StreamingSourceManager` runs one worker per streaming session. Configuration, `start()` and stop requests run on
   the GUI thread; once launched, the worker is the only caller of the plugin (`poll()`, then `stop()`). What a layout
   save needs is captured before the worker starts, so a save never calls into a polling plugin.
@@ -37,7 +38,12 @@ Everything in the shell lives on the GUI thread. Two kinds of worker exist:
 ## Playback and panel access
 
 Space toggles Play/Pause through a non-repeating `QShortcut` on `TimelineWidget`; a text editor keeps Space through
-Qt's shortcut override. An object dock's context menu offers Open/Close Settings; `settingsPanelToggleRequested`
+Qt's shortcut override. A workspace restore (layout load, its rollback, undo/redo, the pinned-toolbox relaunch) hides
+or deletes the focused plot or switches the shown tab, and Qt would then focus the next widget in the tab chain, a
+filter in the browser. `MainWindow`'s `RestoreFocusGuard` spans each restore and then gives focus back to the widget
+that held it if it is still shown, else to the main window; `PlotDocker::xmlLoadState` does the same around its own
+hide, which a duplicated tab reaches outside any restore.
+An object dock's context menu offers Open/Close Settings; `settingsPanelToggleRequested`
 travels through `PlotDocker` to `MainWindow`, which binds the settings page to that dock and toggles the right panel.
 
 ## Window frame
@@ -55,14 +61,29 @@ Linux window manager keeps its own.
 
 Desktop startup takes repeatable `-d` / `--datafile <path>`, positional files and `-l` / `--layout <path>`.
 `MainWindow::loadAtStartup` waits for the terminal ticket of every explicit file before applying the layout. Explicit
-files override a source-bound layout's saved files (the generic-layout rewrite removes dataset qualifiers so curves bind
-to the new data); without them, `--layout` replays its saved sources and starts its recorded streams with no prompt.
-Unattended startup (`--exit-after-layout`, `--screenshot`, the `offscreen`/`minimal` platforms; `isUnattendedRun` in
-`main.cpp`) loads with `DialogPolicy::kNever`. A failed or cancelled explicit file skips the layout and settles it
-false, so `--exit-after-layout` exits unsuccessfully. The final restore is deferred through a window-owned timer so it
-never runs during teardown. `--exit-after-layout` exit codes are a contract for harnesses (`LayoutExitWatch`): 0
-applied, 1 load failed or cancelled, 2 timed out, 64 usage error. With `--screenshot` too, whichever quit fires first
-wins, and only `--exit-after-layout`'s code says whether the layout applied. Tests: `MainWindowStartupTest`.
+files override a source-bound layout's saved files: the layout applies as a generic layout, but each saved dataset it
+names is mapped to an explicit file when it can be, and its qualifiers keep their binding, pointed at that file, so a
+layout comparing two runs reopens with `-d run1 -d run2 -l layout`. `layout_xml::matchDatasetsToFiles` maps each file at
+most once: a saved path that is one of the files; then the only file still unclaimed with the saved file name (a
+path-less source label, with that label); then, per format (case-insensitive file suffix), the saved paths and files
+still left, in order, when that format's counts are equal. A path-less label never pairs by position: it has no format
+and may be a toolbox's own source. Dataset order is the layout's `<fileInfo>` list, then first appearance in the
+document; files keep command-line order. A dataset is its saved path, or its source label without one; `pj-upload://`
+and `pj-stream://` identities never map. Each mapped dataset is reported once (`Layout`/`dataset-mapped`: `Layout
+dataset "<label>" -> <file>` and how; a path-less label that follows its dataset's path adds no line); everything left
+unmapped is stripped and binds only where unique. A kept label the loader derived from the saved file name (the file
+name, or `<base>/<entry>` for a fan-out) follows the new name, since the identity resolver compares labels exactly.
+`removeDatasetQualifiersForGenericLayout` applies the mapping to every consumer, after `resolveDatasetSourcePaths`.
+Without explicit files, `--layout` replays its saved sources and starts its recorded streams with no prompt.
+A startup layout prompts only for which dataset(s) to show, and only when someone is at the display ("One layout over
+several datasets"); its other failures are diagnostics (`LayoutLoadInteractivity::kStartupAttended`). Unattended
+startup (`--exit-after-layout`, `--screenshot`, `--dump-diagnostics`, the `offscreen`/`minimal` platforms;
+`isUnattendedRun` in `main.cpp`) loads with `DialogPolicy::kNever`. A failed or
+cancelled explicit file skips the layout and settles it false, so `--exit-after-layout` exits unsuccessfully. The final
+restore is deferred through a window-owned timer so it never runs during teardown. `--exit-after-layout` exit codes are
+a contract for harnesses (`LayoutExitWatch`): 0 applied, 1 load failed or cancelled, 2 timed out, 64 usage error. With
+`--screenshot` too, whichever quit fires first wins, and only `--exit-after-layout`'s code says whether the layout
+applied. Tests: `MainWindowStartupTest`.
 
 ## File loading
 
@@ -105,6 +126,18 @@ catalog and time reference are final and the load context is retired. A
 the completed generation must not reset the successor's context or state.
 `FileLoaderTest` covers terminal-only producers, already-bound curves, and
 shutdown/reuse during terminal publication.
+
+**A load that yields nothing fails.** A plugin can finish its import successfully with no row and no object entry
+(a CAN log without a decoding database, a file with a header only). After the terminal flush `FileLoader` asks
+`SessionManager::datasetHoldsData`; when it is false the load fails like a start failure (`kFailed`,
+`data-source-load-failed`, `fileLoadFailed`). The reason quotes the plugin: the last warning or error it reported
+during `start()` (`DataSourceRuntimeHost::lastReportedProblem`, cleared just before `start()`), else the reason of a
+FAILED `request_stop`. A first load erases its dataset, which frees its label, so the next load of the same file
+gets the plain name; a reload rolls back to the data it was replacing; a fan-out entry fails alone. A stop-and-keep
+that kept nothing is a discard, and a fan-out a user stopped reports a cancel even when an earlier entry failed. A
+layout's data file that yields nothing fails the layout restore, as any load failure does. Every file entry point (open dialog, drop, `-d`, layout replay, MCP
+`open_file`) goes through this one check; streaming sources start empty and never reach it. Tests:
+`FileLoaderTest.*YieldsNoData*`.
 
 ### Load diagnostics
 
@@ -272,7 +305,7 @@ families: `stampDatasetSourcePaths`, then `relativizeDatasetSourcePaths`) and, i
 URDF file and `file://` package roots (Scene3D's `relocateLayoutResources`). `loadLayoutFromPath` resolves them
 against the layout folder before any restore (`resolveDatasetSourcePaths`, Scene3D's `resolveLayoutResourceUrls`).
 Undo snapshots and in-memory captures stay absolute; browser layouts skip both steps; a generic layout has no dataset
-qualifier.
+qualifier, except those startup keeps for its explicit files ("Command-line startup").
 
 **`__pj_saved_filepath`** exists only in the config handed to a plugin's `loadConfig` on a layout replay of a native
 file (`rewriteReplayFilepaths` with `SavedFilepath::kRecord`) and never reaches host state: the rewrite drops any
@@ -286,11 +319,112 @@ through the rewrite with `SavedFilepath::kOmit`.
 reported by `reportDerived` under source "Layout" (so `layout_issue_capture_` sees it), and the Custom Topics panel is
 re-derived after every restore.
 
+**A derived object that cannot be restored is skipped, like a missing curve.** `DerivedObjects::restore` reports each
+filter, transform, marker generator or on-demand recipe it could not restore (an input the loaded data lacks, a dataset
+path that is not loaded, a malformed entry) and installs the rest. `applyDataProcessors` turns that into a failed
+restore only under `MissingCurvePolicy::kExact` (undo/redo, the browser's all-or-nothing apply); under `kPrompt` and
+`kRetainAndDiagnose` (File → Load Layout, `--layout`, the progressive drain) the entries are skipped with their
+diagnostics and the layout applies. `kPrompt` lists them in the missing-curve prompt (`promptMissingCurves`), with the
+same Cancel; `kRetainAndDiagnose` shows one toast. A curve that plots a skipped output is then an unresolved curve, so
+it takes the missing-curve path of the same policy. Only the preflight refuses before anything mutates; the drain
+reports its refusal as `processor-restore-refused`.
+
+**A save never loses what the load skipped.** `DerivedRestoreReport::skipped` names the exact saved elements the
+restore skipped. Under `kRetainAndDiagnose` `applyDataProcessors` stages copies of exactly those, and the layout's commit
+point (`commitRestoredLayout`) makes them `kept_derived_`; `saveLayoutToPath` writes them back, as pending curves are
+kept and saved. Identity is never guessed from the file: one filter or rule bound to two runs, one of them not loaded,
+keeps the other binding. Each copy loses its session dataset ids; a qualifier only an id named (a stream bound at load)
+gets back its `pj-stream://` identity. Under `kPrompt` the prompt asked instead: its Continue drops them, and its title
+and button name the layout's data, not curves, once a derived object is listed.
+
+A kept entry is retired for good when a live recipe stands for it: same kind and name (a filter by its output, the
+other kinds by owner and id) and, for a filter or a generator, the same dataset (path, else source name). That check
+runs on every catalog addition and marker change (`retireReplacedKeptDerived`), so creating and deleting the recipe
+before a save does not bring the old entry back. A kept transform or on-demand recipe whose output a live one now writes
+is not saved: the next load would refuse it. Only layout files carry kept entries: an undo snapshot or a `kExact`
+rollback target would fail on the same missing input. The next layout load replaces them; removing every dataset, or
+trashing the last catalog row, drops them.
+
 **Restore order.** `applyWorkspace` parses once and restores: preflight (read-only, before anything mutates) ->
 per-source display offsets -> processors -> rebind every curve to a catalog key. Offsets come before processors so a
 generator that reads the display frame sees the settled offset. A layout restore replaces the persisted toolboxes
 (every tab and floating window, plus a takeover the layout names; any other takeover stays) synchronously before
 relaunching them, after asking once when one of them is busy.
+
+### One layout over several datasets
+
+A layout aimed at one dataset, applied while several loaded datasets carry its topics, would leave each reference to
+such a topic ambiguous: plot curves unresolved, scene layers pending, an empty workspace. Such a binding is never
+guessed silently: it is asked about, or chosen by the rules below (an automated load's choice is reported). The rules
+are intended behaviour, each with its reason. `layout_xml::planDatasetChoice` decides, `layout_xml::pinLayoutToDataset(s)`
+rewrite the document, `MainWindow::chooseLayoutDatasets` asks through `LayoutDatasetDialog`, reports, and hands the
+result on.
+
+- **When it applies.** On the synchronous leg (nothing left to reload or start), when the file named at most one dataset
+  (`layout_xml::datasetIdentities`: a generic layout names none) and that dataset is not loaded (a loaded file named
+  under another label is loaded: the curve binding finds it by its path). A layout naming several datasets, a stream or
+  an upload keeps its own bindings, and startup maps them to its explicit files ("Command-line startup"): those name
+  what they show. The entries of one fan-out file share its path and differ by label, so each (path, label) pair is a
+  dataset of its own.
+- **Shared topics decide whether to choose.** A topic of the layout is shared when two or more loaded datasets carry
+  it. The layout's topics are what its plots, scenes, widgets, filters, transforms, on-demand recipes and dataset-bound
+  marker rules read. A series key (`<topic>/<field>`: a marker rule's input, an on-demand input saved without a
+  `topic`) reads the longest topic naming a prefix of it, of those any loaded dataset carries or the layout's recipes
+  write. Its own outputs (filters, transforms, on-demand recipes as `<owner>/<id>/<output>`, marker rules) are not, so a dataset
+  holding them from an earlier load of the same layout fits it no better.
+- **No shared topic: nothing is chosen.** A generic layout is applied as it is: each reference binds to the one dataset
+  carrying its topic. Reason: a layout over curves from several files (the browser's Save Layout writes every layout
+  generic) names no dataset, and pinning it all to one file would lose the others' curves. A layout naming a dataset
+  that is not loaded loses its qualifiers (`layout_xml::removeDatasetQualifiersForGenericLayout`) when a loaded
+  dataset carries one of its topics, so each reference binds where its topic is unique; it keeps them otherwise, so
+  the missing-data prompt names its dataset. Reason: a qualified curve never falls back to a unique topic
+  (`CatalogModel::resolveCurveKey`), so the qualifiers of a dataset that is not there would leave every curve
+  unresolved.
+- **One dataset fitting best is pinned, unasked.** A dataset fits best when it carries more of the shared topics than
+  any other, or as many and more of the layout's other topics: the shared topics decide first; the others then say
+  which file the layout was made for (a layout plotting `sensor`, which two files carry, and `extra`, which one of them
+  carries, was made for that one).
+- **A pin covers what its dataset carries.** Pinning to a dataset (the best fit, the one checked, or each checked one
+  in its own copy) qualifies every reference to a topic that dataset carries (all of its catalog topics, not only the
+  shared ones), every reference to an output of a recipe reading one of those (through chains of recipes: a pinned
+  recipe writes into its dataset), every marker rule all of whose key topics are among those, and every other
+  nameless reader (marker scope, a transform input saved without a topic). Any other reference keeps no qualifier and
+  binds where its topic is unique, so a curve over a topic only another file carries still shows it. Reason: a
+  transform or marker rule reads every input from one dataset, so pinning only its shared inputs would split it, and a
+  rule pinned to a dataset lacking one of its inputs would fail to restore.
+- **Several fitting equally (as many shared topics, and as many others) are asked about, when the load can ask**
+  (File → Load Layout, the recent list, the browser's Load Layout, a startup layout with someone at the display): one
+  checkbox per candidate dataset, in load order, the first checked; Cancel settles the load false with nothing applied,
+  like the reload prompt's Cancel. Reason: only the user knows which run a generic layout is for. Checked candidates
+  removed while the question was open (the browser's does not block) are reported: the load goes on with the others,
+  or fails when none is left, never taken for a Cancel.
+- **A load that cannot ask takes the first loaded candidate and says so** (`layout-dataset-chosen`, a warning): an
+  unattended `--layout` (`--exit-after-layout`, `--screenshot`, `--dump-diagnostics`, the offscreen QA instance), and
+  any other load without a display to ask on. Reason: a harness, an agent or the QA instance cannot answer a dialog,
+  and an unbound workspace helps no one; the diagnostic keeps the choice visible.
+- **One checked: the layout is pinned to it,** and the tabs keep their names. Plots, scenes, recipes, marker rules,
+  marker scopes and Custom Widget wires are all rewritten in the document by the same qualifier walk, so no widget
+  needs its own logic.
+- **Several checked: each tab is duplicated, one copy per dataset,** side by side, named `<tab> [<dataset label>]`,
+  each copy pinned to its dataset. Reason: a Scene3D, Scene2D or Custom Widget view shows one dataset, so comparing
+  runs needs one copy of the view per run. Each filter and dataset-bound marker rule is copied once for each checked
+  dataset that covers it, pinned there, keeping its output name or rule id: both are per dataset (`BatchEngine` binds a rule
+  by id and dataset). One no checked dataset covers stays single and unqualified.
+- **Copies never collide.** A tab copy is the user's (`plot_xml::prepareTabCopy`, shared with Duplicate Tab: no
+  plugin ownership) and takes tab, area and plot ids no element of the document has, so a duplicated layout saved and
+  loaded again duplicates cleanly. Ids are renamed, not dropped: the pending-curve binder finds a copy's plots by id.
+- **Every copy shows a curve in the same colour.** A saved colour is copied as is; a curve without one first gets the
+  colour its plot would give it (`plot_xml::fillMissingCurveColors`: the session's remembered colour for it, else the
+  plot's next free palette colour). Reason: the copies exist to compare runs, so the same signal must look the same in
+  each. Scene layers take no session-assigned colour, so their copies match already.
+- **The checked datasets start together.** Their starts are aligned as the Source Timeline's "Align starts" does,
+  over the checked datasets only (`SourceTimelineController::alignStartsOf`), before the restore builds the plots:
+  a plot keeps its view when an offset changes (a Timeline drag must not re-zoom), so aligning after the plots fit
+  would leave each later run's copy showing its old window, empty. Reason: the copies are there to compare runs, so
+  each starts at the same display time. One checked dataset keeps its offset.
+- **Refused, not guessed, where a copy cannot work** (`layout_xml::duplicationBlockers`): a transform's id is also its
+  script's class id and unique per plugin across datasets, so no second copy can exist; an on-demand recipe reads its
+  inputs and upstream outputs by name. Such a layout lets one dataset be checked at a time, and the dialog names them.
 
 ### Streaming sources in a layout file
 
@@ -428,8 +562,8 @@ See the derived-objects architecture, "The on-demand pipeline".
 docks: wired to the session, the diagnostic sink, the undo debounce and
 `TopicDemandController::registerCustomWidgetDock`, and given the `pj.playback.v1` time mappers
 (`displayTimeForTopic` / `displayTimeForSource`, the same two a toolbox session's playback host uses). The
-object-widget factory is installed whether or not Scene2D/Scene3D are built, because this kind and
-`state_transitions` do not depend on them. `MainWindow::createCustomWidgetDock(dock, plugin_id, type)`, which the
+object-widget factory is installed whether or not Scene2D/Scene3D are built, because this kind,
+`state_transitions` and `log` do not depend on them. `MainWindow::createCustomWidgetDock(dock, plugin_id, type)`, which the
 picker calls, binds the plugin widget before the dock mounts it (so the mount sees the plugin's widget tree), then
 adopts it. `onObjectFamilyRequested(kCustomWidget)` creates nothing: the widget is chosen first, or an unbound panel
 would be left behind. Object types with no built-in view (`isCustomWidgetObjectType` in
@@ -437,13 +571,15 @@ would be left behind. Object types with no built-in view (`isCustomWidgetObjectT
 mounted Custom Widget (`tryAcceptObjectTopic`), and a drop on an empty dock gets a toast saying to create the Custom
 Widget first.
 
-`CustomWidgetController` (owned by `right_panel_stack_`) holds the rest: both right-panel pages, the pending target
-panel, the `ActiveWidgetsMarker` and the startup review. `MainWindow` calls `showPicker`, `pageForFocusedDock`,
-`attachDock`, `reviewUncleanShutdown` and `clearActiveWidgets`; the controller calls back through `Hooks`.
+`CustomWidgetController` (owned by `right_panel_stack_`) holds the rest: the config page in the right panel, the
+picker menu, the pending target panel, the `ActiveWidgetsMarker` and the startup review. `MainWindow` calls
+`showPicker`, `pageForFocusedDock`, `attachDock`, `reviewUncleanShutdown` and `clearActiveWidgets`; the controller
+calls back through `Hooks`.
 
-- `CustomWidgetPickerPanel` lists the installed widget types from `ExtensionCatalogService::widgets()`, rebuilt on
-  `catalogChanged` and every time it is shown. A library built against another Qt is listed disabled with its
-  mismatch reason. With nothing installed it offers the Marketplace (hidden on WASM).
+- `CustomWidgetPickerMenu` is a context menu, popped up under the empty panel's Custom Widget button. It lists the
+  installed widget types from `ExtensionCatalogService::widgets()`, rebuilt every time it opens. A library built
+  against another Qt is listed disabled with its mismatch reason. The button itself is disabled with nothing
+  installed, so the menu never opens empty.
 - `CustomWidgetConfigPanel` binds to the focused `CustomWidgetDockWidget`: one row per input with its wires and a
   chooser listing only the keys `CustomWidgetDockWidget::canBind` accepts ("Choose series" replaces slot 0, "Add
   series" on a `multiple` input appends at `WidgetBindings::kNewSlot`), then a settings form built from
@@ -453,9 +589,9 @@ panel, the `ActiveWidgetsMarker` and the startup review. `MainWindow` calls `sho
   inputs once, from the event loop, however many arrive together. A missing widget shows its reason and its stored
   wires, read-only.
 
-Flow: the placeholder's Custom Widget icon → `showPicker(dock)` keeps the empty dock in a `QPointer` and shows the
-picker, which stays up while that dock has the focus; a pick → `createCustomWidgetDock` and the new panel's config
-page. A dock closed or filled in between is left alone.
+Flow: the placeholder's Custom Widget button → `showPicker(dock)` keeps the empty dock in a `QPointer` and pops the
+menu up under the button; a pick → `createCustomWidgetDock` and the new panel's config page. A dock closed or filled
+in between is left alone.
 
 **Crash loop breaker (desktop only).** `CustomWidgetController` owns this process's `ActiveWidgetsMarker`
 (`active_widgets.<pid>.json` in the default directory) and hands it to every Custom Widget dock, which records its
@@ -470,6 +606,21 @@ restore as placeholders. An unattended run only reports. An unreadable record is
 Tests: `main_window_custom_widget_test.cpp` (`UncleanShutdownTest` gives each case its own application name, because
 Disable needs the extension store's single-writer lease), `custom_widget_panels_test.cpp`, and the executable's
 end-to-end runs registered from `pj_custom_widgets/tests/E2E.cmake`.
+
+## Log panels
+
+`MainWindow::makeSceneDock` builds the `"log"` kind (`LogDockWidget` from `pj_log`, the `<log>` layout tag),
+counted as `panel.log`, given the app-wide time format and wired to the undo debounce,
+`TopicDemandController::registerLogDock` and the pending-binding rebuild. `panelKindForObjectType` routes `kLog` to
+it, so a log topic dropped on an empty area opens a Log panel (the drop factory hands the topic over through
+`IDataWidget::tryAcceptObjectTopic` and seeds every new widget at the playhead), and the placeholder's Log button
+(`VisualizationKind::kLog`) creates an empty one. A log dropped on a mounted Log panel merges into it
+(`tryAcceptObjectTopic`). An advertised log placeholder dropped on a Log panel stays pending in it
+(`TopicDemandController::handleLogDockPlaceholderDrop`) while `PendingDisplayBinder::addPendingLogTopic` holds its
+demand; a restored layout's unresolved topics are collected the same way. Deleting a topic or a dataset from the
+Datasets panel calls `discardTopic` / `discardDataset` first, next to the scene docks' `discardPendingRestoresFor*`,
+so the panel drops it instead of waiting for it. `applyTimeLabelFormat` reaches every panel
+through `forEachLogPanel`. The curve list badges a log row with the Log glyph (`objectTypeBadgeIcon`).
 
 ## Browser (WebAssembly) boundary
 
@@ -625,7 +776,27 @@ output and a Linux ELF fixture linked both with and without `--exclude-libs,ALL`
   or scene views embedded in a toolbox panel as displayed.
 - Removing curves rebuilds the whole curve tree (`CurveListPanel::onCatalogItemsRemoved`); expansion and scroll are
   restored, the selection is not.
+- A derived object skipped at a `kRetainAndDiagnose` load (`--layout`, a cloud import) is not recreated when its
+  input arrives later (a late import, a stream), while a curve plotting its output stays a pending intent waiting for
+  it. The kept entries (`kept_derived_`) hold what a retry would need; nothing retries them yet.
 - In-band embedded assets are not routed to Scene3D docks on load.
+- The Source Timeline's "Align starts", "Align ends" and "Reset" keep every plot's view, as a drag does, so a plot
+  showing only a dataset they move is left on its old window, empty, until zoomed out (from the code, not
+  reproduced).
+- A layout naming several datasets is never asked about: when neither the saved paths nor startup's mapping bind its
+  datasets, its references stay unresolved.
+- A shared topic no chosen dataset carries keeps no qualifier and stays ambiguous (two runs, each recorded as two
+  files, with one of each checked).
+- A scene whose topics are split across files, over a shared one (`/tf`), pins the shared topic to the best fit and
+  leaves its other topics unqualified, so its layers from another file stay pending: a scene shows one dataset. The
+  fix belongs to the scene: `Scene3DDockWidget::representativeDatasetId` would also read robot-model and trail
+  sources, or the scene would bind as one dataset.
+- A series key resolves to a topic by name alone (the longest loaded topic naming a prefix of it), while marker rules
+  bind by series (`CatalogModel::findScalarForMarkerKey`). When another loaded dataset has a topic literally named
+  `sensor/value` and the chosen ones carry topic `sensor` with field `value`, a rule over `sensor/value` is left
+  unpinned and finds several carriers. Deciding coverage per dataset with `findScalarForMarkerKey` would fix it.
+- A layout holding a transform or an on-demand recipe shows one dataset at a time: duplicating a transform would need
+  a recipe instance id apart from its script's class id (`DataProcessorService::TransformRecipe::user_id` is both).
 - Restoring a layout whose `<pinned_toolboxes>` names a plugin that is missing or fails to bind goes through
   `launchToolbox`'s error path, which opens a modal `MessageBox::warning` even in an unattended run (suspected from
   the code, not reproduced).

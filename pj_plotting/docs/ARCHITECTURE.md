@@ -30,7 +30,10 @@ invariants; each header's doc-comment owns its API contract; measurements and pl
   resolve last-write-wins, a null is a gap, the trailing run stays open.
 - **`PlotXml.h`** is the plot-XML vocabulary shared with `pj_app`'s layout passes: the `x_basis` range markers, the
   `pending_intent` keep-alive predicate, and the `<marker_scope scope=...>` attribute with its two persisted values (the
-  value <-> `MarkerScope` mapping lives in `PlotWidget.cpp`).
+  value <-> `MarkerScope` mapping lives in `PlotWidget.cpp`). It also holds the steps a layout pass shares with the
+  widgets: the curve palette and its free-colour rule (`freePaletteIndex`, which `PlotWidgetBase` runs over its
+  curves' pens), `fillMissingCurveColors` (a saved plot's curves get the colours the plot would pick), and
+  `prepareTabCopy` (Duplicate Tab and the layout's per-dataset tab copies).
 
 ## Wheel zoom keys
 
@@ -359,3 +362,5 @@ The performance baseline is in `pj_scene3D/docs/TECHNICAL_NOTES.md` "Performance
 - The raster fallback after a GPU failure waits for a popup or modal window but does not detect a `QDrag::exec` loop
   started from the canvas.
 - `TabbedPlotWidget.cpp` still defines `HorizontalScrollArea`, which the tab strip no longer uses.
+- A curve restored from a layout whose data has not arrived yet does not reserve its saved colour (it waits in
+  `PendingDisplayBinder`, which the plot cannot see), so a curve added to that plot meanwhile can take the same colour.

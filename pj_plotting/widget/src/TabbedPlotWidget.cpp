@@ -29,7 +29,9 @@
 #include "pj_plotting/DockWidget.h"
 #include "pj_plotting/PlotDocker.h"
 #include "pj_plotting/PlotWidget.h"
+#include "pj_plotting/PlotXml.h"
 #include "pj_widgets/FrameworkTokens.h"
+#include "pj_widgets/OwnedMenu.h"
 #include "pj_widgets/SvgUtil.h"
 
 using namespace Qt::StringLiterals;
@@ -508,15 +510,7 @@ PlotDocker* TabbedPlotWidget::duplicateTab(PlotDocker* source) {
     }
   }
   // Empty ids make every restored docker, area and plot mint a fresh one.
-  for (const QString& attribute : {u"id"_s, u"history_exempt"_s, u"owner_plugin"_s, u"tab_id"_s}) {
-    tab_element.removeAttribute(attribute);
-  }
-  for (const QString& tag : {u"DockArea"_s, u"plot"_s}) {
-    const QDomNodeList nodes = tab_element.elementsByTagName(tag);
-    for (int index = 0; index < nodes.size(); ++index) {
-      nodes.at(index).toElement().removeAttribute(u"id"_s);
-    }
-  }
+  plot_xml::prepareTabCopy(tab_element);
   const auto source_index = static_cast<int>(source_entry - tabs_.data());
   PlotDocker* copy = addTab(tr("%1 (copy)").arg(source->name()));
   restoring_state_ = true;
@@ -632,14 +626,14 @@ void TabbedPlotWidget::onTabContextMenuRequested(PlotTabFrame* frame, const QPoi
   if (entry == nullptr || entry->docker == nullptr) {
     return;  // widget tabs have no plot state to copy
   }
-  QMenu menu(this);
+  auto* menu = new QMenu(this);
   QPointer<PlotDocker> docker(entry->docker);
-  connect(menu.addAction(tr("Duplicate tab")), &QAction::triggered, this, [this, docker]() {
+  connect(menu->addAction(tr("Duplicate tab")), &QAction::triggered, this, [this, docker]() {
     if (docker != nullptr) {
       duplicateTab(docker);
     }
   });
-  menu.exec(frame->mapToGlobal(pos));
+  showOwnedMenu(menu, frame->mapToGlobal(pos));
 }
 
 void TabbedPlotWidget::closeTab(PlotTabFrame* frame, bool honor_veto) {
@@ -953,6 +947,8 @@ bool TabbedPlotWidget::xmlLoadState(const QDomElement& tabbed_area, RestoreInten
     for (TabEntry& entry : reusable_tabs) {
       stack_->removeWidget(entry.docker);
       entry.docker->deleteLater();
+      // Hidden now, not at the deferred delete: a rename editor inside it must not look shown to a focus restore.
+      entry.frame->hide();
       entry.frame->deleteLater();
     }
     reusable_tabs.clear();

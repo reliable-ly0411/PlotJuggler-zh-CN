@@ -318,6 +318,11 @@ class SessionManager : public QObject {
   /// range conversion for playback goes through here, so no raw range reaches the playback axis offset-blind.
   [[nodiscard]] std::optional<DisplayRange> datasetDisplayRange(DatasetId dataset_id) const;
 
+  /// True when any of the dataset's topics, scalar or object (off-clock ones included), holds a row or an entry. A
+  /// file load that ends without any is a failed load (FileLoader); a streaming dataset starts empty and is never
+  /// asked.
+  [[nodiscard]] bool datasetHoldsData(DatasetId dataset_id) const;
+
   // "Use time offset" switches the displayed frame between absolute epoch seconds (off) and seconds since
   // globalTimeReference() (on). Only the boolean is state.
 
@@ -701,9 +706,6 @@ class SessionManager : public QObject {
   // Moved by suspendOnDemand; a result staged under another epoch is never current.
   std::unordered_map<DatasetId, uint64_t> epochs_;
   ScalarSeriesLookup scalar_lookup_;
-  // Consumed dataset -> anchor. A consumed dataset stays registered, so its source keeps qualifying on-demand inputs,
-  // which bind on the anchor.
-  std::unordered_map<DatasetId, DatasetId> merged_into_;
   QPointer<TransformService> transform_service_;
   std::shared_ptr<const scripting::IImageDecoder> image_decoder_;
   std::shared_ptr<scripting::IVideoFrameSource> video_source_;

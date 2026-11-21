@@ -18,10 +18,10 @@ namespace PJ {
 // an explicit action (a drop onto a 3D dock, or "Open in 3D view").
 [[nodiscard]] bool isImageFamilyObjectType(sdk::BuiltinObjectType type);
 
-// The drop-routing decision: "scene2d", "scene3d", or empty when no built family accepts `type`. Image-family
-// types never fall back to 3D (a color image would be rejected there); a type both families claim
+// The drop-routing decision: "log" for a log, "scene2d", "scene3d", or empty when no built family accepts `type`.
+// Image-family types never fall back to 3D (a color image would be rejected there); a type both families claim
 // (kSceneEntities) goes to 3D.
-[[nodiscard]] QString sceneKindForObjectType(sdk::BuiltinObjectType type);
+[[nodiscard]] QString panelKindForObjectType(sdk::BuiltinObjectType type);
 
 // So the curve list never offers a drag that can only end in "cannot display".
 [[nodiscard]] bool isDroppableObjectType(sdk::BuiltinObjectType type);
@@ -29,5 +29,9 @@ namespace PJ {
 // An object type no dock family claims that a Custom Widget input can still take (panel-only types excluded):
 // its catalog row starts a drag, and an empty dock answers a drop by saying a Custom Widget shows it.
 [[nodiscard]] bool isCustomWidgetObjectType(sdk::BuiltinObjectType type);
+
+// The curve-list badge of an object type: the Log panel's glyph for a log, the Custom Widget glyph for a Custom Widget
+// type; empty for any other.
+[[nodiscard]] QString objectTypeBadgeIcon(sdk::BuiltinObjectType type);
 
 }  // namespace PJ

@@ -49,6 +49,7 @@ Derived series reach this module as ordinary datastore topics through the catalo
   rendering is CPU-heavy, so do not drop the GPU default without measuring.
 - **Do not make the plot canvas a `WA_NativeWindow` inside Qt-Advanced-Docking:** it was found to break the dock layout
   (not re-verified).
+- **Vendored ADS menus stay unreachable in the browser.** ADS opens its tab, title-bar and auto-hide-tab menus with `QMenu::exec()`, which aborts the browser build. They never open because `PlotDocker`'s `HiddenTitleBar` is forced invisible (the tabs and title-bar menu live inside it; `DockToolbar` forwards mouse events to it, never context-menu events) and auto-hide is never enabled (`CDockManager::AutoHideFeatureEnabled` is off by default, so no `CAutoHideTab` exists). Showing the ADS title bar or enabling auto-hide needs those menus replaced first.
 - **QRhi canvas:** a text resource never survives `releaseResources()` (a GPU reset or context teardown reuses it
   stale); set the viewport after binding each pipeline (Vulkan draws nothing otherwise); `renderFailed()` can fire
   inside `render()`, so a receiver that replaces the canvas connects queued (the swap deletes the canvas under the
@@ -66,6 +67,16 @@ Derived series reach this module as ordinary datastore topics through the catalo
   an explicit `x_basis`; display-relative seconds would restore the wrong window under another display offset.
 - **`TabbedPlotWidget::forEachDocker` / `findDocker`** enumerate the docker tabs in one pass; an index loop over
   `dockerCount()` / `dockerAt()` is quadratic (each is a linear scan).
+- **The XY keep-ratio fit only widens an axis**, so it always starts from the requested view
+  (`PlotWidgetBase::applyRectKeepingRatio` keeps it), re-fitted on every plot resize and persisted through
+  `requestedView()`. Fitting or saving the axes as shown instead zooms out a little on each resize, and a layout
+  restored at startup or under another window shape comes back wider.
+- **A new curve takes a palette colour no curve of its plot uses yet; once every colour is in use it takes the
+  least-used one, lowest index first** (`plot_xml::freePaletteIndex` in `PlotXml.h`, over the curves' pens, so
+  restored and user-picked colours count). Both halves are intended: the session counter and `CurveColorRegistry` know
+  only what they handed out and a layout restore sets colours without them, so a plain counter repeats a restored
+  colour; and a fixed slot on exhaustion paints every further curve the same colour, where the least-used rule spreads
+  the repeats evenly. A colour the registry remembers for that curve is honoured as it is.
 - **`visibleXRangeChanged`** reports every move of the time axis; `rectChanged` drives the zoom link only.
 - **Object-dock drop hover** consults `IDataWidget::canAcceptObjectTopic` before accepting a catalog drag, so a view's
   payload-dependent refusal shows in the cursor. "Open Settings" / "Close Settings" in an object dock's context menu

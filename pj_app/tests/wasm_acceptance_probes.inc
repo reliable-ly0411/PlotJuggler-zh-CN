@@ -53,6 +53,18 @@ PJ::MainWindow* wasmTestMainWindow() {
   return nullptr;
 }
 
+/// Whether a deferred readback may still grab `canvas`. A layout restore that replaced the plot meanwhile leaves the old
+/// canvas hidden until its deferred delete. Grabbing it there (Qt 6.12 WebAssembly, Chromium headless shell 1228) made
+/// the window's backing store report a lost WebGL device and reinitialize, and the renderer then often crashed
+/// (tests/wasm/persistence_layout.spec.js, "a plot readback pending across a layout restore").
+bool wasmReadbackCanvasShown(const QWidget& canvas) {
+  if (canvas.isVisible()) {
+    return true;
+  }
+  qInfo("PJ_WASM_PLOT_READBACK_SKIPPED canvas no longer shown");
+  return false;
+}
+
 }  // namespace
 
 /// Whether this build has the on-demand Python lane. Unlike the smoke probe it starts no Python work, so a spec can
@@ -1450,6 +1462,9 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_multi_plot_state() {
       const QColor canvas_color = canvas->palette().color(QPalette::Window);
       QTimer::singleShot(
           250, canvas, [canvas, current_sequence, index, plot_id, all_curve_colors, tracker_color, canvas_color]() {
+            if (!wasmReadbackCanvasShown(*canvas)) {
+              return;
+            }
             const QImage image = canvas->grabFramebuffer();
             QStringList counts;
             for (const auto& [title, color] : all_curve_colors) {
@@ -1486,6 +1501,35 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_split_horizontal_action
       {QCoreApplication::translate("PJ::PlotWidget", "Split &Horizontally"),
        QCoreApplication::translate("PJ::DockWidget", "Split Horizontally")},
       "split_horizontal");
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_duplicate_tab_action() {
+  reportWasmMenuAction(u"Duplicate tab"_s, "duplicate_tab");
+}
+
+/// The plot-tab count and the strip frames' centers (left to right), for the tab context-menu spec.
+extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_plot_tabs() {
+  auto* main_window = wasmTestMainWindow();
+  auto* tabs = main_window != nullptr ? main_window->findChild<PJ::TabbedPlotWidget*>() : nullptr;
+  if (tabs == nullptr) {
+    qWarning("PJ_WASM_PLOT_TABS_FAILED no tab widget");
+    return;
+  }
+  QList<QWidget*> frames;
+  for (QFrame* frame : tabs->findChildren<QFrame*>(u"plotTabFrame"_s)) {
+    if (frame->isVisible()) {
+      frames.push_back(frame);
+    }
+  }
+  std::sort(frames.begin(), frames.end(), [](const QWidget* lhs, const QWidget* rhs) {
+    return lhs->mapToGlobal(QPoint(0, 0)).x() < rhs->mapToGlobal(QPoint(0, 0)).x();
+  });
+  qInfo("PJ_WASM_PLOT_TABS count=%d", tabs->tabCount());
+  for (qsizetype index = 0; index < frames.size(); ++index) {
+    const QPoint center = frames[index]->mapToGlobal(frames[index]->rect().center());
+    qInfo("PJ_WASM_PLOT_TAB_FRAME index=%lld center=%d,%d", static_cast<long long>(index), center.x(), center.y());
+  }
+  qInfo("PJ_WASM_PLOT_TABS_DONE");
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_save_layout_action() {
@@ -1568,9 +1612,14 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_placeholder_icons() {
   const QPoint scene2d = center("buttonVizScene2D");
   const QPoint scene3d = center("buttonVizScene3D");
   const QPoint custom = center("buttonVizCustomWidget");
+  const QPoint log = center("buttonVizLog");
+  const auto* log_button = placeholder->findChild<QToolButton*>(u"buttonVizLog"_s);
+  if (log_button != nullptr) {
+    qInfo("PJ_WASM_LOG_TOOLTIP value=%s", log_button->toolTip().toUtf8().toBase64().constData());
+  }
   qInfo(
-      "PJ_WASM_PLACEHOLDER_ICONS plot=%d,%d transitions=%d,%d scene2d=%d,%d scene3d=%d,%d custom=%d,%d", plot.x(), plot.y(),
-      transitions.x(), transitions.y(), scene2d.x(), scene2d.y(), scene3d.x(), scene3d.y(), custom.x(), custom.y());
+      "PJ_WASM_PLACEHOLDER_ICONS plot=%d,%d transitions=%d,%d scene2d=%d,%d scene3d=%d,%d custom=%d,%d log=%d,%d", plot.x(), plot.y(),
+      transitions.x(), transitions.y(), scene2d.x(), scene2d.y(), scene3d.x(), scene3d.y(), custom.x(), custom.y(), log.x(), log.y());
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_interface_language() {
@@ -1636,6 +1685,23 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_custom_widgets() {
             dock->bindings().size(), dock->hasPendingWires() ? 1 : 0, rows, center.x(), center.y(),
             static_cast<long long>(resolved));
       ++count;
+    }
+    for (auto* dock : window->findChildren<PJ::LogDockWidget*>()) {
+      if (!dock->isVisible()) {
+        continue;
+      }
+      const auto* view = dock->findChild<QTreeView*>(u"logView"_s);
+      const int rows = view != nullptr && view->model() != nullptr ? view->model()->rowCount() : -1;
+      const QPoint center = window->mapFromGlobal(dock->mapToGlobal(dock->rect().center()));
+      const auto* future = dock->findChild<QToolButton*>(u"futureButton"_s);
+      if (future != nullptr && future->isVisible()) {
+        const QPoint point = window->mapFromGlobal(future->mapToGlobal(future->rect().center()));
+        qInfo("PJ_WASM_LOG_FUTURE x=%d y=%d checked=%d", point.x(), point.y(), future->isChecked() ? 1 : 0);
+      }
+      const auto pending = dock->pendingDemands().size();
+      const auto resolved = dock->displayedTopics().size();
+      qInfo("PJ_WASM_LOG_DOCK bindings=%zu pending=%zu rows=%d x=%d y=%d resolved=%zu",
+            pending + resolved, pending, rows, center.x(), center.y(), resolved);
     }
     qInfo("PJ_WASM_CUSTOM_DONE count=%d", count);
     return;
@@ -1792,6 +1858,8 @@ EM_JS(void, pj_wasm_install_browser_test_probes, (), {
   globalThis.pjWasmReportRemoveAllActionProbe = () => Module._pj_wasm_test_report_remove_all_action();
   globalThis.pjWasmReportZoomOutActionProbe = () => Module._pj_wasm_test_report_zoom_out_action();
   globalThis.pjWasmReportSplitHorizontalActionProbe = () => Module._pj_wasm_test_report_split_horizontal_action();
+  globalThis.pjWasmReportDuplicateTabActionProbe = () => Module._pj_wasm_test_report_duplicate_tab_action();
+  globalThis.pjWasmReportPlotTabsProbe = () => Module._pj_wasm_test_report_plot_tabs();
   globalThis.pjWasmReportSaveLayoutActionProbe = () => Module._pj_wasm_test_report_save_layout_action();
   globalThis.pjWasmReportSaveSourceLayoutActionProbe = () => Module._pj_wasm_test_report_save_source_layout_action();
   globalThis.pjWasmReportApplyFilterActionProbe = () => Module._pj_wasm_test_report_apply_filter_action();
@@ -1834,6 +1902,9 @@ void PJ::MainWindow::installWasmPlotAcceptanceProbes() {
     auto* canvas = plot->findChild<PlotRhiCanvas*>();
     const QColor curve_color = added->curve->pen().color();
     QTimer::singleShot(500, canvas, [canvas, curve_color]() {
+      if (!wasmReadbackCanvasShown(*canvas)) {
+        return;
+      }
       const QImage image = canvas->grabFramebuffer();
       const WasmPixelBounds curve = findWasmExactColor(image, curve_color);
       qInfo(
@@ -1905,6 +1976,9 @@ void PJ::MainWindow::installWasmPlotAcceptanceProbes() {
         250, canvas,
         [canvas, curve_colors = std::move(curve_colors), tracker_color, grid_color, hover_fill_color, canvas_color,
          curve_style, line_width, current_sequence]() {
+          if (!wasmReadbackCanvasShown(*canvas)) {
+            return;
+          }
           const QImage image = canvas->grabFramebuffer();
           QStringList counts;
           WasmPixelBounds first_curve;

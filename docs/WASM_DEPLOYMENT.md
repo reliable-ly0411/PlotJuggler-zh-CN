@@ -8,7 +8,9 @@ the packaged entrypoint then shows why on the page ("PlotJuggler cannot start:
 this page was not served over HTTPS." or "…is not cross-origin isolated.", with
 what the server must do) instead of loading the runtime. When the server does send
 the headers and the page still is not isolated, the browser itself cannot isolate
-it (an Android WebView, as in DuckDuckGo), and the page says to open another one. To serve the app from
+it (an Android WebView, as in DuckDuckGo), and the page says to open another one. The module is built with
+WebAssembly SIMD, so it needs Chrome or Edge 91, Firefox 89 or Safari 16.4 (iOS 16.4) or later; an older engine gets
+"PlotJuggler cannot start in this browser: it does not support WebAssembly SIMD." To serve the app from
 a robot together with its PlotJuggler Bridge, see
 [`WASM_HOSTING.md`](./WASM_HOSTING.md).
 
@@ -95,7 +97,6 @@ their registration (the Arrow family builds Apache Arrow C++ through `PjWasmArro
 | `PJ_WASM_WITH_FFT` | `toolbox_fft` |
 | `PJ_WASM_WITH_DATA_EXPORTER` | `toolbox_data_exporter` (the exported files download from the browser) |
 | `PJ_WASM_WITH_ANOMALY_DETECTOR` | `toolbox_anomaly_detector`, the Marker Editor (the host runs its rules) |
-| `PJ_WASM_WITH_LOG_WIDGET` | `widget_log` (the log viewer Custom Widget) |
 
 Visualization families are on by default too: `PJ_WASM_WITH_SCENE2D` (images,
 depth, annotations, and with `PJ_WASM_WITH_VIDEO` software H.264/HEVC/AV1 video
