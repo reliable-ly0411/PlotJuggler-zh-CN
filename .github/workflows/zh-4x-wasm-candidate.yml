@@ -10,6 +10,14 @@ on:
         description: Replay the pinned #71 acceptance artifact without rebuilding
         type: boolean
         default: false
+      artifact_luau:
+        description: Replay only the Firefox Luau acceptance case on the pinned artifact
+        type: boolean
+        default: false
+      profile_failed_luau:
+        description: Run the separate diagnostic profile only after a failing Luau acceptance case
+        type: boolean
+        default: true
 permissions:
   contents: read
 concurrency:
@@ -18,8 +26,9 @@ concurrency:
 jobs:
   identity:
     if: >-
-      (github.event_name == 'workflow_dispatch' && !inputs.artifact_only) ||
-      (github.event_name == 'push' && github.event.head_commit.message != 'Replay verified #71 WASM acceptance artifact only')
+      (github.event_name == 'workflow_dispatch' && !inputs.artifact_only && !inputs.artifact_luau) ||
+      (github.event_name == 'push' && github.event.head_commit.message != 'Replay verified #71 WASM acceptance artifact only' &&
+       github.event.head_commit.message != 'Probe verified #71 Firefox Luau heartbeat only')
     runs-on: ubuntu-22.04
     outputs:
       upstream_sha: ${{ steps.identity.outputs.upstream_sha }}
@@ -102,8 +111,9 @@ jobs:
       acceptance_symbol_map: true
   replay:
     if: >-
-      (github.event_name == 'workflow_dispatch' && inputs.artifact_only) ||
-      (github.event_name == 'push' && github.event.head_commit.message == 'Replay verified #71 WASM acceptance artifact only')
+      (github.event_name == 'workflow_dispatch' && (inputs.artifact_only || inputs.artifact_luau)) ||
+      (github.event_name == 'push' && github.event.head_commit.message == 'Replay verified #71 WASM acceptance artifact only') ||
+      (github.event_name == 'push' && github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only')
     runs-on: ubuntu-22.04
     timeout-minutes: 40
     permissions:
@@ -112,11 +122,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox]
+        browser: ${{ fromJSON((inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only') && '["firefox"]' || '["chromium","firefox"]') }}
     env:
       PJ_WASM_URL: http://127.0.0.1:6931/
       PJ_WASM_BUILD_DIR: build-wasm-probe
       PJ_WASM_PYTHON: '1'
+      REPLAY_LUAU_ONLY: ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only') }}
+      PROFILE_FAILED_LUAU: ${{ github.event_name == 'push' || inputs.profile_failed_luau }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -150,14 +162,20 @@ jobs:
           npm --prefix tests/wasm ci
           (cd tests/wasm; npx playwright install --with-deps "$REPLAY_BROWSER")
       - uses: actions/cache/restore@v5
+        if: env.REPLAY_LUAU_ONLY != 'true'
         with:
           path: build-wasm-assets
           key: wasm-hosted-assets-${{ hashFiles('tests/wasm/fixtures/hosted_assets.json') }}
       - run: npm --prefix tests/wasm run fetch:assets
+        if: env.REPLAY_LUAU_ONLY != 'true'
       - name: Replay exact Log and serial rollback cases
+        if: env.REPLAY_LUAU_ONLY != 'true'
         env:
           REPLAY_BROWSER: ${{ matrix.browser }}
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/replay.sh test
+      - name: Replay sole Firefox Luau acceptance case and retain independent diagnostic
+        if: env.REPLAY_LUAU_ONLY == 'true'
+        run: bash .replay-controller/scripts/ci/pj71-wasm-replay/luau.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
