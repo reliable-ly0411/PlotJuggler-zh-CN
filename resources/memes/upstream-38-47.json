@@ -1,0 +1,57 @@
+{
+  "source_repository": "https://github.com/PlotJuggler/PlotJuggler",
+  "source_commit": "7fb21b41de4b9b83bb859e547311a9fca268d7ec",
+  "scope": "Untranslated upstream desktop splash originals; integrity inventory only, not localization, visual review or redistribution approval.",
+  "images": [
+    {
+      "id": 38,
+      "file": "meme_38.jpg",
+      "sha256": "3b09ec17abbcb0bc4e067501c438380f292d2e5989adedb86dac749f833291d7"
+    },
+    {
+      "id": 39,
+      "file": "meme_39.jpg",
+      "sha256": "2e0e75d316680f42cc529da84c7f86ed89fcca0824d8f9d1bf1c4b6b131b7ed4"
+    },
+    {
+      "id": 40,
+      "file": "meme_40.jpg",
+      "sha256": "9376692cb03f3d0447221fdad0b6c8e1e59210bfcda176ef501a2b043fce13ed"
+    },
+    {
+      "id": 41,
+      "file": "meme_41.jpg",
+      "sha256": "5d0496ea402043a1ceb6d716005aea60bfbebc1a4187d4fd16b0250989292c06"
+    },
+    {
+      "id": 42,
+      "file": "meme_42.jpg",
+      "sha256": "a9ec3d7953ffb62fb554199212fd750b18837f6bb0b645d13078aaa5ae94c3e1"
+    },
+    {
+      "id": 43,
+      "file": "meme_43.jpg",
+      "sha256": "f46623be6323ef8984c3de58876cfe2515f9fe2488768552d0e7a30a0c9637dd"
+    },
+    {
+      "id": 44,
+      "file": "meme_44.jpg",
+      "sha256": "7f566de26ec1b49d8cd5d5c7237e4d91745e8820c9e8526d0e703a9c795516c2"
+    },
+    {
+      "id": 45,
+      "file": "meme_45.jpg",
+      "sha256": "29b375e13317935170d15e9d93c727a8fc24fd7440b2500232ce68edb9b2b568"
+    },
+    {
+      "id": 46,
+      "file": "meme_46.jpg",
+      "sha256": "d06300829f21e49bbe50f2993931c203a2d764e8337c4c53119bf068acb1f4ff"
+    },
+    {
+      "id": 47,
+      "file": "meme_47.jpg",
+      "sha256": "3585c1d105b9caf5fbc04fbb74a06efa68c71d4643a1dd99070ca0152fc37c80"
+    }
+  ]
+}
