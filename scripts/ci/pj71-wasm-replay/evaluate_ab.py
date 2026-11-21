@@ -24,13 +24,13 @@ def parse(name):
     return results[0]
 
 a = parse(sys.argv[1])
-b = parse(sys.argv[2])
-assert b["status"] == "passed" and sys.argv[4] == "0", "B did not pass the exact gate"
+c = parse(sys.argv[2])
+assert c["status"] == "passed" and sys.argv[4] == "0", "C did not pass the exact gate"
 if a["status"] == "passed":
     raise SystemExit("Inconclusive: A also passed; the baseline slowdown did not reproduce")
 assert a["status"] == "failed" and sys.argv[3] != "0", "A infrastructure/test failure unrelated to 100ms gate"
 errors = "\n".join(re.sub(r"\x1b\[[0-9;]*m", "", e.get("message", "")) for e in a["errors"])
 match = re.search(r"Expected:\s*< 100\s+Received:\s*([0-9.]+)", errors)
 assert match and float(match[1]) >= 100, "A failed for a different assertion"
-print(f"A reproduced {match[1]} ms; B passed the unchanged strict gate and exact 30k outputs.")
+print(f"A reproduced {match[1]} ms; C passed the unchanged strict gate and exact 30k outputs.")
 print("This is a single paired observation, not evidence that the improvement persists or a release gate pass.")
