@@ -9,7 +9,7 @@ on:
         description: Run exactly one native regression lane
         type: choice
         required: true
-        options: [windows-fixtures, mac-apbin, panel-c]
+        options: [windows-fixtures, mac-apbin, panel-d]
 
 permissions:
   contents: read
@@ -382,11 +382,11 @@ jobs:
         shell: bash
         run: python3 probe-control/scripts/ci/pj71-native/select_and_verify.py test mac
 
-  panel-c:
+  panel-d:
     if: >-
-      (github.event_name == 'workflow_dispatch' && inputs.lane == 'panel-c') ||
+      (github.event_name == 'workflow_dispatch' && inputs.lane == 'panel-d') ||
       (github.event_name == 'push' && !github.event.created &&
-       github.event.head_commit.message == 'Validate exact PanelEngine candidate C only')
+       github.event.head_commit.message == 'Validate exact PanelEngine candidate D only')
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     env:
@@ -410,8 +410,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      - name: Materialize exact distinct product C
-        run: python3 probe-control/scripts/ci/pj71-native/panel-c.py source
+      - name: Materialize exact distinct product D
+        run: python3 probe-control/scripts/ci/pj71-native/panel-d.py source
       - name: Read pinned versions
         id: versions
         run: |
@@ -501,7 +501,7 @@ jobs:
       - name: Configure and build only the PanelEngine runner
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = 982a614372d7fda3b20ba3e31f246850f2ab6f82
+          test "$(git rev-parse HEAD)" = 2e9235ef1575551f4fa14c84ce150301e4022bcd
           qt="$PWD/.qt/$PJ_QT_VERSION/gcc_64"
           test "$("$qt/bin/qmake" -query QT_VERSION)" = '6.12.0'
           cmake -S . -B build -G Ninja \
@@ -513,10 +513,14 @@ jobs:
       - name: Require all exact PanelEngine and parsed-data tests to execute
         env:
           QT_QPA_PLATFORM: xcb
-        run: xvfb-run -a python3 probe-control/scripts/ci/pj71-native/panel-c.py test
+        run: xvfb-run -a python3 probe-control/scripts/ci/pj71-native/panel-d.py test
+      - name: Prove startup tests reject the exact former C translation unit
+        env:
+          QT_QPA_PLATFORM: xcb
+        run: xvfb-run -a python3 probe-control/scripts/ci/pj71-native/panel-d.py negative
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: pj71-panel-C-native-982a6143-${{ github.run_attempt }}
-          path: panel-c-evidence/
+          name: pj71-panel-D-native-2e9235ef-${{ github.run_attempt }}
+          path: panel-d-evidence/
           retention-days: 7
