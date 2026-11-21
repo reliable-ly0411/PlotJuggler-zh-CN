@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""Merge one allowlisted upstream into a source-only branch; never build or publish."""
+"""Merge one approved upstream commit into a source-only branch; never build or publish."""
 import argparse
 import json
 import pathlib
@@ -17,8 +17,11 @@ def sync(config, push=False):
     repo = config['upstream_repository']
     branch = config['upstream_branch']
     target = config['sync_branch']
+    approved = config.get('approved_upstream_commit')
     if (repo, branch, target) != ('PlotJuggler/PlotJuggler', 'main', 'zh-CN-4.x-dev'):
         raise ValueError('Only the independent PJ4 development mapping is allowed')
+    if not isinstance(approved, str) or not re.fullmatch(r'[0-9a-f]{40}', approved):
+        raise ValueError('Require one exact approved PJ4 upstream commit')
     for value in (branch, target):
         if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._/-]*', value) or '..' in value or '@{' in value:
             raise ValueError('Unsafe branch')
@@ -30,11 +33,20 @@ def sync(config, push=False):
         raise RuntimeError('Checkout must match the development target')
     before = git('rev-parse', 'HEAD').stdout.strip()
     git('fetch', '--no-recurse-submodules', '--no-tags', 'https://github.com/' + repo + '.git', 'refs/heads/' + branch)
-    upstream = git('rev-parse', 'FETCH_HEAD^{commit}').stdout.strip()
-    if git('merge-base', '--is-ancestor', upstream, before, check=False).returncode == 0:
-        return {'changed': False, 'source_sha': before, 'upstream_sha': upstream}
-    held = git('diff', '--name-only', before + '...' + upstream, '--', '.github').stdout.splitlines()
-    result = git('merge', '--no-ff', '--no-commit', upstream, check=False)
+    tip = git('rev-parse', '--verify', 'FETCH_HEAD^{commit}').stdout.strip()
+    verified = git('rev-parse', '--verify', approved + '^{commit}', check=False)
+    if verified.returncode or verified.stdout.strip() != approved:
+        raise RuntimeError('Approved PJ4 upstream SHA must identify an available commit')
+    if git('merge-base', '--is-ancestor', approved, tip, check=False).returncode != 0:
+        raise RuntimeError('Approved PJ4 upstream commit is not reachable from the fetched main tip')
+    report = {'upstream_sha': approved, 'upstream_tip_sha': tip}
+    already = git('merge-base', '--is-ancestor', approved, before, check=False)
+    if already.returncode == 0:
+        return dict(report, changed=False, source_sha=before)
+    if already.returncode != 1:
+        raise RuntimeError('Could not compare development history with the approved upstream commit')
+    held = git('diff', '--name-only', before + '...' + approved, '--', '.github').stdout.splitlines()
+    result = git('merge', '--no-ff', '--no-commit', approved, check=False)
     if result.returncode:
         conflicts = git('diff', '--name-only', '--diff-filter=U').stdout.splitlines()
         # Automation is intentionally held at the trusted local revision below.
@@ -47,11 +59,11 @@ def sync(config, push=False):
         # Preserve trusted maintenance code, policy and every local workflow. Upstream
         # CI changes are reported, never automatically granted local token access.
         git('restore', '--source=' + before, '--staged', '--worktree', '--', '.github')
-        git('commit', '-m', 'sync: merge upstream source at ' + upstream[:12] + ' (no build or publish)')
+        git('commit', '-m', 'sync: merge upstream source at ' + approved[:12] + ' (no build or publish)')
         after = git('rev-parse', 'HEAD').stdout.strip()
         if push:
             git('push', 'origin', 'HEAD:refs/heads/' + target)
-        return {'changed': True, 'source_sha': after, 'upstream_sha': upstream, 'held_upstream_policy_paths': held}
+        return dict(report, changed=True, source_sha=after, held_upstream_policy_paths=held)
     except Exception:
         git('merge', '--abort', check=False)
         raise
