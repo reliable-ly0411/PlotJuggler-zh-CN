@@ -41,6 +41,19 @@
     </message>
 </context>
 <context>
+    <name>BatchLoadDialog</name>
+    <message>
+        <location filename="../src/ui/BatchLoadDialog.ui" line="+26"/>
+        <source>Configuration dialogs:</source>
+        <translation>配置对话框：</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Each checked file gets its own copy of the layout&apos;s tabs.</source>
+        <translation>布局会为每个选中的文件复制一组标签页。</translation>
+    </message>
+</context>
+<context>
     <name>CurveEditor</name>
     <message>
         <location filename="../../pj_plotting/widget/src/CurveEditor.ui" line="+37"/>
@@ -997,6 +1010,49 @@
         <location line="+8"/>
         <source>archive entry path is deeper than %1 segments</source>
         <translation>压缩包条目路径的层级超过 %1</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::BatchLoadDialog</name>
+    <message>
+        <location filename="../src/ui/BatchLoadDialog.cpp" line="+27"/>
+        <source>Load Data</source>
+        <translation>加载数据</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Loading %1 files.</source>
+        <translation>正在加载 %1 个文件。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Show all</source>
+        <translation>全部显示</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show first</source>
+        <translation>每种格式只显示一次</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Skip</source>
+        <translation>跳过</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Every file shows its loader&apos;s dialog.</source>
+        <translation>每个文件都会显示其加载器的配置对话框。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The first file of each format shows its dialog; the others reuse its settings.</source>
+        <translation>每种格式只为第一个文件显示对话框，其余文件沿用该设置。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Every file uses its format&apos;s last settings; a format never configured still asks.</source>
+        <translation>每个文件使用其格式上次的设置。尚未配置过的格式仍会询问。</translation>
     </message>
 </context>
 <context>
@@ -4613,7 +4669,7 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <translation>加载数据</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+68"/>
         <location line="+3"/>
         <source>Replace Data</source>
         <translation>替换数据</translation>
@@ -4644,13 +4700,13 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <translation>此布局需要数据源插件“%1”，但尚未安装用于处理 %2 文件的该插件。</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <location line="+479"/>
+        <location line="+24"/>
+        <location line="+500"/>
         <source>Plugin &apos;%1&apos;: createHandle failed.</source>
         <translation>插件“%1”：createHandle 失败。</translation>
     </message>
     <message>
-        <location line="-462"/>
+        <location line="-483"/>
         <source>Could not create the time domain for %1.</source>
         <translation>无法为 %1 创建时间域。</translation>
     </message>
@@ -4661,24 +4717,24 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
     </message>
     <message>
         <location line="+68"/>
-        <location line="+372"/>
+        <location line="+393"/>
         <source>createDataset failed: %1</source>
         <translation>createDataset 失败：%1</translation>
     </message>
     <message>
-        <location line="-339"/>
-        <location line="+369"/>
+        <location line="-360"/>
+        <location line="+390"/>
         <source>Plugin &apos;%1&apos;: service registration failed: %2</source>
         <translation>插件“%1”：服务注册失败：%2</translation>
     </message>
     <message>
-        <location line="-363"/>
-        <location line="+371"/>
+        <location line="-384"/>
+        <location line="+392"/>
         <source>Plugin &apos;%1&apos;: bind failed: %2</source>
         <translation>插件“%1”：绑定失败：%2</translation>
     </message>
     <message>
-        <location line="-349"/>
+        <location line="-370"/>
         <source>Plugin &apos;%1&apos;: the saved configuration is not a JSON object and cannot be replayed.</source>
         <translation>插件“%1”：已保存的配置不是 JSON 对象，无法重新应用。</translation>
     </message>
@@ -4693,18 +4749,18 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <translation>“%1”拒绝了布局预设：%2；将改为显示配置对话框</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <location line="+326"/>
+        <location line="+21"/>
+        <location line="+334"/>
         <source>Plugin &apos;%1&apos;: loadConfig failed: %2</source>
         <translation>插件“%1”：loadConfig 失败：%2</translation>
     </message>
     <message>
-        <location line="-286"/>
+        <location line="-293"/>
         <source>Plugin contract violation: %1. Reinstall the plugin from the Marketplace.</source>
         <translation>插件接口契约违规：%1。请从扩展市场重新安装此插件。</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+32"/>
         <source>Plugin &apos;%1&apos;: loadConfig (post-dialog) failed: %2</source>
         <translation>插件“%1”：对话框关闭后 loadConfig 失败：%2</translation>
     </message>
@@ -4714,28 +4770,28 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <translation>加载已取消</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+24"/>
         <source>Cannot replace dataset %1: the selected configuration expands into %2 datasets.</source>
         <translation>无法替换数据集 %1：选中的配置会生成 %2 个数据集。</translation>
     </message>
     <message>
-        <location line="-714"/>
+        <location line="-770"/>
         <source>Plugin &apos;%1&apos;: saveConfig failed: %2 — layout save will skip plugin config</source>
         <translation>插件“%1”：saveConfig 失败：%2；保存布局时将跳过插件配置</translation>
     </message>
     <message>
-        <location line="+885"/>
+        <location line="+941"/>
         <source>Could not create the time domain for %1: %2</source>
         <translation>无法为 %1 创建时间域：%2</translation>
     </message>
     <message>
         <location line="+270"/>
-        <location line="+365"/>
+        <location line="+367"/>
         <source>Loader metadata rejected: %1</source>
         <translation>加载器元数据被拒绝：%1</translation>
     </message>
     <message>
-        <location line="-330"/>
+        <location line="-332"/>
         <location line="+177"/>
         <location line="+3"/>
         <source>Import discarded</source>
@@ -4755,12 +4811,12 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
     </message>
     <message>
         <location line="-191"/>
-        <location line="+332"/>
+        <location line="+333"/>
         <source>Plugin &apos;%1&apos;: start failed: %2</source>
         <translation>插件“%1”：启动失败：%2</translation>
     </message>
     <message>
-        <location line="-1363"/>
+        <location line="-1420"/>
         <source>Plugin &apos;%1&apos; loaded no data</source>
         <translation>插件“%1”未加载任何数据</translation>
     </message>
@@ -4770,12 +4826,12 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <translation>浏览器无法再读取“%1”：该文件自打开后已在磁盘上更改或移除。从中加载的数据可能不完整，请重新打开以重新加载。</translation>
     </message>
     <message>
-        <location line="+1085"/>
+        <location line="+1141"/>
         <source>not a readable file.</source>
         <translation>不是可读取的文件。</translation>
     </message>
     <message>
-        <location line="+161"/>
+        <location line="+163"/>
         <source>Plugin &apos;%1&apos;: derived-series replay failed: %2</source>
         <translation>插件“%1”：派生序列重放失败：%2</translation>
     </message>
@@ -5298,7 +5354,7 @@ for example when the stream is already rectified.</source>
 <context>
     <name>PJ::MainWindow</name>
     <message>
-        <location filename="../src/MainWindow.cpp" line="+451"/>
+        <location filename="../src/MainWindow.cpp" line="+452"/>
         <source>PlotJuggler 4 Layout (*.pj4.xml)</source>
         <translation>PlotJuggler 4 布局 (*.pj4.xml)</translation>
     </message>
@@ -5372,12 +5428,12 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+6794"/>
+        <location line="+6865"/>
         <source>Details are in the notifications.</source>
         <translation>详情请查看通知。</translation>
     </message>
     <message>
-        <location line="-6760"/>
+        <location line="-6831"/>
         <location line="+38"/>
         <source>This object topic cannot be displayed (type %1).</source>
         <translation>无法显示此对象话题（类型为 %1）。</translation>
@@ -5394,13 +5450,13 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+154"/>
-        <location line="+2068"/>
+        <location line="+2075"/>
         <location line="+79"/>
         <source>dataset removed</source>
         <translation>数据集已移除</translation>
     </message>
     <message>
-        <location line="-1857"/>
+        <location line="-1864"/>
         <source>Start Streaming</source>
         <translation>开始接收数据流</translation>
     </message>
@@ -5428,7 +5484,7 @@ for example when the stream is already rectified.</source>
 %1</translation>
     </message>
     <message>
-        <location line="+229"/>
+        <location line="+236"/>
         <source>Stop loading…</source>
         <translation>停止加载…</translation>
     </message>
@@ -5456,15 +5512,15 @@ for example when the stream is already rectified.</source>
         <location line="+1"/>
         <location line="+1439"/>
         <location line="+173"/>
-        <location line="+1998"/>
-        <location line="+459"/>
-        <location line="+2149"/>
+        <location line="+1999"/>
+        <location line="+477"/>
+        <location line="+2194"/>
         <location line="+1107"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-7249"/>
+        <location line="-7313"/>
         <source>Undo</source>
         <translation>撤销</translation>
     </message>
@@ -5563,12 +5619,12 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+2"/>
-        <location line="+4779"/>
+        <location line="+4843"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="-4612"/>
+        <location line="-4676"/>
         <source>Are you sure you want to remove &apos;%1&apos; and its data?</source>
         <translation>确定要移除“%1”及其数据吗？</translation>
     </message>
@@ -5721,8 +5777,8 @@ for example when the stream is already rectified.</source>
     </message>
     <message>
         <location line="+89"/>
-        <location line="+460"/>
-        <location line="+226"/>
+        <location line="+461"/>
+        <location line="+244"/>
         <location line="+13"/>
         <location line="+41"/>
         <location line="+123"/>
@@ -5731,7 +5787,7 @@ for example when the stream is already rectified.</source>
         <location line="+15"/>
         <location line="+6"/>
         <location line="+430"/>
-        <location line="+170"/>
+        <location line="+215"/>
         <location line="+19"/>
         <location line="+371"/>
         <location line="+309"/>
@@ -5739,9 +5795,9 @@ for example when the stream is already rectified.</source>
         <translation>加载布局</translation>
     </message>
     <message>
-        <location line="-2592"/>
+        <location line="-2656"/>
         <location line="+25"/>
-        <location line="+2699"/>
+        <location line="+2763"/>
         <location line="+26"/>
         <location line="+7"/>
         <location line="+5"/>
@@ -5749,7 +5805,7 @@ for example when the stream is already rectified.</source>
         <translation>保存布局</translation>
     </message>
     <message>
-        <location line="-2755"/>
+        <location line="-2819"/>
         <source>Requested layout download: %1</source>
         <translation>已请求下载布局：%1</translation>
     </message>
@@ -5789,30 +5845,30 @@ for example when the stream is already rectified.</source>
         <translation>（没有可用的工具箱）</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Cannot open &apos;%1&apos; for reading.</source>
         <translation>无法打开“%1”进行读取。</translation>
     </message>
     <message>
         <location line="+10"/>
-        <location line="+404"/>
+        <location line="+422"/>
         <source>&apos;%1&apos; is not a valid PJ4 layout: %2 (line %3, col %4)</source>
         <translation>“%1”不是有效的 PJ4 布局：%2（第 %3 行，第 %4 列）</translation>
     </message>
     <message>
-        <location line="-386"/>
-        <location line="+398"/>
+        <location line="-404"/>
+        <location line="+416"/>
         <source>&apos;%1&apos; cannot be loaded: %2</source>
         <translation>无法加载“%1”：%2</translation>
     </message>
     <message>
-        <location line="-385"/>
-        <location line="+407"/>
+        <location line="-403"/>
+        <location line="+425"/>
         <source>Layout &apos;%1&apos; was saved by a newer PJ4 (pj4_version=%2 &gt; %3); loading best-effort.</source>
         <translation>布局“%1”由更高版本的 PJ4 保存（pj4_version=%2 &gt; %3）；将尽可能加载。</translation>
     </message>
     <message>
-        <location line="-382"/>
+        <location line="-400"/>
         <source>same file</source>
         <translation>同一文件</translation>
     </message>
@@ -5882,7 +5938,7 @@ for example when the stream is already rectified.</source>
         <translation>此布局一次只显示一个数据集：无法为第二个数据集复制 %1。</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+41"/>
         <source>The chosen datasets were removed while the question was open; nothing was loaded.</source>
         <translation>在询问期间，选中的数据集已被移除，未加载任何内容。</translation>
     </message>
@@ -5892,7 +5948,7 @@ for example when the stream is already rectified.</source>
         <translation>在询问期间，部分选中的数据集已被移除，布局将显示其余数据集。</translation>
     </message>
     <message>
-        <location line="+115"/>
+        <location line="+120"/>
         <location line="+11"/>
         <location line="+10"/>
         <location line="+64"/>
@@ -6041,7 +6097,7 @@ for example when the stream is already rectified.</source>
         <translation>无法下载“%1”：%2</translation>
     </message>
     <message>
-        <location line="-3032"/>
+        <location line="-3051"/>
         <source>New release available: &lt;span style=&apos;font-weight:600;&apos;&gt;%1&lt;/span&gt;</source>
         <translation>有新版本可用：&lt;span style=&apos;font-weight:600;&apos;&gt;%1&lt;/span&gt;</translation>
     </message>
@@ -6051,7 +6107,7 @@ for example when the stream is already rectified.</source>
         <translation>绑定到此数据源（保存流设置，包括凭据）</translation>
     </message>
     <message>
-        <location line="+343"/>
+        <location line="+344"/>
         <source>Streaming sources: %1</source>
         <translation>流数据源：%1</translation>
     </message>
@@ -6085,7 +6141,7 @@ for example when the stream is already rectified.</source>
 %1</translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+163"/>
         <source>Stream &apos;%1&apos;: %2</source>
         <translation>流“%1”：%2</translation>
     </message>
@@ -6140,7 +6196,7 @@ for example when the stream is already rectified.</source>
         <translation>打开预设</translation>
     </message>
     <message>
-        <location line="+123"/>
+        <location line="+168"/>
         <location line="+54"/>
         <source>No data is loaded. Open a data source before applying this layout.</source>
         <translation>当前没有加载数据。请先打开数据源，再应用此布局。</translation>
@@ -9734,10 +9790,10 @@ Details: %1</source>
     </message>
     <message>
         <location line="+2"/>
-        <location filename="../src/FileLoader.cpp" line="-1831"/>
+        <location filename="../src/FileLoader.cpp" line="-1889"/>
         <location line="+87"/>
         <location line="+7"/>
-        <location filename="../src/MainWindow.cpp" line="-9939"/>
+        <location filename="../src/MainWindow.cpp" line="-10010"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>

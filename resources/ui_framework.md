@@ -29,9 +29,9 @@ read its color from the theme in use.
 |---|---|---|---|
 | 1 | Banner | `#1C1C22` | `#D6D6D6` |
 | 2 | Backdrop | `#373743` | `#EBEBEB` |
-| 3 | Data Backdrop | `#5C5C70` | `#FFFFFF` |
+| 3 | Data Backdrop | `#212128` | `#FFFFFF` |
 | 4 | Input | `#535365` | `#F5F5F5` |
-| 5 | Separation | `#D2D2DA` | `#ADADAD` |
+| 5 | Separation | `#5A5A68` | `#ADADAD` |
 | 6 | Banner Input | `#25252D` | `#E0E0E0` |
 | 7 | Scroll Handle | `#007AF5` | `#47A3FF` |
 
@@ -68,10 +68,12 @@ frames, popups, and dialogs.
 ### 3. Data Backdrop
 
 The background of any widget, label, or frame that contains interactable, editable
-data — charts, tree views, spin boxes, scrubbers. It is intentionally *lighter*
-than the Backdrop so text and values read more easily.
+data — charts, tree views, spin boxes, scrubbers. It is the surface farthest from
+the Backdrop toward the text's opposite: *lighter* than the Backdrop in the light
+theme, *darker* (near-black) in the dark theme, so curves, text and values have the
+most contrast.
 
-- **Dark:** `#5C5C70`
+- **Dark:** `#212128`
 - **Light:** `#FFFFFF`
 
 **Examples**
@@ -95,7 +97,7 @@ filter searches.
 A line or gap that acts as a buffer or border between objects. Used mostly by the
 draggable Separator widget, which turns a purple color when grabbed.
 
-- **Dark:** `#D2D2DA`
+- **Dark:** `#5A5A68`
 - **Light:** `#ADADAD`
 
 ### 6. Banner Input
