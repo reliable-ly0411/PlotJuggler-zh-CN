@@ -17,13 +17,13 @@ HERE = Path(__file__).parent
 EVID = Path("panel-d-evidence")
 EVID.mkdir(exist_ok=True)
 PRODUCT_FILE = Path("pj_dialog_host/src/panel_engine.cpp")
-REGRESSION = "bc4ab9d843de918f4d47fff424efa83fb0e3ec48c0876f25798198fce77f71da"
+REGRESSION = "9007ceb2bb60bccc7213ccaf4fc2dc10deea54001e28ac80f34da5d930fb28f6"
 C_TO_D = "9fdbece580d57e5277c2625af254754661d6674d6e7501881825ee71cf4fe0a6"
 C_SOURCE_BLOB = "c7e865a6e9fefbe0eee53a9073a5b59ea612b7d6"
 TEST_BLOBS = {
     "pj_dialog_host/tests/mock_panel_plugin.cpp": "fb77ad3a55cedc1a9e3f153fe97afa00a5e95800",
     "pj_dialog_host/tests/mock_panel_plugin.hpp": "c7fb730595dfd00dcd00de0530601776749c2c58",
-    "pj_dialog_host/tests/panel_engine_test.cpp": "d2f53259795f00dc7069529c70080ed7291f18d6",
+    "pj_dialog_host/tests/panel_engine_test.cpp": "f7e918288016fa3ebca7cc56230d472ead4a6198",
 }
 TEST_SCOPE = sorted(TEST_BLOBS)
 NEGATIVE_FAILURES = {
