@@ -39,10 +39,16 @@ if [[ "$PROFILE_FAILED_LUAU" == true && -s "$evidence/luau-original.json" ]]; th
   # Reuse the pinned profile helper and expand ONLY its derivative test instrumentation.
   # The helper hashes the unmodified gate source/report and saves them with the profile.
   python3 "$here/luau-profile.py" .ci-controller/tests/wasm/profile_firefox_editor.cjs "$RUNNER_TEMP/luau-profile.cjs"
+  # An explicit third argument switches the pinned helper to its historical Markdown reader.
+  # Use its native JSON path and never alter either copy of the unprofiled gate report.
+  report="tests/wasm/firefox-editors-report.json"
+  test ! -e "$report"
+  cp "$evidence/luau-original.json" "$report"
+  cmp "$evidence/luau-original.json" "$report"
   profile_status=0
   PJ_SOURCE_SHA="$source" PJ_CONTROLLER_SHA="$producer" PJ_VALIDATION_ROLE=localized \
     PJ_ORIGINAL_RUN_ID="$GITHUB_RUN_ID" PJ_ORIGINAL_JOB_ID="$GITHUB_JOB" PJ_DIAGNOSTIC_CONTROLLER_SHA="$GITHUB_SHA" \
-    xvfb-run -a node "$RUNNER_TEMP/luau-profile.cjs" "$repo_root" "$repo_root/.ci-controller" "$evidence/luau-original.json" \
+    xvfb-run -a node "$RUNNER_TEMP/luau-profile.cjs" "$repo_root" "$repo_root/.ci-controller" \
     2>&1 | tee "$evidence/luau-profile.log" || profile_status=$?
   printf '%s\n' "$profile_status" > "$evidence/luau-profile-exit.txt"
   if [[ -d firefox-editor-profile-results ]]; then
