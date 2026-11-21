@@ -1,8 +1,8 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MIT
 //
-// ToolRegistry: the tool catalog the model is offered (names, descriptions,
-// input schemas) and the no-throw dispatch to the executors.
+// ToolRegistry: the tool catalog the model is offered (names, descriptions, input schemas) and the no-throw dispatch
+// to the executors.
 
 #include "pj_runtime/agent_tools/tool_registry.hpp"
 
@@ -10,6 +10,7 @@
 #include <string>
 #include <string_view>
 
+#include "pj_runtime/PlaybackRate.h"
 #include "tools_internal.hpp"
 
 namespace PJ::agent_tools {
@@ -29,8 +30,6 @@ using detail::removeMarkers;
 using detail::reportStatus;
 using detail::sceneViewTool;
 using detail::waitForTool;
-
-// --- registry --------------------------------------------------------------
 
 void ToolRegistry::add(ToolSpec spec) {
   tools_.push_back(std::move(spec));
@@ -186,33 +185,29 @@ ToolRegistry::ToolRegistry() {
       {"create_markers",
        "Create plot markers from a Luau rule you write (preferred), or from a simple threshold "
        "template. There is ONE marker set of yours: calling this again REPLACES it (use "
-       "remove_markers to clear it). Saved in layouts. Undo protection is verified when supported; "
-       "failure is reported.\n"
-       "A condition true over a STRETCH of time wants ONE region per stretch "
-       "(startMarker/closeMarker), never one line per matching sample. The call reports how many "
-       "markers it produced and of which kind: past ~50, the shape is wrong — merge contiguous "
-       "hits into regions or raise the threshold.\n"
-       "A per-sample threshold on a raw high-rate signal (IMU and the like) marks vibration, not "
-       "events: require the condition to hold for a minimum duration and cross-check against an "
-       "independent slower signal before labeling.\n"
-       "RAW FORM: 'inputs' (series the rule reads) + 'rule' (a whole Luau script, run once over "
-       "the full series) + optional 'output' (series path the markers attach to; default = first "
-       "input; \"__global__\" renders on every plot — only for events meaningful against ANY "
+       "remove_markers to clear it). Saved in layouts; undo protection failures are reported.\n"
+       "RAW FORM: 'inputs' (series the rule reads) + 'rule' (a Luau script, run once over the "
+       "full series) + optional 'output' (series path the markers attach to; default = first "
+       "input; \"__global__\" renders on every plot, only for events meaningful against ANY "
        "signal).\n"
-       "Rule vocabulary:\n"
-       "- series(\"topic/field\") -> accessor or nil: s:size(); s:at(i) 0-based -> {t, v} or nil; "
-       "s:atTime(t) -> interpolated value. GetSeriesNames() -> declared input names. "
-       "Timestamps t are int64 NANOSECONDS.\n"
-       "- startMarker(t) then closeMarker(t2, opts) -> ONE shaded region per pair.\n"
-       "- createVerticalMarker(t, opts); createPointMarker(t, y, opts); "
-       "createHorizontalMarker(y, opts); createBandMarker(y_low, y_high, opts); "
-       "createMarker(x?, y?, opts).\n"
-       "- bandPower(s, f_lo_hz, f_hi_hz) -> summed FFT power for spectral rules.\n"
-       "- opts (all optional): label, description, category, color \"#RRGGBB\", severity "
+       "Write rules with when(series, condition), not loops:\n"
+       "  when(\"/speed\", above(2)):backgroundColor(\"red\", {label=\"fast\"}) -- shade while true\n"
+       "  when(\"/acc\", outside(-3, 3)):event({label=\"overload\", minGap=1}) -- point where it starts\n"
+       "  when(\"/mode\", changes()):verticalLine({label=function(v, prev) return prev..\"->\"..v end})\n"
+       "  when(\"/mode\"):backgroundColor({[0]=\"gray\", [1]=\"green\"}) -- by value; or a function\n"
+       "Conditions: above, below, between(a,b), outside(a,b), equals, isTrue(), changes(), or "
+       "function(v, t, prev, prev_t) -> bool (t int64 ns; other series: s:atTime(t)). "
+       "Marks fire once per stretch (every=true: per sample); minDuration / minGap (s) drop short "
+       "regions / close marks: use them on raw high-rate (IMU) signals; cross-check a slower signal. "
+       "The reply counts markers: past ~50 the rule is wrong.\n"
+       "Loops only for windows/state: series(\"topic/field\") -> s:size(), s:at(i) 0-based {t, v}, "
+       "s:atTime(t); startMarker(t) / closeMarker(t, opts); createVerticalMarker(t, opts), "
+       "createPointMarker(t, y, opts), createHorizontalMarker(y, opts), createBandMarker(lo, hi, opts); "
+       "bandPower(s, f_lo_hz, f_hi_hz); GetSeriesNames().\n"
+       "opts: label, description, category, color (\"#RRGGBB\"|Qt name), severity "
        "(\"info\"|\"warning\"|\"error\"|\"critical\"), status.\n"
-       "TEMPLATE FORM (simple threshold): 'series' + 'comparison' (>, <, >=, <=) + 'threshold' + "
-       "optional 'label' and 'style' (\"region\" default: one band per exceedance stretch; "
-       "\"line\": one vertical line per matching sample).",
+       "TEMPLATE FORM (writes a when() rule): 'series' + 'comparison' (>, <, >=, <=) + 'threshold' + "
+       "optional 'label', 'style' (\"region\" default | \"line\": per matching sample).",
        {{"type", "object"},
         {"properties",
          {{"rule", {{"type", "string"}, {"description", "raw Luau marker script (raw form)"}}},
@@ -258,11 +253,12 @@ ToolRegistry::ToolRegistry() {
   add(
       {"playback",
        "Drive the transport: the time cursor, shared by every plot. action: 'state' (read it), "
-       "'play', 'pause', 'seek' (to 'time_s'), 'rate' (to 'rate'; 1.0 = real time, clamped to "
-       "[0.05, 20]). Every call returns the whole state - playing, current_time_s, range "
-       "{min_s, max_s}, rate - so a clamped seek shows where the cursor actually landed. Times are "
-       "DISPLAY-AXIS SECONDS, the numbers on the plot X axes: a feature found in read_series "
-       "buckets sits at stats.t_start_display_s + bucket.t.",
+       "'play', 'pause', 'seek' (to 'time_s'), 'rate' (to 'rate'; 1.0 = real time, clamped to [" +
+           json(kMinPlaybackRate).dump() + ", " + json(kMaxPlaybackRate).dump() +
+           "]). Every call returns the whole state - playing, current_time_s, range "
+           "{min_s, max_s}, rate - so a clamped seek shows where the cursor actually landed. Times are "
+           "DISPLAY-AXIS SECONDS, the numbers on the plot X axes: a feature found in read_series "
+           "buckets sits at stats.t_start_display_s + bucket.t.",
        {{"type", "object"},
         {"properties",
          {{"action", {{"type", "string"}, {"enum", json::array({"state", "play", "pause", "seek", "rate"})}}},

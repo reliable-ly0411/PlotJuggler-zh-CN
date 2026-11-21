@@ -12,7 +12,6 @@
 #include <QFontDatabase>
 #include <QPalette>
 #include <QPen>
-#include <QSettings>
 #include <QSize>
 #include <QString>
 #include <algorithm>
@@ -20,6 +19,7 @@
 #include <map>
 using namespace Qt::StringLiterals;
 
+#include "pj_widgets/AppSettings.h"
 #include "pj_widgets/FrameworkTokens.h"
 
 namespace PJ {
@@ -135,7 +135,7 @@ void CurveTracker::setPosition(const QPointF& tracker_position) {
   };
 
   std::multimap<double, LineParts> text_lines;
-  const int precision = QSettings().value(u"Preferences::precision"_s, 3).toInt();
+  const int precision = valuePrecision();
   int values_char_count = 0;
   int delta_char_count = 0;
   double min_y = std::numeric_limits<double>::max();
@@ -252,6 +252,10 @@ void CurveTracker::setPosition(const QPointF& tracker_position) {
   text_marker_->setVisible(marker_visible);
   logTrackerText(plot_, marker_visible, marker_html, text_color);
   previous_tracker_point_ = tracker_position;
+}
+
+QString CurveTracker::valueBoxText() const {
+  return text_marker_ != nullptr ? text_marker_->label().text() : QString();
 }
 
 void CurveTracker::setReferencePosition(std::optional<QPointF> reference_pos) {

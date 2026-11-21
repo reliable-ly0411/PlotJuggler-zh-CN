@@ -11,7 +11,7 @@
 // its output directory), into <deployment>/sources, where the THIRD_PARTY_NOTICES.txt of the build points. Writes
 // ~300 MB. A pinned hash is verified (a mismatch, a missing hash, or a Qt version without hashes fails); a git pin is
 // resolved to its commit and archived from GitHub's tarball of that commit, whose hash is recorded. With --links, only
-// PlotJuggler 4 (a private repository) is archived: the offer gives every library's public address instead, which
+// PlotJuggler 4 (the built revision) is archived: the offer gives every library's public address instead, which
 // the GPL accepts beside the object code as long as those addresses keep serving it; each is checked to answer.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -26,7 +26,7 @@ import { readVersion } from './wasm_manifest.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ADS_DIRECTORY = '3rdparty/Qt-Advanced-Docking';
-const ISSUES = 'https://github.com/PlotJuggler/PJ4/issues';
+const ISSUES = 'https://github.com/PlotJuggler/PlotJuggler/issues';
 // protobuf fetches it in its own build, at the abseil-cpp-version of its cmake/dependencies.cmake.
 const ABSEIL = 'https://github.com/abseil/abseil-cpp.git';
 // The Qt modules on pj_app's link line (the SBOMs read by cmake/PjWasmNotices.cmake), and the libraries each provides.
@@ -81,6 +81,8 @@ export async function declaredDependencies() {
     '3rdparty/qwt/CMakeLists.txt',
     // Shared with the desktop build, which prefers an installed pocketfft over this fetch.
     'pj_scripting/cmake/PjPocketfft.cmake',
+    // Shared with the desktop builds, which prefer an installed nanoarrow 0.9.0 over this fetch.
+    'pj_datastore/cmake/PjNanoarrow.cmake',
   ];
   // The root CMakeLists.txt derives the SDK version from the conanfile.
   const sdkVersion = (await read('conanfile.txt')).match(/^plotjuggler_sdk\/([0-9][0-9A-Za-z.-]*)/m)?.[1];
@@ -232,7 +234,7 @@ behind the About dialog's "Third-party licences" link.
 
   ${pj4.name}
     PlotJuggler 4: \`git archive\` of revision ${pj4.commit}, including the
-    build scripts and the libraries vendored under 3rdparty/; also at https://github.com/PlotJuggler/PJ4
+    build scripts and the libraries vendored under 3rdparty/; also at https://github.com/PlotJuggler/PlotJuggler
 
 ${listing}
 

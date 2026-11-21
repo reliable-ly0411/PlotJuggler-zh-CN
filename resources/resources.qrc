@@ -11,89 +11,47 @@
     <!-- Bundled UI font (SIL OFL 1.1). Loaded at startup via
          QFontDatabase::addApplicationFont and set as the application font, so
          typography is controlled and consistent across machines instead of
-         relying on the host's default sans-serif. The variable font covers the
-         whole weight axis, so font-weight 400/600/700 resolve to real masters
-         (not synthesized bold). -->
-    <file alias="fonts/NotoSans/NotoSans-Variable.ttf">fonts/NotoSans/NotoSans-Variable.ttf</file>
+         relying on the host's default sans-serif. See
+         fonts/PlotJugglerSans/README.md. -->
+    <file alias="fonts/PlotJugglerSans/PlotJugglerSans-Regular.ttf">fonts/PlotJugglerSans/PlotJugglerSans-Regular.ttf</file>
+    <file alias="fonts/PlotJugglerSans/PlotJugglerSans-Bold.ttf">fonts/PlotJugglerSans/PlotJugglerSans-Bold.ttf</file>
 
     <!-- Original-meme Chinese variants; English JPEG pool remains unchanged. -->
     <file alias="memes/zh_CN.json">memes/zh_CN.json</file>
-    <file alias="memes/zh_CN/meme_00.png">memes/zh_CN/meme_00.png</file>
-    <file alias="memes/zh_CN/meme_08.png">memes/zh_CN/meme_08.png</file>
-    <file alias="memes/zh_CN/meme_4x_01.png">memes/zh_CN/meme_4x_01.png</file>
-    <file alias="memes/zh_CN/meme_4x_03.png">memes/zh_CN/meme_4x_03.png</file>
-    <file alias="memes/zh_CN/meme_4x_04.png">memes/zh_CN/meme_4x_04.png</file>
-    <file alias="memes/zh_CN/meme_4x_05.png">memes/zh_CN/meme_4x_05.png</file>
-    <file alias="memes/zh_CN/meme_4x_06.png">memes/zh_CN/meme_4x_06.png</file>
-    <file alias="memes/zh_CN/meme_4x_07.png">memes/zh_CN/meme_4x_07.png</file>
-    <file alias="memes/zh_CN/meme_4x_08.png">memes/zh_CN/meme_4x_08.png</file>
-    <file alias="memes/zh_CN/meme_4x_10.png">memes/zh_CN/meme_4x_10.png</file>
-    <file alias="memes/zh_CN/meme_4x_12.png">memes/zh_CN/meme_4x_12.png</file>
-    <file alias="memes/zh_CN/meme_4x_14.png">memes/zh_CN/meme_4x_14.png</file>
-    <file alias="memes/zh_CN/meme_4x_22.png">memes/zh_CN/meme_4x_22.png</file>
-    <file alias="memes/zh_CN/meme_4x_28.png">memes/zh_CN/meme_4x_28.png</file>
-    <file alias="memes/zh_CN/meme_4x_36.png">memes/zh_CN/meme_4x_36.png</file>
-    <file alias="memes/zh_CN/meme_4x_37.png">memes/zh_CN/meme_4x_37.png</file>
-    <file alias="memes/zh_CN/meme_52.png">memes/zh_CN/meme_52.png</file>
-    <file alias="memes/zh_CN/meme_60.png">memes/zh_CN/meme_60.png</file>
-    <file alias="memes/zh_CN/meme_93.png">memes/zh_CN/meme_93.png</file>
-    <file alias="memes/zh_CN/meme_97.png">memes/zh_CN/meme_97.png</file>
-    <file alias="memes/zh_CN/patches/atlas_103.png">memes/zh_CN/patches/atlas_103.png</file>
-    <file alias="memes/zh_CN/patches/atlas_14.png">memes/zh_CN/patches/atlas_14.png</file>
-    <file alias="memes/zh_CN/patches/atlas_25.png">memes/zh_CN/patches/atlas_25.png</file>
-    <file alias="memes/zh_CN/patches/atlas_35.png">memes/zh_CN/patches/atlas_35.png</file>
-    <file alias="memes/zh_CN/patches/atlas_42.png">memes/zh_CN/patches/atlas_42.png</file>
-    <file alias="memes/zh_CN/patches/atlas_45.png">memes/zh_CN/patches/atlas_45.png</file>
-    <file alias="memes/zh_CN/patches/atlas_61.png">memes/zh_CN/patches/atlas_61.png</file>
-    <file alias="memes/zh_CN/patches/atlas_71.png">memes/zh_CN/patches/atlas_71.png</file>
-    <file alias="memes/zh_CN/patches/atlas_79.png">memes/zh_CN/patches/atlas_79.png</file>
-    <file alias="memes/zh_CN/patches/atlas_89.png">memes/zh_CN/patches/atlas_89.png</file>
-    <file alias="memes/zh_CN/patches/atlas_95.png">memes/zh_CN/patches/atlas_95.png</file>
+    <file alias="memes/zh_CN/meme_00.png">memes/zh_CN/meme_00.jpg</file>
+    <file alias="memes/zh_CN/meme_08.png">memes/zh_CN/meme_08.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_01.png">memes/zh_CN/meme_4x_01.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_03.png">memes/zh_CN/meme_4x_03.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_04.png">memes/zh_CN/meme_4x_04.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_05.png">memes/zh_CN/meme_4x_05.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_06.png">memes/zh_CN/meme_4x_06.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_07.png">memes/zh_CN/meme_4x_07.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_08.png">memes/zh_CN/meme_4x_08.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_10.png">memes/zh_CN/meme_4x_10.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_12.png">memes/zh_CN/meme_4x_12.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_14.png">memes/zh_CN/meme_4x_14.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_22.png">memes/zh_CN/meme_4x_22.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_28.png">memes/zh_CN/meme_4x_28.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_36.png">memes/zh_CN/meme_4x_36.jpg</file>
+    <file alias="memes/zh_CN/meme_4x_37.png">memes/zh_CN/meme_4x_37.jpg</file>
+    <file alias="memes/zh_CN/meme_52.png">memes/zh_CN/meme_52.jpg</file>
+    <file alias="memes/zh_CN/meme_60.png">memes/zh_CN/meme_60.jpg</file>
+    <file alias="memes/zh_CN/meme_93.png">memes/zh_CN/meme_93.jpg</file>
+    <file alias="memes/zh_CN/meme_97.png">memes/zh_CN/meme_97.jpg</file>
+    <file alias="memes/zh_CN/patches/atlas_103.png">memes/zh_CN/patches/atlas_103.jpg</file>
+    <file alias="memes/zh_CN/patches/atlas_14.png">memes/zh_CN/patches/atlas_14.jpg</file>
+    <file alias="memes/zh_CN/patches/atlas_25.png">memes/zh_CN/patches/atlas_25.jpg</file>
+    <file alias="memes/zh_CN/patches/atlas_35.png">memes/zh_CN/patches/atlas_35.jpg</file>
+    <file alias="memes/zh_CN/patches/atlas_42.png">memes/zh_CN/patches/atlas_42.jpg</file>
+    <file alias="memes/zh_CN/patches/atlas_45.png">memes/zh_CN/patches/atlas_45.jpg</file>
+    <file alias="memes/zh_CN/patches/atlas_61.png">memes/zh_CN/patches/atlas_61.jpg</file>
+    <file alias="memes/zh_CN/patches/atlas_71.png">memes/zh_CN/patches/atlas_71.jpg</file>
+    <file alias="memes/zh_CN/patches/atlas_79.png">memes/zh_CN/patches/atlas_79.jpg</file>
+    <file alias="memes/zh_CN/patches/atlas_89.png">memes/zh_CN/patches/atlas_89.jpg</file>
+    <file alias="memes/zh_CN/patches/atlas_95.png">memes/zh_CN/patches/atlas_95.jpg</file>
     <!-- Built-in features and known limitations served to plugins by the
          "pj.feature_catalog.v1" service (pj_runtime/include/pj_runtime/FeatureCatalogHost.h). -->
     <file alias="feature_catalog.json">feature_catalog.json</file>
-  </qresource>
-  <qresource prefix="/resources">
-    <!-- Funny splashscreen pool. The startup splash enumerates this directory
-         at runtime (QDir(":/resources/memes")), so adding a meme is a pure
-         resource change: drop meme_NN.jpg here and list it below. -->
-    <file alias="memes/meme_01.jpg">memes/meme_01.jpg</file>
-    <file alias="memes/meme_02.jpg">memes/meme_02.jpg</file>
-    <file alias="memes/meme_03.jpg">memes/meme_03.jpg</file>
-    <file alias="memes/meme_04.jpg">memes/meme_04.jpg</file>
-    <file alias="memes/meme_05.jpg">memes/meme_05.jpg</file>
-    <file alias="memes/meme_06.jpg">memes/meme_06.jpg</file>
-    <file alias="memes/meme_07.jpg">memes/meme_07.jpg</file>
-    <file alias="memes/meme_08.jpg">memes/meme_08.jpg</file>
-    <file alias="memes/meme_09.jpg">memes/meme_09.jpg</file>
-    <file alias="memes/meme_10.jpg">memes/meme_10.jpg</file>
-    <file alias="memes/meme_11.jpg">memes/meme_11.jpg</file>
-    <file alias="memes/meme_12.jpg">memes/meme_12.jpg</file>
-    <file alias="memes/meme_13.jpg">memes/meme_13.jpg</file>
-    <file alias="memes/meme_14.jpg">memes/meme_14.jpg</file>
-    <file alias="memes/meme_15.jpg">memes/meme_15.jpg</file>
-    <file alias="memes/meme_16.jpg">memes/meme_16.jpg</file>
-    <file alias="memes/meme_17.jpg">memes/meme_17.jpg</file>
-    <file alias="memes/meme_18.jpg">memes/meme_18.jpg</file>
-    <file alias="memes/meme_19.jpg">memes/meme_19.jpg</file>
-    <file alias="memes/meme_20.jpg">memes/meme_20.jpg</file>
-    <file alias="memes/meme_21.jpg">memes/meme_21.jpg</file>
-    <file alias="memes/meme_22.jpg">memes/meme_22.jpg</file>
-    <file alias="memes/meme_23.jpg">memes/meme_23.jpg</file>
-    <file alias="memes/meme_24.jpg">memes/meme_24.jpg</file>
-    <file alias="memes/meme_25.jpg">memes/meme_25.jpg</file>
-    <file alias="memes/meme_26.jpg">memes/meme_26.jpg</file>
-    <file alias="memes/meme_27.jpg">memes/meme_27.jpg</file>
-    <file alias="memes/meme_28.jpg">memes/meme_28.jpg</file>
-    <file alias="memes/meme_29.jpg">memes/meme_29.jpg</file>
-    <file alias="memes/meme_30.jpg">memes/meme_30.jpg</file>
-    <file alias="memes/meme_31.jpg">memes/meme_31.jpg</file>
-    <file alias="memes/meme_32.jpg">memes/meme_32.jpg</file>
-    <file alias="memes/meme_33.jpg">memes/meme_33.jpg</file>
-    <file alias="memes/meme_34.jpg">memes/meme_34.jpg</file>
-    <file alias="memes/meme_35.jpg">memes/meme_35.jpg</file>
-    <file alias="memes/meme_36.jpg">memes/meme_36.jpg</file>
-    <file alias="memes/meme_37.jpg">memes/meme_37.jpg</file>
   </qresource>
   <qresource prefix="/filters">
     <!-- The 12 built-in data filters as one self-describing Luau resource (M3).

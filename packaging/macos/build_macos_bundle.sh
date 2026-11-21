@@ -68,12 +68,16 @@ fi
 
 # Same curated set as the Windows installer ($PluginIds in
 # packaging/installer/build_windows_installer.ps1): ros2-topic-subscriber is
-# Linux-only, and toolbox-assistant-agent ships on Linux only for now.
+# Linux-only, and toolbox-assistant-agent (POSIX-only CLI backends) ships on Linux only. log-widget is
+# absent: the registry has no macos-arm64 build of it (Widget plugins build on
+# Linux and Windows only).
 BUNDLE_IDS=(
   csv-loader mcap-loader parquet-loader ulog-loader mp4-loader pointcloud-3d-loader
   dummy-streamer foxglove-bridge plotjuggler-bridge webrtc-client
   ros-parser protobuf-parser json-parser data-tamer-parser
   toolbox-quaternion toolbox-transform-editor toolbox-mosaico arrow-parser
+  toolbox-fft toolbox-anomaly-detector toolbox-data-exporter
+  influx-parser navmap-parser candump-loader blf-loader mf4-loader
 )
 PLATFORM="macos-arm64"
 REGISTRY_URL="https://raw.githubusercontent.com/PlotJuggler/pj-plugin-registry/refs/heads/development/registry.json"
@@ -180,11 +184,12 @@ if [[ "${BUNDLE_PLUGINS}" == 1 ]]; then
     read -r url checksum < <(python3 - "${registry_json}" "${id}" "${PLATFORM}" <<'PY'
 import json, sys
 reg, want_id, plat = sys.argv[1:4]
-for ext in json.load(open(reg)).get("extensions", []):
-    if ext.get("id") == want_id:
-        p = ext.get("platforms", {}).get(plat) or {}
-        print(p.get("url", ""), p.get("checksum", ""))
-        break
+# The registry keeps older releases of an id for older hosts: take the newest that ships plat.
+found = [e for e in json.load(open(reg)).get("extensions", [])
+         if e.get("id") == want_id and plat in e.get("platforms", {})]
+if found:
+    p = max(found, key=lambda e: tuple(int(x) for x in e["version"].split(".")))["platforms"][plat]
+    print(p.get("url", ""), p.get("checksum", ""))
 PY
     ) || true
     [[ -n "${url:-}" ]] || die "the registry has no '${id}' for ${PLATFORM}"

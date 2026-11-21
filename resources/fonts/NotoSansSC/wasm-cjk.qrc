@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/resources/fonts/NotoSansSC">
+    <file>NotoSansSC-Subset.otf</file>
+    <file>OFL.txt</file>
+  </qresource>
+</RCC>

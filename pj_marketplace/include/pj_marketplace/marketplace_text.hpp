@@ -161,6 +161,26 @@ inline QString marketplacePluginText(const QString& id, const QString& version, 
        QT_TRANSLATE_NOOP(
            "PJ::MarketplaceCatalog",
            "Real-time data streaming via ZeroMQ. High-performance messaging for distributed systems.")},
+      {"candump-loader", QT_TRANSLATE_NOOP("PJ::MarketplaceCatalog", "candump Loader")},
+      {"candump-loader", QT_TRANSLATE_NOOP(
+                             "PJ::MarketplaceCatalog",
+                             "Data loader for Linux SocketCAN candump captures (log and screen format), decoded to "
+                             "signals via DBC or an ARUS-style CSV dictionary.")},
+      {"influx-parser", QT_TRANSLATE_NOOP("PJ::MarketplaceCatalog", "InfluxDB Line Protocol Parser")},
+      {"influx-parser",
+       QT_TRANSLATE_NOOP(
+           "PJ::MarketplaceCatalog",
+           "Message parser for InfluxDB line protocol, the text format Telegraf and InfluxDB clients send.")},
+      {"log-widget", QT_TRANSLATE_NOOP("PJ::MarketplaceCatalog", "Log Widget")},
+      {"log-widget", QT_TRANSLATE_NOOP(
+                         "PJ::MarketplaceCatalog",
+                         "Dock widget that lists log messages (such as ROS /rosout) next to the playback tracker.")},
+      {"navmap-parser", QT_TRANSLATE_NOOP("PJ::MarketplaceCatalog", "NavMap Parser")},
+      {"navmap-parser",
+       QT_TRANSLATE_NOOP(
+           "PJ::MarketplaceCatalog",
+           "Shows EasyNavigation NavMap maps (navmap_ros_interfaces/msg/NavMap), the triangle-mesh navigation maps, in "
+           "the 3D scene with their per-cell layers, and applies the NavMapLayer updates published beside them.")},
   };
   for (const auto& entry : entries) {
     if (id == QLatin1String(entry.id) && source == QString::fromUtf8(entry.source)) {

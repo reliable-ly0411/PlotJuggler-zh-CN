@@ -9,6 +9,7 @@
 #include <QDomNodeList>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QString>
@@ -16,8 +17,10 @@
 #include <QTemporaryDir>
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 
+#include "FanoutConfig.h"
 #include "LayoutXml.h"
 #include "pj_runtime/XmlCdata.h"
 using namespace Qt::StringLiterals;
@@ -34,9 +37,7 @@ QString roundTripJson(const QString& input) {
   PJ::appendJsonAsCdata(doc, plugin, input);
   doc.appendChild(plugin);
 
-  // Round-trip through serialize -> reparse to confirm the document
-  // survives the actual XML pipeline (not just text() of the in-memory
-  // DOM, which would only test our writer, not the reader).
+  // Round-trip through serialize -> reparse so the reader is exercised, not just the in-memory DOM.
   const QByteArray serialized = doc.toByteArray(2);
   QDomDocument reparsed;
   if (!reparsed.setContent(serialized)) {
@@ -78,18 +79,14 @@ TEST(AppendJsonAsCdata, RoundTripsConsecutiveClosingCdataSequences) {
 }
 
 TEST(AppendJsonAsCdata, RoundTripsUnicodeAndAngleBrackets) {
-  // Tests that QDomDocument doesn't choke on <, >, &, unicode within CDATA.
   const QString in = uR"({"label":"<x & y> ünïcødé"})"_s;
   EXPECT_EQ(roundTripJson(in), in);
 }
 
 // ---------- directCdataText (params vs <source_fallback> separation) --------
-//
-// A <processor> layout element (M7) carries its params as a DIRECT CDATA child
-// AND an optional <source_fallback> CHILD ELEMENT holding the filter's Luau
-// source. QDomElement::text() recurses the whole subtree, so reading params via
-// processor.text() would slurp the embedded source in too. directCdataText reads
-// only the element's own direct CDATA, keeping the two payloads independent.
+// A <processor> element carries its params as a direct CDATA child plus an optional <source_fallback> child
+// element holding the filter's Luau source. QDomElement::text() recurses the subtree and would slurp the source into
+// the params; directCdataText reads only the element's own CDATA.
 
 QDomElement buildProcessorWithSource(QDomDocument& doc, const QString& params, const QString& source) {
   QDomElement processor = doc.createElement(u"processor"_s);
@@ -252,6 +249,164 @@ TEST(ExtractDataSource, CanonicalBrowserContentFingerprintIsOptionalAndValidated
   EXPECT_FALSE(refs.front().content_sha256_malformed);
 }
 
+TEST(ExtractDataSource, SideFilesAreOptionalAndTheirFingerprintsValidated) {
+  constexpr auto kSha256 = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+  QDomDocument doc = buildDataSourceDoc(u"run.log"_s);
+  EXPECT_TRUE(PJ::layout_xml::extractDataSource(doc, QDir::current()).front().side_files.isEmpty())
+      << "a layout without <sideFile> reads as before";
+  QDomElement file_info =
+      doc.documentElement().firstChildElement(u"previouslyLoaded_Datafiles"_s).firstChildElement(u"fileInfo"_s);
+  for (const auto& [filename, sha256] : std::array<std::pair<QString, QString>, 3>{{
+           {u"a.dbc"_s, QString::fromLatin1(kSha256)},
+           {u"pj4-side/1/a.dbc"_s, u"ABCDEF"_s},
+           {QString(), QString::fromLatin1(kSha256)},
+       }}) {
+    QDomElement side = doc.createElement(u"sideFile"_s);
+    side.setAttribute(u"filename"_s, filename);
+    side.setAttribute(u"content_sha256"_s, sha256);
+    file_info.appendChild(side);
+  }
+  const QList<DataSourceRef> refs = PJ::layout_xml::extractDataSource(doc, QDir::current());
+  ASSERT_EQ(refs.size(), 1);
+  ASSERT_EQ(refs.front().side_files.size(), 2) << "a side file with no filename is skipped";
+  EXPECT_EQ(refs.front().side_files[0].filename, u"a.dbc"_s);
+  EXPECT_EQ(refs.front().side_files[0].content_sha256, QLatin1StringView(kSha256));
+  EXPECT_FALSE(refs.front().side_files[0].content_sha256_malformed);
+  EXPECT_EQ(refs.front().side_files[1].filename, u"pj4-side/1/a.dbc"_s);
+  EXPECT_TRUE(refs.front().side_files[1].content_sha256.isEmpty());
+  EXPECT_TRUE(refs.front().side_files[1].content_sha256_malformed);
+}
+
+// ---------- logicalBrowserSideFiles ----------------------------------------
+
+constexpr auto kSideSha = "1111111111111111111111111111111111111111111111111111111111111111";
+
+std::optional<PJ::layout_xml::StagedFileInfo> stagedSideFile(const QString& path) {
+  if (path == u"/pj_uploads/t/2/engine.dbc"_s) {
+    return PJ::layout_xml::StagedFileInfo{.name = u"engine.dbc"_s, .content_sha256 = QString::fromLatin1(kSideSha)};
+  }
+  if (path == u"/pj_uploads/t/3/engine.dbc"_s) {
+    return PJ::layout_xml::StagedFileInfo{.name = u"engine.dbc"_s, .content_sha256 = u"2"_s.repeated(64)};
+  }
+  if (path == u"/pj_uploads/t/1/run.log"_s) {
+    return PJ::layout_xml::StagedFileInfo{.name = u"run.log"_s, .content_sha256 = u"3"_s.repeated(64)};
+  }
+  return std::nullopt;
+}
+
+TEST(LogicalBrowserSideFiles, NamesEachStagedSideFileAndEmptiesTheDataFolder) {
+  // Two dictionaries of one basename, one in a fan-out child, plus a label that already reads like the name.
+  const std::string config =
+      R"({"filepath":"/pj_uploads/t/1/run.log","aux_base_dir":"/pj_uploads/t/1","label":"engine.dbc",)"
+      R"("dictionaries":{"can0":["/pj_uploads/t/2/engine.dbc"]},"delimiter":",",)"
+      R"("__pj_fanout":["{\"filepath\":\"/pj_uploads/t/1/run.log\",\"dbc\":\"/pj_uploads/t/3/engine.dbc\"}"]})";
+  QString error;
+  const auto result = PJ::layout_xml::logicalBrowserSideFiles(
+      config, u"/pj_uploads/t/1/run.log"_s, u"run.log"_s, stagedSideFile, &error);
+  ASSERT_TRUE(result.has_value()) << error.toStdString();
+  ASSERT_EQ(result->side_files.size(), 2);
+  EXPECT_EQ(result->side_files[0].filename, u"pj4-side/0/engine.dbc"_s) << "the plain name is taken by the label";
+  EXPECT_EQ(result->side_files[0].content_sha256, QLatin1StringView(kSideSha));
+  EXPECT_EQ(result->side_files[1].filename, u"pj4-side/1/engine.dbc"_s);
+  EXPECT_EQ(result->config.find("/pj_uploads/t/2"), std::string::npos) << result->config;
+  EXPECT_EQ(result->config.find("/pj_uploads/t/3"), std::string::npos) << result->config;
+
+  const QJsonObject root = QJsonDocument::fromJson(QByteArray::fromStdString(result->config)).object();
+  EXPECT_EQ(root.value(u"filepath"_s).toString(), u"/pj_uploads/t/1/run.log"_s)
+      << "the data file is left for rewriteReplayFilepaths";
+  EXPECT_EQ(root.value(u"aux_base_dir"_s).toString(), QString());
+  EXPECT_EQ(root.value(u"label"_s).toString(), u"engine.dbc"_s);
+  EXPECT_EQ(root.value(u"delimiter"_s).toString(), u","_s);
+  EXPECT_EQ(
+      root.value(u"dictionaries"_s).toObject().value(u"can0"_s).toArray().first().toString(),
+      u"pj4-side/0/engine.dbc"_s);
+  const QJsonObject child =
+      QJsonDocument::fromJson(root.value(u"__pj_fanout"_s).toArray().first().toString().toUtf8()).object();
+  EXPECT_EQ(child.value(u"dbc"_s).toString(), u"pj4-side/1/engine.dbc"_s);
+
+  // Replay maps the saved names back to fresh copies; together with the filepath rewrite nothing ephemeral stays.
+  const std::string replayed = PJ::detail::rewriteReplayFilepaths(
+                                   PJ::detail::replaceConfigStringValues(
+                                       result->config, {{u"pj4-side/0/engine.dbc"_s, u"/pj_uploads/u/7/engine.dbc"_s},
+                                                        {u"pj4-side/1/engine.dbc"_s, u"/pj_uploads/u/8/engine.dbc"_s}})
+                                       .value(),
+                                   u"/pj_uploads/u/6/run.log"_s, PJ::detail::SavedFilepath::kOmit)
+                                   .value();
+  const QJsonObject replayed_root = QJsonDocument::fromJson(QByteArray::fromStdString(replayed)).object();
+  EXPECT_EQ(
+      replayed_root.value(u"dictionaries"_s).toObject().value(u"can0"_s).toArray().first().toString(),
+      u"/pj_uploads/u/7/engine.dbc"_s);
+  EXPECT_EQ(replayed_root.value(u"filepath"_s).toString(), u"/pj_uploads/u/6/run.log"_s);
+}
+
+TEST(LogicalBrowserSideFiles, UsesThePlainNameWhenFreeAndLeavesUnknownStringsAlone) {
+  const std::string config =
+      R"({"filepath":"/pj_uploads/t/1/run.log","dbc":"/pj_uploads/t/2/engine.dbc","other":"/pj_uploads/t/9/x"})";
+  const auto result = PJ::layout_xml::logicalBrowserSideFiles(
+      config, u"/pj_uploads/t/1/run.log"_s, u"run.log"_s, stagedSideFile, nullptr);
+  ASSERT_TRUE(result.has_value());
+  ASSERT_EQ(result->side_files.size(), 1);
+  EXPECT_EQ(result->side_files[0].filename, u"engine.dbc"_s);
+  const QJsonObject root = QJsonDocument::fromJson(QByteArray::fromStdString(result->config)).object();
+  EXPECT_EQ(root.value(u"dbc"_s).toString(), u"engine.dbc"_s);
+  EXPECT_EQ(root.value(u"other"_s).toString(), u"/pj_uploads/t/9/x"_s)
+      << "an unknown path stays, so the save's ephemeral-path check still refuses it";
+}
+
+// One file picked twice (candump can0 and can1 both given engine.dbc) is staged twice with equal name and bytes:
+// it is one side file, so a desktop replay finds it beside the data file under one name.
+TEST(LogicalBrowserSideFiles, OneFileStagedTwiceIsOneSideFile) {
+  const auto staged = [](const QString& path) -> std::optional<PJ::layout_xml::StagedFileInfo> {
+    if (path == u"/up/2/engine.dbc"_s || path == u"/up/3/engine.dbc"_s) {
+      return PJ::layout_xml::StagedFileInfo{.name = u"engine.dbc"_s, .content_sha256 = QString::fromLatin1(kSideSha)};
+    }
+    return std::nullopt;
+  };
+  const auto result = PJ::layout_xml::logicalBrowserSideFiles(
+      R"({"filepath":"/up/1/run.log","dictionaries":{"can0":["/up/2/engine.dbc"],"can1":["/up/3/engine.dbc"]}})",
+      u"/up/1/run.log"_s, u"run.log"_s, staged, nullptr);
+  ASSERT_TRUE(result.has_value());
+  ASSERT_EQ(result->side_files.size(), 1);
+  EXPECT_EQ(result->side_files[0].filename, u"engine.dbc"_s);
+  const QJsonObject dictionaries =
+      QJsonDocument::fromJson(QByteArray::fromStdString(result->config)).object().value(u"dictionaries"_s).toObject();
+  EXPECT_EQ(dictionaries.value(u"can0"_s).toArray().first().toString(), u"engine.dbc"_s);
+  EXPECT_EQ(dictionaries.value(u"can1"_s).toArray().first().toString(), u"engine.dbc"_s);
+}
+
+// A side file never takes the data file's logical name, nor a fallback name the configuration already uses.
+TEST(LogicalBrowserSideFiles, FallbackNamesSkipTheDataFileAndEveryTakenName) {
+  const auto staged = [](const QString& path) -> std::optional<PJ::layout_xml::StagedFileInfo> {
+    if (path == u"/up/2/run.log"_s) {
+      return PJ::layout_xml::StagedFileInfo{.name = u"run.log"_s, .content_sha256 = QString::fromLatin1(kSideSha)};
+    }
+    return std::nullopt;
+  };
+  const auto result = PJ::layout_xml::logicalBrowserSideFiles(
+      R"({"filepath":"/up/1/run.log","side":"/up/2/run.log","note":"pj4-side/0/run.log"})", u"/up/1/run.log"_s,
+      u"run.log"_s, staged, nullptr);
+  ASSERT_TRUE(result.has_value());
+  ASSERT_EQ(result->side_files.size(), 1);
+  EXPECT_EQ(result->side_files[0].filename, u"pj4-side/1/run.log"_s);
+  EXPECT_EQ(
+      QJsonDocument::fromJson(QByteArray::fromStdString(result->config)).object().value(u"note"_s).toString(),
+      u"pj4-side/0/run.log"_s);
+}
+
+TEST(LogicalBrowserSideFiles, RefusesASideFileWithoutFingerprintAndPassesNonObjectsThrough) {
+  QString error;
+  const auto unfingerprinted = PJ::layout_xml::logicalBrowserSideFiles(
+      R"({"filepath":"/d/run.log","dbc":"/d/2/x.dbc"})", u"/d/run.log"_s, u"run.log"_s,
+      [](const QString&) { return std::optional(PJ::layout_xml::StagedFileInfo{.name = u"x.dbc"_s}); }, &error);
+  EXPECT_FALSE(unfingerprinted.has_value());
+  EXPECT_TRUE(error.contains(u"x.dbc"_s)) << error.toStdString();
+
+  const auto verbatim = PJ::layout_xml::logicalBrowserSideFiles("not json", {}, {}, stagedSideFile, nullptr);
+  ASSERT_TRUE(verbatim.has_value());
+  EXPECT_EQ(verbatim->config, "not json");
+  EXPECT_TRUE(verbatim->side_files.isEmpty());
+}
+
 // A downloaded layout's sources live beside it; relative names are paths, so
 // filesystem characters never turn into URL syntax.
 TEST(ResolveFileSourceUrl, RelativeAndAbsoluteNetworkReferencesResolve) {
@@ -328,8 +483,7 @@ TEST(ExtractDataSource, SourceFilepathModeResolvesAgainstLayoutDir) {
 TEST(ExtractDataSource, PluginCdataWithClosingSequenceRoundTrips) {
   const QString json = uR"({"pat":"weird ]]> in middle"})"_s;
   const QDomDocument doc = buildDataSourceDoc(u"/tmp/x.mcap"_s, QString(), u"CSV"_s, json);
-  // Round-trip the WHOLE doc through serialize+reparse to confirm the
-  // CDATA splitting survives the actual file pipeline.
+  // Round-trip the whole doc through serialize+reparse so the CDATA splitting goes through the file pipeline.
   QDomDocument reparsed;
   ASSERT_TRUE(reparsed.setContent(doc.toByteArray(2)));
   const QList<DataSourceRef> refs = PJ::layout_xml::extractDataSource(reparsed, QDir::current());
@@ -338,9 +492,8 @@ TEST(ExtractDataSource, PluginCdataWithClosingSequenceRoundTrips) {
 }
 
 TEST(ExtractDataSource, PluginManifestIdParsedWhenPresentAndEmptyWhenAbsent) {
-  // New layouts write BOTH the display name (ID — what old readers keep using)
-  // and the stable manifest id (manifest_id) on <plugin>. Old layouts carry
-  // only ID; the manifest id field must then stay empty.
+  // Layouts write both the display name (ID, what old readers keep using) and the stable manifest id (manifest_id)
+  // on <plugin>; an old layout carries only ID and the manifest id must then stay empty.
   QDomDocument doc = buildDataSourceDoc(u"/tmp/x.mcap"_s, QString(), u"MCAP Loader"_s, u"{}"_s);
   {
     const QList<DataSourceRef> refs = PJ::layout_xml::extractDataSource(doc, QDir::current());
@@ -363,10 +516,9 @@ TEST(ExtractDataSource, PluginManifestIdParsedWhenPresentAndEmptyWhenAbsent) {
 
 // ---------- <materialize> provider source records ---------------------------
 
-// Appends a <materialize> child to the doc's only <fileInfo>, mirroring
-// MainWindow::appendDataSourceElement's save shape: provider/identity as
-// attributes, the canonical descriptor JSON as a CDATA payload written through
-// appendJsonAsCdata (so a "]]>"-bearing descriptor splits across sections).
+// Appends a <materialize> child to the doc's only <fileInfo>, mirroring MainWindow::appendDataSourceElement's save
+// shape: provider/identity attributes, the descriptor JSON as CDATA through appendJsonAsCdata (so a "]]>"-bearing
+// descriptor splits across sections).
 void appendMaterialize(QDomDocument& doc, const QString& provider, const QString& identity, const QString& descriptor) {
   QDomElement file_info =
       doc.documentElement().firstChildElement(u"previouslyLoaded_Datafiles"_s).firstChildElement(u"fileInfo"_s);
@@ -378,9 +530,8 @@ void appendMaterialize(QDomDocument& doc, const QString& provider, const QString
 }
 
 TEST(ExtractDataSource, MaterializeRecordSurvivesSerializeReparseByteExact) {
-  // The descriptor bytes are a cross-repo identity contract: they must come
-  // back VERBATIM through the real XML file pipeline, including newlines and
-  // the CDATA-hostile "]]>" sequence.
+  // The descriptor bytes are a cross-repo identity contract: they must come back verbatim through the XML file
+  // pipeline, including newlines and the CDATA-hostile "]]>" sequence.
   const QString descriptor = u"{\n  \"provider\": \"mcap-cloud\",\n  \"pattern\": \"a ]]> b\"\n}"_s;
   const QString plugin_json = uR"({"topics":[]})"_s;
   QDomDocument doc = buildDataSourceDoc(u"/tmp/cache.mcap"_s, QString(), u"MCAP Loader"_s, plugin_json);
@@ -393,15 +544,14 @@ TEST(ExtractDataSource, MaterializeRecordSurvivesSerializeReparseByteExact) {
   EXPECT_EQ(refs.front().materialize_provider, u"mcap-cloud"_s);
   EXPECT_EQ(refs.front().materialize_identity, u"mcap-cloud:v1:sha256/128:ab12"_s);
   EXPECT_EQ(refs.front().materialize_descriptor_json, descriptor);
-  // <materialize> is a SIBLING of <plugin>: the plugin child must parse exactly
-  // as before, with no descriptor bytes leaking into its config payload.
+  // <materialize> is a sibling of <plugin>: the plugin parses exactly as without it, no descriptor bytes in its config.
   EXPECT_EQ(refs.front().plugin_id, u"MCAP Loader"_s);
   EXPECT_EQ(refs.front().plugin_config_json, plugin_json);
 }
 
 TEST(ExtractDataSource, MaterializeAbsentLeavesFieldsEmpty) {
-  // Old layouts (no <materialize> child) parse identically: all three fields
-  // stay empty and every pre-existing field is untouched.
+  // Old layouts (no <materialize> child) parse identically: all three fields stay empty, every other field is
+  // untouched.
   const QString json = uR"({"topics":["a"]})"_s;
   const QDomDocument doc = buildDataSourceDoc(u"/tmp/x.mcap"_s, u"robot"_s, u"CSV"_s, json);
   const QList<DataSourceRef> refs = PJ::layout_xml::extractDataSource(doc, QDir::current());
@@ -414,9 +564,8 @@ TEST(ExtractDataSource, MaterializeAbsentLeavesFieldsEmpty) {
 }
 
 TEST(ExtractDataSource, UnknownFileInfoChildrenStayIgnoredAndParsingIsReadOnly) {
-  // Forward/backward tolerance: a genuinely unknown <fileInfo> child changes
-  // nothing (the old-reader guarantee <materialize> relies on), and extracting
-  // never mutates the document (byte-stable before/after).
+  // An unknown <fileInfo> child changes nothing (the old-reader guarantee <materialize> relies on), and extracting
+  // never mutates the document (byte-stable).
   QDomDocument doc = buildDataSourceDoc(u"/tmp/x.mcap"_s, QString(), u"MCAP Loader"_s, uR"({"a":1})"_s);
   appendMaterialize(doc, u"mcap-cloud"_s, u"id-1"_s, uR"({"key":"cloud/a.mcap"})"_s);
   QDomElement file_info =
@@ -436,10 +585,8 @@ TEST(ExtractDataSource, UnknownFileInfoChildrenStayIgnoredAndParsingIsReadOnly) 
 }
 
 TEST(ExtractDataSource, MultipleFileInfosParsedInOrder) {
-  // A multi-file session: two distinct files, each with its own plugin config.
-  // Host-absolute paths (QDir::tempPath()) — a hardcoded POSIX "/tmp/x" is
-  // drive-relative on Windows, so extractDataSource would re-anchor it and the
-  // equality check would fail.
+  // Host-absolute paths (QDir::tempPath()): a hardcoded POSIX "/tmp/x" is drive-relative on Windows, so
+  // extractDataSource would re-anchor it and the equality check would fail.
   const QString abs_a = QDir::tempPath() + u"/a.mcap"_s;
   const QString abs_b = QDir::tempPath() + u"/b.mcap"_s;
   const QString json_a = uR"({"topics":["/a"]})"_s;
@@ -457,9 +604,7 @@ TEST(ExtractDataSource, MultipleFileInfosParsedInOrder) {
 }
 
 TEST(ExtractDataSource, MultiFileSurvivesSerializeReparse) {
-  // The full file pipeline: build two fileInfos, serialize, reparse, and
-  // confirm both come back in order — the round-trip a saved/loaded layout takes.
-  // Host-absolute paths so the assertion holds cross-platform (see above).
+  // Two fileInfos serialized and reparsed come back in order. Host-absolute paths, as above.
   const QString abs_a = QDir::tempPath() + u"/a.mcap"_s;
   const QString abs_b = QDir::tempPath() + u"/b.mcap"_s;
   QDomDocument doc = buildDataSourceDoc(abs_a);
@@ -472,7 +617,7 @@ TEST(ExtractDataSource, MultiFileSurvivesSerializeReparse) {
   EXPECT_EQ(refs[1].resolved_path, QFileInfo(abs_b).absoluteFilePath());
 }
 
-// ---------- Source Timeline state (v3) --------------------------------------
+// ---------- Source Timeline state --------------------------------------
 
 // Stamps the per-source timeline attributes onto a doc's only <fileInfo>, as
 // MainWindow::appendDataSourceElement does at save time.
@@ -509,9 +654,8 @@ TEST(ExtractDataSource, SchemaV4TimelineOffsetIsSourceOnly) {
 }
 
 TEST(ExtractDataSource, TimelineStateAbsentLeavesDefaults) {
-  // A pre-v3 layout (no timeline attributes): the reloaded dataset must keep its
-  // natural zero offset (has_display_offset=false → caller skips the write) and
-  // fall back to load order (timeline_order=-1).
+  // A layout without timeline attributes: the dataset keeps its natural zero offset (has_display_offset=false, so the
+  // caller skips the write) and falls back to load order (timeline_order=-1).
   const QDomDocument doc = buildDataSourceDoc(u"/tmp/run.mcap"_s);
   const QList<DataSourceRef> refs = PJ::layout_xml::extractDataSource(doc, QDir::current());
   ASSERT_EQ(refs.size(), 1);
@@ -523,8 +667,6 @@ TEST(ExtractDataSource, TimelineStateAbsentLeavesDefaults) {
 }
 
 TEST(ExtractDataSource, TimelineStateSurvivesSerializeReparse) {
-  // The realistic path: stamp attrs, serialize to bytes, reparse — the exact
-  // round-trip a saved/loaded layout file takes.
   QDomDocument doc = buildDataSourceDoc(u"/tmp/run.mcap"_s);
   setTimelineState(doc, /*offset_ns=*/42'000LL, /*order=*/0);
   QDomDocument reparsed;
@@ -584,13 +726,7 @@ TEST(ExtractDataSource, FanoutDatasetTimelineStatesRoundTripUnderOneFileReplay) 
 }
 
 // ---------- isSamePath ------------------------------------------------------
-//
-// Codifies the data-source-replay bug: loadLayoutFromPath used to skip the
-// reload whenever ANY source was loaded, instead of checking whether the
-// currently-loaded source matched the one the layout referenced. A layout
-// for file A would then no-op when file B was open, leaving the catalog
-// populated with B's keys and every A-key reported as "missing".
-// isSamePath() is what gates that decision now.
+// isSamePath() decides whether the source a layout references is the one already loaded.
 
 TEST(IsSamePath, EmptyInputsAreNotSame) {
   EXPECT_FALSE(PJ::layout_xml::isSamePath(QString(), QString()));
@@ -599,9 +735,7 @@ TEST(IsSamePath, EmptyInputsAreNotSame) {
 }
 
 TEST(IsSamePath, DifferentExistingFilesAreNotSame) {
-  // The exact bug scenario: two real files with different basenames.
-  // Before the fix, loadLayoutFromPath treated "anything loaded" as
-  // "skip" — this test would have passed even when it shouldn't have.
+  // Two real files with different basenames.
   QTemporaryDir dir;
   ASSERT_TRUE(dir.isValid());
   const QString a = dir.filePath(u"sagod.mcap"_s);
@@ -634,9 +768,7 @@ TEST(IsSamePath, RelativeAndAbsoluteFormsOfSameFileAreSame) {
 }
 
 TEST(IsSamePath, NonexistentPathsAreNotSame) {
-  // canonicalFilePath() returns empty for missing files; treating those
-  // as "same" would mean two layouts that reference deleted files would
-  // skip the reload prompt — the opposite of helpful.
+  // canonicalFilePath() is empty for missing files; those must not compare as the same.
   EXPECT_FALSE(PJ::layout_xml::isSamePath(u"/nonexistent/a.mcap"_s, u"/nonexistent/b.mcap"_s));
   EXPECT_FALSE(PJ::layout_xml::isSamePath(u"/nonexistent/a.mcap"_s, u"/nonexistent/a.mcap"_s));
 }
@@ -652,10 +784,8 @@ TEST(IsSamePath, FilesystemPathContainingSchemeTextStillCanonicalizes) {
   QTemporaryDir dir;
   ASSERT_TRUE(dir.isValid());
 #ifdef Q_OS_WIN
-  // ':' cannot occur in a Windows path component. A doubled separator after
-  // the drive prefix is nevertheless a legal spelling of the same file and
-  // still contains the `://` text that the historical broad URI check
-  // misclassified.
+  // ':' cannot occur in a Windows path component. A doubled separator after the drive prefix is nevertheless a legal
+  // spelling of the same file and still contains `://`, which a broad URI check would misclassify.
   const QString absolute = QDir::fromNativeSeparators(dir.filePath(u"capture.mcap"_s));
   ASSERT_TRUE(QFile(absolute).open(QIODevice::WriteOnly));
   ASSERT_GE(absolute.size(), 3);
@@ -687,9 +817,7 @@ TEST(EnsureLayoutExtension, LeavesCorrectExtensionUntouched) {
 }
 
 TEST(EnsureLayoutExtension, RespectsAnyUserSpecifiedExtension) {
-  // Contract is "append only when no extension is specified", so a name the
-  // user deliberately gave another suffix is left alone rather than turned
-  // into a double extension like notes.txt.pj4.xml.
+  // Append only when no extension is given: a user-chosen suffix is left alone, not turned into notes.txt.pj4.xml.
   EXPECT_EQ(PJ::layout_xml::ensureLayoutExtension(u"notes.txt"_s), u"notes.txt"_s);
   EXPECT_EQ(PJ::layout_xml::ensureLayoutExtension(u"my.layout"_s), u"my.layout"_s);
 }
@@ -786,8 +914,7 @@ TEST(ExtractSeriesPaths, DedupKeepsSameTopicFieldFromDifferentDatasets) {
   a.setAttribute(u"dataset_id"_s, u"1"_s);
   QDomElement b = addTsCurve(pd, u"/speed"_s, u"value"_s);
   b.setAttribute(u"dataset_id"_s, u"2"_s);
-  // Same (topic, field) but distinct dataset qualifiers must remain two entries;
-  // collapsing them was the root of the multi-dataset undo bug.
+  // Same (topic, field) with distinct dataset qualifiers must stay two entries.
   EXPECT_EQ(PJ::layout_xml::extractSeriesPaths(pd.doc).size(), 2);
 }
 
@@ -800,7 +927,7 @@ TEST(DatasetSourcePath, StampResolveAndPortableIdGuardCoverEveryIdentityShape) {
   // Curves live inside a <plot>; processor inputs carry the same portable dataset
   // identity, while scene elements remain owned by their widget families.
   PlotDoc pd = makePlotDoc();
-  QDomElement& doc_root = pd.plot;  // curves attach to the plot
+  QDomElement& doc_root = pd.plot;
   QDomElement ts = addTsCurve(pd, u"/imu"_s, u"x"_s);
   ts.setAttribute(u"dataset_id"_s, u"7"_s);
   QDomElement xy = addXyCurve(pd, SeriesPath{u"/xy"_s, u"x"_s}, SeriesPath{u"/xy"_s, u"y"_s});
@@ -892,8 +1019,8 @@ TEST(DatasetSourcePath, StampResolveAndPortableIdGuardCoverEveryIdentityShape) {
   EXPECT_EQ(generator.attribute(u"dataset_path"_s), expected);
 }
 
-// LAY-17: an <on_demand> recipe's inputs carry their dataset like a transform's: a known id gets its path at
-// file save, an unvalidated volatile id is stripped, and a generic layout keeps no qualifier.
+// An <on_demand> recipe's inputs carry their dataset like a transform's: a known id gets its path at file save, an
+// unvalidated volatile id is stripped, and a generic layout keeps no qualifier.
 TEST(DatasetSourcePath, OnDemandInputsAreStampedAndStripped) {
   QDomDocument doc;
   QDomElement root = doc.createElement(u"root"_s);
@@ -1327,7 +1454,7 @@ TEST(DatasetIdentityPasses, SceneLayerIdentityIsOnlyStrippedForGenericExport) {
   QDomElement scene = doc.createElement(u"scene3d"_s);
   scene.setAttribute(u"version"_s, u"1"_s);
   doc.appendChild(scene);
-  // Mirrors SceneDockWidget::xmlSaveState's <layer> shape (id + source, NO path).
+  // Mirrors SceneDockWidget::xmlSaveState's <layer> shape for a dataset with no source path (id + source, no path).
   QDomElement layer = doc.createElement(u"layer"_s);
   layer.setAttribute(u"dataset_id"_s, u"3"_s);
   layer.setAttribute(u"dataset_source"_s, u"run.mcap"_s);
@@ -1339,7 +1466,7 @@ TEST(DatasetIdentityPasses, SceneLayerIdentityIsOnlyStrippedForGenericExport) {
   payload.setAttribute(u"point_size"_s, u"2"_s);
   layer.appendChild(payload);
   scene.appendChild(layer);
-  // A config-topic (TF) child, also id-qualified, likewise must survive.
+  // A config-topic (TF) child, also id-qualified.
   QDomElement config = doc.createElement(u"config_topic"_s);
   config.setAttribute(u"dataset_id"_s, u"3"_s);
   config.setAttribute(u"dataset_source"_s, u"run.mcap"_s);
@@ -1549,7 +1676,6 @@ TEST(NormalizePlotRangeBasis, TimeSeriesRangeGetsAbsoluteBasis) {
   QDomElement range = addRange(pd);
   PJ::layout_xml::normalizePlotRangeBasis(pd.doc);
   EXPECT_EQ(range.attribute(u"x_basis"_s), u"absolute"_s);
-  // Numeric values are untouched.
   EXPECT_EQ(range.attribute(u"left"_s), u"1600000000.000000"_s);
   EXPECT_EQ(range.attribute(u"right"_s), u"1600000001.000000"_s);
 }
@@ -1575,7 +1701,6 @@ TEST(NormalizePlotRangeBasis, ExistingBasisIsLeftUntouched) {
 TEST(NormalizePlotRangeBasis, PlotWithoutRangeIsSkipped) {
   PlotDoc pd = makePlotDoc();
   pd.plot.setAttribute(u"mode"_s, u"TimeSeries"_s);
-  // No <range> child.
   PJ::layout_xml::normalizePlotRangeBasis(pd.doc);
   EXPECT_TRUE(pd.plot.firstChildElement(u"range"_s).isNull());
 }

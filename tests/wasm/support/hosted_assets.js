@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-// The browser samples' files on PlotJuggler's asset host, served to the suites from a local
-// mirror. The suites never reach the network (browser.js), so a sample that loads from the host
-// gets its files from a mirror that `npm run fetch:assets` fills once, each file checked against
-// its SHA-256 in fixtures/hosted_assets.json. PJ_WASM_ASSETS_MIRROR moves the mirror.
+// The browser samples' files on PlotJuggler's asset host, served to the suites from a local mirror: the
+// suites never reach the network (browser.js). `npm run fetch:assets` fills the mirror once, each file
+// checked against its SHA-256 in fixtures/hosted_assets.json. PJ_WASM_ASSETS_MIRROR moves the mirror.
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
@@ -13,6 +12,15 @@ const MIRROR = path.resolve(
   process.env.PJ_WASM_ASSETS_MIRROR || path.join(__dirname, '..', '..', '..', 'build-wasm-assets'));
 // The deployment's types (scripts/package_wasm.mjs) plus the hosted samples' own.
 const HOSTED_CONTENT_TYPES = [['.glb', 'model/gltf-binary'], ['.jpg', 'image/jpeg'], ['.urdf', 'application/xml']];
+
+// Why the mirror cannot serve the samples, or '' when every file is present at its manifest size
+// (a stale file would stream a truncated body); the hash is fetch:assets' job.
+function hostedAssetsMissing() {
+  const missing = Object.entries(MANIFEST.files).filter(
+    ([file, { bytes }]) => !fs.existsSync(path.join(MIRROR, file)) || fs.statSync(path.join(MIRROR, file)).size !== bytes);
+  return missing.length === 0 ? '' : `${missing.length} hosted sample files are not mirrored in ${MIRROR}: `
+    + 'run npm --prefix tests/wasm run fetch:assets';
+}
 
 // Serves the mirror on loopback, with the CORS header the host sends, and returns
 // { origin, route(context, samples_origin), close() }. route() rewrites the asset host to that
@@ -24,13 +32,6 @@ const HOSTED_CONTENT_TYPES = [['.glb', 'model/gltf-binary'], ['.jpg', 'image/jpe
 async function startHostedAssetMirror() {
   const { CONTENT_TYPES } = await import('../../../scripts/package_wasm.mjs');
   const contentTypes = new Map([...CONTENT_TYPES, ...HOSTED_CONTENT_TYPES]);
-  // Present at its manifest size (a stale file would stream a truncated body); the hash is fetch:assets' job.
-  const missing = Object.entries(MANIFEST.files).filter(
-    ([file, { bytes }]) => !fs.existsSync(path.join(MIRROR, file)) || fs.statSync(path.join(MIRROR, file)).size !== bytes);
-  if (missing.length > 0) {
-    throw new Error(`${missing.length} hosted sample files are not mirrored in ${MIRROR}: `
-      + 'run npm --prefix tests/wasm run fetch:assets');
-  }
   const server = http.createServer((request, response) => {
     const file = decodeURIComponent(new URL(request.url, 'http://mirror').pathname.slice(1));
     if (!Object.hasOwn(MANIFEST.files, file)) {
@@ -86,4 +87,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { startHostedAssetMirror };
+module.exports = { hostedAssetsMissing, startHostedAssetMirror };

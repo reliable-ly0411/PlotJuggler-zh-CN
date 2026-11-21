@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
 """Bind the exact original packages to all completed clean acceptance reports."""
+import argparse
 import hashlib
 import json
 import os
 from pathlib import Path
 import subprocess
 
-from version_map import versions
+from version_map import package_versions
 from verify_package import ACCEPTANCE_LANGUAGES
 
 
@@ -51,12 +52,13 @@ def verify_checksums(root, files):
     assert found == expected, 'Missing original package checksum'
 
 
-def main():
+def main(*, development_candidate=False):
     source = os.environ['GITHUB_SHA']
     tree = subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip()
     values = dict(line.split('=', 1) for line in Path('versions.env').read_text(encoding='utf-8').splitlines()
                   if line and not line.startswith('#'))
     version = values['PJ_APP_VERSION']
+    package = package_versions(version, development_candidate=development_candidate)
     reports = sorted(Path('reports').rglob('acceptance.json'))
     identities = report_identities(reports, Path('reports'))
     accepted, screenshots = [], []
@@ -87,7 +89,7 @@ def main():
     expected = {f'PlotJuggler-{version}-Windows-x64-zh-CN.exe',
                 f'PlotJuggler-{version}-Windows-x64-portable-zh-CN.zip',
                 f'PlotJuggler-{version}-x86_64-zh-CN.AppImage',
-                f'plotjuggler4_{versions(version)["deb"]}_amd64-zh-CN.deb'}
+                f'plotjuggler4_{package["deb"]}_amd64-zh-CN.deb'}
     files = sorted(p for p in Path('candidate').rglob('*') if p.suffix in ['.exe', '.zip', '.AppImage', '.deb'])
     assert len(files) == 4 and {p.name for p in files} == expected
     verify_checksums(Path('candidate'), files)
@@ -104,12 +106,16 @@ def main():
     result = {'schema_version': 1, 'source_commit': source, 'source_tree': tree,
               'workflow_sha': os.environ['GITHUB_WORKFLOW_SHA'], 'run_id': os.environ['GITHUB_RUN_ID'],
               'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
-              'version': version, 'tag': 'v' + version, 'automated_acceptance': 'passed',
-              'visual_review': 'required before creating the version-specific promotion ref',
+              'version': version, 'tag': package['tag'], 'publishable': package['publishable'],
+              'automated_acceptance': 'passed',
+              'visual_review': ('required before creating the version-specific promotion ref' if package['publishable']
+                                else 'development artifact; not eligible for release promotion'),
               'assets': [{'name': p.name, 'size': p.stat().st_size, 'sha256': sha256(p)} for p in files],
               'acceptance_reports': accepted, 'screenshots': screenshots}
     Path('release-manifest.json').write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--development-candidate', action='store_true')
+    main(development_candidate=parser.parse_args().development_candidate)

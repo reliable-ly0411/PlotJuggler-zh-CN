@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: MPL-2.0
+# Isolated product fix: one complete localized build and the unchanged browser gates.
+name: WASM materialization timer validation
+on:
+  push:
+    branches: ['zh-CN-4.x-feat/wasm-materialization-timer']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: zh4-wasm-timer-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  localized:
+    uses: ./.github/workflows/zh-4x-wasm-lane.yml
+    with:
+      role: localized
+      source_repository: ${{ github.repository }}
+      source_sha: ${{ github.sha }}
+      acceptance_symbol_map: true

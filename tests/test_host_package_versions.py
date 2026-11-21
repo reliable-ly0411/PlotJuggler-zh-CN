@@ -68,6 +68,9 @@ class HostPackageVersionsTests(unittest.TestCase):
             lock.parent.mkdir(parents=True)
             lock.write_text(json.dumps({'repository':'qt/qtbase', 'commit':'pinned',
                             'files': {'LGPL-3.0-only.txt':'hash'}}), encoding='utf-8')
+            (lock.parent / 'registry-lock.json').write_text('{"extensions": []}', encoding='utf-8')
+            (lock.parent / 'registry-provenance.json').write_text(
+                '{"sources": [], "supplement_notices": []}', encoding='utf-8')
             collect(root, build, qt, licenses, lambda url, path, digest: path.write_text('license', encoding='utf-8'))
             self.assertIn('/qt/6.13/6.13.2/single/', (licenses/'Qt-6.13.2/SOURCE.txt').read_text(encoding='utf-8'))
             self.assertFalse((licenses/'Qt-6.11.1').exists())

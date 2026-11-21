@@ -1,0 +1,211 @@
+diff --git a/data_load_csv/CHANGELOG.md b/data_load_csv/CHANGELOG.md
+index e09721e..b052cab 100644
+--- a/data_load_csv/CHANGELOG.md
++++ b/data_load_csv/CHANGELOG.md
+@@ -3,6 +3,16 @@
+ One entry per released version (newest first). Introduced at the version
+ below; for earlier releases see the git history of `data_load_csv/`.
+ 
++## [1.0.9] - 2026-11-16
++
++### Fixed
++- A load in which every row is skipped (for example a custom time format that
++  matches no row) now fails with "No rows imported" and the first skip reason,
++  instead of succeeding with no data. Reloading a file this way used to silently
++  remove the dataset already loaded; it is now kept.
++- The "Rows Skipped" prompt no longer says rows have an incorrect number of
++  columns when they were skipped for an invalid timestamp.
++
+ ## [1.0.8] - 2026-11-08
+ 
+ ### Changed
+diff --git a/data_load_csv/CMakeLists.txt b/data_load_csv/CMakeLists.txt
+index c7693ca..720b327 100644
+--- a/data_load_csv/CMakeLists.txt
++++ b/data_load_csv/CMakeLists.txt
+@@ -54,6 +54,15 @@ target_compile_options(csv_parser_test PRIVATE ${PJ_WARNING_FLAGS})
+ target_link_libraries(csv_parser_test PRIVATE csv_parser_lib GTest::gtest_main)
+ add_test(NAME csv_parser_test COMMAND csv_parser_test)
+ 
++# --- Import test: loads the built plugin and drives it end to end ---
++add_executable(csv_source_test tests/csv_source_test.cpp)
++target_compile_features(csv_source_test PRIVATE cxx_std_20)
++target_compile_options(csv_source_test PRIVATE ${PJ_WARNING_FLAGS})
++target_compile_definitions(csv_source_test PRIVATE CSV_SOURCE_PLUGIN_PATH="$<TARGET_FILE:csv_source_plugin>")
++target_link_libraries(csv_source_test PRIVATE plotjuggler_sdk::plugin_host GTest::gtest_main)
++add_dependencies(csv_source_test csv_source_plugin)
++add_test(NAME csv_source_test COMMAND csv_source_test)
++
+ include(${CMAKE_CURRENT_LIST_DIR}/../cmake/HardenPluginExports.cmake)
+ pj_harden_plugin_exports(csv_source_plugin
+   REQUIRED_EXPORTS PJ_get_data_source_vtable PJ_get_dialog_vtable)
+diff --git a/data_load_csv/csv_source.cpp b/data_load_csv/csv_source.cpp
+index e386ebb..63f56d6 100644
+--- a/data_load_csv/csv_source.cpp
++++ b/data_load_csv/csv_source.cpp
+@@ -130,10 +130,18 @@ class CsvSource : public PJ::FileSourceBase {
+           detail += "Line " + std::to_string(warn.line_number) + ": " + warn.detail + "\n";
+         }
+       }
++      // Nothing survived parsing: fail like any other import error. Reporting success
++      // with zero rows makes the host commit an empty dataset, which on a reload
++      // silently replaces the data the user already had.
++      if (result.lines_processed == 0) {
++        return PJ::unexpected(
++            "No rows imported, " + std::to_string(result.lines_skipped) + " skipped" +
++            (detail.empty() ? std::string{} : " (first: " + detail.substr(0, detail.find('\n')) + ")"));
++      }
+       if (!detail.empty()) {
+         if (!runtimeHost().askContinue(
+-                "Rows Skipped", "Some rows have an incorrect number of columns and will be skipped:\n\n" + detail +
+-                                    "\nContinue loading?")) {
++                "Rows Skipped",
++                "Some rows were not parsed as expected and will be skipped:\n\n" + detail + "\nContinue loading?")) {
+           return PJ::unexpected(std::string("Loading aborted by user"));
+         }
+       }
+diff --git a/data_load_csv/manifest.json b/data_load_csv/manifest.json
+index 7f47a36..0c1d5cb 100644
+--- a/data_load_csv/manifest.json
++++ b/data_load_csv/manifest.json
+@@ -1,7 +1,7 @@
+ {
+   "id": "csv-loader",
+   "name": "CSV Loader",
+-  "version": "1.0.8",
++  "version": "1.0.9",
+   "description": "Data loader for CSV files.",
+   "author": "PlotJuggler Team",
+   "publisher": "PlotJuggler",
+diff --git a/data_load_csv/tests/csv_source_test.cpp b/data_load_csv/tests/csv_source_test.cpp
+new file mode 100644
+index 0000000..5514b18
+--- /dev/null
++++ b/data_load_csv/tests/csv_source_test.cpp
+@@ -0,0 +1,126 @@
++// Drives the built CSV plugin end to end through a minimal recording host.
++#include <gtest/gtest.h>
++
++#include <filesystem>
++#include <fstream>
++#include <pj_base/sdk/plugin_data_api.hpp>
++#include <pj_base/sdk/service_traits.hpp>
++#include <pj_plugins/host/data_source_library.hpp>
++#include <pj_plugins/host/service_registry_builder.hpp>
++#include <string>
++#include <vector>
++
++namespace {
++
++struct RecordingHost {
++  int records = 0;
++  std::vector<std::string> prompts;  // "title|message" of every message box, answered with Continue
++
++  static bool ensureTopic(void*, PJ_string_view_t, PJ_topic_handle_t* out, PJ_error_t*) noexcept {
++    *out = PJ_topic_handle_t{1};
++    return true;
++  }
++  static bool ensureField(
++      void*, PJ_topic_handle_t topic, PJ_string_view_t, PJ_primitive_type_t, PJ_field_handle_t* out,
++      PJ_error_t*) noexcept {
++    *out = PJ_field_handle_t{topic, 1};
++    return true;
++  }
++  static bool appendBoundRecord(
++      void* ctx, PJ_topic_handle_t, int64_t, const PJ_bound_field_value_t*, uint64_t, PJ_error_t*) noexcept {
++    ++static_cast<RecordingHost*>(ctx)->records;
++    return true;
++  }
++};
++
++struct ImportOutcome {
++  bool ok = false;
++  std::string error;
++};
++
++/// Writes `csv` to a temp file and imports it with `config` (filepath added) into `host`.
++ImportOutcome importCsv(const std::string& csv, std::string config, RecordingHost& host) {
++  const auto path =
++      std::filesystem::temp_directory_path() /
++      ("csv_source_test_" + std::string(::testing::UnitTest::GetInstance()->current_test_info()->name()) + ".csv");
++  std::ofstream(path) << csv;
++
++  static const PJ_source_write_host_vtable_t kWrite = [] {
++    PJ_source_write_host_vtable_t vtable{};
++    vtable.abi_version = PJ_PLUGIN_DATA_API_VERSION;
++    vtable.struct_size = sizeof(vtable);
++    vtable.ensure_topic = &RecordingHost::ensureTopic;
++    vtable.ensure_field = &RecordingHost::ensureField;
++    vtable.append_bound_record = &RecordingHost::appendBoundRecord;
++    return vtable;
++  }();
++  static const PJ_data_source_runtime_host_vtable_t kRuntime = [] {
++    PJ_data_source_runtime_host_vtable_t vtable{};
++    vtable.protocol_version = 1;
++    vtable.struct_size = sizeof(vtable);
++    vtable.report_message = [](void*, PJ_data_source_message_level_t, PJ_string_view_t) noexcept {};
++    vtable.progress_start = [](void*, PJ_string_view_t, uint64_t, bool, PJ_error_t*) noexcept { return true; };
++    vtable.progress_update = [](void*, uint64_t) noexcept { return true; };
++    vtable.progress_finish = [](void*) noexcept {};
++    vtable.is_stop_requested = [](void*) noexcept { return false; };
++    vtable.notify_state = [](void*, PJ_data_source_state_t) noexcept {};
++    vtable.show_message_box = [](void* ctx, PJ_message_box_type_t, PJ_string_view_t title, PJ_string_view_t message,
++                                 int) noexcept -> int {
++      static_cast<RecordingHost*>(ctx)->prompts.push_back(
++          std::string(title.data, title.size) + "|" + std::string(message.data, message.size));
++      return PJ_MSG_BTN_CONTINUE;
++    };
++    return vtable;
++  }();
++
++  ImportOutcome outcome;
++  auto library = PJ::DataSourceLibrary::load(std::string(CSV_SOURCE_PLUGIN_PATH));
++  if (!library) {
++    outcome.error = "load: " + library.error();
++    return outcome;
++  }
++  auto handle = library->createHandle();
++  PJ::ServiceRegistryBuilder registry;
++  registry.registerService<PJ::sdk::SourceWriteHostService>(PJ_source_write_host_t{.ctx = &host, .vtable = &kWrite});
++  registry.registerService<PJ::sdk::DataSourceRuntimeHostService>(
++      PJ_data_source_runtime_host_t{.ctx = &host, .vtable = &kRuntime});
++  config.insert(1, R"("filepath":")" + path.generic_string() + R"(",)");
++  if (auto status = handle.bind(registry.view()); !status) {
++    outcome.error = "bind: " + status.error();
++  } else if (status = handle.loadConfig(config); !status) {
++    outcome.error = "loadConfig: " + status.error();
++  } else if (status = handle.start(); !status) {
++    outcome.error = status.error();
++  } else {
++    outcome.ok = true;
++  }
++  std::filesystem::remove(path);
++  return outcome;
++}
++
++// QA repro: a custom time format no row matches. Reporting success with zero rows
++// made the host commit an empty dataset over the one being reloaded.
++TEST(CsvSourceTest, ImportWithEveryRowSkippedFails) {
++  RecordingHost host;
++  const auto outcome = importCsv(
++      "time,a\n0.00,1\n0.01,2\n",
++      R"({"time_mode":"column","time_column_index":0,"use_custom_format":true,)"
++      R"("custom_time_format":"yyyy-MM-dd hh:mm:ss"})",
++      host);
++  EXPECT_FALSE(outcome.ok);
++  EXPECT_NE(outcome.error.find("Invalid timestamp"), std::string::npos) << outcome.error;
++  EXPECT_EQ(host.records, 0);
++}
++
++TEST(CsvSourceTest, RowsSkippedPromptDoesNotBlameColumnCountForBadTimestamps) {
++  RecordingHost host;
++  const auto outcome =
++      importCsv("time,a\n0.0,1\nnot_a_time,2\n0.2,3\n", R"({"time_mode":"column","time_column_index":0})", host);
++  ASSERT_TRUE(outcome.ok) << outcome.error;
++  EXPECT_EQ(host.records, 2);
++  ASSERT_EQ(host.prompts.size(), 1u);
++  EXPECT_NE(host.prompts[0].find("Invalid timestamp"), std::string::npos) << host.prompts[0];
++  EXPECT_EQ(host.prompts[0].find("incorrect number of columns"), std::string::npos) << host.prompts[0];
++}
++
++}  // namespace

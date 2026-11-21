@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
 """Exercise real ELF dependency discovery and generated Debian control fields."""
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -13,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 @unittest.skipUnless(all(shutil.which(x) for x in ('gcc', 'dpkg-deb', 'readelf', 'file')),
                      'Linux packaging tools required')
 class DebDependenciesTest(unittest.TestCase):
-    def build_fixture(self, directory, soname):
+    def build_fixture(self, directory, soname, version=None):
         root = Path(directory)
         app = root / 'AppDir'
         for sub in ('bin', 'lib', 'share/applications', 'share/icons/hicolor/256x256/apps',
@@ -34,7 +35,8 @@ class DebDependenciesTest(unittest.TestCase):
                         '-l:' + soname, '-o', str(app / 'usr/lib/consumer.so')], check=True)
         return subprocess.run(['bash', str(ROOT / 'packaging/deb/build_deb.sh'),
                                '--appdir', str(app), '--output-dir', str(root / 'out')],
-                              text=True, capture_output=True)
+                              text=True, capture_output=True,
+                              env={**os.environ, **({"PJ_VERSION": version} if version else {})})
 
     def test_readline_dependency_preserves_alternative(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -44,6 +46,15 @@ class DebDependenciesTest(unittest.TestCase):
             depends = subprocess.check_output(['dpkg-deb', '-f', str(package), 'Depends'], text=True)
             self.assertIn('libreadline8 | libreadline8t64', depends)
             self.assertNotIn(', |,', depends)
+
+    def test_development_control_and_filename_use_candidate_mapping(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = self.build_fixture(tmp, 'libreadline.so.8', '4.1.0-zh.1.dev.3')
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            package = next((Path(tmp) / 'out').glob('*.deb'))
+            version = subprocess.check_output(['dpkg-deb', '-f', str(package), 'Version'], text=True).strip()
+            self.assertEqual(version, '4.1.0~zh.1~dev.3-1')
+            self.assertEqual(package.name, 'plotjuggler4_' + version + '_amd64.deb')
 
     def test_unknown_dependency_remains_blocked(self):
         with tempfile.TemporaryDirectory() as tmp:

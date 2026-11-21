@@ -1,14 +1,6 @@
 # ---------------------------------------------------------------------------
 # pj_datastore — columnar storage engine for the PlotJuggler application.
-#
-# Depends on pj_base + fmt (both provided by the plotjuggler_sdk SDK submodule,
-# which the root CMakeLists adds BEFORE this module so their targets exist) plus
-# tsl::robin_map + nanoarrow.
-#
-# This module was previously part of the plotjuggler_sdk submodule. The
-# external-dependency detection below (tsl-robin-map / benchmark / nanoarrow /
-# nanoarrow_ipc) was relocated here from that submodule's root CMakeLists when
-# the engine moved into the application repo.
+# The root CMakeLists provides the plotjuggler_sdk and fmt targets before it adds this module.
 # ---------------------------------------------------------------------------
 
 option(
@@ -19,113 +11,14 @@ option(
 
 find_package(tsl-robin-map REQUIRED)
 find_package(nlohmann_json REQUIRED)  # marker_topic_metadata.cpp
-# Google Benchmark is skipped in the MemorySanitizer lane. That lane builds four
-# named test executables and no benchmarks, so requiring the package would mean
-# instrumenting a library nothing in the lane links — and google-benchmark's own
-# regex-backend detection fails to configure against an instrumented libc++.
+# Google Benchmark is skipped in the MemorySanitizer lane, which builds no benchmarks: requiring it would mean
+# instrumenting a library nothing there links, and its regex-backend detection fails against an instrumented libc++.
 if(PJ_BUILD_TESTS AND NOT PJ_ENABLE_MSAN)
   find_package(benchmark CONFIG REQUIRED)
 endif()
 
-# --- nanoarrow core ---
-# nanoarrow >= 0.8 links its IPC target to zstd::libzstd and lz4::lz4, but its
-# config looks neither up (no find_dependency), and some lz4 packages ship no
-# CMake config at all: provide whichever target is missing before nanoarrow.
-find_package(zstd CONFIG QUIET)
-find_package(lz4 CONFIG QUIET)
-foreach(_pj_codec IN ITEMS zstd lz4)
-  if(_pj_codec STREQUAL "zstd")
-    set(_pj_codec_target zstd::libzstd)
-  else()
-    set(_pj_codec_target lz4::lz4)
-  endif()
-  if(NOT TARGET ${_pj_codec_target})
-    find_library(PJ_${_pj_codec}_LIBRARY NAMES ${_pj_codec} lib${_pj_codec})
-    find_path(PJ_${_pj_codec}_INCLUDE_DIR NAMES ${_pj_codec}.h)
-    if(PJ_${_pj_codec}_LIBRARY AND PJ_${_pj_codec}_INCLUDE_DIR)
-      add_library(${_pj_codec_target} UNKNOWN IMPORTED)
-      set_target_properties(${_pj_codec_target} PROPERTIES
-        IMPORTED_LOCATION "${PJ_${_pj_codec}_LIBRARY}"
-        INTERFACE_INCLUDE_DIRECTORIES "${PJ_${_pj_codec}_INCLUDE_DIR}")
-    endif()
-  endif()
-endforeach()
-find_package(nanoarrow CONFIG QUIET)
-
-set(PJ_NANOARROW_TARGET "")
-if(TARGET nanoarrow::nanoarrow)
-  set(PJ_NANOARROW_TARGET nanoarrow::nanoarrow)
-elseif(TARGET nanoarrow::nanoarrow_static)
-  set(PJ_NANOARROW_TARGET nanoarrow::nanoarrow_static)
-elseif(TARGET nanoarrow::nanoarrow_shared)
-  set(PJ_NANOARROW_TARGET nanoarrow::nanoarrow_shared)
-else()
-  find_package(PkgConfig QUIET)
-  if(PkgConfig_FOUND)
-    pkg_check_modules(NANOARROW QUIET nanoarrow)
-    if(NANOARROW_FOUND)
-      add_library(pj_nanoarrow INTERFACE)
-      target_include_directories(pj_nanoarrow INTERFACE
-        ${NANOARROW_INCLUDE_DIRS}
-      )
-      target_link_libraries(pj_nanoarrow INTERFACE ${NANOARROW_LIBRARIES})
-      set(PJ_NANOARROW_TARGET pj_nanoarrow)
-    endif()
-  endif()
-endif()
-
-if(PJ_NANOARROW_TARGET STREQUAL "")
-  message(FATAL_ERROR
-    "nanoarrow is required for pj_datastore. "
-    "Install nanoarrow and expose a CMake target "
-    "(nanoarrow::nanoarrow / nanoarrow::nanoarrow_static / nanoarrow::nanoarrow_shared) "
-    "or provide a pkg-config entry named 'nanoarrow'."
-  )
-endif()
-
-# --- nanoarrow IPC ---
-set(PJ_NANOARROW_IPC_TARGET "")
-if(TARGET nanoarrow::nanoarrow_ipc)
-  set(PJ_NANOARROW_IPC_TARGET nanoarrow::nanoarrow_ipc)
-elseif(TARGET nanoarrow::nanoarrow_ipc_static)
-  set(PJ_NANOARROW_IPC_TARGET nanoarrow::nanoarrow_ipc_static)
-elseif(TARGET nanoarrow::nanoarrow_ipc_shared)
-  set(PJ_NANOARROW_IPC_TARGET nanoarrow::nanoarrow_ipc_shared)
-else()
-  find_package(PkgConfig QUIET)
-  if(PkgConfig_FOUND)
-    pkg_check_modules(NANOARROW_IPC QUIET nanoarrow_ipc)
-    if(NANOARROW_IPC_FOUND)
-      add_library(pj_nanoarrow_ipc INTERFACE)
-      target_include_directories(pj_nanoarrow_ipc INTERFACE
-        ${NANOARROW_IPC_INCLUDE_DIRS}
-      )
-      target_link_libraries(pj_nanoarrow_ipc INTERFACE ${NANOARROW_IPC_LIBRARIES})
-      set(PJ_NANOARROW_IPC_TARGET pj_nanoarrow_ipc)
-    endif()
-  endif()
-endif()
-
-if(PJ_NANOARROW_IPC_TARGET STREQUAL "")
-  message(FATAL_ERROR
-    "nanoarrow IPC is required for pj_datastore. "
-    "Install nanoarrow with IPC support and expose a CMake target "
-    "(nanoarrow::nanoarrow_ipc / nanoarrow::nanoarrow_ipc_static / nanoarrow::nanoarrow_ipc_shared) "
-    "or provide a pkg-config entry named 'nanoarrow_ipc'."
-  )
-endif()
-
-# nanoarrow IPC internally depends on the flatcc runtime (libflatccrt).
-# Some package managers (e.g. Conan) bundle it alongside the IPC library
-# but don't declare it as a transitive link dependency. Since the IPC target
-# already sets INTERFACE_LINK_DIRECTORIES, linking by name suffices.
-# Upstream nanoarrow configs expose the preferred name as an ALIAS, which
-# target_link_libraries rejects — resolve to the underlying target first.
-get_target_property(_pj_nanoarrow_ipc_real ${PJ_NANOARROW_IPC_TARGET} ALIASED_TARGET)
-if(NOT _pj_nanoarrow_ipc_real)
-  set(_pj_nanoarrow_ipc_real ${PJ_NANOARROW_IPC_TARGET})
-endif()
-target_link_libraries(${_pj_nanoarrow_ipc_real} INTERFACE flatccrt)
+# nanoarrow::nanoarrow + nanoarrow::nanoarrow_ipc: an installed package, else the pinned source.
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/PjNanoarrow.cmake)
 
 # ---------------------------------------------------------------------------
 # Library
@@ -152,9 +45,7 @@ add_library(pj_datastore STATIC
   src/object_store.cpp
   src/marker_topic_metadata.cpp
   src/resident_payload_pool.cpp
-  # Data-processor execution substrate (the DataProcessor base + ProcessorSisoAdapter
-  # that runs a processor as an IncrementalEngine node — moved here from the retired pj_proc
-  # module; lives WITH the ISISOTransform interface it adapts to).
+  # PJ::proc, next to the ISISOTransform interface ProcessorSisoAdapter implements.
   src/data_processor.cpp
   src/processor_siso_adapter.cpp
 )
@@ -179,8 +70,8 @@ target_link_libraries(pj_datastore
     tsl::robin_map
     nlohmann_json::nlohmann_json
     $<BUILD_INTERFACE:pj_internal_fmt>
-    ${PJ_NANOARROW_TARGET}
-    ${PJ_NANOARROW_IPC_TARGET}
+    nanoarrow::nanoarrow
+    nanoarrow::nanoarrow_ipc
 )
 
 # ---------------------------------------------------------------------------
@@ -226,10 +117,9 @@ if(PJ_BUILD_TESTS)
     # the plugin SDK for message_parser_plugin_base.hpp and builtin object types.
     tests/plugin_parser_object_write_test.cpp
 
-    # Arrow import test (needs nanoarrow explicitly for building test IPC data)
+    # Builds its IPC input with nanoarrow, linked below.
     tests/arrow_import_test.cpp
 
-    # v4 Arrow C Data Interface round-trip test (Phase 1b).
     tests/arrow_stream_round_trip_test.cpp
   )
 
@@ -242,7 +132,7 @@ if(PJ_BUILD_TESTS)
     SOURCES ${PJ_DATASTORE_TESTS}
     LIBS
       pj_datastore plotjuggler_sdk::plugin_sdk
-      ${PJ_NANOARROW_TARGET} ${PJ_NANOARROW_IPC_TARGET}
+      nanoarrow::nanoarrow nanoarrow::nanoarrow_ipc
   )
 
   # Death tests need a separate executable; the concurrency target names are
@@ -259,10 +149,8 @@ if(PJ_BUILD_TESTS)
     add_test(NAME ${test_name} COMMAND ${test_name})
   endforeach()
 
-  # The concurrency / thread-safety tests must fail LOUDLY on a deadlock rather
-  # than hang the whole ctest run — a lock-ordering regression (e.g. an ABBA in
-  # the write-host secondary mirror) is exactly the bug class they guard. This is
-  # the per-test floor; CI also passes a global --timeout.
+  # A deadlock must fail these tests, not hang ctest: lock-ordering regressions are what they guard. CI also passes a
+  # global --timeout.
   set_tests_properties(engine_concurrency_test engine_thread_safety_test
     PROPERTIES TIMEOUT 90)
 
@@ -283,8 +171,7 @@ if(PJ_BUILD_TESTS)
     add_test(NAME sanitizer_msan_selftest COMMAND sanitizer_msan_selftest)
     # PASS only on the MSan report itself. WILL_FAIL would also accept a loader
     # error or a runtime startup abort that never reached the deliberate read,
-    # and a lane that cannot detect that read proves nothing about the 487
-    # tests that pass beside it.
+    # and a lane that cannot detect that read proves nothing about the tests that pass beside it.
     set_tests_properties(sanitizer_msan_selftest PROPERTIES
       PASS_REGULAR_EXPRESSION "MemorySanitizer: use-of-uninitialized-value"
       ENVIRONMENT "MSAN_OPTIONS=halt_on_error=1:exitcode=77:abort_on_error=0"
@@ -319,9 +206,7 @@ if(PJ_BUILD_TESTS)
     target_link_libraries(ingest_benchmark PRIVATE pj_datastore benchmark::benchmark)
   endif()
 
-  # Threaded contention probe for the reader-writer lock (plain main(), not the
-  # google-benchmark micro-loop model — contention is duration-based). Threads
-  # for the writer/reader; no benchmark::benchmark dependency.
+  # Contention probe for the engine lock: plain main(), since contention is measured over time, not in a micro-loop.
   find_package(Threads REQUIRED)
   add_executable(concurrency_benchmark benchmarks/concurrency_benchmark.cpp)
   target_link_libraries(concurrency_benchmark PRIVATE pj_datastore Threads::Threads)

@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <cmath>
 #include <memory>
 #include <optional>
 
@@ -23,12 +24,16 @@ namespace PJ {
 
 namespace {
 
-// The host-namespaced form of a plugin's own tab name. It becomes the docker's
-// stateId, which is what stops two plugins choosing the same name from ever
-// addressing each other's tab.
+// Becomes the docker's stateId, so two plugins choosing the same name never address each other's tab.
 QString ownedTabKey(const QString& plugin_id, const QString& tab_id) {
   return plugin_id + u"/"_s + tab_id;
 }
+
+// 2^62 ns: a display edge plus an epoch offset of this size stays inside int64 ns (`displaySecondsToRaw` rounds to
+// nanoseconds, undefined beyond it), and a wider axis overflows Qwt's scale division, which leaves it at 0..0.
+constexpr double kMaxAxisSeconds = 4.6e9;
+// A narrower window collapses the axis.
+constexpr double kMinAxisSpanSeconds = 1e-9;
 
 /// The ABI error for a tab id the calling plugin does not own (or that does not exist).
 Unexpected<std::string> noOwnedTabError(const QString& tab_id) {
@@ -113,8 +118,7 @@ ViewportRuntimeHost::Callbacks PluginPlotTabsController::viewportCallbacks(const
 
 void PluginPlotTabsController::forEachPlotOwnedBy(
     const QString& plugin_id, const QString& tab_id, const std::function<void(PlotWidget*)>& operation) const {
-  // This is where the boundary is actually enforced: a plugin drives the view
-  // only where the user can see it is driving.
+  // The ownership boundary for view commands: a plugin drives only its own tabs.
   const QString tab_key = tab_id.isEmpty() ? QString() : ownedTabKey(plugin_id, tab_id);
   tabs_.forEachDocker([&plugin_id, &tab_key, &operation](PlotDocker* docker) {
     if (docker->ownerPlugin() != plugin_id || (!tab_key.isEmpty() && docker->stateId() != tab_key)) {
@@ -133,6 +137,10 @@ void PluginPlotTabsController::forEachPlotOwnedBy(
 
 Status PluginPlotTabsController::zoomToTimeRange(
     const QString& plugin_id, double t0_s, double t1_s, const QString& tab_id) {
+  // NaN fails every comparison, so it is refused too.
+  if (!(std::abs(t0_s) <= kMaxAxisSeconds && std::abs(t1_s) <= kMaxAxisSeconds && t1_s - t0_s >= kMinAxisSpanSeconds)) {
+    return unexpected("the zoom range must lie within +-4.6e9 s and be at least 1 ns wide");
+  }
   // An explicit command sets every plot itself, so there is no link feedback to propagate.
   int owned = 0;
   int zoomed = 0;
@@ -147,9 +155,7 @@ Status PluginPlotTabsController::zoomToTimeRange(
   if (zoomed != 0) {
     return okStatus();
   }
-  // Two distinct dead ends with two distinct remedies — open a tab, or put
-  // something in the one you have. Saying only "nothing to zoom" would leave a
-  // caller repeating whichever of the two it guessed.
+  // Two dead ends, two remedies (open a tab, or fill the one you have), so two messages.
   if (!tab_id.isEmpty()) {
     return unexpected(
         owned == 0 ? "this plugin owns no plot tab '" + tab_id.toStdString() + "'"
@@ -164,7 +170,7 @@ Status PluginPlotTabsController::zoomOut(const QString& plugin_id, const QString
   int owned = 0;
   forEachPlotOwnedBy(plugin_id, tab_id, [&owned](PlotWidget* plot) {
     ++owned;
-    plot->zoomOut(false);
+    plot->zoomOutUnlinked();
   });
   if (owned == 0) {
     return unexpected(
@@ -175,9 +181,8 @@ Status PluginPlotTabsController::zoomOut(const QString& plugin_id, const QString
 }
 
 PlotDocker* PluginPlotTabsController::ownedTab(const QString& plugin_id, const QString& tab_id) const {
-  // Ownership is only ever established in createTab, which stamps both the
-  // namespaced stateId and the owner metadata; requiring both to agree is what
-  // keeps a user-made tab from ever answering to a plugin.
+  // newOwnedTab stamps both the namespaced stateId and the owner metadata (a layout file restores both);
+  // requiring both to agree keeps a user-made tab from answering to a plugin.
   const QString key = ownedTabKey(plugin_id, tab_id);
   return tabs_.findDocker(
       [&](PlotDocker* docker) { return docker->stateId() == key && docker->ownerPlugin() == plugin_id; });
@@ -194,8 +199,6 @@ PlotDocker* PluginPlotTabsController::newOwnedTab(
     return nullptr;
   }
   docker->setStateId(ownedTabKey(plugin_id, tab_id));
-  // Plugin composition has no history step: the tab is outside undo/redo even
-  // though it is durable in a full layout file.
   docker->setHistoryExempt(true);
   docker->setOwnerMetadata(plugin_id, tab_id);
   docker->setOwnerBadge(displayToolboxBadge(extensions_, plugin_id));
@@ -294,9 +297,7 @@ Expected<std::string> PluginPlotTabsController::tabConfig(const QString& plugin_
       continue;
     }
     for (const auto& info : plot->curveList()) {
-      // Reported from the catalog entry the curve is actually bound to, so the
-      // dataset named here is the resolved one even when the caller left it
-      // blank — the point of a read-back is to answer "which run is this?".
+      // The dataset the curve is bound to, even when the caller left it blank.
       const std::optional<CatalogItem> item = catalog_.itemDescriptor(info.source_name);
       if (!item.has_value()) {
         continue;
@@ -342,9 +343,15 @@ Status PluginPlotTabsController::addCurve(
   if (plot == nullptr) {
     return unexpected("the tab has no plot to draw in");
   }
-  // A null return here means the title is taken, i.e. the curve is already drawn.
-  plot->addCurve(*key);
-  plot->replot();
+  // The first curve fits the plot to its data: an empty plot's 0..1 window shows none of it. A plot that already has
+  // curves keeps the caller's view. A null return means the title is taken, i.e. already drawn. Unlinked, so a series
+  // whose rows arrive later does not move the user's linked plots.
+  const bool was_empty = plot->isEmpty();
+  if (plot->addCurve(*key) != nullptr && was_empty) {
+    plot->zoomOutUnlinked();
+  } else {
+    plot->replot();
+  }
   return okStatus();
 }
 

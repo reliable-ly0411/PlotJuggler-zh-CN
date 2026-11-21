@@ -50,7 +50,7 @@ class OwnedOutputSourceTests(unittest.TestCase):
 set(Qt6_VERSION 6.12.0)
 set(Qt6Core_VERSION_MAJOR 6)
 set(Qt6Core_VERSION_MINOR 12)
-foreach(c Core Widgets Network)
+foreach(c Core Widgets Network Svg)
  set(Qt6${c}_FOUND TRUE)
  if(NOT TARGET Qt6::${c})
   add_library(Qt6::${c} INTERFACE IMPORTED)

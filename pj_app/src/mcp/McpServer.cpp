@@ -55,7 +55,7 @@ namespace {
 /// The indicator goes away this long after a client's last request (HTTP here is one request per
 /// connection, so there is no "disconnected").
 constexpr int kClientIdleMs = 120'000;
-/// How often a deferred result (an object evaluation) is polled, as the Assistant's GUI tick does.
+/// How often a deferred result (an object evaluation) is polled.
 constexpr int kResumeIntervalMs = 50;
 #ifndef PJ_TARGET_WASM
 /// The socket property naming the token its request was accepted with, so a revoke can close it.
@@ -507,6 +507,22 @@ void McpServer::callTool(const std::string& name, const json& args, const Caller
       (this->*tool->second)(args, caller, reply);
       return;
     }
+#ifndef PJ_TARGET_WASM
+    if (mcp::isUiTool(name) && isPublic(caller) && mcp::uiToolsEnabled()) {
+      const int settle = mcp::uiSettleMs(name, args);
+      json result = ui_driver_.call(name, args);
+      // The input is queued: answer once the app had time to handle it, from the event loop, which
+      // also runs inside a modal dialog the input opened.
+      if (settle > 0) {
+        QTimer::singleShot(settle, this, [reply = std::move(reply), result = std::move(result)]() mutable {
+          reply(std::move(result));
+        });
+      } else {
+        reply(std::move(result));
+      }
+      return;
+    }
+#endif
     const bool agent_tool = mcp::agentTools().find(name) != nullptr;
     const auto app_tool = !agent_tool && isPublic(caller) ? appTools().find(name) : appTools().end();
     if (!agent_tool && app_tool == appTools().end()) {
@@ -935,7 +951,7 @@ json McpServer::jobStatus(const Job& job) {
     status["progress"] = job.progress();
   }
   if (job.killing && !ended(job)) {
-    status["stopping"] = true;  // asked to stop, still winding down
+    status["stopping"] = true;
   }
   return status;
 }

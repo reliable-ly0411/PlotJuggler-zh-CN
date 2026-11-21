@@ -19,7 +19,7 @@ struct InstalledExtension {
   QString id;  ///< Matches Extension::id from the registry
   QString version;
   QDateTime install_date;
-  QString path;  ///< Absolute path to <config-root>/extensions/<id>/
+  QString path;  ///< Absolute path of the scanned directory; its name is not necessarily the id.
   bool enabled = true;
 
   QString name;         ///< Manifest display name; falls back to id when the manifest omits it
@@ -37,17 +37,14 @@ struct InstalledExtension {
   /// not expose it, in which case the loader's ABI-symbol check remains the
   /// authoritative gate.
   uint32_t abi_major = 0;
-  /// Manifest `min_sdk_required`: the oldest SDK contract whose API the plugin
-  /// requires. Empty means undeclared. Unlike the application release floor,
-  /// this is a hard host-side load gate defined by the SDK.
+  /// Manifest `min_sdk_required`: the oldest SDK contract whose API the plugin requires; empty means undeclared. A hard
+  /// host-side gate.
   QString min_sdk_required;
-  /// Manifest `min_plotjuggler_version`. Deprecated: read for back-compat,
-  /// never gates (abi_major is the generation gate; app-level feature gaps
-  /// degrade rather than block).
+  /// Manifest `min_plotjuggler_version`. Deprecated: read and displayed, never gates (abi_major is the generation
+  /// gate; app-level feature gaps degrade rather than block).
   QString min_plotjuggler_version;
-  /// Manifest `suggested_sdk_version`: the full-feature floor. Informational —
-  /// drives the reduced-features note, never an admission criterion. Empty
-  /// means full features at min_sdk_required.
+  /// Manifest `suggested_sdk_version`: the full-feature floor. Informational (drives the reduced-features note), never
+  /// an admission criterion. Empty means full features at min_sdk_required.
   QString suggested_sdk_version;
 };
 

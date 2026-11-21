@@ -76,7 +76,9 @@ def prepare(source, build, output, config, platform, archive=None):
     manifest_bytes = manifest_path.read_bytes()
     manifest = json.loads(manifest_bytes.decode('utf-8'))
     baseline = json.loads((source/'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))['ardupilot_plugin']
-    require(manifest['id'] == 'ardupilot-dataflash' and manifest['version'] == baseline['version'], 'APBIN manifest differs')
+    require(manifest['id'] == 'ardupilot-dataflash' and manifest['version'] == baseline['version'],
+            f"APBIN manifest differs: expected ardupilot-dataflash={baseline['version']}, "
+            f"got {manifest['id']}={manifest['version']}")
     require(manifest['license'] == baseline['license'], 'APBIN license differs')
     output.mkdir(parents=True)
     for identifier, files in [('ardupilot-dataflash', {selected.name: apbin_bytes, 'manifest.json': manifest_bytes}),

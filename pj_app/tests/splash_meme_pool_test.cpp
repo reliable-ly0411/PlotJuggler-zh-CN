@@ -16,6 +16,15 @@
 #include "AppLanguage.h"
 #include "Splashscreen.h"
 
+// Q_INIT_RESOURCE / Q_CLEANUP_RESOURCE declare their functions in the current scope, so they must be used outside
+// any namespace.
+static void unregisterMemePool() {
+  Q_CLEANUP_RESOURCE(memes);
+}
+static void registerMemePool() {
+  Q_INIT_RESOURCE(memes);
+}
+
 using namespace Qt::StringLiterals;
 
 namespace PJ {
@@ -35,7 +44,7 @@ QStringList sourcePool() {
   return memesIn(QString::fromUtf8(PJ_MEMES_SOURCE_DIR));
 }
 
-// rcc has no globbing, so a meme reaches the splash only if resources.qrc lists
+// rcc has no globbing, so a meme reaches the splash only if memes.qrc lists
 // it explicitly. A file added to the directory but left out of the manifest is
 // invisible at runtime with no build error and no warning — it simply never
 // shows, and the only symptom is a meme nobody ever sees.
@@ -97,7 +106,7 @@ TEST(SplashMemePool, EveryMemeOnDiskIsListedInTheManifest) {
   const QStringList compiled = compiledPool();
   for (const QString& meme : on_disk) {
     EXPECT_TRUE(compiled.contains(meme)) << meme.toStdString()
-                                         << " exists in resources/memes/ but is missing from resources.qrc, "
+                                         << " exists in resources/memes/ but is missing from memes.qrc, "
                                          << "so the splash can never show it";
   }
 }
@@ -112,7 +121,7 @@ TEST(SplashMemePool, EveryCompiledMemeDecodes) {
   const QDir dir(u":/resources/memes"_s);
   for (const QString& meme : compiled) {
     EXPECT_FALSE(QPixmap(dir.filePath(meme)).isNull())
-        << meme.toStdString() << " is listed in resources.qrc but does not decode; the splash would come up blank";
+        << meme.toStdString() << " is listed in memes.qrc but does not decode; the splash would come up blank";
   }
 }
 
@@ -135,9 +144,8 @@ TEST(SplashMemePool, CapNeverUpscalesAPoolMeme) {
   }
 }
 
-// A width-only cap leaves a tall image at full height, which is what put an
-// 883px-tall meme on screen. Synthetic sizes pin both orientations regardless of
-// what the pool happens to contain today.
+// A width-only cap would leave a tall image at full height. Synthetic sizes pin both orientations whatever the
+// pool holds.
 TEST(SplashMemePool, CapBoundsPortraitAndLandscapeAlike) {
   QPixmap landscape(1200, 300);
   landscape.fill(Qt::red);
@@ -165,6 +173,21 @@ TEST(SplashMemePool, CapLeavesImagesInsideTheBoxUntouched) {
   EXPECT_EQ(capMemeToSplashBox(exactly_at_the_bound).size(), exactly_at_the_bound.size());
 }
 
+// A funny splash request over an empty image pool must still show the serious
+// banner. Localized catalog metadata is not an image in the English pool.
+TEST(SplashMemePool, EmptyPoolFallsBackToTheSeriousSplash) {
+  const AppLanguage language(*qApp, u"en_US"_s);
+  QSettings settings;
+  settings.setValue(kSplashModeKey, kSplashModeMemes);
+  unregisterMemePool();
+  EXPECT_TRUE(compiledPool().isEmpty());
+  const QPixmap splash = makeStartupSplash();
+  EXPECT_FALSE(splash.isNull());
+  EXPECT_EQ(splash.deviceIndependentSize(), QSizeF(720, 300));
+  registerMemePool();
+  EXPECT_FALSE(compiledPool().isEmpty());
+}
+
 }  // namespace
 }  // namespace PJ
 
@@ -174,6 +197,14 @@ int main(int argc, char** argv) {
   }
   QStandardPaths::setTestModeEnabled(true);
   QApplication app(argc, argv);
+  QTemporaryDir profile;
+  if (!profile.isValid()) {
+    return 1;
+  }
+  QSettings::setDefaultFormat(QSettings::IniFormat);
+  QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, profile.path());
+  QCoreApplication::setOrganizationName(u"PlotJugglerTest"_s);
+  QCoreApplication::setApplicationName(u"SplashMemePool"_s);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

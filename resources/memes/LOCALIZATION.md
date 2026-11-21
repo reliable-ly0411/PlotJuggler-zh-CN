@@ -23,6 +23,14 @@ not assert a new license to underlying films, cartoons, photographs or marks.
 The repository's source-code license does not by itself establish rights to
 those third-party depictions.
 
+The production resource aliases still use the reviewed `.png` names, while
+their packaged bytes use the 31 JPEG derivatives from candidate `d0734db9`
+(quality 90, progressive, 4:4:4). `jpeg-q90-manifest.json` records the original
+PNG and derived JPEG hashes and dimensions. Every original PNG remains in Git,
+unchanged. Qt detects the actual image format; both raw decoding and atlas
+composition remain acceptance gates. The current candidate needs fresh native
+and WASM evidence; the older candidate's measured size is not reused.
+
 Validation: header-only loader and copied Qt compositor compiled with Qt 6.11.1;
 all current translated variants exported successfully offscreen and inspected
 individually. This is Linux pixel validation, not a Windows GUI acceptance run.

@@ -77,17 +77,14 @@ struct QStringHash {
   return u"dataset:%1/object_topic:%2"_s.arg(dataset_id).arg(object_topic_id.id);
 }
 
-// Key for a data-less advertised placeholder. Distinct namespace from the
-// curve/object keys so it never collides with a storage-backed entry.
+// Key for a data-less advertised placeholder; its own namespace so it never collides with a storage-backed key.
 [[nodiscard]] QString makeAdvertisedKey(DatasetId dataset_id, const QString& topic_name) {
   return u"dataset:%1/advertised:%2"_s.arg(dataset_id).arg(topic_name);
 }
 
-// True when `live_path` and `saved_path` name the same on-disk source. Replicates
-// pj_app's layout_xml::isSamePath semantics without depending on it (pj_runtime is
-// below pj_app): literal-equality short-circuit first, then a QFileInfo-based
-// normalisation fallback through SessionManager::normalizedSourcePath. Empty
-// inputs never match.
+// True when `live_path` and `saved_path` name the same on-disk source. Replicates pj_app's layout_xml::isSamePath
+// semantics without depending on it (pj_runtime is below pj_app): literal equality first, then a normalisation through
+// SessionManager::normalizedSourcePath. Empty inputs never match.
 [[nodiscard]] bool isSamePathLike(const QString& live_path, const QString& saved_path) {
   if (live_path.isEmpty() || saved_path.isEmpty()) {
     return false;
@@ -285,7 +282,7 @@ struct CatalogModel::Impl {
   // by the DatasetId the curve belonged to, so a reload (new DatasetId)
   // re-introduces the name.
   tsl::robin_map<DatasetId, NameSet> removed_names_per_dataset;
-  // Plugin-provided tree-root labels (issue #98), keyed by stable DatasetId so
+  // Plugin-provided tree-root labels, keyed by stable DatasetId so
   // they survive rebuilds and clearAll/restoreDataset. Never holds empty values.
   tsl::robin_map<DatasetId, QString> dataset_display_overrides;
 
@@ -499,19 +496,20 @@ std::optional<double> CatalogModel::scalarValueAt(const QString& key, double dis
   if (scalar == nullptr || !isPlottablePrimitive(scalar->logical_type)) {
     return std::nullopt;  // object topics carry no scalar value; strings → stringValueAt
   }
-  // Display-axis seconds -> raw ns through this dataset's display offset, then a
-  // null-aware latest-at-or-before point query (zero-order hold) read under the
-  // engine lock. latestNumericAt distinguishes a null cell from a real 0, so a
-  // sparsely-populated field shows "-" rather than a fabricated "0.000".
+  // The plot tracker's lookup, under the engine lock. The type was checked above,
+  // so read the storage directly rather than through DataReader::series, which
+  // copies the topic's column descriptors on every call (per visible row, 10 Hz).
   const DisplayOffset offset = impl_->session->displayOffset(it->second.dataset_id);
   const Timestamp raw_ns = displaySecondsToRaw(DisplaySeconds{display_seconds}, offset);
-  const DataReader reader(impl_->session->dataEngine());
-  const auto value_or =
-      reader.latestNumericAt(QueryPoint{.topic_id = scalar->topic_id, .t = raw_ns}, scalar->column_index);
-  if (!value_or.has_value() || !value_or->has_value()) {
-    return std::nullopt;  // read error, no row at/before the query time, or null cell
+  const DataEngine& engine = impl_->session->dataEngine();
+  const auto lock = engine.lockEngine();
+  const TopicStorage* storage = engine.getTopicStorage(scalar->topic_id);
+  if (storage == nullptr) {
+    return std::nullopt;
   }
-  return **value_or;
+  const SeriesReader series(storage->sealedChunks(), scalar->column_index, storage->retentionFloor());
+  const auto sample = series.sampleAtOrBeforeTime(raw_ns);
+  return sample.has_value() ? std::optional<double>{sample->value} : std::nullopt;
 }
 
 std::optional<TopicStats> CatalogModel::topicStats(const QString& key) const {
@@ -717,8 +715,8 @@ std::optional<QString> CatalogModel::resolveCurveKey(
   }
 
   // Legacy/generic unqualified layouts may target a structurally similar
-  // recording. Accept exactly one candidate; duplicates stay unresolved (the
-  // reported multi-dataset bug was this scan taking the first match).
+  // recording. Accept exactly one candidate; duplicates stay unresolved (taking the
+  // first match binds the layout to an arbitrary dataset).
   std::optional<QString> unique_match;
   for (const auto& [id, name] : datasets()) {
     (void)name;
@@ -770,23 +768,19 @@ std::optional<CurveDescriptor> CatalogModel::descriptorForPath(
 }
 
 void CatalogModel::rebuildFromDatastore() {
-  // Keep the samplesIngested gate's cache in sync after EVERY rebuild — whether
-  // triggered by the gate or by an explicit caller (load completion, dataset
-  // removal, display-name change) — so the next ingest can correctly skip. The
-  // fingerprint is taken BEFORE the rebuild: a worker commit landing while the
-  // rebuild reads the datastore then differs from the saved value, so the next
-  // ingest rebuilds again instead of skipping past a change the rebuild missed.
+  // Keep the samplesIngested gate's cache in sync after EVERY rebuild (gate-triggered or an explicit caller: load
+  // completion, dataset removal, display-name change) so the next ingest can skip correctly. The fingerprint is taken
+  // BEFORE the rebuild: a worker commit landing while the rebuild reads the datastore then differs from the saved
+  // value, so the next ingest rebuilds again instead of skipping past a change the rebuild missed.
   const std::uint64_t fingerprint = catalogFingerprint();
   rebuildNow();
   impl_->last_fingerprint = fingerprint;
 }
 
 void CatalogModel::rebuildIfChanged() {
-  // Gate for the high-frequency samplesIngested path: a full rebuild re-scans and
-  // re-allocates every curve key/label, but most ingest batches only append rows.
-  // Skip when nothing that affects catalog contents changed since the last
-  // rebuild. Stays synchronous (no timer), so callers that read the catalog right
-  // after a structural commit still see it updated.
+  // Gate for the high-frequency samplesIngested path: a full rebuild re-scans and re-allocates every curve key/label,
+  // but most ingest batches only append rows, so skip when nothing affecting catalog contents changed since the last
+  // rebuild. Synchronous (no timer), so callers reading the catalog right after a structural commit see it updated.
   const std::uint64_t fp = catalogFingerprint();
   if (impl_->last_fingerprint == fp) {
     return;
@@ -832,6 +826,9 @@ std::uint64_t CatalogModel::catalogFingerprint() const {
           if (const TopicStorage* storage = engine.getTopicStorage(topic_id); storage != nullptr) {
             columns = storage->columnDescriptors().size();
             whole_numbers = storage->wholeNumbersSignature();
+            for (const FieldId field_id : storage->retiredColumns()) {
+              fp += mix(11, (static_cast<std::uint64_t>(topic_id) << 20) ^ field_id);
+            }
           }
           fp += mix(2, (static_cast<std::uint64_t>(topic_id) << 20) ^ columns);
           // A float field gaining its first chunk, or its first fractional value,
@@ -889,23 +886,19 @@ void CatalogModel::rebuildNow() {
   DataEngine& engine = impl_->session->dataEngine();
   ObjectStore& object_store = impl_->session->objectStore();
   std::vector<DatasetId> dataset_ids = reader.listDatasets();
-  // Deterministic order (ascending by id). listDatasets() iterates a robin_map
-  // whose order is unstable across create/delete/recreate. The duplicate-label
-  // ordinal below gives the un-suffixed BASE label to the FIRST dataset seen for
-  // a given name and " (N)" to the rest; an unstable order let that flip between
-  // two same-named datasets on successive rebuilds. A pre-existing dataset thus
-  // relabeled base->" (N)" is invisible to the key-only diff further down, and
-  // the tree view groups nodes by the label STRING — so the stale base-label node
-  // lingered and absorbed the other dataset's topics (duplicated fields, no "(N)"
-  // node). Sorting pins the base label to the oldest dataset, so no already-shown
-  // dataset is ever relabeled and the bug cannot arise.
+  // Deterministic order (ascending id): listDatasets() iterates a robin_map whose order is unstable across
+  // create/delete/recreate. The duplicate-label ordinal below gives the un-suffixed BASE label to the FIRST dataset
+  // seen for a name and " (N)" to the rest. An unstable order could flip that between two same-named datasets; the
+  // key-only diff further down does not see a relabel and the tree view groups nodes by label STRING, so a stale
+  // base-label node would linger and absorb the other dataset's topics. Sorting pins the base label to the oldest
+  // dataset, so no already-shown dataset is relabeled.
   std::sort(dataset_ids.begin(), dataset_ids.end());
   // Ephemeral (preview) transform outputs are intentionally NOT catalogued — the
   // Transform Editor's live preview materializes a real output topic, and it must
   // never surface in the Sources tree regardless of when a rebuild fires.
   const std::unordered_set<TopicId> ephemeral_outputs = impl_->session->derivedScalarTopics(/*ephemeral_only=*/true);
 
-  // issue #98: a plugin-provided display name (set via setDatasetDisplayName)
+  // A plugin-provided display name (set via setDatasetDisplayName)
   // overrides the file-derived source_name label, with the same '/'→'_'
   // normalization as baseDatasetLabel so it participates in the duplicate-label
   // ordinal disambiguation below. Absent/empty ⇒ the source_name label.
@@ -977,6 +970,7 @@ void CatalogModel::rebuildNow() {
       // worker commit / createTopicField cannot then race the descriptor read.
       std::vector<ColumnDescriptor> columns;
       std::vector<bool> whole_numbers_only;
+      std::vector<bool> retired;
       {
         const auto lock = engine.lockEngine();
         const TopicStorage* storage = engine.getTopicStorage(topic_id);
@@ -985,7 +979,9 @@ void CatalogModel::rebuildNow() {
         }
         columns = topicColumns(*storage, type_tree);
         whole_numbers_only.reserve(columns.size());
+        retired.reserve(columns.size());
         for (const ColumnDescriptor& column : columns) {
+          retired.push_back(storage->isColumnRetired(column.field_id));
           const StorageKind kind = storageKindOf(column.logical_type);
           const bool is_float = kind == StorageKind::kFloat32 || kind == StorageKind::kFloat64;
           whole_numbers_only.push_back(is_float && storage->wholeNumbersOnly(column.field_id).value_or(false));
@@ -995,7 +991,8 @@ void CatalogModel::rebuildNow() {
         const ColumnDescriptor& column = columns[column_index];
         // Surface every column in a consumer family (plottable curves and/or
         // discrete state series); only kUnspecified stays out.
-        if (!isPlottablePrimitive(column.logical_type) && !isDiscretePrimitive(column.logical_type)) {
+        if (retired[column_index] ||
+            (!isPlottablePrimitive(column.logical_type) && !isDiscretePrimitive(column.logical_type))) {
           continue;
         }
 
@@ -1032,9 +1029,8 @@ void CatalogModel::rebuildNow() {
       }
       const QString key = makeObjectTopicKey(dataset_id, object_topic_id);
       if (removed_names_for_dataset != nullptr && removed_names_for_dataset->count(key) > 0) {
-        // Honor the per-dataset removal blacklist for object topics too.
-        // Without this, dropping an image topic into the trash would silently
-        // come back on the next rebuildFromDatastore.
+        // Honor the per-dataset removal blacklist for object topics too, or a trashed image topic would come back on
+        // the next rebuildFromDatastore.
         continue;
       }
       next_items.insert_or_assign(
@@ -1301,10 +1297,8 @@ bool CatalogModel::removeDataset(DatasetId dataset_id, bool tombstone) {
     impl_->removed_datasets.insert(dataset_id);
   }
   impl_->removed_names_per_dataset.erase(dataset_id);
-  // Drop the plugin-provided display-name override only on a REAL delete
-  // (tombstone=false); a tombstoning remove keeps it so restoreDataset()
-  // re-applies the name. Erasing on real delete avoids leaving stale overrides
-  // to accumulate (a latent hazard for the duplicate-label ordinal).
+  // Drop the plugin-provided display-name override only on a REAL delete (tombstone=false); a tombstoning remove keeps
+  // it so restoreDataset() re-applies the name.
   if (!tombstone) {
     impl_->dataset_display_overrides.erase(dataset_id);
   }

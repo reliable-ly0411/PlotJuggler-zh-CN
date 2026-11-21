@@ -1,0 +1,63 @@
+{
+  "status": "CSV #397 / Log #391 integrated in the local product-sync worktree; no release or whole-application acceptance",
+  "upstream_repository": "https://github.com/PlotJuggler/pj-official-plugins",
+  "upstream_fixes": {
+    "csv397": "bae7e986a7bae7a9ac7d029fcd806e2b9c8c892b",
+    "log391": "66d6e544c74b9499f31527b7a79ea8ab3c148770"
+  },
+  "wasm_base": "598e966243ef6e75b29cadd5d145559d3eb504c2",
+  "native_csv_base": "ba6ee417d91a01aae778a0ec3a4443a024671123",
+  "native_prerequisite_patch_sha256": "0f0b6ceaca36e914d8beb458156aeb6c07e87ebe5668d517b1f8d1e69597a442",
+  "patches_sha256": {
+    "native-csv397-after-localization.patch": "0b6719a47decdec9f2dae99aa2d2729d534a5f81badb9f40bc18ba988fec0575",
+    "wasm-csv397.patch": "ea81b038989a7a3d9198389379a641ea928f7cd6e73c658e02a6511cf00b21a9",
+    "wasm-log391.patch": "9044c7606ab77fe2dd8ef65b5f83ffa85841120f4a95869480e73e8ce6f6324d"
+  },
+  "native_result_files_sha256": {
+    "data_load_csv/csv_source.cpp": "f2bfb2645fbfa79e0e2f97a650aceb256520ac810c4d66a4022cb67fc02748d2",
+    "data_load_csv/CMakeLists.txt": "8dc8a4674e9a9bc71c4bd07feeb82617501f9fe8266368afc285428992636028",
+    "data_load_csv/tests/csv_runtime_language_test.cpp": "99297a7942e3375b21c18c0d367a5c2b1835e0dd86fec2cd154d18df68c68f84",
+    "data_load_csv/tests/csv_source_test.cpp": "8aead947941a22c03163ad3513319a0cb3c138159b0035f1a77fcefa9fe75c76"
+  },
+  "native_input_files_sha256": {
+    "data_load_csv/csv_source.cpp": "3c04ad395b9e39cda211226f703fea6bce2c785cfcae2d6aca4fe93b18685628",
+    "data_load_csv/CMakeLists.txt": "20c1c6915bef6ec723f1a349c8c22abaa300bdc8eebba34fbfb89cacb02f781e",
+    "data_load_csv/tests/csv_runtime_language_test.cpp": "f0c7481e39924a56555df01a6617834b5401813b69405c0923c19ef1a3f597a4"
+  },
+  "runtime_validation": {
+    "sdk_commit": "ffd749ab343c3211b5100f124f6c873667b82629",
+    "native_csv": {
+      "ctest": 8,
+      "cases": 128,
+      "result": "PASS"
+    },
+    "wasm_sources_native_dso": {
+      "ctest": 7,
+      "cases": 138,
+      "qt": "6.12.0",
+      "result": "PASS"
+    },
+    "scope": "Linux GCC14 native builds of exact patch outputs; no WebAssembly or full application acceptance",
+    "native_csv_standalone_sdk": {
+      "sdk": "0.34.1",
+      "sdk_commit": "4d59e7de81455afe73a77051075e8fb4b9f6b0fd",
+      "ctest": 8,
+      "cases": 128,
+      "result": "PASS at -O2 -Werror; initial -O3 -Werror build failed in existing SDK parser_module_abi.cpp"
+    }
+  },
+  "native_combined_patch_sha256": "6b4d6bbb54c6ecec4c3a2b20d86a5228954db8fb1f0ffa06323f48c939324a01",
+  "native_prerequisite_patch_git_ref": "1613eaec28e7c4aee13f7efc72f5e2b2d73a35ae:packaging/localization/plugin-patches/csv-loader.patch",
+  "wasm_result_files_sha256": {
+    "data_load_csv/CHANGELOG.md": "fcfe947e47b0dfa126bd61286509555a39c205a00c498fe7d548f3954f6fd00a",
+    "data_load_csv/CMakeLists.txt": "c0a195c6dc2dda141cbd45a0a796f741abfe865274f590a8a4175e798ae28933",
+    "data_load_csv/csv_source.cpp": "5a39656bbea729fcc878d7aba89b014c03154afc1c089059471609cf010e6fa8",
+    "data_load_csv/manifest.json": "d3617b78b956ea6a0caafd3ae63dfe9e9a7e4b52bbfbcf5ab747bc2ca309a0ef",
+    "data_load_csv/tests/csv_source_test.cpp": "8aead947941a22c03163ad3513319a0cb3c138159b0035f1a77fcefa9fe75c76",
+    "widget_log/CHANGELOG.md": "f73b1a3b4c0c747fb69c331c0fa8c7042117c4730916897430cfea4addc908a9",
+    "widget_log/log_loader.cpp": "fa3bb1d9eaa64f38a50a3ba1a6386f4fb95f5644b2494190816743f9b93019d5",
+    "widget_log/log_loader.hpp": "f1218be4b7ff01a25355318ee9a070a3a5c7d265d565d0b124d18d4c549e8a6f",
+    "widget_log/manifest.json": "95ea87001b25e5ac69cc610c73610d3b8edbffbd42ee44db291fa8693dc1377a",
+    "widget_log/tests/log_core_test.cpp": "3df48c6b343525b9523873e079cdaf4670afe86cb2316a79c14f2400767209b3"
+  }
+}

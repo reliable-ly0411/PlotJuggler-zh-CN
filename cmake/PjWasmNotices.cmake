@@ -62,16 +62,17 @@ endfunction()
 
 # One FetchContent dependency, its licence files relative to its source tree (an absolute path, such as a text of
 # cmake/wasm_notices/ for a header that only names its licence, is used as is). Nothing when this configuration does
-# not populate it (its option is off).
+# not populate it (its option is off) and a licence file is relative to its tree. A dependency declared only for the
+# source offer (never populated) names absolute texts and is guarded by its caller instead.
 function(pj_wasm_notice output name title spdx)
   FetchContent_GetProperties(${name} POPULATED populated SOURCE_DIR source)
-  if(NOT populated)
-    return()
-  endif()
   set(specs "")
   foreach(spec IN LISTS ARGN)
     string(REGEX MATCH "[^|]+$" file "${spec}")
     if(NOT IS_ABSOLUTE "${file}")
+      if(NOT populated)
+        return()
+      endif()
       string(REGEX REPLACE "([^|]+)$" "${source}/\\1" spec "${spec}")
     endif()
     list(APPEND specs "${spec}")
@@ -165,7 +166,7 @@ function(pj_wasm_write_notices output python_notices)
   file(WRITE "${output}"
       "Third-party software in PlotJuggler 4's browser build\n\n"
       "plotjuggler4.wasm, plotjuggler4.js and qtloader.js contain the libraries below, linked statically. PlotJuggler\n"
-      "itself is MPL-2.0 (https://github.com/PlotJuggler/PJ4). Each section names a library, its licence as an SPDX\n"
+      "itself is MPL-2.0 (https://github.com/PlotJuggler/PlotJuggler). Each section names a library, its licence as an SPDX\n"
       "expression, and its copyright and licence text as its source distributes them.\n\n"
       "Licence of this bundle. The browser build (plotjuggler4.wasm, plotjuggler4.js, qtloader.js) is a combined work\n"
       "conveyed under the GNU General Public License version 3, because it statically links Qt's WebAssembly platform\n"
@@ -173,7 +174,7 @@ function(pj_wasm_write_notices output python_notices)
       "GPL-3.0-only entry of the Qt section below. PlotJuggler 4's own source is MPL-2.0, which permits this\n"
       "combination; the desktop application remains MPL-2.0. sources/SOURCE-OFFER.txt, next to this deployment,\n"
       "names the complete corresponding source, PlotJuggler 4's included, and where each part is; it is also\n"
-      "available on written request via https://github.com/PlotJuggler/PJ4/issues.\n\n"
+      "available on written request via https://github.com/PlotJuggler/PlotJuggler/issues.\n\n"
       "The libraries below keep their own licences. Qt is used under the GNU LGPL version 3, except its WebAssembly\n"
       "platform plugin, as above. FFmpeg (libavcodec, libavutil, libswscale), built LGPL-only, and the Qt Advanced\n"
       "Docking System, PlotJuggler's fork, are used under the LGPL version 2.1 or later. PlotJuggler 4's source pins\n"
@@ -195,7 +196,8 @@ function(pj_wasm_write_notices output python_notices)
   _pj_notice_section("${output}" "Qt Advanced Docking System" "LGPL-2.1-or-later"
       "${CMAKE_SOURCE_DIR}/3rdparty/Qt-Advanced-Docking/LICENSE")
   _pj_notice_section("${output}" "nanocdr" "Apache-2.0" "HEADER|${CMAKE_SOURCE_DIR}/3rdparty/nanocdr/include/nanocdr/nanocdr.hpp")
-  _pj_notice_section("${output}" "Noto Sans (font)" "OFL-1.1" "${CMAKE_SOURCE_DIR}/resources/fonts/NotoSans/OFL.txt")
+  _pj_notice_section("${output}" "PlotJuggler Sans (font, derived from Noto Sans)" "OFL-1.1" "${CMAKE_SOURCE_DIR}/resources/fonts/PlotJugglerSans/OFL.txt")
+  _pj_notice_section("${output}" "Noto Sans SC (browser CJK subset)" "OFL-1.1" "${CMAKE_SOURCE_DIR}/resources/fonts/NotoSansSC/OFL.txt")
 
   # Fetched: the name is the FetchContent name, the files are in its source tree.
   pj_wasm_notice("${output}" plotjuggler_sdk "PlotJuggler SDK (pj_base, pj_plugins)" "Apache-2.0" LICENSE LICENSE-APACHE)
@@ -203,6 +205,8 @@ function(pj_wasm_write_notices output python_notices)
   pj_wasm_notice("${output}" pj_official_plugins "liblzf decompressor (in the PCD/PLY loader)" "BSD-2-Clause"
       data_load_3d/contrib/liblzf/LICENSE)
   pj_wasm_notice("${output}" pj_official_plugins "mcap (in the MCAP loader)" "MIT" data_load_mcap/contrib/mcap/LICENSE)
+  pj_wasm_notice("${output}" pj_official_plugins "nanocdr (in the NavMap parser)" "Apache-2.0"
+      parser_navmap/contrib/nanocdr/LICENSE)
   pj_wasm_notice("${output}" qwt_upstream "Qwt 6.3.0" "LGPL-2.1-only WITH Qwt-exception-1.0" COPYING)
   pj_wasm_notice("${output}" nlohmann_json "nlohmann/json" "MIT" LICENSE.MIT)
   pj_wasm_notice("${output}" fmt "{fmt}" "MIT" LICENSE)
@@ -223,6 +227,22 @@ function(pj_wasm_write_notices output python_notices)
   pj_wasm_notice("${output}" rosx_introspection "nanocdr (in rosx_introspection)" "Apache-2.0"
       "HEADER|include/rosx_introspection/contrib/nanocdr.hpp")
   pj_wasm_notice("${output}" data_tamer "Data Tamer" "MIT" LICENSE)
+  pj_wasm_notice("${output}" ulog_cpp "ulog_cpp (PX4)" "BSD-3-Clause" LICENSE)
+  pj_wasm_notice("${output}" dbc_parser_cpp "dbc_parser_cpp (in the CAN loaders)" "MIT" LICENSE)
+  pj_wasm_notice("${output}" dbc_fast_float "fast_float 3.8 (in dbc_parser_cpp)" "MIT OR Apache-2.0 OR BSL-1.0" LICENSE-MIT)
+  pj_wasm_notice("${output}" lblf "lblf (in the BLF loader)" "MIT" LICENSE)
+  pj_wasm_notice("${output}" mdflib "mdflib (in the MF4 loader)" "MIT" LICENSE)
+  pj_wasm_notice("${output}" expat "Expat" "MIT" COPYING)
+  # Arrow's LICENSE.txt also carries the code it vendors (fast_float, double-conversion, flatbuffers...).
+  pj_wasm_notice("${output}" arrow "Apache Arrow C++ and Parquet" "Apache-2.0" LICENSE.txt NOTICE.txt)
+  pj_wasm_notice("${output}" arrow_thrift "Apache Thrift (in Parquet)" "Apache-2.0" LICENSE NOTICE)
+  pj_wasm_notice("${output}" arrow_snappy "Snappy (in Arrow)" "BSD-3-Clause" COPYING)
+  pj_wasm_notice("${output}" arrow_simdjson "simdjson (in Arrow)" "Apache-2.0" LICENSE)
+  if(PJ_WASM_WITH_ARROW)
+    # Headers only, through Thrift; declared for the source offer and never populated.
+    pj_wasm_notice("${output}" arrow_boost "Boost (headers, in Thrift)" "BSL-1.0"
+                   "${CMAKE_SOURCE_DIR}/cmake/wasm_notices/BSL-1.0.txt")
+  endif()
   pj_wasm_notice("${output}" lz4 "LZ4 library" "BSD-2-Clause" lib/LICENSE)
   pj_wasm_notice("${output}" zstd "Zstandard" "BSD-3-Clause" LICENSE)
   pj_wasm_notice("${output}" Luau "Luau" "MIT" LICENSE.txt)

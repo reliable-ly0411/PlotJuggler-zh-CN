@@ -133,6 +133,37 @@ race:QtPrivate::QCallableObject<PJ::wireSourceCapture
 race:QtPrivate::QCallableObject<PJ::*makePluginMessageBoxHandler
 # A finished-slot object the GUI thread ran, freed later by Qt's network thread.
 race:QtPrivate::QCallableObject<PJ::*attachFinished
+# Qt's own teardown of a disconnected slot functor, on whichever thread cleans the
+# sender's orphaned connections. Deleting a QNetworkReply on the GUI thread orphans
+# its connections (McpBrowserLink::poll's finished lambda among them); the
+# "QNetworkAccessManager" thread, destroying its QHttpThreadDelegate at the same time,
+# removes the delegate's connections from that reply and frees the reply's orphans
+# (QObject::~QObject -> cleanOrphanedConnections -> deleteOrphaned, seen there under
+# gdb). Both sides hold the reply's signalSlotLock, a QBasicMutex futex TSan cannot see,
+# so the free is reported against the GUI thread's allocation (2026-11-16). Only the
+# functor's destruction runs under this frame, never its body, so unlike a per-site
+# QCallableObject entry it hides no race in a slot's body. It does hide races in that
+# destruction: destroying a functor runs its captures' destructors, application code,
+# so a race in freeing a captured object (a shared_ptr's last owner, say) goes unseen.
+race:QObjectPrivate::ConnectionData::deleteOrphaned
+# Queued from a worker, audited 2026-11-16: the scene 2D frame worker's repaint
+# request (captures a QPointer to the layer) and a diagnostic reported from an
+# ingest worker (captures a QPointer to the bridge and the Diagnostic by value).
+# Each report is the GUI thread reading a capture the worker copied into the
+# queued call; neither capture is touched by the worker after the post.
+race:QtPrivate::QCallableObject<PJ::Scene2DLayer::makeQueuedRepaintCallback
+race:QtPrivate::QCallableObject<PJ::QtDiagnosticBridge::sink
+# The URL a redirected fetch was served from, freed by the GUI thread. Qt's HTTP
+# thread (started by QNetworkAccessManager, running no PJ4 code) builds the
+# redirect target QUrl and hands it to the reply on the GUI thread through a
+# queued signal inside libQt6Network; fetchBytesWithLimit
+# copies reply->url() into FetchedBytes::final_url, which UrlFetcher moves into
+# its FetchResult. The report pairs the free of that QUrl's private block with its
+# allocation on the HTTP thread, whose stack holds no PJ4 frame. Probed
+# 2026-11-16 by dropping each FetchResult member separately: only final_url races.
+# Thread-creation stacks are not matched by race: entries, so the GUI frame that
+# drops the last reference is the only one to name.
+race:~FetchResult
 
 # Test plugin libraries are dlclosed between tests and reloaded at the same
 # address. TSan keeps the unloaded library's access history, so the next load's

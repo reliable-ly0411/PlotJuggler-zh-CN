@@ -1,0 +1,317 @@
+{
+  "quality": 90,
+  "chroma_subsampling": "4:4:4",
+  "progressive": true,
+  "images": [
+    {
+      "source": "memes/zh_CN/meme_00.png",
+      "source_sha256": "ebf66bc1df513f3226a0429b37fcff452ada4d12406e944b76bdcb6443d20d15",
+      "jpeg": "memes/zh_CN/meme_00.jpg",
+      "jpeg_sha256": "1116bb136b5c1c28324781b9cc148987a9c02ada301ac80456d99ffa6c2b01fd",
+      "size": [
+        966,
+        1629
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_08.png",
+      "source_sha256": "0c2585d93f01e23bb7249e38d5c0671b66fddee2de370c990e235aa9538f1f84",
+      "jpeg": "memes/zh_CN/meme_08.jpg",
+      "jpeg_sha256": "43bbb4d56a907706fc7fa6983f4d609a2c5d04c98bde1ebeddd41bab2483adf9",
+      "size": [
+        1120,
+        1405
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_01.png",
+      "source_sha256": "dddc2c8613f7ca38e0e453510ad8c88d741442861b380d19b98b7385ac44ddad",
+      "jpeg": "memes/zh_CN/meme_4x_01.jpg",
+      "jpeg_sha256": "3cb9159a8a8ed7635fbd7988674c826d24f02c064530023ebe3859a87c9bad60",
+      "size": [
+        1586,
+        992
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_03.png",
+      "source_sha256": "f7f9874a86a6d7229670cc06da983554487d5267ee5f89ae3865992568db5675",
+      "jpeg": "memes/zh_CN/meme_4x_03.jpg",
+      "jpeg_sha256": "112ffc306250ed7096b7e9d07bb43352c9937080cf9ee1c5979caf169c38804d",
+      "size": [
+        1299,
+        1211
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_04.png",
+      "source_sha256": "1613d80463fc5343968d79ef65dc59acc3e73efb3fdab85eb03d450bed0b0234",
+      "jpeg": "memes/zh_CN/meme_4x_04.jpg",
+      "jpeg_sha256": "fa916e4f0e04f833c1e093e5a4b796f0bf2b85b136102a08763f6712b5351172",
+      "size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_05.png",
+      "source_sha256": "2328532b503c611e595ed3de586f8bd2d756316cc0e5c4cda9d5b01c0e7cf9e2",
+      "jpeg": "memes/zh_CN/meme_4x_05.jpg",
+      "jpeg_sha256": "a26a2b5d7435dfe396f20e6b06ea9c5aefc73138ae5dd882e26ef13c7137e7c2",
+      "size": [
+        1670,
+        942
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_06.png",
+      "source_sha256": "c7bf2d8646dc0d6d0a70e794764032d2a1c35d7c3efddcd08d327f123e5d31fe",
+      "jpeg": "memes/zh_CN/meme_4x_06.jpg",
+      "jpeg_sha256": "0e99d37bb96a1e7765f5ba1ad3ca2eb1b5d225f25b75c9fc32ff7dd5be5dba4b",
+      "size": [
+        1538,
+        1022
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_07.png",
+      "source_sha256": "a3096391b29ca70b2e0e2d0066262739bcba75479f95e1ee4f17911f4448a676",
+      "jpeg": "memes/zh_CN/meme_4x_07.jpg",
+      "jpeg_sha256": "d29a8dbbae15a314002e70b02996fe6e41e36e96776071bfae2b6f3c5ae00488",
+      "size": [
+        1727,
+        911
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_08.png",
+      "source_sha256": "c0d5d7690d93ec830fa5c96ced6b9cd79296abba7cab6ad480624ecf7d9fc31d",
+      "jpeg": "memes/zh_CN/meme_4x_08.jpg",
+      "jpeg_sha256": "24567cfabc7066d7abd5a1fabf63d0ce6714aacd6c6a359832d730e74303beba",
+      "size": [
+        1433,
+        1098
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_10.png",
+      "source_sha256": "f7195eeb2082eae970b99931dfdc950bcd4300207968fbde09c0737e86ab9cd4",
+      "jpeg": "memes/zh_CN/meme_4x_10.jpg",
+      "jpeg_sha256": "82bb64fc622644aadd470943f04cf1deb2ca7f83990a248af6db9ab29b996ae5",
+      "size": [
+        1422,
+        1106
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_12.png",
+      "source_sha256": "2cfe6bdf412957cb34171c9473c614d83194c00738c0972c170811ab9865a42c",
+      "jpeg": "memes/zh_CN/meme_4x_12.jpg",
+      "jpeg_sha256": "dca4aeb0f7a0a9bfec1c372c11a706d50dd7e4cc48b303604e8a58fe5c4ad8d6",
+      "size": [
+        1455,
+        1081
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_14.png",
+      "source_sha256": "a64298238ac83ae9876a890953fad496dd8e1b49e7babd23804bf07c2c772ccb",
+      "jpeg": "memes/zh_CN/meme_4x_14.jpg",
+      "jpeg_sha256": "fb5d7085f2867e44e242fcc156114090aa36ada85f930166d9a30195e7298764",
+      "size": [
+        1060,
+        1484
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_22.png",
+      "source_sha256": "66360d61d41a3544e63bbdb61c3f7f5ff7a061d4ebde2ff02f830e8e10119c2f",
+      "jpeg": "memes/zh_CN/meme_4x_22.jpg",
+      "jpeg_sha256": "5980aadba3928d658c49974e3def9c6b58d1547d7682c741a4f51b2a79d68327",
+      "size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_28.png",
+      "source_sha256": "4dbe1b30778c4c6932fb510f4c6569abb6c96923a9566ead4002a0487658fff9",
+      "jpeg": "memes/zh_CN/meme_4x_28.jpg",
+      "jpeg_sha256": "6524096115e66d9250e402997fe35401fbf273663ee7fafebce644149604c1a4",
+      "size": [
+        1022,
+        1539
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_36.png",
+      "source_sha256": "eeed8d0da7a04cfc979b71ae8f41ef0fb1370d275c9dcc48e7535c96d4c06c97",
+      "jpeg": "memes/zh_CN/meme_4x_36.jpg",
+      "jpeg_sha256": "1fae8fbf5c2ed352e966c7c7ad8e3fa91d9de5cc4896762e2f785ae86aeb7ec3",
+      "size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_4x_37.png",
+      "source_sha256": "2f93fcb50c92c28ea93fccdcf8dd3f003e50be525bd4fe09973e543739982cb3",
+      "jpeg": "memes/zh_CN/meme_4x_37.jpg",
+      "jpeg_sha256": "fd63fe0e3c3f56333f730022309c980af2380d87b3c5353bc208d8832aaf87d1",
+      "size": [
+        1586,
+        992
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_52.png",
+      "source_sha256": "5cd9eae8f1d55f021ef89caf533480091c0756de228e5922ed336b17b5723f24",
+      "jpeg": "memes/zh_CN/meme_52.jpg",
+      "jpeg_sha256": "153a5eb1700767e254b8de264d3ecf70ef079b128de93ddc799be7c29e24febc",
+      "size": [
+        1575,
+        998
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_60.png",
+      "source_sha256": "3cd561a6ecd100b499023fd452149290eea1ad37f113fe5f7dc7c76144ad5ece",
+      "jpeg": "memes/zh_CN/meme_60.jpg",
+      "jpeg_sha256": "38f23566fb543e8cd73d0ee09388f1210a54aadd742b7832e1cb565e4683e781",
+      "size": [
+        1351,
+        1164
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_93.png",
+      "source_sha256": "833c448bcce0b103f071c6a7f0401daa2ce9e3a58a77ebead61c1eed680888ea",
+      "jpeg": "memes/zh_CN/meme_93.jpg",
+      "jpeg_sha256": "04ba7ae577a8c532a86004235a03a091793ac427bad18cfd47ce27205ce609c1",
+      "size": [
+        1240,
+        1268
+      ]
+    },
+    {
+      "source": "memes/zh_CN/meme_97.png",
+      "source_sha256": "e3d3ba7fbc94ad59f89734d1d47ca89b399d470ed45ef3950ecde2724fb3af33",
+      "jpeg": "memes/zh_CN/meme_97.jpg",
+      "jpeg_sha256": "4b00871cc58b9e1f0a78bfb784a8bb311129de1e2df47e25b5981371285ae591",
+      "size": [
+        1186,
+        1327
+      ]
+    },
+    {
+      "source": "memes/zh_CN/patches/atlas_103.png",
+      "source_sha256": "4bb62a74a598044d379788f6a8662a9437bda145cfb35d3fc3e954f3f4496794",
+      "jpeg": "memes/zh_CN/patches/atlas_103.jpg",
+      "jpeg_sha256": "63efb7bfc5ed878370c0d0c610d8304284053c3775457643fab26352978f9ad9",
+      "size": [
+        934,
+        235
+      ]
+    },
+    {
+      "source": "memes/zh_CN/patches/atlas_14.png",
+      "source_sha256": "9ea55dc8146dec1ff4d7103165b2bf4dda24da947dc659fdb8523a9e95b7c532",
+      "jpeg": "memes/zh_CN/patches/atlas_14.jpg",
+      "jpeg_sha256": "db2aa4b947ed8ee9f1a9d8132c4559c20f549502eafb2db4eb569ef54c4ab2b2",
+      "size": [
+        942,
+        325
+      ]
+    },
+    {
+      "source": "memes/zh_CN/patches/atlas_25.png",
+      "source_sha256": "4ccdcee7c8303b59e63da54ea20aa72c6add6185bc8de22735b1680434f45452",
+      "jpeg": "memes/zh_CN/patches/atlas_25.jpg",
+      "jpeg_sha256": "a947b94cb81a1ce5d9454cd5c5656a43634e3faa4c359867cdb3906dbc639b19",
+      "size": [
+        1230,
+        370
+      ]
+    },
+    {
+      "source": "memes/zh_CN/patches/atlas_35.png",
+      "source_sha256": "b6c8f0a9d11807c24b788be7ac1f9ff21753a3e908d8c74381a77b47fa5516ce",
+      "jpeg": "memes/zh_CN/patches/atlas_35.jpg",
+      "jpeg_sha256": "0519cbc4d889b6222eeafb1ee8bec489d95e0d1116c30c3388d08181e25bfb15",
+      "size": [
+        982,
+        191
+      ]
+    },
+    {
+      "source": "memes/zh_CN/patches/atlas_42.png",
+      "source_sha256": "9a780150f0b32ac15941391ec6da409483fda6832854deecb97d3af17421a1fe",
+      "jpeg": "memes/zh_CN/patches/atlas_42.jpg",
+      "jpeg_sha256": "d65037730b1337a215eb42e797808ef85dd88c0b9551729929b5c14990e12dfc",
+      "size": [
+        1150,
+        402
+      ]
+    },
+    {
+      "source": "memes/zh_CN/patches/atlas_45.png",
+      "source_sha256": "6f6a9731df29f3c7113d826c82e8e4a71398ee8aae5db9f61d4a8fb34e248402",
+      "jpeg": "memes/zh_CN/patches/atlas_45.jpg",
+      "jpeg_sha256": "42147fb95e494b174715456a1087c2ac4b7fa460969d4561f0188a5f061d8d1e",
+      "size": [
+        1217,
+        389
+      ]
+    },
+    {
+      "source": "memes/zh_CN/patches/atlas_61.png",
+      "source_sha256": "b80d204d45f72d23c320d63b514a2454118bcce1d7119998a9ccb6bdefced43e",
+      "jpeg": "memes/zh_CN/patches/atlas_61.jpg",
+      "jpeg_sha256": "6b33d5ab7c84cb2949744b41ee6d0184c2b0297a775e123585b1365a97182812",
+      "size": [
+        738,
+        678
+      ]
+    },
+    {
+      "source": "memes/zh_CN/patches/atlas_71.png",
+      "source_sha256": "b41772bb0cc79b1ddba06b48b4681adef5aab8f1e89150788b444e117a39f9f7",
+      "jpeg": "memes/zh_CN/patches/atlas_71.jpg",
+      "jpeg_sha256": "a28b91427929bbb3ef1f1c5cb19252a2a90d49ed1de02d66d91682006cdf8baf",
+      "size": [
+        350,
+        403
+      ]
+    },
+    {
+      "source": "memes/zh_CN/patches/atlas_79.png",
+      "source_sha256": "69973a866e2a778f75544196d17da3e6a27511b018f55a88a323ec186274e3d4",
+      "jpeg": "memes/zh_CN/patches/atlas_79.jpg",
+      "jpeg_sha256": "9e6e54f5ed7e094789a63f8f0c1952ab89197a9aa20c4e0100332cda7e5f735f",
+      "size": [
+        1055,
+        326
+      ]
+    },
+    {
+      "source": "memes/zh_CN/patches/atlas_89.png",
+      "source_sha256": "f8b8fc34543d7969b4c2a4ebeda3343b368dabc0e05afa85794147432dff5f1d",
+      "jpeg": "memes/zh_CN/patches/atlas_89.jpg",
+      "jpeg_sha256": "a868367a147b339e2a7d2ed13241523b38c7ea9ea7b275d6d4cb99e22e1afbc8",
+      "size": [
+        545,
+        473
+      ]
+    },
+    {
+      "source": "memes/zh_CN/patches/atlas_95.png",
+      "source_sha256": "b37ab611cd74b02e4005aaa63cb40a5ea87951d37feef4deb5bfb7794278b8f0",
+      "jpeg": "memes/zh_CN/patches/atlas_95.jpg",
+      "jpeg_sha256": "38423ec77b1fa7b5d67ab41869f60b8d938777f14c7d06dbce99d7208de4ef59",
+      "size": [
+        1536,
+        350
+      ]
+    }
+  ]
+}

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
+const { uiTranslations } = require('./support/ui_language');
 // On-demand Python through the product path: a layout carrying Python recipes restores over a loaded dataset, and a
-// 3D scene shows what they compute. The browser Transform Editor cannot create one yet, so the recipes come in the
+// 3D scene shows what they compute. The browser Transform Editor cannot create one, so the recipes come in the
 // layout, as a desktop session saves them (DerivedObjects::save). A recipe that does not compile restores silently and
-// shows its compile error on its layer once the scene demands it (slice P-c). Without Python in the build the spec
+// shows its compile error on its layer once the scene demands it. Without Python in the build the spec
 // skips, unless PJ_WASM_PYTHON=1 says the build must have it (WASM CI).
 const { test, expect } = require('@playwright/test');
 const { downloadLayoutFromFileMenu } = require('./support/layout_actions');
@@ -87,14 +88,17 @@ test('a layout restores on-demand Python recipes: a scene shows the output and a
 
   // The restored dock (a new identity), with both derived layers: the good recipe's points with x > 0, and the broken
   // recipe's compile error as its layer's warning, demanded by the scene.
+  const tr = await uiTranslations(page);
+  const errorPrefix = tr('QObject', 'error: %1', '');
   const restored = await waitForPoints(page, messages, (data, dock) =>
     dock.identity !== source.identity && data.points.live === 2 && data.points.rendered === 1
-    && data.points.vertices > 0 && data.warnings.some(warning => warning.startsWith('error: ')));
+    && data.points.vertices > 0 && data.warnings.some(warning => warning.startsWith(errorPrefix)));
   console.log(`PJ_WASM_PY_LAYOUT source_vertices=${source.data.points.vertices} `
     + `derived_vertices=${restored.data.points.vertices} warnings=${JSON.stringify(restored.data.warnings)}`);
   expect(restored.data.points.vertices).toBe(POSITIVE_X_POINTS);
   expect(restored.data.warnings).toHaveLength(1);
-  expect(restored.data.warnings[0]).toMatch(/^error: .*SyntaxError/);
+  expect(restored.data.warnings[0].startsWith(errorPrefix)).toBe(true);
+  expect(restored.data.warnings[0].slice(errorPrefix.length)).toMatch(/^.*SyntaxError/);
   expect(messages.filter(message => message.includes('PJ_WASM_LAYOUT_LOAD_FAILED'))).toEqual([]);
   expect(errors).toEqual([]);
 });

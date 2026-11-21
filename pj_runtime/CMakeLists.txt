@@ -52,13 +52,17 @@ add_library(pj_runtime STATIC
     src/ResultHistory.cpp
     src/ServiceRegistration.cpp
     src/SessionManager.cpp
+    src/TelemetryIdentity.cpp
     src/TelemetryPing.cpp
     src/ToolboxRuntimeHost.cpp
     src/TopicDemandTracker.cpp
     src/TransformService.cpp
     src/UpdateChecker.cpp
+    src/UsageCounters.cpp
+    src/UsageReporter.cpp
     src/ViewportRuntimeHost.cpp
     src/WidgetRuntimeHost.cpp
+    src/CanonicalObjectPayload.cpp
     src/ActiveWidgetsMarker.cpp
     include/pj_runtime/AppSession.h
     include/pj_runtime/CatalogModel.h
@@ -90,6 +94,7 @@ add_library(pj_runtime STATIC
     include/pj_runtime/OnDemandService.h
     include/pj_runtime/PlaybackControlHost.h
     include/pj_runtime/PlaybackEngine.h
+    include/pj_runtime/PlaybackRate.h
     include/pj_runtime/ParserRoutingService.h
     include/pj_runtime/PlotTabsRuntimeHost.h
     include/pj_runtime/QSettingsBackend.h
@@ -108,10 +113,13 @@ add_library(pj_runtime STATIC
     include/pj_runtime/TopicDemandTracker.h
     include/pj_runtime/TransformService.h
     include/pj_runtime/UpdateChecker.h
+    include/pj_runtime/UsageCounters.h
+    include/pj_runtime/UsageReporter.h
     include/pj_runtime/ToolboxTags.h
     include/pj_runtime/UpdateVersion.h
     include/pj_runtime/ViewportRuntimeHost.h
     include/pj_runtime/WidgetRuntimeHost.h
+    include/pj_runtime/CanonicalObjectPayload.h
     include/pj_runtime/WidgetValue.h
     include/pj_runtime/WireTarget.h
     include/pj_runtime/ActiveWidgetsMarker.h
@@ -178,7 +186,7 @@ if(NOT EMSCRIPTEN)
     )
 endif()
 
-# The agent tool layer (MIT, see CLAUDE.md): the tool registry and executors pj_app's MCP server
+# The agent tool layer (MIT): the tool registry and executors pj_app's MCP server
 # runs over a toolbox's host views. Its own Qt-free library, so a consumer (pj_app's unit tests)
 # links it without pj_runtime's closure.
 add_library(pj_agent_tools STATIC
@@ -216,9 +224,9 @@ if(PJ_BUILD_TESTS)
         # tokens, the Python lane, destruction.
         tests/engine_pool_test.cpp
         # PJ_BENCH-gated: prints the GUI-thread stall of applying a transform or a
-        # marker rule over a long series (docs/derived_objects/ARCHITECTURE.md §19).
+        # marker rule over a long series.
         tests/engine_freeze_bench_test.cpp
-        # M1: re-prove the streaming gate through a Luau LuaSisoTransform
+        # The streaming gate through a Luau LuaSisoTransform.
         tests/data_processor_service_test.cpp
         # links the shared marker engine (runMarkerScript) the service drives
         tests/batch_engine_test.cpp
@@ -241,7 +249,8 @@ if(PJ_BUILD_TESTS)
         tests/input_stager_test.cpp
         # The in-flight memory budget: one line of waiters for both engines, served first in, first out.
         tests/in_flight_budget_test.cpp
-        # On-demand scheduling under D30 (one run in flight, one pending request per node), through the facade.
+        # On-demand scheduling under the result policy (one run in flight, one pending request per node),
+        # through the facade.
         tests/node_scheduler_test.cpp
         # AppSession drives the on-demand engine: the playhead, demand, installs and findings.
         tests/on_demand_cursor_follow_test.cpp
@@ -261,9 +270,9 @@ if(PJ_BUILD_TESTS)
         # Dataset-qualified input names ("dataset_source:topic/field") coming from a
         # plugin: the parse, and the ambiguity a bare topic leaves behind.
         tests/dataset_qualified_name_test.cpp
-        # M4.2: plugin-created transforms compile a Luau script via the catalogue
+        # Plugin-created transforms compile a Luau script via the catalogue
         tests/data_processor_service_transform_test.cpp
-        # M4.2: the bridge compiles a Luau transform script through the service
+        # The bridge compiles a Luau transform script through the service
         tests/data_processors_runtime_host_test.cpp
         # Pure header-only version math (UpdateVersion.h) — no networking, no lib.
         tests/update_version_test.cpp
@@ -276,10 +285,13 @@ if(PJ_BUILD_TESTS)
         # Drives UpdateChecker's reply state machine against a local QTcpServer.
         # Qt6::Test supplies QSignalSpy; Qt6::Network comes transitively via pj_runtime.
         tests/update_checker_test.cpp
-        # Drives TelemetryPing's POST + reply handling against a local capturing
-        # QTcpServer — enforces the payload privacy contract on the wire (the
-        # allowed-key set + salted-hash user id), no real network.
+        # Drives TelemetryPing's POST and reply handling against a local capturing QTcpServer; enforces the payload
+        # privacy contract on the wire (the allowed-key set + salted-hash user id), no real network.
         tests/telemetry_ping_test.cpp
+        # The per-day usage counters (persistence, pruning, opt-out deletion) and the usage report
+        # upload: the payload's key set and the private-plugin fold are pinned on the wire.
+        tests/usage_counters_test.cpp
+        tests/usage_reporter_test.cpp
         tests/app_session_test.cpp
         tests/playback_engine_test.cpp
         # Qt6::Test supplies QSignalSpy for the displayOffsetChanged emission test.
@@ -300,11 +312,11 @@ if(PJ_BUILD_TESTS)
         tests/data_source_runtime_host_object_ingest_test.cpp
         tests/data_source_runtime_host_record_tap_test.cpp
         tests/data_source_runtime_host_stream_swap_test.cpp
-        # M5: notify_available_topics threading + a-priori classification fallback.
+        # notify_available_topics threading + a-priori classification fallback.
         tests/data_source_runtime_host_advertise_test.cpp
         # report_message → DiagnosticSink forwarding (levels, label, reporting thread).
         tests/data_source_runtime_host_message_test.cpp
-        # Route-aware parser selection (SDK 0.22): claim admission, lazy exact-claim
+        # Route-aware parser selection: claim admission, lazy exact-claim
         # discovery, per-route winners, divergent-winner bindings, and the legacy
         # fallback for encodings outside the SDK claim registry.
         tests/extension_catalog_parser_routes_test.cpp
@@ -315,13 +327,13 @@ if(PJ_BUILD_TESTS)
         tests/active_widgets_marker_test.cpp
         # Bundled-plugin seeding (share -> marketplace sync) + scan-tier precedence.
         tests/extension_catalog_seed_test.cpp
-        # SDK 0.28: the runtime-side hosts a toolbox binding drives. Playback is
+        # The runtime-side hosts a toolbox binding drives. Playback is
         # global; viewport and plot-tab operations are scoped to the calling
         # plugin's owned tabs.
         tests/playback_control_host_test.cpp
         tests/viewport_runtime_host_test.cpp
         tests/plot_tabs_runtime_host_test.cpp
-        # D4: an ephemeral (history-exempt) transform must still be visible in the
+        # An ephemeral (history-exempt) transform must still be visible in the
         # ABI catalog snapshot a plugin reads, and must vanish from it on remove.
         # pj_scripting: the Luau transform compiles via the transient-catalogue fallback.
         tests/data_processor_ephemeral_abi_visibility_test.cpp
@@ -337,10 +349,10 @@ if(PJ_BUILD_TESTS)
             # plugin the record-tap test builds on, driven through RecordingService
             # into an MCAP file that is then read back. Desktop-only (mcap + the writer).
             tests/recording_pipeline_test.cpp
-            # M3 source capture: the completion-contract gate + cache publish +
+            # Source capture: the completion-contract gate + cache publish +
             # cache-first resolve, over the same real host/parser fixture.
             tests/source_capture_service_test.cpp
-            # M3 owner wiring: ToolboxRuntimeHost's parser-ingest lifecycle
+            # Owner wiring: ToolboxRuntimeHost's parser-ingest lifecycle
             # (create/release/discard/teardown) driving SourceCaptureService.
             tests/toolbox_capture_wiring_test.cpp
             # The "pj.feature_catalog.v1" document composed from fakes. Desktop
@@ -382,8 +394,8 @@ if(PJ_BUILD_TESTS)
 
     # Keep this executable separate: its debug thread-affinity death test forks
     # and deliberately aborts in the child process.
-    # H.20: full coverage for TransformService's incremental UID-keyed TF ingest —
-    # the heart of PR #174 (live + scrubbable streaming TF) and the bulk file path.
+    # TransformService's incremental UID-keyed TF ingest (live, scrubbable
+    # streaming TF) and the bulk file path.
     # Pure logic against a SessionManager + a mock FrameTransforms parser; no GL,
     # no widgets. Custom main (QCoreApplication for the QObject service).
     add_executable(transform_service_test
@@ -405,15 +417,10 @@ if(PJ_BUILD_TESTS)
         plotjuggler_sdk::plugin_sdk
     )
 
-    # Streaming pause/resume two-engine lockstep, exercised at the
-    # DataSourceRuntimeHost integration layer — the runtime-level companion to
-    # pj_datastore/tests/streaming_mirror_test.cpp. Those unit tests verify the
-    # createTopicField/setSecondaryEngine MECHANISM; these verify the host
-    # actually WIRES it (setSecondaryEngine on the source + each parser binding)
-    # and that a plugin's cached TopicHandle/FieldHandle survives a
-    # setDataEngineTarget pause/resume swap end to end. The caching parser
-    # plugin covers the parser-path variant (parser_protobuf-style cached
-    # FieldHandle) that the unit tests do not exercise.
+    # Streaming pause/resume two-engine lockstep at the DataSourceRuntimeHost integration layer: pj_datastore's
+    # streaming_mirror_test covers the createTopicField/setSecondaryEngine MECHANISM; this verifies the host WIRES it
+    # (setSecondaryEngine on the source and each parser binding) and that a plugin's cached TopicHandle/FieldHandle
+    # survives a setDataEngineTarget pause/resume swap. The caching parser plugin covers the parser-path variant.
     add_library(streaming_caching_parser_plugin SHARED
         tests/streaming_caching_parser_plugin.cpp
     )
@@ -451,6 +458,21 @@ if(PJ_BUILD_TESTS)
     endif()
     add_test(NAME extension_catalog_service_thread_safety_test COMMAND extension_catalog_service_thread_safety_test)
 
+    if(PJ_ENABLE_TSAN)
+      # Deliberately racy, like pj_datastore's sanitizer_race_selftest: PASS only on a
+      # race report naming the read, which one token shared across queued calls would hide.
+      # A clean exit (lost instrumentation, or the over-synchronization back) fails.
+      add_executable(tsan_invoke_queued_selftest tests/tsan_invoke_queued_selftest.cpp)
+      target_compile_options(tsan_invoke_queued_selftest PRIVATE ${PJ_WARNING_FLAGS})
+      target_link_libraries(tsan_invoke_queued_selftest PRIVATE pj_runtime)
+      add_test(NAME tsan_invoke_queued_selftest COMMAND tsan_invoke_queued_selftest)
+      set_tests_properties(tsan_invoke_queued_selftest PROPERTIES
+        PASS_REGULAR_EXPRESSION "ThreadSanitizer: data race.*readWhatTheCallWasNotHandedOff"
+        ENVIRONMENT "TSAN_OPTIONS=halt_on_error=1:exitcode=66:abort_on_error=0:suppressions=${CMAKE_CURRENT_SOURCE_DIR}/../cmake/sanitizers/tsan.supp"
+        TIMEOUT 30
+      )
+    endif()
+
     # SDK example/test plugins the host tests dlopen. The SDK packages the
     # sources and builds them through pj_add_sdk_test_fixture(); the aliases
     # keep the <name>_plugin spelling every consumer here and in
@@ -463,9 +485,8 @@ if(PJ_BUILD_TESTS)
       endforeach()
     endif()
 
-    # PluginRuntimeCatalog — duplicate-resolution policy (version/compat/authoritative)
-    # relocated from the SDK into the host. These mocks moved with the tests from the
-    # SDK; mock_data_source_plugin (v1) is the SDK example fixture above.
+    # PluginRuntimeCatalog duplicate-resolution policy (version/compat/authoritative);
+    # mock_data_source_plugin (v1) is the SDK example fixture above.
     add_library(mock_data_source_v2_plugin SHARED tests/mock_data_source_v2_plugin.cpp)
     target_compile_features(mock_data_source_v2_plugin PRIVATE cxx_std_20)
     target_compile_options(mock_data_source_v2_plugin PRIVATE ${PJ_WARNING_FLAGS})
@@ -506,8 +527,7 @@ if(PJ_BUILD_TESTS)
     # v1/v2 builds of a mock whose image stays resident after dlclose. Two
     # mechanisms: -z nodelete (DF_1_NODELETE, compiler-independent) and a bound
     # STB_GNU_UNIQUE anchor (models real GCC plugin builds; needs default
-    # symbol visibility). Consumed by extension_manager_test's staged-promotion
-    # regression coverage.
+    # symbol visibility). Consumed by extension_manager_test's staged promotion.
     add_library(mock_data_source_pinning_plugin SHARED tests/mock_data_source_pinning_plugin.cpp)
     target_compile_features(mock_data_source_pinning_plugin PRIVATE cxx_std_20)
     target_compile_options(mock_data_source_pinning_plugin PRIVATE ${PJ_WARNING_FLAGS})
