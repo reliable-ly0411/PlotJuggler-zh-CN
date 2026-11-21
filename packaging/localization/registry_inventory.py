@@ -36,11 +36,13 @@ def read_inventory(root):
     return registry, provenance
 
 
-def stage_notices(root, licenses):
+def stage_notices(root, licenses, *, plugin_ids=None):
     """Retain complete source notices and provenance alongside the original DSOs."""
     _, provenance = read_inventory(root)
     components = []
     for notice in provenance['supplement_notices']:
+        if plugin_ids is not None and notice['id'] not in plugin_ids:
+            continue
         relative = Path('registry-plugins') / notice['id']
         target = licenses / relative
         target.mkdir(parents=True, exist_ok=True)

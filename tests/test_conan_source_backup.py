@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import tarfile
 import tempfile
 import textwrap
 import unittest
@@ -12,7 +13,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / '.github/workflows/zh-4x-ci.yml'
 GLM_SHA = '1c0a0fced9b0d87c7b7bc94e40be490cff6d4c83c25db8488d8f33754e7fdeb2'
-FFMPEG_SHA = 'cf38e0e28c7e5605942c4a77755349b0145804a397af37eb1fb4c77cb237f635'
+FFMPEG_SHA = '8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e'
 
 
 def seed_script(path=WORKFLOW):
@@ -105,13 +106,23 @@ class ConanSourceBackupTests(unittest.TestCase):
 
     def test_ffmpeg_seed_matches_exact_locked_recipe(self):
         path = ROOT / '.github/conan/source-backup' / FFMPEG_SHA
-        self.assertEqual(path.stat().st_size, 12036420)
+        self.assertEqual(path.stat().st_size, 12040788)
         self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), FFMPEG_SHA)
         metadata = json.loads(path.with_suffix('.json').read_text(encoding='utf-8'))
-        self.assertEqual(metadata['references']['ffmpeg/9.0.1'],
-                         ['https://ffmpeg.org/releases/ffmpeg-9.0.1.tar.xz'])
-        lock = (ROOT / 'conan.lock').read_text(encoding='utf-8')
-        self.assertIn('ffmpeg/9.0.1#e1b7a11d16ed758bcbc0771208d32597', lock)
+        self.assertEqual(metadata['references'], {
+            'ffmpeg/9.0.2': ['https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz']})
+        lock = json.loads((ROOT / 'conan.lock').read_text(encoding='utf-8'))
+        self.assertEqual([ref.split('%', 1)[0] for ref in lock['requires'] if ref.startswith('ffmpeg/')],
+                         ['ffmpeg/9.0.2#89fa9c8f2637808f87802638d0f9b86d'])
+        with tarfile.open(path, 'r:xz') as archive:
+            self.assertEqual(archive.extractfile('ffmpeg-9.0.2/RELEASE').read().strip(), b'9.0.2')
+        (self.seeds / path.name).write_bytes(path.read_bytes())
+        (self.seeds / (path.name + '.json')).write_bytes(path.with_suffix('.json').read_bytes())
+        result = self.run_seed()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(hashlib.sha256((self.cache / 's' / FFMPEG_SHA).read_bytes()).hexdigest(), FFMPEG_SHA)
+        self.assertEqual(json.loads((self.cache / 's' / (FFMPEG_SHA + '.json')).read_text(encoding='utf-8')),
+                         metadata)
 
 
 if __name__ == '__main__':

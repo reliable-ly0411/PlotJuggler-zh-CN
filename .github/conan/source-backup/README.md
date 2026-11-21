@@ -27,8 +27,8 @@ happened to back up, which skews old (spot-checked 2026-09: `elfutils/0.190` and
 `kissfft/131.1.0` present; `ffmpeg/9.0.1`, `openssl/3.6.4`, `assimp/6.0.5`
 absent). So it is a safety net,
 not a guarantee; this directory remains the answer whenever a source must be
-under our control. The FFmpeg 9.0.1 source is now included here after a Windows
-runner timed out connecting to ffmpeg.org and the mirror returned HTTP 401.
+under our control. The locked FFmpeg source is seeded because Windows runners
+can time out connecting to ffmpeg.org and the mirror need not have the archive.
 
 ## Why this exists
 
@@ -83,7 +83,7 @@ when the `cpython` recipe moves macOS off 2.5.0.
 |---|---|---|
 | `b3a24de97a8fdb…` | `zlib-1.2.13.tar.gz` (byte-identical to the official release; also mirrored at `github.com/madler/zlib/releases/download/v1.2.13/`) | `minizip/1.2.13` ← `assimp` |
 | `15417edc8e12a5…` | `mpdecimal-2.5.0.tar.gz` (sha256 pinned by the recipe; recovered from the Internet Archive's copy of the bytereef.org release) | `mpdecimal/2.5.0` ← `cpython`, macOS only |
-| `cf38e0e28c7e5605…` | `ffmpeg-9.0.1.tar.xz` (12,036,420 bytes; unmodified official release mirrored by MacPorts) | `ffmpeg/9.0.1` |
+| `8c3850283eb25fa0…` | `ffmpeg-9.0.2.tar.xz` (12,040,788 bytes; unmodified official release) | `ffmpeg/9.0.2` |
 | `1c0a0fced9b0d87c…` | `glm-1.0.3.zip` (6,112,835 bytes; unmodified official release) | `glm/1.0.3` |
 
 ## GLM 1.0.3 provenance
@@ -103,20 +103,19 @@ when the `cpython` recipe moves macOS off 2.5.0.
   No dependency version, recipe revision, download routes, TLS verification,
   or repository permissions change.
 
-## FFmpeg 9.0.1 provenance
+## FFmpeg 9.0.2 provenance
 
-- Original release URL: <https://ffmpeg.org/releases/ffmpeg-9.0.1.tar.xz>.
-- Retrieved from the MacPorts project's distribution mirror:
-  <https://distfiles.macports.org/ffmpeg/ffmpeg-9.0.1.tar.xz>.
-- SHA256: `cf38e0e28c7e5605942c4a77755349b0145804a397af37eb1fb4c77cb237f635`.
-  This matches the exact locked Conan recipe
-  `ffmpeg/9.0.1#e1b7a11d16ed758bcbc0771208d32597`, the
-  [ConanCenter source declaration](https://github.com/conan-io/conan-center-index/blob/597f2a3314af809b0be8aaf1f2c2b32c6080a09f/recipes/ffmpeg/all/conandata.yml),
-  and the [MacPorts version and checksum record](https://github.com/macports/macports-ports/blob/60403e730a8bfa82bc823625e74ad12243b3506c/multimedia/ffmpeg/Portfile).
-- Conan 2.34.0 generated the sidecar by running that locked recipe's `source()`
-  against the preverified cache blob; the original source URL is preserved.
-- The archive remains unmodified, including upstream licenses. No dependency
-  version, recipe revision, TLS verification, or repository permissions change.
+- Retrieved from the original release URL: <https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz>.
+- SHA256: `8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e`.
+  The dependency lock pins `ffmpeg/9.0.2#89fa9c8f2637808f87802638d0f9b86d`;
+  the digest and original URL agree with the
+  [ConanCenter source declaration](https://github.com/conan-io/conan-center-index/blob/61a335b1506d7fab97beda6cf196b522f58c93ae/recipes/ffmpeg/all/conandata.yml)
+  and the matching pin in `cmake/PjWasmFfmpeg.cmake`.
+- The sidecar records only the matching recipe name/version and original URL
+  using Conan's source-cache metadata format. The timestamp is informational
+  and is not part of the cache's digest or URL lookup.
+- The archive remains unmodified, including upstream licenses. No TLS
+  verification, download fallback, or repository permissions change.
 
 ## Assimp 6.0.5 official prefetch
 
