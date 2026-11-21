@@ -20,9 +20,12 @@ PRODUCT_FILE = Path("pj_dialog_host/src/panel_engine.cpp")
 REGRESSION = "bc4ab9d843de918f4d47fff424efa83fb0e3ec48c0876f25798198fce77f71da"
 C_TO_D = "9fdbece580d57e5277c2625af254754661d6674d6e7501881825ee71cf4fe0a6"
 C_SOURCE_BLOB = "c7e865a6e9fefbe0eee53a9073a5b59ea612b7d6"
-TEST_SCOPE = ["pj_dialog_host/tests/" + name for name in (
-    "mock_panel_plugin.cpp", "mock_panel_plugin.hpp", "panel_engine_test.cpp",
-)]
+TEST_BLOBS = {
+    "pj_dialog_host/tests/mock_panel_plugin.cpp": "fb77ad3a55cedc1a9e3f153fe97afa00a5e95800",
+    "pj_dialog_host/tests/mock_panel_plugin.hpp": "c7fb730595dfd00dcd00de0530601776749c2c58",
+    "pj_dialog_host/tests/panel_engine_test.cpp": "d2f53259795f00dc7069529c70080ed7291f18d6",
+}
+TEST_SCOPE = sorted(TEST_BLOBS)
 NEGATIVE_FAILURES = {
     "StartupDocumentInstallsCatalogDropTarget": "panel->acceptDrops()",
     "StartupDocumentInstallsButtonShortcut": "shortcuts.end()",
@@ -50,8 +53,11 @@ def overlay(*args, blob):
 
 def require_test_overlay():
     require(git("diff", "--name-only", "HEAD").splitlines() == TEST_SCOPE, "Unexpected tracked diff")
-    require(git("diff", "--binary", "HEAD") + "\n" == (EVID / "D-native-test.patch").read_text(),
-            "Test overlay bytes changed")
+    git("diff", "--cached", "HEAD", "--exit-code")
+    # Formatted diffs abbreviate blob IDs differently for shallow and full repositories.
+    # Check full Git blob identities after applying the separately hash-verified patch.
+    for path, expected in TEST_BLOBS.items():
+        require(git("hash-object", "--", path) == expected, f"Test overlay bytes changed: {path}")
 
 
 if sys.argv[1] == "source":
@@ -68,7 +74,7 @@ if sys.argv[1] == "source":
     require(git("write-tree") == TREE, "Candidate tree mismatch")
     env = os.environ.copy()
     for prefix in ["AUTHOR", "COMMITTER"]:
-        env.update({f"GIT_{prefix}_NAME": "PlotJuggler candidate DI",
+        env.update({f"GIT_{prefix}_NAME": "PlotJuggler candidate CI",
                     f"GIT_{prefix}_EMAIL": "candidate-ci@example.invalid",
                     f"GIT_{prefix}_DATE": "2026-11-21T17:20:00Z"})
     result = git("-c", "commit.gpgSign=false", "commit-tree", TREE, "-p", A, "-m",
