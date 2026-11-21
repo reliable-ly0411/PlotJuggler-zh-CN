@@ -29,7 +29,8 @@ jobs:
       (github.event_name == 'workflow_dispatch' && !inputs.artifact_only && !inputs.artifact_luau) ||
       (github.event_name == 'push' && github.event.head_commit.message != 'Replay verified #71 WASM acceptance artifact only' &&
        github.event.head_commit.message != 'Probe verified #71 Firefox Luau heartbeat only' &&
-       github.event.head_commit.message != 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate')
+       github.event.head_commit.message != 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' &&
+       github.event.head_commit.message != 'Profile verified Firefox Luau candidate D artifact only')
     runs-on: ubuntu-22.04
     outputs:
       upstream_sha: ${{ steps.identity.outputs.upstream_sha }}
@@ -115,7 +116,8 @@ jobs:
       (github.event_name == 'workflow_dispatch' && (inputs.artifact_only || inputs.artifact_luau)) ||
       (github.event_name == 'push' && github.event.head_commit.message == 'Replay verified #71 WASM acceptance artifact only') ||
       (github.event_name == 'push' && github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only') ||
-      (github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate')
+      (github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate') ||
+      (github.event_name == 'push' && github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only')
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     permissions:
@@ -125,15 +127,17 @@ jobs:
       fail-fast: false
       matrix:
         browser: >-
-          ${{ fromJSON((inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate') && '["firefox"]' || '["chromium","firefox"]') }}
+          ${{ fromJSON((inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' || github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only') && '["firefox"]' || '["chromium","firefox"]') }}
     env:
       PJ_WASM_URL: http://127.0.0.1:6931/
       PJ_WASM_BUILD_DIR: build-wasm-probe
       PJ_WASM_PYTHON: '1'
       REPLAY_LUAU_ONLY: >-
-        ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate') }}
+        ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' || github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only') }}
       COMPARE_LUAU_ONLY: >-
         ${{ github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' }}
+      PROFILE_D_ONLY: >-
+        ${{ github.event_name == 'push' && github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only' }}
       PROFILE_FAILED_LUAU: ${{ github.event_name == 'push' || inputs.profile_failed_luau }}
     steps:
       - uses: actions/checkout@v6
@@ -157,9 +161,15 @@ jobs:
         with:
           node-version: '22.22.1'
       - name: Download pinned artifact and verify original acceptance receipt
+        if: env.PROFILE_D_ONLY != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/replay.sh verify
+      - name: Verify and stage the exact candidate D artifacts (no build)
+        if: env.PROFILE_D_ONLY == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .replay-controller/scripts/ci/pj71-wasm-replay/d-replay.sh
       - name: Provision pinned browser and vendored mirror inputs
         env:
           REPLAY_BROWSER: ${{ matrix.browser }}

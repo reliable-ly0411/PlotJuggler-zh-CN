@@ -6,6 +6,12 @@ here=$(cd "$(dirname "$0")" && pwd)
 title='Transform Editor creates a large exact Luau series while the browser main thread stays responsive'
 source=857bd12b935579458914de18b59d8950b8bf71bd
 producer=4c1ddc674097a5ab7391368050303208f99a6c72
+receipt_producer="$producer"
+if [[ "${PROFILE_D_ONLY:-false}" == true ]]; then
+  source=2e9235ef1575551f4fa14c84ce150301e4022bcd
+  receipt_producer="$source"
+  test -s "$evidence/D-artifact-verify.log"
+fi
 test "$(git rev-parse HEAD)" = "$source"
 test "$(git -C .ci-controller rev-parse HEAD)" = "$producer"
 git diff HEAD --exit-code
@@ -19,7 +25,7 @@ for _ in $(seq 1 50); do
   sleep 0.2
 done
 curl -fsS -o /dev/null "$PJ_WASM_URL"
-printf 'source=%s\nproducer_controller=%s\nreplay_controller=%s\n' "$source" "$producer" "$GITHUB_SHA" \
+printf 'source=%s\nproducer_controller=%s\nreplay_controller=%s\n' "$source" "$receipt_producer" "$GITHUB_SHA" \
   > "$evidence/luau-replay-identity.txt"
 
 # Gate: the exact source test, one Firefox worker and no profiler or overlays.
@@ -35,6 +41,20 @@ if [[ "$gate_status" == 0 ]]; then
     "$evidence/luau-original.json"
   exit 0
 fi
+if [[ "${PROFILE_D_ONLY:-false}" == true && -s "$evidence/luau-original.json" ]]; then
+  if ! jq -e --arg title "$title" '
+    .stats.expected == 0 and .stats.unexpected == 1 and
+    .stats.skipped == 0 and .stats.flaky == 0 and
+    ([.. | objects | select(.title? == $title and .file? == "editors.spec.js")
+       | .tests[] | select(.projectName == "firefox") | .results[]] as $r
+     | ($r | length) == 1 and $r[0].status == "failed" and
+       any($r[0].errors[]; .message | gsub("\u001b\\[[0-9;]*m"; "")
+         | capture("Expected:[[:space:]]*< 100[[:space:]]+Received:[[:space:]]*(?<gap>[0-9]+([.][0-9]+)?)").gap | tonumber >= 100))
+  ' "$evidence/luau-original.json"; then
+    echo 'Diagnostic skipped: fresh unprofiled D failure is not the exact heartbeat gate.' | tee "$evidence/luau-profile-skip.log"
+    exit "$gate_status"
+  fi
+fi
 if [[ "$PROFILE_FAILED_LUAU" == true && -s "$evidence/luau-original.json" ]]; then
   # Reuse the pinned profile helper and expand ONLY its derivative test instrumentation.
   # The helper hashes the unmodified gate source/report and saves them with the profile.
@@ -46,7 +66,7 @@ if [[ "$PROFILE_FAILED_LUAU" == true && -s "$evidence/luau-original.json" ]]; th
   cp "$evidence/luau-original.json" "$report"
   cmp "$evidence/luau-original.json" "$report"
   profile_status=0
-  PJ_SOURCE_SHA="$source" PJ_CONTROLLER_SHA="$producer" PJ_VALIDATION_ROLE=localized \
+  PJ_SOURCE_SHA="$source" PJ_CONTROLLER_SHA="$receipt_producer" PJ_VALIDATION_ROLE=localized \
     PJ_ORIGINAL_RUN_ID="$GITHUB_RUN_ID" PJ_ORIGINAL_JOB_ID="$GITHUB_JOB" PJ_DIAGNOSTIC_CONTROLLER_SHA="$GITHUB_SHA" \
     xvfb-run -a node "$RUNNER_TEMP/luau-profile.cjs" "$repo_root" "$repo_root/.ci-controller" \
     2>&1 | tee "$evidence/luau-profile.log" || profile_status=$?

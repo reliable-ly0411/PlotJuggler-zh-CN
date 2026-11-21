@@ -12,15 +12,16 @@ expected_paths='pj_dialog_host/src/panel_engine.cpp'
 title='Transform Editor creates a large exact Luau series while the browser main thread stays responsive'
 
 case "$1" in
-materialize)
-  test -s "$evidence/verify.log"
+materialize|source)
   test "$(git rev-parse HEAD)" = "$a"
   git diff HEAD --exit-code
-  mkdir "$saved"
-  mv build-wasm-probe "$saved/acceptance"
-  # The verified A artifact includes a standalone emrun.py under .emsdk.
-  # Move it out of D's SDK install/cache path; the focused browser case serves via Node.
-  mv .emsdk "$saved/emsdk"
+  if [[ "$1" == materialize ]]; then
+    test -s "$evidence/verify.log"
+    mkdir "$saved"
+    mv build-wasm-probe "$saved/acceptance"
+    # The original A SDK includes standalone emrun.py; leave the build path clean.
+    mv .emsdk "$saved/emsdk"
+  fi
   patch="$evidence/D-product.patch"
   base64 --decode "$here/panel-d.patch.b64" > "$patch"
   printf '%s  %s\n' "$patch_sha" "$patch" | sha256sum --check
