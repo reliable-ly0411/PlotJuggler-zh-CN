@@ -1,5 +1,6 @@
 {
   "upstream_repository": "PlotJuggler/PlotJuggler",
   "upstream_branch": "main",
-  "sync_branch": "zh-CN-4.x-dev"
+  "sync_branch": "zh-CN-4.x-dev",
+  "approved_upstream_commit": "1877b40120414b8590349cb9ef66ae7a5878f63a"
 }
