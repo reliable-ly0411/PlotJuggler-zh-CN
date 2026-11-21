@@ -1,0 +1,20 @@
+{
+  "upstream": {
+    "repository": "PlotJuggler/PlotJuggler",
+    "sha": "1877b40120414b8590349cb9ef66ae7a5878f63a",
+    "tree": "456ae2666b68059abbc23ac2c689ba4b85d608d8",
+    "budget_scope": "reference startup <= 16932000"
+  },
+  "upstream-comparator": {
+    "repository": "PlotJuggler/PlotJuggler",
+    "sha": "fae51d5be4a40836b96cee79d806ec37b63c4599",
+    "tree": "425c942f19efb52e145b09f988eeca5e60847733",
+    "budget_scope": "matched upstream startup <= 20000000 (exact upstream workflow)"
+  },
+  "localized": {
+    "repository": "reliable-ly0411/PlotJuggler-zh-CN",
+    "sha": "c1cd36528c1464aecbcfb91426242adf5f2215fe",
+    "tree": "ee6525cc0ea115eda43243f76c9c0e3221f23e39",
+    "budget_scope": "localized total <= 26000000; startup observed only"
+  }
+}

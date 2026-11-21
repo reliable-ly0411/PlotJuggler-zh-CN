@@ -93,8 +93,55 @@ class WasmReceiptTest(unittest.TestCase):
         self.args.source_root = self.upstream
         self.run_receipt()
 
+    def select_planned_source(self, role, path, sha, repository, tree=None):
+        record = self.controller / 'docs/localization/wasm-validation-targets.json'
+        record.write_text(json.dumps({role: {
+            'repository': repository, 'sha': sha,
+            'tree': tree or RECEIPT.git(path, 'rev-parse', 'HEAD^{tree}'),
+        }}), encoding='utf-8')
+        self.args.controller_sha = self.commit(self.controller, 'validation controller')
+        self.args.mode = 'identity'
+        self.args.role = role
+        self.args.source_root = path
+        self.args.source_sha = sha
+        self.args.source_repository = repository
+
+    def test_exact_localized_product_may_differ_from_controller_with_plan(self):
+        self.select_planned_source('localized', self.upstream, self.upstream_sha, 'fixture/localized')
+        self.assertNotEqual(self.args.source_sha, self.args.controller_sha)
+        self.run_receipt()
+
+    def test_plan_does_not_relabel_other_checkout_as_localized(self):
+        self.select_planned_source('localized', self.upstream, self.upstream_sha, 'fixture/localized')
+        self.args.source_repository = 'fixture/other'
+        with self.assertRaisesRegex(ValueError, 'distinct|exact validation role'):
+            self.run_receipt()
+
+    def test_plan_requires_exact_tree(self):
+        self.select_planned_source('localized', self.upstream, self.upstream_sha, 'fixture/localized', tree='f' * 40)
+        with self.assertRaisesRegex(ValueError, 'exact validation role'):
+            self.run_receipt()
+
+    def test_comparator_needs_plan(self):
+        self.args.mode = 'identity'
+        self.args.role = 'upstream-comparator'
+        self.args.source_repository = 'PlotJuggler/PlotJuggler'
+        with self.assertRaisesRegex(ValueError, 'official source plan'):
+            self.run_receipt()
+
+    def test_comparator_cannot_relabel_frozen_reference(self):
+        self.select_planned_source('upstream-comparator', self.upstream, self.upstream_sha, 'PlotJuggler/PlotJuggler')
+        with self.assertRaisesRegex(ValueError, 'not the frozen'):
+            self.run_receipt()
+
+    def test_comparator_accepts_distinct_exact_official_source(self):
+        newer = self.commit(self.upstream, 'same-source comparator')
+        self.select_planned_source('upstream-comparator', self.upstream, newer, 'PlotJuggler/PlotJuggler')
+        self.run_receipt()
+
     def test_existing_budget_scripts_keep_independent_boundaries(self):
-        for script, budget in [('wasm_size_budget.mjs', 16932000), ('wasm_localized_size_budget.mjs', 26000000)]:
+        for script, budget in [('wasm_size_budget.mjs', 16932000), ('wasm_size_budget.mjs', 20000000),
+                               ('wasm_localized_size_budget.mjs', 26000000)]:
             for amount in [budget, budget + 1]:
                 with self.subTest(script=script, amount=amount):
                     manifest = self.root / 'budget.json'

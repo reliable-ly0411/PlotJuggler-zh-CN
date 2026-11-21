@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: MPL-2.0
-# Two complete source builds, never a subtraction from one localized binary.
+# Independent complete builds: frozen reference, matched upstream and localized product.
 name: Chinese 4.x WASM candidate
 on:
   push:
-    branches: ['zh-CN-4.x-feat/upstream-main-audit-20261117']
+    branches: ['zh-CN-4.x-ci/upstream-fae51d5b-integration']
   workflow_dispatch:
 permissions:
   contents: read
@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       upstream_sha: ${{ steps.identity.outputs.upstream_sha }}
+      comparator_sha: ${{ steps.identity.outputs.comparator_sha }}
       candidate_sha: ${{ steps.identity.outputs.candidate_sha }}
     steps:
       - uses: actions/checkout@v6
@@ -25,15 +26,47 @@ jobs:
         run: |
           python3 - <<'PY_IDENTITY'
           import json, os, re, subprocess
-          baseline = json.load(open('docs/localization/upstream-baseline.json', encoding='utf-8'))
+          root = 'docs/localization/'
+          baseline = json.load(open(root + 'upstream-baseline.json', encoding='utf-8'))
+          targets = json.load(open(root + 'wasm-validation-targets.json', encoding='utf-8'))
           assert baseline['upstream_repository'] == 'https://github.com/PlotJuggler/PlotJuggler'
-          upstream = baseline['upstream_commit']
-          assert re.fullmatch('[0-9a-f]{40}', upstream)
-          subprocess.run(['git', 'merge-base', '--is-ancestor', upstream, 'HEAD'], check=True)
-          head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert baseline['upstream_commit'] == targets['upstream']['sha']
+          assert targets['upstream']['repository'] == targets['upstream-comparator']['repository'] == 'PlotJuggler/PlotJuggler'
+          assert targets['localized']['repository'] == os.environ['GITHUB_REPOSITORY'] == 'reliable-ly0411/PlotJuggler-zh-CN'
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+          head = git('rev-parse', 'HEAD')
           assert head == os.environ['GITHUB_SHA']
+          source = targets['localized']['sha']
+          for record in targets.values():
+              sha = record['sha']
+              assert re.fullmatch('[0-9a-f]{40}', sha)
+              assert git('rev-parse', f'{sha}^{{tree}}') == record['tree']
+              git('merge-base', '--is-ancestor', sha, source)
+          git('merge-base', '--is-ancestor', source, head)
+          assert targets['upstream']['sha'] != targets['upstream-comparator']['sha']
+          allowed = {
+              '.github/workflows/zh-4x-wasm-candidate.yml',
+              '.github/workflows/zh-4x-wasm-lane.yml',
+              'docs/localization/wasm-validation-targets.json',
+              'packaging/localization/wasm_receipt.py',
+              'tests/test_wasm_validation_receipt.py',
+          }
+          delta = set(git('diff', '--name-only', source, head).splitlines())
+          assert delta <= allowed, sorted(delta - allowed)
+          for version_key in ('PJ_QT_VERSION', 'PJ_EMSCRIPTEN_VERSION', 'PJ_WASM_NODE_VERSION'):
+              pins = {
+                  next(line for line in git('show', record['sha'] + ':versions.env').splitlines()
+                       if line.startswith(version_key + '='))
+                  for record in targets.values()
+              }
+              assert len(pins) == 1, pins
+          upstream_workflow = git('show', targets['upstream-comparator']['sha'] + ':.github/workflows/wasm-ci.yml')
+          assert 'scripts/wasm_size_budget.mjs build-wasm-prod/deploy/manifest.json 20000000' in upstream_workflow
           with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
-              output.write(f'upstream_sha={upstream}\ncandidate_sha={head}\n')
+              output.write(f"upstream_sha={targets['upstream']['sha']}\n")
+              output.write(f"comparator_sha={targets['upstream-comparator']['sha']}\n")
+              output.write(f"candidate_sha={targets['localized']['sha']}\n")
           PY_IDENTITY
   upstream:
     needs: identity
@@ -42,6 +75,14 @@ jobs:
       role: upstream
       source_repository: PlotJuggler/PlotJuggler
       source_sha: ${{ needs.identity.outputs.upstream_sha }}
+      acceptance_symbol_map: true
+  matched_upstream:
+    needs: identity
+    uses: ./.github/workflows/zh-4x-wasm-lane.yml
+    with:
+      role: upstream-comparator
+      source_repository: PlotJuggler/PlotJuggler
+      source_sha: ${{ needs.identity.outputs.comparator_sha }}
       acceptance_symbol_map: true
   localized:
     needs: identity

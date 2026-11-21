@@ -219,6 +219,10 @@ jobs:
         if: inputs.role == 'upstream'
         run: node scripts/wasm_size_budget.mjs build-wasm-prod/deploy/manifest.json 16932000
 
+      - name: Matched upstream startup budget (exact upstream policy)
+        if: inputs.role == 'upstream-comparator'
+        run: node scripts/wasm_size_budget.mjs build-wasm-prod/deploy/manifest.json 20000000
+
       - name: Complete localized total budget
         if: inputs.role == 'localized'
         run: node scripts/wasm_localized_size_budget.mjs build-wasm-prod/deploy/manifest.json

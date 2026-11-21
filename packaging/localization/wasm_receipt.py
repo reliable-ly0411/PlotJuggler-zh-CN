@@ -73,14 +73,28 @@ def identity(args):
         if git(root, 'rev-parse', 'HEAD') != expected:
             raise ValueError('Checkout SHA does not match requested identity')
     baseline = json.loads((args.controller_root / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
+    source_tree = git(args.source_root, 'rev-parse', 'HEAD^{tree}')
+    plan = args.controller_root / 'docs/localization/wasm-validation-targets.json'
+    if plan.is_file():
+        record = json.loads(plan.read_text(encoding='utf-8')).get(args.role)
+        if not record or (args.source_repository, args.source_sha, source_tree) != (
+                record['repository'], record['sha'], record['tree']):
+            raise ValueError('Source repository, commit or tree does not match the exact validation role')
     if args.role == 'upstream':
         if args.source_sha != baseline['upstream_commit'] or args.source_repository != 'PlotJuggler/PlotJuggler':
             raise ValueError('Upstream lane does not match the recorded upstream source')
-    elif args.source_sha != args.controller_sha:
-        raise ValueError('Localized lane must build the exact controller commit')
+    elif args.role == 'upstream-comparator':
+        if not plan.is_file() or args.source_repository != 'PlotJuggler/PlotJuggler':
+            raise ValueError('Matched upstream requires a distinct official source plan')
+        if args.source_sha == baseline['upstream_commit']:
+            raise ValueError('Matched upstream is not the frozen budget reference')
+    elif args.role == 'localized':
+        if not plan.is_file() and args.source_sha != args.controller_sha:
+            raise ValueError('Localized lane must build the exact controller commit without a plan')
+    else:
+        raise ValueError('Unknown validation role')
     return {'role': args.role, 'kind': args.kind, 'source_repository': args.source_repository,
-            'source_sha': args.source_sha, 'source_tree': git(args.source_root, 'rev-parse', 'HEAD^{tree}'),
-            'controller_sha': args.controller_sha}
+            'source_sha': args.source_sha, 'source_tree': source_tree, 'controller_sha': args.controller_sha}
 
 
 def run(args):
@@ -124,7 +138,9 @@ def run(args):
                    'versions_env': (args.source_root / 'versions.env').read_text(encoding='utf-8'),
                    'validation_run': {'id': os.environ.get('GITHUB_RUN_ID'), 'attempt': os.environ.get('GITHUB_RUN_ATTEMPT')},
                    'startup_budget_script_sha256': sha256(args.source_root / 'scripts/wasm_size_budget.mjs'),
-                   'budget_scope': 'reference startup <= 16932000' if args.role == 'upstream' else 'localized total <= 26000000; startup observed only'}
+                   'budget_scope': {'upstream': 'reference startup <= 16932000',
+                                    'upstream-comparator': 'matched upstream startup <= 20000000 (exact upstream workflow)',
+                                    'localized': 'localized total <= 26000000; startup observed only'}[args.role]}
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(receipt, indent=2) + '\n', encoding='utf-8')
     for path, package in packages.items():
@@ -136,7 +152,7 @@ def main():
     """Parse explicit lane and checkout identity; never infer them from filenames."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mode', choices=['identity', 'capture', 'verify'])
-    parser.add_argument('--role', choices=['upstream', 'localized'], required=True)
+    parser.add_argument('--role', choices=['upstream', 'upstream-comparator', 'localized'], required=True)
     parser.add_argument('--kind', choices=['production', 'acceptance'], required=True)
     parser.add_argument('--source-repository', required=True)
     parser.add_argument('--source-sha', required=True)
