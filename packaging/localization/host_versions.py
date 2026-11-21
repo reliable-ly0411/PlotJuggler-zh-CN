@@ -22,6 +22,6 @@ def read_host_versions(root):
     conan = configparser.ConfigParser(delimiters=('=',), allow_no_value=True, inline_comment_prefixes=('#',), strict=True)
     conan.read(root / 'conanfile.txt', encoding='utf-8')
     sdk = [ref.split('/', 1)[1] for ref in conan['requires'] if ref.startswith('plotjuggler_sdk/')]
-    if len(sdk) != 1 or not re.fullmatch(r'\d+\.\d+\.\d+', sdk[0]):
+    if len(sdk) != 1 or not re.fullmatch(r'(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*)?', sdk[0]):
         raise ValueError('Require exactly one pinned host SDK')
     return {'version': values['PJ_APP_VERSION'], 'qt_version': qt, 'sdk_version': sdk[0]}
