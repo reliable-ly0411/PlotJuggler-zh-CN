@@ -29,7 +29,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' && !inputs.artifact_only && !inputs.artifact_luau) ||
       (github.event_name == 'push' && github.event.head_commit.message != 'Replay verified #71 WASM acceptance artifact only' &&
        github.event.head_commit.message != 'Probe verified #71 Firefox Luau heartbeat only' &&
-       github.event.head_commit.message != 'Compare pinned Firefox Luau baseline with shared parsed panel candidate')
+       github.event.head_commit.message != 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate')
     runs-on: ubuntu-22.04
     outputs:
       upstream_sha: ${{ steps.identity.outputs.upstream_sha }}
@@ -115,7 +115,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' && (inputs.artifact_only || inputs.artifact_luau)) ||
       (github.event_name == 'push' && github.event.head_commit.message == 'Replay verified #71 WASM acceptance artifact only') ||
       (github.event_name == 'push' && github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only') ||
-      (github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with shared parsed panel candidate')
+      (github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate')
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     permissions:
@@ -125,15 +125,15 @@ jobs:
       fail-fast: false
       matrix:
         browser: >-
-          ${{ fromJSON((inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with shared parsed panel candidate') && '["firefox"]' || '["chromium","firefox"]') }}
+          ${{ fromJSON((inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate') && '["firefox"]' || '["chromium","firefox"]') }}
     env:
       PJ_WASM_URL: http://127.0.0.1:6931/
       PJ_WASM_BUILD_DIR: build-wasm-probe
       PJ_WASM_PYTHON: '1'
       REPLAY_LUAU_ONLY: >-
-        ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with shared parsed panel candidate') }}
+        ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate') }}
       COMPARE_LUAU_ONLY: >-
-        ${{ github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with shared parsed panel candidate' }}
+        ${{ github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' }}
       PROFILE_FAILED_LUAU: ${{ github.event_name == 'push' || inputs.profile_failed_luau }}
     steps:
       - uses: actions/checkout@v6
@@ -182,7 +182,7 @@ jobs:
       - name: Replay sole Firefox Luau acceptance case and retain independent diagnostic
         if: env.REPLAY_LUAU_ONLY == 'true' && env.COMPARE_LUAU_ONLY != 'true'
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/luau.sh
-      - name: Materialize and verify distinct shared-parsed-panel product C
+      - name: Materialize and verify distinct startup-safe shared-parsed-panel product D
         if: env.COMPARE_LUAU_ONLY == 'true'
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/ab.sh materialize
 
@@ -313,7 +313,7 @@ jobs:
             --target pj_app --parallel 2
           ccache --show-stats
 
-      - name: Verify C acceptance package and run one exact same-runner A/C pair
+      - name: Verify D acceptance package and run one exact same-runner A/D pair
         if: env.COMPARE_LUAU_ONLY == 'true'
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/ab.sh pair
 
@@ -323,15 +323,15 @@ jobs:
           name: pj71-wasm-artifact-replay-${{ matrix.browser }}-${{ github.run_attempt }}
           path: replay-evidence/
 
-      - name: Preserve distinct C acceptance package for follow-up, not distribution
-        if: ${{ !cancelled() && env.COMPARE_LUAU_ONLY == 'true' && hashFiles('replay-evidence/C-acceptance-receipt.json') != '' }}
+      - name: Preserve distinct D acceptance package for follow-up, not distribution
+        if: ${{ !cancelled() && env.COMPARE_LUAU_ONLY == 'true' && hashFiles('replay-evidence/D-acceptance-receipt.json') != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: pj71-luau-C-982a6143-acceptance-${{ github.run_attempt }}
+          name: pj71-luau-D-2e9235ef-acceptance-${{ github.run_attempt }}
           path: |
             build-wasm-probe/deploy/
-            replay-evidence/C-acceptance-receipt.json
-            replay-evidence/C-identity.txt
+            replay-evidence/D-acceptance-receipt.json
+            replay-evidence/D-identity.txt
           compression-level: 0
           retention-days: 7
           if-no-files-found: error
