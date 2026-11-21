@@ -1,0 +1,383 @@
+name: PJ4 isolated native regression probes
+
+on:
+  push:
+    branches: [ci/pj71-native-857bd12b]
+  workflow_dispatch:
+    inputs:
+      lane:
+        description: Run exactly one native regression lane
+        type: choice
+        required: true
+        options: [windows-fixtures, mac-apbin]
+
+permissions:
+  contents: read
+
+jobs:
+  windows-fixtures:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.lane == 'windows-fixtures') ||
+      (github.event_name == 'push' && github.event.created &&
+       github.ref == 'refs/heads/ci/pj71-native-857bd12b')
+    runs-on: windows-2022
+    timeout-minutes: 200
+    env:
+      PJ_DISABLE_TELEMETRY: '1'
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        include:
+          - os: windows-2022
+            qt_arch: msvc2022_64
+            generator: Ninja Multi-Config
+            installation: windows
+    steps:
+      - name: Keep patch context LF on Windows
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v6
+        with:
+          ref: 857bd12b935579458914de18b59d8950b8bf71bd
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          path: probe-control
+          sparse-checkout-cone-mode: false
+          sparse-checkout: /scripts/ci/pj71-native/
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Verify parent source and apply audited test-only patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "857bd12b935579458914de18b59d8950b8bf71bd"
+          test "$(git -C 3rdparty/plotjuggler-apbin-plugins rev-parse HEAD)" = "fc6065fd64305479946552a757d78e6afdd2c506"
+          git diff --exit-code
+          python probe-control/scripts/ci/pj71-native/select_and_verify.py patch windows .
+      - name: Read pinned versions
+        id: versions
+        run: |
+          source ./versions.env
+          echo "PJ_VERSION=$PJ_APP_VERSION" >> "$GITHUB_ENV"
+          echo "PJ_QT_VERSION=$PJ_QT_VERSION" >> "$GITHUB_ENV"
+          echo "qt_version=$PJ_QT_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Build tools
+        run: python -m pip install 'conan>=2,<3' 'cmake>=3.28,<4' 'ninja!=1.13.0' 'aqtinstall>=3.3'
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+        with:
+          arch: x64
+      - uses: actions/cache/restore@v5
+        with:
+          path: .qt
+          key: zh4-qt-${{ matrix.os }}-${{ steps.versions.outputs.qt_version }}
+      - name: Install pinned Windows Qt
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/windows/install_qt6.ps1
+      - name: Provide pinned fonts for Windows offscreen tests
+        if: runner.os == 'Windows'
+        # Qt's offscreen QFreeTypeFontDatabase uses QT_QPA_FONTDIR rather than
+        # the native Windows font database. Keep this test-only dependency out
+        # of the application and pin both its upstream revision and bytes.
+        run: |
+          python - <<'PYFONT'
+          from pathlib import Path
+          import hashlib
+          import os
+          import urllib.request
+          base = 'https://raw.githubusercontent.com/notofonts/noto-cjk/523d033d6cb47f4a80c58a35753646f5c3608a78/'
+          target = Path('build/ci-fonts').resolve()
+          target.mkdir(parents=True, exist_ok=True)
+          files = {
+              'Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf':
+                  '2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b',
+              'LICENSE': '6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2',
+          }
+          for path, expected in files.items():
+              with urllib.request.urlopen(base + path, timeout=120) as response:
+                  data = response.read()
+              if hashlib.sha256(data).hexdigest() != expected:
+                  raise SystemExit(f'CI font checksum mismatch: {path}')
+              (target / Path(path).name).write_bytes(data)
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as output:
+              output.write(f'QT_QPA_FONTDIR={target.as_posix()}\n')
+          PYFONT
+      - uses: actions/cache/restore@v5
+        id: conan-cache
+        with:
+          path: ~/.conan2
+          key: zh4-conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt', 'conan.lock') }}
+          restore-keys: |
+            zh4-conan-${{ matrix.os }}-${{ hashFiles('conanfile.txt', 'conan.lock') }}-partial-
+            zh4-conan-${{ matrix.os }}-
+      - name: Prepare Conan sources
+        timeout-minutes: 12
+        run: |
+          conan profile detect --force
+          ./scripts/configure_conan_remote.sh
+          cache_dir="$(python -c 'import os; print(os.path.abspath(".conan-source-cache").replace(chr(92), "/"))')"
+          conan_home="$(conan config home)"
+          mkdir -p "$conan_home"
+          python - "$conan_home/global.conf" "$cache_dir" <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import re
+          import shutil
+          import sys
+          # Conan 2.34 trusts local cache hits without rehashing. Validate every
+          # repository seed before copying any bytes into that trusted cache.
+          seeds = Path('.github/conan/source-backup')
+          blobs = sorted(p for p in seeds.iterdir() if re.fullmatch(r'[0-9a-f]{64}', p.name))
+          for blob in blobs:
+              if hashlib.sha256(blob.read_bytes()).hexdigest() != blob.name:
+                  raise SystemExit(f'Conan source backup SHA256 mismatch: {blob.name}')
+              metadata = json.loads(blob.with_suffix('.json').read_text(encoding='utf-8'))
+              if not metadata.get('references'):
+                  raise SystemExit(f'Conan source backup metadata missing references: {blob.name}')
+          target = Path(sys.argv[2]) / 's'
+          target.mkdir(parents=True, exist_ok=True)
+          for blob in blobs:
+              shutil.copy2(blob, target / blob.name)
+              shutil.copy2(blob.with_suffix('.json'), target / (blob.name + '.json'))
+          p = Path(sys.argv[1])
+          lines = p.read_text(encoding='utf-8').splitlines() if p.exists() else []
+          lines = [s for s in lines if not s.startswith(('core.sources:download_cache=', 'core.sources:download_urls='))]
+          lines += [f'core.sources:download_cache={sys.argv[2]}',
+                    'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources/"]']
+          p.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+          python scripts/prefetch_assimp_source.py --cache-dir "$cache_dir"
+      - name: Resolve exact Windows SDK and dependencies
+        if: runner.os == 'Windows'
+        id: conan-windows
+        # Invoke Conan outside Git Bash. Its FFmpeg recipe launches its own
+        # MSYS shell; nested shells can corrupt pkg-config's native path list.
+        # https://github.com/conan-io/conan-center-index/issues/30348
+        shell: pwsh
+        run: |
+          # setup-python injects a native path which conflicts with Conan's
+          # MSYS pkg-config search path. Let the locked dependency graph own it.
+          # https://github.com/conan-io/setup-conan#using-setup-python-action-alongside-setup-conan
+          Remove-Item Env:PKG_CONFIG_PATH -ErrorAction SilentlyContinue
+          python scripts/bootstrap_host_sdk.py
+          conan install . --output-folder=build --build=missing `
+            -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial `
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 `
+            -o 'cpython/*:shared=True' -s 'cpython/*:build_type=Release' `
+            -s compiler.version=194 -c 'tools.cmake.cmaketoolchain:generator=Ninja Multi-Config' `
+            --format=json --out-file=build/conan-graph.json
+          exit $LASTEXITCODE
+      - name: Build only the three regression binaries
+        run: |
+          cmake -S . -B build -G "${{ matrix.generator }}" \
+            -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+            -DCMAKE_PREFIX_PATH="$PWD/.qt/$PJ_QT_VERSION/${{ matrix.qt_arch }}" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPJ_BUILD_TESTS=ON -DPJ_BUILD_DEMOS=OFF \
+            -DPJ_PLUGIN_FEEDBACK_ACCEPTANCE=ON \
+            -DPJ_INSTALLATION=${{ matrix.installation }} \
+            -DCMAKE_POLICY_DEFAULT_CMP0141=NEW -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+
+          cmake --build build --config RelWithDebInfo --target pj_log_tests pj_app_unit_tests pj_app_gui_tests --parallel 2
+      - name: Put the runtime DLLs on PATH
+        # Prepend Qt's and FFmpeg's bin/ dirs to PATH so the OS loader can resolve
+        # their DLLs (Qt6Core.dll, avcodec/avformat/avutil/swscale) when ctest
+        # launches the test executables. Without this they exit 0xC0000135
+        # (STATUS_DLL_NOT_FOUND) before any test code runs.
+        shell: bash
+        run: |
+          echo "$(cygpath -w "$(pwd)/.qt/${PJ_QT_VERSION}/msvc2022_64/bin")" >> "$GITHUB_PATH"
+          # FFmpeg's Conan bin dir(s) are emitted at configure time by
+          # pj_scene2D/core/CMakeLists.txt (Conan's package path is hashed and not
+          # knowable here). Prepend each so every exe that transitively links
+          # pj_scene2d_core resolves the FFmpeg DLLs — covers all such tests at once,
+          # no per-target list.
+          # CPython runtime dir (pythonXY.dll) for python_engine_test — emitted by
+          # pj_scripting/CMakeLists.txt when cpython is built shared (Windows only).
+          # Same rationale as the FFmpeg dirs above.
+          for f in build/pj_ffmpeg_bin_dirs.txt build/pj_python_bin_dirs.txt; do
+            [[ -f "$f" ]] || continue
+            while IFS= read -r _d; do
+              [[ -n "$_d" ]] && echo "$_d" >> "$GITHUB_PATH"
+            done < "$f"
+          done
+
+      - name: Require all three original Windows regressions to pass
+        run: python probe-control/scripts/ci/pj71-native/select_and_verify.py test windows
+  mac-apbin:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.lane == 'mac-apbin') ||
+      (github.event_name == 'push' && github.event.created &&
+       github.ref == 'refs/heads/ci/pj71-native-857bd12b')
+    runs-on: macos-15
+    timeout-minutes: 120
+    env:
+      PJ_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/checkout@v6
+        with:
+          ref: 857bd12b935579458914de18b59d8950b8bf71bd
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          path: probe-control
+          sparse-checkout-cone-mode: false
+          sparse-checkout: /scripts/ci/pj71-native/
+          persist-credentials: false
+      - name: Verify parent source and apply audited test-only patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "857bd12b935579458914de18b59d8950b8bf71bd"
+          test "$(git -C 3rdparty/plotjuggler-apbin-plugins rev-parse HEAD)" = "fc6065fd64305479946552a757d78e6afdd2c506"
+          git diff --exit-code
+          python probe-control/scripts/ci/pj71-native/select_and_verify.py patch mac 3rdparty/plotjuggler-apbin-plugins
+      - name: Read versions
+        id: versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          source ./versions.env
+          echo "PJ_QT_VERSION=${PJ_QT_VERSION}" >> "${GITHUB_ENV}"
+          echo "qt_version=${PJ_QT_VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Install build tools
+        # Homebrew builds no bottles for macOS 14 any more, so a `brew install`
+        # there compiles from source: use the image's ninja when it has one.
+        shell: bash
+        run: |
+          command -v ninja || HOMEBREW_NO_AUTO_UPDATE=1 brew install ninja
+          xcodebuild -version
+          clang --version
+
+      - name: Install sccache
+        # Same as windows-ci.yml: a speedup, never load-bearing. On Depot runners
+        # the backend is Depot Cache through the preset SCCACHE_WEBDAV_* variables
+        # (every build, PRs included, reads and writes it); on macos-15 it is a
+        # local disk cache, cold every run.
+        id: setup_sccache
+        continue-on-error: true
+        uses: mozilla-actions/sccache-action@v0.0.10
+        with:
+          version: "v0.16.0"
+
+      - uses: conan-io/setup-conan@v1
+        with:
+          cache_packages: false
+
+      - name: Compute Conan cache key
+        # The toolchain is part of every package ID: a runner-image Xcode bump
+        # must start a new closure rather than restore one it cannot use.
+        id: conan_cache
+        shell: bash
+        run: |
+          hash=$( (cat conanfile.txt conan.lock; clang --version) | shasum -a 256 | cut -c1-16)
+          echo "hash=v1-${hash}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Conan cache
+        # On Depot runners actions/cache is backed by Depot Cache storage.
+        id: conan-gha-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.conan2
+          key: conan-macos-arm64-relwithdebinfo-${{ steps.conan_cache.outputs.hash }}
+          restore-keys: conan-macos-arm64-relwithdebinfo-v1-
+
+      - name: Seed Conan source download cache
+        # Same checksum-verified, repo-hosted source seed as linux-ci.yml
+        # (minizip's only zlib.net URL rejects runner IPs).
+        shell: bash
+        run: |
+          set -euo pipefail
+          cache_dir="${RUNNER_TEMP}/conan-source-cache"
+          mkdir -p "${cache_dir}/s"
+          find .github/conan/source-backup -maxdepth 1 -type f ! -name README.md \
+            -exec cp -f {} "${cache_dir}/s/" \;
+          conan_home="$(conan config home)"
+          conf="${conan_home}/global.conf"
+          mkdir -p "${conan_home}"
+          if [[ -f "$conf" ]]; then
+            grep -v '^core\.sources:download_cache=' "$conf" > "${conf}.tmp" || true
+            mv "${conf}.tmp" "$conf"
+          fi
+          echo "core.sources:download_cache=${cache_dir}" >> "$conf"
+          cat "$conf"
+
+      - name: Restore Qt SDK cache
+        id: qt-sdk-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .qt/${{ steps.versions.outputs.qt_version }}/macos
+          key: qt-sdk-${{ steps.versions.outputs.qt_version }}-macos-v1
+
+      - name: Install Qt via aqt
+        # Inline like windows-ci.yml (scripts/install_qt6.sh is Linux-only); the
+        # version comes from versions.env.
+        if: steps.qt-sdk-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          # Same aqt pin as windows-ci.yml (released aqt cannot resolve the new repo layout).
+          pip3 install --break-system-packages \
+            "git+https://github.com/miurahr/aqtinstall.git@8c3695d4a4e1ceabf6a74dc6c79681656dc6b74b"
+          attempt=0
+          until aqt install-qt mac desktop "${PJ_QT_VERSION}" clang_64 --outputdir ./.qt; do
+            attempt=$((attempt + 1))
+            if [ "$attempt" -ge 5 ]; then echo "aqt failed after ${attempt} attempts" >&2; exit 1; fi
+            sleep $((attempt * 15))
+          done
+          test -x ".qt/${PJ_QT_VERSION}/macos/bin/qmake"
+
+      - name: Conan install
+        shell: bash
+        run: |
+          set -euo pipefail
+          conan profile detect --force
+          scripts/configure_conan_remote.sh
+          conan_log="${RUNNER_TEMP}/pj4-conan-install.log"
+          conan install . --output-folder=build --build=missing -r=plotjuggler-conan -r=conancenter \
+            --lockfile=conan.lock --lockfile-partial \
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 \
+            -c tools.cmake.cmaketoolchain:generator=Ninja \
+            2>&1 | tee "$conan_log"
+          if grep -q "Building from source" "$conan_log"; then
+            echo "::notice::Conan built missing macOS binaries; the cache save below persists them."
+          fi
+
+      - name: Build APBIN source test and plugin
+        id: build
+        shell: bash
+        env:
+          SCCACHE_AVAILABLE: ${{ steps.setup_sccache.outcome == 'success' }}
+        run: |
+          launcher_args=()
+          if [[ "$SCCACHE_AVAILABLE" == "true" ]]; then
+            launcher_args=(-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache)
+          else
+            echo "::warning::sccache unavailable; building without a compiler cache"
+          fi
+          cmake -S . -B build -G Ninja \
+            "-DCMAKE_TOOLCHAIN_FILE=${PWD}/build/conan_toolchain.cmake" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            "-DCMAKE_PREFIX_PATH=${PWD}/.qt/${PJ_QT_VERSION}/macos" \
+            "${launcher_args[@]}" \
+            -DPJ_DEBUG_INFO=lines \
+            -DPJ_BUILD_DEMOS=OFF
+          # -k 0: one run lists every compile error.
+          cmake --build build --target ardupilot_source_test --parallel 2
+          if [[ "$SCCACHE_AVAILABLE" == "true" ]]; then sccache --show-stats; fi
+
+      - name: Require APBIN actual plugin ABI and Unicode test to pass
+        shell: bash
+        run: python3 probe-control/scripts/ci/pj71-native/select_and_verify.py test mac
