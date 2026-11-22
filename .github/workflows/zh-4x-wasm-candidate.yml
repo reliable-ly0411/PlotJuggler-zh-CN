@@ -137,7 +137,7 @@ jobs:
       PJ_WASM_BUILD_DIR: build-wasm-probe
       PJ_WASM_PYTHON: '1'
       REPLAY_LUAU_ONLY: >-
-        ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' || github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only' || github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E' || github.event.head_commit.message == 'Diagnose pinned Firefox Luau candidate D across two device pixel ratios') }
+        ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' || github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only' || github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E' || github.event.head_commit.message == 'Diagnose pinned Firefox Luau candidate D across two device pixel ratios') }}
       COMPARE_LUAU_ONLY: >-
         ${{ github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' }}
       COMPARE_E_ONLY: >-
