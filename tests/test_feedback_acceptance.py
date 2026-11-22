@@ -577,23 +577,34 @@ class VulkanWorkflowSetupTests(unittest.TestCase):
 
 class PackageLanguagesTests(unittest.TestCase):
     def run_manifest(self, languages, png_languages):
+        _, provenance = manifest.read_inventory(ROOT)
+        inventories = {
+            platform: manifest.expected_plugin_inventory(ROOT, platform)
+            for platform in ('windows-x86_64', 'linux-x86_64')
+        }
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); old = Path.cwd()
             try:
                 os.chdir(root)
                 Path('versions.env').write_text('PJ_APP_VERSION=4.0.0-zh.1.rc.4\n', encoding='utf-8')
                 for relative, (platform, kind) in manifest.REPORT_IDENTITIES.items():
-                    i = 0 if platform == 'windows-2022' else 1
+                    windows = platform == 'windows-2022'
+                    inventory = inventories['windows-x86_64' if windows else 'linux-x86_64']
                     directory = (root/'reports'/relative).parent; directory.mkdir(parents=True)
                     report = {'status': 'automated_checks_passed', 'languages': languages,
-                              'release': {'source_commit': 'a'*40, 'source_tree': 'b'*40, 'version': '4.0.0-zh.1.rc.4'},
-                              'plugin_count': 19 if i==0 else 21, 'loaded_plugin_count': 19 if i==0 else 20,
-                              'unavailable_plugins': [] if i==0 else [{'id': 'ros2-topic-subscriber', 'status': 'not_tested_missing_external_dependency'}],
+                              'release': {'source_commit': 'a'*40, 'source_tree': 'b'*40, 'version': '4.0.0-zh.1.rc.4',
+                                          'expected_plugins': [f'{key}={value}' for key, value in sorted(inventory.items())],
+                                          'bin_plugin_version': inventory['ardupilot-dataflash'],
+                                          'registry_sources': provenance['sources']},
+                              'plugin_count': len(inventory),
+                              'loaded_plugin_count': len(inventory) - (0 if windows else 1),
+                              'unavailable_plugins': [] if windows else [
+                                  {'id': 'ros2-topic-subscriber', 'status': 'not_tested_missing_external_dependency'}],
                               'checks': ['synthetic test']}
                     (directory/'acceptance.json').write_text(json.dumps(report), encoding='utf-8')
                     for language in png_languages:
                         (directory/f'gui-{language}.png').write_bytes(b'synthetic-size-check-only'*500)
-                    if i == 0:
+                    if windows:
                         suffix = 'portable-zh-CN.zip' if kind == 'portable' else 'zh-CN.exe'
                         name = 'PlotJuggler-4.0.0-zh.1.rc.4-Windows-x64-' + suffix
                         digest = manifest.hashlib.sha256(b'synthetic package').hexdigest()
