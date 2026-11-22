@@ -31,7 +31,8 @@ jobs:
        github.event.head_commit.message != 'Probe verified #71 Firefox Luau heartbeat only' &&
        github.event.head_commit.message != 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' &&
        github.event.head_commit.message != 'Profile verified Firefox Luau candidate D artifact only' &&
-       github.event.head_commit.message != 'Compare pinned Firefox Luau candidate D with selected-view candidate E')
+       github.event.head_commit.message != 'Compare pinned Firefox Luau candidate D with selected-view candidate E' &&
+       github.event.head_commit.message != 'Diagnose pinned Firefox Luau candidate D across two device pixel ratios')
     runs-on: ubuntu-22.04
     outputs:
       upstream_sha: ${{ steps.identity.outputs.upstream_sha }}
@@ -119,7 +120,8 @@ jobs:
       (github.event_name == 'push' && github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only') ||
       (github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate') ||
       (github.event_name == 'push' && github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only') ||
-      (github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E')
+      (github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E') ||
+      (github.event_name == 'push' && github.event.head_commit.message == 'Diagnose pinned Firefox Luau candidate D across two device pixel ratios')
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     permissions:
@@ -129,17 +131,19 @@ jobs:
       fail-fast: false
       matrix:
         browser: >-
-          ${{ fromJSON((inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' || github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only' || github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E') && '["firefox"]' || '["chromium","firefox"]') }}
+          ${{ fromJSON((inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' || github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only' || github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E' || github.event.head_commit.message == 'Diagnose pinned Firefox Luau candidate D across two device pixel ratios') && '["firefox"]' || '["chromium","firefox"]') }}
     env:
       PJ_WASM_URL: http://127.0.0.1:6931/
       PJ_WASM_BUILD_DIR: build-wasm-probe
       PJ_WASM_PYTHON: '1'
       REPLAY_LUAU_ONLY: >-
-        ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' || github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only' || github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E') }}
+        ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' || github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only' || github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E' || github.event.head_commit.message == 'Diagnose pinned Firefox Luau candidate D across two device pixel ratios') }
       COMPARE_LUAU_ONLY: >-
         ${{ github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' }}
       COMPARE_E_ONLY: >-
         ${{ github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E' }}
+      DPR_D_ONLY: >-
+        ${{ github.event_name == 'push' && github.event.head_commit.message == 'Diagnose pinned Firefox Luau candidate D across two device pixel ratios' }}
       PROFILE_D_ONLY: >-
         ${{ github.event_name == 'push' && github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only' }}
       PROFILE_FAILED_LUAU: ${{ github.event_name == 'push' || inputs.profile_failed_luau }}
@@ -165,12 +169,12 @@ jobs:
         with:
           node-version: '22.22.1'
       - name: Download pinned artifact and verify original acceptance receipt
-        if: env.PROFILE_D_ONLY != 'true' && env.COMPARE_E_ONLY != 'true'
+        if: env.PROFILE_D_ONLY != 'true' && env.COMPARE_E_ONLY != 'true' && env.DPR_D_ONLY != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/replay.sh verify
       - name: Verify and stage the exact candidate D artifacts (no build)
-        if: env.PROFILE_D_ONLY == 'true' || env.COMPARE_E_ONLY == 'true'
+        if: env.PROFILE_D_ONLY == 'true' || env.COMPARE_E_ONLY == 'true' || env.DPR_D_ONLY == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/d-replay.sh
@@ -194,8 +198,27 @@ jobs:
           REPLAY_BROWSER: ${{ matrix.browser }}
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/replay.sh test
       - name: Replay sole Firefox Luau acceptance case and retain independent diagnostic
-        if: env.REPLAY_LUAU_ONLY == 'true' && env.COMPARE_LUAU_ONLY != 'true' && env.COMPARE_E_ONLY != 'true'
+        if: env.REPLAY_LUAU_ONLY == 'true' && env.COMPARE_LUAU_ONLY != 'true' && env.COMPARE_E_ONLY != 'true' && env.DPR_D_ONLY != 'true'
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/luau.sh
+      - name: Diagnose pinned D only at Firefox device pixel ratios 1 and 2
+        if: env.DPR_D_ONLY == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 2e9235ef1575551f4fa14c84ce150301e4022bcd
+          test "$(git rev-parse 'HEAD^{tree}')" = 483bb27b54c929697295978fc66a1c59da4870d5
+          git diff HEAD --exit-code
+          test -s replay-evidence/D-artifact-verify.log
+          test -z "${MOZ_PROFILER_STARTUP:-}"
+          node scripts/serve_wasm.mjs --root build-wasm-probe/deploy --port 6931 > replay-evidence/D-dpr-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 50); do
+            curl -fsS -o /dev/null "$PJ_WASM_URL" && break
+            sleep 0.2
+          done
+          curl -fsS -o /dev/null "$PJ_WASM_URL"
+          xvfb-run -a node .replay-controller/scripts/ci/pj71-wasm-replay/dpr.cjs
       - name: Materialize and verify distinct startup-safe shared-parsed-panel product D
         if: env.COMPARE_LUAU_ONLY == 'true'
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/ab.sh materialize
