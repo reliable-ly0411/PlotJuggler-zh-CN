@@ -794,3 +794,220 @@ jobs:
           name: pj4-sync-812ac2a-native-a1c93b0-${{ github.run_attempt }}
           path: ${{ runner.temp }}/pj4-sync-812ac2a-native/
           retention-days: 7
+
+  sync-da8a7eef-firefox:
+    if: >-
+      github.event_name == 'push' && !github.event.created &&
+      github.ref == 'refs/heads/ci/pj71-native-857bd12b' &&
+      github.event.head_commit.message == 'Validate pinned PlotJuggler da8a7eef Firefox regressions only'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 155
+    env:
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      PJ_DISABLE_TELEMETRY: '1'
+      PJ_WASM_URL: http://127.0.0.1:6931/
+      PJ_WASM_PYTHON: '1'
+    steps:
+      - name: Use HTTPS for github.com submodules
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+      - uses: actions/checkout@v6
+        with:
+          ref: refs/heads/zh-CN-4.x-ci/sync-da8a7eef-source
+          submodules: recursive
+          persist-credentials: false
+      - name: Verify sealed QA inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir ci-evidence
+          test "$(git rev-parse HEAD)" = 5bd2595316c1367ef77862c8078c9ac994dead19
+          test "$(git rev-parse HEAD^{tree})" = 93b4ab03a336957d41e2515631d18256c8c3c34d
+          git submodule status --recursive | tee ci-evidence/submodules.txt
+          ! grep -Eq '^[-+U]' ci-evidence/submodules.txt
+          test -z "$(git status --porcelain --untracked-files=no)"
+          printf 'source=%s\nsourceTree=%s\ncontrol=%s\nartifactKind=acceptance-probe; production 26 MB gate not exercised\n'             "$(git rev-parse HEAD)" "$(git rev-parse HEAD^{tree})" "$GITHUB_SHA" > ci-evidence/identity
+      - name: Read toolchain versions
+        id: versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          source ./versions.env
+          for name in PJ_QT_VERSION PJ_EMSCRIPTEN_VERSION PJ_WASM_NODE_VERSION; do
+            echo "${name}=${!name}" >> "${GITHUB_ENV}"
+          done
+          echo "wasm_qt=${PJ_QT_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "emscripten=${PJ_EMSCRIPTEN_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "node=${PJ_WASM_NODE_VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Install pinned packaging runtime
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ steps.versions.outputs.node }}
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ccache ninja-build python3-pip make pkg-config
+          # Scene2D video cross-compiles dav1d, whose build system is meson.
+          python3 -m pip install --user meson
+          # Runtime libraries for the desktop host Qt tools (qsb bakes the QRhi
+          # shaders offline and transitively links the full Qt GUI stack, even
+          # headless). The lean runner ships none of these, so qsb would die at
+          # load time with exit 127.
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libegl1 libfontconfig1 libfreetype6 libxkbcommon0 \
+            libx11-6 libxcb1 libglib2.0-0 libdbus-1-3
+
+      - name: Cache Qt WebAssembly and host kits
+        id: qt-cache
+        uses: actions/cache@v5
+        with:
+          path: .qt-wasm
+          key: qt-wasm-${{ steps.versions.outputs.wasm_qt }}-multithread-shadertools-v1
+
+      - name: Install Qt WebAssembly and host kits
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --user 'aqtinstall==3.3.0'
+          "${HOME}/.local/bin/aqt" install-qt linux desktop \
+            "${PJ_QT_VERSION}" linux_gcc_64 --outputdir .qt-wasm \
+            -m qtshadertools
+          "${HOME}/.local/bin/aqt" install-qt all_os wasm \
+            "${PJ_QT_VERSION}" wasm_multithread --outputdir .qt-wasm \
+            -m qtshadertools
+
+      - name: Cache Emscripten SDK
+        id: emsdk-cache
+        uses: actions/cache@v5
+        with:
+          path: .emsdk
+          key: emsdk-${{ steps.versions.outputs.emscripten }}-linux-x64-v1
+
+      - name: Install Emscripten SDK
+        if: steps.emsdk-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch "${PJ_EMSCRIPTEN_VERSION}" \
+            https://github.com/emscripten-core/emsdk.git .emsdk
+          .emsdk/emsdk install "${PJ_EMSCRIPTEN_VERSION}"
+          .emsdk/emsdk activate "${PJ_EMSCRIPTEN_VERSION}"
+
+      - name: Restore WebAssembly compiler cache
+        # restore/save split rather than actions/cache: the implicit post-job
+        # save fires on every run and the SHA-keyed entry is never an exact
+        # hit, so each run persisted a new blob of up to max_size (4 G below)
+        # into billed Depot Cache storage. See linux-ci.yml's "Save ccache".
+        id: ccache_restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.cache/ccache
+          key: ccache-zh4-localized-5bd2595316c1367ef77862c8078c9ac994dead19
+          restore-keys: |
+            ccache-zh4-localized-
+
+      - name: Configure compiler cache
+        run: |
+          ccache --set-config=max_size=4G
+          ccache --set-config=compression=true
+          ccache --set-config=compiler_check=content
+          ccache --set-config=hash_dir=false
+          ccache --set-config=base_dir="${GITHUB_WORKSPACE}"
+          ccache --zero-stats
+
+      - name: Cache the WebAssembly CPython build
+        # A content key (the recipe with its pinned tarball hash, the Emscripten
+        # release): an exact hit or a cold ~4 minute build, so the plain action,
+        # which saves only on a miss, adds one entry per recipe change.
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pj-wasm-cpython
+          key: wasm-cpython-${{ hashFiles('cmake/PjWasmPython.cmake', 'cmake/wasm_python/**') }}-emsdk-${{ steps.versions.outputs.emscripten }}
+
+      - name: Build one QA binary (shipped features, ingress probe on)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .emsdk/emsdk_env.sh >/dev/null
+          embuilder build zlib
+          cmake -S . -B build-wasm-probe -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE="${PWD}/.qt-wasm/${PJ_QT_VERSION}/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
+            -DQT_HOST_PATH="${PWD}/.qt-wasm/${PJ_QT_VERSION}/gcc_64" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DPJ_BUILD_TESTS=OFF \
+            -DPJ_BUILD_DEMOS=OFF \
+            -DPJ_WASM_ENABLE_INGRESS_PROBE=ON \
+            -DPJ_WASM_SCENE3D_CAPABILITY_PROBE=OFF \
+            -DPJ_WASM_WITH_SCENE2D=ON \
+            -DPJ_WASM_WITH_SCENE3D=ON \
+            -DPJ_WASM_WITH_PYTHON=ON \
+            -DPJ_WASM_PYTHON_CACHE_DIR="${HOME}/.cache/pj-wasm-cpython"
+          cmake --build build-wasm-probe \
+            --target pj_app --parallel 2
+          ccache --show-stats
+
+
+      - name: Package the one Firefox acceptance artifact
+        run: |
+          node scripts/package_wasm.mjs --source build-wasm-probe/pj_app --output build-wasm-probe/deploy
+          sha256sum build-wasm-probe/deploy/manifest.json > ci-evidence/manifest-sha256.txt
+      - name: Install pinned Firefox and its display dependencies
+        working-directory: tests/wasm
+        run: |
+          sudo apt-get install -y --no-install-recommends libgl1 libegl1 libgl1-mesa-dri libegl-mesa0
+          npm ci
+          npx playwright install --with-deps firefox
+      - name: Run and verify exactly two unmodified Firefox tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/serve_wasm.mjs --root build-wasm-probe/deploy --port 6931 > /dev/null 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 50); do
+            curl -fsS -o /dev/null "${PJ_WASM_URL}plotjuggler4.html" && break
+            sleep 0.2
+          done
+          curl -fsS -o /dev/null "${PJ_WASM_URL}plotjuggler4.html"
+          export PLAYWRIGHT_JSON_OUTPUT_NAME="$GITHUB_WORKSPACE/ci-evidence/playwright.json"
+          export TITLE_RELOAD='a preference the UI changes reaches durable storage without an explicit sync and survives refresh'
+          export TITLE_EDITOR='Transform Editor creates a large exact Luau series while the browser main thread stays responsive'
+          runtime_rc=0
+          xvfb-run -a npm --prefix tests/wasm run test:firefox -- \
+            '(^|/)(persistence_layout|editors)[.]spec[.]js$' \
+            --grep "(${TITLE_RELOAD}|${TITLE_EDITOR})$" --retries=0 --reporter=line,json \
+            --output "$RUNNER_TEMP/pj-firefox-output" || runtime_rc=$?
+          export RUNTIME_RC="$runtime_rc"
+          python3 - <<'PYRESULT'
+          import json, os
+          from pathlib import Path
+          report = json.loads(Path(os.environ['PLAYWRIGHT_JSON_OUTPUT_NAME']).read_text())
+          def specs(groups):
+              for g in groups:
+                  yield from g.get('specs', [])
+                  yield from specs(g.get('suites', []))
+          observed = []
+          for s in specs(report['suites']):
+              for case in s.get('tests', []):
+                  observed.append((s['title'], case['projectName'], case['status'],
+                                   [r['status'] for r in case['results']]))
+          expected = sorted([(os.environ[name], 'firefox', 'expected', ['passed'])
+                             for name in ('TITLE_RELOAD', 'TITLE_EDITOR')])
+          print(observed)
+          Path('ci-evidence/executed.json').write_text(json.dumps(observed) + '\n')
+          assert sorted(observed) == expected, 'selected browser tests must both actually execute and pass exactly once'
+          assert not report['errors'] and report['stats']['skipped'] == 0
+          assert int(os.environ['RUNTIME_RC']) == 0
+          PYRESULT
+      - name: Retain only scoped source and browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: da8a7eef-firefox-selected-evidence
+          path: ci-evidence/
+          if-no-files-found: error
+          retention-days: 7
