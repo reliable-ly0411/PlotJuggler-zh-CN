@@ -37,6 +37,8 @@ class RegistryInventoryTests(unittest.TestCase):
         linux = [x for x in linux if x]
         self.assertEqual(set(windows), set(CORE_PLUGINS))
         self.assertEqual(set(linux), set(windows) | {'toolbox-assistant-agent', 'ros2-topic-subscriber'})
+        self.assertIn('log-widget', entries)
+        self.assertNotIn('log-widget', linux)  # The built-in Log panel replaces the legacy DSO.
         for platform, ids in [('windows-x86_64', windows), ('linux-x86_64', linux)]:
             for identifier in ids:
                 self.assertIn(identifier, entries)
@@ -83,6 +85,15 @@ class RegistryInventoryTests(unittest.TestCase):
         notice.write_text('MIT', encoding='utf-8')
         with self.assertRaisesRegex(ValueError, 'notice hash differs'):
             read_inventory(self.root)
+
+    def test_staged_notices_describe_selected_plugins_without_mutating_provenance(self):
+        dest = self.root / 'licenses'
+        records = stage_notices(self.root, dest, plugin_ids=CORE_PLUGINS)
+        self.assertEqual({record['component'] for record in records},
+                         {'candump-loader', 'influx-parser', 'navmap-parser'})
+        self.assertFalse((dest / 'registry-plugins/log-widget').exists())
+        self.assertEqual(json.loads((dest / 'registry-provenance.json').read_text(encoding='utf-8')),
+                         read_inventory(self.root)[1])
 
 
 if __name__ == '__main__':

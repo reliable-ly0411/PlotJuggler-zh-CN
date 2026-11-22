@@ -58,7 +58,7 @@
 #include "pj_widgets/ComboBox.h"
 #include "pj_widgets/FrameworkTokens.h"
 #include "pj_widgets/RenderingWarningLabel.h"
-#include "pj_widgets/SvgUtil.h"
+#include "pj_widgets/SvgButton.h"
 #include "urdf_package_resolver.h"
 using namespace Qt::StringLiterals;
 
@@ -300,6 +300,7 @@ Scene3DDockWidget::Scene3DDockWidget(QWidget* parent) : SceneDockWidget(parent) 
           -> std::unique_ptr<ISceneLayer> {
         prepareTransformBufferForTopic(topic_id);
         auto layer = std::make_unique<SceneEntitiesLayer>(topic_id, display_name, this);
+        layer->setPackageResolver(package_resolver_.get());
         wireScene3DLayer(layer.get());
         return layer;
       });
@@ -361,18 +362,13 @@ Scene3DDockWidget::Scene3DDockWidget(QWidget* parent) : SceneDockWidget(parent) 
     }
   });
 
-  home_button_ = new QToolButton(this);
+  // Filled like the neighbouring combos by the theme stylesheet (QToolButton#cameraHomeButton), so it reads over any
+  // scene content; SvgButton re-tints the glyph on a theme switch.
+  home_button_ = new SvgButton(u":/resources/svg/recenter.svg"_s, SvgButton::Size::kDefault, this);
   home_button_->setObjectName(u"cameraHomeButton"_s);
+  home_button_->setAutoRaise(false);
   home_button_->setFocusPolicy(Qt::ClickFocus);
   home_button_->setToolTip(tr("Reset view to default"));
-  // Pinned to the light-theme ink: this overlay button is always light, and a theme-following ink would be near
-  // invisible in dark mode.
-  home_button_->setIcon(PJ::loadSvg(u":/resources/svg/recenter.svg"_s));
-  home_button_->setStyleSheet(
-      QStringLiteral(
-          "QToolButton { background-color: rgba(255, 255, 255, 200); border: 1px solid rgba(60, 60, 60, 180); "
-          "padding: %1px; border-radius: 3px; }")
-          .arg(PJ::theme::space(PJ::theme::Space::None)));
   home_button_->raise();
   connect(home_button_, &QToolButton::clicked, this, [this]() {
     if (view_ != nullptr) {
@@ -1060,6 +1056,24 @@ void Scene3DDockWidget::resetTransformBindingIfDatasetGone() {
   pushTransformBufferToLayers();
 }
 
+QStringList Scene3DDockWidget::packageSearchFolders(const QSettings& settings) {
+  return pj::scene3d::UrdfPackageResolver::globalSearchRoots(settings);
+}
+
+void Scene3DDockWidget::setPackageSearchFolders(QSettings& settings, const QStringList& folders) {
+  pj::scene3d::UrdfPackageResolver::setGlobalSearchRoots(settings, folders);
+}
+
+void Scene3DDockWidget::reloadPackageSearchFolders() {
+  package_resolver_->clearPackageIndexes();
+  for (const SceneLayerInfo& info : layers()) {
+    if (auto* robot = dynamic_cast<RobotModelLayer*>(layerFor(info.topic_id));
+        robot != nullptr && robot->unresolvedMeshCount() > 0) {
+      robot->retry();
+    }
+  }
+}
+
 void Scene3DDockWidget::pushTransformBufferToLayers() {
   for (const SceneLayerInfo& info : layers()) {
     ISceneLayer* layer = layerFor(info.topic_id);
@@ -1372,10 +1386,10 @@ void Scene3DDockWidget::layoutFrameOverlayCombo() {
 
   constexpr int kGap = 6;
   if (home_button_ != nullptr) {
-    const int hb = h;  // square, matching the fixed-frame combo height
-    home_button_->setGeometry(view_origin.x() + kMargin + w + kGap, view_origin.y() + kMargin, hb, hb);
+    const int hb = h;                               // square, matching the fixed-frame combo height
     const int home_icon_dim = std::max(hb - 2, 1);  // fill minus the 1px border, matching config-panel icons
-    home_button_->setIconSize(QSize(home_icon_dim, home_icon_dim));
+    home_button_->setExtent(hb, home_icon_dim);
+    home_button_->move(view_origin.x() + kMargin + w + kGap, view_origin.y() + kMargin);
     home_button_->raise();
   }
 
@@ -1584,7 +1598,7 @@ Scene3DDockWidget::ElementRestoreResult Scene3DDockWidget::restoreLayerElement(
   bool payload_invalid = !payload.isNull() && !payload.nextSiblingElement().isNull();
   if (!payload_invalid && !payload.isNull()) {
     if (auto* robot = dynamic_cast<RobotModelLayer*>(layer); robot != nullptr) {
-      const RobotModelLayer::XmlLoadResult result = robot->xmlLoadStateResult(payload);
+      const RobotModelLayer::XmlLoadResult result = robot->xmlLoadStateResult(payload, representativeDatasetId());
       if (result == RobotModelLayer::XmlLoadResult::kDeferred) {
         if (deferred_topic_name != nullptr) {
           *deferred_topic_name = payload.attribute(u"source_topic_name"_s);
@@ -1619,29 +1633,20 @@ Scene3DDockWidget::ElementRestoreResult Scene3DDockWidget::resolveSavedTopicRef(
   if (topic_name.isEmpty()) {
     return ElementRestoreResult::kInvalid;
   }
-  std::optional<ObjectTopicId> topic_id_opt;
-  if (!hasDatasetIdentity(el)) {
-    const auto generic =
-        pj::scene3d::resolveUniqueObjectTopic(sessionManager()->objectStore(), topic_name.toStdString(), expected_type);
-    if (generic.ambiguous) {
-      return ElementRestoreResult::kInvalid;
-    }
-    topic_id_opt = generic.topic_id;
-  } else {
-    bool dataset_ok = false;
-    const qulonglong dataset_value = el.attribute(u"dataset_id"_s).toULongLong(&dataset_ok);
-    if (el.hasAttribute(u"dataset_id"_s) &&
-        (!dataset_ok || dataset_value == 0 || dataset_value > std::numeric_limits<uint32_t>::max())) {
-      return ElementRestoreResult::kInvalid;
-    }
-    const SavedElementDataset binding = datasetForSavedElement(el);
-    if (binding.refused) {
-      return ElementRestoreResult::kConsumed;
-    }
-    if (binding.dataset.has_value()) {
-      topic_id_opt = sessionManager()->objectStore().findTopic(*binding.dataset, topic_name.toStdString());
-    }
+  const bool qualified = hasDatasetIdentity(el);
+  bool dataset_ok = false;
+  const qulonglong dataset_value = el.attribute(u"dataset_id"_s).toULongLong(&dataset_ok);
+  if (el.hasAttribute(u"dataset_id"_s) &&
+      (!dataset_ok || dataset_value == 0 || dataset_value > std::numeric_limits<uint32_t>::max())) {
+    return ElementRestoreResult::kInvalid;
   }
+  const SavedElementDataset binding = qualified ? datasetForSavedElement(el) : SavedElementDataset{};
+  if (binding.refused) {
+    return ElementRestoreResult::kConsumed;
+  }
+  const std::optional<ObjectTopicId> topic_id_opt = resolveSavedObjectTopic(
+      sessionManager()->objectStore(), topic_name.toStdString(), expected_type, qualified, binding.dataset,
+      representativeDatasetId());
   if (!topic_id_opt.has_value()) {
     if (deferred_topic_name != nullptr) {
       *deferred_topic_name = topic_name;
@@ -1692,7 +1697,7 @@ Scene3DDockWidget::ElementRestoreResult Scene3DDockWidget::restoreTrailElement(
   if (trail == nullptr) {
     return invalid("trail layer could not be created");
   }
-  const pj::scene3d::TrailLayer::XmlLoadResult result = trail->xmlLoadStateResult(payload);
+  const pj::scene3d::TrailLayer::XmlLoadResult result = trail->xmlLoadStateResult(payload, representativeDatasetId());
   if (result == pj::scene3d::TrailLayer::XmlLoadResult::kDeferred) {
     if (deferred_topic_name != nullptr) {
       *deferred_topic_name = payload.attribute(u"source_topic_name"_s);

@@ -19,12 +19,28 @@
 #include <map>
 using namespace Qt::StringLiterals;
 
+#include "pj_plotting/PlotScaleDraw.h"
 #include "pj_widgets/AppSettings.h"
+#include "pj_widgets/ColorContrast.h"
 #include "pj_widgets/FrameworkTokens.h"
 
 namespace PJ {
 
 namespace {
+
+// Curve palettes are tuned to draw on the plot, not to be read as text: on the dark backdrop the default red and blue
+// fall under this ratio.
+constexpr double kMinTextContrast = 4.5;
+
+// The time line reads like the X axis under it: plain seconds, or the clock format the date-time toggle installed there
+// (an XY plot keeps plain seconds).
+[[nodiscard]] QString trackerTimeText(const QwtPlot* plot, double seconds, int precision) {
+  const auto* draw = dynamic_cast<const PlotTimeScaleDraw*>(plot->axisScaleDraw(QwtPlot::xBottom));
+  if (draw != nullptr && isWallClock(draw->format())) {
+    return formatTimeLabel(seconds, draw->format(), precision);
+  }
+  return QString::number(seconds, 'f', precision);
+}
 
 [[nodiscard]] std::optional<QPointF> referencePointAt(const QwtPlotCurve* curve, std::optional<QPointF> reference) {
   return reference.has_value() ? curvePointAt(curve, reference->x()) : std::nullopt;
@@ -127,8 +143,11 @@ void CurveTracker::setPosition(const QPointF& tracker_position) {
     point_markers_.push_back(marker);
   }
 
+  // The value box is the canvas colour at partial alpha, so its text reads against the canvas colour itself.
+  const QColor canvas_color = plot_->canvasBackground().color();
+
   struct LineParts {
-    QColor color;
+    QColor color;  // text ink: the curve colour, lightened on the dark theme until it reads on the box
     QString value;
     QString delta;
     QString name;
@@ -172,7 +191,7 @@ void CurveTracker::setPosition(const QPointF& tracker_position) {
 
     const auto maybe_reference = referencePointAt(curve, reference_pos_);
     LineParts parts;
-    parts.color = color;
+    parts.color = fw_theme == theme::Theme::Dark ? inkWithContrast(color, canvas_color, kMinTextContrast) : color;
     parts.value = QString::number(point.y(), 'f', precision);
     parts.name = curve->title().text();
     if (maybe_reference.has_value()) {
@@ -205,7 +224,7 @@ void CurveTracker::setPosition(const QPointF& tracker_position) {
     time_delta = u" (Δ %1)"_s.arg(QString::number(tracker_position.x() - reference_pos_->x(), 'f', precision));
   }
   QString marker_html = u"<font color=%1>time : %2%3</font><br>"_s.arg(
-      text_color.name(), QString::number(tracker_position.x(), 'f', precision), time_delta);
+      text_color.name(), trackerTimeText(plot_, tracker_position.x(), precision), time_delta);
 
   if (valueBoxAllowed()) {
     int line_index = 0;
@@ -222,9 +241,9 @@ void CurveTracker::setPosition(const QPointF& tracker_position) {
       }
     }
 
-    // Canvas colour with alpha: a white veil on the light theme, a dark one on dark,
-    // so the WindowText/curve-colour ink above always reads against it.
-    QColor background_color = plot_->canvasBackground().color();
+    // Canvas colour with alpha: a white veil on the light theme, a dark one on dark, so the WindowText ink above reads
+    // against it (and the curve-colour ink on the dark theme, lifted to kMinTextContrast).
+    QColor background_color = canvas_color;
     background_color.setAlpha(200);
     marker_text.setBackgroundBrush(background_color);
     marker_text.setBorderPen(QPen(Qt::NoPen));

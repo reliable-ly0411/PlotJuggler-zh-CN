@@ -394,13 +394,36 @@ jobs:
           done
           curl -fsS -o /dev/null "${PJ_WASM_URL}" || { echo "wasm server failed to start"; exit 1; }
 
+      - name: Choose the suite
+        # A PR that touches the browser build itself runs everything; any other PR the @smoke specs.
+        id: scope
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # The paths this job used to be limited to: the browser build, its tests and packaging.
+          WASM_PATHS: '(^|/)wasm/|^tests/wasm/|^cmake/PjWasm|^cmake/wasm_|^pj_scripting/|^scripts/[^/]*wasm|^resources/wasm-presets/|^\.github/workflows/wasm-ci\.yml$'
+        run: |
+          set -euo pipefail
+          full=true
+          if [ "${{ github.event_name }}" = pull_request ]; then
+            files=$(gh pr diff "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" --name-only)
+            grep -qE "${WASM_PATHS}" <<<"${files}" || full=false
+          fi
+          echo "full=${full}" >> "${GITHUB_OUTPUT}"
+          echo "Full Chromium suite: ${full}"
+
       - name: Functional browser suite (acceptance package)
         # Three workers (playwright.config.js); the @serial cases run alone below.
+        if: steps.scope.outputs.full == 'true'
         run: npm --prefix tests/wasm run test
 
       - name: Serial cases (acceptance package)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.scope.outputs.full == 'true' }}
         run: npm --prefix tests/wasm run test:serial
+
+      - name: Smoke specs (acceptance package)
+        if: steps.scope.outputs.full != 'true'
+        run: npm --prefix tests/wasm run test:smoke
 
   wasm-firefox:
     # The acceptance package of the wasm job, in Firefox. Firefox has no

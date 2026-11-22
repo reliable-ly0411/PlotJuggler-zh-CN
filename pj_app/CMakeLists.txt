@@ -105,9 +105,8 @@ add_library(pj_app_shell OBJECT
     src/ui/CustomWidgetConfigPanel.cpp
     src/ui/CustomWidgetConfigPanel.h
     src/ui/CustomWidgetConfigPanel.ui
-    src/ui/CustomWidgetPickerPanel.cpp
-    src/ui/CustomWidgetPickerPanel.h
-    src/ui/CustomWidgetPickerPanel.ui
+    src/ui/CustomWidgetPickerMenu.cpp
+    src/ui/CustomWidgetPickerMenu.h
     src/ui/LeftPanel.cpp
     src/ui/LeftPanel.h
     src/ui/LeftPanel.ui
@@ -120,6 +119,12 @@ add_library(pj_app_shell OBJECT
     src/ui/AboutDialog.cpp
     src/ui/AboutDialog.h
     src/ui/AboutDialog.ui
+    src/ui/BatchLoadDialog.cpp
+    src/ui/BatchLoadDialog.h
+    src/ui/BatchLoadDialog.ui
+    src/ui/LayoutDatasetDialog.cpp
+    src/ui/LayoutDatasetDialog.h
+    src/ui/LayoutDatasetDialog.ui
     src/ui/McpJobsDialog.cpp
     src/ui/McpJobsDialog.h
     src/ui/McpJobsDialog.ui
@@ -220,6 +225,7 @@ target_link_libraries(pj_app_shell PUBLIC
     pj_widgets
     pj_plotting
     pj_custom_widgets
+    pj_log
     pj_scripting
     pj_scene_common
     $<$<TARGET_EXISTS:pj_scene2d_widgets>:pj_scene2d_widgets>
@@ -278,6 +284,11 @@ target_link_libraries(pj_app PRIVATE
     pj_app_shell
     $<$<NOT:$<BOOL:${EMSCRIPTEN}>>:pj_resources>
     $<$<NOT:$<BOOL:${EMSCRIPTEN}>>:Backward::Backward>)
+# Sanitizer lanes keep the sanitizer's own report. backward-cpp's handler would replace it, and when LeakSanitizer
+# aborts at exit the handler runs on the signal stack its own static destructor already freed.
+if(PJ_ENABLE_SANITIZERS OR PJ_ENABLE_TSAN OR PJ_ENABLE_MSAN)
+    target_compile_definitions(pj_app PRIVATE PJ_NO_CRASH_HANDLER)
+endif()
 
 # PluginCheckRunner::locateHelper looks for the admission helper next to the executable. An install puts both
 # in bin/; a build tree does not, so copy it next to the app (else only PATH finds it). Done from the consumer
@@ -559,6 +570,12 @@ if(PJ_BUILD_TESTS)
     set_source_files_properties(tests/main_window_reload_button_test.cpp PROPERTIES
         COMPILE_DEFINITIONS PJ_DIALOG_PROBE_SOURCE_PLUGIN_PATH="$<TARGET_FILE:dialog_probe_source_plugin>")
 
+    # A batch of files asks once how the loaders' dialogs behave (show all / first / skip).
+    list(APPEND PJ_APP_GUI_TEST_SOURCES tests/main_window_batch_load_test.cpp tests/modal_answerer_test.cpp)
+    set_source_files_properties(tests/main_window_batch_load_test.cpp PROPERTIES
+        COMPILE_DEFINITIONS
+        "PJ_DIALOG_PROBE_SOURCE_PLUGIN_PATH=\"$<TARGET_FILE:dialog_probe_source_plugin>\";PJ_MOCK_FILE_SOURCE_PLUGIN_PATH=\"$<TARGET_FILE:mock_file_source_plugin>\"")
+
     # Browser presets: a layout's streaming sources start from their saved
     # configuration inside the same all-or-nothing replay, and their views bind
     # as topics arrive (test stream plugin staged per case).
@@ -652,6 +669,12 @@ if(PJ_BUILD_TESTS)
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/main_window_layout_dataset_paths_test.cpp)
 
+    # A layout aimed at one dataset over several matching ones: asked, duplicated per dataset, or the first one.
+    list(APPEND PJ_APP_GUI_TEST_SOURCES
+        tests/main_window_layout_dataset_choice_test.cpp)
+    set_source_files_properties(tests/main_window_layout_dataset_choice_test.cpp PROPERTIES
+        COMPILE_DEFINITIONS PJ_MOCK_FILE_SOURCE_PLUGIN_PATH="$<TARGET_FILE:mock_file_source_plugin>")
+
     # The Custom Series list is derived from DataProcessorService, not accumulated
     # from plugin announcements — the paths that announce nothing are a layout
     # restore and a withdrawal through the data-processors ABI.
@@ -696,6 +719,10 @@ if(PJ_BUILD_TESTS)
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/main_window_scene3d_drop_framing_test.cpp)
 
+    # The Log panel through the shell: the placeholder button, a drop on an empty area, the time format, layouts.
+    list(APPEND PJ_APP_GUI_TEST_SOURCES
+        tests/main_window_log_panel_test.cpp)
+
     # The 2D scene panel's layer rows carry each layer's warning from the start.
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/scene2d_config_panel_test.cpp)
@@ -710,6 +737,12 @@ if(PJ_BUILD_TESTS)
     # which ship hidden outside --debug-mode, so the button follows them.
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/preferences_reset_button_test.cpp)
+
+    # A plugin folder that no longer exists stays listed, in a grey that reads in both themes.
+    list(APPEND PJ_APP_GUI_TEST_SOURCES
+        tests/item_view_rows_theme_test.cpp
+        tests/label_link_theme_test.cpp
+        tests/preferences_missing_folder_test.cpp)
 
     # The first GPU widget does not recreate the main window's native window.
     # Desktop only, like the hidden QRhiWidget that ensures it.
@@ -763,6 +796,9 @@ if(PJ_BUILD_TESTS)
         tests/main_window_layout_import_policy_test.cpp)
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/main_window_layout_apply_reason_test.cpp)
+    # Keyboard focus after a workspace rebuild deletes the focused plot.
+    list(APPEND PJ_APP_GUI_TEST_SOURCES
+        tests/main_window_restore_focus_test.cpp)
     add_executable(main_window_layout_import_cancel_test tests/main_window_layout_import_cancel_test.cpp)
     target_include_directories(main_window_layout_import_cancel_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(main_window_layout_import_cancel_test PRIVATE pj_app_shell pj_resources GTest::gtest)
@@ -904,7 +940,7 @@ if(PJ_BUILD_TESTS)
     # Shutdown while suspended at the plugin dialog: the dialog is rejected before the plugin is destroyed.
     add_library(dialog_probe_source_plugin SHARED tests/dialog_probe_source.cpp)
     target_compile_features(dialog_probe_source_plugin PRIVATE cxx_std_20)
-    target_link_libraries(dialog_probe_source_plugin PRIVATE plotjuggler_sdk::plugin_sdk)
+    target_link_libraries(dialog_probe_source_plugin PRIVATE plotjuggler_sdk::plugin_sdk nlohmann_json::nlohmann_json)
     if(DEFINED PJ_WARNING_FLAGS)
         target_compile_options(dialog_probe_source_plugin PRIVATE ${PJ_WARNING_FLAGS})
     endif()

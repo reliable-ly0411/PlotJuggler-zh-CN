@@ -44,7 +44,15 @@ does not link it.
   `SourceTimelineController`). `recomputeRange()` updates only the `PlaybackEngine` range
   from the offset-adjusted union of visible topics; it is called throttled on the drag
   path, never resets `currentTime` while data remains, and returns the union's
-  display-min, which `seedPlaybackFromSession()` reuses for the first-load playhead snap.
+  display-min, which `seedPlaybackFromSession()` reuses for the playhead snap. The playhead is
+  seeded on the datasets present when it last snapped; a seed snaps it again once none of them
+  is in the catalog. Data replaced without the catalog ever emptying (a browser preset switch
+  loads the next preset's files before removing the previous ones; removing the first dataset
+  after adding another) therefore starts at the new data's start, while an added dataset, a
+  refill (same `DatasetId`), a merge (the anchor inherits) and a followed stream keep the
+  playhead: `setActiveStreamingDataset` adds the stream to a seeded set, because the shell
+  does not re-seed on a removal while it follows a stream. The stream holds the seeding only
+  once it has data.
   When no visible data remains it collapses the transport with `resetPlaybackToEmpty()`
   (pause, `[0,0]` range, cursor 0), the same reset the `CatalogModel::cleared()` hook runs
   on a full wipe: this is what stops playback when the last dataset is removed. While a
@@ -69,7 +77,9 @@ does not link it.
   the anchor (leftmost on the display axis) keeps its clock and ids, the others are
   shifted into it by their relative display offset and removed from the catalog, scalar
   topics union by name, object topics fuse by name, and the anchor is relabelled
-  `*_merged`. `objectMergeConflicts(selected)` is the builtin-object-type preflight (it also
+  `<label>_merged` (`setDatasetDisplayName`, an engine relabel). The consumed datasets keep their labels, which now
+  address the anchor, but are listed nowhere (`DataEngine::isMergedAway`) and are never a load's target: `FileLoader`
+  opens a consumed file again as a new dataset. `objectMergeConflicts(selected)` is the builtin-object-type preflight (it also
   reports same-named marker topics whose scope, target or owner differ); a successful merge
   emits `datasetsMerged(anchor, consumed)`.
 - **On-demand wiring** (derived_objects "The on-demand pipeline", "Streaming"): requests every demanded recipe at the
@@ -190,7 +200,7 @@ does not link it.
   `StreamingSourceManager`, which gates every demand-driven affordance (dimming, census
   previews, the force-streaming menu) so file datasets are never shown as pausable.
 - **Identity facade**: `datasetSourceName` (the raw `DatasetInfo::source_name`, not the
-  deduped label), `resolveDatasetIdentity`, `datasetSourcePath`, so widget code needs no
+  label), `datasetLabel` / `datasetByLabel` (the engine's dataset label, the tree root's name), `resolveDatasetIdentity`, `datasetSourcePath`, so widget code needs no
   `FileLoader` dependency. `resolveCurveKey(...)` is the one three-tier curve resolver
   used by layout/undo restore (`PendingDisplayBinder`) and clipboard paste (`PlotWidget`);
   its `SeriesCapability` filters by consumer (`kPlottable` for plot curves, `kDiscrete` for
@@ -432,11 +442,13 @@ does not link it.
   `out_total`, saturated at `UINT32_MAX`), and stops delivering as soon as the sink returns false. The sink runs under
   the engine lock for scalar reads. `inputs_changed`, `config_changed` and `report_message` go to the `Callbacks`
   given at construction. Qt-free; one instance per panel, must outlive the `WidgetHandle` bound to it.
-- **`CanonicalObjectPayload`.** `canonicalObjectPayload(session, topic, type, entry)`: the bytes a Widget plugin
-  receives for a stored object entry. With no parser bound to the topic the stored bytes are already canonical and
-  pass through untouched (anchor included); with a parser bound (the store holds the wire message, e.g. ROS CDR) the
-  entry is decoded through it under its per-topic lock (`decodeObjectEntry`) and re-serialized with the SDK's
-  `serializeBuiltinObject`. `canonicalObjectEncoder(session)` wraps it as the `ObjectPayloadEncoder` both delivery
+- **`CanonicalObjectPayload`.** `decodeStoredObjects(session, topic, type, entries, sink)` decodes stored object
+  entries into `sdk::BuiltinObject`s, taking the topic's parser binding once per call: through the topic's parser under its per-topic lock (`decodeObjectEntry`) when one is bound
+  (the store holds the wire message, e.g. ROS CDR), else from the canonical bytes; a log's own stamp is moved by the
+  entry's `payload_stamp_shift`, so a time-shifted merge keeps it on the dataset clock. The built-in Log panel reads
+  logs through it. `canonicalObjectPayload(session, topic, type, entry)` gives the bytes a Widget plugin receives: with
+  no parser and no stamp shift the stored bytes are already canonical and pass through untouched (anchor included);
+  otherwise the decoded object is re-serialized with the SDK's `serializeBuiltinObject`. `canonicalObjectEncoder(session)` wraps it as the `ObjectPayloadEncoder` both delivery
   paths of a panel use: `WidgetRuntimeHost` (history) and `pj_custom_widgets`' `fetchObjectPayload` (the current
   value, encoded once per entry the wire shows). A decode or serialization failure is an error, which history skips
   and the current value turns into no value.
@@ -528,24 +540,27 @@ does not link it.
 
 ### Dataset-qualified names
 
-`DatasetQualifiedName.h` uses the SDK's `sdk::splitDatasetQualifier`: the longest loaded
-prefix wins; colons in both parts can prevent round-tripping, so it is not a persistent
-identity. `resolveMarkerDataset` normalizes qualified keys to bare form, refuses a bare
+A qualifier is the dataset's label (`DataEngine::datasetLabel`: unique, assigned at creation, held until the dataset
+is removed), the same string the tree, the plugin catalog snapshot and `get_status` show. Every host resolver splits
+against `DataEngine::datasetLabels()` with the SDK's `sdk::splitDatasetQualifier` (the longest label wins) and looks the
+dataset up with `DataEngine::datasetByLabel`; a stale label resolves nowhere, never to another dataset, and a merged-away
+dataset's label resolves to the anchor holding its data, for every resolver alike. Colons in both
+parts can prevent round-tripping, and a label is a session name, so it is not a persistent identity. `resolveMarkerDataset` normalizes qualified keys to bare form, refuses a bare
 input found in several datasets (suggesting the qualified forms), and rejects inputs absent
 from the chosen dataset; `MarkersRuntimeHost` runs it only for single-dataset generators
-(under `{"scope":"all"}` keys are literal and a key whose prefix names a loaded source is
+(under `{"scope":"all"}` keys are literal and a key whose prefix is a loaded label is
 rejected). A stripped qualifier is kept in `GeneratorRecipe::declared_inputs` (persisted
 as `<input declared=…>`) so the script reads `series("src:key")`. A generic layout's
 generator (no dataset) binds on restore to the one loaded dataset whose catalog carries
 every input (`CatalogModel::findScalarForMarkerKey`; a rule with no inputs binds only when
 exactly one dataset is loaded; otherwise a `generator-restore-failed` diagnostic). Transforms
 use the same splitter in `DataProcessorService::installTransform`, which rejects qualifiers
-naming two datasets. Config read-back echoes each input bare unless the bare name is
-ambiguous across datasets and `dataset_source:bare` resolves back to the bound dataset.
+naming two datasets. Config read-back echoes a transform input bare unless the bare name is
+ambiguous across datasets, then as `label:bare`; a generator input declared qualified, or whose bare name became
+ambiguous, is echoed under the bound dataset's current label when that form resolves back to it.
 On-demand recipes keep the qualified name as the script's alias; the session's resolver strips
 it for a topic, its qualifier splitter for another node's output (`RecipeGraph::QualifierSplitter`,
-derived_objects "The on-demand pipeline"). A dataset merged
-away stays registered, so its source keeps qualifying inputs, which bind on the anchor. A
+derived_objects "The on-demand pipeline"). An unqualified input binds on any dataset not merged away. A
 qualified input saved in a layout also records what it read (`topic`, or `upstream` for another
 node's output), so a generic layout binds on another recording while the name stays the alias.
 

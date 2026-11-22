@@ -5,10 +5,10 @@
 
 #include <DockManager.h>
 
+#include <QApplication>
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QIcon>
-#include <QInputDialog>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
@@ -16,20 +16,20 @@
 #include <QPointer>
 #include <QPushButton>
 #include <QRegularExpression>
-#include <QScrollArea>
-#include <QScrollBar>
 #include <QStackedWidget>
 #include <QStyle>
 #include <QVBoxLayout>
-#include <QWheelEvent>
 #include <algorithm>
+#include <array>
 #include <optional>
 #include <utility>
 
 #include "pj_plotting/DockWidget.h"
 #include "pj_plotting/PlotDocker.h"
 #include "pj_plotting/PlotWidget.h"
+#include "pj_plotting/PlotXml.h"
 #include "pj_widgets/FrameworkTokens.h"
+#include "pj_widgets/OwnedMenu.h"
 #include "pj_widgets/SvgUtil.h"
 
 using namespace Qt::StringLiterals;
@@ -46,25 +46,6 @@ constexpr int kTabBarHeight = 23;
 constexpr int kTabBarButtonSize = 23;
 // Icon size: the title bar's 20-px glyph, so the strip buttons read at the same weight as the rest of the chrome.
 constexpr int kTabBarIconSize = 20;
-
-// QScrollArea variant that redirects vertical wheel input to the horizontal scrollbar, so an overflowing tab strip
-// wheel-scrolls as in Chrome or VSCode without a heavy horizontal scrollbar.
-class HorizontalScrollArea : public QScrollArea {
- public:
-  using QScrollArea::QScrollArea;
-
- protected:
-  void wheelEvent(QWheelEvent* event) override {
-    QScrollBar* hbar = horizontalScrollBar();
-    const int delta = event->angleDelta().y();
-    if (hbar != nullptr && delta != 0) {
-      hbar->setValue(hbar->value() - delta);
-      event->accept();
-      return;
-    }
-    QScrollArea::wheelEvent(event);
-  }
-};
 
 // ADS config flags are process-global and must be set before the first CDockManager is instantiated; call once, lazily.
 void applyAdsConfigOnce() {
@@ -84,7 +65,8 @@ void applyAdsConfigOnce() {
 }  // namespace
 
 // Private widget for one tab in the strip: a name label and a close button. Double-clicking swaps the label for an
-// in-place QLineEdit; Enter commits the rename, Escape or focus loss reverts.
+// in-place QLineEdit with the name selected; Enter commits the rename, Escape or focus loss reverts. A left-button drag
+// past the platform drag distance is reported through the drag signals; the strip does the reordering.
 class PlotTabFrame : public QFrame {
   Q_OBJECT
  public:
@@ -153,20 +135,52 @@ class PlotTabFrame : public QFrame {
     label_->hide();
     edit_->show();
     edit_->setFocus(Qt::OtherFocusReason);
-    edit_->setCursorPosition(edit_->text().length());
+    edit_->selectAll();  // typing replaces the name instead of appending to it
   }
 
  signals:
   void clicked();
   void renameCommitted(const QString& new_name);
   void closeRequested();
+  void dragStarted();
+  void dragMoved(const QPoint& global_pos);
+  void dragFinished();
 
  protected:
   void mousePressEvent(QMouseEvent* event) override {
+    // A press during a drag means its release is gone (a right-click's context menu takes it): finish the drag here.
+    if (dragging_) {
+      dragging_ = false;
+      emit dragFinished();
+    }
     if (event->button() == Qt::LeftButton) {
+      press_pos_ = event->position().toPoint();
       emit clicked();
     }
     QFrame::mousePressEvent(event);
+  }
+
+  void mouseMoveEvent(QMouseEvent* event) override {
+    QFrame::mouseMoveEvent(event);
+    if ((event->buttons() & Qt::LeftButton) == 0 || edit_active_) {
+      return;
+    }
+    if (!dragging_ &&
+        (event->position().toPoint() - press_pos_).manhattanLength() >= QApplication::startDragDistance()) {
+      dragging_ = true;
+      emit dragStarted();
+    }
+    if (dragging_) {
+      emit dragMoved(event->globalPosition().toPoint());
+    }
+  }
+
+  void mouseReleaseEvent(QMouseEvent* event) override {
+    if (event->button() == Qt::LeftButton && dragging_) {
+      dragging_ = false;
+      emit dragFinished();
+    }
+    QFrame::mouseReleaseEvent(event);
   }
 
   void mouseDoubleClickEvent(QMouseEvent* event) override {
@@ -225,6 +239,8 @@ class PlotTabFrame : public QFrame {
   QLineEdit* edit_;
   QPushButton* close_button_;
   bool edit_active_ = false;
+  bool dragging_ = false;
+  QPoint press_pos_;
 };
 
 TabbedPlotWidget::TabbedPlotWidget(QWidget* parent) : TabbedPlotWidget(u"main"_s, parent) {}
@@ -508,15 +524,7 @@ PlotDocker* TabbedPlotWidget::duplicateTab(PlotDocker* source) {
     }
   }
   // Empty ids make every restored docker, area and plot mint a fresh one.
-  for (const QString& attribute : {u"id"_s, u"history_exempt"_s, u"owner_plugin"_s, u"tab_id"_s}) {
-    tab_element.removeAttribute(attribute);
-  }
-  for (const QString& tag : {u"DockArea"_s, u"plot"_s}) {
-    const QDomNodeList nodes = tab_element.elementsByTagName(tag);
-    for (int index = 0; index < nodes.size(); ++index) {
-      nodes.at(index).toElement().removeAttribute(u"id"_s);
-    }
-  }
+  plot_xml::prepareTabCopy(tab_element);
   const auto source_index = static_cast<int>(source_entry - tabs_.data());
   PlotDocker* copy = addTab(tr("%1 (copy)").arg(source->name()));
   restoring_state_ = true;
@@ -526,12 +534,7 @@ PlotDocker* TabbedPlotWidget::duplicateTab(PlotDocker* source) {
     closeTab(tabs_.back().frame, /*honor_veto=*/false);
     return nullptr;
   }
-  // addTab appended the copy: move it next to its source (the strip layout holds the tab frames at the same indexes as
-  // tabs_).
-  const int target_index = source_index + 1;
-  tabs_bar_layout_->removeWidget(tabs_.back().frame);
-  tabs_bar_layout_->insertWidget(target_index, tabs_.back().frame, 0, Qt::AlignVCenter);
-  std::rotate(tabs_.begin() + target_index, tabs_.end() - 1, tabs_.end());
+  moveTabFrame(static_cast<int>(tabs_.size()) - 1, source_index + 1);  // addTab appended the copy
   // addTab announced the copy before the restore filled it, so listeners bound to its plots saw no final state.
   emit currentTabChanged(copy);
   emit undoableChange();
@@ -627,19 +630,107 @@ void TabbedPlotWidget::onTabCloseRequested(PlotTabFrame* frame) {
   closeTab(frame, /*honor_veto=*/true);
 }
 
+void TabbedPlotWidget::moveTabFrame(int from, int to) {
+  PlotTabFrame* frame = tabs_[from].frame;
+  tabs_bar_layout_->removeWidget(frame);
+  tabs_bar_layout_->insertWidget(to, frame, 0, Qt::AlignVCenter);
+  if (from < to) {
+    std::rotate(tabs_.begin() + from, tabs_.begin() + from + 1, tabs_.begin() + to + 1);
+  } else {
+    std::rotate(tabs_.begin() + to, tabs_.begin() + from, tabs_.begin() + from + 1);
+  }
+  // The next drag step compares against the neighbours' new geometry, not the pre-move one.
+  tabs_bar_layout_->activate();
+}
+
+int TabbedPlotWidget::tabIndexOf(PlotTabFrame* frame) const {
+  const auto it =
+      std::find_if(tabs_.begin(), tabs_.end(), [frame](const TabEntry& entry) { return entry.frame == frame; });
+  return it == tabs_.end() ? -1 : static_cast<int>(it - tabs_.begin());
+}
+
+QWidget* TabbedPlotWidget::neighbourOf(const TabEntry& entry, Side first, bool plot_pages_only) const {
+  const auto index = &entry - tabs_.data();
+  const auto count = static_cast<std::ptrdiff_t>(tabs_.size());
+  for (const int step : first == Side::kLeft ? std::array{-1, 1} : std::array{1, -1}) {
+    for (auto at = index + step; at >= 0 && at < count; at += step) {
+      if (!plot_pages_only || isHistoryDocker(tabs_[at])) {
+        return contentOf(tabs_[at]);
+      }
+    }
+  }
+  return nullptr;
+}
+
+bool TabbedPlotWidget::isHistoryDocker(const TabEntry& entry) {
+  return entry.docker != nullptr && entry.docker->isSerializable(SnapshotScope::kHistory);
+}
+
+std::vector<PlotDocker*> TabbedPlotWidget::historyDockerOrder() const {
+  std::vector<PlotDocker*> order;
+  for (const TabEntry& entry : tabs_) {
+    if (isHistoryDocker(entry)) {
+      order.push_back(entry.docker);
+    }
+  }
+  return order;
+}
+
+void TabbedPlotWidget::onTabDragStarted(PlotTabFrame* frame) {
+  const int index = tabIndexOf(frame);
+  // Only tabs an undo snapshot rebuilds move: a restore re-appends widget and history-exempt pages after them, so a
+  // position given to those would not survive the next undo.
+  drag_start_order_ = (index >= 0 && isHistoryDocker(tabs_[index])) ? historyDockerOrder() : std::vector<PlotDocker*>{};
+}
+
+void TabbedPlotWidget::onTabDragMoved(PlotTabFrame* frame, const QPoint& global_pos) {
+  const int from = tabIndexOf(frame);
+  if (drag_start_order_.empty() || from < 0 || !isHistoryDocker(tabs_[from])) {
+    return;
+  }
+  // The tab moves past a neighbour once the cursor crosses the neighbour's midpoint, so a wide and a narrow tab do not
+  // swap back and forth under a still cursor. Distances run along the strip's reading direction (index 0 is on the
+  // right in a right-to-left layout).
+  const int x = tabs_inner_->mapFromGlobal(global_pos).x();
+  const int direction = tabs_inner_->isRightToLeft() ? -1 : 1;
+  // Signed distance from tab `index`'s midpoint to the cursor, positive towards the strip's end.
+  const auto past = [&](int index) { return direction * (x - tabs_[index].frame->geometry().center().x()); };
+  const int last = static_cast<int>(tabs_.size()) - 1;
+  int to = from;
+  while (to > 0 && past(to - 1) < 0) {
+    --to;
+  }
+  while (to < last && past(to + 1) > 0) {
+    ++to;
+  }
+  if (to != from) {
+    moveTabFrame(from, to);
+  }
+}
+
+void TabbedPlotWidget::onTabDragFinished() {
+  // Compared as the undo snapshot's tab order, not an index: a tab another owner opens or closes during the drag shifts
+  // the indexes, and passing a widget or history-exempt tab is no change an undo would keep.
+  const bool moved = !drag_start_order_.empty() && historyDockerOrder() != drag_start_order_;
+  drag_start_order_.clear();
+  if (moved) {
+    emit undoableChange();  // one step per drag, however many neighbours it passed
+  }
+}
+
 void TabbedPlotWidget::onTabContextMenuRequested(PlotTabFrame* frame, const QPoint& pos) {
   const TabEntry* entry = findEntry(frame);
   if (entry == nullptr || entry->docker == nullptr) {
     return;  // widget tabs have no plot state to copy
   }
-  QMenu menu(this);
+  auto* menu = new QMenu(this);
   QPointer<PlotDocker> docker(entry->docker);
-  connect(menu.addAction(tr("Duplicate tab")), &QAction::triggered, this, [this, docker]() {
+  connect(menu->addAction(tr("Duplicate tab")), &QAction::triggered, this, [this, docker]() {
     if (docker != nullptr) {
       duplicateTab(docker);
     }
   });
-  menu.exec(frame->mapToGlobal(pos));
+  showOwnedMenu(menu, frame->mapToGlobal(pos));
 }
 
 void TabbedPlotWidget::closeTab(PlotTabFrame* frame, bool honor_veto) {
@@ -694,9 +785,16 @@ void TabbedPlotWidget::closeTab(PlotTabFrame* frame, bool honor_veto) {
   if (it == tabs_.end()) {
     return;  // a reentrant close already removed it
   }
+  // The tab to the right on the strip takes over, else the one to the left. The stack holds pages in creation order, so
+  // left to itself it would show the page created next, wherever a duplicate or a moved tab put it on the strip.
+  const QPointer<QWidget> next =
+      stack_->currentWidget() == content ? neighbourOf(*it, Side::kRight, /*plot_pages_only=*/false) : nullptr;
   tabs_.erase(it);
 
   stack_->removeWidget(content);
+  if (next != nullptr) {
+    stack_->setCurrentWidget(next);
+  }
   tabs_bar_layout_->removeWidget(frame_widget);
   frame_widget->deleteLater();
   content->deleteLater();
@@ -810,6 +908,9 @@ PlotTabFrame* TabbedPlotWidget::createTabFrame(const QString& tab_name) {
     onTabRenameRequested(frame, new_name);
   });
   connect(frame, &PlotTabFrame::closeRequested, this, [this, frame]() { onTabCloseRequested(frame); });
+  connect(frame, &PlotTabFrame::dragStarted, this, [this, frame]() { onTabDragStarted(frame); });
+  connect(frame, &PlotTabFrame::dragMoved, this, [this, frame](const QPoint& pos) { onTabDragMoved(frame, pos); });
+  connect(frame, &PlotTabFrame::dragFinished, this, &TabbedPlotWidget::onTabDragFinished);
   frame->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(frame, &QWidget::customContextMenuRequested, this, [this, frame](const QPoint& pos) {
     onTabContextMenuRequested(frame, pos);
@@ -899,6 +1000,14 @@ bool TabbedPlotWidget::xmlLoadState(const QDomElement& tabbed_area, RestoreInten
   // redo keeps the page the user is on, a plot or a widget tab, if it survives the restore (a reused page keeps its
   // object).
   const QPointer<QWidget> shown = intent == RestoreIntent::kHistory ? stack_->currentWidget() : nullptr;
+  // A shown page the restore removes hands over to the nearest plot page on its left, where the undone step started:
+  // "Duplicate tab" puts the copy right of its source, "Add tab" appends. The saved index can name a tab the user left
+  // before that step (selecting a tab is not one). Widget and history-exempt pages are passed over: the restore moves
+  // them to the end of the strip.
+  QPointer<QWidget> beside;
+  if (const TabEntry* entry = shown != nullptr ? findEntry(shown.data()) : nullptr; entry != nullptr) {
+    beside = neighbourOf(*entry, Side::kLeft, /*plot_pages_only=*/true);
+  }
 
   QVector<QDomElement> target_tabs;
   for (QDomElement tab = tabbed_area.firstChildElement(u"Tab"_s); !tab.isNull();
@@ -953,6 +1062,8 @@ bool TabbedPlotWidget::xmlLoadState(const QDomElement& tabbed_area, RestoreInten
     for (TabEntry& entry : reusable_tabs) {
       stack_->removeWidget(entry.docker);
       entry.docker->deleteLater();
+      // Hidden now, not at the deferred delete: a rename editor inside it must not look shown to a focus restore.
+      entry.frame->hide();
       entry.frame->deleteLater();
     }
     reusable_tabs.clear();
@@ -992,7 +1103,11 @@ bool TabbedPlotWidget::xmlLoadState(const QDomElement& tabbed_area, RestoreInten
   // tabs).
   const int max_index = static_cast<int>(target_tabs.size()) - 1;
   const int current_index = std::clamp(requested_index, 0, std::max(0, max_index));
-  if (const TabEntry* kept = shown != nullptr ? findEntry(shown.data()) : nullptr; kept != nullptr) {
+  const TabEntry* kept = shown != nullptr ? findEntry(shown.data()) : nullptr;
+  if (kept == nullptr && beside != nullptr) {
+    kept = findEntry(beside.data());
+  }
+  if (kept != nullptr) {
     selectEntry(*kept);
   } else if (PlotDocker* docker = dockerAt(current_index)) {
     stack_->setCurrentWidget(docker);

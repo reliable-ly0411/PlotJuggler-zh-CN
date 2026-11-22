@@ -51,6 +51,8 @@ The namespace mirrors `pj_plugins`: this is its Qt-side companion. Each header's
 - `pj_ui_loader.hpp`: `PjUiLoader`, the `QUiLoader` that instantiates the host widgets plugin `.ui` files name
   (`RangeSlider`, `MarkerTimeline`, `DateRangePicker`, `CredentialsEditor`, `SectionHeaderBand`, `Search`,
   `ToggleSwitch`, `PJ::ComboBox`). A new plugin-usable `pj_widgets` control is registered in its `createWidget`.
+  Its `load` (hiding `QUiLoader::load`, so callers hold a `PjUiLoader`) swaps every `<iconset>` that names a host
+  SVG (`:/resources/svg/...`) for the themed `loadSvg` rendering, once at load.
 - `chart_preview_widget.hpp`: a light Qwt chart for toolbox previews. `widget_binding` builds it when the frame
   carries `chart_markers` or the panel has no session and catalog; otherwise `chart_series` renders with the full
   `PlotWidget`. Interaction is off until the `chart_zoom_enabled` key.
@@ -77,7 +79,7 @@ reference for plugin authors.
 | `pjMarkdown` (bool) | child `QPlainTextEdit` in a layout | After load, promoted to a read-only `QTextBrowser` with the same object name and properties. `plain_text` renders as GitHub-dialect Markdown with raw HTML disabled, resource loading blocked, and only an explicit click on an `http` / `https` link opening externally. Combine with `pjFollowTail` for a streaming transcript. Cannot promote a `QPlainTextEdit` that is the `.ui` root. |
 | `pjToolboxChromeAction` (bool), `chromeActionIcon` (SVG resource path), `chromeActionSlot` (string) | `QAbstractButton` in a toolbox panel | `pj_app` hides the button in the content and stands a proxy in the panel chrome (the banner, or the floating window's title bar), forwarding clicks to the original. `chromeActionSlot="leading"` puts it before the title; anything else after. |
 | `pjToolboxSideDrawer` (bool) | one `QWidget` in a toolbox panel | `pj_app` hoists the widget into a full-height, draggable `QSplitter` column at the left of the whole panel chrome, resizable down to its own `.ui` minimum width and persisted per plugin in `QSettings` as `ToolboxDrawerWidth/<plugin id>`. The plugin keeps driving it by name (see `pjHoistedWidgets`). |
-| `pj_context_actions` (string) | `QListWidget` | `"id=Label[;id2=Label 2...]"`: a right-click over a row (not empty space) builds a context menu from the clauses, in order. A choice emits `WidgetEventBuilder::itemContextAction(index, id)` with the delivered-order row index; only the id crosses the ABI. A malformed clause (no `=`, empty id or label) is skipped. Absent or empty: no menu. |
+| `pj_context_actions` (string) | `QListWidget` | `"id=Label[;id2=Label 2...]"`: a right-click over a row (not empty space) builds a context menu from the clauses, in order. A choice emits `WidgetEventBuilder::itemContextAction(index, id)` with the delivered-order row index; only the id crosses the ABI. The menu goes through `PJ::showOwnedMenu`, so it is non-blocking in the browser and a row replaced while it is open fires nothing. A malformed clause (no `=`, empty id or label) is skipped. Absent or empty: no menu. |
 
 - The `pj_enable_when` / `pj_visible_when` closures are cached per loaded root in an `InstalledRules` child
   (`widget_binding.cpp`), found again from any ancestor root on every data apply.

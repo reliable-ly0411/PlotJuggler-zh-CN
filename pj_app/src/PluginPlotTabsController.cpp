@@ -59,6 +59,18 @@ QString displayToolboxBadge(const ExtensionCatalogService& extensions, const QSt
   return bundledPluginText(id, QString::fromStdString(toolbox->version), QString::fromStdString(toolbox->name));
 }
 
+/// The curve a plugin names: `dataset` is a dataset label (CatalogModel::datasetByLabel), as the catalog snapshot
+/// reports it, not a persisted identity; empty when the series is unique across datasets.
+std::optional<QString> pluginCurveKey(
+    const CatalogModel& catalog, const QString& topic, const QString& field, const QString& dataset) {
+  const std::optional<DatasetId> named =
+      dataset.isEmpty() ? std::optional<DatasetId>(0) : catalog.datasetByLabel(dataset);
+  if (!named.has_value()) {
+    return std::nullopt;
+  }
+  return catalog.resolveCurveKey(*named, {}, {}, topic, field, SeriesCapability::kPlottable);
+}
+
 }  // namespace
 
 PluginPlotTabsController::PluginPlotTabsController(
@@ -309,7 +321,7 @@ Expected<std::string> PluginPlotTabsController::tabConfig(const QString& plugin_
       QJsonObject curve;
       curve.insert(u"topic"_s, item->topic_name);
       curve.insert(u"field"_s, scalar->field_name);
-      curve.insert(u"dataset"_s, catalog_.datasetSourceName(item->dataset_id).value_or(QString()));
+      curve.insert(u"dataset"_s, catalog_.datasetLabel(item->dataset_id).value_or(QString()));
       curves.append(curve);
     }
   }
@@ -329,8 +341,7 @@ Status PluginPlotTabsController::addCurve(
   if (const QString kind = sceneKindOf(docker); !kind.isEmpty()) {
     return sceneTabError(tab_id, kind);
   }
-  const std::optional<QString> key =
-      catalog_.resolveCurveKey(0, dataset_source, {}, topic, field, SeriesCapability::kPlottable);
+  const std::optional<QString> key = pluginCurveKey(catalog_, topic, field, dataset_source);
   if (!key.has_value()) {
     // resolveCurveKey folds "no such series" and "several datasets have it"
     // into one nullopt; the message names both remedies.
@@ -365,8 +376,7 @@ Status PluginPlotTabsController::removeCurve(
   if (const QString kind = sceneKindOf(docker); !kind.isEmpty()) {
     return sceneTabError(tab_id, kind);
   }
-  const std::optional<QString> key =
-      catalog_.resolveCurveKey(0, dataset_source, {}, topic, field, SeriesCapability::kPlottable);
+  const std::optional<QString> key = pluginCurveKey(catalog_, topic, field, dataset_source);
   if (!key.has_value()) {
     return unexpected(("no plottable series '" + topic + u"/"_s + field + "' is loaded").toStdString());
   }

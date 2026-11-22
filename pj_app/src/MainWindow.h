@@ -101,6 +101,7 @@ class PlotWidget;
 class PreferencesDialog;
 class CustomWidgetController;
 class CustomWidgetDockWidget;
+class LogDockWidget;
 class StateTransitionsDockWidget;
 class PendingDisplayBinder;
 class SourceCacheStore;
@@ -151,8 +152,10 @@ class MainWindow : public QMainWindow {
   friend class MainWindowMarkerGeneratorTestPeer;
   friend class MainWindowMarkerStatusTestPeer;
   friend class MainWindowValuePrecisionTestPeer;
+  friend class MainWindowLogPanelTestPeer;
   friend class MainWindowLayoutDatasetPathsTestPeer;
   friend class MainWindowReloadButtonTestPeer;
+  friend class MainWindowBatchLoadTestPeer;
   friend class MainWindowHistoryExemptTestPeer;
   friend class MainWindowCustomSeriesTestPeer;
   friend class MainWindowCustomTopicsTestPeer;
@@ -192,12 +195,16 @@ class MainWindow : public QMainWindow {
   void installWasmPlotAcceptanceProbes();
 #endif
 
-  // --layout: reloads the layout's data sources without prompting.
-  void loadLayoutAtStartup(const QString& path);
-
-  // Loads explicit files, then applies the optional layout against their data. A failed or cancelled file
-  // aborts the layout and settles it false. Only attended file loads may open dialogs; the layout never prompts.
+  // Loads explicit files, then applies the optional layout against their data (with no files, the layout reloads its
+  // own sources without prompting). A failed or cancelled file aborts the layout and settles it false. Only an
+  // attended (`interactive`) start may open dialogs: the batch question before two or more files load
+  // (BatchLoadDialog), the files' own, and the layout's dataset question.
   void loadAtStartup(const QStringList& data_files, const QString& layout_path, bool interactive);
+  // loadAtStartup's loads, once any batch question is answered. `load_batch`: null outside a batch. `compared`: the
+  // files checked in that question when a layout came with them (empty: the layout asks its own question).
+  void loadStartupFiles(
+      const QStringList& absolute_files, const QString& layout_path, bool interactive,
+      const std::shared_ptr<LoadBatch>& load_batch, const QStringList& compared);
 
   // Startup step, before any layout restore: see CustomWidgetController::reviewUncleanShutdown. A
   // non-interactive run never shows the question.
@@ -628,6 +635,8 @@ class MainWindow : public QMainWindow {
   // On OK: applyDerivedBatchPreferences, applyTimeLabelFormat, and a precision change re-seeds both tracker lines and
   // the Value column at the current times, the only places the text is formatted.
   void bindPlottingPreferences(PreferencesDialog& dialog);
+  // On a changed package search folder list, every 3D view retries its robots' unresolved meshes.
+  void bindScenePreferences(PreferencesDialog& dialog);
 
   // PlotWidget::setMarkerStatus on BatchEngine::runningChanged. "Computing" shows only after a rule has run for
   // kMarkerStatusShowDelay, so a quick run never flickers a note.
@@ -707,6 +716,7 @@ class MainWindow : public QMainWindow {
   void forEachStateStrip(const std::function<void(StateTransitionsDockWidget*)>& operation);
   // Every mounted Custom Widget panel across all tabs.
   void forEachCustomWidgetDock(const std::function<void(CustomWidgetDockWidget*)>& operation);
+  void forEachLogPanel(const std::function<void(LogDockWidget*)>& operation);
 
   // On the catalog's cleared()/itemsRemoved(): every data widget prunes its dead curves or layers (an emptied
   // object dock returns to the placeholder).
@@ -784,14 +794,20 @@ class MainWindow : public QMainWindow {
   // restore, LayoutImportBatch included (captured at construction): late continuations run long after the
   // caller's stack, and any startup flag, has unwound.
   enum class LayoutLoadInteractivity {
-    kInteractive,  ///< user-driven (menu / recent list): prompts allowed
-    kAutomated,    ///< --layout CLI: auto-reload, never any dialog
+    kInteractive,      ///< user-driven (menu / recent list): prompts allowed
+    kStartupAttended,  ///< --layout CLI with someone at the display: as kAutomated, but asks which dataset(s) to show
+    kAutomated,        ///< --layout CLI unattended: auto-reload, never any dialog
   };
-  void loadLayoutFromPath(const QString& path, LayoutLoadInteractivity interactivity, bool use_current_data = false);
+  // `current_data_files` set: the layout applies to those already-loaded files (startup's explicit `-d` files) as a
+  // generic layout, keeping only the dataset qualifiers that name one of them; its saved sources are not replayed.
+  // `chosen_files`: the startup files chosen, before they loaded, to show this layout; they answer its dataset
+  // question instead of asking it (chooseLayoutDatasets).
+  void loadLayoutFromPath(
+      const QString& path, LayoutLoadInteractivity interactivity,
+      const std::optional<QStringList>& current_data_files = std::nullopt, const QStringList& chosen_files = {});
   // Byte-level layout loads: browser uploads and recipes, and loadLayoutFromUrl (which is why they build on the
   // desktop too). Every terminal outcome goes through finishBrowserLayoutLoad, which logs
   // PJ_WASM_LAYOUT_LOAD_OK/FAILED.
-  enum class BrowserLayoutLoadResult { kApplied, kPending, kFailed };
 
   [[nodiscard]] QDomDocument browserGenericLayoutDocument() const;
   [[nodiscard]] std::optional<QDomDocument> browserSourceLayoutDocument(QString& error) const;
@@ -805,8 +821,7 @@ class MainWindow : public QMainWindow {
   // `layout_url` is where the bytes came from (empty for an upload): Scene3D resources and file sources resolve
   // against it, and its sources download instead of being reselected.
   void loadLayoutFromBytes(const QByteArray& bytes, const QString& browser_name, const QUrl& layout_url = {});
-  [[nodiscard]] BrowserLayoutLoadResult loadBrowserParsedLayout(
-      QDomDocument doc, const QString& browser_name, const QUrl& layout_url);
+  void loadBrowserParsedLayout(QDomDocument doc, const QString& browser_name, const QUrl& layout_url);
   void restoreBrowserChromeAndPanels(const QDomDocument& doc, const QString& browser_name);
   // Called first by every layout open, before the layout starts its own streams: those must not count as running.
   void snapshotStreamWindowAtLayoutOpen();
@@ -879,8 +894,24 @@ class MainWindow : public QMainWindow {
   // The synchronous leg: applies a parsed layout to already-loaded data (the progressive leg is
   // beginProgressiveLayoutRestore). `stream_tracks`, the timeline tracks of the streams this load started or
   // bound, join the files' offsets and order; a layout with some applies though their datasets are still empty.
+  // `compared`: the datasets a multi-copy load duplicated the layout for; their starts are aligned before the restore
+  // builds and fits the plots.
   void applyRestoredLayout(
-      QDomDocument doc, const QString& path, MissingCurvePolicy policy, const LayoutTimelinePlan& stream_tracks);
+      QDomDocument doc, const QString& path, MissingCurvePolicy policy, const LayoutTimelinePlan& stream_tracks,
+      const std::vector<DatasetId>& compared = {});
+  // What chooseLayoutDatasets hands on.
+  struct ChosenLayout {
+    std::optional<QDomDocument> doc;  ///< nullopt: nothing to apply (cancelled, or every chosen dataset `removed`)
+    QString removed;                  ///< to report: chosen datasets were removed while the question was open
+    std::vector<DatasetId> compared;  ///< the datasets a multi-copy load shows, for applyRestoredLayout
+  };
+  // Which loaded dataset(s) a layout aimed at one dataset shows (layout_xml::planDatasetChoice). `saved`: see there.
+  // A plan that asks asks only when `can_prompt`, else takes the first dataset and says so in a diagnostic. `then`
+  // runs before this returns, except while the browser's non-blocking question is open; nothing is applied in
+  // between.
+  void chooseLayoutDatasets(
+      QDomDocument doc, const std::optional<QList<layout_xml::DatasetIdentity>>& saved, bool can_prompt,
+      const QString& layout_name, const QStringList& chosen_files, std::function<void(ChosenLayout)> then);
   // Starts each stream from its saved configuration, without its plugin's dialog, and adds it to `binding`.
   // Returns one "Stream '<id>': why" line per stream that did not start.
   [[nodiscard]] QStringList startLayoutStreams(
@@ -915,7 +946,7 @@ class MainWindow : public QMainWindow {
   // The end-of-drain owner of every unresolved-state decision (binder intents, blocking scene pends), on the same
   // policy applyWorkspace honours: kRetainAndDiagnose keeps the intents and diagnoses, kPrompt prompts. False
   // when the user cancelled (the restore was aborted).
-  [[nodiscard]] bool finalizeUnresolvedRestoreState(MissingCurvePolicy policy);
+  [[nodiscard]] bool finalizeUnresolvedRestoreState(MissingCurvePolicy policy, const QStringList& skipped_derived);
   // A drain-time restore failure: diagnostic under kRetainAndDiagnose, warning dialog otherwise.
   void reportLayoutRestoreIssue(MissingCurvePolicy policy, const char* id, const QString& message);
   // For a restore with materialize-bearing sources; the shell effects (workspace checkpoint, removeDatasetData,
@@ -949,7 +980,8 @@ class MainWindow : public QMainWindow {
   // kExact, then the file sources' timeline state plus `stream_tracks` (the replay's streams, still without
   // data, so an empty catalog is not an error when there are some).
   [[nodiscard]] bool applyBrowserRestoredLayout(
-      QDomDocument doc, const QString& browser_name, const LayoutTimelinePlan& stream_tracks = {});
+      QDomDocument doc, const QString& browser_name, const LayoutTimelinePlan& stream_tracks = {},
+      const std::vector<DatasetId>& compared = {});
   // The replay's last step: applies it, rolls back on a failure or replaces the previous preset's data on a URL
   // load's success, and finishes the load. `apply_failure` is the token if the layout itself does not apply.
   void applyBrowserReplay(QDomDocument apply_doc, const QString& apply_failure);
@@ -989,6 +1021,9 @@ class MainWindow : public QMainWindow {
       const CapturedWorkspace& target, MissingCurvePolicy policy, TimelineRestoreMode timeline_mode,
       const CapturedWorkspace* rollback_to = nullptr, RestoreIntent intent = RestoreIntent::kReplace,
       QString* out_reason = nullptr);
+  // Whether restoreWorkspaceState(doc) refuses before changing anything (its read-only preflight). A refusal is not
+  // rolled back, so a caller that moves offsets before the restore asks first. Query-only.
+  [[nodiscard]] bool restoreRefuses(const QDomDocument& doc) const;
 
   [[nodiscard]] CapturedWorkspace captureWorkspace(SnapshotScope scope) const;
   // SnapshotScope::kFull.
@@ -1021,9 +1056,10 @@ class MainWindow : public QMainWindow {
   enum class MissingCurveChoice { kRemove, kCancel };
 
   // Modal. A long `names` list is truncated. `import_failures` ("path: why" per source the import could not bring
-  // back) tells the user why the curves are missing.
+  // back) tells the user why the curves are missing; `skipped_derived` lists the derived objects the restore skipped.
+  // With any listed, the title and the Remove button speak of the layout's data, not of curves.
   [[nodiscard]] MissingCurveChoice promptMissingCurves(
-      const QStringList& names, const QStringList& import_failures = {});
+      const QStringList& names, const QStringList& import_failures = {}, const QStringList& skipped_derived = {});
   // The active batch's failed sources as "path: why" lines (empty without a batch).
   [[nodiscard]] QStringList layoutImportFailureLines() const;
 
@@ -1068,9 +1104,10 @@ class MainWindow : public QMainWindow {
 
   // Thin wrappers over pj_runtime's DerivedObjects, which owns the <data_processors> persistence. This one is
   // parse + checkDataProcessorDependencies + applyDataProcessors; `out_reason` is cleared on entry and set only
-  // when a `kHistory` restore is refused.
+  // when the preflight refuses.
   [[nodiscard]] bool restoreDataProcessors(
-      const QDomElement& root, RestoreIntent intent = RestoreIntent::kReplace, QString* out_reason = nullptr);
+      const QDomElement& root, RestoreIntent intent = RestoreIntent::kReplace, QString* out_reason = nullptr,
+      MissingCurvePolicy policy = MissingCurvePolicy::kExact, QStringList* skipped = nullptr);
 
   [[nodiscard]] DerivedObjects derivedObjects() const;
   // Reports each derived-recipe diagnostic as a "Layout" warning.
@@ -1080,7 +1117,12 @@ class MainWindow : public QMainWindow {
   // applyTimelineOffsets, so a refusal never has to undo a moved offset.
   [[nodiscard]] bool checkDataProcessorDependencies(const DerivedSnapshot& snapshot, QString* out_reason = nullptr);
   // Also reports its warnings and re-derives the Custom Topics list. An empty snapshot clears every recipe.
-  [[nodiscard]] bool applyDataProcessors(DerivedSnapshot snapshot);
+  // A derived object that cannot be restored (an input the loaded data lacks, a malformed entry) fails the restore
+  // only under kExact, as an unresolved curve does; under any other policy it is skipped, so the rest of the layout
+  // applies and curves plotting its output go through the missing-curve handling. kPrompt appends the skip messages
+  // to `skipped` for the caller's missing-data prompt; kRetainAndDiagnose shows one toast; kSilentDrop nothing.
+  [[nodiscard]] bool applyDataProcessors(
+      DerivedSnapshot snapshot, MissingCurvePolicy policy = MissingCurvePolicy::kExact, QStringList* skipped = nullptr);
 
   // For a node-state or offset change: reuses the last transform rows unless the catalog changed. Costs per
   // derived row, never per catalog row.
@@ -1163,6 +1205,8 @@ class MainWindow : public QMainWindow {
   void dragEnterEvent(QDragEnterEvent* event) override;
   void dragMoveEvent(QDragMoveEvent* event) override;
   void dropEvent(QDropEvent* event) override;
+  // Dropped .urdf files become robot models in the 3D view under `pos` (window coordinates), or in the only 3D view.
+  void addDroppedRobotModels(const QStringList& urdf_paths, QPoint pos);
 
   // Custom frame only: a 1-px edge from the PJ::theme:: tokens, since QSS cannot reach a top-level widget. None
   // while maximized or fullscreen.
@@ -1259,9 +1303,16 @@ class MainWindow : public QMainWindow {
   // set, restores the left panel (its streaming buffer reaches running streams) and re-baselines undo. Both restore
   // legs end here. restoreChromeAndPanels must not take commit-only
   // steps: it also runs while the restore can still abort.
+  // Also moves staged_kept_derived_ into kept_derived_.
   void commitRestoredLayout(const QDomDocument& doc, MissingCurvePolicy policy);
+  // Drops for good each kept entry a live recipe now stands for (same kind and name, and for a filter or generator
+  // the same dataset). Not mid-restore, which may still roll the live recipes back.
+  void retireReplacedKeptDerived();
+  // Appends the kept entries to `doc`'s <data_processors>, except one whose output a live transform or on-demand
+  // recipe now writes.
+  void appendKeptDerived(QDomDocument& doc);
 
-  // An empty, wired object dock of `kind` ("scene3d", "scene2d", "state_transitions", "CustomWidget"); null for
+  // An empty, wired object dock of `kind` ("scene3d", "scene2d", "state_transitions", "log", "CustomWidget"); null for
   // an unknown kind.
   IDataWidget* makeSceneDock(const QString& kind, QWidget* parent);
 
@@ -1370,6 +1421,13 @@ class MainWindow : public QMainWindow {
   bool plugin_failure_toast_shown_ = false;
   // While non-null, every "Layout" diagnostic is also appended here, so a failed restore can say why.
   QStringList* layout_issue_capture_ = nullptr;
+  // The <data_processors> entries the last unattended layout load (kRetainAndDiagnose) skipped, saved back by
+  // saveLayoutToPath so a save never loses what the load skipped (as pending curves are kept); an interactive load
+  // asked instead, and its Continue drops them. Layout files only: an undo snapshot or a kExact rollback target
+  // carrying them would fail on the same missing input. Replaced by the next layout load, emptied with the catalog.
+  QDomDocument kept_derived_;
+  // What applyDataProcessors skipped in the restore under way, for commitRestoredLayout; a rollback never commits it.
+  QDomDocument staged_kept_derived_;
   std::unique_ptr<Theme> theme_;
   TitleBar* title_bar_ = nullptr;
   // Fixed for the window's lifetime: the native window is created frameless or not.

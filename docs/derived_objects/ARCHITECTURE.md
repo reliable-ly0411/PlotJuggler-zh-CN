@@ -156,7 +156,7 @@ The contract is part of the pinned SDK; the host serves it through the on-demand
 - **WINDOW and INSTANT** are mutually exclusive.
 - **An optional typed dataset id on the v2 request.** Empty means a unique name, or an error. A plugin copies the id
   from catalog v2; layouts map dataset ids on load (`SessionManager::resolveDatasetIdentity`). The per-input
-  `source:topic` qualifier stays.
+  `label:topic` qualifier (`DataEngine::datasetLabel`) stays.
 
 ## Types and bindings
 
@@ -223,7 +223,7 @@ not Qt signals. Restore lives in `DerivedObjects` ("Life cycle of recipes and re
 The session owns it. `SessionManager` builds it over its pool and budget and wires the resolver (an object topic by
 name in each dataset, with the builtin type from its metadata; a scalar series, a number or a string, through
 `CatalogModel::findScalarForMarkerKey`, which `AppSession` injects and the catalog memoizes until its items change; a
-`source:` qualifier stripped; never an on-demand output, which the graph binds itself), the qualifier splitter (how
+`label:` qualifier stripped; never an on-demand output, which the graph binds itself), the qualifier splitter (how
 the graph reads a qualified upstream output: `RecipeGraph::QualifierSplitter`), the parser lookup, the dataset epochs
 and the TF providers (one snapshot per `kTfSnapshotPeriod` while a dataset ingests). It turns the callbacks into its
 signals (`derivedEntriesPublished`, `derivedStateChanged`, `onDemandRecipeInstalled`, `objectTopicsChanged`).
@@ -485,8 +485,11 @@ Where the details live:
 - **Restore and layout persistence:** the `DerivedObjects.h` comments (`save`, `parse`, `refusal`, `restore`; the
   `<data_processors>` block and its `<on_demand>` element; generators that name no dataset,
   `WantedGenerator::bind_by_inputs`; history's refusals). Diagnostics come back as data; `MainWindow` reports them and
-  `applyWorkspace` parses once. The layout format is checked against layouts saved by a `release-4.1` build and by the
-  prototype (`pj_app/tests/fixtures/layouts/`).
+  `applyWorkspace` parses once. An entry that cannot be restored never stops the others; whether it fails the whole
+  workspace is the shell's missing-data policy (only an exact restore fails; a layout load skips it, applies the rest
+  and saves the skipped entry back unchanged: `pj_app` ARCHITECTURE "Layout files and derived recipes"). The layout
+  format is checked against layouts saved by a `release-4.1` build and by the prototype
+  (`pj_app/tests/fixtures/layouts/`).
 - **Which generators stay unchanged, and when a marker run is cancelled:** the `BatchEngine.h` class comment and
   `unchangedGeneratorIds`.
 - **Which processor outputs mark marker rules stale:** `DataProcessorService::setOutputsChangedSink` and

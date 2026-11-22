@@ -29,9 +29,9 @@ read its color from the theme in use.
 |---|---|---|---|
 | 1 | Banner | `#1C1C22` | `#D6D6D6` |
 | 2 | Backdrop | `#373743` | `#EBEBEB` |
-| 3 | Data Backdrop | `#5C5C70` | `#FFFFFF` |
+| 3 | Data Backdrop | `#212128` | `#FFFFFF` |
 | 4 | Input | `#535365` | `#F5F5F5` |
-| 5 | Separation | `#D2D2DA` | `#ADADAD` |
+| 5 | Separation | `#5A5A68` | `#ADADAD` |
 | 6 | Banner Input | `#25252D` | `#E0E0E0` |
 | 7 | Scroll Handle | `#007AF5` | `#47A3FF` |
 
@@ -68,10 +68,12 @@ frames, popups, and dialogs.
 ### 3. Data Backdrop
 
 The background of any widget, label, or frame that contains interactable, editable
-data — charts, tree views, spin boxes, scrubbers. It is intentionally *lighter*
-than the Backdrop so text and values read more easily.
+data — charts, tree views, spin boxes, scrubbers. It is the surface farthest from
+the Backdrop toward the text's opposite: *lighter* than the Backdrop in the light
+theme, *darker* (near-black) in the dark theme, so curves, text and values have the
+most contrast.
 
-- **Dark:** `#5C5C70`
+- **Dark:** `#212128`
 - **Light:** `#FFFFFF`
 
 **Examples**
@@ -95,7 +97,7 @@ filter searches.
 A line or gap that acts as a buffer or border between objects. Used mostly by the
 draggable Separator widget, which turns a purple color when grabbed.
 
-- **Dark:** `#D2D2DA`
+- **Dark:** `#5A5A68`
 - **Light:** `#ADADAD`
 
 ### 6. Banner Input
@@ -212,7 +214,7 @@ icons match the body-text ink; disabled icons drop to a muted mid-grey.
   - **Light:** `#333333`
 - **Disabled**
   - **Dark:** `#8F8FA3`
-  - **Light:** `#A3A3A3`
+  - **Light:** `#808080`
 
 ## Outline / Stroke + Focus
 
@@ -221,9 +223,21 @@ outlines — distinct from `Surface::Separation`, which is a background *fill*.
 Accessor: `outline(role, state)` with roles {Default, Interactive, Divider,
 Gridline} and states {Rest, Hovered, Focused, Checked, Disabled}. Rest reuses the
 old `border_default`, Hovered reuses `border_hover`, and **Focus is a distinct
-ring** (`#1177FF`) rather than being collapsed into hover. Focus is drawn as a
+ring** (`outline_*_focused`) rather than being collapsed into hover. Focus is drawn as a
 ring over the nominal fill, so `State::Focused` on the interaction grid resolves
-to Nominal.
+to Nominal. Push buttons are the exception: `PJ::Style` draws their keyboard-focus
+ring as the button's own 2px edge, the fill mixed half and half with the theme's `text`
+ink (soft pink on the dark destructive fill, deep purple on the light one), because the
+blue ring has no contrast on the neutral grey fill (about 1.3:1 in dark). It shows only
+after keyboard navigation.
+
+## Status Text
+
+Status text (a warning or an error a label reports) uses the `status_warning_ink` / `status_error_ink` tokens, which
+reach 4.5:1 on the backdrop in both themes; `status_*` without `_ink` are the brighter tones for icons and dots. A
+label opts in with the dynamic property `pjStatus` = `"warning"` or `"error"` (the `QLabel[pjStatus=...]` rules), so
+a plugin `.ui` names a role instead of a hex colour that cannot read in both themes. Setting the property after the
+label is shown needs `style()->unpolish(label)` and `polish(label)`: Qt evaluates attribute selectors at polish.
 
 ## Overlays and Selection
 
@@ -266,7 +280,8 @@ materials) are data colors, not chrome, and are not part of this framework.
   a transient press.
 - The state ramp has no `Selected` (distinct from `Checked`), `Active/Current` (current tab, live playhead) or
   `ReadOnly` state.
-- Link, placeholder and caret ink are not themed: the toast's `<a href>` uses Qt's default `QPalette::Link`, and
-  fields set placeholder colors unthemed (reasoning from a review of the widgets, not re-checked).
+- Caret ink is not themed (reasoning from a review of the widgets, not re-checked). Link and placeholder ink are:
+  the `link` and `on_input_muted` tokens reach `QPalette::Link`/`PlaceholderText` through pj_app `Theme.cpp`, and the
+  `QLineEdit` rule sets `placeholder-text-color`.
 - The `chrome_*` palette keys (bar height, button size, icon size, spacing, border width) are not referenced by any
   stylesheet rule or by C++; chrome heights come from `ChromeMetrics` (`pj_widgets/CLAUDE.md`).

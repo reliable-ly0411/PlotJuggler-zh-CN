@@ -50,6 +50,7 @@ in
       ninjaFlags = [
         "Luau.Common"
         "Luau.Ast"
+        "Luau.Bytecode"
         "Luau.Compiler"
         "Luau.VM"
         "Luau.CodeGen"
@@ -58,7 +59,7 @@ in
       installPhase = ''
         runHook preInstall
         mkdir -p "$out/lib/cmake/Luau" "$out/include"
-        for component in Common Ast Compiler VM CodeGen; do
+        for component in Common Ast Bytecode Compiler VM CodeGen; do
           cp "libLuau.$component.a" "$out/lib/"
           cp -r "../$component/include/." "$out/include/"
         done
@@ -74,10 +75,10 @@ in
   # so recipes/ has no cloudini entry. Keep the version at conanfile.txt's.
   cloudini = stdenv.mkDerivation rec {
     pname = "pj4-cloudini";
-    version = "1.4.1";
+    version = "1.5.0";
     src = fetchurl {
       url = "https://github.com/facontidavide/cloudini/archive/refs/tags/${version}.tar.gz";
-      sha256 = "0fb83aa71c665fc73fdaaf3eefb2f16282f554f3d326c626437467acb203f59b";
+      sha256 = "1bb5031e863ac331224321e92aea0fa4a389539f2e6445ed9cc881464dd2717f";
     };
     nativeBuildInputs = [
       cmake

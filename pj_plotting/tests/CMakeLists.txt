@@ -27,9 +27,11 @@ pj_add_test_runner(pj_plotting_widget_tests
         plot_docker_palette_test.cpp
         tabbed_widget_tab_test.cpp
         plot_widget_replace_curve_test.cpp
+        plot_widget_curve_colors_test.cpp
         plot_scale_draw_test.cpp
         plot_widget_default_style_test.cpp
         plot_widget_xy_marker_test.cpp
+        plot_widget_xy_keep_ratio_test.cpp
         plot_widget_global_markers_test.cpp
         plot_widget_marker_status_test.cpp
         marker_color_names_test.cpp

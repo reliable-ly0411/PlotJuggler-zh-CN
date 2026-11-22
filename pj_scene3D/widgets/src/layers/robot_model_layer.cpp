@@ -414,7 +414,8 @@ bool RobotModelLayer::validateXml(const QDomElement& element) {
   return parseSettings(element).has_value();
 }
 
-RobotModelLayer::XmlLoadResult RobotModelLayer::xmlLoadStateResult(const QDomElement& element) {
+RobotModelLayer::XmlLoadResult RobotModelLayer::xmlLoadStateResult(
+    const QDomElement& element, PJ::DatasetId preferred_dataset) {
   const std::optional<ParsedSettings> settings = parseSettings(element);
   if (!settings.has_value()) {
     return XmlLoadResult::kInvalid;
@@ -424,23 +425,11 @@ RobotModelLayer::XmlLoadResult RobotModelLayer::xmlLoadStateResult(const QDomEle
   if (settings->source_type == SourceType::kTopic && ctx_.session != nullptr && !topic_name.isEmpty()) {
     const QString& source = settings->dataset_source;
     const QString& path = settings->dataset_path;
-    if (settings->dataset_id == 0 && source.isEmpty() && path.isEmpty()) {
-      const UniqueObjectTopicResolution generic = resolveUniqueObjectTopic(
-          ctx_.session->objectStore(), topic_name.toStdString(), PJ::sdk::BuiltinObjectType::kRobotDescription);
-      if (generic.ambiguous) {
-        return XmlLoadResult::kInvalid;
-      }
-      restored_topic = generic.topic_id;
-    } else {
-      const PJ::DatasetIdentityResolution dataset =
-          ctx_.session->resolveDatasetIdentity(settings->dataset_id, source, path);
-      if (dataset.ambiguous) {
-        return XmlLoadResult::kInvalid;
-      }
-      if (dataset.id.has_value()) {
-        restored_topic = ctx_.session->objectStore().findTopic(*dataset.id, topic_name.toStdString());
-      }
-    }
+    const bool qualified = settings->dataset_id != 0 || !source.isEmpty() || !path.isEmpty();
+    restored_topic = PJ::resolveSavedObjectTopic(
+        ctx_.session->objectStore(), topic_name.toStdString(), PJ::sdk::BuiltinObjectType::kRobotDescription, qualified,
+        qualified ? ctx_.session->resolveDatasetIdentity(settings->dataset_id, source, path).id : std::nullopt,
+        preferred_dataset);
     if (!restored_topic.has_value()) {
       return XmlLoadResult::kDeferred;
     }
@@ -864,26 +853,19 @@ QWidget* RobotModelLayer::createConfigWidget(QWidget* parent) {
       return;
     }
     const QString root = PJ::FileDialog::getExistingDirectory(
-        container, tr("Select the folder that contains your robot packages"), QString());
+        container, tr("Select your workspace or the folder that contains your robot packages"), QString());
     if (root.isEmpty()) {
       return;
     }
-    QStringList missing;
-    for (const QString& package : packages) {
-      const QString package_dir = QDir(root).filePath(package);
-      if (QFileInfo(package_dir).isDir()) {
-        resolver_->rememberPackageRoot(package.toStdString(), package_dir);
-      } else {
-        missing.push_back(package);
-      }
-    }
-    refresh_roots_list();
-    if (missing.size() == packages.size()) {
-      setStatus(
-          tr("Package '%1' not found under '%2' - expected a subdirectory named '%1'").arg(missing.first(), root));
+    resolver_->clearPackageIndexes();
+    if (std::ranges::none_of(
+            packages, [this, &root](const QString& p) { return resolver_->folderHasPackage(root, p); })) {
+      setStatus(tr("Package '%1' not found under '%2' - expected a folder named '%1'").arg(packages.first(), root));
       refresh_status();
       return;
     }
+    resolver_->addUserFolder(root);
+    refresh_roots_list();
     loadFromCurrentSource();
     refresh_status();
   });
@@ -1052,6 +1034,9 @@ void RobotModelLayer::setIgnoreColladaUpAxis(bool ignore) {
 }
 
 void RobotModelLayer::retry() {
+  if (resolver_ != nullptr) {
+    resolver_->clearPackageIndexes();
+  }
   loadFromCurrentSource();
 }
 

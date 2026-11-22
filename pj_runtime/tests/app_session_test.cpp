@@ -16,8 +16,11 @@
 #include "event_pump_test_utils.h"
 #include "marker_test_utils.h"
 #include "pj_base/builtin/plot_markers.hpp"
+#include "pj_base/sdk/dataset_qualified_name.hpp"
+#include "pj_base/sdk/plugin_data_api.hpp"
 #include "pj_datastore/engine.hpp"
 #include "pj_datastore/marker_topic_metadata.hpp"
+#include "pj_datastore/plugin_data_host.hpp"
 #include "pj_datastore/query.hpp"
 #include "pj_datastore/reader.hpp"
 #include "pj_datastore/topic_storage.hpp"
@@ -27,6 +30,7 @@
 #include "pj_runtime/BatchEngine.h"
 #include "pj_runtime/CatalogModel.h"
 #include "pj_runtime/CurveColorRegistry.h"
+#include "pj_runtime/DatasetQualifiedName.h"
 #include "pj_runtime/DerivedTopics.h"
 #include "pj_runtime/ExtensionCatalogService.h"
 #include "pj_runtime/PlaybackEngine.h"
@@ -556,6 +560,74 @@ TEST(AppSessionTest, FocusPlaybackSnapsRangeToTheGivenDatasets) {
   EXPECT_DOUBLE_EQ(session.playbackEngine().rangeMin().value, 500'000.0e-9);
   EXPECT_DOUBLE_EQ(session.playbackEngine().rangeMax().value, 600'000.0e-9);
   EXPECT_DOUBLE_EQ(session.playbackEngine().currentTime().value, 500'000.0e-9);
+}
+
+// A playhead past the import's end is outside the new range: it goes to the import's start, not to its end.
+TEST(AppSessionTest, FocusPlaybackStartsAnImportThatEndsBeforeThePlayhead) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  PJ::AppSession session(dir.path());
+
+  auto late = session.sessionManager().dataEngine().createDataset(PJ::DatasetDescriptor{.source_name = "late.mcap"});
+  ASSERT_TRUE(late.has_value()) << late.error();
+  addScalarSamples(session, *late, "/imu/x", {2'000'000'000, 3'000'000'000});
+  ASSERT_TRUE(session.focusPlaybackOnDatasets({*late}));
+  session.playbackEngine().setCurrentTime(PJ::DisplaySeconds{2.5});
+
+  auto early = session.sessionManager().dataEngine().createDataset(PJ::DatasetDescriptor{.source_name = "early.mcap"});
+  ASSERT_TRUE(early.has_value()) << early.error();
+  addScalarSamples(session, *early, "/odom/x", {500'000'000, 600'000'000});
+
+  EXPECT_TRUE(session.focusPlaybackOnDatasets({*early}));
+  EXPECT_DOUBLE_EQ(session.playbackEngine().rangeMax().value, 0.6);
+  EXPECT_DOUBLE_EQ(session.playbackEngine().currentTime().value, 0.5);
+}
+
+// A playhead inside the range a growing import re-focuses on stays where the user put it.
+TEST(AppSessionTest, FocusPlaybackKeepsAPlayheadInsideTheGrowingRange) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  PJ::AppSession session(dir.path());
+
+  auto growing = session.sessionManager().dataEngine().createDataset(PJ::DatasetDescriptor{.source_name = "grow.mcap"});
+  ASSERT_TRUE(growing.has_value()) << growing.error();
+  addScalarSamples(session, *growing, "/imu/x", {1'000'000'000, 2'000'000'000});
+  ASSERT_TRUE(session.focusPlaybackOnDatasets({*growing}));
+  session.playbackEngine().setCurrentTime(PJ::DisplaySeconds{1.5});
+
+  addScalarSamples(session, *growing, "/imu/y", {1'000'000'000, 3'000'000'000});
+  EXPECT_TRUE(session.focusPlaybackOnDatasets({*growing}));
+  EXPECT_DOUBLE_EQ(session.playbackEngine().rangeMax().value, 3.0);
+  EXPECT_DOUBLE_EQ(session.playbackEngine().currentTime().value, 1.5);
+}
+
+// Between two notifies of a growing import the range is the union of all data (recomputeRange), so the user can scrub
+// past the import's tip. The next focus clamps the playhead to the tip instead of yanking it back to the start.
+TEST(AppSessionTest, FocusPlaybackClampsAPlayheadScrubbedPastAGrowingImport) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  PJ::AppSession session(dir.path());
+
+  auto later = session.sessionManager().dataEngine().createDataset(PJ::DatasetDescriptor{.source_name = "later.mcap"});
+  ASSERT_TRUE(later.has_value()) << later.error();
+  addScalarSamples(session, *later, "/imu/x", {5'000'000'000, 9'000'000'000});
+  session.catalogModel().rebuildFromDatastore();
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+
+  auto growing = session.sessionManager().dataEngine().createDataset(PJ::DatasetDescriptor{.source_name = "grow.mcap"});
+  ASSERT_TRUE(growing.has_value()) << growing.error();
+  addScalarSamples(session, *growing, "/odom/x", {1'000'000'000, 2'000'000'000});
+  ASSERT_TRUE(session.focusPlaybackOnDatasets({*growing}));
+  ASSERT_DOUBLE_EQ(session.playbackEngine().currentTime().value, 1.0);
+
+  session.catalogModel().rebuildFromDatastore();
+  session.recomputeRange();
+  session.playbackEngine().setCurrentTime(PJ::DisplaySeconds{2.5});
+
+  addScalarSamples(session, *growing, "/odom/y", {1'000'000'000, 2'200'000'000});
+  EXPECT_TRUE(session.focusPlaybackOnDatasets({*growing}));
+  EXPECT_DOUBLE_EQ(session.playbackEngine().rangeMax().value, 2.2);
+  EXPECT_DOUBLE_EQ(session.playbackEngine().currentTime().value, 2.2);
 }
 
 // Latched/static objects (tf_static, stale markers) carry payload-embedded
@@ -1461,6 +1533,143 @@ TEST(AppSessionTest, RefillDoesNotHoldTheExtentOfADatasetMergedAway) {
   refill.commit();
 }
 
+// Data replaced without the catalog ever emptying (a browser preset loads the next one's files, then removes the
+// previous ones): once no dataset the playhead was seeded on is left, the next seed snaps it to the new data's start
+// instead of clamping a stale time to the new range's edge.
+TEST(AppSessionTest, PlayheadSnapsToNewDataOnceItsSeedDatasetsAreGone) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  PJ::AppSession session(dir.path());
+  PJ::PlaybackEngine& engine = session.playbackEngine();
+
+  const PJ::DatasetId first = makeShiftedDataset(session, "first", 0, "/s", {100 * kSecond, 200 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  engine.setCurrentTime(PJ::DisplaySeconds{150.0});
+
+  makeShiftedDataset(session, "earlier", 0, "/s", {10 * kSecond, 20 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  EXPECT_DOUBLE_EQ(engine.currentTime().value, 150.0) << "a second dataset does not move the playhead";
+
+  removeDatasetEverywhere(session, first);
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  EXPECT_DOUBLE_EQ(engine.rangeMin().value, 10.0);
+  EXPECT_DOUBLE_EQ(engine.rangeMax().value, 20.0);
+  EXPECT_DOUBLE_EQ(engine.currentTime().value, 10.0) << "not clamped to the new data's end";
+}
+
+// A merge keeps the playhead's seeding: the anchor carries on for the datasets it consumed.
+TEST(AppSessionTest, MergeKeepsThePlayheadSeededOnTheAnchor) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  PJ::AppSession session(dir.path());
+  PJ::PlaybackEngine& engine = session.playbackEngine();
+
+  const PJ::DatasetId seeded = makeShiftedDataset(session, "seeded", 0, "/s", {1 * kSecond, 10 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  engine.setCurrentTime(PJ::DisplaySeconds{5.0});
+  const PJ::DatasetId anchor = makeShiftedDataset(session, "anchor", 0, "/t", {0, 2 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  ASSERT_EQ(session.mergeDatasets({seeded, anchor}), anchor);
+
+  makeShiftedDataset(session, "later", 0, "/u", {20 * kSecond, 30 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  EXPECT_DOUBLE_EQ(engine.currentTime().value, 5.0);
+}
+
+// The shell does not seed while a stream is followed (live-follow drives the playhead), so the followed stream joins
+// the seeding: removing the file seeded before it, then loading another, keeps the playhead.
+TEST(AppSessionTest, FollowedStreamKeepsThePlayheadSeeded) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  PJ::AppSession session(dir.path());
+  PJ::PlaybackEngine& engine = session.playbackEngine();
+
+  const PJ::DatasetId file = makeShiftedDataset(session, "file", 0, "/s", {0, 50 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  const PJ::DatasetId stream = makeShiftedDataset(session, "stream", 0, "/live", {100 * kSecond, 200 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  session.setActiveStreamingDataset(stream);
+  session.recomputeRange();
+  engine.setCurrentTime(PJ::DisplaySeconds{150.0});
+
+  removeDatasetEverywhere(session, file);
+  session.setActiveStreamingDataset(0);
+  makeShiftedDataset(session, "next", 0, "/s", {300 * kSecond, 400 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  EXPECT_DOUBLE_EQ(engine.currentTime().value, 150.0) << "an added dataset does not move the playhead";
+}
+
+// A stopped stream still holds the playhead's seeding: removing the file seeded before it keeps the playhead.
+TEST(AppSessionTest, StoppedStreamKeepsThePlayheadSeeded) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  PJ::AppSession session(dir.path());
+  PJ::PlaybackEngine& engine = session.playbackEngine();
+
+  const PJ::DatasetId file = makeShiftedDataset(session, "file", 0, "/s", {0, 50 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  const PJ::DatasetId stream = makeShiftedDataset(session, "stream", 0, "/live", {100 * kSecond, 200 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  session.setActiveStreamingDataset(stream);
+  session.setActiveStreamingDataset(0);
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  engine.setCurrentTime(PJ::DisplaySeconds{200.0});
+
+  removeDatasetEverywhere(session, file);
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  EXPECT_DOUBLE_EQ(engine.currentTime().value, 200.0) << "not moved from the stream's tip to its start";
+}
+
+// A stream-only session is not seeded: the first file loaded after it still snaps the playhead to the data's start.
+TEST(AppSessionTest, StreamOnlySessionStillSnapsOnItsFirstFile) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  PJ::AppSession session(dir.path());
+  PJ::PlaybackEngine& engine = session.playbackEngine();
+
+  const PJ::DatasetId stream = makeShiftedDataset(session, "stream", 0, "/live", {100 * kSecond, 200 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  session.setActiveStreamingDataset(stream);
+  session.setActiveStreamingDataset(0);
+  engine.setCurrentTime(PJ::DisplaySeconds{180.0});
+
+  makeShiftedDataset(session, "file", 0, "/s", {50 * kSecond, 60 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  EXPECT_DOUBLE_EQ(engine.currentTime().value, 50.0) << "snapped to the union's start";
+}
+
+// A followed stream that has received no data yet (only advertised topics) does not hold the seeding: data replaced
+// under it still starts at the new data.
+TEST(AppSessionTest, FollowedStreamWithoutDataDoesNotHoldTheSeeding) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  PJ::AppSession session(dir.path());
+  PJ::PlaybackEngine& engine = session.playbackEngine();
+
+  const PJ::DatasetId file = makeShiftedDataset(session, "file", 0, "/s", {0, 50 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  const PJ::DatasetId stream = makeEmptyShiftedDataset(session, "stream", 0);
+  session.catalogModel().setAdvertisedTopics(stream, {{.topic_name = "/odom"}});
+  session.setActiveStreamingDataset(stream);
+  engine.setCurrentTime(PJ::DisplaySeconds{40.0});
+
+  removeDatasetEverywhere(session, file);
+  makeShiftedDataset(session, "next", 0, "/s", {30 * kSecond, 80 * kSecond});
+  session.catalogModel().rebuildFromDatastore();
+  session.catalogModel().setAdvertisedTopics(stream, {{.topic_name = "/odom"}});
+  ASSERT_TRUE(session.seedPlaybackFromSession());
+  EXPECT_DOUBLE_EQ(engine.currentTime().value, 30.0) << "the new data's start, not the old time clamped into it";
+}
+
 // Automatic marker runs follow demand: a generator on a demand-capable streaming
 // dataset stays stale while nothing displays that dataset, and runs as soon as a
 // display reference arrives, with no further ingest.
@@ -1585,6 +1794,135 @@ TEST(AppSessionTest, MarkerResolverReadsAMultiChunkSeriesAndItsWindow) {
   const auto windowed = manager.batchEngine().upsertGenerator(recipe);
   ASSERT_TRUE(windowed.has_value()) << windowed.error();
   expect_samples(5, 24);
+}
+
+// --- One dataset label on every surface ---
+
+// What each surface calls `dataset`, checked against `expected`: the tree (catalog items and datasets(), which
+// get_status lists), the plugin catalog snapshot (PJ_data_source_info_t.name, which the agent tools list and match),
+// and the host resolvers (CatalogModel::datasetByLabel behind plot tabs and scene views, resolveMarkerDataset behind
+// marker generators; transforms and on-demand inputs split against the same DataEngine labels).
+void expectOneLabel(PJ::AppSession& session, PJ::DatasetId id, const std::string& expected) {
+  PJ::CatalogModel& catalog = session.catalogModel();
+  catalog.rebuildFromDatastore();
+  const QString label = QString::fromStdString(expected);
+
+  const auto listed = catalog.datasets();
+  const auto row = std::find_if(listed.begin(), listed.end(), [id](const auto& entry) { return entry.first == id; });
+  ASSERT_NE(row, listed.end()) << expected;
+  EXPECT_EQ(row->second, label) << "tree / get_status";
+  std::optional<PJ::CatalogItem> scalar;
+  for (const PJ::CatalogItem& item : catalog.items()) {
+    if (item.dataset_id == id) {
+      EXPECT_EQ(item.dataset_name, label) << "tree row " << item.key.toStdString();
+      if (PJ::asScalarField(item) != nullptr) {
+        scalar = item;
+      }
+    }
+  }
+
+  PJ::DataEngine& engine = session.sessionManager().dataEngine();
+  PJ::DatastoreToolboxHost host(engine, session.sessionManager().objectStore());
+  PJ::sdk::ToolboxHostView view(host.raw());
+  auto snapshot = view.catalogSnapshotV2();
+  ASSERT_TRUE(snapshot.has_value()) << snapshot.error();
+  int named = 0;
+  for (const PJ_data_source_info_t& source : snapshot->dataSources()) {
+    if (source.handle.id == id) {
+      EXPECT_EQ(PJ::sdk::toStringView(source.name), expected) << "catalog snapshot";
+    }
+    named += PJ::sdk::toStringView(source.name) == expected ? 1 : 0;
+  }
+  EXPECT_EQ(named, 1) << "one snapshot entry carries " << expected;
+
+  EXPECT_EQ(catalog.datasetLabel(id), std::optional<QString>(label));
+  EXPECT_EQ(catalog.datasetByLabel(label), std::optional<PJ::DatasetId>(id));
+  ASSERT_TRUE(scalar.has_value()) << expected;
+  const PJ::ScalarFieldPayload* field = PJ::asScalarField(*scalar);
+  const std::string key = PJ::sdk::markerSeriesKey(scalar->topic_name.toStdString(), field->field_path.toStdString());
+  std::vector<std::string> inputs = {PJ::sdk::qualifiedSeriesName(expected, key)};
+  std::vector<std::string> outputs;
+  const PJ::Expected<PJ::DatasetId> bound = PJ::resolveMarkerDataset(inputs, outputs, catalog.items(), engine);
+  ASSERT_TRUE(bound.has_value()) << bound.error();
+  EXPECT_EQ(*bound, id) << "marker qualifier";
+}
+
+PJ::DatasetId loadDataset(PJ::AppSession& session, const std::string& source, bool with_data = true) {
+  auto dataset = session.sessionManager().dataEngine().createDataset(PJ::DatasetDescriptor{.source_name = source});
+  EXPECT_TRUE(dataset.has_value());
+  if (with_data) {
+    addScalarSamples(session, *dataset, "/s", {0, 1'000'000'000LL});
+  }
+  return *dataset;
+}
+
+TEST(AppSessionDatasetLabelTest, EverySurfaceShowsAndAcceptsTheSameLabel) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+  PJ::AppSession session(dir.path());
+
+  // Plain duplicates.
+  const PJ::DatasetId dup_a = loadDataset(session, "dup.csv");
+  const PJ::DatasetId dup_b = loadDataset(session, "dup.csv");
+  // An item-less older copy (a stream that has produced nothing yet) still holds the bare name.
+  (void)loadDataset(session, "ghost.csv", /*with_data=*/false);
+  const PJ::DatasetId ghost = loadDataset(session, "ghost.csv");
+  // '/' reads as '_', an empty source name as "Dataset".
+  const PJ::DatasetId slashed = loadDataset(session, "logs/drive.mcap");
+  const PJ::DatasetId unnamed = loadDataset(session, "");
+  // A display name is a relabel, made unique like any label.
+  const PJ::DatasetId pretty_a = loadDataset(session, "info.json");
+  const PJ::DatasetId pretty_b = loadDataset(session, "info.json");
+  session.catalogModel().setDatasetDisplayName(pretty_a, u"lerobot/pusht"_s);
+  session.catalogModel().setDatasetDisplayName(pretty_b, u"lerobot/pusht"_s);
+  // A merge relabels its anchor; the consumed dataset keeps its label, so a new dataset of its name takes " (2)" (the
+  // loader opens the consumed file again as a new dataset: FileLoaderTest.ReopeningAMergedAwayFileLoadsANewDataset).
+  const PJ::DatasetId anchor = loadDataset(session, "m.csv");
+  const PJ::DatasetId consumed = loadDataset(session, "n.csv");
+  ASSERT_EQ(session.mergeDatasets({anchor, consumed}), anchor);
+  const PJ::DatasetId reloaded = loadDataset(session, "n.csv");
+
+  expectOneLabel(session, dup_a, "dup.csv");
+  expectOneLabel(session, dup_b, "dup.csv (2)");
+  expectOneLabel(session, ghost, "ghost.csv (2)");
+  expectOneLabel(session, slashed, "logs_drive.mcap");
+  expectOneLabel(session, unnamed, "Dataset");
+  expectOneLabel(session, pretty_a, "lerobot_pusht");
+  expectOneLabel(session, pretty_b, "lerobot_pusht (2)");
+  expectOneLabel(session, anchor, "m.csv_merged");
+  expectOneLabel(session, reloaded, "n.csv (2)");
+  // The merged-away dataset holds "n.csv" but no surface lists it.
+  for (const auto& [id, label] : session.catalogModel().datasets()) {
+    EXPECT_NE(id, consumed) << label.toStdString();
+  }
+  PJ::DatastoreToolboxHost host(session.sessionManager().dataEngine(), session.sessionManager().objectStore());
+  auto snapshot = PJ::sdk::ToolboxHostView(host.raw()).catalogSnapshotV2();
+  ASSERT_TRUE(snapshot.has_value()) << snapshot.error();
+  for (const PJ_data_source_info_t& source : snapshot->dataSources()) {
+    EXPECT_NE(source.handle.id, consumed) << PJ::sdk::toStringView(source.name);
+  }
+  // Its label still addresses its data, now on the anchor, in every resolver (they share DataEngine::datasetByLabel).
+  EXPECT_EQ(session.catalogModel().datasetByLabel(u"n.csv"_s), std::optional<PJ::DatasetId>(anchor));
+  const std::vector<PJ::CatalogItem> items = session.catalogModel().items();
+  const auto merged_scalar = std::find_if(items.begin(), items.end(), [anchor](const PJ::CatalogItem& item) {
+    return item.dataset_id == anchor && PJ::asScalarField(item) != nullptr;
+  });
+  ASSERT_NE(merged_scalar, items.end());
+  std::vector<std::string> merged_inputs = {PJ::sdk::qualifiedSeriesName(
+      "n.csv",
+      PJ::sdk::markerSeriesKey(
+          merged_scalar->topic_name.toStdString(), PJ::asScalarField(*merged_scalar)->field_path.toStdString()))};
+  std::vector<std::string> no_outputs;
+  const PJ::Expected<PJ::DatasetId> merged_bound =
+      PJ::resolveMarkerDataset(merged_inputs, no_outputs, items, session.sessionManager().dataEngine());
+  ASSERT_TRUE(merged_bound.has_value()) << merged_bound.error();
+  EXPECT_EQ(*merged_bound, anchor);
+
+  // Removing the older copy renames nothing, and its label addresses nothing until a new dataset takes it.
+  session.sessionManager().removeDataset(dup_a);
+  session.catalogModel().removeDataset(dup_a, /*tombstone=*/false);
+  expectOneLabel(session, dup_b, "dup.csv (2)");
+  EXPECT_FALSE(session.catalogModel().datasetByLabel(u"dup.csv"_s).has_value());
 }
 
 }  // namespace

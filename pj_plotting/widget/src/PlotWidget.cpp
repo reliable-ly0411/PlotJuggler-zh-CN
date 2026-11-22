@@ -61,6 +61,7 @@
 #include "pj_widgets/CurveTreeView.h"
 #include "pj_widgets/FrameworkTokens.h"
 #include "pj_widgets/MessageBox.h"
+#include "pj_widgets/OwnedMenu.h"
 #include "pj_widgets/SvgUtil.h"
 using namespace Qt::StringLiterals;
 
@@ -291,21 +292,23 @@ PlotWidget::CurveInfo* PlotWidget::addCurve(const QString& name, QColor color) {
   }
 
   // Auto-assignment: reuse the curve's remembered colour so it stays consistent across plots; otherwise take the next
-  // colour from the shared session-wide palette counter and remember it. An explicit (non-transparent) colour, from a
-  // layout file for example, is honored as-is. session_ is non-null here (guarded above).
+  // colour from the configured sequence that this plot does not use yet (freePaletteIndex has the rule, including what
+  // happens once the palette is exhausted) and remember it. An explicit (non-transparent) colour, from a layout file
+  // for example, is honored as-is. session_ is non-null here (guarded above).
   if (color == Qt::transparent) {
     CurveColorRegistry& registry = session_->curveColorRegistry();
     if (const auto remembered = registry.color(name); remembered.has_value()) {
       color = QColor(*remembered);
     } else {
-      // New curve: the colour index follows the configured sequence. "global" advances the session-wide registry
-      // counter (one continuous sequence across every plot); "per plot" uses the curve's positional index in this plot,
-      // so each plot restarts at colour 0. Either way the colour is remembered by name, so the curve keeps it on re-add
-      // and across plots.
+      // New curve: "global" draws from the session-wide registry counter (one continuous sequence across every plot);
+      // "per plot" starts at the curve's positional index in this plot, so each plot restarts at colour 0. Either way
+      // the colour is remembered by name, so the curve keeps it on re-add and across plots. The counters know nothing
+      // of colours a layout restore or the user put on this plot, which freePaletteIndex reads from the plot.
       QSettings settings;
       const bool global = settings.value(u"Preferences::curve_color_global"_s, true).toBool();
-      const int index = global ? registry.nextPaletteIndex() : static_cast<int>(curveList().size());
-      color = PlotWidgetBase::paletteColor(index);
+      int per_plot_index = static_cast<int>(curveList().size());
+      color = PlotWidgetBase::paletteColor(
+          freePaletteIndex([&] { return global ? registry.nextPaletteIndex() : per_plot_index++; }));
       registry.setColor(name, color.name());
     }
   }
@@ -614,6 +617,13 @@ void PlotWidget::beforeCanvasReplot() {
   }
 }
 
+void PlotWidget::changeEvent(QEvent* event) {
+  PlotWidgetBase::changeEvent(event);  // re-derives the canvas colour first
+  if (event->type() == QEvent::ApplicationPaletteChange || event->type() == QEvent::PaletteChange) {
+    redrawTrackers();
+  }
+}
+
 void PlotWidget::redrawTrackers() {
   if (isXYPlot()) {
     updateXYMarkers(last_tracker_time_sec_);
@@ -770,7 +780,7 @@ QDomElement PlotWidget::xmlSaveState(QDomDocument& doc) const {
   // Skip <range> when the canvas has not computed a real viewport (a drop right before save): a degenerate rect would
   // restore as a zero-width window and hide everything. Without <range>, xmlLoadState falls back to zoomOut(), which
   // auto-fits.
-  const QRectF rect = currentBoundingRect();
+  const QRectF rect = requestedView();
   if (rect.left() != rect.right() && rect.top() != rect.bottom()) {
     QDomElement range_element = doc.createElement(u"range"_s);
     range_element.setAttribute(u"bottom"_s, QString::number(rect.bottom(), 'f', 6));
@@ -1963,18 +1973,9 @@ void PlotWidget::canvasContextMenuTriggered(const QPoint& pos) {
     return;
   }
 
-#ifdef PJ_TARGET_WASM
-  // QMenu::exec() enters a nested event loop, which needs Asyncify in Qt WASM; the production browser build is
-  // Asyncify-free, so the menu is retained until its asynchronous popup closes. Actions and handlers are shared with
-  // desktop.
-  auto* wasm_menu = new QMenu(qwtPlot());
-  wasm_menu->setAttribute(Qt::WA_DeleteOnClose);
-  QMenu& menu = *wasm_menu;
-#else
-  QMenu menu(qwtPlot());
-#endif
-  menu.setObjectName(u"PJMenu"_s);
-  menu.setProperty("categorySeparators", true);
+  auto* menu = new QMenu(qwtPlot());
+  menu->setObjectName(u"PJMenu"_s);
+  menu->setProperty("categorySeparators", true);
   // Refresh icons with the active theme on every popup so the glyphs stay tinted after a theme switch.
   const QString theme = currentTheme();
   action_split_horizontal_->setIcon(QIcon(loadSvg(":/resources/svg/add_column.svg", theme)));
@@ -1987,33 +1988,29 @@ void PlotWidget::canvasContextMenuTriggered(const QPoint& pos) {
   // DataProcessorService) and adds the filtered curve(s) to this plot. Filters are time-series transforms, so the
   // action is hidden on XY plots.
   if (session_ != nullptr && catalog_ != nullptr && !curveList().empty() && !isXYPlot()) {
-    menu.addAction(QIcon(loadSvg(":/resources/svg/function.svg", theme)), tr("Apply Filter..."), this, [this]() {
+    menu->addAction(QIcon(loadSvg(":/resources/svg/function.svg", theme)), tr("Apply Filter..."), this, [this]() {
       launchFilterEditor();
     });
-    addActionCategorySeparator(menu);
+    addActionCategorySeparator(*menu);
   }
 
-  menu.addAction(
+  menu->addAction(
       QIcon(loadSvg(":/resources/svg/copy.svg", theme)), tr("Copy"), this, [this]() { copyWidgetToClipboard(); });
-  QAction* paste_action = menu.addAction(
+  QAction* paste_action = menu->addAction(
       QIcon(loadSvg(":/resources/svg/paste.svg", theme)), tr("Paste"), this, [this]() { pasteWidgetFromClipboard(); });
   paste_action->setEnabled(canPasteWidgetFromClipboard());
-  addActionCategorySeparator(menu);
+  addActionCategorySeparator(*menu);
 
-  menu.addAction(action_split_horizontal_);
-  menu.addAction(action_split_vertical_);
-  addActionCategorySeparator(menu);
-  menu.addAction(action_zoom_out_);
-  menu.addAction(action_zoom_out_horizontal_);
-  menu.addAction(action_zoom_out_vertical_);
-  addActionCategorySeparator(menu);
-  menu.addAction(action_remove_all_curves_);
+  menu->addAction(action_split_horizontal_);
+  menu->addAction(action_split_vertical_);
+  addActionCategorySeparator(*menu);
+  menu->addAction(action_zoom_out_);
+  menu->addAction(action_zoom_out_horizontal_);
+  menu->addAction(action_zoom_out_vertical_);
+  addActionCategorySeparator(*menu);
+  menu->addAction(action_remove_all_curves_);
   action_remove_all_curves_->setEnabled(!curveList().empty());
-#ifdef PJ_TARGET_WASM
-  menu.popup(qwtPlot()->canvas()->mapToGlobal(pos));
-#else
-  menu.exec(qwtPlot()->canvas()->mapToGlobal(pos));
-#endif
+  showOwnedMenu(menu, qwtPlot()->canvas()->mapToGlobal(pos));
 }
 
 void PlotWidget::launchFilterEditor() {

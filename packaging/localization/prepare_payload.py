@@ -26,7 +26,7 @@ CORE_PLUGINS = ['mcap-loader', 'csv-loader', 'parquet-loader', 'ulog-loader',
                 'json-parser', 'data-tamer-parser', 'toolbox-quaternion',
                 'toolbox-transform-editor', 'toolbox-mosaico', 'arrow-parser',
                 'toolbox-fft', 'toolbox-anomaly-detector', 'toolbox-data-exporter',
-                'influx-parser', 'navmap-parser', 'candump-loader', 'blf-loader', 'mf4-loader', 'log-widget']
+                'influx-parser', 'navmap-parser', 'candump-loader', 'blf-loader', 'mf4-loader']
 
 
 def download(url, target, expected):
@@ -84,7 +84,8 @@ def stage(build, prefix, config, linux_tools, *, development_candidate=False):
              prefix / 'bin/fonts/NotoSansCJKsc-Regular.otf', FONT_SHA)
     download(base + 'LICENSE', licenses / 'NotoSansCJK-OFL.txt', FONT_LICENSE_SHA)
     qt = ROOT / '.qt' / host['qt_version'] / ('gcc_64' if linux_tools else 'msvc2022_64')
-    collect(ROOT, build, qt, licenses, download, windows=not linux_tools)
+    ids = CORE_PLUGINS + (['toolbox-assistant-agent', 'ros2-topic-subscriber'] if linux_tools else [])
+    collect(ROOT, build, qt, licenses, download, windows=not linux_tools, registry_plugin_ids=ids)
     baseline = json.loads((ROOT / 'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
     plugin_manifest = json.loads(manifest.read_text(encoding='utf-8'))
     assert plugin_manifest['license'] == baseline['ardupilot_plugin']['license'] == 'LGPL-3.0-only'
@@ -99,7 +100,6 @@ def stage(build, prefix, config, linux_tools, *, development_candidate=False):
     record['host_sdk_source'] = json.loads((ROOT / 'cmake/host-sdk-source.json').read_text(encoding='utf-8'))
     locked, provenance = read_inventory(ROOT)
     record['registry_sources'] = provenance['sources']
-    ids = CORE_PLUGINS + (['toolbox-assistant-agent', 'ros2-topic-subscriber'] if linux_tools else [])
     record['expected_plugins'] = [f"{x['id']}={x['version']}" for x in locked['extensions'] if x['id'] in ids]
     assert len(record['expected_plugins']) == len(ids)
     record['expected_plugins'].append('ardupilot-dataflash=' + record['bin_plugin_version'])

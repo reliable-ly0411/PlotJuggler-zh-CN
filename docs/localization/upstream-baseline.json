@@ -1,9 +1,9 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
   "upstream_branch": "main",
-  "upstream_commit": "1877b40120414b8590349cb9ef66ae7a5878f63a",
+  "upstream_commit": "a7814caa0c20c6115613e71638fe61ccadd6131c",
   "upstream_version_file": "versions.env",
-  "baseline_recorded_utc": "2026-11-19",
+  "baseline_recorded_utc": "2026-11-22",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
   "localization_source_branch": "zh-CN",
   "localization_source_commit": "766a88d8e689c7803f32acb315ac872a0a67a57b",
@@ -154,6 +154,13 @@
     "previous_upstream_parent": "690f2c5066991eb3c624d863705528c006ad68ac",
     "upstream_commit_count": 8,
     "status": "Independent source integration candidate; no promotion or release."
+  },
+  "development_checkpoint_20261121": {
+    "development": "b5832136100b7b4ce15b5587a506ac69bfe335bb",
+    "upstream": "9671c907aa11210832987cb6eac5419b07c44b12",
+    "observed_upstream_tip": "55caa38bcfb19a9a9d1b8f92970981cd97c99686",
+    "status": "Development integration candidate; not promoted or released.",
+    "evidence": "docs/localization/UPSTREAM-CHECKPOINT-20261121.md"
   },
   "candidate_validation": {
     "branch": "zh-CN-4.x-feat/upstream-main-audit-20261117",

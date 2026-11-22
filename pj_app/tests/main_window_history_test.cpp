@@ -10,7 +10,6 @@
 #include <QFile>
 #include <QGuiApplication>
 #include <QKeyEvent>
-#include <QLabel>
 #include <QLineEdit>
 #include <QMouseEvent>
 #include <QPointer>
@@ -20,7 +19,6 @@
 #include <QTemporaryDir>
 #include <QTest>
 #include <QThread>
-#include <QTimer>
 #include <QToolButton>
 #include <algorithm>
 #include <atomic>
@@ -72,6 +70,7 @@
 #include "pj_widgets/VisualizationPlaceholderWidget.h"
 #include "support/gui_test_env.h"
 #include "support/isolated_main_window.h"
+#include "support/modal_answerer.h"
 #ifdef PJ_WITH_SCENE3D
 #include "pj_scene3d_widgets/Scene3DDockWidget.h"
 #endif
@@ -316,14 +315,6 @@ QDomElement addSavedAbsoluteProcessor(
   PJ::appendJsonAsCdata(doc, processor, u"{}"_s);
   processors.appendChild(processor);
   return processor;
-}
-
-void closeNextModalDialog() {
-  QTimer::singleShot(0, []() {
-    if (QWidget* modal = QApplication::activeModalWidget(); modal != nullptr) {
-      modal->close();
-    }
-  });
 }
 
 class MainWindowHistoryFixture : public ::testing::Test {
@@ -767,31 +758,50 @@ TEST_F(MainWindowHistoryFixture, ProgressiveProcessorWaitsUntilDrainForLateInput
   app_session.catalogModel().rebuildFromDatastore();
 }
 
-TEST_F(MainWindowHistoryFixture, ProgressiveProcessorMissingAtDrainRollsWorkspaceBack) {
+// A layout load's processor whose input never arrives is reported at the drain in the missing-data prompt, as a
+// missing curve is; Remove skips it and the rest of the layout applies instead of rolling back.
+TEST_F(MainWindowHistoryFixture, ProgressiveProcessorMissingAtDrainIsSkipped) {
   PJ::MainWindow& window = mainWindow();
   PJ::AppSession& app_session = PJ::MainWindowHistoryTestPeer::appSession(window);
   PJ::DataProcessorService& processors = app_session.sessionManager().dataProcessorService();
   processors.clearAllFilters();
   PJ::PlotWidget* plot = ensureCurrentPlot(window);
   ASSERT_NE(plot, nullptr);
-  plot->setStateId(u"progressive-processor-rollback-before"_s);
+  plot->setStateId(u"progressive-processor-skip-before"_s);
   const QByteArray previous_workspace = PJ::MainWindowHistoryTestPeer::liveState(window);
 
   QDomDocument target;
   ASSERT_TRUE(static_cast<bool>(target.setContent(previous_workspace)));
   QDomElement target_plot = target.elementsByTagName(u"plot"_s).at(0).toElement();
-  if (!target_plot.isNull()) {
-    target_plot.setAttribute(u"id"_s, u"progressive-processor-rollback-target"_s);
-  }
+  ASSERT_FALSE(target_plot.isNull());
+  target_plot.setAttribute(u"id"_s, u"progressive-processor-skip-target"_s);
   addSavedAbsoluteProcessor(target, std::numeric_limits<PJ::DatasetId>::max(), u"never-arrives"_s, u"/never_arrives"_s);
   PJ::MainWindowHistoryTestPeer::beginProgressiveRestore(window, target);
   ASSERT_TRUE(PJ::MainWindowHistoryTestPeer::progressiveRestoreInFlight(window));
 
-  closeNextModalDialog();
+  QStringList ids;
+  QObject::connect(
+      window.diagnosticBridge(), &PJ::QtDiagnosticBridge::diagnosticReported, &window,
+      [&ids](int, const QString&, const QString& id, const QString&) { ids.push_back(id); });
+  QString prompt;
+  QString clicked;
+  const QStringList labels{u"Continue without them"_s, u"Remove from plots"_s};
+  pj_app_test::ModalAnswerer answer(10);
+  answer.next(pj_app_test::messageBoxWithButton(labels), [&](QWidget* box) {
+    prompt = pj_app_test::messageBoxBody(box);
+    clicked = pj_app_test::clickMessageBoxButton(box, labels);
+  });
+
   PJ::MainWindowHistoryTestPeer::drainProgressiveRestore(window);
+  QCoreApplication::processEvents();
   EXPECT_FALSE(PJ::MainWindowHistoryTestPeer::progressiveRestoreInFlight(window));
-  EXPECT_EQ(PJ::MainWindowHistoryTestPeer::liveState(window), previous_workspace);
+  EXPECT_TRUE(prompt.contains(u"/never_arrives"_s)) << prompt.toStdString();
+  EXPECT_EQ(clicked, u"Continue without them"_s) << "no curve is missing";
+  const QByteArray live = PJ::MainWindowHistoryTestPeer::liveState(window);
+  EXPECT_TRUE(live.contains("progressive-processor-skip-target")) << live.toStdString();
   EXPECT_TRUE(processors.recipes().empty());
+  EXPECT_TRUE(ids.contains(u"processor-restore-failed"_s)) << ids.join(u", "_s).toStdString();
+  EXPECT_FALSE(ids.contains(u"processor-restore-refused"_s)) << ids.join(u", "_s).toStdString();
 }
 
 TEST_F(MainWindowHistoryFixture, InvalidSceneElementFailsExactUndoTransactionally) {

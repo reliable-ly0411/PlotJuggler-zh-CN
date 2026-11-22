@@ -7,6 +7,7 @@ pj_add_test_runner(pj_widgets_tests
     SOURCES
         curve_tree_view_test.cpp
         svg_button_test.cpp
+        dialog_theme_test.cpp
         file_dialog_test.cpp
         owned_directory_test.cpp
         credentials_editor_test.cpp
@@ -20,10 +21,13 @@ pj_add_test_runner(pj_widgets_tests
         eliding_label_test.cpp
         toggle_switch_test.cpp
         color_picker_widget_test.cpp
+        style_focus_ring_test.cpp
         style_input_height_test.cpp
         marker_timeline_test.cpp
         progress_bar_test.cpp
         colormap_test.cpp
+        # Headless: contrast math over QColor.
+        color_contrast_test.cpp
         graphics_api_test.cpp
         messagebox_test.cpp
         ingest_progress_widget_test.cpp
@@ -51,6 +55,7 @@ pj_add_test_runner(pj_widgets_tests
         header_divider_highlight_test.cpp
         header_resize_policy_test.cpp
         visualization_placeholder_test.cpp
+        icon_ink_test.cpp
     # Layout margins, spacing and the button wrap budget resolve from the framework palette (FrameworkTokens), so the
     # stylesheet resource is linked. app_settings_test reaches the plugin settings service (pj_runtime QSettingsBackend):
     # the library itself links no other PJ module.

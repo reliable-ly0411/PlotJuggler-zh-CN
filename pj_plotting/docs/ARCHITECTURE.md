@@ -30,7 +30,10 @@ invariants; each header's doc-comment owns its API contract; measurements and pl
   resolve last-write-wins, a null is a gap, the trailing run stays open.
 - **`PlotXml.h`** is the plot-XML vocabulary shared with `pj_app`'s layout passes: the `x_basis` range markers, the
   `pending_intent` keep-alive predicate, and the `<marker_scope scope=...>` attribute with its two persisted values (the
-  value <-> `MarkerScope` mapping lives in `PlotWidget.cpp`).
+  value <-> `MarkerScope` mapping lives in `PlotWidget.cpp`). It also holds the steps a layout pass shares with the
+  widgets: the curve palette and its free-colour rule (`freePaletteIndex`, which `PlotWidgetBase` runs over its
+  curves' pens), `fillMissingCurveColors` (a saved plot's curves get the colours the plot would pick), and
+  `prepareTabCopy` (Duplicate Tab and the layout's per-dataset tab copies).
 
 ## Wheel zoom keys
 
@@ -164,6 +167,13 @@ three ways (concrete key, qualified miss clears the key, unqualified miss leaves
   (`PlotWidget::stampLiveCurveKeys`, as a clipboard copy does); without them every copied plot comes up empty.
   `addTab` announces the copy before it is filled, so `currentTabChanged` fires again once it is: listeners such as
   the shell's curve editor would otherwise keep rows built before the restored visibility and markers.
+- **Tab order.** The strip layout, `tabs_` and the saved `<Tab>` sequence share one order. A restore rebuilds the
+  serialized plot tabs in document order, then re-appends the pages outside its scope: an undo or redo re-appends the
+  widget and history-exempt pages, a layout load only the widget pages. Dragging a plot tab moves it past each
+  neighbour whose midpoint the cursor crosses, along the layout direction (a wide and a narrow tab do not swap back and
+  forth under a still cursor). On release, or on a press that shows the release was lost, it emits one `undoableChange`
+  if the undo snapshot's tab order changed. Widget and history-exempt tabs cannot be dragged, since the next undo would
+  move them back; a plot tab dragged past one moves it only until then.
 - **Layout restore** parses and validates the whole structural tree before changing the live docker, restores splitter
   ratios as large relative weights (the docker is not laid out at its final size yet, so pixel scaling would distort the
   split), and emits no undo step for its intermediate states. It restores into the live plot page whose tab id
@@ -174,7 +184,9 @@ three ways (concrete key, qualified miss clears the key, unqualified miss leaves
   must drop what a new one would not have: the page's focused dock (it points at a removed dock), armed undo debounces,
   a curve order that differs from the saved one (the plot then rebuilds its curves). A bound curve editor is refreshed
   on re-bind, since the restore changes colour and visibility without a curve-list signal. Selecting a tab is not an
-  undo step, so an undo or redo keeps the tab the user is on when it survives; a layout load selects the saved one.
+  undo step, so an undo or redo keeps the tab the user is on when it survives, and otherwise shows the nearest plot
+  page on its left on the strip, where the undone step started; a layout load selects the saved one. Closing the
+  current tab shows the tab to its right on the strip (else its left), not the next page in creation order.
 
 ## PlotRhiCanvas
 
@@ -358,4 +370,5 @@ The performance baseline is in `pj_scene3D/docs/TECHNICAL_NOTES.md` "Performance
 - When the GPU canvas fails in the browser there is no raster fallback: the banner stays.
 - The raster fallback after a GPU failure waits for a popup or modal window but does not detect a `QDrag::exec` loop
   started from the canvas.
-- `TabbedPlotWidget.cpp` still defines `HorizontalScrollArea`, which the tab strip no longer uses.
+- A curve restored from a layout whose data has not arrived yet does not reserve its saved colour (it waits in
+  `PendingDisplayBinder`, which the plot cannot see), so a curve added to that plot meanwhile can take the same colour.

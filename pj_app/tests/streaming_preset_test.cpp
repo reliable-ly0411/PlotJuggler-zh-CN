@@ -10,7 +10,6 @@
 
 #include <gtest/gtest.h>
 
-#include <QAbstractButton>
 #include <QApplication>
 #include <QByteArray>
 #include <QDialog>
@@ -18,7 +17,6 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QHash>
-#include <QLabel>
 #include <QList>
 #include <QSet>
 #include <QSettings>
@@ -52,6 +50,7 @@
 #include "pj_widgets/IntScrubber.h"
 #include "support/isolated_main_window.h"
 #include "support/loader_test_support.h"
+#include "support/modal_answerer.h"
 #include "support/preset_test_support.h"
 #include "support/route_server.h"
 
@@ -790,29 +789,23 @@ class DesktopStreamLayoutTest : public StreamingPresetTest {
     return settled.value_or(false);
   }
 
-  // Answers the next modal message box that has a button labelled `label` by clicking
-  // it, once `ready` (when given) holds, and records the box's text in `asked`.
+  // Answers the next message box that has a button labelled `label` by clicking it, once `ready` (when given) holds,
+  // and records the box's text in `asked`.
   void answerNextQuestion(const QString& label, QString* asked = nullptr, std::function<bool()> ready = {}) {
-    auto* timer = new QTimer(window_.get());
-    QObject::connect(timer, &QTimer::timeout, timer, [timer, label, asked, ready = std::move(ready)] {
-      QWidget* modal = QApplication::activeModalWidget();
-      if (modal == nullptr || (ready && !ready())) {
-        return;
-      }
-      for (QAbstractButton* button : modal->findChildren<QAbstractButton*>(u"pjMessageBoxButton"_s)) {
-        if (button->text() == label) {
-          if (const auto* body = modal->findChild<QLabel*>(u"pjMessageBoxBody"_s);
-              asked != nullptr && body != nullptr) {
-            *asked = body->text();
+    answerer_.next(
+        [label, ready = std::move(ready)](QWidget* modal) {
+          return pj_app_test::messageBoxButton(modal, label) != nullptr && (!ready || ready());
+        },
+        [label, asked](QWidget* box) {
+          if (asked != nullptr) {
+            *asked = pj_app_test::messageBoxBody(box);
           }
-          timer->deleteLater();
-          button->click();
-          return;
-        }
-      }
-    });
-    timer->start(10);
+          pj_app_test::clickMessageBoxButton(box, {label});
+        });
   }
+
+  // Declared in the derived fixture, so destroyed before the base's window_.
+  pj_app_test::ModalAnswerer answerer_{10};
 };
 
 TEST_F(DesktopStreamLayoutTest, CommandLineLayoutStartsItsStreamsWithoutAsking) {
@@ -957,8 +950,8 @@ TEST_F(DesktopStreamLayoutTest, FileOnlyLayoutLeavesTheBufferAlone) {
   EXPECT_EQ(bufferSpinBox()->value(), 30);
 }
 
-// A progressive restore that aborts (here on a data processor whose input never arrives) applies none of the
-// layout's left panel state: the running stream keeps its window.
+// A progressive restore that aborts (here on a scene element that is not valid) applies none of the layout's left
+// panel state: the running stream keeps its window.
 TEST_F(DesktopStreamLayoutTest, AnAbortedRestoreLeavesTheBufferAlone) {
   PJ::StreamingSourceManager& streams = PresetTestPeer::streams(*window_);
   const int before = streams.retentionSeconds();
@@ -971,12 +964,16 @@ TEST_F(DesktopStreamLayoutTest, AnAbortedRestoreLeavesTheBufferAlone) {
           {u"data.mock"_s}),
       before + 40);
   layout.replace(
-      "</root>",
-      R"(<data_processors><processor input_topic="/missing_processor_input" input_field="value" )"
-      R"(input_dataset_source="missing-processor-source" processor_id="absolute" output_name="missing[Absolute]">)"
-      R"(<![CDATA[{}]]></processor></data_processors></root>)");
+      "</DockSplitter>",
+      R"(<DockArea id="bad-area" name="bad"><scene3d><layer object_type="not_a_type"/></scene3d></DockArea>)"
+      R"(</DockSplitter>)");
+  QStringList ids;
+  QObject::connect(
+      window_->diagnosticBridge(), &PJ::QtDiagnosticBridge::diagnosticReported, window_.get(),
+      [&ids](int, const QString&, const QString& id, const QString&) { ids.push_back(id); });
   QSignalSpy buffer_spy(&streams, &PJ::StreamingSourceManager::retentionWindowChanged);
   EXPECT_FALSE(openLayoutFile(layout));
+  EXPECT_TRUE(ids.contains(u"layout-plots-invalid"_s)) << ids.join(u", "_s).toStdString();
   EXPECT_EQ(streams.retentionSeconds(), before);
   EXPECT_EQ(bufferSpinBox()->value(), before);
   for (const QList<QVariant>& emitted : buffer_spy) {

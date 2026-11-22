@@ -9,6 +9,7 @@
 #include <QPointer>
 #include <QRectF>
 #include <QWidget>
+#include <functional>
 #include <list>
 #include <map>
 #include <optional>
@@ -79,8 +80,8 @@ class PlotWidgetBase : public QWidget {
   // alias.
   [[nodiscard]] CurveInfo* curveFromTitle(const QString& title);
 
-  // The colour at `index` in the built-in 8-colour palette (wraps modulo the palette size), for callers that own a
-  // shared colour counter (a session-wide CurveColorRegistry) and must not depend on this widget's nextColor().
+  // plot_xml::paletteColor, for callers that own a shared colour counter (a session-wide CurveColorRegistry) and must
+  // not depend on this widget's nextColor().
   [[nodiscard]] static QColor paletteColor(int index);
 
   // Session-wide override of the GPU-canvas choice: when true (the --disable-opengl flag in main.cpp), every plot
@@ -122,6 +123,10 @@ class PlotWidgetBase : public QWidget {
   void setSwapZoomPan(bool swapped);
 
   [[nodiscard]] QRectF currentBoundingRect() const;
+  // The view to persist: for an XY plot keeping its ratio, the range last asked for, before the fit widened one axis
+  // to the canvas shape (saving the widened axes would widen again at every load under another window shape);
+  // otherwise currentBoundingRect().
+  [[nodiscard]] QRectF requestedView() const;
   [[nodiscard]] QRectF maxZoomRect() const noexcept;
 
   [[nodiscard]] bool keepRatioXY() const noexcept;
@@ -180,6 +185,10 @@ class PlotWidgetBase : public QWidget {
   // width separately (per-curve width) can restyle a curve non-destructively.
   void applyStyleToCurve(QwtPlotCurve* curve, CurveStyle style);
   QColor nextColor();
+  // plot_xml::freePaletteIndex over this plot's curves: their own pens decide, so a colour restored from a layout or
+  // picked by the user counts like an auto-assigned one. Each draw advances the caller's counter, so a session-wide
+  // counter skips the colours this plot holds.
+  [[nodiscard]] int freePaletteIndex(const std::function<int()>& next_index) const;
   // Fills `info`'s ride-along marker with its curve's current colour; no-op if it already has it. The marker is not a
   // tracker: nothing else follows a recolour, so a pass that shows it calls this.
   void syncMarkerColor(const CurveInfo& info);
@@ -206,7 +215,7 @@ class PlotWidgetBase : public QWidget {
 
   // Corrects `rect` to the canvas aspect ratio (XY with keepRatioXY) and applies it to the axes; the caller decides
   // whether to replot. Pass the rect explicitly: after a magnifier or panner change currentBoundingRect() is stale
-  // (they emit before they replot).
+  // (they emit before they replot). `rect` stays the requested view: a resize re-fits it, not the widened axes.
   void applyRectKeepingRatio(QRectF rect);
 
   // Applies a rect to the axes (min/max-safe, so it tolerates applyKeepAspectRatio's normalized rect); the caller
