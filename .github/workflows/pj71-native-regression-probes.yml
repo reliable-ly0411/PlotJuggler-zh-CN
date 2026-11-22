@@ -526,7 +526,7 @@ jobs:
       github.ref == 'refs/heads/ci/pj71-native-857bd12b' &&
       ((github.event_name == 'workflow_dispatch' && inputs.lane == 'preferences-language') ||
        (github.event_name == 'push' && !github.event.created &&
-        github.event.head_commit.message == 'Validate exact Qt 6.12 preferences-language candidate only'))
+        github.event.head_commit.message == 'Validate rebased Qt 6.12 preferences-language candidate only'))
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
@@ -540,7 +540,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: 5526844b48afa5cfa531f5125aa4ea7f29b43af8
+          ref: 9fa1803e75e246ac93b76339ce530e63bdba5a39
           submodules: recursive
           persist-credentials: false
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -601,17 +601,24 @@ jobs:
         run: |
           set -euo pipefail
           evidence="$RUNNER_TEMP/pj71-preferences-language-evidence"
-          test "$(git rev-parse HEAD)" = 38447475371eb386a7f1e542468f60f954249984
-          test "$(git rev-parse HEAD^{tree})" = bf49ccd7e396b1f463d4ebf6d7c38375f5a06bc3
-          ./build.sh --skip-conan-install --no-demos --no-widget-demos --no-marketplace-app \
-            --target pj_app_gui_tests 2>&1 | tee "$evidence/build.log"
+          test "$(git rev-parse HEAD)" = 329d242bebffabb11e9b5f2b8dd4c346ce25508c
+          test "$(git rev-parse HEAD^{tree})" = 6f46fe34c2be27880b67c2d9bd737c7492a19b7e
           qt="$(realpath .qt/6.12.0/gcc_64)"
+          # Match the Conan CMakeDeps configuration: build.sh selects Release on Linux.
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_PREFIX_PATH="$qt" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DPJ_BUILD_TESTS=ON -DPJ_BUILD_DEMOS=OFF -DPJ_BUILD_WIDGET_DEMOS=OFF \
+            -DPJ_BUILD_MARKETPLACE_APP=OFF 2>&1 | tee "$evidence/configure.log"
           grep -Fx "Qt6_DIR:PATH=$qt/lib/cmake/Qt6" build/CMakeCache.txt > "$evidence/qt-cmake-cache.txt"
+          grep -Fx "CMAKE_BUILD_TYPE:STRING=RelWithDebInfo" build/CMakeCache.txt > "$evidence/configuration.txt"
+          python3 probe-control/scripts/ci/pj71-native/preferences-language.py config
+          cmake --build build --target pj_app_gui_tests --parallel 2 2>&1 | tee "$evidence/build.log"
       - name: Require exactly the 18 PreferencesLanguageTest cases
         run: xvfb-run -a python3 probe-control/scripts/ci/pj71-native/preferences-language.py test
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
-          name: pj71-native-preferences-language-38447475-${{ github.run_attempt }}
+          name: pj71-native-preferences-language-329d242b-${{ github.run_attempt }}
           path: ${{ runner.temp }}/pj71-preferences-language-evidence/
           retention-days: 7

@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -13,16 +14,18 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-BASE = '5526844b48afa5cfa531f5125aa4ea7f29b43af8'
-CANDIDATE = '38447475371eb386a7f1e542468f60f954249984'
-TREE = 'bf49ccd7e396b1f463d4ebf6d7c38375f5a06bc3'
-PATCH_SHA256 = 'c789f04ee25fb95f00b19d8298f00804aefacbcfeeb99f6f2642960f3984983f'
+BASE = '9fa1803e75e246ac93b76339ce530e63bdba5a39'
+CANDIDATE = '329d242bebffabb11e9b5f2b8dd4c346ce25508c'
+TREE = '6f46fe34c2be27880b67c2d9bd737c7492a19b7e'
+PATCH_SHA256 = '8c2658def93a78c22e8a47f91d4924127ba6639643f98cc3b43e9e2f40714403'
 RAW_COMMIT = (
-    'tree ' + TREE + '\nparent ' + BASE + '\n'
-    'author Codex preview <codex-preview@openai.com> 1795309145 -0800\n'
-    'committer Codex preview <codex-preview@openai.com> 1795309145 -0800\n\n'
-    'fix(i18n): preserve unrecognized saved language on unrelated OK\n'
-).encode()
+    b'tree 6f46fe34c2be27880b67c2d9bd737c7492a19b7e\n'
+    b'parent 9fa1803e75e246ac93b76339ce530e63bdba5a39\n'
+    b'author Codex preview <codex-preview@openai.com> 1795309145 -0800\n'
+    b'committer Codex preview <codex-preview@openai.com> 1795318593 -0800\n'
+    b'\n'
+    b'fix(i18n): preserve unrecognized saved language on unrelated OK\n'
+)
 TEST_SOURCE = 'pj_app/tests/preferences_language_test.cpp'
 SCOPE = {'pj_app/src/PreferencesDialog.cpp', 'pj_app/src/PreferencesDialog.h', TEST_SOURCE}
 PREFIX = 'pj_app_gui_tests.PreferencesLanguageTest.'
@@ -124,6 +127,27 @@ def seed(cache):
         }), encoding='utf-8')
 
 
+def verify_configuration(evidence):
+    # CMakeDeps registers dependency include directories only for its generated
+    # configuration. Verify the affected fixture actually gets the header now.
+    entries = json.loads(Path('build/compile_commands.json').read_text(encoding='utf-8'))
+    hits = [item for item in entries if item['file'].endswith('/pj_app/tests/dialog_probe_source.cpp')]
+    require(len(hits) == 1, 'Expected one configured dialog-probe fixture translation unit')
+    entry = hits[0]
+    argv = entry.get('arguments') or shlex.split(entry['command'])
+    includes = []
+    for index, arg in enumerate(argv):
+        if arg in ('-I', '-isystem', '-iquote') and index + 1 < len(argv):
+            includes.append(argv[index + 1])
+        elif arg.startswith('-I') and len(arg) > 2:
+            includes.append(arg[2:])
+    headers = [str(Path(entry['directory'], path, 'nlohmann/json.hpp').resolve())
+               for path in includes if Path(entry['directory'], path, 'nlohmann/json.hpp').is_file()]
+    require(headers, 'Configured dialog-probe fixture is still missing nlohmann/json.hpp')
+    (evidence / 'dialog-probe-header.txt').write_text('\n'.join(headers) + '\n', encoding='utf-8')
+    print('Configured dialog-probe header resolved:', headers[0])
+
+
 def test(evidence):
     require(git('rev-parse', 'HEAD') == CANDIDATE and git('rev-parse', 'HEAD^{tree}') == TREE,
             'Unexpected source at CTest')
@@ -160,5 +184,5 @@ if __name__ == '__main__':
     if len(sys.argv) == 3 and sys.argv[1] == 'seed':
         seed(Path(sys.argv[2]))
     else:
-        require(len(sys.argv) == 2 and sys.argv[1] in ('source', 'test'), 'Expected source, seed or test')
-        {'source': source, 'test': test}[sys.argv[1]](evidence_root)
+        require(len(sys.argv) == 2 and sys.argv[1] in ('source', 'config', 'test'), 'Expected source, seed, config or test')
+        {'source': source, 'config': verify_configuration, 'test': test}[sys.argv[1]](evidence_root)
