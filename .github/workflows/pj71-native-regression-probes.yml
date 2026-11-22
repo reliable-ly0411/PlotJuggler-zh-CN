@@ -1340,3 +1340,186 @@ jobs:
             ${{ runner.temp }}/pj4-sync-0b8a47e7-session/submodules.txt
             ${{ runner.temp }}/pj4-sync-0b8a47e7-session/ctest.xml
           retention-days: 7
+
+  sync-ddd680a1-rhi-tracker:
+    if: >-
+      github.ref == 'refs/heads/ci/pj71-native-857bd12b' &&
+      github.event_name == 'push' && !github.event.created &&
+      github.event.head_commit.message == 'Validate pinned PlotJuggler ddd680a1 software RHI and tracker regressions'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 95
+    env:
+      PJ_BUILD_JOBS: '2'
+      PJ_DISABLE_TELEMETRY: '1'
+      QT_QPA_PLATFORM: xcb
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      PJ_GRAPHICS_API: vulkan
+      PJ_REQUIRE_GPU_TESTS: '1'
+      LC_ALL: C.UTF-8
+      QT_LOGGING_RULES: pj.graphics.info=true
+      TEST_SOURCE: c608442054279694433be07579be04411c07bfe9
+      TEST_TREE: 1a83feeb4c96f90ad2e300368328d9fa40b52e82
+      TEST_PRECEDING_PARENT: 234cf96ddd382646eb8ab45ae06fd46818123b2d
+      TEST_OFFICIAL_PARENT: ddd680a195e25ca7b0c09e4256aede05b1f9af65
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: c608442054279694433be07579be04411c07bfe9
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: 4ab98a78805def550124ec0e66ae4d1f6055a682
+          path: probe-bootstrap
+          sparse-checkout-cone-mode: false
+          sparse-checkout: /scripts/ci/pj71-native/preferences-language.py
+          persist-credentials: false
+      - name: Verify pinned product commit, both parents and source roster
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj4-sync-ddd680a1-rhi-tracker"
+          mkdir "$evidence"
+          test "$(git rev-parse HEAD)" = "$TEST_SOURCE"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$TEST_TREE"
+          test "$(git cat-file commit HEAD | sed -n 's/^parent //p' | paste -sd' ')" = "$TEST_PRECEDING_PARENT $TEST_OFFICIAL_PARENT"
+          git diff --exit-code HEAD
+          git submodule status --recursive > "$evidence/submodules.txt"
+          ! grep -E '^[-+U]' "$evidence/submodules.txt"
+          printf 'source=%s\ntree=%s\npreceding_parent=%s\nofficial_parent=%s\n' \
+            "$TEST_SOURCE" "$TEST_TREE" "$TEST_PRECEDING_PARENT" "$TEST_OFFICIAL_PARENT" > "$evidence/source.txt"
+      - name: Prepare the known native compiler and display dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
+            libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 \
+            libva-dev libdrm-dev xvfb xauth ccache zstd mesa-vulkan-drivers libvulkan-dev vulkan-tools \
+            libset-scalar-perl locales fonts-noto-cjk
+          sudo locale-gen de_DE.UTF-8
+          python3 -m venv "$RUNNER_TEMP/pj-sync-native-tools"
+          "$RUNNER_TEMP/pj-sync-native-tools/bin/pip" install conan==2.22.2 aqtinstall==3.3.0 cmake==3.31.10 ninja
+          echo "$RUNNER_TEMP/pj-sync-native-tools/bin" >> "$GITHUB_PATH"
+      - uses: actions/cache/restore@v5
+        with:
+          path: .qt
+          key: stable-delta-qt-linux-${{ hashFiles('versions.env') }}
+      - uses: actions/cache/restore@v5
+        with:
+          path: ~/.conan2
+          key: stable-delta-conan-linux-${{ hashFiles('conan.lock', 'cmake/host-sdk-source.json') }}
+      - name: Acquire and record the exact official Qt 6.12 toolchain
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj4-sync-ddd680a1-rhi-tracker"
+          source ./versions.env
+          test "$PJ_QT_VERSION" = "6.12.0"
+          ./scripts/install_qt6.sh 2>&1 | tee "$evidence/qt-install.log"
+          qt="$PWD/.qt/$PJ_QT_VERSION/gcc_64"
+          test "$("$qt/bin/qmake" -query QT_VERSION)" = "6.12.0"
+          "$qt/bin/qmake" -query > "$evidence/qt.txt"
+      - name: Resolve only the locked native dependencies
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj4-sync-ddd680a1-rhi-tracker"
+          conan profile detect --force
+          ./scripts/configure_conan_remote.sh
+          python3 scripts/bootstrap_host_sdk.py
+          source_cache="$RUNNER_TEMP/pj-sync-conan-sources"
+          python3 probe-bootstrap/scripts/ci/pj71-native/preferences-language.py seed "$source_cache"
+          printf 'core.sources:download_cache=%s\n' "$source_cache" >> "$(conan config home)/global.conf"
+          conan install . --output-folder=build --build=missing \
+            -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial \
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 \
+            2>&1 | tee "$evidence/conan.log"
+      - name: Build only the Scene3D RHI and plotting widget test binaries
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj4-sync-ddd680a1-rhi-tracker"
+          test "$(git rev-parse HEAD)" = "$TEST_SOURCE"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$TEST_TREE"
+          git diff --exit-code HEAD
+          qt="$(realpath .qt/6.12.0/gcc_64)"
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_PREFIX_PATH="$qt" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DPJ_BUILD_TESTS=ON -DPJ_BUILD_DEMOS=OFF -DPJ_BUILD_WIDGET_DEMOS=OFF \
+            -DPJ_BUILD_MARKETPLACE_APP=OFF 2>&1 | tee "$evidence/configure.log"
+          grep -Fx "Qt6_DIR:PATH=$qt/lib/cmake/Qt6" build/CMakeCache.txt > "$evidence/qt-cmake-cache.txt"
+          grep -Fx 'CMAKE_BUILD_TYPE:STRING=RelWithDebInfo' build/CMakeCache.txt > "$evidence/configuration.txt"
+
+          cmake --build build --target scene3d_rhi_failure_test pj_plotting_widget_tests --parallel 2 \
+            2>&1 | tee "$evidence/build.log"
+      - name: Execute both software RHI cases and the tracker glide case without skips
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj4-sync-ddd680a1-rhi-tracker"
+          test "$(git rev-parse HEAD)" = "$TEST_SOURCE"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$TEST_TREE"
+          git diff --exit-code HEAD
+          mapfile -t icds < <(find /usr/share/vulkan/icd.d -maxdepth 1 -type f -name 'lvp_icd*.json' -print)
+          test "${#icds[@]}" -eq 1
+          export VK_DRIVER_FILES="${icds[0]}" VK_ICD_FILENAMES="${icds[0]}"
+          export PJ_SCENE3D_SOFTWARE_HDR=0
+          printf 'PJ_GRAPHICS_API=%s\nPJ_SCENE3D_SOFTWARE_HDR=%s\n' "$PJ_GRAPHICS_API" "$PJ_SCENE3D_SOFTWARE_HDR" > "$evidence/software-env.txt"
+          xvfb-run -a vulkaninfo --summary > "$evidence/vulkan-device.txt" 2>&1
+          grep -Ei 'deviceType *= *PHYSICAL_DEVICE_TYPE_CPU' "$evidence/vulkan-device.txt"
+          grep -Ei 'deviceName *= *(llvmpipe|lavapipe)' "$evidence/vulkan-device.txt"
+          xvfb-run -a python3 - "$evidence" <<'PY_RESULT'
+          import os, re, subprocess, sys, xml.etree.ElementTree as ET
+          from pathlib import Path
+          e = Path(sys.argv[1])
+          assert os.environ["PJ_SCENE3D_SOFTWARE_HDR"] == "0"
+          expected_by_target = {
+              'scene3d_rhi_failure_test': [
+                  'Scene3dRhiFailureTest.SoftwareRasterizerDrawsTheDirectPass',
+                  'Scene3dRhiFailureTest.FailureOutranksTheSoftwareNotice',
+              ],
+              'pj_plotting_widget_tests': ['PlotScaleDrawTest.TrackerValueBoxGlidesToTheValue'],
+          }
+          for target, names in expected_by_target.items():
+              bins = [p for p in Path('build').rglob(target) if p.is_file() and os.access(p, os.X_OK)]
+              assert len(bins) == 1, (target, bins)
+              args = [str(bins[0]), '--gtest_filter=' + ':'.join(names)]
+              listing = subprocess.check_output(args + ['--gtest_list_tests'], text=True)
+              (e / (target + '.discovery.txt')).write_text(listing)
+              suite = ''
+              discovered = []
+              for line in listing.splitlines():
+                  if line and not line.startswith(' ') and line.endswith('.'):
+                      suite = line
+                  elif suite and line.startswith('  ') and line.strip():
+                      discovered.append(suite + line.strip().split()[0])
+              assert len(discovered) == len(names) and set(discovered) == set(names), discovered
+              report = e / (target + '.xml')
+              result = subprocess.run(args + ['--gtest_output=xml:' + str(report)], text=True,
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120)
+              (e / (target + '.log')).write_text(result.stdout)
+              print(result.stdout)
+              result.check_returncode()
+              if target == 'scene3d_rhi_failure_test':
+                  assert re.search(r'Graphics API:.*Vulkan.*set by PJ_GRAPHICS_API', result.stdout, re.I), result.stdout
+              cases = ET.parse(report).getroot().findall('.//testcase')
+              ids = [c.attrib['classname'] + '.' + c.attrib['name'] for c in cases]
+              assert len(ids) == len(names) and set(ids) == set(names), ids
+              for c in cases:
+                  assert c.attrib['status'] == 'run' and c.attrib.get('result') == 'completed', c.attrib
+                  assert not any(c.find(tag) is not None for tag in ('failure', 'error', 'skipped'))
+          print('All three exact upstream cases executed once and passed without skips.')
+          PY_RESULT
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: pj4-sync-ddd680a1-rhi-tracker-evidence
+          path: |
+            ${{ runner.temp }}/pj4-sync-ddd680a1-rhi-tracker/source.txt
+            ${{ runner.temp }}/pj4-sync-ddd680a1-rhi-tracker/submodules.txt
+            ${{ runner.temp }}/pj4-sync-ddd680a1-rhi-tracker/software-env.txt
+            ${{ runner.temp }}/pj4-sync-ddd680a1-rhi-tracker/vulkan-device.txt
+            ${{ runner.temp }}/pj4-sync-ddd680a1-rhi-tracker/*.discovery.txt
+            ${{ runner.temp }}/pj4-sync-ddd680a1-rhi-tracker/*.xml
+            ${{ runner.temp }}/pj4-sync-ddd680a1-rhi-tracker/*.log
+          retention-days: 7
