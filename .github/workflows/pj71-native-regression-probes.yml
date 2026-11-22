@@ -1011,3 +1011,160 @@ jobs:
           path: ci-evidence/
           if-no-files-found: error
           retention-days: 7
+
+  sync-da8a7eef-rhi:
+    if: >-
+      github.ref == 'refs/heads/ci/pj71-native-857bd12b' &&
+      github.event_name == 'push' && !github.event.created &&
+      github.event.head_commit.message == 'Validate pinned PlotJuggler da8a7eef Scene3D regression only'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 95
+    env:
+      PJ_BUILD_JOBS: '2'
+      PJ_DISABLE_TELEMETRY: '1'
+      QT_QPA_PLATFORM: xcb
+      PJ_GRAPHICS_API: vulkan
+      PJ_REQUIRE_GPU_TESTS: '1'
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      TEST_SOURCE: 5bd2595316c1367ef77862c8078c9ac994dead19
+      TEST_TREE: 93b4ab03a336957d41e2515631d18256c8c3c34d
+      TEST_PRECEDING_PARENT: a1c93b0039bfc4d09020c74ef759bbd0b4965a57
+      TEST_OFFICIAL_PARENT: da8a7eef3e85c816ca3f48eb360d0a073a4942bd
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: 5bd2595316c1367ef77862c8078c9ac994dead19
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: 4ab98a78805def550124ec0e66ae4d1f6055a682
+          path: probe-bootstrap
+          sparse-checkout-cone-mode: false
+          sparse-checkout: /scripts/ci/pj71-native/preferences-language.py
+          persist-credentials: false
+      - name: Verify pinned product commit, both parents and source roster
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj4-sync-da8a7eef-rhi"
+          mkdir "$evidence"
+          test "$(git rev-parse HEAD)" = "$TEST_SOURCE"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$TEST_TREE"
+          test "$(git cat-file commit HEAD | sed -n 's/^parent //p' | paste -sd' ')" = "$TEST_PRECEDING_PARENT $TEST_OFFICIAL_PARENT"
+          git diff --exit-code HEAD
+          git submodule status --recursive > "$evidence/submodules.txt"
+          ! grep -E '^[-+U]' "$evidence/submodules.txt"
+          printf 'source=%s\ntree=%s\npreceding_parent=%s\nofficial_parent=%s\n' \
+            "$TEST_SOURCE" "$TEST_TREE" "$TEST_PRECEDING_PARENT" "$TEST_OFFICIAL_PARENT" > "$evidence/source.txt"
+      - name: Prepare the known native compiler and display dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
+            libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 \
+            libva-dev libdrm-dev xvfb xauth ccache zstd mesa-vulkan-drivers libvulkan-dev vulkan-tools \
+            libset-scalar-perl locales fonts-noto-cjk
+          sudo locale-gen de_DE.UTF-8
+          python3 -m venv "$RUNNER_TEMP/pj-sync-native-tools"
+          "$RUNNER_TEMP/pj-sync-native-tools/bin/pip" install conan==2.22.2 aqtinstall==3.3.0 cmake==3.31.10 ninja
+          echo "$RUNNER_TEMP/pj-sync-native-tools/bin" >> "$GITHUB_PATH"
+      - uses: actions/cache/restore@v5
+        with:
+          path: .qt
+          key: stable-delta-qt-linux-${{ hashFiles('versions.env') }}
+      - uses: actions/cache/restore@v5
+        with:
+          path: ~/.conan2
+          key: stable-delta-conan-linux-${{ hashFiles('conan.lock', 'cmake/host-sdk-source.json') }}
+      - name: Acquire and record the exact official Qt 6.12 toolchain
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj4-sync-da8a7eef-rhi"
+          source ./versions.env
+          test "$PJ_QT_VERSION" = "6.12.0"
+          ./scripts/install_qt6.sh 2>&1 | tee "$evidence/qt-install.log"
+          qt="$PWD/.qt/$PJ_QT_VERSION/gcc_64"
+          test "$("$qt/bin/qmake" -query QT_VERSION)" = "6.12.0"
+          "$qt/bin/qmake" -query > "$evidence/qt.txt"
+      - name: Resolve only the locked native dependencies
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj4-sync-da8a7eef-rhi"
+          conan profile detect --force
+          ./scripts/configure_conan_remote.sh
+          python3 scripts/bootstrap_host_sdk.py
+          source_cache="$RUNNER_TEMP/pj-sync-conan-sources"
+          python3 probe-bootstrap/scripts/ci/pj71-native/preferences-language.py seed "$source_cache"
+          printf 'core.sources:download_cache=%s\n' "$source_cache" >> "$(conan config home)/global.conf"
+          conan install . --output-folder=build --build=missing \
+            -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial \
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 \
+            2>&1 | tee "$evidence/conan.log"
+      - name: Build only the Scene3D RHI test executable and its dependencies
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj4-sync-da8a7eef-rhi"
+          test "$(git rev-parse HEAD)" = "$TEST_SOURCE"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$TEST_TREE"
+          git diff --exit-code HEAD
+          qt="$(realpath .qt/6.12.0/gcc_64)"
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_PREFIX_PATH="$qt" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DPJ_BUILD_TESTS=ON -DPJ_BUILD_DEMOS=OFF -DPJ_BUILD_WIDGET_DEMOS=OFF \
+            -DPJ_BUILD_MARKETPLACE_APP=OFF 2>&1 | tee "$evidence/configure.log"
+          grep -Fx "Qt6_DIR:PATH=$qt/lib/cmake/Qt6" build/CMakeCache.txt > "$evidence/qt-cmake-cache.txt"
+          grep -Fx 'CMAKE_BUILD_TYPE:STRING=RelWithDebInfo' build/CMakeCache.txt > "$evidence/configuration.txt"
+
+          grep -q '^TEST_F(Scene3dRhiRenderTest, OrientationTextureMarkedCornerStaysTopLeft)' \
+            pj_scene3D/widgets/tests/scene3d_rhi_render_test.cpp
+          test "$(git rev-parse HEAD:pj_scene3D/widgets/rhi/shaders/model.frag)" = a3044db1d44b2445f053344ab9839efee06be3d1
+          test "$(git rev-parse HEAD:pj_scene3D/widgets/rhi/shaders/model.frag.qsb)" = 7dbb4359b19aaf45134861872e861247fd94254e
+          cmake --build build --target scene3d_rhi_render_test --parallel 2 2>&1 | tee "$evidence/build.log"
+      - name: Verify Vulkan CPU device and one non-skipped real Scene3D render
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj4-sync-da8a7eef-rhi"
+          test "$(git rev-parse HEAD)" = "$TEST_SOURCE"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$TEST_TREE"
+          git diff --exit-code HEAD
+          mapfile -t icds < <(find /usr/share/vulkan/icd.d -maxdepth 1 -type f -name 'lvp_icd*.json' -print)
+          test "${#icds[@]}" -eq 1
+          export VK_DRIVER_FILES="${icds[0]}" VK_ICD_FILENAMES="${icds[0]}"
+          xvfb-run -a vulkaninfo --summary > "$evidence/vulkan-device.txt"
+          grep -Ei 'deviceType *= *PHYSICAL_DEVICE_TYPE_CPU' "$evidence/vulkan-device.txt"
+          grep -Ei 'deviceName *= *(llvmpipe|lavapipe)' "$evidence/vulkan-device.txt"
+          mapfile -t bins < <(find build -type f -executable -name scene3d_rhi_render_test -print)
+          test "${#bins[@]}" -eq 1
+          exact='Scene3dRhiRenderTest.OrientationTextureMarkedCornerStaysTopLeft'
+          xvfb-run -a "${bins[0]}" --gtest_filter="$exact" --gtest_list_tests | tee "$evidence/discovery.log"
+          grep -Fx '  OrientationTextureMarkedCornerStaysTopLeft' "$evidence/discovery.log"
+          QT_LOGGING_RULES='qt.rhi.*=true' xvfb-run -a "${bins[0]}" --gtest_filter="$exact" \
+            --gtest_output="xml:$evidence/gtest.xml" 2>&1 | tee "$evidence/test.log"
+          python3 - "$evidence/gtest.xml" "$exact" <<'PY_RESULT'
+          import sys, xml.etree.ElementTree as ET
+          root = ET.parse(sys.argv[1]).getroot()
+          cases = root.findall('.//testcase')
+          assert len(cases) == 1
+          case = cases[0]
+          assert case.attrib['classname'] + '.' + case.attrib['name'] == sys.argv[2]
+          assert case.attrib['status'] == 'run' and case.attrib.get('result') == 'completed'
+          assert not [tag for tag in ('failure', 'error', 'skipped') if case.find(tag) is not None]
+          print(sys.argv[2] + ' ran once and passed; Lavapipe CPU device verified.')
+          PY_RESULT
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: scene3d-rhi-da8a7eef-selected-evidence
+          path: |
+            ${{ runner.temp }}/pj4-sync-da8a7eef-rhi/source.txt
+            ${{ runner.temp }}/pj4-sync-da8a7eef-rhi/submodules.txt
+            ${{ runner.temp }}/pj4-sync-da8a7eef-rhi/vulkan-device.txt
+            ${{ runner.temp }}/pj4-sync-da8a7eef-rhi/discovery.log
+            ${{ runner.temp }}/pj4-sync-da8a7eef-rhi/gtest.xml
+            ${{ runner.temp }}/pj4-sync-da8a7eef-rhi/test.log
+          retention-days: 7
