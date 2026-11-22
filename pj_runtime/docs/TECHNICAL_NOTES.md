@@ -125,17 +125,12 @@ actual Qt helper with `PJ_QT_PREFIX` pointing at a Qt installation.
 
 ## WebAssembly materialization wakeups
 
-`DataProcessorService` uses a positive one-millisecond timer interval on WASM so
-each replay slice can schedule a subsequent browser wakeup. In Qt 6.12.0,
-[`QEventDispatcherWasm::sendTimerEvents`](https://github.com/qt/qtbase/blob/v6.12.0/src/corelib/kernel/qeventdispatcher_wasm.cpp)
-rearms the native timer only when the activation count is positive, whereas
-[`QTimerInfoList::activateTimers`](https://github.com/qt/qtbase/blob/v6.12.0/src/corelib/kernel/qtimerinfo_unix.cpp)
-delivers zero-interval callbacks without adding them to that count. A replay
-must not depend on unrelated UI events or timers to resume it. Desktop scheduling
-continues to use its zero interval. Slice budgets, notifications, output samples
-and the browser heartbeat/completion assertions are independent of this interval.
-
-The native timer-driven unit test explicitly pumps `processEvents`; this does
-not demonstrate browser native-timer rearming. Keep the real browser test that
-waits for all 30,000 output samples without pumping Qt, including its original
-100 ms heartbeat bound and 60-second completion timeout.
+`DataProcessorService` uses a single-shot zero-interval timer, rearmed only
+after an unfinished slice. Qt 6.12's browser dispatcher does not count zero
+timers towards the activation count used for automatic rearming; explicit
+`start()` registers the next wake independently of other events. This replaces
+the fork's earlier repeating one-millisecond timer; it is not layered onto it.
+The slice budget, notifications, output and strict browser conditions are
+unchanged. The native timer unit test pumps Qt events and cannot establish the
+browser behavior: keep the actual 30,000-row acceptance with its original
+heartbeat and completion bounds.

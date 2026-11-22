@@ -1201,16 +1201,14 @@ void DataProcessorService::armMaterializationTimer() {
   }
   if (!materialize_timer_) {
     materialize_timer_ = std::make_unique<QTimer>();
-#ifdef PJ_TARGET_WASM
-    // Qt 6.12's WASM dispatcher rearms only for counted timer activations;
-    // zero-interval callbacks are delivered but excluded from that count.
-    materialize_timer_->setInterval(1);
-#else
+    // Single-shot, re-armed per slice: Qt 6.12.0's browser dispatcher re-arms its native timer after a pass only when
+    // a nonzero-interval timer fired (QEventDispatcherWasm::sendTimerEvents), so a repeating zero-interval timer
+    // stops whenever no other timer is running. Each start() registers the timer, which arms it.
+    materialize_timer_->setSingleShot(true);
     materialize_timer_->setInterval(0);
-#endif
     QObject::connect(materialize_timer_.get(), &QTimer::timeout, materialize_timer_.get(), [this]() {
-      if (stepMaterialization()) {
-        materialize_timer_->stop();
+      if (!stepMaterialization()) {
+        materialize_timer_->start();
       }
     });
   }

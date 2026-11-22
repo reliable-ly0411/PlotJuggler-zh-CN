@@ -1202,7 +1202,7 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
 
   QSettings settings;
   // Read before buildGlobalToolbar() creates the buttons.
-  show_points_ = settings.value(u"MainWindow.buttonShowpoint"_s, true).toBool();
+  show_points_ = settings.value(u"MainWindow.buttonShowpoint"_s, false).toBool();
   activate_grid_ = settings.value(u"MainWindow.buttonActivateGrid"_s, false).toBool();
   dots_ = settings.value(u"MainWindow.buttonDots"_s, false).toBool();
   tracker_info_ = static_cast<CurveTracker::Parameter>(
@@ -1857,9 +1857,8 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
   // A lambda: a function-pointer connect rejects onUndoableChange's extra (defaulted) argument.
   connect(ui_->tabbedPlotWidget, &TabbedPlotWidget::undoableChange, this, [this] { onUndoableChange(); });
 
-  // "Align starts", off by default so the Source Timeline shows the datasets' natural offsets. Toggling it later
-  // rewrites every dataset's offset.
-  session_->sessionManager().setUseTimeOffset(QSettings().value(u"MainWindow.useTimeOffset"_s, false).toBool());
+  // "Align starts", on by default so the time axis starts at 0. Toggling it later rewrites every dataset's offset.
+  session_->sessionManager().setUseTimeOffset(QSettings().value(u"MainWindow.useTimeOffset"_s, true).toBool());
   ui_->timelineWidget->setUseTimeOffset(session_->sessionManager().useTimeOffset());
   connect(ui_->timelineWidget, &TimelineWidget::useTimeOffsetToggled, this, [this](bool checked) {
     QSettings().setValue(u"MainWindow.useTimeOffset"_s, checked);
@@ -2245,6 +2244,9 @@ MainWindow::~MainWindow() {
   // parser-owned records and a decode thread). ~ads::CDockManager deletes its docks in place.
   plugin_plot_tabs_.reset();  // its tab-strip reference must not outlive the strip
   delete ui_->tabbedPlotWidget;
+  // A dock's replaced content is parentless and deleted later, so the deletes above miss it; with no event loop
+  // left to run, delete it now. A Scene2D image layer's decode thread reads the object store session_ destroys.
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
   // Every Custom Widget dock died above, each removing its entry; clearing here also covers one
   // that never got the chance. Reaching this line is the clean exit the record is about.
   if (custom_widgets_ != nullptr) {

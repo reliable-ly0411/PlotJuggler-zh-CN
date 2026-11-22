@@ -25,7 +25,8 @@ than parsing the same numeric preview payload twice. The SDK normalizes malforme
 JSON to an empty object, so that ambiguous result is separately validated before
 replacing the previous view. One-shot commands remain in the typed view while
 the diff copy strips them; rejection, identical-data and command replay semantics
-remain unchanged.
+remain unchanged. A close payload skips the diff and apply without advancing the
+last-applied baseline; a declined close can apply the next ordinary payload.
 
 ## What belongs here
 
