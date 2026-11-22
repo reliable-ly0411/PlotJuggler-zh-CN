@@ -3,6 +3,7 @@
 """Fast-forward only the two upstream mirror refs, without checking out upstream code."""
 
 import argparse
+import http.client
 import json
 import os
 from pathlib import Path
@@ -24,6 +25,43 @@ class SyncError(RuntimeError):
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         raise SyncError(f"Unexpected GitHub API redirect (HTTP {code}); no request retried")
+
+
+def http_failure_kind(exc):
+    """Classify selected API failures without putting GitHub response text in reports."""
+    if exc.code not in (403, 422, 429):
+        return None
+    remaining = exc.headers.get("X-RateLimit-Remaining") if exc.headers else None
+    if exc.code == 429 or (exc.code == 403 and remaining == "0"):
+        return "rate_limit"
+
+    # The response is untrusted. Read a bounded JSON body and emit only fixed labels.
+    try:
+        body = exc.read(4097) if exc.fp is not None else b""
+        payload = json.loads(body) if 0 < len(body) <= 4096 else None
+    except (http.client.HTTPException, OSError, RecursionError, ValueError):
+        payload = None
+    message = payload.get("message") if isinstance(payload, dict) else None
+    if not isinstance(message, str):
+        return "forbidden_unspecified" if exc.code == 403 else None
+    message = message.casefold()
+    if exc.code == 403 and ("secondary rate limit" in message or "api rate limit exceeded" in message):
+        return "rate_limit"
+    if "workflow" in message and (
+        "without `workflow` scope" in message or
+        "without workflows permission" in message or
+        '"workflows" permission' in message or
+        "'workflows' permission" in message
+    ):
+        return "workflow_permission"
+    if any(hint in message for hint in (
+        "repository rule violations", "protected branch hook declined",
+        "changes must be made through a pull request",
+    )):
+        return "branch_rule"
+    if exc.code == 403 and message == "resource not accessible by integration":
+        return "integration_access_denied"
+    return "forbidden_unspecified" if exc.code == 403 else None
 
 
 class GitHub:
@@ -51,18 +89,9 @@ class GitHub:
             with self.opener.open(request, timeout=60) as response:
                 return json.load(response)
         except urllib.error.HTTPError as exc:
-            # Preserve GitHub's reason without logging request headers or token values.
-            detail = ""
-            try:
-                payload = json.loads(exc.read(8192))
-                message = payload.get("message", "") if isinstance(payload, dict) else ""
-                if isinstance(message, str):
-                    if self.token:
-                        message = message.replace(self.token, "[redacted]")
-                    detail = ": " + " ".join(message.split())[:1000] if message else ""
-            except (OSError, ValueError, TypeError):
-                pass
-            raise SyncError(f"GitHub {method} {path}: HTTP {exc.code}{detail}; no request retried") from exc
+            kind = http_failure_kind(exc)
+            detail = f" [{kind}]" if kind else ""
+            raise SyncError(f"GitHub {method} {path}: HTTP {exc.code}{detail}; no request retried") from None
         except (OSError, ValueError) as exc:
             raise SyncError(f"GitHub {method} {path}: request failed; no request retried") from exc
 
