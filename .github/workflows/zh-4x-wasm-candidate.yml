@@ -30,7 +30,8 @@ jobs:
       (github.event_name == 'push' && github.event.head_commit.message != 'Replay verified #71 WASM acceptance artifact only' &&
        github.event.head_commit.message != 'Probe verified #71 Firefox Luau heartbeat only' &&
        github.event.head_commit.message != 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' &&
-       github.event.head_commit.message != 'Profile verified Firefox Luau candidate D artifact only')
+       github.event.head_commit.message != 'Profile verified Firefox Luau candidate D artifact only' &&
+       github.event.head_commit.message != 'Compare pinned Firefox Luau candidate D with selected-view candidate E')
     runs-on: ubuntu-22.04
     outputs:
       upstream_sha: ${{ steps.identity.outputs.upstream_sha }}
@@ -117,7 +118,8 @@ jobs:
       (github.event_name == 'push' && github.event.head_commit.message == 'Replay verified #71 WASM acceptance artifact only') ||
       (github.event_name == 'push' && github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only') ||
       (github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate') ||
-      (github.event_name == 'push' && github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only')
+      (github.event_name == 'push' && github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only') ||
+      (github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E')
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     permissions:
@@ -127,15 +129,17 @@ jobs:
       fail-fast: false
       matrix:
         browser: >-
-          ${{ fromJSON((inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' || github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only') && '["firefox"]' || '["chromium","firefox"]') }}
+          ${{ fromJSON((inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' || github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only' || github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E') && '["firefox"]' || '["chromium","firefox"]') }}
     env:
       PJ_WASM_URL: http://127.0.0.1:6931/
       PJ_WASM_BUILD_DIR: build-wasm-probe
       PJ_WASM_PYTHON: '1'
       REPLAY_LUAU_ONLY: >-
-        ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' || github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only') }}
+        ${{ (inputs.artifact_luau || github.event.head_commit.message == 'Probe verified #71 Firefox Luau heartbeat only' || github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' || github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only' || github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E') }}
       COMPARE_LUAU_ONLY: >-
         ${{ github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau baseline with startup-safe shared parsed panel candidate' }}
+      COMPARE_E_ONLY: >-
+        ${{ github.event_name == 'push' && github.event.head_commit.message == 'Compare pinned Firefox Luau candidate D with selected-view candidate E' }}
       PROFILE_D_ONLY: >-
         ${{ github.event_name == 'push' && github.event.head_commit.message == 'Profile verified Firefox Luau candidate D artifact only' }}
       PROFILE_FAILED_LUAU: ${{ github.event_name == 'push' || inputs.profile_failed_luau }}
@@ -161,12 +165,12 @@ jobs:
         with:
           node-version: '22.22.1'
       - name: Download pinned artifact and verify original acceptance receipt
-        if: env.PROFILE_D_ONLY != 'true'
+        if: env.PROFILE_D_ONLY != 'true' && env.COMPARE_E_ONLY != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/replay.sh verify
       - name: Verify and stage the exact candidate D artifacts (no build)
-        if: env.PROFILE_D_ONLY == 'true'
+        if: env.PROFILE_D_ONLY == 'true' || env.COMPARE_E_ONLY == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/d-replay.sh
@@ -190,14 +194,18 @@ jobs:
           REPLAY_BROWSER: ${{ matrix.browser }}
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/replay.sh test
       - name: Replay sole Firefox Luau acceptance case and retain independent diagnostic
-        if: env.REPLAY_LUAU_ONLY == 'true' && env.COMPARE_LUAU_ONLY != 'true'
+        if: env.REPLAY_LUAU_ONLY == 'true' && env.COMPARE_LUAU_ONLY != 'true' && env.COMPARE_E_ONLY != 'true'
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/luau.sh
       - name: Materialize and verify distinct startup-safe shared-parsed-panel product D
         if: env.COMPARE_LUAU_ONLY == 'true'
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/ab.sh materialize
 
+      - name: Prepare exact E source after verified D baseline
+        if: env.COMPARE_E_ONLY == 'true'
+        run: bash .replay-controller/scripts/ci/pj71-wasm-replay/de.sh materialize
+
       - name: Read toolchain versions
-        if: env.COMPARE_LUAU_ONLY == 'true'
+        if: env.COMPARE_LUAU_ONLY == 'true' || env.COMPARE_E_ONLY == 'true'
         id: versions
         shell: bash
         run: |
@@ -211,7 +219,7 @@ jobs:
           echo "node=${PJ_WASM_NODE_VERSION}" >> "${GITHUB_OUTPUT}"
 
       - name: Install build tools
-        if: env.COMPARE_LUAU_ONLY == 'true'
+        if: env.COMPARE_LUAU_ONLY == 'true' || env.COMPARE_E_ONLY == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ccache ninja-build python3-pip make pkg-config
@@ -226,7 +234,7 @@ jobs:
             libx11-6 libxcb1 libglib2.0-0 libdbus-1-3
 
       - name: Cache Qt WebAssembly and host kits
-        if: env.COMPARE_LUAU_ONLY == 'true'
+        if: env.COMPARE_LUAU_ONLY == 'true' || env.COMPARE_E_ONLY == 'true'
         id: qt-cache
         uses: actions/cache/restore@v5
         with:
@@ -234,7 +242,7 @@ jobs:
           key: qt-wasm-${{ steps.versions.outputs.wasm_qt }}-multithread-shadertools-v1
 
       - name: Install Qt WebAssembly and host kits
-        if: env.COMPARE_LUAU_ONLY == 'true' && steps.qt-cache.outputs.cache-hit != 'true'
+        if: (env.COMPARE_LUAU_ONLY == 'true' || env.COMPARE_E_ONLY == 'true') && steps.qt-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -247,7 +255,7 @@ jobs:
             -m qtshadertools
 
       - name: Cache Emscripten SDK
-        if: env.COMPARE_LUAU_ONLY == 'true'
+        if: env.COMPARE_LUAU_ONLY == 'true' || env.COMPARE_E_ONLY == 'true'
         id: emsdk-cache
         uses: actions/cache/restore@v5
         with:
@@ -255,7 +263,7 @@ jobs:
           key: emsdk-${{ steps.versions.outputs.emscripten }}-linux-x64-v1
 
       - name: Install Emscripten SDK
-        if: env.COMPARE_LUAU_ONLY == 'true' && steps.emsdk-cache.outputs.cache-hit != 'true'
+        if: (env.COMPARE_LUAU_ONLY == 'true' || env.COMPARE_E_ONLY == 'true') && steps.emsdk-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -265,7 +273,7 @@ jobs:
           .emsdk/emsdk activate "${PJ_EMSCRIPTEN_VERSION}"
 
       - name: Restore WebAssembly compiler cache
-        if: env.COMPARE_LUAU_ONLY == 'true'
+        if: env.COMPARE_LUAU_ONLY == 'true' || env.COMPARE_E_ONLY == 'true'
         # restore/save split rather than actions/cache: the implicit post-job
         # save fires on every run and the SHA-keyed entry is never an exact
         # hit, so each run persisted a new blob of up to max_size (4 G below)
@@ -279,7 +287,7 @@ jobs:
             ccache-zh4-localized-
 
       - name: Configure compiler cache
-        if: env.COMPARE_LUAU_ONLY == 'true'
+        if: env.COMPARE_LUAU_ONLY == 'true' || env.COMPARE_E_ONLY == 'true'
         run: |
           ccache --set-config=max_size=4G
           ccache --set-config=compression=true
@@ -289,7 +297,7 @@ jobs:
           ccache --zero-stats
 
       - name: Cache the WebAssembly CPython build
-        if: env.COMPARE_LUAU_ONLY == 'true'
+        if: env.COMPARE_LUAU_ONLY == 'true' || env.COMPARE_E_ONLY == 'true'
         # A content key (the recipe with its pinned tarball hash, the Emscripten
         # release): an exact hit or a cold ~4 minute build, so the plain action,
         # which saves only on a miss, adds one entry per recipe change.
@@ -299,7 +307,7 @@ jobs:
           key: wasm-cpython-${{ hashFiles('cmake/PjWasmPython.cmake', 'cmake/wasm_python/**') }}-emsdk-${{ steps.versions.outputs.emscripten }}
 
       - name: Build acceptance configuration (shipped defaults, ingress probe on)
-        if: env.COMPARE_LUAU_ONLY == 'true'
+        if: env.COMPARE_LUAU_ONLY == 'true' || env.COMPARE_E_ONLY == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -327,6 +335,9 @@ jobs:
         if: env.COMPARE_LUAU_ONLY == 'true'
         run: bash .replay-controller/scripts/ci/pj71-wasm-replay/ab.sh pair
 
+      - name: Verify E acceptance and run one exact Firefox D/E pair
+        if: env.COMPARE_E_ONLY == 'true'
+        run: bash .replay-controller/scripts/ci/pj71-wasm-replay/de.sh pair
       - uses: actions/upload-artifact@v4
         if: always()
         with:
