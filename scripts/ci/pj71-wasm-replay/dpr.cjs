@@ -18,7 +18,7 @@ function once(text, needle, replacement) {
   return text.replace(needle, replacement);
 }
 
-function instrument(original) {
+function instrument(original, profile = false) {
   const boundary = `test('${TITLE}'`;
   const start = original.indexOf(boundary);
   if (start < 0 || original.indexOf(boundary, start + 1) !== -1) throw new Error('Ambiguous target');
@@ -62,6 +62,16 @@ test.use(require('./support/browser').devicePixelRatioOptions(dprExpected));\n`;
     ticks: heartbeat.ticks, maxGapMs: Math.max(...heartbeatGaps)
   }), { flag: 'wx' });
   expect(heartbeat.finished - heartbeat.started).toBeGreaterThan(75);`);
+  if (profile) {
+    selected = once(selected, '    const heartbeat = { started: performance.now(), ticks: [], timer: 0 };', `    performance.mark('pj-dpr-heartbeat-start');
+    const heartbeat = { started: performance.now(), ticks: [], timer: 0 };`);
+    selected = once(selected, '    return { started: state.started, finished: performance.now(), ticks: state.ticks };', `    const finished = performance.now();
+    performance.mark('pj-dpr-heartbeat-done');
+    return { started: state.started, finished, ticks: state.ticks, pageOrigin: performance.timeOrigin,
+      startMark: performance.getEntriesByName('pj-dpr-heartbeat-start')[0].startTime,
+      stopMark: performance.getEntriesByName('pj-dpr-heartbeat-done')[0].startTime };`);
+    selected = once(selected, 'ticks: heartbeat.ticks, maxGapMs:', 'ticks: heartbeat.ticks, pageOrigin: heartbeat.pageOrigin, startMark: heartbeat.startMark, stopMark: heartbeat.stopMark, maxGapMs:');
+  }
   return original.slice(0, start) + prelude + selected;
 }
 
@@ -114,7 +124,13 @@ function outcome(trials) {
 function run(root) {
   const tests = path.join(root, 'tests/wasm');
   const evidence = path.join(root, 'replay-evidence');
-  const output = path.join(evidence, 'D-dpr');
+  const profile = process.env.PJ_DPR_PROFILE === '1';
+  const runnerTemp = process.env.RUNNER_TEMP;
+  if (profile && (!runnerTemp || !path.isAbsolute(runnerTemp) || runnerTemp === root ||
+      path.relative(path.resolve(root), path.resolve(runnerTemp)) === '' ||
+      !path.relative(path.resolve(root), path.resolve(runnerTemp)).startsWith('..' + path.sep)))
+    throw new Error('Profile scratch must be outside the checkout');
+  const output = profile ? path.join(runnerTemp, 'pj71-dpr-profile-raw') : path.join(evidence, 'D-dpr');
   fs.mkdirSync(output);
   const source = path.join(tests, 'editors.spec.js');
   const originalProof = path.join(evidence, 'D-original-gate-44938040959.json');
@@ -131,7 +147,7 @@ function run(root) {
     ...c, projects: c.projects.filter(p => p.name === 'firefox'),
     testMatch: 'firefox_dpr_diagnostic.spec.js', fullyParallel: false, workers: 1, retries: 0
   };\n`;
-  fs.writeFileSync(derived, instrument(originalSource), { flag: 'wx' });
+  fs.writeFileSync(derived, instrument(originalSource, profile), { flag: 'wx' });
   const trials = [];
   try {
     fs.writeFileSync(config, cfg, { flag: 'wx' });
@@ -142,10 +158,21 @@ function run(root) {
       fs.mkdirSync(trial);
       const report = path.join(trial, 'playwright.json');
       const measurement = path.join(trial, 'measurement.json');
-      const result = spawnSync(process.execPath, [cli, 'test', '--config', config, '--project=firefox',
+      const profiler = profile ? {
+        MOZ_PROFILER_STARTUP: '1', MOZ_PROFILER_STARTUP_INTERVAL: '1',
+        MOZ_PROFILER_STARTUP_FILTERS: 'GeckoMain,Compositor,Renderer,RenderBackend,CanvasRenderer,DOM Worker',
+        MOZ_PROFILER_SHUTDOWN: path.join(trial, 'gecko-profile.json'),
+      } : {};
+      const logFd = profile ? fs.openSync(path.join(trial, 'playwright.log'), 'wx', 0o600) : null;
+      let result;
+      try {
+        result = spawnSync(process.execPath, [cli, 'test', '--config', config, '--project=firefox',
         '--workers=1', '--retries=0', '--reporter=line,json', '--grep', TITLE, '--output', path.join(trial, 'results')],
-        { cwd: tests, stdio: 'inherit', env: { ...process.env, CI: 'true', PJ_DIAGNOSTIC_DPR: String(ratio),
+        { cwd: tests, stdio: profile ? ['ignore', logFd, logFd] : 'inherit', env: { ...process.env, ...profiler, CI: 'true', PJ_DIAGNOSTIC_DPR: String(ratio),
           PJ_DIAGNOSTIC_MEASUREMENT: measurement, PLAYWRIGHT_JSON_OUTPUT_NAME: report } });
+      } finally {
+        if (logFd !== null) fs.closeSync(logFd);
+      }
       let data, valid = false, error = result.error?.message;
       try {
         data = read(measurement);
@@ -158,9 +185,17 @@ function run(root) {
       return info;
     });
     const sameInputs = [source, originalProof, receipt, manifest].map(sha).every((h, i) => h === inputHashes[i]);
-    const diagnosis = sameInputs ? outcome(measured) : 'inconclusive: source or acceptance input changed';
+    let diagnosis = sameInputs ? outcome(measured) : 'inconclusive: source or acceptance input changed';
+    if (profile) {
+      const g = measured.map(t => t.data?.dprGeometry?.canvas);
+      const geometry = sameInputs && measured.every(t => t.valid) && g.length === ORDER.length &&
+        equalGeometry(g[0], g[3], 1) && equalGeometry(g[1], g[2], 1) && equalGeometry(g[0], g[1], 2);
+      diagnosis = geometry ? 'profiled data ready; timings are not acceptance or unprofiled comparisons' :
+        'inconclusive: profile trial identity, heartbeat, or exact dimensions missing';
+    }
     write(path.join(output, 'summary.json'), {
-      diagnosticOnly: true, acceptanceResult: 'unchanged', diagnosis, order: ORDER, measured,
+      diagnosticOnly: true, profilePerturbsTiming: profile, independentUnprofiledRun: profile ? '45000112754/14745552347' : null,
+      acceptanceResult: 'unchanged', diagnosis, order: ORDER, measured,
       source: read(receipt).identity, sourceSpecSha256: inputHashes[0], originalReportSha256: inputHashes[1],
       receiptSha256: inputHashes[2], manifestSha256: inputHashes[3], derivedSha256: sha(derived),
       artifacts: artifacts.map(a => ({ id: a.id, digest: a.digest, run: a.workflow_run?.id })),
@@ -169,7 +204,7 @@ function run(root) {
       firefox: read(browsers).browsers.filter(x => x.name === 'firefox'), sameInputs,
     });
     console.log(diagnosis);
-    return diagnosis.startsWith('directional:') ? 0 : 1;
+    return /^(directional:|profiled data ready)/.test(diagnosis) ? 0 : 1;
   } finally {
     fs.rmSync(derived);
     if (fs.existsSync(config)) fs.rmSync(config);
