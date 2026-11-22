@@ -9,7 +9,7 @@ on:
         description: Run exactly one native regression lane
         type: choice
         required: true
-        options: [windows-fixtures, mac-apbin, panel-e]
+        options: [windows-fixtures, mac-apbin, panel-e, preferences-language]
 
 permissions:
   contents: read
@@ -519,4 +519,99 @@ jobs:
         with:
           name: pj71-panel-E-native-84eabea0-${{ github.run_attempt }}
           path: panel-e-evidence/
+          retention-days: 7
+
+  preferences-language:
+    if: >-
+      github.ref == 'refs/heads/ci/pj71-native-857bd12b' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.lane == 'preferences-language') ||
+       (github.event_name == 'push' && !github.event.created &&
+        github.event.head_commit.message == 'Validate exact Qt 6.12 preferences-language candidate only'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PJ_BUILD_JOBS: '2'
+      PJ_DISABLE_TELEMETRY: '1'
+      QT_QPA_PLATFORM: xcb
+      LIBGL_ALWAYS_SOFTWARE: '1'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: 5526844b48afa5cfa531f5125aa4ea7f29b43af8
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          path: probe-control
+          sparse-checkout-cone-mode: false
+          sparse-checkout: /scripts/ci/pj71-native/preferences-language*
+          persist-credentials: false
+      - name: Materialize exact preferences-language commit and verify 18-case roster
+        run: python3 probe-control/scripts/ci/pj71-native/preferences-language.py source
+      - name: Prepare build tools and display dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
+            libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 \
+            libva-dev libdrm-dev xvfb xauth ccache zstd mesa-vulkan-drivers libvulkan-dev \
+            libset-scalar-perl locales fonts-noto-cjk
+          sudo locale-gen de_DE.UTF-8
+          python3 -m venv "$RUNNER_TEMP/pj-pref-tools"
+          "$RUNNER_TEMP/pj-pref-tools/bin/pip" install conan==2.22.2 aqtinstall==3.3.0 cmake==3.31.10 ninja
+          echo "$RUNNER_TEMP/pj-pref-tools/bin" >> "$GITHUB_PATH"
+      - uses: actions/cache/restore@v5
+        with:
+          path: .qt
+          key: stable-delta-qt-linux-${{ hashFiles('versions.env') }}
+      - uses: actions/cache/restore@v5
+        with:
+          path: ~/.conan2
+          key: stable-delta-conan-linux-${{ hashFiles('conan.lock', 'cmake/host-sdk-source.json') }}
+      - name: Acquire and record the exact official Qt 6.12 toolchain
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj71-preferences-language-evidence"
+          source ./versions.env
+          test "$PJ_QT_VERSION" = "6.12.0"
+          ./scripts/install_qt6.sh 2>&1 | tee "$evidence/qt-install.log"
+          qt="$PWD/.qt/$PJ_QT_VERSION/gcc_64"
+          test "$("$qt/bin/qmake" -query QT_VERSION)" = "6.12.0"
+          "$qt/bin/qmake" -query > "$evidence/qt.txt"
+      - name: Resolve only the locked native dependencies
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj71-preferences-language-evidence"
+          conan profile detect --force
+          ./scripts/configure_conan_remote.sh
+          python3 scripts/bootstrap_host_sdk.py
+          source_cache="$RUNNER_TEMP/pj-pref-conan-sources"
+          python3 probe-control/scripts/ci/pj71-native/preferences-language.py seed "$source_cache"
+          printf 'core.sources:download_cache=%s\n' "$source_cache" >> "$(conan config home)/global.conf"
+          conan install . --output-folder=build --build=missing \
+            -r=plotjuggler-conan -r=conancenter --lockfile=conan.lock --lockfile-partial \
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 -c tools.build:jobs=2 \
+            2>&1 | tee "$evidence/conan.log"
+      - name: Build only pj_app_gui_tests and its dependency closure
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/pj71-preferences-language-evidence"
+          test "$(git rev-parse HEAD)" = 38447475371eb386a7f1e542468f60f954249984
+          test "$(git rev-parse HEAD^{tree})" = bf49ccd7e396b1f463d4ebf6d7c38375f5a06bc3
+          ./build.sh --skip-conan-install --no-demos --no-widget-demos --no-marketplace-app \
+            --target pj_app_gui_tests 2>&1 | tee "$evidence/build.log"
+          qt="$(realpath .qt/6.12.0/gcc_64)"
+          grep -Fx "Qt6_DIR:PATH=$qt/lib/cmake/Qt6" build/CMakeCache.txt > "$evidence/qt-cmake-cache.txt"
+      - name: Require exactly the 18 PreferencesLanguageTest cases
+        run: xvfb-run -a python3 probe-control/scripts/ci/pj71-native/preferences-language.py test
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: pj71-native-preferences-language-38447475-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/pj71-preferences-language-evidence/
           retention-days: 7
