@@ -799,7 +799,7 @@ jobs:
     if: >-
       github.event_name == 'push' && !github.event.created &&
       github.ref == 'refs/heads/ci/pj71-native-857bd12b' &&
-      github.event.head_commit.message == 'Validate PlotJuggler da8a7eef Firefox regressions after localized probe fix'
+      github.event.head_commit.message == 'Validate PlotJuggler da8a7eef Firefox regressions at the packaged root'
     runs-on: ubuntu-22.04
     timeout-minutes: 155
     env:
@@ -955,6 +955,9 @@ jobs:
         run: |
           node scripts/package_wasm.mjs --source build-wasm-probe/pj_app --output build-wasm-probe/deploy
           sha256sum build-wasm-probe/deploy/manifest.json > ci-evidence/manifest-sha256.txt
+          node -p "require('./build-wasm-probe/deploy/manifest.json').entrypoint" > ci-evidence/entrypoint.txt
+          test "$(cat ci-evidence/entrypoint.txt)" = index.html
+          sha256sum build-wasm-probe/deploy/index.html > ci-evidence/entrypoint-sha256.txt
       - name: Install pinned Firefox and its display dependencies
         working-directory: tests/wasm
         run: |
@@ -965,14 +968,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/serve_wasm.mjs --root build-wasm-probe/deploy --port 6931 > /dev/null 2>&1 &
+          node scripts/serve_wasm.mjs --root build-wasm-probe/deploy --port 6931 > ci-evidence/serve-wasm.log 2>&1 &
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
+          response="$RUNNER_TEMP/pj-firefox-index.html"
           for _ in $(seq 1 50); do
-            curl -fsS -o /dev/null "${PJ_WASM_URL}plotjuggler4.html" && break
+            curl -fs -o "$response" "${PJ_WASM_URL}" && break
+            kill -0 "$server" 2>/dev/null || { cat ci-evidence/serve-wasm.log; exit 1; }
             sleep 0.2
           done
-          curl -fsS -o /dev/null "${PJ_WASM_URL}plotjuggler4.html"
+          curl -fsS -o "$response" "${PJ_WASM_URL}"
+          cmp "$response" build-wasm-probe/deploy/index.html
           export PLAYWRIGHT_JSON_OUTPUT_NAME="$GITHUB_WORKSPACE/ci-evidence/playwright.json"
           export TITLE_RELOAD='a preference the UI changes reaches durable storage without an explicit sync and survives refresh'
           export TITLE_EDITOR='Transform Editor creates a large exact Luau series while the browser main thread stays responsive'
