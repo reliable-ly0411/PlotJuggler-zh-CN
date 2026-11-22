@@ -799,7 +799,7 @@ jobs:
     if: >-
       github.event_name == 'push' && !github.event.created &&
       github.ref == 'refs/heads/ci/pj71-native-857bd12b' &&
-      github.event.head_commit.message == 'Validate PlotJuggler da8a7eef Firefox regressions at the packaged root'
+      github.event.head_commit.message == 'Validate both PlotJuggler da8a7eef Firefox regressions after roster preflight'
     runs-on: ubuntu-22.04
     timeout-minutes: 155
     env:
@@ -807,6 +807,9 @@ jobs:
       PJ_DISABLE_TELEMETRY: '1'
       PJ_WASM_URL: http://127.0.0.1:6931/
       PJ_WASM_PYTHON: '1'
+      TITLE_RELOAD: a preference the UI changes reaches durable storage without an explicit sync and survives refresh
+      TITLE_EDITOR: Transform Editor creates a large exact Luau series while the browser main thread stays responsive
+      PJ_FF_FILES: '(^|/)(persistence_layout|editors)[.]spec[.]js$'
     steps:
       - name: Use HTTPS for github.com submodules
         run: git config --global url."https://github.com/".insteadOf "git@github.com:"
@@ -843,6 +846,31 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ steps.versions.outputs.node }}
+
+      - name: Prove the exact Firefox roster before building
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --prefix tests/wasm ci
+          export PLAYWRIGHT_JSON_OUTPUT_NAME="$GITHUB_WORKSPACE/ci-evidence/playwright-list.json"
+          npm --prefix tests/wasm run test:firefox -- "$PJ_FF_FILES" \
+            --grep "(${TITLE_RELOAD}|${TITLE_EDITOR} @serial)$" --list --retries=0 --reporter=json
+          python3 - <<'PYLIST'
+          import json, os
+          from pathlib import Path
+          report = json.loads(Path(os.environ['PLAYWRIGHT_JSON_OUTPUT_NAME']).read_text())
+          def specs(groups):
+              for group in groups:
+                  for spec in group.get('specs', []):
+                      yield group['file'], spec
+                  yield from specs(group.get('suites', []))
+          observed = sorted((Path(f).name, s['title'], t['projectName'])
+                            for f, s in specs(report['suites']) for t in s['tests'])
+          expected = sorted([('persistence_layout.spec.js', os.environ['TITLE_RELOAD'], 'firefox'),
+                             ('editors.spec.js', os.environ['TITLE_EDITOR'], 'firefox')])
+          print(observed)
+          assert not report['errors'] and observed == expected, 'expected the exact two original Firefox cases'
+          PYLIST
 
       - name: Install build tools
         run: |
@@ -962,7 +990,6 @@ jobs:
         working-directory: tests/wasm
         run: |
           sudo apt-get install -y --no-install-recommends libgl1 libegl1 libgl1-mesa-dri libegl-mesa0
-          npm ci
           npx playwright install --with-deps firefox
       - name: Run and verify exactly two unmodified Firefox tests
         shell: bash
@@ -980,12 +1007,10 @@ jobs:
           curl -fsS -o "$response" "${PJ_WASM_URL}"
           cmp "$response" build-wasm-probe/deploy/index.html
           export PLAYWRIGHT_JSON_OUTPUT_NAME="$GITHUB_WORKSPACE/ci-evidence/playwright.json"
-          export TITLE_RELOAD='a preference the UI changes reaches durable storage without an explicit sync and survives refresh'
-          export TITLE_EDITOR='Transform Editor creates a large exact Luau series while the browser main thread stays responsive'
           runtime_rc=0
           xvfb-run -a npm --prefix tests/wasm run test:firefox -- \
-            '(^|/)(persistence_layout|editors)[.]spec[.]js$' \
-            --grep "(${TITLE_RELOAD}|${TITLE_EDITOR})$" --retries=0 --reporter=line,json \
+            "$PJ_FF_FILES" \
+            --grep "(${TITLE_RELOAD}|${TITLE_EDITOR} @serial)$" --retries=0 --reporter=line,json \
             --output "$RUNNER_TEMP/pj-firefox-output" || runtime_rc=$?
           export RUNTIME_RC="$runtime_rc"
           python3 - <<'PYRESULT'
