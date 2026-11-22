@@ -233,6 +233,7 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
   for (const auto& language : AppLanguage::supportedLanguages()) {
     ui_->languageCombo->addItem(language.native_name, language.code);
   }
+  connect(ui_->languageCombo, &QComboBox::activated, this, [this](int) { language_choice_activated_ = true; });
   // Qt may cache the empty-model minimum hint while the page is assembled.
   // Respect both hints so the form cannot squeeze below either size contract.
   ui_->languageCombo->setMinimumWidth(
@@ -563,7 +564,12 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
       }
     }
     QSettings settings;
-    settings.setValue(AppLanguage::kPreferenceKey, ui_->languageCombo->currentData().toString());
+    // Preserve a newer version's unrecognized locale when an unrelated OK leaves the English fallback selected.
+    // An explicit activation can still choose English itself, even when the fallback is already displayed.
+    const QString language = ui_->languageCombo->currentData().toString();
+    if (language_choice_activated_ || language != AppLanguage::preferredLanguage(settings)) {
+      settings.setValue(AppLanguage::kPreferenceKey, language);
+    }
     const bool precision_changed = ui_->scrubberFloatPrecision->value() != valuePrecision();
     settings.setValue(QString::fromLatin1(kPrecisionSettingsKey), ui_->scrubberFloatPrecision->value());
     settings.setValue(u"Preferences::use_opengl"_s, ui_->openglToggle->isChecked());

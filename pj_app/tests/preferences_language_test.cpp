@@ -128,6 +128,9 @@ TEST(PreferencesLanguageTest, FreshProfileOffersThreeLanguagesWithARestartNotice
   const auto* notice = dialog.findChild<QLabel*>(u"labelLanguageRestart"_s);
   ASSERT_NE(notice, nullptr);
   EXPECT_FALSE(notice->text().isEmpty());
+  dialog.accept();
+  EXPECT_FALSE(QSettings().contains(PJ::AppLanguage::kPreferenceKey));
+  EXPECT_EQ(PJ::AppLanguage::preferredLanguage(QSettings()), u"zh_CN"_s);
 }
 
 TEST(PreferencesLanguageTest, AcceptSavesNextLaunchLanguageWithoutRetranslatingTheSession) {
@@ -162,6 +165,57 @@ TEST(PreferencesLanguageTest, CancelLeavesTheSavedLanguageAlone) {
     combo->setCurrentIndex(combo->findData(u"zh_CN"_s));
     dialog.reject();
   }
+  EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"en_US"_s);
+}
+
+TEST(PreferencesLanguageTest, UnrelatedAcceptPreservesFutureLanguage) {
+  QSettings().setValue(PJ::AppLanguage::kPreferenceKey, u"ja_JP"_s);
+  PJ::Theme theme;
+  PJ::PreferencesDialog dialog(theme);
+  const auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+  ASSERT_NE(combo, nullptr);
+  EXPECT_EQ(combo->currentData().toString(), u"en_US"_s);
+  dialog.accept();
+  EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"ja_JP"_s);
+}
+
+TEST(PreferencesLanguageTest, ExplicitSelectionReplacesFutureLanguageOnlyOnAccept) {
+  QSettings().setValue(PJ::AppLanguage::kPreferenceKey, u"ja_JP"_s);
+  PJ::Theme theme;
+  {
+    PJ::PreferencesDialog dialog(theme);
+    auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+    ASSERT_NE(combo, nullptr);
+    const int traditional = combo->findData(u"zh_TW"_s);
+    ASSERT_GE(traditional, 0);
+    combo->setCurrentIndex(traditional);
+    ASSERT_TRUE(QMetaObject::invokeMethod(combo, "activated", Qt::DirectConnection, Q_ARG(int, traditional)));
+    dialog.reject();
+  }
+  EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"ja_JP"_s);
+  {
+    PJ::PreferencesDialog dialog(theme);
+    auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+    ASSERT_NE(combo, nullptr);
+    const int traditional = combo->findData(u"zh_TW"_s);
+    ASSERT_GE(traditional, 0);
+    combo->setCurrentIndex(traditional);
+    ASSERT_TRUE(QMetaObject::invokeMethod(combo, "activated", Qt::DirectConnection, Q_ARG(int, traditional)));
+    dialog.accept();
+  }
+  EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"zh_TW"_s);
+}
+
+TEST(PreferencesLanguageTest, ExplicitSelectionCanSaveAlreadyDisplayedEnglishFallback) {
+  QSettings().setValue(PJ::AppLanguage::kPreferenceKey, u"ja_JP"_s);
+  PJ::Theme theme;
+  PJ::PreferencesDialog dialog(theme);
+  auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+  ASSERT_NE(combo, nullptr);
+  ASSERT_EQ(combo->currentData().toString(), u"en_US"_s);
+  // QComboBox::activated is emitted for user selections even when the index is unchanged.
+  ASSERT_TRUE(QMetaObject::invokeMethod(combo, "activated", Qt::DirectConnection, Q_ARG(int, combo->currentIndex())));
+  dialog.accept();
   EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"en_US"_s);
 }
 

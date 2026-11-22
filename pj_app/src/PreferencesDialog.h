@@ -59,6 +59,7 @@ class PreferencesDialog : public Dialog {
 
   Ui::PreferencesContent* ui_;
   Theme& theme_;
+  bool language_choice_activated_ = false;
   // editingFinished re-fires on unchanged text; this suppresses the duplicate probe.
   QString last_checked_registry_url_;
   QNetworkAccessManager* network_ = nullptr;  // Created on the first probe.
