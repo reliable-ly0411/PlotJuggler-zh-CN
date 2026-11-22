@@ -1,4 +1,4 @@
-"""Materialize independent candidate D and require precise, non-skipped Qt CTest coverage."""
+"""Materialize independent candidate E and require precise, non-skipped Qt CTest coverage."""
 from base64 import decodebytes
 from hashlib import sha256
 import json
@@ -13,23 +13,22 @@ A = "857bd12b935579458914de18b59d8950b8bf71bd"
 D = "2e9235ef1575551f4fa14c84ce150301e4022bcd"
 TREE = "483bb27b54c929697295978fc66a1c59da4870d5"
 PATCH = "fc472e762767f3da60cfcb27ca0dcc38445c74610d19d38c7099c39b7da9ba94"
+E = "84eabea0353dba95b7288166a618f5d827af1fc1"
+E_TREE = "22ea9ccccd54ab2e78bdc2f44ed0ef94c2ad2de5"
+E_PATCH = "a737da3dd27f114e9448dd7b36f49509c466cccad7edbd90bf44602bc5440c7a"
+E_SCOPE = ["pj_dialog_host/include/pj_plugins/host_qt/widget_binding.hpp",
+           "pj_dialog_host/src/panel_engine.cpp", "pj_dialog_host/src/widget_binding.cpp"]
 HERE = Path(__file__).parent
-EVID = Path("panel-d-evidence")
+EVID = Path("panel-e-evidence")
 EVID.mkdir(exist_ok=True)
 PRODUCT_FILE = Path("pj_dialog_host/src/panel_engine.cpp")
-REGRESSION = "9007ceb2bb60bccc7213ccaf4fc2dc10deea54001e28ac80f34da5d930fb28f6"
-C_TO_D = "9fdbece580d57e5277c2625af254754661d6674d6e7501881825ee71cf4fe0a6"
-C_SOURCE_BLOB = "c7e865a6e9fefbe0eee53a9073a5b59ea612b7d6"
+REGRESSION = "a045779d6fa10b9a181bb467234e620ec95f9f941a87d8d39ba85e923391d90e"
 TEST_BLOBS = {
-    "pj_dialog_host/tests/mock_panel_plugin.cpp": "fb77ad3a55cedc1a9e3f153fe97afa00a5e95800",
-    "pj_dialog_host/tests/mock_panel_plugin.hpp": "c7fb730595dfd00dcd00de0530601776749c2c58",
-    "pj_dialog_host/tests/panel_engine_test.cpp": "f7e918288016fa3ebca7cc56230d472ead4a6198",
+    "pj_dialog_host/tests/mock_panel_plugin.cpp": "1308e57fbeaa4cdf29a39ef85db716631d496c4e",
+    "pj_dialog_host/tests/mock_panel_plugin.hpp": "c6e83fb86db7b5daf08ab9fd8e025b90af087c8b",
+    "pj_dialog_host/tests/panel_engine_test.cpp": "cf4a3ffd30c941815296313b7e19d560fd48702a",
 }
 TEST_SCOPE = sorted(TEST_BLOBS)
-NEGATIVE_FAILURES = {
-    "StartupDocumentInstallsCatalogDropTarget": "panel->acceptDrops()",
-    "StartupDocumentInstallsButtonShortcut": "shortcuts.end()",
-}
 
 
 def require(valid, message):
@@ -85,28 +84,45 @@ if sys.argv[1] == "source":
     require(identity == [D, TREE, A], "Candidate readback mismatch")
     git("diff", "HEAD", "--exit-code")
     (EVID / "D-product.commit").write_bytes(sp.check_output(["git", "cat-file", "commit", D]))
+    e_patch = patch("panel-e.patch.b64", E_PATCH)
+    (EVID / "E-product.patch").write_bytes(e_patch)
+    overlay("--index", "--check", blob=e_patch)
+    overlay("--index", blob=e_patch)
+    git("diff", "--cached", "--check", D)
+    require(git("diff", "--cached", "--name-only", D).splitlines() == E_SCOPE, "Unexpected E scope")
+    require(git("write-tree") == E_TREE, "E tree mismatch")
+    for prefix in ["AUTHOR", "COMMITTER"]:
+        env[f"GIT_{prefix}_DATE"] = "2026-11-22T02:00:00Z"
+    result = git("-c", "commit.gpgSign=false", "commit-tree", E_TREE, "-p", D, "-m",
+                 "Apply parsed panel updates without re-encoding changed widget data", env=env)
+    require(result == E, "E commit mismatch")
+    git("checkout", "--detach", E)
+    require(git("rev-parse", "HEAD", "HEAD^{tree}", "HEAD^").splitlines() == [E, E_TREE, D],
+            "E readback mismatch")
+    git("diff", "HEAD", "--exit-code")
+    (EVID / "E-product.commit").write_bytes(sp.check_output(["git", "cat-file", "commit", E]))
     (EVID / "identity.json").write_text(json.dumps({
-        "product": D, "tree": TREE, "parent": A, "patch_sha256": PATCH,
+        "product": E, "tree": E_TREE, "parent": D, "base": A, "patch_sha256": E_PATCH,
         "controller": os.environ["GITHUB_SHA"], "run": os.environ["GITHUB_RUN_ID"],
         "required_qt": "6.12.0",
     }, indent=2))
-    tests = patch("panel-d-regression.patch.b64", REGRESSION)
-    (EVID / "D-native-test.patch").write_bytes(tests)
+    tests = patch("panel-e-regression.patch.b64", REGRESSION)
+    (EVID / "E-native-test.patch").write_bytes(tests)
     overlay("--check", blob=tests)
     overlay(blob=tests)
     require_test_overlay()
 elif sys.argv[1] == "test":
-    require(git("rev-parse", "HEAD", "HEAD^{tree}").splitlines() == [D, TREE], "Product moved before CTest")
+    require(git("rev-parse", "HEAD", "HEAD^{tree}").splitlines() == [E, E_TREE], "Product moved before CTest")
     require_test_overlay()
-    expected = sorted((HERE / "panel-d-tests.txt").read_text().splitlines())
-    require(len(expected) == len(set(expected)) == 31, "Wrong exact test roster")
+    expected = sorted((HERE / "panel-e-tests.txt").read_text().splitlines())
+    require(len(expected) == len(set(expected)) == 34, "Wrong exact test roster")
     expr = r"^pj_dialog_host_panel_tests\.(PanelEngineTest|ParsedWidgetData)\."
     command = ["ctest", "--test-dir", "build", "-R", expr]
     raw = sp.check_output([*command, "--show-only=json-v1"], text=True)
     (EVID / "ctest-selection.json").write_text(raw)
     selected = sorted(t["name"] for t in json.loads(raw)["tests"])
     require(selected == expected, f"Wrong CTest selection: {selected!r}")
-    junit = EVID.resolve() / "panel-d-results.xml"
+    junit = EVID.resolve() / "panel-e-results.xml"
     sp.run([*command, "--no-tests=error", "--output-on-failure", "--timeout", "120",
             "--output-junit", str(junit)], check=True)
     cases = ET.parse(junit).findall(".//testcase")
@@ -115,42 +131,6 @@ elif sys.argv[1] == "test":
         require(case.get("status") == "run" and not any(
             case.find(name) is not None for name in ("skipped", "failure", "error")),
             f"Case did not pass: {case.get('name')}")
-    print(f"{len(cases)}/31 executed and passed, no skips.")
-elif sys.argv[1] == "negative":
-    require(git("rev-parse", "HEAD", "HEAD^{tree}").splitlines() == [D, TREE], "Wrong D negative-control base")
-    require_test_overlay()
-    require((EVID / "panel-d-results.xml").is_file(), "D positive test evidence missing")
-    c_to_d = patch("panel-d-to-c.patch.b64", C_TO_D)
-    overlay("--check", "--reverse", blob=c_to_d)
-    original = PRODUCT_FILE.read_bytes()
-    try:
-        overlay("--reverse", blob=c_to_d)
-        require(git("hash-object", str(PRODUCT_FILE)) == C_SOURCE_BLOB, "Wrong exact C source blob")
-        require(git("diff", "--name-only", "HEAD").splitlines() == [str(PRODUCT_FILE), *TEST_SCOPE],
-                "Negative control must only swap the former source file")
-        sp.run(["cmake", "--build", "build", "--target", "pj_dialog_host_panel_tests", "--parallel", "2"], check=True)
-        expr = r"^pj_dialog_host_panel_tests\.PanelEngineTest\.(" + "|".join(NEGATIVE_FAILURES) + ")$"
-        command = ["ctest", "--test-dir", "build", "-R", expr]
-        raw = sp.check_output([*command, "--show-only=json-v1"], text=True)
-        (EVID / "negative-control-selection.json").write_text(raw)
-        selected = {t["name"].rsplit(".", 1)[-1] for t in json.loads(raw)["tests"]}
-        require(selected == NEGATIVE_FAILURES.keys(), f"Wrong negative test selection: {selected}")
-        junit = EVID.resolve() / "panel-c-negative-results.xml"
-        result = sp.run([*command, "--no-tests=error", "--output-on-failure", "--timeout", "120",
-                         "--output-junit", str(junit)], check=False)
-        require(result.returncode == 8, f"Unexpected CTest result: {result.returncode}")
-        cases = ET.parse(junit).findall(".//testcase")
-        require(len(cases) == 2, "Missing negative-control evidence")
-        for case in cases:
-            name = case.get("name").rsplit(".", 1)[-1]
-            require(case.get("status") == "fail" and case.find("failure") is not None
-                    and case.find("skipped") is None and case.find("error") is None,
-                    f"Test did not assert a regression: {name}")
-            require(NEGATIVE_FAILURES[name] in (case.findtext("system-out") or ""),
-                    f"Wrong failure cause: {name}")
-        print("Exact candidate C translation unit rejected by both focused startup assertions.")
-    finally:
-        PRODUCT_FILE.write_bytes(original)
-        require_test_overlay()
+    print(f"{len(cases)}/34 executed and passed, no skips.")
 else:
-    raise SystemExit("Use source, test or negative")
+    raise SystemExit("Use source or test")
