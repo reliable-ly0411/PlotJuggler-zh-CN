@@ -9,7 +9,10 @@ from pathlib import Path
 import subprocess
 
 from version_map import package_versions
-from verify_package import ACCEPTANCE_LANGUAGES
+from registry_inventory import read_inventory
+from verify_package import ACCEPTANCE_LANGUAGES, expected_plugin_inventory
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def sha256(path):
@@ -62,6 +65,9 @@ def main(*, development_candidate=False):
     reports = sorted(Path('reports').rglob('acceptance.json'))
     identities = report_identities(reports, Path('reports'))
     accepted, screenshots = [], []
+    _, provenance = read_inventory(ROOT)
+    source_inventories = {platform: expected_plugin_inventory(ROOT, platform)
+                          for platform in ('windows-x86_64', 'linux-x86_64')}
     for path, (platform, kind) in zip(reports, identities):
         report = json.loads(path.read_text(encoding='utf-8'))
         assert report['status'] == 'automated_checks_passed'
@@ -69,11 +75,17 @@ def main(*, development_candidate=False):
         assert report['release']['source_commit'] == source
         assert report['release']['source_tree'] == tree
         assert report['release']['version'] == version
-        assert report['plugin_count'] == (19 if platform == 'windows-2022' else 21)
-        if report['plugin_count'] == 19:
-            assert report['loaded_plugin_count'] == 19 and report['unavailable_plugins'] == []
+        windows = platform == 'windows-2022'
+        inventory = source_inventories['windows-x86_64' if windows else 'linux-x86_64']
+        specs = [f'{identifier}={version}' for identifier, version in sorted(inventory.items())]
+        assert sorted(report['release']['expected_plugins']) == specs, 'Report inventory differs from source lock'
+        assert report['release']['bin_plugin_version'] == inventory['ardupilot-dataflash']
+        assert report['release']['registry_sources'] == provenance['sources'], 'Registry provenance differs from source lock'
+        assert report['plugin_count'] == len(inventory)
+        if windows:
+            assert report['loaded_plugin_count'] == len(inventory) and report['unavailable_plugins'] == []
         else:
-            assert report['loaded_plugin_count'] == 20
+            assert report['loaded_plugin_count'] == len(inventory) - 1
             assert len(report['unavailable_plugins']) == 1
             unavailable = report['unavailable_plugins'][0]
             assert unavailable['id'] == 'ros2-topic-subscriber'
@@ -85,7 +97,6 @@ def main(*, development_candidate=False):
             png = path.parent / f'gui-{language}.png'
             assert png.stat().st_size > 10000
             screenshots.append({'path': png.as_posix(), 'sha256': sha256(png), 'size': png.stat().st_size})
-    assert sorted(x['plugin_count'] for x in accepted) == [19, 19, 21, 21, 21, 21]
     expected = {f'PlotJuggler-{version}-Windows-x64-zh-CN.exe',
                 f'PlotJuggler-{version}-Windows-x64-portable-zh-CN.zip',
                 f'PlotJuggler-{version}-x86_64-zh-CN.AppImage',

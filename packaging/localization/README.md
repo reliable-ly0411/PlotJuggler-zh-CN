@@ -399,3 +399,12 @@ failed installer stage cannot fall through into portable packaging. Missing or
 duplicate registry entries, download hashes and final plugin inventory assertions
 remain fatal. PowerShell propagation tests run under a real PowerShell runtime;
 local platforms without it explicitly skip those tests.
+
+Both native candidate package jobs consume `registry-lock.json`. The current
+native targets use the `candump-loader`, `influx-parser` and `navmap-parser`
+supplements; the locked external `log-widget` is not bundled now that the app
+provides its own Log panel. The source-built BIN plugin is staged independently
+and is not taken from the registry. AppImage accepts a local JSON path or an
+HTTP(S) URL; relative paths resolve from the invocation directory. Clean-host
+verification and the final manifest require the source-locked inventory for
+each platform, not a fixed historical count.

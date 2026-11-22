@@ -26,7 +26,7 @@
 #   packaging/appimage/build_appimage.sh --plugins-dir <path>  # LOCAL: copy a folder you
 #                                                    #   curated, verbatim, into
 #                                                    #   usr/lib/plotjuggler/plugins
-#   packaging/appimage/build_appimage.sh --plugins-registry [url]
+#   packaging/appimage/build_appimage.sh --plugins-registry [url-or-path]
 #                                                    # REGISTRY: download the
 #                                                    #   curated set (BUNDLE_IDS)
 #                                                    #   from the plugin registry,
@@ -162,8 +162,15 @@ while [[ $# -gt 0 ]]; do
       PLUGINS_LOCAL_DIR="$(realpath -m -- "${2:?--plugins-dir needs a path}")"; shift 2 ;;
     --plugins-registry)
       PLUGINS_MODE="registry"
-      # Optional URL argument (anything not starting with '-').
-      if [[ -n "${2:-}" && "${2}" != -* ]]; then REGISTRY_URL="$2"; shift; fi
+      # Resolve local snapshots before the packager changes its working directory.
+      if [[ -n "${2:-}" && "${2}" != -* ]]; then
+        REGISTRY_URL="$2"
+        case "${REGISTRY_URL}" in
+          http://*|https://*) ;;
+          *) REGISTRY_URL="$(realpath -m -- "${REGISTRY_URL}")" ;;
+        esac
+        shift
+      fi
       shift ;;
     --extra-prefix)
       EXTRA_PREFIX="$(realpath -m -- "${2:?--extra-prefix needs a path}")"; shift 2 ;;
@@ -300,14 +307,19 @@ collect_plugins_registry() {
   command -v sha256sum >/dev/null || { echo "sha256sum required for --plugins-registry"; exit 1; }
 
   local registry_json; registry_json="$(mktemp)"
-  echo "Plugins: fetching registry ${REGISTRY_URL}"
-  wget -qO "${registry_json}" "${REGISTRY_URL}" || { echo "ERROR: failed to download registry"; exit 1; }
+  echo "Plugins: reading registry ${REGISTRY_URL}"
+  case "${REGISTRY_URL}" in
+    http://*|https://*)
+      wget -qO "${registry_json}" "${REGISTRY_URL}" || { echo "ERROR: failed to download registry" >&2; exit 1; } ;;
+    *)
+      cp -- "${REGISTRY_URL}" "${registry_json}" || { echo "ERROR: failed to read registry ${REGISTRY_URL}" >&2; exit 1; } ;;
+  esac
 
   local id url checksum want got zip dest
   for id in "${BUNDLE_IDS[@]}"; do
     # Resolve this extension's url + checksum for our platform from the registry. The registry
     # keeps older releases of an id for older hosts, so take the newest one that ships our platform.
-    read -r url checksum < <(python3 - "${registry_json}" "${id}" "${PLATFORM}" <<'PY'
+    if ! read -r url checksum < <(python3 - "${registry_json}" "${id}" "${PLATFORM}" <<'PY'
 import json, sys
 reg, want_id, plat = sys.argv[1], sys.argv[2], sys.argv[3]
 data = json.load(open(reg))
@@ -316,8 +328,10 @@ if found:
     p = max(found, key=lambda e: tuple(int(x) for x in e["version"].split(".")))["platforms"][plat]
     print(p.get("url", ""), p.get("checksum", ""))
 PY
-)
-    [[ -n "${url}" ]] || { echo "ERROR: registry has no '${id}' for ${PLATFORM}"; exit 1; }
+    ) || [[ -z "${url}" ]]; then
+      echo "ERROR: registry has no usable '${id}' for ${PLATFORM}: ${REGISTRY_URL}" >&2
+      exit 1
+    fi
 
     zip="$(mktemp --suffix=.zip)"
     echo "  ${id}: ${url}"
