@@ -799,7 +799,7 @@ jobs:
     if: >-
       github.event_name == 'push' && !github.event.created &&
       github.ref == 'refs/heads/ci/pj71-native-857bd12b' &&
-      github.event.head_commit.message == 'Validate pinned PlotJuggler da8a7eef Firefox regressions only'
+      github.event.head_commit.message == 'Validate PlotJuggler da8a7eef Firefox regressions after localized probe fix'
     runs-on: ubuntu-22.04
     timeout-minutes: 155
     env:
@@ -812,7 +812,7 @@ jobs:
         run: git config --global url."https://github.com/".insteadOf "git@github.com:"
       - uses: actions/checkout@v6
         with:
-          ref: refs/heads/zh-CN-4.x-ci/sync-da8a7eef-source
+          ref: refs/heads/zh-CN-4.x-ci/sync-da8a7eef-qa-probe
           submodules: recursive
           persist-credentials: false
       - name: Verify sealed QA inputs
@@ -820,8 +820,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir ci-evidence
-          test "$(git rev-parse HEAD)" = 5bd2595316c1367ef77862c8078c9ac994dead19
-          test "$(git rev-parse HEAD^{tree})" = 93b4ab03a336957d41e2515631d18256c8c3c34d
+          test "$(git rev-parse HEAD)" = d976576acaa278346c666f77cf8ecab5566f9924
+          test "$(git rev-parse HEAD^{tree})" = 3d6826dd9d54867a2599087168dee5cf7efafc16
           git submodule status --recursive | tee ci-evidence/submodules.txt
           ! grep -Eq '^[-+U]' ci-evidence/submodules.txt
           test -z "$(git status --porcelain --untracked-files=no)"
@@ -904,7 +904,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ~/.cache/ccache
-          key: ccache-zh4-localized-5bd2595316c1367ef77862c8078c9ac994dead19
+          key: ccache-zh4-localized-d976576acaa278346c666f77cf8ecab5566f9924
           restore-keys: |
             ccache-zh4-localized-
 
