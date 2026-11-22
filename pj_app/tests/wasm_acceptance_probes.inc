@@ -1504,7 +1504,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_split_horizontal_action
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_report_duplicate_tab_action() {
-  reportWasmMenuAction(u"Duplicate tab"_s, "duplicate_tab");
+  reportWasmMenuAction({QCoreApplication::translate("PJ::TabbedPlotWidget", "Duplicate tab")}, "duplicate_tab");
 }
 
 /// The plot-tab count and the strip frames' centers (left to right), for the tab context-menu spec.
