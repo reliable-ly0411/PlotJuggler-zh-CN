@@ -22,11 +22,11 @@ HERE = Path(__file__).parent
 EVID = Path("panel-e-evidence")
 EVID.mkdir(exist_ok=True)
 PRODUCT_FILE = Path("pj_dialog_host/src/panel_engine.cpp")
-REGRESSION = "b6daee18f2ecad3e37a6f2f2edae6c8c441e63d73afd1cbf05854dbdce8a6389"
+REGRESSION = "477cdf30e4a27641cfab1df2fd5609af1af69d4e752351d5649d1f5c82f54d61"
 TEST_BLOBS = {
     "pj_dialog_host/tests/mock_panel_plugin.cpp": "1308e57fbeaa4cdf29a39ef85db716631d496c4e",
     "pj_dialog_host/tests/mock_panel_plugin.hpp": "c6e83fb86db7b5daf08ab9fd8e025b90af087c8b",
-    "pj_dialog_host/tests/panel_engine_test.cpp": "877721e92e691cf46dff2f3f18cb87897d029d05",
+    "pj_dialog_host/tests/panel_engine_test.cpp": "f5154b01362406f2e4dd9f8a5ef6bfaa69f3284e",
 }
 TEST_SCOPE = sorted(TEST_BLOBS)
 
