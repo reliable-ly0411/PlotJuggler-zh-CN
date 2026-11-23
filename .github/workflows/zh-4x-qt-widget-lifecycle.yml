@@ -98,6 +98,7 @@ jobs:
           #include <QRawFont>
           #include <QPainterPath>
           #include <QTextLayout>
+          #include <QTextOption>
           #include <QTimer>
           #include <QVBoxLayout>
           #include <array>
@@ -127,32 +128,44 @@ jobs:
                 const auto* label = labels[i];
                 const auto index = label->text().indexOf(QChar(0x25b8));
                 QTextLayout layout(label->text(), label->font());
+                QTextOption options;
+                options.setWrapMode(QTextOption::NoWrap);
+                layout.setTextOption(options);
                 layout.beginLayout();
                 auto line = layout.createLine();
+                if (!line.isValid()) qFatal("No Qt text line was laid out");
                 line.setLineWidth(650);
                 layout.endLayout();
-                int matches=0, missing=0, glyph=0;
-                bool cmap=false, outline=false;
+                if (index < 0 || line.textStart() != 0 || line.textLength() != label->text().size())
+                  qFatal("The Qt line does not cover the full Chinese sample");
+                const auto flags = QTextLayout::RetrieveGlyphIndexes | QTextLayout::RetrieveGlyphPositions |
+                    QTextLayout::RetrieveStringIndexes;
+                int total=0, missing=0, matches=0, glyph=0;
+                for (const auto& run : line.glyphRuns(0, line.textLength(), flags)) {
+                  for (auto g : run.glyphIndexes()) {
+                    ++total;
+                    missing += g == 0;
+                  }
+                }
+                bool cmap=false, outline=false, split=false;
                 QString family;
-                for (const auto& run : layout.glyphRuns(-1, -1, QTextLayout::RetrieveGlyphIndexes | QTextLayout::RetrieveStringIndexes)) {
-                  const auto glyphs = run.glyphIndexes();
-                  const auto indexes = run.stringIndexes();
-                  if (glyphs.size() != indexes.size()) qFatal("Invalid Qt glyph run indexes");
-                  for (qsizetype j=0; j<glyphs.size(); ++j) {
-                    missing += glyphs[j] == 0;
-                    if (indexes[j] != index) continue;
+                const auto targeted = line.glyphRuns(static_cast<int>(index), 1, flags);
+                for (const auto& run : targeted) {
+                  split = split || run.flags().testFlag(QGlyphRun::SplitLigature);
+                  for (auto g : run.glyphIndexes()) {
                     ++matches;
                     const auto raw = run.rawFont();
                     family = raw.familyName();
-                    glyph = static_cast<int>(glyphs[j]);
-                    outline = raw.isValid() && !raw.pathForGlyph(glyphs[j]).isEmpty();
+                    glyph = static_cast<int>(g);
+                    outline = raw.isValid() && !raw.pathForGlyph(g).isEmpty();
                     const auto own = raw.glyphIndexesForString(QString(QChar(0x25b8)));
-                    cmap = own.size() == 1 && own.front() == glyphs[j];
+                    cmap = own.size() == 1 && own.front() == g;
                   }
                 }
-                if (index < 0 || matches != 1 || missing || !glyph || family != u"Noto Sans Symbols 2"_s || !cmap || !outline)
-                  qFatal("PJ_QA_FAIL %s index=%lld matches=%d missing=%d glyph=%d family=%s cmap=%d outline=%d",
-                      qPrintable(samples[i].first), static_cast<long long>(index), matches, missing, glyph, qPrintable(family), cmap, outline);
+                if (total == 0 || matches != 1 || missing || !glyph || split || family != u"Noto Sans Symbols 2"_s || !cmap || !outline)
+                  qFatal("PJ_QA_FAIL %s index=%lld total=%d ranges=%lld matches=%d missing=%d glyph=%d family=%s cmap=%d outline=%d split=%d",
+                      qPrintable(samples[i].first), static_cast<long long>(index), total, static_cast<long long>(targeted.size()),
+                      matches, missing, glyph, qPrintable(family), cmap, outline, split);
                 qInfo("PJ_QA_GLYPH %s index=%lld glyph=%d family=%s cmap=%d outline=%d missing=%d",
                     qPrintable(samples[i].first), static_cast<long long>(index), glyph, qPrintable(family), cmap, outline, missing);
               }
