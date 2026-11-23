@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-name: Test the branch's reproducible symbol generator
+name: Audit actual localized keys and committed font coverage
 on:
   push:
     branches: ['zh-CN-4.x-ci/qt-widget-lifecycle-1459']
@@ -7,30 +7,71 @@ on:
 permissions:
   contents: read
 jobs:
-  noto-symbols:
+  catalog-audit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 30
+    env:
+      QT_QPA_PLATFORM: offscreen
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 5759299277d4558f7e45afe00c40391f4a5fead4
+          ref: 10e773ddbd4d543b3545feeafcb41fcda795209d
           persist-credentials: false
-      - name: Download the exact official release and reproduce the PR font
+      - name: Verify exact integrated development snapshot
+        run: test "$(git rev-parse HEAD)" = '10e773ddbd4d543b3545feeafcb41fcda795209d'
+      - name: Restore the existing pinned Qt kit if available
+        uses: actions/cache/restore@v5
+        with:
+          path: .qt
+          key: stable-delta-qt-linux-${{ hashFiles('versions.env') }}
+      - name: Install and identify exact Qt, without Conan or whole app
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = 5759299277d4558f7e45afe00c40391f4a5fead4
-          test "$(git rev-parse HEAD:resources/fonts/NotoSansSymbols2/NotoSansSymbols2-Subset.ttf)" = 99f0a5e2b4b7afa3e44155a477b3d8317597efa2
-          sed -n '1p' resources/fonts/NotoSansSymbols2/OFL.txt
-          python3 -m venv "$RUNNER_TEMP/font-repro"
-          "$RUNNER_TEMP/font-repro/bin/pip" install --disable-pip-version-check --no-deps fonttools==4.61.1
-          curl --proto '=https' --proto-redir '=https' --fail --silent --show-error --location --max-time 90 \
-             'https://github.com/notofonts/symbols/releases/download/NotoSansSymbols2-v2.008/NotoSansSymbols2-v2.008.zip' \
-             --output "$RUNNER_TEMP/noto-symbols-v2.008.zip"
-          test "$(wc -c < "$RUNNER_TEMP/noto-symbols-v2.008.zip")" = 2331441
-          python3 -S tests/test_symbol_font_regeneration.py -v
-          "$RUNNER_TEMP/font-repro/bin/python" tests/test_symbol_font_regeneration.py --fonttools -v
-          "$RUNNER_TEMP/font-repro/bin/python" scripts/make_cjk_font_subset.py \
-            --symbols-release "$RUNNER_TEMP/noto-symbols-v2.008.zip" --check
-          "$RUNNER_TEMP/font-repro/bin/python" scripts/make_cjk_font_subset.py \
-            --symbols-release "$RUNNER_TEMP/noto-symbols-v2.008.zip"
-          git diff --exit-code -- resources/fonts
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev libxcb-cursor0 libfontconfig1 libdbus-1-3
+          python3 -m venv "$RUNNER_TEMP/qt-widget-tools"
+          "$RUNNER_TEMP/qt-widget-tools/bin/pip" install aqtinstall==3.3.0
+          export PATH="$RUNNER_TEMP/qt-widget-tools/bin:$PATH"
+          source ./versions.env
+          test "$PJ_QT_VERSION" = 6.12.0
+          ./scripts/install_qt6.sh
+          test "$(./.qt/6.12.0/gcc_64/bin/qmake -query QT_VERSION)" = 6.12.0
+          test -s .qt/6.12.0/gcc_64/translations/qtbase_zh_CN.qm
+          test -s .qt/6.12.0/gcc_64/translations/qtbase_zh_TW.qm
+      - name: Independently verify both source catalogs and actual codepoint union
+        run: |
+          set -euo pipefail
+          lupdate="$PWD/.qt/6.12.0/gcc_64/bin/lupdate"
+          test "$("$lupdate" -version 2>&1)" = 'lupdate version 6.12.0'
+          python3 tests/check_translations_4x.py --lupdate "$lupdate" || printf '%s\n' 'Catalog validator reported a non-zero result; inspect above'
+          python3 -m venv "$RUNNER_TEMP/catalog-audit"
+          "$RUNNER_TEMP/catalog-audit/bin/pip" install --disable-pip-version-check --no-deps fonttools==4.61.1
+          python3 - <<'PY'
+          import ast
+          ast.parse(open("scripts/check_cjk_font_coverage.py").read())
+          PY
+          "$RUNNER_TEMP/catalog-audit/bin/python" scripts/check_cjk_font_coverage.py
+          "$RUNNER_TEMP/catalog-audit/bin/python" - <<'PY'
+          from pathlib import Path
+          import unicodedata
+          import xml.etree.ElementTree as ET
+          from fontTools.ttLib import TTFont
+          paths = ["PlotJugglerSans/PlotJugglerSans-Regular.ttf", "NotoSansSC/NotoSansSC-Subset.otf",
+                   "NotoSansSymbols2/NotoSansSymbols2-Subset.ttf"]
+          fonts = {}
+          for path in paths:
+              with TTFont(Path("resources/fonts") / path) as font:
+                  fonts[path] = set(font.getBestCmap())
+          combined = set().union(*fonts.values())
+          for lang in ("zh_CN", "zh_TW"):
+              trans = ET.parse(f"pj_app/translations/plotjuggler4_{lang}.ts").iter("translation")
+              active = [t for t in trans if t.get("type") not in ("unfinished", "obsolete", "vanished")]
+              text = ''.join(''.join(t.itertext()) for t in active)
+              needed = {ord(c) for c in text if unicodedata.category(c) not in ("Cc", "Cf")}
+              absent = sorted(needed - combined)
+              print(f"CATALOG {lang}: {len(active)} active entries, {len(needed)} required codepoints, {len(absent)} missing")
+              for cp in absent:
+                  print(f"FONT_MISSING {lang} U+{cp:04X} {chr(cp)} {unicodedata.name(chr(cp), 'unassigned')}")
+          assert all(cp in fonts[paths[1]] for cp in map(ord, "創擊補"))
+          assert [path for path in paths if 0x25B8 in fonts[path]] == [paths[-1]]
+          PY
