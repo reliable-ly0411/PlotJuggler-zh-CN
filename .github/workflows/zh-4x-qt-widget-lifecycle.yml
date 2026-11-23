@@ -13,12 +13,12 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: e4ad75efcba8f8e1bd7ba48ba25bfc3c646addc6
+          ref: 5759299277d4558f7e45afe00c40391f4a5fead4
           persist-credentials: false
       - name: Download the exact official release and reproduce the PR font
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = e4ad75efcba8f8e1bd7ba48ba25bfc3c646addc6
+          test "$(git rev-parse HEAD)" = 5759299277d4558f7e45afe00c40391f4a5fead4
           test "$(git rev-parse HEAD:resources/fonts/NotoSansSymbols2/NotoSansSymbols2-Subset.ttf)" = 99f0a5e2b4b7afa3e44155a477b3d8317597efa2
           sed -n '1p' resources/fonts/NotoSansSymbols2/OFL.txt
           python3 -m venv "$RUNNER_TEMP/font-repro"
@@ -27,7 +27,8 @@ jobs:
              'https://github.com/notofonts/symbols/releases/download/NotoSansSymbols2-v2.008/NotoSansSymbols2-v2.008.zip' \
              --output "$RUNNER_TEMP/noto-symbols-v2.008.zip"
           test "$(wc -c < "$RUNNER_TEMP/noto-symbols-v2.008.zip")" = 2331441
-          "$RUNNER_TEMP/font-repro/bin/python" tests/test_symbol_font_regeneration.py -v
+          python3 -S tests/test_symbol_font_regeneration.py -v
+          "$RUNNER_TEMP/font-repro/bin/python" tests/test_symbol_font_regeneration.py --fonttools -v
           "$RUNNER_TEMP/font-repro/bin/python" scripts/make_cjk_font_subset.py \
             --symbols-release "$RUNNER_TEMP/noto-symbols-v2.008.zip" --check
           "$RUNNER_TEMP/font-repro/bin/python" scripts/make_cjk_font_subset.py \
