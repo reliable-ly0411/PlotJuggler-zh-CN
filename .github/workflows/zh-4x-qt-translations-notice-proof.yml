@@ -1,0 +1,91 @@
+name: Verify Qt translations WASM notice (isolated)
+on:
+  push:
+    branches: [zh-CN-4.x-ci/qt-translations-notice-proof]
+    paths: [.github/workflows/zh-4x-qt-translations-notice-proof.yml]
+permissions:
+  contents: read
+jobs:
+  qt-notice:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      PRODUCT_SHA: 166398d45c8b2d57e21ee42899c3851435c27850
+      BASE_SHA: 843552e4ef8027a85ac92ca6ddb1e39742b2a036
+      PRODUCT_TREE: a9fd7af4a73246adf5ec28cea41f4170d8be571f
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: 166398d45c8b2d57e21ee42899c3851435c27850
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Verify exact source and extract four official Qt WASM archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PRODUCT_SHA"
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse HEAD^{tree})" = "$PRODUCT_TREE"
+          grep -Ex 'PJ_QT_VERSION="?6\.12\.0"?' versions.env
+          mkdir -p "$RUNNER_TEMP/qt-kit" "$RUNNER_TEMP/qt-evidence"
+          printf 'product %s\nbase %s\ntree %s\n' "$PRODUCT_SHA" "$BASE_SHA" "$PRODUCT_TREE" >"$RUNNER_TEMP/qt-evidence/identities.txt"
+          cd "$RUNNER_TEMP/qt-kit"
+          url=https://download.qt.io/online/qtsdkrepository/all_os/wasm/qt6_6120/qt6_6120_wasm_multithread/qt.qt6.6120.wasm_multithread
+          while read -r module digest; do
+            archive="6.12.0-0-202609280346${module}-Linux-openSUSE_16_0-GCC-Linux-WebAssembly-X86_64.7z"
+            curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --connect-timeout 15 --max-time 65 --retry 2 --retry-all-errors "$url/$archive" -o "$archive"
+            printf '%s  %s\n' "$digest" "$archive" | sha256sum --check | tee -a "$RUNNER_TEMP/qt-evidence/archive-verification.txt"
+            cmake -E tar xf "$archive"
+          done <<'QT_ARCHIVES'
+          qtbase 6d80d6bd06403e4a61cdd4d24bb0c079a37291838a263559d3a88be7bbfac526
+          qtsvg 24e66989faf6e55d7d131b862638f9f195c1d5573000a902e66dc613960cc04e
+          qttools ca0a27374bc36f9dcb4fed9eb2de3f7b82145b57933476204aab80920fb99ce9
+          qttranslations 85b21a5ff33cbc11cab7e87bc949fd4eec97db8a55a47fda17012c366ca5dc45
+          QT_ARCHIVES
+          kit="$RUNNER_TEMP/qt-kit/6.12.0/wasm_multithread"
+          test -s "$kit/translations/qtbase_zh_CN.qm"
+          test -s "$kit/translations/qtbase_zh_TW.qm"
+          for module in qtbase qtsvg qttools qttranslations; do test -s "$kit/sbom/$module-6.12.0.spdx.json"; done
+          sha256sum "$kit"/translations/qtbase_zh_{CN,TW}.qm "$kit"/sbom/{qtbase,qtsvg,qttools,qttranslations}-6.12.0.spdx.json | sed "s#  $kit/#  #" >>"$RUNNER_TEMP/qt-evidence/archive-verification.txt"
+      - name: Exercise the actual Qt notices generator before and after
+        shell: bash
+        run: |
+          set -euo pipefail
+          d="$RUNNER_TEMP/qt-evidence"
+          kit="$RUNNER_TEMP/qt-kit/6.12.0/wasm_multithread"
+          git show "$BASE_SHA:cmake/PjWasmNotices.cmake" >"$RUNNER_TEMP/previous-notices.cmake"
+          cat >"$RUNNER_TEMP/run-qt-notices.cmake" <<'CMAKE'
+          cmake_minimum_required(VERSION 3.19)
+          set(CMAKE_SOURCE_DIR "${REPO}")
+          set(Qt6_VERSION "6.12.0")
+          set(Qt6_DIR "${QT_KIT}/lib/cmake/Qt6")
+          include("${GENERATOR}")
+          file(WRITE "${REPORT}" "")
+          _pj_qt_notices("${REPORT}")
+          CMAKE
+          cmake -DREPO="$PWD" -DQT_KIT="$kit" -DGENERATOR="$RUNNER_TEMP/previous-notices.cmake" -DREPORT="$d/before.txt" -P "$RUNNER_TEMP/run-qt-notices.cmake"
+          cmake -DREPO="$PWD" -DQT_KIT="$kit" -DGENERATOR="$PWD/cmake/PjWasmNotices.cmake" -DREPORT="$d/after.txt" -P "$RUNNER_TEMP/run-qt-notices.cmake"
+          diff -u --label before --label after "$d/before.txt" "$d/after.txt" >"$d/notices.diff" || test "$?" -eq 1
+          python3 - "$kit/sbom/qttranslations-6.12.0.spdx.json" "$d" <<'PY' | tee "$d/result.txt"
+          from difflib import SequenceMatcher
+          from pathlib import Path
+          import json, sys
+          sbom, report = map(Path, sys.argv[1:])
+          package, = [p for p in json.loads(sbom.read_text())['packages'] if p['name'] == 'Translations']
+          assert 'BSD-3-Clause' in package['licenseConcluded'], package['licenseConcluded']
+          before, after = ((report / f"{name}.txt").read_text() for name in ('before', 'after'))
+          expected = "\n--- Translations " + package.get('versionInfo', '') + "\nLicense: " + package['licenseConcluded'] + "\n" + package['copyrightText'] + "\n"
+          assert before.count('\n--- Translations ') == 0, "old generator already emitted the attribution"
+          assert after.count('\n--- Translations ') == 1 and expected in after, "notices mismatch against the official SBOM"
+          assert all(op[0] in ('equal', 'insert') for op in SequenceMatcher(None, before.splitlines(), after.splitlines(), autojunk=False).get_opcodes()), "previous notices were changed or removed"
+          assert before.count('\n--- BSD-3-Clause\n') == after.count('\n--- BSD-3-Clause\n') == 1, "BSD appendix must be retained, not duplicated"
+          print("PASS: one official Qt translations attribution added and all previous notices preserved.")
+          print(expected.strip())
+          PY
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: qt-translations-notice-proof
+          path: ${{ runner.temp }}/qt-evidence
+          retention-days: 14
+          if-no-files-found: ignore
