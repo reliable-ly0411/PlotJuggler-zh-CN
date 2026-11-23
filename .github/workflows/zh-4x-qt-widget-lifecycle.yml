@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-name: Run the persistent Qt WASM symbol regression
+name: Verify exact Qt translation source offer and OFL
 on:
   push:
     branches: ['zh-CN-4.x-ci/qt-widget-lifecycle-1459']
@@ -7,61 +7,49 @@ on:
 permissions:
   contents: read
 jobs:
-  glyph-fallback:
+  source-offer:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 9befc7c5bae4bffbdbee91a79c140e83d4b69bb6
+          ref: b48857ab87d3c70a18625df43848d766d24116e9
+          fetch-depth: 2
           persist-credentials: false
-      - name: Restore pinned Qt WASM and Emscripten caches
-        uses: actions/cache/restore@v5
+      - uses: actions/setup-node@v6
         with:
-          path: .qt-wasm
-          key: qt-wasm-6.12.0-multithread-shadertools-v1
-      - uses: actions/cache/restore@v5
-        with:
-          path: .emsdk
-          key: emsdk-5.0.5-linux-x64-v1
-      - name: Prepare the same Qt WebAssembly kit and pinned compiler
+          node-version: '22.22.1'
+      - name: Confirm only the guard changed and run both package source suites
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = 9befc7c5bae4bffbdbee91a79c140e83d4b69bb6
-          source versions.env
-          test "$PJ_QT_VERSION/$PJ_EMSCRIPTEN_VERSION" = '6.12.0/5.0.5'
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends ninja-build libgl1 libegl1 libfontconfig1 libfreetype6 libxkbcommon0 libx11-6 libxcb1 libglib2.0-0 libdbus-1-3
-          if [[ ! -f .qt-wasm/6.12.0/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake ]]; then
-            python3 -m venv "$RUNNER_TEMP/glyph-tools"
-            "$RUNNER_TEMP/glyph-tools/bin/pip" install aqtinstall==3.3.0
-            "$RUNNER_TEMP/glyph-tools/bin/aqt" install-qt linux desktop 6.12.0 linux_gcc_64 --outputdir .qt-wasm -m qtshadertools
-            "$RUNNER_TEMP/glyph-tools/bin/aqt" install-qt all_os wasm 6.12.0 wasm_multithread --outputdir .qt-wasm -m qtshadertools
-          fi
-          if [[ ! -x .emsdk/upstream/emscripten/emcc ]]; then
-            git clone --depth 1 --branch 5.0.5 https://github.com/emscripten-core/emsdk.git .emsdk
-            .emsdk/emsdk install 5.0.5
-            .emsdk/emsdk activate 5.0.5
-          fi
-      - name: Build only an isolated Qt Widgets glyph probe
+          test "$(git rev-parse HEAD)" = b48857ab87d3c70a18625df43848d766d24116e9
+          test "$(git rev-parse HEAD^)" = 5784fc667e83c064f74cd53d3e232b090d5a8fd1
+          test "$(git diff --name-only HEAD^ HEAD)" = tests/wasm/wasm_source_offer.test.mjs
+          node --test tests/wasm/wasm_source_offer.test.mjs tests/wasm/wasm_notices.test.mjs
+      - name: Prove faulty snapshots are rejected by the intended guards
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/glyph-src"
-          export QA_SRC="$RUNNER_TEMP/glyph-src" QA_REPO="$PWD"
-          python3 tests/wasm/cjk_symbol_probe/prepare.py "$QA_SRC"
-          source .emsdk/emsdk_env.sh >/dev/null
-          cmake -S "$QA_SRC" -B "$RUNNER_TEMP/glyph-build" -G Ninja \
-            -DCMAKE_TOOLCHAIN_FILE="$PWD/.qt-wasm/6.12.0/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
-            -DQT_HOST_PATH="$PWD/.qt-wasm/6.12.0/gcc_64" -DCMAKE_BUILD_TYPE=Release
-          cmake --build "$RUNNER_TEMP/glyph-build" --parallel 2 --target pjGlyphProbe
-      - name: Check real Chromium shaping in both catalog samples
-        run: |
-          set -euo pipefail
-          npm ci --prefix tests/wasm
-          (cd tests/wasm && npx playwright install --with-deps chromium)
-          python3 .emsdk/upstream/emscripten/emrun.py --no-browser --serve-after-exit \
-            --hostname 127.0.0.1 --port 8892 "$RUNNER_TEMP/glyph-build/pjGlyphProbe.html" &
-          pid=$!
-          trap 'kill "$pid" 2>/dev/null || true' EXIT
-          for i in {1..20}; do curl -fsS http://127.0.0.1:8892/pjGlyphProbe.html >/dev/null && break; sleep 1; done
-          node tests/wasm/cjk_symbol_probe/check.cjs http://127.0.0.1:8892/pjGlyphProbe.html
+          file=scripts/wasm_source_offer.mjs
+          cp "$file" "$RUNNER_TEMP/original-source-offer"
+          check_failed() {
+            local test_name="$1" reason="$2"
+            if node --test --test-name-pattern="$test_name" tests/wasm/wasm_source_offer.test.mjs >"$RUNNER_TEMP/source-negative.log" 2>&1; then
+              cat "$RUNNER_TEMP/source-negative.log"
+              return 1
+            fi
+            grep -Eq "^not ok .*$test_name" "$RUNNER_TEMP/source-negative.log"
+            grep -F "$reason" "$RUNNER_TEMP/source-negative.log"
+          }
+          sed -i -e "/^  qttranslations: /d" "$file"
+          check_failed 'the merged Chinese catalogs' 'qttranslations appears exactly once'
+          cp "$RUNNER_TEMP/original-source-offer" "$file"
+          sed -i 's/Object.entries(QT_MODULES).map/[...Object.entries(QT_MODULES), ["qttranslations-shadow", "duplicate"]].map/' "$file"
+          check_failed 'the merged Chinese catalogs' 'qttranslations appears exactly once'
+          cp "$RUNNER_TEMP/original-source-offer" "$file"
+          sed -i 's/85929c0c30d6f273f23bd879bb69803ea17b010ab73cab2f8abf95357f6f6bbb/15929c0c30d6f273f23bd879bb69803ea17b010ab73cab2f8abf95357f6f6bbb/' "$file"
+          check_failed 'the merged Chinese catalogs' '85929c0c30d6f273f23bd879bb69803ea17b010ab73cab2f8abf95357f6f6bbb'
+          cp "$RUNNER_TEMP/original-source-offer" "$file"
+          sed -i '/Noto Sans Symbols 2 (browser symbol subset)/d' cmake/PjWasmNotices.cmake
+          check_failed 'the browser notices carry the Symbols 2' 'The input did not match'
+          git restore -- cmake/PjWasmNotices.cmake
+          git diff --exit-code
