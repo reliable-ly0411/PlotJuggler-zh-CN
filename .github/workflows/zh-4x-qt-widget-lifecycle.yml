@@ -15,15 +15,16 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          fetch-depth: 3
+          fetch-depth: 4
           persist-credentials: false
       - name: Verify exact base and narrow Qt scope
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          test "$(git rev-parse HEAD^)" = "a4f0de46c0592d636bb8155fa216025e8d55045a"
-          test "$(git rev-parse HEAD^^)" = "c608442054279694433be07579be04411c07bfe9"
-          diff -u <(printf '%s\n' '.github/workflows/zh-4x-qt-widget-lifecycle.yml' 'pj_app/cmake/PjAppLanguage.cmake' 'pj_app/tests/i18n/CMakeLists.txt' 'pj_app/tests/i18n/check_translation_paths.cmake' 'pj_app/tests/qt_file_dialog_language_test.cpp') <(git diff --name-only HEAD^^ HEAD)
+          test "$(git rev-parse HEAD^)" = "9a883026a9803f26be8fa42157cae7c8db2c6fbe"
+          test "$(git rev-parse HEAD^^)" = "a4f0de46c0592d636bb8155fa216025e8d55045a"
+          test "$(git rev-parse HEAD^^^)" = "c608442054279694433be07579be04411c07bfe9"
+          diff -u <(printf '%s\n' '.github/workflows/zh-4x-qt-widget-lifecycle.yml' 'pj_app/cmake/PjAppLanguage.cmake' 'pj_app/tests/i18n/CMakeLists.txt' 'pj_app/tests/i18n/check_translation_paths.cmake' 'pj_app/tests/qt_file_dialog_language_test.cpp') <(git diff --name-only HEAD^^^ HEAD)
       - name: Restore the existing pinned Qt kit if available
         uses: actions/cache/restore@v5
         with:

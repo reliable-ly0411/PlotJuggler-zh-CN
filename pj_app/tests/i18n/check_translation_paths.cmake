@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
+cmake_minimum_required(VERSION 3.22)
 # Use the real kit and production lrelease helper, without modifying installed Qt.
 foreach(query IN ITEMS QT_INSTALL_PREFIX QT_INSTALL_TRANSLATIONS)
     execute_process(COMMAND "${QT_QMAKE}" -query "${query}" OUTPUT_VARIABLE "${query}"
@@ -7,6 +8,7 @@ endforeach()
 if(NOT IS_ABSOLUTE "${QT_INSTALL_TRANSLATIONS}" OR NOT IS_ABSOLUTE "${QT_INSTALL_PREFIX}")
     message(FATAL_ERROR "The native Qt kit did not report absolute installation paths")
 endif()
+get_filename_component(reference_dir "${TEST_BINARY_DIR}/../translations" ABSOLUTE)
 file(RELATIVE_PATH relative "${QT_INSTALL_PREFIX}" "${QT_INSTALL_TRANSLATIONS}")
 foreach(mode IN ITEMS relative absolute internal missing_cn missing_tw)
     set(source "${TEST_BINARY_DIR}/${mode}/src")
@@ -58,7 +60,7 @@ foreach(mode IN ITEMS relative absolute internal missing_cn missing_tw)
         endif()
         execute_process(COMMAND "${CMAKE_COMMAND}" --build "${binary}" --config Release --target pj_app_lrelease
             RESULT_VARIABLE status OUTPUT_VARIABLE output ERROR_VARIABLE error)
-        if(NOT status EQUAL 0 OR "${output}${error}" MATCHES "cannot be found for language|dropping duplicate messages")
+        if(NOT status EQUAL 0 OR "${output}${error}" MATCHES "cannot be found for language")
             message(FATAL_ERROR "${mode}: catalog merge failed\n${output}${error}")
         endif()
         foreach(language IN ITEMS zh_CN zh_TW)
@@ -66,6 +68,14 @@ foreach(mode IN ITEMS relative absolute internal missing_cn missing_tw)
             file(SIZE "${qm}" size)
             if(size EQUAL 0)
                 message(FATAL_ERROR "${mode}: ${qm} is empty")
+            endif()
+            # Dev deliberately overlaps some stock Qt keys with reviewed app
+            # wording. Compare the real merged bytes, not lrelease's duplicate
+            # warnings (which are also emitted by the normal native build).
+            file(SHA256 "${reference_dir}/plotjuggler4_${language}.qm" expected_hash)
+            file(SHA256 "${qm}" actual_hash)
+            if(NOT actual_hash STREQUAL expected_hash)
+                message(FATAL_ERROR "${mode}: merged ${language} output differs from the normal build")
             endif()
         endforeach()
         message(STATUS "${mode}: built both merged catalogs")
