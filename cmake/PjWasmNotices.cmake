@@ -90,7 +90,8 @@ set(_PJ_QT_NOTICE_PACKAGES
     BundledPcre2 BundledZLIB
     QWasmIntegrationPlugin QGifPlugin QICOPlugin QJpegPlugin QTlsBackendCertOnlyPlugin
     Svg SvgWidgets QSvgPlugin QSvgIconPlugin
-    UiTools)
+    UiTools
+    Translations)
 
 function(_pj_qt_notices output)
   get_filename_component(sbom_dir "${Qt6_DIR}/../../../sbom" ABSOLUTE)
@@ -102,7 +103,7 @@ function(_pj_qt_notices output)
       "follows the list, once.\n")
   set(license_refs "")
   set(license_ids "")
-  foreach(module IN ITEMS qtbase qtsvg qttools)
+  foreach(module IN ITEMS qtbase qtsvg qttools qttranslations)
     set(sbom "${sbom_dir}/${module}-${Qt6_VERSION}.spdx.json")
     if(NOT EXISTS "${sbom}")
       message(FATAL_ERROR "Third-party notices: the Qt kit has no SBOM ${sbom}")
