@@ -1,0 +1,83 @@
+# SPDX-License-Identifier: MPL-2.0
+cmake_minimum_required(VERSION 3.22)
+# Use the real kit and production lrelease helper, without modifying installed Qt.
+foreach(query IN ITEMS QT_INSTALL_PREFIX QT_INSTALL_TRANSLATIONS)
+    execute_process(COMMAND "${QT_QMAKE}" -query "${query}" OUTPUT_VARIABLE "${query}"
+        OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+endforeach()
+if(NOT IS_ABSOLUTE "${QT_INSTALL_TRANSLATIONS}" OR NOT IS_ABSOLUTE "${QT_INSTALL_PREFIX}")
+    message(FATAL_ERROR "The native Qt kit did not report absolute installation paths")
+endif()
+get_filename_component(reference_dir "${TEST_BINARY_DIR}/../translations" ABSOLUTE)
+file(RELATIVE_PATH relative "${QT_INSTALL_PREFIX}" "${QT_INSTALL_TRANSLATIONS}")
+foreach(mode IN ITEMS relative absolute internal missing_cn missing_tw)
+    set(source "${TEST_BINARY_DIR}/${mode}/src")
+    set(binary "${TEST_BINARY_DIR}/${mode}/build")
+    set(partial "${source}/translations")
+    file(REMOVE_RECURSE "${TEST_BINARY_DIR}/${mode}")
+    file(MAKE_DIRECTORY "${source}/modules" "${partial}")
+    set(internal "")
+    set(expected "")
+    if(mode STREQUAL "relative")
+        set(exported "${relative}")
+    elseif(mode STREQUAL "absolute")
+        set(exported "${QT_INSTALL_TRANSLATIONS}")
+    elseif(mode STREQUAL "internal")
+        set(internal "${QT_INSTALL_TRANSLATIONS}")
+        set(exported "${source}/does-not-exist")
+    else()
+        if(mode STREQUAL "missing_cn")
+            set(expected "qtbase_zh_CN.qm")
+            set(present "qtbase_zh_TW.qm")
+        else()
+            set(expected "qtbase_zh_TW.qm")
+            set(present "qtbase_zh_CN.qm")
+        endif()
+        file(COPY "${QT_INSTALL_TRANSLATIONS}/${present}" DESTINATION "${partial}")
+        set(exported "${partial}")
+    endif()
+    file(WRITE "${source}/modules/FindQt6.cmake"
+        "include(\"${QT_CONFIG_DIR}/Qt6Config.cmake\")\n"
+        "set(QT6_INSTALL_PREFIX \"${QT_INSTALL_PREFIX}\")\n"
+        "set(QT6_INSTALL_TRANSLATIONS \"${exported}\")\n"
+        "set(QT_INTERNAL_ABSOLUTE_TRANSLATIONS_DIR \"${internal}\")\n")
+    file(WRITE "${source}/CMakeLists.txt"
+        "cmake_minimum_required(VERSION 3.22)\nproject(translation_path_test LANGUAGES CXX)\n"
+        "list(PREPEND CMAKE_MODULE_PATH \"${source}/modules\")\n"
+        "set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)\n"
+        "include(\"${LANGUAGE_CMAKE}\")\npj_add_app_language()\n")
+    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${TEST_GENERATOR}" -S "${source}" -B "${binary}"
+        RESULT_VARIABLE status OUTPUT_VARIABLE output ERROR_VARIABLE error)
+    if(expected)
+        string(FIND "${output}${error}" "Chinese UI requires ${expected} in" found)
+        if(status EQUAL 0 OR found EQUAL -1)
+            message(FATAL_ERROR "${mode}: expected rejection for ${expected}\n${output}${error}")
+        endif()
+        message(STATUS "${mode}: rejected ${expected}")
+    else()
+        if(NOT status EQUAL 0 OR "${output}${error}" MATCHES "cannot be found for language")
+            message(FATAL_ERROR "${mode}: configuration failed\n${output}${error}")
+        endif()
+        execute_process(COMMAND "${CMAKE_COMMAND}" --build "${binary}" --config Release --target pj_app_lrelease
+            RESULT_VARIABLE status OUTPUT_VARIABLE output ERROR_VARIABLE error)
+        if(NOT status EQUAL 0 OR "${output}${error}" MATCHES "cannot be found for language")
+            message(FATAL_ERROR "${mode}: catalog merge failed\n${output}${error}")
+        endif()
+        foreach(language IN ITEMS zh_CN zh_TW)
+            set(qm "${binary}/translations/plotjuggler4_${language}.qm")
+            file(SIZE "${qm}" size)
+            if(size EQUAL 0)
+                message(FATAL_ERROR "${mode}: ${qm} is empty")
+            endif()
+            # Dev deliberately overlaps some stock Qt keys with reviewed app
+            # wording. Compare the real merged bytes, not lrelease's duplicate
+            # warnings (which are also emitted by the normal native build).
+            file(SHA256 "${reference_dir}/plotjuggler4_${language}.qm" expected_hash)
+            file(SHA256 "${qm}" actual_hash)
+            if(NOT actual_hash STREQUAL expected_hash)
+                message(FATAL_ERROR "${mode}: merged ${language} output differs from the normal build")
+            endif()
+        endforeach()
+        message(STATUS "${mode}: built both merged catalogs")
+    endif()
+endforeach()
