@@ -1,0 +1,241 @@
+# SPDX-License-Identifier: MPL-2.0
+name: PlotJuggler acceptance-only Python reference optimization control
+on:
+  push:
+    branches: ['zh-CN-4.x-ci/dev-symbol-python-control-20261123']
+    paths: ['.github/workflows/zh-4x-dev-symbol-python-control-20261123.yml']
+permissions:
+  contents: read
+env:
+  PJ_SOURCE_SHA: d23073390f2cbb866a75dce691fa0562c9b6fa6a
+  PJ_WASM_URL: http://127.0.0.1:6931/
+  PJ_WASM_PYTHON: '1'
+jobs:
+  python-acceptance-control:
+    if: github.repository == 'reliable-ly0411/PlotJuggler-zh-CN'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 110
+    steps:
+      - name: Use HTTPS for recursive sources
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+      - name: Check out exact control product
+        uses: actions/checkout@v6
+        with:
+          ref: d23073390f2cbb866a75dce691fa0562c9b6fa6a
+          submodules: recursive
+          persist-credentials: false
+      - name: Check out exact original validation controller
+        uses: actions/checkout@v6
+        with:
+          ref: d23073390f2cbb866a75dce691fa0562c9b6fa6a
+          path: .ci-controller
+          persist-credentials: false
+      - name: Check out browser logging overlay only
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          path: .diagnostic-controller
+          sparse-checkout: .github/wasm-python-control
+          persist-credentials: false
+      - name: Verify source and unchanged pybind11 dependency
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PJ_SOURCE_SHA"
+          test "$(git rev-parse 'HEAD^{tree}')" = 270b3187d7c9d60f8426aece523945d536b27aae
+          test "$(git -C .ci-controller rev-parse HEAD)" = "$PJ_SOURCE_SHA"
+          mkdir -p candidate-evidence
+          git rev-parse HEAD > candidate-evidence/commit.txt
+          git rev-parse 'HEAD^{tree}' > candidate-evidence/tree.txt
+          git submodule status --recursive > candidate-evidence/submodules.txt
+          grep -F 'refs/tags/v3.1.0' cmake/PjWasmPython.cmake | tee candidate-evidence/pybind11.txt
+          git diff --exit-code HEAD
+      - name: Read toolchain versions
+        id: versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          source ./versions.env
+          for name in PJ_QT_VERSION PJ_EMSCRIPTEN_VERSION PJ_WASM_NODE_VERSION; do
+            echo "${name}=${!name}" >> "${GITHUB_ENV}"
+          done
+          echo "wasm_qt=${PJ_QT_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "emscripten=${PJ_EMSCRIPTEN_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "node=${PJ_WASM_NODE_VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Install pinned packaging runtime
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ steps.versions.outputs.node }}
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ccache ninja-build python3-pip make pkg-config
+          # Scene2D video cross-compiles dav1d, whose build system is meson.
+          python3 -m pip install --user meson
+          # Runtime libraries for the desktop host Qt tools (qsb bakes the QRhi
+          # shaders offline and transitively links the full Qt GUI stack, even
+          # headless). The lean runner ships none of these, so qsb would die at
+          # load time with exit 127.
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libegl1 libfontconfig1 libfreetype6 libxkbcommon0 \
+            libx11-6 libxcb1 libglib2.0-0 libdbus-1-3
+
+      - name: Cache Qt WebAssembly and host kits
+        id: qt-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .qt-wasm
+          key: qt-wasm-${{ steps.versions.outputs.wasm_qt }}-multithread-shadertools-v1
+
+      - name: Install Qt WebAssembly and host kits
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --user 'aqtinstall==3.3.0'
+          "${HOME}/.local/bin/aqt" install-qt linux desktop \
+            "${PJ_QT_VERSION}" linux_gcc_64 --outputdir .qt-wasm \
+            -m qtshadertools
+          "${HOME}/.local/bin/aqt" install-qt all_os wasm \
+            "${PJ_QT_VERSION}" wasm_multithread --outputdir .qt-wasm \
+            -m qtshadertools
+
+      - name: Cache Emscripten SDK
+        id: emsdk-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .emsdk
+          key: emsdk-${{ steps.versions.outputs.emscripten }}-linux-x64-v1
+
+      - name: Install Emscripten SDK
+        if: steps.emsdk-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch "${PJ_EMSCRIPTEN_VERSION}" \
+            https://github.com/emscripten-core/emsdk.git .emsdk
+          .emsdk/emsdk install "${PJ_EMSCRIPTEN_VERSION}"
+          .emsdk/emsdk activate "${PJ_EMSCRIPTEN_VERSION}"
+
+      - name: Restore WebAssembly compiler cache
+        # restore/save split rather than actions/cache: the implicit post-job
+        # save fires on every run and the SHA-keyed entry is never an exact
+        # hit, so each run persisted a new blob of up to max_size (4 G below)
+        # into billed Depot Cache storage. See linux-ci.yml's "Save ccache".
+        id: ccache_restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.cache/ccache
+          key: ccache-zh4-localized-d23073390f2cbb866a75dce691fa0562c9b6fa6a
+          restore-keys: |
+            ccache-zh4-localized-
+
+      - name: Configure compiler cache
+        run: |
+          ccache --set-config=max_size=4G
+          ccache --set-config=compression=true
+          ccache --set-config=compiler_check=content
+          ccache --set-config=hash_dir=false
+          ccache --set-config=base_dir="${GITHUB_WORKSPACE}"
+          ccache --zero-stats
+
+      - name: Cache the WebAssembly CPython build
+        # A content key (the recipe with its pinned tarball hash, the Emscripten
+        # release): an exact hit or a cold ~4 minute build, so the plain action,
+        # which saves only on a miss, adds one entry per recipe change.
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.cache/pj-wasm-cpython
+          key: wasm-cpython-${{ hashFiles('cmake/PjWasmPython.cmake', 'cmake/wasm_python/**') }}-emsdk-${{ steps.versions.outputs.emscripten }}
+      - name: Build acceptance configuration (shipped defaults, ingress probe on)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .emsdk/emsdk_env.sh >/dev/null
+          cmake -S . -B build-wasm-probe -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE="${PWD}/.qt-wasm/${PJ_QT_VERSION}/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
+            -DQT_HOST_PATH="${PWD}/.qt-wasm/${PJ_QT_VERSION}/gcc_64" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DPJ_BUILD_TESTS=OFF \
+            -DPJ_BUILD_DEMOS=OFF \
+            -DPJ_WASM_ENABLE_INGRESS_PROBE=ON \
+            -DPJ_WASM_SCENE3D_CAPABILITY_PROBE=ON \
+            -DPJ_WASM_WITH_SCENE2D=ON \
+            -DPJ_WASM_WITH_SCENE3D=ON \
+            -DPJ_WASM_WITH_PYTHON=ON \
+            -DPJ_WASM_PYTHON_CACHE_DIR="${HOME}/.cache/pj-wasm-cpython"
+          cmake --build build-wasm-probe \
+            --target pj_app --parallel 2
+          ccache --show-stats
+
+      - name: Package exact original acceptance application only
+        run: node scripts/package_wasm.mjs --source build-wasm-probe/pj_app --output build-wasm-probe/deploy
+      - name: Capture exact acceptance receipt and effective compiler inputs
+        run: |
+          set -euo pipefail
+          mkdir -p validation-receipts
+          python3 .ci-controller/packaging/localization/wasm_receipt.py capture \
+            --role localized --source-repository reliable-ly0411/PlotJuggler-zh-CN --source-sha "$PJ_SOURCE_SHA" \
+            --controller-sha "$PJ_SOURCE_SHA" --kind acceptance \
+            --cache build-wasm-probe/CMakeCache.txt \
+            --package build-wasm-probe/deploy \
+            --output validation-receipts/acceptance.json
+          grep -E '^CMAKE_(C|CXX|EXE_LINKER)_FLAGS_RELEASE:' build-wasm-probe/CMakeCache.txt | tee candidate-evidence/release-flags.txt
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          entries = json.loads(Path('build-wasm-probe/compile_commands.json').read_text())
+          chosen = [x for x in entries if x['file'].endswith(('python_sandbox.cpp', 'python_object_script.cpp'))]
+          assert len(chosen) == 2
+          Path('candidate-evidence/python-compile-commands.json').write_text(json.dumps(chosen, indent=2))
+          for x in chosen:
+              print(x['command'])
+          PY
+          ninja -C build-wasm-probe -t commands pj_app | tail -n 1 > candidate-evidence/pj-app-link-command.txt
+      - name: Install pinned browsers and stage logging-only overlay
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y --no-install-recommends libgl1 libegl1 libgl1-mesa-dri libegl-mesa0
+          cp .diagnostic-controller/.github/wasm-python-control/python.spec.js tests/wasm/python.spec.js
+          node --check tests/wasm/python.spec.js
+          git diff --binary -- tests/wasm/python.spec.js > candidate-evidence/test-overlay.patch
+          test -s candidate-evidence/test-overlay.patch
+          cd tests/wasm
+          npm ci
+          npx playwright install --with-deps chromium firefox
+      - name: Start exact acceptance HTTP package on loopback
+        id: serve
+        run: |
+          set -euo pipefail
+          node scripts/serve_wasm.mjs --root build-wasm-probe/deploy --host 127.0.0.1 --port 6931 >candidate-evidence/server.log 2>&1 &
+          for _ in $(seq 1 50); do curl -fsS -o /dev/null "$PJ_WASM_URL" && break; sleep .2; done
+          curl -fsS -o /dev/null "$PJ_WASM_URL"
+      - name: Execute original Chromium Python cap case, with phase console logging
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        working-directory: tests/wasm
+        run: |
+          set -o pipefail
+          npx playwright test python.spec.js --project=chromium --workers=1 --reporter=line \
+            --grep 'stdlib, value, per-call cost' --output ../../candidate-evidence/chromium \
+            2>&1 | tee ../../candidate-evidence/chromium.txt
+      - name: Execute original Firefox Python cap case, with phase console logging
+        if: ${{ !cancelled() && steps.serve.outcome == 'success' }}
+        working-directory: tests/wasm
+        run: |
+          set -o pipefail
+          xvfb-run -a npx playwright test python.spec.js --project=firefox --workers=1 --reporter=line \
+            --grep 'stdlib, value, per-call cost' --output ../../candidate-evidence/firefox \
+            2>&1 | tee ../../candidate-evidence/firefox.txt
+      - name: Retain exact reference acceptance package and diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-reference-acceptance-d23073390f2cbb866a75dce691fa0562c9b6fa6a-${{ github.run_attempt }}
+          path: |
+            candidate-evidence/
+            validation-receipts/acceptance.json
+            build-wasm-probe/deploy/
+          if-no-files-found: warn
