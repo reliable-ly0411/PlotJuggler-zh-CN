@@ -153,6 +153,8 @@ jobs:
         run: |
           set -euo pipefail
           source .emsdk/emsdk_env.sh >/dev/null
+          # Emscripten supplies the exact target sysroot port; a host zlib cannot satisfy this build.
+          embuilder build zlib
           cmake -S . -B build-wasm-probe -G Ninja \
             -DCMAKE_TOOLCHAIN_FILE="${PWD}/.qt-wasm/${PJ_QT_VERSION}/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
             -DQT_HOST_PATH="${PWD}/.qt-wasm/${PJ_QT_VERSION}/gcc_64" \
