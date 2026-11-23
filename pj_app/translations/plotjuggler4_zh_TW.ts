@@ -4659,6 +4659,22 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <source>The folder %1 is not responding, showing your home folder instead.</source>
         <translation>資料夾 %1 沒有回應，改為顯示您的家目錄。</translation>
     </message>
+    <message>
+        <source>%1 already exists. Do you want to replace it?</source>
+        <translation>%1 已存在。要取代它嗎？</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation>取代</translation>
+    </message>
+    <message>
+        <source>Replace file?</source>
+        <translation>取代檔案？</translation>
+    </message>
 </context>
 <context>
     <name>PJ::FileLoader</name>
@@ -6718,6 +6734,10 @@ for example when the stream is already rectified.</source>
         <source>Not connecting to the AI agent relay %1: it must be an http address on this computer (127.0.0.1).</source>
         <translation>未連線至 AI 智慧體中繼 %1：它必須是本機（127.0.0.1）的 http 位址。</translation>
     </message>
+    <message>
+        <source>Drop the URDF file onto a 3D view.</source>
+        <translation>將 URDF 檔案拖到 3D 視圖上。</translation>
+    </message>
 </context>
 <context>
     <name>PJ::MarkerTimeline</name>
@@ -8388,6 +8408,14 @@ Details: %1</source>
         <source>Fixed by --profile-dir: %1</source>
         <translation>由 --profile-dir 固定為：%1</translation>
     </message>
+    <message>
+        <source>Add a folder with robot packages</source>
+        <translation>加入包含機器人套件的資料夾</translation>
+    </message>
+    <message>
+        <source>Add a folder…</source>
+        <translation>加入資料夾…</translation>
+    </message>
 </context>
 <context>
     <name>PJ::PresetController</name>
@@ -9573,7 +9601,7 @@ Details: %1</source>
     <message>
         <location line="+16"/>
         <source>Folders containing 3D assets</source>
-        <translation>包含三維資源的資料夾</translation>
+        <translation type="vanished">包含三維資源的資料夾</translation>
     </message>
     <message>
         <location line="+91"/>
@@ -9676,6 +9704,14 @@ Details: %1</source>
         <location line="+20"/>
         <source>OK</source>
         <translation>確定</translation>
+    </message>
+    <message>
+        <source>Add your ROS workspace or any folder that holds robot packages: packages are found in its subfolders. The folders in $ROS_PACKAGE_PATH and $AMENT_PREFIX_PATH, and /opt/ros/&lt;distro&gt;/share, are searched too.</source>
+        <translation>加入 ROS 工作區或任一包含機器人套件的資料夾：程式會在其子資料夾中尋找套件，也會搜尋 $ROS_PACKAGE_PATH、$AMENT_PREFIX_PATH 指定的資料夾及 /opt/ros/&lt;distro&gt;/share。</translation>
+    </message>
+    <message>
+        <source>Folders searched for robot packages (package://):</source>
+        <translation>搜尋機器人套件的資料夾（package://）：</translation>
     </message>
 </context>
 <context>
@@ -11329,12 +11365,12 @@ Details: %1</source>
     <message>
         <location line="+26"/>
         <source>Select the folder that contains your robot packages</source>
-        <translation>選擇包含機器人套件的資料夾</translation>
+        <translation type="vanished">選擇包含機器人套件的資料夾</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Package &apos;%1&apos; not found under &apos;%2&apos; - expected a subdirectory named &apos;%1&apos;</source>
-        <translation>在「%2」中找不到套件「%1」；預期應有名為「%1」的子目錄</translation>
+        <translation type="vanished">在「%2」中找不到套件「%1」；預期應有名為「%1」的子目錄</translation>
     </message>
     <message>
         <location line="+49"/>
@@ -11390,6 +11426,14 @@ Details: %1</source>
         <translation>
             <numerusform>  •  %n 個絕對路徑不存在</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Package &apos;%1&apos; not found under &apos;%2&apos; - expected a folder named &apos;%1&apos;</source>
+        <translation>在「%2」下找不到套件「%1」：應有名為「%1」的資料夾</translation>
+    </message>
+    <message>
+        <source>Select your workspace or the folder that contains your robot packages</source>
+        <translation>選取工作區或包含機器人套件的資料夾</translation>
     </message>
 </context>
 <context>
@@ -11493,6 +11537,14 @@ Details: %1</source>
         <location line="+13"/>
         <source>Wireframe:</source>
         <translation>線框：</translation>
+    </message>
+    <message>
+        <source>cannot resolve the package:// reference</source>
+        <translation>無法解析 package:// 參照</translation>
+    </message>
+    <message>
+        <source>package &apos;%1&apos; not found in the mesh search folders</source>
+        <translation>在網格搜尋資料夾中找不到套件「%1」</translation>
     </message>
 </context>
 <context>
@@ -11807,6 +11859,10 @@ Details: %1</source>
         <location line="+12"/>
         <source>Could not create mesh-map shader bindings</source>
         <translation>無法創建模型網格地圖著色器綁定</translation>
+    </message>
+    <message>
+        <source>Software rendering (%1): reduced 3D quality</source>
+        <translation>軟體算繪（%1）：3D 畫質已降低</translation>
     </message>
 </context>
 <context>
