@@ -29,6 +29,28 @@ function(pj_add_app_language)
         target_compile_options(pj_app_language PRIVATE ${PJ_WARNING_FLAGS})
     endif()
 
+    # The full Qt widget vocabulary is required, rather than silently shipping
+    # an English-only file dialog when a minimal Qt kit omits translations.
+    set(qt_translations_dir "${QT_INTERNAL_ABSOLUTE_TRANSLATIONS_DIR}")
+    if(NOT qt_translations_dir)
+        if(IS_ABSOLUTE "${QT6_INSTALL_TRANSLATIONS}")
+            set(qt_translations_dir "${QT6_INSTALL_TRANSLATIONS}")
+        else()
+            set(qt_translations_dir "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_TRANSLATIONS}")
+        endif()
+    endif()
+    # Qt's merge helper otherwise prefixes even an absolute install directory.
+    # Keep the override local to this function, including split-prefix Qt kits.
+    set(QT_INTERNAL_ABSOLUTE_TRANSLATIONS_DIR "${qt_translations_dir}")
+    foreach(language IN ITEMS zh_CN zh_TW)
+        if(NOT EXISTS "${qt_translations_dir}/qtbase_${language}.qm" OR
+           IS_DIRECTORY "${qt_translations_dir}/qtbase_${language}.qm")
+            message(FATAL_ERROR
+                "Chinese UI requires qtbase_${language}.qm in ${qt_translations_dir}. "
+                "Install the Qt translations component matching this Qt kit.")
+        endif()
+    endforeach()
+
     # Qt6.9+ can merge Qt's own strings into the embedded catalog. There is no
     # runtime dependency on a developer machine's Qt translations directory.
     qt_add_lrelease(
