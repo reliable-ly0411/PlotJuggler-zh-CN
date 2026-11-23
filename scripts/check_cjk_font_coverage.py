@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 from fontTools.ttLib import TTFont
 ROOT = Path(__file__).resolve().parents[1]
 cmap = TTFont(ROOT / 'resources/fonts/NotoSansSC/NotoSansSC-Subset.otf').getBestCmap()
+with TTFont(ROOT / 'resources/fonts/NotoSansSymbols2/NotoSansSymbols2-Subset.ttf') as symbols:
+    assert 0x25B8 in symbols.getBestCmap(), 'Noto Sans Symbols 2: missing U+25B8 menu separator'
 for language in ('zh_CN', 'zh_TW'):
     catalog = ROOT / f'pj_app/translations/plotjuggler4_{language}.ts'
     text = ''.join(''.join(t.itertext()) for t in ET.parse(catalog).iter('translation'))

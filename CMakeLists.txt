@@ -19,6 +19,14 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# This isolated WASM comparison changes optimization only; no feature or resource switches.
+if(EMSCRIPTEN AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_C_FLAGS_RELEASE "-Oz -DNDEBUG" CACHE STRING "WASM size experiment C flags" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "-Oz -DNDEBUG" CACHE STRING "WASM size experiment C++ flags" FORCE)
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-Oz" CACHE STRING "WASM size experiment executable linker flags" FORCE)
+endif()
+
 # MainWindow.cpp exceeds MSVC's default object section limit (C1128), at least
 # when built with embedded (/Z7) debug info.
 add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/bigobj>)

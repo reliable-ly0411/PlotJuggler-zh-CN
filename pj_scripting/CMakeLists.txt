@@ -205,6 +205,11 @@ endif()
 # Header-only; the browser build fetches it too (PjWasmDependencies.cmake). Not needed by the standalone core above.
 find_package(tsl-robin-map REQUIRED)
 
+# Isolated WASM comparison: keep global compilation/linking at -Oz, except this translation unit.
+if(EMSCRIPTEN AND PJ_WASM_WITH_PYTHON)
+  set_property(SOURCE src/python_sandbox.cpp APPEND PROPERTY COMPILE_OPTIONS "$<$<CONFIG:Release>:-O3>")
+endif()
+
 add_library(pj_scripting STATIC ${PJ_SCRIPTING_SOURCES})
 target_compile_features(pj_scripting PUBLIC cxx_std_20)
 set_target_properties(pj_scripting PROPERTIES POSITION_INDEPENDENT_CODE ON)
