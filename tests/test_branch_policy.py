@@ -33,8 +33,23 @@ class BranchPolicyTest(unittest.TestCase):
         for forbidden in ["contents: write", "pull_request_target:", "gh release", "gh api",
                           "git push", "action-gh-release", "  publish:", "    tags:"]:
             self.assertNotIn(forbidden, text)
-        self.assertIn("zh-CN-4.x-dev", text)
-        self.assertIn("zh-CN-4.x-*/**", text)
+
+    def test_development_workflow_avoids_duplicate_topic_pushes(self):
+        text = (ROOT / ".github/workflows/zh-4x-ci.yml").read_text(encoding="utf-8")
+        events = text.split("\non:\n", 1)[1].split("\n\n", 1)[0]
+        push, pull_request = events.split("\n  pull_request:\n", 1)
+        pull_request, manual = pull_request.split("\n  workflow_dispatch:\n", 1)
+
+        def branch_filters(section):
+            line = next(line for line in section.splitlines() if line.startswith("    branches:"))
+            return {item.strip().strip("'") for item in line.split("[", 1)[1].rstrip("]").split(",")}
+
+        self.assertEqual(branch_filters(push), {
+            "zh-CN-4.x", "zh-CN-4.x-dev", "zh-CN-4.x-ci/**", "zh-CN-4.x-release/**",
+        })
+        self.assertEqual(branch_filters(pull_request), {"zh-CN-4.x", "zh-CN-4.x-dev"})
+        self.assertIn("windows_native_build:", manual)
+        self.assertIn("startsWith(github.ref_name, 'zh-CN-4.x-ci/manual-build-')", text)
 
 
     def test_new_upstream_workflows_do_not_enable_fork_publication(self):
