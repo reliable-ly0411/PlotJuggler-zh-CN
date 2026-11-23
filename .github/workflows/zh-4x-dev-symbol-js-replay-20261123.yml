@@ -1,0 +1,126 @@
+# SPDX-License-Identifier: MPL-2.0
+name: Exact localized WASM JS test replay (no build)
+on:
+  push:
+    branches: ['zh-CN-4.x-ci/dev-symbol-js-replay-20261123']
+    paths: ['.github/workflows/zh-4x-dev-symbol-js-replay-20261123.yml']
+permissions:
+  actions: read
+  contents: read
+jobs:
+  artifact-replay:
+    if: github.repository == 'reliable-ly0411/PlotJuggler-zh-CN'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox]
+    env:
+      PJ_WASM_URL: http://127.0.0.1:6931/
+      PJ_WASM_PYTHON: '1'
+      REPLAY_BROWSER: ${{ matrix.browser }}
+    steps:
+      - name: Check out exact original product
+        uses: actions/checkout@v6
+        with:
+          ref: 09f054a9fc1e0d15c48ad67e349c7508d61140dc
+          persist-credentials: false
+      - name: Check out exact original acceptance controller
+        uses: actions/checkout@v6
+        with:
+          ref: 09f054a9fc1e0d15c48ad67e349c7508d61140dc
+          path: .ci-controller
+          persist-credentials: false
+      - name: Check out isolated test overlays
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          path: .replay-controller
+          sparse-checkout: .github/wasm-js-replay/
+          persist-credentials: false
+      - name: Pin original ZIP and verify full original acceptance receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          repo=reliable-ly0411/PlotJuggler-zh-CN
+          src=09f054a9fc1e0d15c48ad67e349c7508d61140dc
+          test "$(git rev-parse HEAD)" = "$src"
+          test "$(git rev-parse 'HEAD^{tree}')" = e2ee95bb122de06b5d480b161bbcd045be626e8f
+          test "$(gh api "repos/$repo/actions/artifacts/14791551769" --jq .workflow_run.id)" = 45109925011
+          test "$(gh api "repos/$repo/actions/artifacts/14791551769" --jq .workflow_run.head_sha)" = "$src"
+          zip="$RUNNER_TEMP/plot-oz-accepted.zip"
+          gh api "repos/$repo/actions/artifacts/14791551769/zip" > "$zip"
+          echo "0adcdc5dcc44e6f1bac913a50a38406ad4d7bad3153bc9b2e84bc5df8e98aa7e  $zip" | sha256sum -c -
+          unzip -q "$zip"
+          python3 .ci-controller/packaging/localization/wasm_receipt.py verify \
+            --role localized --source-repository "$repo" --source-sha "$src" --controller-sha "$src" --kind acceptance \
+            --package build-wasm-probe/deploy --package build-wasm-probe/deploy-presets \
+            --extra 'build-wasm-probe/pj_app/scene3d_capability_probe.*' \
+            --extra build-wasm-probe/pj_app/qtloader.js --extra build-wasm-probe/pj_app/qtlogo.svg \
+            --extra .emsdk/upstream/emscripten/emrun.py --output validation-receipts/acceptance.json
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.22.1'
+      - name: Stage browser-only test overlays and install pinned browser
+        run: |
+          set -euo pipefail
+          for spec in log_widget_targeted.spec.js python.spec.js scene2d.spec.js; do
+            cp ".replay-controller/.github/wasm-js-replay/$spec" "tests/wasm/$spec"
+            node --check "tests/wasm/$spec"
+          done
+          if [[ "$REPLAY_BROWSER" == firefox ]]; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends libgl1 libegl1 libgl1-mesa-dri libegl-mesa0
+          fi
+          cd tests/wasm
+          npm ci
+          npx playwright install --with-deps "$REPLAY_BROWSER"
+      - name: Serve exact archived assets on loopback
+        id: ready
+        run: |
+          set -euo pipefail
+          mkdir -p replay-evidence
+          node scripts/serve_wasm.mjs --root build-wasm-probe/deploy --host 127.0.0.1 --port 6931 >replay-evidence/server.log 2>&1 &
+          for _ in $(seq 1 50); do curl -fsS -o /dev/null "$PJ_WASM_URL" && break; sleep 0.2; done
+          curl -fsS -o /dev/null "$PJ_WASM_URL"
+      - name: Replay real Log binding and native/legacy restoration
+        if: ${{ !cancelled() && steps.ready.outcome == 'success' }}
+        working-directory: tests/wasm
+        run: |
+          set -o pipefail
+          prefix=()
+          if [[ "$REPLAY_BROWSER" == firefox ]]; then prefix=(xvfb-run -a); fi
+          "${prefix[@]}" npx playwright test log_widget_targeted.spec.js --project="$REPLAY_BROWSER" \
+            --grep 'a native Log restores' --workers=1 --reporter=line --output ../../replay-evidence/log-results \
+            2>&1 | tee ../../replay-evidence/log.txt
+      - name: Replay on-demand Python and record stage markers before timeout
+        if: ${{ !cancelled() && steps.ready.outcome == 'success' }}
+        working-directory: tests/wasm
+        run: |
+          set -o pipefail
+          prefix=()
+          if [[ "$REPLAY_BROWSER" == firefox ]]; then prefix=(xvfb-run -a); fi
+          "${prefix[@]}" npx playwright test python.spec.js --project="$REPLAY_BROWSER" \
+            --grep 'stdlib, value, per-call cost' --workers=1 --reporter=line --output ../../replay-evidence/python-results \
+            2>&1 | tee ../../replay-evidence/python.txt
+      - name: Replay original English compositor golden and record geometry
+        if: ${{ !cancelled() && steps.ready.outcome == 'success' && matrix.browser == 'chromium' }}
+        working-directory: tests/wasm
+        env:
+          PJ_WASM_TEST_LANGUAGE: en_US
+        run: |
+          set -o pipefail
+          npx playwright test scene2d.spec.js --project=chromium --workers=1 --reporter=line \
+            --grep 'Foxglove JPEG, annotations, split Scene2D docks, and recreation render' \
+            --output ../../replay-evidence/scene2d-results 2>&1 | tee ../../replay-evidence/scene2d.txt
+      - name: Retain screenshots, logs and unchanged acceptance receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: exact-oz-js-replay-${{ matrix.browser }}-${{ github.run_attempt }}
+          path: |
+            replay-evidence/
+            validation-receipts/acceptance.json
+          if-no-files-found: warn
