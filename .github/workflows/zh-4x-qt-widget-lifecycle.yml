@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: MPL-2.0
+name: Exact dev Qt widget language lifecycle
+on:
+  push:
+    branches: ['zh-CN-4.x-ci/qt-widget-lifecycle-1459']
+    paths: ['.github/workflows/zh-4x-qt-widget-lifecycle.yml']
+permissions:
+  contents: read
+jobs:
+  qt-widgets:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Verify exact base and test-only scope
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse HEAD^)" = "c608442054279694433be07579be04411c07bfe9"
+          diff -u <(printf '%s\n' '.github/workflows/zh-4x-qt-widget-lifecycle.yml' 'pj_app/tests/i18n/CMakeLists.txt' 'pj_app/tests/qt_file_dialog_language_test.cpp') <(git diff --name-only HEAD^ HEAD)
+      - name: Restore the existing pinned Qt kit if available
+        uses: actions/cache/restore@v5
+        with:
+          path: .qt
+          key: stable-delta-qt-linux-${{ hashFiles('versions.env') }}
+      - name: Install and identify exact Qt, without Conan or whole app
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev libxcb-cursor0 libfontconfig1 libdbus-1-3
+          python3 -m venv "$RUNNER_TEMP/qt-widget-tools"
+          "$RUNNER_TEMP/qt-widget-tools/bin/pip" install aqtinstall==3.3.0
+          export PATH="$RUNNER_TEMP/qt-widget-tools/bin:$PATH"
+          source ./versions.env
+          test "$PJ_QT_VERSION" = 6.12.0
+          ./scripts/install_qt6.sh
+          test "$(./.qt/6.12.0/gcc_64/bin/qmake -query QT_VERSION)" = 6.12.0
+          test -s .qt/6.12.0/gcc_64/translations/qtbase_zh_CN.qm
+          test -s .qt/6.12.0/gcc_64/translations/qtbase_zh_TW.qm
+      - name: Compile only three isolated i18n executables and run actual test functions
+        run: |
+          set -euo pipefail
+          cmake -S pj_app/tests/i18n -B "$RUNNER_TEMP/pj-qt-widget-qa" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PWD/.qt/6.12.0/gcc_64"
+          cmake --build "$RUNNER_TEMP/pj-qt-widget-qa" --parallel 2 --target \
+            qt_file_dialog_language_test app_language_test browser_language_test
+          ctest --test-dir "$RUNNER_TEMP/pj-qt-widget-qa" --output-on-failure --no-tests=error --verbose \
+            -R '^(QtFileDialogLanguageTest|AppLanguageTest|BrowserLanguageTest)$'
+          log="$RUNNER_TEMP/pj-qt-widget-qa/Testing/Temporary/LastTest.log"
+          grep -F 'PASS   : QtFileDialogLanguageTest::repeatedNonNativeFileDialogsUseSelectedLanguage()' "$log"
+          grep -F 'PASS   : QtFileDialogLanguageTest::repeatedWidgetLookupsDoNotChangeTheNumericLocale()' "$log"
