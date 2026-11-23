@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-name: Probe Qt WASM U+25B8 fallback
+name: Test the branch's reproducible symbol generator
 on:
   push:
     branches: ['zh-CN-4.x-ci/qt-widget-lifecycle-1459']
@@ -7,210 +7,29 @@ on:
 permissions:
   contents: read
 jobs:
-  glyph-fallback:
+  noto-symbols:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 50003de47c6629e2544f7ad8784e9cdce049738e
+          ref: e4ad75efcba8f8e1bd7ba48ba25bfc3c646addc6
           persist-credentials: false
-      - name: Restore pinned Qt WASM and Emscripten caches
-        uses: actions/cache/restore@v5
-        with:
-          path: .qt-wasm
-          key: qt-wasm-6.12.0-multithread-shadertools-v1
-      - uses: actions/cache/restore@v5
-        with:
-          path: .emsdk
-          key: emsdk-5.0.5-linux-x64-v1
-      - name: Prepare the same Qt WebAssembly kit and pinned compiler
+      - name: Download the exact official release and reproduce the PR font
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = 50003de47c6629e2544f7ad8784e9cdce049738e
-          source versions.env
-          test "$PJ_QT_VERSION/$PJ_EMSCRIPTEN_VERSION" = '6.12.0/5.0.5'
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends ninja-build libgl1 libegl1 libfontconfig1 libfreetype6 libxkbcommon0 libx11-6 libxcb1 libglib2.0-0 libdbus-1-3
-          if [[ ! -f .qt-wasm/6.12.0/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake ]]; then
-            python3 -m venv "$RUNNER_TEMP/glyph-tools"
-            "$RUNNER_TEMP/glyph-tools/bin/pip" install aqtinstall==3.3.0
-            "$RUNNER_TEMP/glyph-tools/bin/aqt" install-qt linux desktop 6.12.0 linux_gcc_64 --outputdir .qt-wasm -m qtshadertools
-            "$RUNNER_TEMP/glyph-tools/bin/aqt" install-qt all_os wasm 6.12.0 wasm_multithread --outputdir .qt-wasm -m qtshadertools
-          fi
-          if [[ ! -x .emsdk/upstream/emscripten/emcc ]]; then
-            git clone --depth 1 --branch 5.0.5 https://github.com/emscripten-core/emsdk.git .emsdk
-            .emsdk/emsdk install 5.0.5
-            .emsdk/emsdk activate 5.0.5
-          fi
-      - name: Build only an isolated Qt Widgets glyph probe
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/glyph-src"
-          export QA_SRC="$RUNNER_TEMP/glyph-src" QA_REPO="$PWD"
-          python3 - <<'PY'
-          import json
-          import os
-          import re
-          import shutil
-          from pathlib import Path
-          import xml.etree.ElementTree as ET
-          repo = Path(os.environ["QA_REPO"])
-          dest = Path(os.environ["QA_SRC"])
-          for f in ("BundledFont.cpp", "BundledFont.h"):
-              shutil.copyfile(repo / "pj_app/src" / f, dest / f)
-          # The WASM resources come from the exact production qrc and binary blobs.
-          shutil.copytree(repo / "resources/fonts/NotoSansSC", dest / "NotoSansSC")
-          shutil.copytree(repo / "resources/fonts/NotoSansSymbols2", dest / "NotoSansSymbols2")
-          faces = ("PlotJugglerSans-Regular.ttf", "PlotJugglerSans-Bold.ttf")
-          for f in faces:
-              shutil.copyfile(repo / "resources/fonts/PlotJugglerSans" / f, dest / f)
-          (dest / "primary.qrc").write_text('<RCC><qresource prefix="/resources/fonts/PlotJugglerSans">' +
-              ''.join(f"<file>{f}</file>" for f in faces) + '</qresource></RCC>')
-          s = (repo / "pj_app/src/main.cpp").read_text()
-          start = s.index("  if (const QString family = PJ::registerBundledFont(")
-          end = s.index("\n#else", start)
-          setup = s[start:end]
-          assert setup.count("QFontDatabase::addApplicationFont") == 2 and setup.count("#ifdef PJ_TARGET_WASM") == 1
-          (dest / "setup.inc").write_text(setup.replace("\n#ifdef PJ_TARGET_WASM", ""))
-          samples = []
-          for lang in ("zh_CN", "zh_TW"):
-              r = ET.parse(repo / f"pj_app/translations/plotjuggler4_{lang}.ts").getroot()
-              m = [n.findtext("translation") for c in r.findall("context") if c.findtext("name") == "MarketplaceWindow"
-                   for n in c.findall("message") if n.findtext("source") == "Plugin settings — open Preferences ▸ Plugins"]
-              assert len(m) == 1 and m[0].count("▸") == 1 and "Preferences" not in m[0], (lang, m)
-              samples.append(f'{{QStringLiteral("{lang}"), QStringLiteral({json.dumps(m[0], ensure_ascii=False)})}}')
-          (dest / "samples.inc").write_text(",\n".join(samples))
-          PY
-          cat >"$QA_SRC/CMakeLists.txt" <<'CMAKE'
-          cmake_minimum_required(VERSION 3.22)
-          project(pjGlyphProbe LANGUAGES CXX)
-          find_package(Qt6 6.12.0 EXACT REQUIRED COMPONENTS Widgets)
-          set(CMAKE_AUTORCC ON)
-          qt_add_executable(pjGlyphProbe main.cpp BundledFont.cpp primary.qrc NotoSansSC/wasm-cjk.qrc)
-          target_link_libraries(pjGlyphProbe PRIVATE Qt6::Widgets)
-          CMAKE
-          cat >"$QA_SRC/main.cpp" <<'CPP'
-          #include <QApplication>
-          #include <QFontDatabase>
-          #include <QGlyphRun>
-          #include <QLabel>
-          #include <QRawFont>
-          #include <QPainterPath>
-          #include <QTextLayout>
-          #include <QTextOption>
-          #include <QTimer>
-          #include <QVBoxLayout>
-          #include <array>
-          #include "BundledFont.h"
-          using namespace Qt::StringLiterals;
-          int main(int argc, char** argv) {
-            QApplication app(argc, argv);
-          #include "setup.inc"
-            QWidget window;
-            auto* rows = new QVBoxLayout(&window);
-            const std::array<QPair<QString, QString>, 2> samples{{
-          #include "samples.inc"
-            }};
-            std::array<QLabel*, 2> labels{};
-            for (std::size_t i=0; i<labels.size(); ++i) {
-              labels[i] = new QLabel(samples[i].second, &window);
-              auto font = labels[i]->font();
-              font.setPixelSize(25);
-              labels[i]->setFont(font);
-              labels[i]->setTextFormat(Qt::PlainText);
-              rows->addWidget(labels[i]);
-            }
-            window.resize(650, 150);
-            window.show();
-            QTimer::singleShot(0, &window, [&] {
-              for (std::size_t i=0; i<labels.size(); ++i) {
-                const auto* label = labels[i];
-                const auto index = label->text().indexOf(QChar(0x25b8));
-                QTextLayout layout(label->text(), label->font());
-                QTextOption options;
-                options.setWrapMode(QTextOption::NoWrap);
-                layout.setTextOption(options);
-                layout.beginLayout();
-                auto line = layout.createLine();
-                if (!line.isValid()) qFatal("No Qt text line was laid out");
-                line.setLineWidth(650);
-                layout.endLayout();
-                if (index < 0 || line.textStart() != 0 || line.textLength() != label->text().size())
-                  qFatal("The Qt line does not cover the full Chinese sample");
-                const auto flags = QTextLayout::RetrieveGlyphIndexes | QTextLayout::RetrieveGlyphPositions |
-                    QTextLayout::RetrieveStringIndexes;
-                int total=0, missing=0, matches=0, glyph=0;
-                for (const auto& run : line.glyphRuns(0, line.textLength(), flags)) {
-                  for (auto g : run.glyphIndexes()) {
-                    ++total;
-                    missing += g == 0;
-                  }
-                }
-                bool cmap=false, outline=false, split=false;
-                QString family;
-                const auto targeted = line.glyphRuns(static_cast<int>(index), 1, flags);
-                for (const auto& run : targeted) {
-                  split = split || run.flags().testFlag(QGlyphRun::SplitLigature);
-                  for (auto g : run.glyphIndexes()) {
-                    ++matches;
-                    const auto raw = run.rawFont();
-                    family = raw.familyName();
-                    glyph = static_cast<int>(g);
-                    outline = raw.isValid() && !raw.pathForGlyph(g).isEmpty();
-                    const auto own = raw.glyphIndexesForString(QString(QChar(0x25b8)));
-                    cmap = own.size() == 1 && own.front() == g;
-                  }
-                }
-                if (total == 0 || matches != 1 || missing || !glyph || split || family != u"Noto Sans Symbols 2"_s || !cmap || !outline)
-                  qFatal("PJ_QA_FAIL %s index=%lld total=%d ranges=%lld matches=%d missing=%d glyph=%d family=%s cmap=%d outline=%d split=%d",
-                      qPrintable(samples[i].first), static_cast<long long>(index), total, static_cast<long long>(targeted.size()),
-                      matches, missing, glyph, qPrintable(family), cmap, outline, split);
-                qInfo("PJ_QA_GLYPH %s index=%lld glyph=%d family=%s cmap=%d outline=%d missing=%d",
-                    qPrintable(samples[i].first), static_cast<long long>(index), glyph, qPrintable(family), cmap, outline, missing);
-              }
-            });
-            return app.exec();
-          }
-          CPP
-          source .emsdk/emsdk_env.sh >/dev/null
-          cmake -S "$QA_SRC" -B "$RUNNER_TEMP/glyph-build" -G Ninja \
-            -DCMAKE_TOOLCHAIN_FILE="$PWD/.qt-wasm/6.12.0/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
-            -DQT_HOST_PATH="$PWD/.qt-wasm/6.12.0/gcc_64" -DCMAKE_BUILD_TYPE=Release
-          cmake --build "$RUNNER_TEMP/glyph-build" --parallel 2 --target pjGlyphProbe
-      - name: Check real Chromium shaping in both catalog samples
-        run: |
-          set -euo pipefail
-          npm ci --prefix tests/wasm
-          (cd tests/wasm && npx playwright install --with-deps chromium)
-          python3 .emsdk/upstream/emscripten/emrun.py --no-browser --serve-after-exit \
-            --hostname 127.0.0.1 --port 8892 "$RUNNER_TEMP/glyph-build/pjGlyphProbe.html" &
-          pid=$!
-          trap 'kill "$pid" 2>/dev/null || true' EXIT
-          for i in {1..20}; do curl -fsS http://127.0.0.1:8892/pjGlyphProbe.html >/dev/null && break; sleep 1; done
-          cd tests/wasm
-          node <<'JS'
-          const { chromium } = require('@playwright/test');
-          (async () => {
-            const browser = await chromium.launch();
-            const page = await browser.newPage();
-            const markers = new Map();
-            const errors = [];
-            try {
-              page.on('pageerror', e => errors.push(String(e)));
-              page.on('console', m => {
-                const t = m.text();
-                const match = t.match(/PJ_QA_GLYPH (zh_CN|zh_TW) index=\d+ glyph=[1-9]\d* family=Noto Sans Symbols 2 cmap=1 outline=1 missing=0/);
-                if (match) markers.set(match[1], match[0]);
-                if (t.includes('PJ_QA_FAIL')) errors.push(t);
-              });
-              await page.goto('http://127.0.0.1:8892/pjGlyphProbe.html');
-              for (let i = 0; i < 120 && markers.size < 2 && errors.length === 0; ++i)
-                await new Promise(r => setTimeout(r, 500));
-              if (markers.size !== 2 || errors.length) throw Error(JSON.stringify({markers:[...markers], errors}));
-              for (const line of markers.values()) console.log(line);
-            } finally {
-              await browser.close();
-            }
-          })().catch(e => { console.error(e); process.exitCode = 1 });
-          JS
+          test "$(git rev-parse HEAD)" = e4ad75efcba8f8e1bd7ba48ba25bfc3c646addc6
+          test "$(git rev-parse HEAD:resources/fonts/NotoSansSymbols2/NotoSansSymbols2-Subset.ttf)" = 99f0a5e2b4b7afa3e44155a477b3d8317597efa2
+          sed -n '1p' resources/fonts/NotoSansSymbols2/OFL.txt
+          python3 -m venv "$RUNNER_TEMP/font-repro"
+          "$RUNNER_TEMP/font-repro/bin/pip" install --disable-pip-version-check --no-deps fonttools==4.61.1
+          curl --proto '=https' --proto-redir '=https' --fail --silent --show-error --location --max-time 90 \
+             'https://github.com/notofonts/symbols/releases/download/NotoSansSymbols2-v2.008/NotoSansSymbols2-v2.008.zip' \
+             --output "$RUNNER_TEMP/noto-symbols-v2.008.zip"
+          test "$(wc -c < "$RUNNER_TEMP/noto-symbols-v2.008.zip")" = 2331441
+          "$RUNNER_TEMP/font-repro/bin/python" tests/test_symbol_font_regeneration.py -v
+          "$RUNNER_TEMP/font-repro/bin/python" scripts/make_cjk_font_subset.py \
+            --symbols-release "$RUNNER_TEMP/noto-symbols-v2.008.zip" --check
+          "$RUNNER_TEMP/font-repro/bin/python" scripts/make_cjk_font_subset.py \
+            --symbols-release "$RUNNER_TEMP/noto-symbols-v2.008.zip"
+          git diff --exit-code -- resources/fonts
