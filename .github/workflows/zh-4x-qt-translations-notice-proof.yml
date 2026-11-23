@@ -42,7 +42,14 @@ jobs:
           qttools ca0a27374bc36f9dcb4fed9eb2de3f7b82145b57933476204aab80920fb99ce9
           qttranslations 85b21a5ff33cbc11cab7e87bc949fd4eec97db8a55a47fda17012c366ca5dc45
           QT_ARCHIVES
-          kit="$RUNNER_TEMP/qt-kit/6.12.0/wasm_multithread"
+          find "$RUNNER_TEMP/qt-kit" -type f \( -name '*.spdx.json' -o -name 'qtbase_zh_*.qm' \) -printf '%P\n' | sort | tee "$RUNNER_TEMP/qt-evidence/kit-file-list.txt"
+          mapfile -t manifests < <(find "$RUNNER_TEMP/qt-kit" -type f -path '*/sbom/qttranslations-6.12.0.spdx.json')
+          if [[ ${#manifests[@]} != 1 ]]; then
+            printf 'Expected exactly one installed Qt translations SBOM, got %d\n' "${#manifests[@]}" >&2
+            exit 1
+          fi
+          kit=${manifests[0]%/sbom/qttranslations-6.12.0.spdx.json}
+          printf 'QT_KIT_PATH=%s\n' "$kit" >>"$GITHUB_ENV"
           test -s "$kit/translations/qtbase_zh_CN.qm"
           test -s "$kit/translations/qtbase_zh_TW.qm"
           for module in qtbase qtsvg qttools qttranslations; do test -s "$kit/sbom/$module-6.12.0.spdx.json"; done
@@ -52,7 +59,7 @@ jobs:
         run: |
           set -euo pipefail
           d="$RUNNER_TEMP/qt-evidence"
-          kit="$RUNNER_TEMP/qt-kit/6.12.0/wasm_multithread"
+          kit="$QT_KIT_PATH"
           git show "$BASE_SHA:cmake/PjWasmNotices.cmake" >"$RUNNER_TEMP/previous-notices.cmake"
           cat >"$RUNNER_TEMP/run-qt-notices.cmake" <<'CMAKE'
           cmake_minimum_required(VERSION 3.19)
