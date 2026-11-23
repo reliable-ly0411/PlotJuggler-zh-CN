@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-name: Exact dev Qt widget and translation paths
+name: Exact Qt RHI translation extraction
 on:
   push:
     branches: ['zh-CN-4.x-ci/qt-widget-lifecycle-1459']
@@ -15,16 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          fetch-depth: 4
+          fetch-depth: 5
           persist-credentials: false
-      - name: Verify exact base and narrow Qt scope
+      - name: Verify exact development and translation sources
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          test "$(git rev-parse HEAD^)" = "9a883026a9803f26be8fa42157cae7c8db2c6fbe"
-          test "$(git rev-parse HEAD^^)" = "a4f0de46c0592d636bb8155fa216025e8d55045a"
-          test "$(git rev-parse HEAD^^^)" = "c608442054279694433be07579be04411c07bfe9"
-          diff -u <(printf '%s\n' '.github/workflows/zh-4x-qt-widget-lifecycle.yml' 'pj_app/cmake/PjAppLanguage.cmake' 'pj_app/tests/i18n/CMakeLists.txt' 'pj_app/tests/i18n/check_translation_paths.cmake' 'pj_app/tests/qt_file_dialog_language_test.cpp') <(git diff --name-only HEAD^^^ HEAD)
+          test "$(git rev-parse HEAD^)" = "89fb65101bd7b2bf11c2f4d00ad6b124795108e6"
+          test "$(git rev-parse HEAD^^^^)" = "c608442054279694433be07579be04411c07bfe9"
+          git diff --exit-code HEAD^^^^ HEAD -- pj_scene3D/widgets/rhi pj_app/translations
       - name: Restore the existing pinned Qt kit if available
         uses: actions/cache/restore@v5
         with:
@@ -44,20 +43,35 @@ jobs:
           test "$(./.qt/6.12.0/gcc_64/bin/qmake -query QT_VERSION)" = 6.12.0
           test -s .qt/6.12.0/gcc_64/translations/qtbase_zh_CN.qm
           test -s .qt/6.12.0/gcc_64/translations/qtbase_zh_TW.qm
-      - name: Compile only three isolated i18n executables and run actual test functions
+      - name: Extract real RHI strings and require both current Chinese translations
         run: |
           set -euo pipefail
-          cmake -S pj_app/tests/i18n -B "$RUNNER_TEMP/pj-qt-widget-qa" -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PWD/.qt/6.12.0/gcc_64"
-          cmake --build "$RUNNER_TEMP/pj-qt-widget-qa" --parallel 2 --target \
-            qt_file_dialog_language_test app_language_test browser_language_test
-          ctest --test-dir "$RUNNER_TEMP/pj-qt-widget-qa" --output-on-failure --no-tests=error --verbose \
-            -R '^(QtFileDialogLanguageTest|AppLanguageTest|BrowserLanguageTest|QtTranslationPaths)$'
-          log="$RUNNER_TEMP/pj-qt-widget-qa/Testing/Temporary/LastTest.log"
-          grep -F 'PASS   : QtFileDialogLanguageTest::repeatedNonNativeFileDialogsUseSelectedLanguage()' "$log"
-          grep -F 'PASS   : QtFileDialogLanguageTest::repeatedWidgetLookupsDoNotChangeTheNumericLocale()' "$log"
-          for result in 'relative: built both merged catalogs' 'absolute: built both merged catalogs' \
-            'internal: built both merged catalogs' 'missing_cn: rejected qtbase_zh_CN.qm' \
-            'missing_tw: rejected qtbase_zh_TW.qm'; do
-            grep -F -- "$result" "$log"
-          done
+          lupdate="$PWD/.qt/6.12.0/gcc_64/bin/lupdate"
+          "$lupdate" -version
+          test "$("$lupdate" -version 2>&1)" = 'lupdate version 6.12.0'
+          "$lupdate" pj_scene3D/widgets/rhi/rhi_scene_pass.h \
+            pj_scene3D/widgets/rhi/passes/{gridmap,marker,meshmap,model,occupancy,voxel}_rhi_pass.cpp \
+            -locations none -no-obsolete -ts "$RUNNER_TEMP/rhi-extracted.ts"
+          python3 - "$RUNNER_TEMP/rhi-extracted.ts" <<'PY'
+          import json
+          import sys
+          import xml.etree.ElementTree as ET
+          expected = {tuple(item) for item in json.loads("[[\"pj::scene3d::MeshDiagnostics\",\"Grid map %1 x %2 exceeds this GPU's texture or draw limits\"],[\"pj::scene3d::SceneViewWidget\",\"A model exceeds the decoded-texture limit\"],[\"pj::scene3d::SceneViewWidget\",\"A model GPU buffer exceeds the 4 GiB buffer limit\"],[\"pj::scene3d::SceneViewWidget\",\"Could not allocate a model material texture\"],[\"pj::scene3d::SceneViewWidget\",\"Could not allocate a model wireframe buffer\"],[\"pj::scene3d::SceneViewWidget\",\"Could not allocate model GPU buffers\"],[\"pj::scene3d::SceneViewWidget\",\"Could not allocate the grid-map textures\"],[\"pj::scene3d::SceneViewWidget\",\"Could not allocate the mesh-map colour buffer\"],[\"pj::scene3d::SceneViewWidget\",\"Could not allocate the mesh-map vertex buffers\"],[\"pj::scene3d::SceneViewWidget\",\"Could not allocate the occupancy-grid texture\"],[\"pj::scene3d::SceneViewWidget\",\"Could not allocate the voxel-grid 3D texture\"],[\"pj::scene3d::SceneViewWidget\",\"Could not create grid-map shader bindings\"],[\"pj::scene3d::SceneViewWidget\",\"Could not create mesh-map shader bindings\"],[\"pj::scene3d::SceneViewWidget\",\"Could not create model material bindings\"],[\"pj::scene3d::SceneViewWidget\",\"Could not create occupancy-grid shader bindings\"],[\"pj::scene3d::SceneViewWidget\",\"Could not create the grid-map uniform buffer\"],[\"pj::scene3d::SceneViewWidget\",\"Could not create the mesh-map uniform buffers\"],[\"pj::scene3d::SceneViewWidget\",\"Could not create the occupancy-grid uniform buffer\"],[\"pj::scene3d::SceneViewWidget\",\"Could not create the voxel-grid uniform buffer\"],[\"pj::scene3d::SceneViewWidget\",\"Could not create voxel-grid shader bindings\"],[\"pj::scene3d::SceneViewWidget\",\"Could not decode a model material texture\"],[\"pj::scene3d::SceneViewWidget\",\"Marker instance accounting overflowed the view limit\"],[\"pj::scene3d::SceneViewWidget\",\"Markers need %1 instances and %2 streamed vertices; only %3 and %4 remain in this view's budget\"],[\"pj::scene3d::SceneViewWidget\",\"Markers need %1 submitted instances and %2 streamed vertices; the layer limits are %3 and %4\"],[\"pj::scene3d::SceneViewWidget\",\"Model shadows exceed this view's draw/triangle budget\"],[\"pj::scene3d::SceneViewWidget\",\"Models need %1 draws and %2 triangles; the layer limits are %3 and %4\"],[\"pj::scene3d::SceneViewWidget\",\"Models need %1 draws and %2 triangles; the remaining view budget is %3 and %4\"],[\"pj::scene3d::SceneViewWidget\",\"Occupancy grid is %1 x %2; this GPU supports textures up to %3 x %3\"],[\"pj::scene3d::SceneViewWidget\",\"The voxel-grid renderer is not available\"],[\"pj::scene3d::SceneViewWidget\",\"This GPU does not support 3D textures\"],[\"pj::scene3d::SceneViewWidget\",\"Voxel grid is %1 x %2 x %3; this GPU supports 3D textures up to %4 per dimension\"]]")}
+          def keys(path, translated):
+              root = ET.parse(path).getroot()
+              found = set()
+              for context in root.findall("context"):
+                  for message in context.findall("message"):
+                      tr = message.find("translation")
+                      if translated and (tr is None or tr.get("type") in ("unfinished", "vanished", "obsolete") or not "".join(tr.itertext()).strip()):
+                          continue
+                      found.add((context.findtext("name"), message.findtext("source")))
+              return found
+          extracted = keys(sys.argv[1], False)
+          assert expected <= extracted, sorted(expected - extracted)
+          print(f"Qt lupdate extracted all {len(expected)} expected RHI keys")
+          for language in ("zh_CN", "zh_TW"):
+              catalog = keys(f"pj_app/translations/plotjuggler4_{language}.ts", True)
+              assert expected <= catalog, (language, sorted(expected - catalog))
+              print(f"{language}: {len(expected)} active translated RHI keys")
+          PY
