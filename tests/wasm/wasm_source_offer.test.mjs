@@ -43,8 +43,8 @@ test('the Qt sources are the PJ_QT_VERSION modules the notices attribute, each w
 
 test('the merged Chinese catalogs have exactly one pinned Qt 6.12.0 translation source', async () => {
   const { archives } = await planSourceOffer({ qtVersion: '6.12.0' });
-  // The kit notice list describes linked modules; it need not list the Qt
-  // translation archive whose strings lrelease embeds in the executable.
+  // The emitted Qt translation attribution and the source archive offer both
+  // cover the two catalogs embedded by lrelease.
   const translationSources = archives.filter(archive =>
     archive.dependency === 'qttranslations' || archive.name.startsWith('qttranslations-'));
   assert.equal(translationSources.length, 1, 'qttranslations appears exactly once');
