@@ -28,8 +28,6 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 from zipfile import ZipFile
 
-from fontTools import subset, version as fonttools_version
-
 ROOT = Path(__file__).resolve().parents[1]
 CATALOGS = [ROOT / f'pj_app/translations/plotjuggler4_{language}.ts' for language in ('zh_CN', 'zh_TW')]
 OUTPUT = ROOT / 'resources/fonts/NotoSansSC/NotoSansSC-Subset.otf'
@@ -47,15 +45,25 @@ def require_hash(data: bytes, expected: str, label: str) -> None:
         raise ValueError(f'{label} does not match the pinned SHA-256')
 
 
-def symbols_font(archive: Path) -> bytes:
-    if fonttools_version != SYMBOL_FONTTOOLS:
-        raise ValueError(f'Symbol generation requires FontTools {SYMBOL_FONTTOOLS}, got {fonttools_version}')
+def read_symbols_donor(archive: Path) -> bytes:
     zip_bytes = archive.read_bytes()
     require_hash(zip_bytes, SYMBOL_ARCHIVE_SHA256, 'Official Symbols ZIP')
     with ZipFile(BytesIO(zip_bytes)) as release:
         donor = release.read(SYMBOL_DONOR)
     require_hash(donor, SYMBOL_DONOR_SHA256, 'Official Symbols Regular TTF')
+    return donor
 
+
+def require_symbols_tool_version(actual: str) -> None:
+    if actual != SYMBOL_FONTTOOLS:
+        raise ValueError(f'Symbol generation requires FontTools {SYMBOL_FONTTOOLS}, got {actual}')
+
+
+def symbols_font(archive: Path) -> bytes:
+    from fontTools import subset, version
+
+    require_symbols_tool_version(version)
+    donor = read_symbols_donor(archive)
     options = subset.Options()
     options.layout_features = ['*']
     options.name_IDs = ['*']
@@ -106,10 +114,12 @@ def main() -> int:
                 require_hash(SYMBOL_OUTPUT.read_bytes(), SYMBOL_OUTPUT_SHA256, 'Tracked Symbols subset')
             else:
                 SYMBOL_OUTPUT.write_bytes(data)
-        except (OSError, ValueError) as error:
+        except (OSError, ValueError, ImportError) as error:
             parser.error(str(error))
         print(f'{SYMBOL_OUTPUT.relative_to(ROOT)}: U+25B8, {len(data)} bytes; pinned SHA-256 verified')
         return 0
+    from fontTools import subset
+
     punctuation = ''.join(map(chr, range(0x3000, 0x3040))) + ''.join(map(chr, range(0xFF00, 0xFFF0))) + '“”‘’…—·'
     text = set(catalog_text() + gb2312_level1() + punctuation + '中文简体繁體')
     # Latin comes from the bundled PlotJuggler Sans, first in the family list.
