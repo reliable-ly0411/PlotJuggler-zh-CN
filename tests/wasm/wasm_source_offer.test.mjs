@@ -41,6 +41,32 @@ test('the Qt sources are the PJ_QT_VERSION modules the notices attribute, each w
   }
 });
 
+test('the merged Chinese catalogs have exactly one pinned Qt 6.12.0 translation source', async () => {
+  const { archives } = await planSourceOffer({ qtVersion: '6.12.0' });
+  // The kit notice list describes linked modules; it need not list the Qt
+  // translation archive whose strings lrelease embeds in the executable.
+  const translationSources = archives.filter(archive =>
+    archive.dependency === 'qttranslations' || archive.name.startsWith('qttranslations-'));
+  assert.equal(translationSources.length, 1, 'qttranslations appears exactly once');
+  const [source] = translationSources;
+  const filename = 'qttranslations-everywhere-src-6.12.0.tar.xz';
+  assert.equal(source.dependency, 'qttranslations');
+  assert.equal(source.name, filename);
+  assert.equal(source.url, `https://download.qt.io/archive/qt/6.12/6.12.0/submodules/${filename}`);
+  assert.equal(source.sha256, '85929c0c30d6f273f23bd879bb69803ea17b010ab73cab2f8abf95357f6f6bbb');
+  assert.match(source.what, /qtbase_zh_CN/);
+  assert.match(source.what, /qtbase_zh_TW/);
+});
+
+test('the browser notices carry the Symbols 2 subset attribution and OFL text', async () => {
+  const notices = await read('cmake/PjWasmNotices.cmake');
+  assert.match(
+    notices,
+    /_pj_notice_section\(\s*"\$\{output\}"\s+"Noto Sans Symbols 2 \(browser symbol subset\)"\s+"OFL-1\.1"\s+"\$\{CMAKE_SOURCE_DIR\}\/resources\/fonts\/NotoSansSymbols2\/OFL\.txt"\s*\)/);
+  const license = await read('resources/fonts/NotoSansSymbols2/OFL.txt');
+  assert.match(license, /SIL OPEN FONT LICENSE Version 1\.1/);
+});
+
 test('every dependency the build fetches has exactly one offer entry, with a pin', async () => {
   const { archives } = await planSourceOffer();
   for (const { name } of await declaredDependencies()) {
