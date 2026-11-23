@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-name: Validate the localized catalog patch without changing the dev branch
+name: Run the persistent Qt WASM symbol regression
 on:
   push:
     branches: ['zh-CN-4.x-ci/qt-widget-lifecycle-1459']
@@ -7,373 +7,61 @@ on:
 permissions:
   contents: read
 jobs:
-  catalog-audit:
+  glyph-fallback:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    env:
-      QT_QPA_PLATFORM: offscreen
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 45dfdb7302e4c498fe1de47aefce4cffe685cfc6
-          fetch-depth: 2
+          ref: 9befc7c5bae4bffbdbee91a79c140e83d4b69bb6
           persist-credentials: false
-      - name: Verify exact integrated development snapshot
-        run: test "$(git rev-parse HEAD)" = '45dfdb7302e4c498fe1de47aefce4cffe685cfc6'
-      - name: Restore the existing pinned Qt kit if available
+      - name: Restore pinned Qt WASM and Emscripten caches
         uses: actions/cache/restore@v5
         with:
-          path: .qt
-          key: stable-delta-qt-linux-${{ hashFiles('versions.env') }}
-      - name: Install and identify exact Qt, without Conan or whole app
+          path: .qt-wasm
+          key: qt-wasm-6.12.0-multithread-shadertools-v1
+      - uses: actions/cache/restore@v5
+        with:
+          path: .emsdk
+          key: emsdk-5.0.5-linux-x64-v1
+      - name: Prepare the same Qt WebAssembly kit and pinned compiler
         run: |
           set -euo pipefail
+          test "$(git rev-parse HEAD)" = 9befc7c5bae4bffbdbee91a79c140e83d4b69bb6
+          source versions.env
+          test "$PJ_QT_VERSION/$PJ_EMSCRIPTEN_VERSION" = '6.12.0/5.0.5'
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev libxcb-cursor0 libfontconfig1 libdbus-1-3
-          python3 -m venv "$RUNNER_TEMP/qt-widget-tools"
-          "$RUNNER_TEMP/qt-widget-tools/bin/pip" install aqtinstall==3.3.0
-          export PATH="$RUNNER_TEMP/qt-widget-tools/bin:$PATH"
-          source ./versions.env
-          test "$PJ_QT_VERSION" = 6.12.0
-          ./scripts/install_qt6.sh
-          test "$(./.qt/6.12.0/gcc_64/bin/qmake -query QT_VERSION)" = 6.12.0
-          test -s .qt/6.12.0/gcc_64/translations/qtbase_zh_CN.qm
-          test -s .qt/6.12.0/gcc_64/translations/qtbase_zh_TW.qm
-      - name: Apply only the two audited catalogs in this runner and verify real Qt
+          sudo apt-get install -y --no-install-recommends ninja-build libgl1 libegl1 libfontconfig1 libfreetype6 libxkbcommon0 libx11-6 libxcb1 libglib2.0-0 libdbus-1-3
+          if [[ ! -f .qt-wasm/6.12.0/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake ]]; then
+            python3 -m venv "$RUNNER_TEMP/glyph-tools"
+            "$RUNNER_TEMP/glyph-tools/bin/pip" install aqtinstall==3.3.0
+            "$RUNNER_TEMP/glyph-tools/bin/aqt" install-qt linux desktop 6.12.0 linux_gcc_64 --outputdir .qt-wasm -m qtshadertools
+            "$RUNNER_TEMP/glyph-tools/bin/aqt" install-qt all_os wasm 6.12.0 wasm_multithread --outputdir .qt-wasm -m qtshadertools
+          fi
+          if [[ ! -x .emsdk/upstream/emscripten/emcc ]]; then
+            git clone --depth 1 --branch 5.0.5 https://github.com/emscripten-core/emsdk.git .emsdk
+            .emsdk/emsdk install 5.0.5
+            .emsdk/emsdk activate 5.0.5
+          fi
+      - name: Build only an isolated Qt Widgets glyph probe
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = 10e773ddbd4d543b3545feeafcb41fcda795209d
-          test "$(git hash-object pj_app/translations/plotjuggler4_zh_CN.ts)" = 34fb2151d5a3fdebc94da144b1b77034e4080a2a
-          test "$(git hash-object pj_app/translations/plotjuggler4_zh_TW.ts)" = 5f2afda1d7cdb2183cb19677426a3e040b472a96
-          cat > "$RUNNER_TEMP/active-catalog.patch" <<'PATCH'
-          diff --git a/pj_app/translations/plotjuggler4_zh_CN.ts b/pj_app/translations/plotjuggler4_zh_CN.ts
-          --- a/pj_app/translations/plotjuggler4_zh_CN.ts
-          +++ b/pj_app/translations/plotjuggler4_zh_CN.ts
-          @@ -4659,6 +4659,22 @@
-                   <source>The folder %1 is not responding, showing your home folder instead.</source>
-                   <translation>文件夹 %1 无响应，改为显示您的主文件夹。</translation>
-               </message>
-          +    <message>
-          +        <source>%1 already exists. Do you want to replace it?</source>
-          +        <translation>%1 已存在。要替换它吗？</translation>
-          +    </message>
-          +    <message>
-          +        <source>Cancel</source>
-          +        <translation>取消</translation>
-          +    </message>
-          +    <message>
-          +        <source>Replace</source>
-          +        <translation>替换</translation>
-          +    </message>
-          +    <message>
-          +        <source>Replace file?</source>
-          +        <translation>替换文件？</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>PJ::FileLoader</name>
-          @@ -6718,6 +6734,10 @@
-                   <source>Not connecting to the AI agent relay %1: it must be an http address on this computer (127.0.0.1).</source>
-                   <translation>未连接到 AI 智能体中继 %1：它必须是本机（127.0.0.1）上的 http 地址。</translation>
-               </message>
-          +    <message>
-          +        <source>Drop the URDF file onto a 3D view.</source>
-          +        <translation>将 URDF 文件拖到 3D 视图上。</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>PJ::MarkerTimeline</name>
-          @@ -8388,6 +8408,14 @@
-                   <source>Fixed by --profile-dir: %1</source>
-                   <translation>由 --profile-dir 固定为：%1</translation>
-               </message>
-          +    <message>
-          +        <source>Add a folder with robot packages</source>
-          +        <translation>添加包含机器人软件包的文件夹</translation>
-          +    </message>
-          +    <message>
-          +        <source>Add a folder…</source>
-          +        <translation>添加文件夹…</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>PJ::PresetController</name>
-          @@ -9573,7 +9601,7 @@
-               <message>
-                   <location line="+16"/>
-                   <source>Folders containing 3D assets</source>
-          -        <translation>包含三维资源的文件夹</translation>
-          +        <translation type="vanished">包含三维资源的文件夹</translation>
-               </message>
-               <message>
-                   <location line="+91"/>
-          @@ -9677,6 +9705,14 @@
-                   <source>OK</source>
-                   <translation>确定</translation>
-               </message>
-          +    <message>
-          +        <source>Add your ROS workspace or any folder that holds robot packages: packages are found in its subfolders. The folders in $ROS_PACKAGE_PATH and $AMENT_PREFIX_PATH, and /opt/ros/&lt;distro&gt;/share, are searched too.</source>
-          +        <translation>添加 ROS 工作空间或任一包含机器人软件包的文件夹：程序会在其子文件夹中查找软件包，也会搜索 $ROS_PACKAGE_PATH、$AMENT_PREFIX_PATH 指定的文件夹及 /opt/ros/&lt;distro&gt;/share。</translation>
-          +    </message>
-          +    <message>
-          +        <source>Folders searched for robot packages (package://):</source>
-          +        <translation>搜索机器人软件包的文件夹（package://）：</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>PresetCatalog</name>
-          @@ -11329,12 +11365,12 @@
-               <message>
-                   <location line="+26"/>
-                   <source>Select the folder that contains your robot packages</source>
-          -        <translation>选择包含机器人包的文件夹</translation>
-          +        <translation type="vanished">选择包含机器人包的文件夹</translation>
-               </message>
-               <message>
-                   <location line="+16"/>
-                   <source>Package &apos;%1&apos; not found under &apos;%2&apos; - expected a subdirectory named &apos;%1&apos;</source>
-          -        <translation>在“%2”中未找到包“%1”；应包含名为“%1”的子目录</translation>
-          +        <translation type="vanished">在“%2”中未找到包“%1”；应包含名为“%1”的子目录</translation>
-               </message>
-               <message>
-                   <location line="+49"/>
-          @@ -11391,6 +11427,14 @@
-                       <numerusform>  •  %n 个绝对路径不存在</numerusform>
-                   </translation>
-               </message>
-          +    <message>
-          +        <source>Package &apos;%1&apos; not found under &apos;%2&apos; - expected a folder named &apos;%1&apos;</source>
-          +        <translation>在“%2”下找不到软件包“%1”：应有名为“%1”的文件夹</translation>
-          +    </message>
-          +    <message>
-          +        <source>Select your workspace or the folder that contains your robot packages</source>
-          +        <translation>选择工作空间或包含机器人软件包的文件夹</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>pj::scene3d::SceneEntitiesLayer</name>
-          @@ -11494,6 +11538,14 @@
-                   <source>Wireframe:</source>
-                   <translation>线框：</translation>
-               </message>
-          +    <message>
-          +        <source>cannot resolve the package:// reference</source>
-          +        <translation>无法解析 package:// 引用</translation>
-          +    </message>
-          +    <message>
-          +        <source>package &apos;%1&apos; not found in the mesh search folders</source>
-          +        <translation>在网格搜索文件夹中找不到软件包“%1”</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>pj::scene3d::SceneViewWidget</name>
-          @@ -11808,6 +11860,10 @@
-                   <source>Could not create mesh-map shader bindings</source>
-                   <translation>无法创建模型网格地图着色器绑定</translation>
-               </message>
-          +    <message>
-          +        <source>Software rendering (%1): reduced 3D quality</source>
-          +        <translation>软件渲染（%1）：3D 画质已降低</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>pj::scene3d::TrailLayer</name>
-          diff --git a/pj_app/translations/plotjuggler4_zh_TW.ts b/pj_app/translations/plotjuggler4_zh_TW.ts
-          --- a/pj_app/translations/plotjuggler4_zh_TW.ts
-          +++ b/pj_app/translations/plotjuggler4_zh_TW.ts
-          @@ -4659,6 +4659,22 @@
-                   <source>The folder %1 is not responding, showing your home folder instead.</source>
-                   <translation>資料夾 %1 沒有回應，改為顯示您的家目錄。</translation>
-               </message>
-          +    <message>
-          +        <source>%1 already exists. Do you want to replace it?</source>
-          +        <translation>%1 已存在。要取代它嗎？</translation>
-          +    </message>
-          +    <message>
-          +        <source>Cancel</source>
-          +        <translation>取消</translation>
-          +    </message>
-          +    <message>
-          +        <source>Replace</source>
-          +        <translation>取代</translation>
-          +    </message>
-          +    <message>
-          +        <source>Replace file?</source>
-          +        <translation>取代檔案？</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>PJ::FileLoader</name>
-          @@ -6718,6 +6734,10 @@
-                   <source>Not connecting to the AI agent relay %1: it must be an http address on this computer (127.0.0.1).</source>
-                   <translation>未連線至 AI 智慧體中繼 %1：它必須是本機（127.0.0.1）的 http 位址。</translation>
-               </message>
-          +    <message>
-          +        <source>Drop the URDF file onto a 3D view.</source>
-          +        <translation>將 URDF 檔案拖到 3D 視圖上。</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>PJ::MarkerTimeline</name>
-          @@ -8388,6 +8408,14 @@
-                   <source>Fixed by --profile-dir: %1</source>
-                   <translation>由 --profile-dir 固定為：%1</translation>
-               </message>
-          +    <message>
-          +        <source>Add a folder with robot packages</source>
-          +        <translation>加入包含機器人套件的資料夾</translation>
-          +    </message>
-          +    <message>
-          +        <source>Add a folder…</source>
-          +        <translation>加入資料夾…</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>PJ::PresetController</name>
-          @@ -9573,7 +9601,7 @@
-               <message>
-                   <location line="+16"/>
-                   <source>Folders containing 3D assets</source>
-          -        <translation>包含三維資源的資料夾</translation>
-          +        <translation type="vanished">包含三維資源的資料夾</translation>
-               </message>
-               <message>
-                   <location line="+91"/>
-          @@ -9677,6 +9705,14 @@
-                   <source>OK</source>
-                   <translation>確定</translation>
-               </message>
-          +    <message>
-          +        <source>Add your ROS workspace or any folder that holds robot packages: packages are found in its subfolders. The folders in $ROS_PACKAGE_PATH and $AMENT_PREFIX_PATH, and /opt/ros/&lt;distro&gt;/share, are searched too.</source>
-          +        <translation>加入 ROS 工作區或任一包含機器人套件的資料夾：程式會在其子資料夾中尋找套件，也會搜尋 $ROS_PACKAGE_PATH、$AMENT_PREFIX_PATH 指定的資料夾及 /opt/ros/&lt;distro&gt;/share。</translation>
-          +    </message>
-          +    <message>
-          +        <source>Folders searched for robot packages (package://):</source>
-          +        <translation>搜尋機器人套件的資料夾（package://）：</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>PresetCatalog</name>
-          @@ -11329,12 +11365,12 @@
-               <message>
-                   <location line="+26"/>
-                   <source>Select the folder that contains your robot packages</source>
-          -        <translation>選擇包含機器人套件的資料夾</translation>
-          +        <translation type="vanished">選擇包含機器人套件的資料夾</translation>
-               </message>
-               <message>
-                   <location line="+16"/>
-                   <source>Package &apos;%1&apos; not found under &apos;%2&apos; - expected a subdirectory named &apos;%1&apos;</source>
-          -        <translation>在「%2」中找不到套件「%1」；預期應有名為「%1」的子目錄</translation>
-          +        <translation type="vanished">在「%2」中找不到套件「%1」；預期應有名為「%1」的子目錄</translation>
-               </message>
-               <message>
-                   <location line="+49"/>
-          @@ -11391,6 +11427,14 @@
-                       <numerusform>  •  %n 個絕對路徑不存在</numerusform>
-                   </translation>
-               </message>
-          +    <message>
-          +        <source>Package &apos;%1&apos; not found under &apos;%2&apos; - expected a folder named &apos;%1&apos;</source>
-          +        <translation>在「%2」下找不到套件「%1」：應有名為「%1」的資料夾</translation>
-          +    </message>
-          +    <message>
-          +        <source>Select your workspace or the folder that contains your robot packages</source>
-          +        <translation>選取工作區或包含機器人套件的資料夾</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>pj::scene3d::SceneEntitiesLayer</name>
-          @@ -11494,6 +11538,14 @@
-                   <source>Wireframe:</source>
-                   <translation>線框：</translation>
-               </message>
-          +    <message>
-          +        <source>cannot resolve the package:// reference</source>
-          +        <translation>無法解析 package:// 參照</translation>
-          +    </message>
-          +    <message>
-          +        <source>package &apos;%1&apos; not found in the mesh search folders</source>
-          +        <translation>在網格搜尋資料夾中找不到套件「%1」</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>pj::scene3d::SceneViewWidget</name>
-          @@ -11808,6 +11860,10 @@
-                   <source>Could not create mesh-map shader bindings</source>
-                   <translation>無法創建模型網格地圖著色器綁定</translation>
-               </message>
-          +    <message>
-          +        <source>Software rendering (%1): reduced 3D quality</source>
-          +        <translation>軟體算繪（%1）：3D 畫質已降低</translation>
-          +    </message>
-           </context>
-           <context>
-               <name>pj::scene3d::TrailLayer</name>
-          PATCH
-          git apply --check "$RUNNER_TEMP/active-catalog.patch"
-          git apply "$RUNNER_TEMP/active-catalog.patch"
-          test "$(git hash-object pj_app/translations/plotjuggler4_zh_CN.ts)" = 4900cd00747ff2875d17a5bd352133332dbe59e8
-          test "$(git hash-object pj_app/translations/plotjuggler4_zh_TW.ts)" = f00c42e309b4ac9c2899c51e8877017c39de940a
-          kit="$PWD/.qt/6.12.0/gcc_64"
-          lupdate="$kit/bin/lupdate"
-          test "$("$lupdate" -version 2>&1)" = 'lupdate version 6.12.0'
-          python3 tests/check_translations_4x.py --lupdate "$lupdate"
-          python3 -m venv "$RUNNER_TEMP/catalog-proof"
-          "$RUNNER_TEMP/catalog-proof/bin/pip" install --disable-pip-version-check --no-deps fonttools==4.61.1
-          "$RUNNER_TEMP/catalog-proof/bin/python" scripts/check_cjk_font_coverage.py
-          out="$RUNNER_TEMP/runtime-catalogs"
-          mkdir -p "$out/src"
-          for lang in zh_CN zh_TW; do
-            "$kit/bin/lrelease" -nounfinished "pj_app/translations/plotjuggler4_$lang.ts" -qm "$out/$lang.qm"
-            test -s "$out/$lang.qm"
-          done
-          cat > "$out/src/CMakeLists.txt" <<'CMAKE'
-          cmake_minimum_required(VERSION 3.22)
-          project(pjCatalogRuntime LANGUAGES CXX)
-          find_package(Qt6 6.12.0 EXACT REQUIRED COMPONENTS Core)
-          add_executable(catalog-runtime main.cpp)
-          target_link_libraries(catalog-runtime PRIVATE Qt6::Core)
-          CMAKE
-          cat > "$out/src/main.cpp" <<'CPP'
-          #include <QCoreApplication>
-          #include <QTranslator>
-          struct Entry { const char *context, *source, *cn, *tw; };
-          const Entry entries[] = {
-            {"PJ::FileDialog", "%1 already exists. Do you want to replace it?", "%1 已存在。要替换它吗？", "%1 已存在。要取代它嗎？"},
-            {"PJ::FileDialog", "Cancel", "取消", "取消"},
-            {"PJ::FileDialog", "Replace", "替换", "取代"},
-            {"PJ::FileDialog", "Replace file?", "替换文件？", "取代檔案？"},
-            {"PJ::MainWindow", "Drop the URDF file onto a 3D view.", "将 URDF 文件拖到 3D 视图上。", "將 URDF 檔案拖到 3D 視圖上。"},
-            {"PJ::PreferencesDialog", "Add a folder with robot packages", "添加包含机器人软件包的文件夹", "加入包含機器人套件的資料夾"},
-            {"PJ::PreferencesDialog", "Add a folder…", "添加文件夹…", "加入資料夾…"},
-            {"PreferencesContent", "Add your ROS workspace or any folder that holds robot packages: packages are found in its subfolders. The folders in $ROS_PACKAGE_PATH and $AMENT_PREFIX_PATH, and /opt/ros/<distro>/share, are searched too.", "添加 ROS 工作空间或任一包含机器人软件包的文件夹：程序会在其子文件夹中查找软件包，也会搜索 $ROS_PACKAGE_PATH、$AMENT_PREFIX_PATH 指定的文件夹及 /opt/ros/<distro>/share。", "加入 ROS 工作區或任一包含機器人套件的資料夾：程式會在其子資料夾中尋找套件，也會搜尋 $ROS_PACKAGE_PATH、$AMENT_PREFIX_PATH 指定的資料夾及 /opt/ros/<distro>/share。"},
-            {"PreferencesContent", "Folders searched for robot packages (package://):", "搜索机器人软件包的文件夹（package://）：", "搜尋機器人套件的資料夾（package://）："},
-            {"pj::scene3d::RobotModelLayer", "Package '%1' not found under '%2' - expected a folder named '%1'", "在“%2”下找不到软件包“%1”：应有名为“%1”的文件夹", "在「%2」下找不到套件「%1」：應有名為「%1」的資料夾"},
-            {"pj::scene3d::RobotModelLayer", "Select your workspace or the folder that contains your robot packages", "选择工作空间或包含机器人软件包的文件夹", "選取工作區或包含機器人套件的資料夾"},
-            {"pj::scene3d::SceneEntitiesLayer", "cannot resolve the package:// reference", "无法解析 package:// 引用", "無法解析 package:// 參照"},
-            {"pj::scene3d::SceneEntitiesLayer", "package '%1' not found in the mesh search folders", "在网格搜索文件夹中找不到软件包“%1”", "在網格搜尋資料夾中找不到套件「%1」"},
-            {"pj::scene3d::SceneViewWidget", "Software rendering (%1): reduced 3D quality", "软件渲染（%1）：3D 画质已降低", "軟體算繪（%1）：3D 畫質已降低"},
-          };
-          int main(int argc, char **argv) {
-            QCoreApplication app(argc, argv);
-            if (argc != 3) return 1;
-            for (int i = 1; i <= 2; ++i) {
-              QTranslator translator;
-              if (!translator.load(QString::fromLocal8Bit(argv[i]))) return 2;
-              for (const auto &entry : entries) {
-                const auto expected = QString::fromUtf8(i == 1 ? entry.cn : entry.tw);
-                if (translator.translate(entry.context, entry.source) != expected)
-                  qFatal("Catalog runtime mismatch: %s / %s", entry.context, entry.source);
-              }
-              if (!translator.translate("PreferencesContent", "Folders containing 3D assets").isEmpty())
-                qFatal("Vanished catalog entry is still active");
-              qInfo("Actual QTranslator: %s all 14 new keys load (old key absent)", argv[i]);
-            }
-            return 0;
-          }
-          CPP
-          cmake -S "$out/src" -B "$out/build" -DCMAKE_PREFIX_PATH="$kit"
-          cmake --build "$out/build" --parallel 2
-          "$out/build/catalog-runtime" "$out/zh_CN.qm" "$out/zh_TW.qm"
-          git diff --exit-code -- resources/fonts
+          mkdir -p "$RUNNER_TEMP/glyph-src"
+          export QA_SRC="$RUNNER_TEMP/glyph-src" QA_REPO="$PWD"
+          python3 tests/wasm/cjk_symbol_probe/prepare.py "$QA_SRC"
+          source .emsdk/emsdk_env.sh >/dev/null
+          cmake -S "$QA_SRC" -B "$RUNNER_TEMP/glyph-build" -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE="$PWD/.qt-wasm/6.12.0/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
+            -DQT_HOST_PATH="$PWD/.qt-wasm/6.12.0/gcc_64" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$RUNNER_TEMP/glyph-build" --parallel 2 --target pjGlyphProbe
+      - name: Check real Chromium shaping in both catalog samples
+        run: |
+          set -euo pipefail
+          npm ci --prefix tests/wasm
+          (cd tests/wasm && npx playwright install --with-deps chromium)
+          python3 .emsdk/upstream/emscripten/emrun.py --no-browser --serve-after-exit \
+            --hostname 127.0.0.1 --port 8892 "$RUNNER_TEMP/glyph-build/pjGlyphProbe.html" &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8892/pjGlyphProbe.html >/dev/null && break; sleep 1; done
+          node tests/wasm/cjk_symbol_probe/check.cjs http://127.0.0.1:8892/pjGlyphProbe.html
