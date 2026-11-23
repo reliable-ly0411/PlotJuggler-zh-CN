@@ -413,10 +413,21 @@ int main(int argc, char* argv[]) {
   const int cjk_font_id = QFontDatabase::addApplicationFont(u":/resources/fonts/NotoSansSC/NotoSansSC-Subset.otf"_s);
   if (cjk_font_id < 0) {
     qWarning("Failed to load bundled browser CJK font");
-  } else {
+  }
+  const int symbol_font_id =
+      QFontDatabase::addApplicationFont(u":/resources/fonts/NotoSansSymbols2/NotoSansSymbols2-Subset.ttf"_s);
+  if (symbol_font_id < 0) {
+    qWarning("Failed to load bundled browser symbol font");
+  }
+  if (cjk_font_id >= 0 || symbol_font_id >= 0) {
     QFont app_font = QApplication::font();
     QStringList families = app_font.families();
-    families.append(QFontDatabase::applicationFontFamilies(cjk_font_id));
+    for (const int id : {cjk_font_id, symbol_font_id}) {
+      if (id >= 0) {
+        families.append(QFontDatabase::applicationFontFamilies(id));
+      }
+    }
+    families.removeDuplicates();
     app_font.setFamilies(families);
     QApplication::setFont(app_font);
   }
