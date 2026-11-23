@@ -12,4 +12,4 @@ jobs:
     with:
       role: localized
       source_repository: reliable-ly0411/PlotJuggler-zh-CN
-      source_sha: d603c32163dbd0eb89659d6058095762fa0d9904
+      source_sha: ${{ github.sha }}
