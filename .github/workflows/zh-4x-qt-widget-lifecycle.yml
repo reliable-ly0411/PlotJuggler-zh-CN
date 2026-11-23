@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-name: Exact dev Qt widget language lifecycle
+name: Exact dev Qt widget and translation paths
 on:
   push:
     branches: ['zh-CN-4.x-ci/qt-widget-lifecycle-1459']
@@ -15,14 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          fetch-depth: 2
+          fetch-depth: 3
           persist-credentials: false
-      - name: Verify exact base and test-only scope
+      - name: Verify exact base and narrow Qt scope
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          test "$(git rev-parse HEAD^)" = "c608442054279694433be07579be04411c07bfe9"
-          diff -u <(printf '%s\n' '.github/workflows/zh-4x-qt-widget-lifecycle.yml' 'pj_app/tests/i18n/CMakeLists.txt' 'pj_app/tests/qt_file_dialog_language_test.cpp') <(git diff --name-only HEAD^ HEAD)
+          test "$(git rev-parse HEAD^)" = "a4f0de46c0592d636bb8155fa216025e8d55045a"
+          test "$(git rev-parse HEAD^^)" = "c608442054279694433be07579be04411c07bfe9"
+          diff -u <(printf '%s\n' '.github/workflows/zh-4x-qt-widget-lifecycle.yml' 'pj_app/cmake/PjAppLanguage.cmake' 'pj_app/tests/i18n/CMakeLists.txt' 'pj_app/tests/i18n/check_translation_paths.cmake' 'pj_app/tests/qt_file_dialog_language_test.cpp') <(git diff --name-only HEAD^^ HEAD)
       - name: Restore the existing pinned Qt kit if available
         uses: actions/cache/restore@v5
         with:
@@ -50,7 +51,12 @@ jobs:
           cmake --build "$RUNNER_TEMP/pj-qt-widget-qa" --parallel 2 --target \
             qt_file_dialog_language_test app_language_test browser_language_test
           ctest --test-dir "$RUNNER_TEMP/pj-qt-widget-qa" --output-on-failure --no-tests=error --verbose \
-            -R '^(QtFileDialogLanguageTest|AppLanguageTest|BrowserLanguageTest)$'
+            -R '^(QtFileDialogLanguageTest|AppLanguageTest|BrowserLanguageTest|QtTranslationPaths)$'
           log="$RUNNER_TEMP/pj-qt-widget-qa/Testing/Temporary/LastTest.log"
           grep -F 'PASS   : QtFileDialogLanguageTest::repeatedNonNativeFileDialogsUseSelectedLanguage()' "$log"
           grep -F 'PASS   : QtFileDialogLanguageTest::repeatedWidgetLookupsDoNotChangeTheNumericLocale()' "$log"
+          for result in 'relative: built both merged catalogs' 'absolute: built both merged catalogs' \
+            'internal: built both merged catalogs' 'missing_cn: rejected qtbase_zh_CN.qm' \
+            'missing_tw: rejected qtbase_zh_TW.qm'; do
+            grep -F -- "$result" "$log"
+          done
