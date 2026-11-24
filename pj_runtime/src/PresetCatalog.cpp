@@ -100,7 +100,8 @@ QList<PresetEntry> parsePresetCatalog(const QByteArray& json, const QUrl& index_
     }
     const QJsonValue listed = object.value(u"listed"_s);
     if (!listed.isUndefined() && !listed.isNull() && !listed.isBool()) {
-      return fail(tr("preset \"%1\" has a \"listed\" that is not true or false").arg(entry.id));
+      return fail(QCoreApplication::translate("PresetCatalog", "preset \"%1\" has a \"listed\" that is not true or false")
+                      .arg(entry.id));
     }
     entry.listed = listed.toBool(true);
     entries.append(std::move(entry));
