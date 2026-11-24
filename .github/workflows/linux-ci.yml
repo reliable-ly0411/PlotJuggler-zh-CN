@@ -414,7 +414,42 @@ jobs:
             -p 'ros-parser-*-linux-x86_64.zip' -D "${plugins}"
           # One archive per call: `unzip a.zip b.zip` reads b.zip as a member name of a.zip.
           for z in "${plugins}"/*.zip; do unzip -q "$z" -d "${plugins}"; done
-          python3 scripts/qa/pjqa.py regress --plugin-dir "${plugins}"
+          replay=$(mktemp -d "${RUNNER_TEMP}/pjqa-english.XXXXXX")
+          python3 - "${replay}" <<'PYTHON'
+          from pathlib import Path
+          import shlex
+          import sys
+
+          source = Path("scripts/qa/regressions")
+          target = Path(sys.argv[1])
+          scripts = sorted(source.glob("*.pjqa"))
+          if len(scripts) != 34:
+              raise SystemExit("Unexpected QA regression suite inventory")
+          for path in scripts:
+              original = path.read_bytes()
+              lines = original.splitlines(keepends=True)
+              indices = [i for i, line in enumerate(lines) if line.startswith(b"# app:")]
+              if len(indices) > 1:
+                  raise SystemExit(f"Duplicate app launch header: {path.name}")
+              if indices:
+                  i = indices[0]
+                  header = lines[i].rstrip(b"\r\n")
+                  args = shlex.split(header[len(b"# app:"):].decode())
+                  if any(arg == "--" or arg == "--language" or arg.startswith("--language=") for arg in args):
+                      raise SystemExit(f"Unexpected app locale or delimiter: {path.name}")
+                  suffix = lines[i][len(header):]
+                  updated = header + b" --language en_US" + suffix
+                  out = b"".join(lines[:i] + [updated] + lines[i + 1:])
+                  restored = out[:sum(map(len, lines[:i])) + len(header)] + out[sum(map(len, lines[:i])) + len(header) + len(b" --language en_US"):]
+              else:
+                  out = b"# app: --language en_US\n" + original
+                  restored = out[len(b"# app: --language en_US\n"):]
+              if restored != original:
+                  raise SystemExit(f"Unexpected fixture byte change: {path.name}")
+              (target / path.name).write_bytes(out)
+          print(f"Prepared {len(scripts)} immutable English replay fixture bodies")
+          PYTHON
+          python3 scripts/qa/pjqa.py regress --plugin-dir "${plugins}" "${replay}"
 
       - name: Upload failed QA regression homes
         if: failure()
