@@ -58,7 +58,9 @@ test('SceneEntities submits procedural geometry and all five PBR maps', async ({
   console.log(`PJ_WASM_SCENE3D_SOFTWARE browser=${browserName} hdr_active=${hdr.active} reason=${hdr.error}`);
   if (browserName === 'chromium') {
     expect(hdr.active).toBe(false);
-    expect(hdr.error).toMatch(/^Software rendering \(SwiftShader\)/);
+    const tr = await uiTranslations(page);
+    expect(hdr.error).toBe(tr('pj::scene3d::SceneViewWidget',
+      'Software rendering (%1): reduced 3D quality', 'SwiftShader'));
   }
 
   expect(messages.some(message => message.includes('PJ_WASM_SCENE3D_FOUNDATION_FAILED'))).toBe(false);

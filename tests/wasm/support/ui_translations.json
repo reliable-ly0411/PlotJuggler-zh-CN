@@ -61,6 +61,12 @@
       "zh_TW": "錯誤：%1"
     }
   },
+  "pj::scene3d::SceneViewWidget": {
+    "Software rendering (%1): reduced 3D quality": {
+      "zh_CN": "软件渲染（%1）：3D 画质已降低",
+      "zh_TW": "軟體算繪（%1）：3D 畫質已降低"
+    }
+  },
   "pj::scene3d::RobotModelLayer": {
     "Select the local URDF again; browser layouts cannot retain host-file access": {
       "zh_CN": "请重新选择本地 URDF；浏览器布局无法保留对本机文件的访问权限",
