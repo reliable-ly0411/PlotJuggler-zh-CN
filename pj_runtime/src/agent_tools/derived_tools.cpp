@@ -356,11 +356,12 @@ ToolResult submitAndPoll(
 // The budget asked for: a positive value (at least 1), with a default when the call gives none. No upper
 // bound here: the host owns that policy and clamps what it grants.
 std::uint64_t requestedBudgetMs(const json& args) {
-  return static_cast<std::uint64_t>(std::max<std::int64_t>(args.value("budget_ms", std::int64_t{1000}), 1));
+  return static_cast<std::uint64_t>(std::max<std::int64_t>(args.value("budget_ms", kDefaultBudgetMs), 1));
 }
 
 std::uint64_t requestedBudgetEvaluations(const json& args) {
-  return static_cast<std::uint64_t>(std::max<std::int64_t>(args.value("budget_evaluations", std::int64_t{50}), 1));
+  return static_cast<std::uint64_t>(
+      std::max<std::int64_t>(args.value("budget_evaluations", kDefaultBudgetEvaluations), 1));
 }
 
 // The host's error text for an installed node whose recipe is in the "error" state, or nullopt when the
@@ -586,6 +587,11 @@ ToolResult createDerivedSeries(const json& args, ToolContext& ctx) {
         "create_derived_series requires 'expression' (a stateless Luau expression over value/v1../time, "
         "e.g. 'value * 2') OR 'body' (full Luau statements ending in return, with optional 'global' state)");
   }
+  const std::string output_type = args.value("output_type", std::string("number"));
+  if (output_type != "number" && output_type != "string") {
+    return ToolResult::failure("'output_type' must be \"number\" (default) or \"string\", got '" + output_type + "'");
+  }
+  const bool text_output = output_type == "string";
   const std::string name = args["name"].get<std::string>();
   // One node can produce SEVERAL series: the host accepts a span of outputs and our wrapper forwards every value the
   // body returns (MULTRET), so roll/pitch/yaw out of one quaternion is one node rather than three recomputing the same
@@ -673,11 +679,12 @@ ToolResult createDerivedSeries(const json& args, ToolContext& ctx) {
   // The host's validator instantiates the class it expects to be named
   // "__validate__" (DataProcessorService::validateScript), so the validation
   // script MUST use that id — while the install script keeps the real name.
-  const std::string validate_script = buildTransformScript("__validate__", "__validate__", global, body, num_extra);
+  const std::string validate_script =
+      buildTransformScript("__validate__", "__validate__", global, body, num_extra, text_output);
   if (auto v = ctx.dp.validateScript("transform", kScriptLanguage, validate_script); !v) {
     return ToolResult::failure("invalid expression: " + v.error());
   }
-  const std::string script = buildTransformScript(name, name, global, body, num_extra);
+  const std::string script = buildTransformScript(name, name, global, body, num_extra, text_output);
 
   std::vector<std::string_view> in_views(inputs.begin(), inputs.end());
   std::vector<std::string_view> out_views(outputs.begin(), outputs.end());
@@ -691,7 +698,10 @@ ToolResult createDerivedSeries(const json& args, ToolContext& ctx) {
       },
       undo_protection_unavailable);
   if (!status) {
-    return ToolResult::failure("create failed: " + status.error());
+    // The engine names the class field `output = "string"`; this tool sets it through output_type.
+    const bool returned_text = !text_output && status.error().find("output = \"string\"") != std::string::npos;
+    return ToolResult::failure(
+        "create failed: " + status.error() + (returned_text ? " (pass output_type \"string\" for text)" : ""));
   }
   if (ctx.notify_data_changed) {
     ctx.notify_data_changed();
@@ -861,9 +871,9 @@ ToolResult evaluateSeries(const json& args, ToolContext& ctx) {
 
   if (args.contains("buckets")) {
     if (!args["buckets"].is_number_integer()) {
-      return ToolResult::failure("'buckets' must be an integer between 1 and 500");
+      return ToolResult::failure("'buckets' must be an integer between 1 and " + std::to_string(kMaxPoints));
     }
-    const std::size_t max_points = static_cast<std::size_t>(std::clamp(args["buckets"].get<int>(), 1, 500));
+    const std::size_t max_points = static_cast<std::size_t>(std::clamp(args["buckets"].get<int>(), 1, kMaxPoints));
     result = withCoarsenedBuckets(std::move(result), r.ts, r.vals, max_points);
   }
   return ToolResult::success(result.dump());
@@ -1091,7 +1101,6 @@ ToolResult createMarkers(const json& args, ToolContext& ctx) {
   // sensitive — a comma decimal separator breaks the generated Luau — and
   // truncates to 6 decimals, corrupting small thresholds).
   const std::string threshold_lit = json(threshold).dump();
-  const std::string label = luaStringEscape(args.value("label", "exceeds " + threshold_lit));
   const std::string style = args.value("style", std::string("region"));
   if (style != "region" && style != "line") {
     return ToolResult::failure(
@@ -1102,13 +1111,18 @@ ToolResult createMarkers(const json& args, ToolContext& ctx) {
   // The rule an agent would write itself, so a later raw rule can follow it. Built-in conditions only: a condition
   // function costs a call per sample and halves the longest series the fuel budget scans.
   std::string condition = "between(-math.huge, " + threshold_lit + ")";
+  std::string relation = "at or below";
   if (comparison == ">") {
     condition = "above(" + threshold_lit + ")";
+    relation = "exceeds";
   } else if (comparison == "<") {
     condition = "below(" + threshold_lit + ")";
+    relation = "below";
   } else if (comparison == ">=") {
     condition = "between(" + threshold_lit + ", math.huge)";
+    relation = "at or above";
   }
+  const std::string label = luaStringEscape(args.value("label", relation + " " + threshold_lit));
   std::string rule = "when(\"" + luaStringEscape(series) + "\", " + condition + ")";
   if (style == "region") {
     rule += ":backgroundColor(nil, {label=\"" + label + "\", severity=\"warning\"})\n";

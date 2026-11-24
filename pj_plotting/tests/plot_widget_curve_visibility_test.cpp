@@ -8,21 +8,27 @@
 #include <gtest/gtest.h>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
+#include <qwt_plot_marker.h>
+#include <qwt_scale_map.h>
 #include <qwt_series_data.h>
 #include <qwt_text.h>
 
 #include <QApplication>
 #include <QColor>
 #include <QDomDocument>
+#include <QFontMetricsF>
 #include <QListWidget>
 #include <QPalette>
 #include <QPen>
-#include <QRegularExpression>
 #include <QSignalSpy>
 #include <QTest>
 #include <QToolButton>
+#include <algorithm>
+#include <cmath>
 #include <memory>
+#include <optional>
 #include <string_view>
+#include <vector>
 
 #include "pj_datastore/writer.hpp"
 #include "pj_plotting/CurveEditor.h"
@@ -37,7 +43,8 @@ using namespace Qt::StringLiterals;
 namespace {
 
 // Samples 0..10 s, one per second, so a tracker sits inside the plotted range.
-PJ::TopicId addRampTopic(PJ::SessionManager& session, PJ::DatasetId dataset_id, std::string_view topic_name) {
+PJ::TopicId addRampTopic(
+    PJ::SessionManager& session, PJ::DatasetId dataset_id, std::string_view topic_name, double scale = 1.0) {
   PJ::DataWriter writer = session.dataEngine().createWriter();
   auto handle = writer.registerScalarSeries(dataset_id, topic_name, PJ::NumericType::kFloat64);
   EXPECT_TRUE(handle.has_value()) << (handle.has_value() ? "" : handle.error());
@@ -45,7 +52,7 @@ PJ::TopicId addRampTopic(PJ::SessionManager& session, PJ::DatasetId dataset_id, 
     return 0;
   }
   for (int k = 0; k <= 10; ++k) {
-    writer.appendScalar(*handle, static_cast<PJ::Timestamp>(k) * 1'000'000'000, static_cast<double>(k));
+    writer.appendScalar(*handle, static_cast<PJ::Timestamp>(k) * 1'000'000'000, scale * static_cast<double>(k));
   }
   EXPECT_FALSE(session.commitChunks(writer.flushAll()).empty());
   return handle->topic_id;
@@ -89,6 +96,15 @@ struct TrackerFixture {
   [[nodiscard]] bool boxNames(const QString& key) {
     return plot->trackerValueBoxText().contains(title(key));
   }
+  // The ink of the value box's row for `key`.
+  [[nodiscard]] std::optional<QColor> rowInk(const QString& key) {
+    for (const PJ::ValueBoxRow& row : plot->trackerValueBoxRows()) {
+      if (row.text.endsWith(u": "_s + title(key))) {
+        return row.ink;
+      }
+    }
+    return std::nullopt;
+  }
 
   PJ::SessionManager session;
   PJ::CatalogModel catalog;
@@ -122,11 +138,10 @@ TEST(PlotCurveVisibility, HidingACurveDropsItsTrackerRowAtOnce) {
 TEST(PlotCurveVisibility, ColourChangeRecoloursTheTrackerRowAtOnce) {
   TrackerFixture fixture;
   const QColor red(Qt::red);
-  ASSERT_FALSE(fixture.plot->trackerValueBoxText().contains(u"color=%1"_s.arg(red.name())));
+  ASSERT_NE(fixture.rowInk(fixture.toggled), red);
 
   fixture.plot->onChangeCurveColor(fixture.toggled, red);
-  EXPECT_TRUE(fixture.plot->trackerValueBoxText().contains(u"color=%1"_s.arg(red.name())))
-      << fixture.plot->trackerValueBoxText().toStdString();
+  EXPECT_EQ(fixture.rowInk(fixture.toggled), red) << fixture.plot->trackerValueBoxText().toStdString();
 }
 
 // The default blue and red curve colours are 3.3:1 and 3.2:1 on the dark backdrop: read as text they are lifted
@@ -143,11 +158,9 @@ TEST(PlotCurveVisibility, DarkThemeTrackerInkReadsOnTheBackdropAndTheCurveKeepsI
 
   const QColor backdrop = fixture.plot->qwtPlot()->canvasBackground().color();
   ASSERT_LT(PJ::contrastRatio(blue, backdrop), 4.5) << "the raw colour must be the failing case";
-  const QRegularExpression row(u"<font color=(#[0-9a-fA-F]{6})>[^<]*: %1</font>"_s.arg(
-      QRegularExpression::escape(fixture.title(fixture.toggled))));
-  const QRegularExpressionMatch match = row.match(fixture.plot->trackerValueBoxText());
-  ASSERT_TRUE(match.hasMatch()) << fixture.plot->trackerValueBoxText().toStdString();
-  const QColor ink(match.captured(1));
+  const std::optional<QColor> row_ink = fixture.rowInk(fixture.toggled);
+  ASSERT_TRUE(row_ink.has_value()) << fixture.plot->trackerValueBoxText().toStdString();
+  const QColor ink = *row_ink;
   EXPECT_GE(PJ::contrastRatio(ink, backdrop), 4.5) << ink.name().toStdString();
   EXPECT_NE(ink, blue);
   EXPECT_EQ(fixture.plot->curveFromTitle(fixture.toggled)->curve->pen().color(), blue);
@@ -166,11 +179,131 @@ TEST(PlotCurveVisibility, ThemeSwitchRedrawsTheTrackerBox) {
 
   const QColor backdrop = fixture.plot->qwtPlot()->canvasBackground().color();
   ASSERT_LT(PJ::contrastRatio(blue, backdrop), 4.5) << "the canvas did not take the dark backdrop";
-  const QRegularExpression row(u"<font color=(#[0-9a-fA-F]{6})>[^<]*: %1</font>"_s.arg(
-      QRegularExpression::escape(fixture.title(fixture.toggled))));
-  const QRegularExpressionMatch match = row.match(fixture.plot->trackerValueBoxText());
-  ASSERT_TRUE(match.hasMatch()) << fixture.plot->trackerValueBoxText().toStdString();
-  EXPECT_GE(PJ::contrastRatio(QColor(match.captured(1)), backdrop), 4.5) << "the box kept the light theme's ink";
+  const std::optional<QColor> row_ink = fixture.rowInk(fixture.toggled);
+  ASSERT_TRUE(row_ink.has_value()) << fixture.plot->trackerValueBoxText().toStdString();
+  EXPECT_GE(PJ::contrastRatio(*row_ink, backdrop), 4.5) << "the box kept the light theme's ink";
+}
+
+// Where the tracker's value box is drawn, in canvas pixels, with the tracker line at each pixel column in turn.
+struct BoxSpan {
+  double left = 0.0;
+  double right = 0.0;
+  double line = 0.0;
+};
+// The plot is sized so that its canvas is `canvas_per_box` times as wide as the box: the test runs with each
+// platform's default font, so the box and the axes differ in width between platforms.
+std::vector<BoxSpan> boxSpansAcrossTheCanvas(
+    TrackerFixture& fixture, double canvas_per_box, double* canvas_left, double* canvas_right) {
+  fixture.plot->resize(520, 240);
+  fixture.plot->show();
+  QApplication::processEvents();
+  QwtPlot* qwt = fixture.plot->qwtPlot();
+  double box_width = 0.0;
+  for (const QwtPlotItem* item : qwt->itemList(QwtPlotItem::Rtti_PlotMarker)) {
+    const auto* marker = static_cast<const QwtPlotMarker*>(item);
+    if (!marker->label().isEmpty()) {
+      box_width = marker->label().textSize().width();
+    }
+  }
+  EXPECT_GT(box_width, 0.0);
+  const double axes_width = qwt->width() - std::abs(qwt->canvasMap(QwtPlot::xBottom).pDist());
+  fixture.plot->resize(static_cast<int>(canvas_per_box * box_width + axes_width), 240);
+  QApplication::processEvents();
+  const QwtScaleMap x_map = qwt->canvasMap(QwtPlot::xBottom);
+  *canvas_left = std::min(x_map.p1(), x_map.p2());
+  *canvas_right = std::max(x_map.p1(), x_map.p2());
+  EXPECT_LT(*canvas_right - *canvas_left, 0.95 * qwt->width()) << "the axes must take part of the plot's width";
+
+  std::vector<BoxSpan> spans;
+  for (double pixel = *canvas_left + 2.0; pixel < *canvas_right - 2.0; pixel += 1.0) {
+    const double time = x_map.invTransform(pixel);
+    fixture.plot->setTrackerPosition(time);
+    EXPECT_TRUE(fixture.plot->trackerValueBoxVisible()) << pixel;
+    for (const QwtPlotItem* item : qwt->itemList(QwtPlotItem::Rtti_PlotMarker)) {
+      const auto* marker = static_cast<const QwtPlotMarker*>(item);
+      if (!marker->label().isEmpty()) {
+        // QwtPlotMarker::drawLabel starts a right-aligned label half a pixel plus `spacing` after its position.
+        const double left = x_map.transform(marker->xValue()) + marker->spacing() + 0.5;
+        spans.push_back({.left = left, .right = left + marker->label().textSize().width(), .line = pixel});
+      }
+    }
+  }
+  return spans;
+}
+
+// The value box stays inside the canvas and clear of the tracker line wherever the line is: the box's width is
+// converted to plot units over the canvas. Over the whole plot widget, which also holds the axes, it came out too
+// small, so near the right edge the box overflowed the canvas or covered the line.
+TEST(PlotCurveVisibility, ValueBoxStaysInsideTheCanvasAndClearOfTheLine) {
+  TrackerFixture fixture;
+  double canvas_left = 0.0;
+  double canvas_right = 0.0;
+  const std::vector<BoxSpan> spans = boxSpansAcrossTheCanvas(fixture, 2.6, &canvas_left, &canvas_right);
+  ASSERT_GT(spans.size(), 100u);
+  constexpr double kSlack = 1.0;  // pixel rounding
+  for (const BoxSpan& box : spans) {
+    ASSERT_LT(2.0 * (box.right - box.left), canvas_right - canvas_left) << "the box must fit on one side of the line";
+    EXPECT_GE(box.left, canvas_left - kSlack) << "line at " << box.line;
+    EXPECT_LE(box.right, canvas_right + kSlack) << "line at " << box.line;
+    EXPECT_TRUE(box.left >= box.line - kSlack || box.right <= box.line + kSlack)
+        << "box " << box.left << ".." << box.right << " covers the line at " << box.line;
+  }
+}
+
+// The box's values are one right-aligned column and the names follow it: the box is as wide as the widest value plus
+// the longest name, which no single row is when they sit on different rows.
+TEST(PlotCurveVisibility, ValueBoxAlignsItsValuesInAColumn) {
+  PJ::SessionManager session;
+  PJ::CatalogModel catalog(&session);
+  auto dataset = session.dataEngine().createDataset(PJ::DatasetDescriptor{.source_name = "drive.mcap"});
+  ASSERT_TRUE(dataset.has_value());
+  const QString wide_value = keyForTopic(catalog, addRampTopic(session, *dataset, "/a", -100000.0));
+  const QString long_name = keyForTopic(catalog, addRampTopic(session, *dataset, "/a_much_longer_curve_name"));
+  VisibilityPlot plot(&session, &catalog);
+  plot.setTrackerParameter(PJ::CurveTracker::kValueName);
+  ASSERT_NE(plot.addCurve(wide_value), nullptr);
+  ASSERT_NE(plot.addCurve(long_name), nullptr);
+  plot.zoomOut(false);
+  plot.setTrackerPosition(5.0);
+
+  const QwtPlotMarker* box = nullptr;
+  for (const QwtPlotItem* item : plot.qwtPlot()->itemList(QwtPlotItem::Rtti_PlotMarker)) {
+    const auto* marker = static_cast<const QwtPlotMarker*>(item);
+    if (!marker->label().isEmpty()) {
+      box = marker;
+    }
+  }
+  ASSERT_NE(box, nullptr);
+  const std::vector<PJ::ValueBoxRow> rows = plot.trackerValueBoxRows();
+  ASSERT_EQ(rows.size(), 3u);  // the time, then one row per curve
+
+  const QFontMetricsF metrics(box->label().font());
+  double widest_value = 0.0;
+  double widest_name = 0.0;
+  double widest_row = metrics.horizontalAdvance(rows[0].text);
+  for (size_t row = 1; row < rows.size(); ++row) {
+    const qsizetype split = rows[row].text.indexOf(u" : "_s);
+    ASSERT_GT(split, 0) << rows[row].text.toStdString();
+    widest_value = std::max(widest_value, metrics.horizontalAdvance(rows[row].text.left(split)));
+    widest_name = std::max(widest_name, metrics.horizontalAdvance(rows[row].text.mid(split)));
+    widest_row = std::max(widest_row, metrics.horizontalAdvance(rows[row].text));
+  }
+  ASSERT_GT(widest_value + widest_name, widest_row + 1.0) << "the widest value and the longest name share a row";
+  EXPECT_DOUBLE_EQ(box->label().textSize().width(), std::ceil(widest_value + widest_name));
+}
+
+// A box wider than the canvas cannot fit on either side: it keeps its first column (the time and the values) inside
+// the canvas and loses the end of its rows.
+TEST(PlotCurveVisibility, ValueBoxWiderThanTheCanvasKeepsItsLeftEdgeInside) {
+  TrackerFixture fixture;
+  double canvas_left = 0.0;
+  double canvas_right = 0.0;
+  const std::vector<BoxSpan> spans = boxSpansAcrossTheCanvas(fixture, 0.7, &canvas_left, &canvas_right);
+  ASSERT_FALSE(spans.empty());
+  ASSERT_GT(spans.front().right - spans.front().left, canvas_right - canvas_left) << "the box must not fit";
+  for (const BoxSpan& box : spans) {
+    EXPECT_GE(box.left, canvas_left - 1.0) << "line at " << box.line;
+  }
 }
 
 TEST(PlotCurveVisibility, SetCurveVisibleIsOneUndoStepAnnouncedOnceAndRepeatingItIsNone) {

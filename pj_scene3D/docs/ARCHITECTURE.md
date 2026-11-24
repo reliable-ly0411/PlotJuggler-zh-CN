@@ -14,15 +14,23 @@ The user is a roboticist scrubbing recorded or live data, with 3D docks next to 
   grids, depth images back-projected into clouds, trails, grid maps and mesh maps with their updates. All of them
   render in the browser too. Paths, laser scans and a camera image/frustum view are not implemented.
 - **Placement over time.** A layer that draws one stamped object (point cloud, depth cloud, pose array and its
-  trail, voxel grid, grid map, a derived SceneEntities finding) is placed where its source frame was at the
-  object's own stamp, in the TF header clock, composed through the root of the TF tree (`fixed <- root` at the
-  cursor times `root <- source` at the stamp; `core/tf/object_placement.h::placeObject`). With a moving fixed frame
-  a map-frame object stays put and a scan stays where it was captured. An unstamped object, one stamped before the
+  trail, voxel grid, grid map, a derived SceneEntities finding), and each stamped SceneEntities entity, is placed where its source frame was at the
+  object's own stamp, in the TF header clock, composed through the anchor, the nearest frame the fixed and the
+  source frame share (`fixed <- anchor` at the cursor times `anchor <- source` at the stamp;
+  `core/tf/object_placement.h::placeObject`). With the root as the fixed frame a scan stays where it was captured in
+  the world. With a fixed frame on a moving body, a map-frame object stays put in the world, and a scan measured on
+  that body stays where it was measured on the body (TECHNICAL_NOTES "Placement through the nearest shared frame").
+  An unstamped object, one stamped before the
   first TF on its chain or more than `kMaxStampPastTf` past the newest falls back to the cursor; a placed object
-  whose TF sample live retention has evicted keeps its last placement (`PlacementHold`). Every other layer
-  (occupancy grid, mesh map, SceneEntities, robot model) and the TF overlay are placed at the tracker time in the
-  entry clock. There is no per-layer toggle; Foxglove's `frame_locked` is not honoured. The per-consumer table is
-  in `docs/derived_objects/ARCHITECTURE.md` "TF".
+  whose TF sample live retention has evicted keeps its last placement (`PlacementHold`). A cloud still drawn while
+  its successor is prepared on a worker (a compressed decode, a depth back-projection) is placed by the same rule,
+  at its own stamp: it stays where it was measured for the frames the worker takes. A SceneEntities entity
+  is placed at its own stamp unless it has none or sets `frame_locked`, which keeps it moving with its frame (the
+  marker geometry groups entities by frame and placement stamp, `MarkerGeometry::frame_stamps`; a batch with more
+  than `kMaxMarkerStampGroups` groups is grouped by frame alone and placed at the cursor); an entity's mesh
+  model is placed at the cursor. Every other layer (occupancy grid, mesh map, robot model) and the TF overlay are
+  placed at the tracker time in the entry clock. There is no per-layer toggle. The per-consumer table is in
+  `docs/derived_objects/ARCHITECTURE.md` "TF".
 - **Marker lifetime.** Layers persist until the producer re-emits on the same key. SceneEntities additionally
   honour `lifetime_ns` (0 = never), anchored on the store entry timestamp the entity was folded from, not on its
   embedded sensor stamp (see "SceneEntities lifetime and the decoded-batch cache"). An expired entity disappears;
@@ -64,8 +72,14 @@ dataset, owned by `pj_runtime`'s `TransformService` and shared (`shared_ptr`) by
 - Two clocks: every sample keeps its header stamp and its entry time. `Clock::kEntry` returns per edge the
   newest-stamped sample that had arrived by `t` (the cursor's clock); `Clock::kHeader` the newest sample stamped at
   or before `t` (an object's own stamp).
-- Zero-order hold, not interpolation: between two stamps the earlier sample, past the last the last, before the
-  first `NoSampleAtTime`. Scrub replay asks what the system believed at `t`, and it never held an interpolated pose.
+- Between two samples a lookup either holds the earlier one (`Sampling::kHold`, the default and what scripts read)
+  or interpolates (`kInterpolate`: translation linearly, rotation by slerp). Past the last sample it holds the last;
+  before the first it fails with `NoSampleAtTime`. Every lookup of the 3D views (placement, triads, connection
+  lines, follow camera, render keys) reads `viewSampling()` (`core/tf/view_sampling.h`), set by Preferences > Scene 3D
+  > "Interpolate transforms between samples", on by default. Holding places an object stamped between two TF samples
+  at the earlier pose, off by the frame's speed times the time since that sample, and moves frames in steps at the
+  TF rate. The frame trail always holds: its points sit at stored sample times, where a chain with one moving edge
+  reads the same either way, and a held point never changes after the live append wrote it.
 - An in-order sample equal to the edge's last is not stored, but its stamp still bounds `latestCommonTime` and
   eviction, so a fixed joint republished at 100 Hz resolves across the window as if every repeat were kept.
 - Thread-safe for concurrent ingest and render readers without external locking; a non-throwing lookup for the
@@ -186,8 +200,10 @@ dock therefore still blends over it. `SceneViewTestAccess::lastSubmittedLayerIds
 `ScenePipelineRegistry` owns every scene pipeline (each family's, the grid's, the TF triads'). A family registers a
 complete `PipelineDesc` with `add(desc, part)` and keeps the handle; the registry builds each variant from the one
 description through `createPipeline()`: **direct** for the widget's target, **HDR colour** and **depth replay** for
-the chain's targets. A state set in the description reaches every variant. `resolve(handle, pass)` returns the
-variant a `ScenePass` binds.
+the chain's targets. A state set in the description reaches every variant, except that the direct variant writes no
+alpha: its target is the view's output, which Qt composites by its alpha, so it keeps the clear's opaque backdrop
+(an annotation's alpha write would let the window show through it). `resolve(handle, pass)` returns the variant a
+`ScenePass` binds.
 
 **Nothing is built at registration.** An HDR variant is created the first time a frame binds it; direct variants
 only for a frame without the HDR chain, all before its first pass (`createDirects()`). A part that draws nothing
@@ -260,7 +276,8 @@ direct fallback writes display-referred colour without a grade.
 
 **HDR alpha is a tonemap-bypass marker, not coverage.** Data draws write it with the coverage-union blend
 (`PJ::straightAlphaBlend`); annotations (TF triads and lines) add nothing (`annotationAlphaBlend`), so they present
-flat and vivid, and the background keeps the exact theme colour.
+flat and vivid, and the background keeps the exact theme colour. The direct pass has no marker: its pipelines leave
+alpha opaque (see "Pipeline registry").
 
 **Depth resolve or replay.** Where QRhi reports `ResolveDepthStencil` and multisample textures (desktop OpenGL from
 4.3, Vulkan, Metal) the HDR pass resolves its depth and the coverage pass is only a clear. Elsewhere (D3D11, WebGL2,
@@ -535,7 +552,8 @@ captures only owned bytes, so it may drain after its layer is gone.
 fixed←source transform, `foldFrameTransformIntoKey`), so a static sample in a moving frame still repaints. It must
 derive from index and entry timestamps, never from a `latestAt` that would decompress cold chunks inside the gate.
 The dock folds in its view key (TF triads and lines, follow target) and `SceneDockWidget::onTrackerTime` skips the
-repaint when nothing changed.
+repaint when nothing changed. With interpolated transforms a moving frame changes the key on every tick, so playback
+repaints at the tick rate; with held transforms it coalesces to the TF rate.
 
 ## Camera system
 
@@ -901,7 +919,12 @@ each has a panel row, and clicking it binds the Settings host to the layer's con
 ## Known gaps
 
 - Paths, laser scans and a camera image/frustum view are not implemented; nor are heading/pose follow, saved views,
-  camera sync across docks, and Foxglove's per-entity `frame_locked`.
+  camera sync across docks.
+- An interpolating lookup blends any two consecutive samples of an edge, however far apart: a frame republished
+  rarely with a new value (a recalibrated mount) glides from one to the other over the whole gap. tf2 has no history
+  for a static transform and would step.
+- A SceneEntities mesh model is placed at the cursor, not at its entity's stamp like the entity's primitives: with TF
+  faster than the entities, a model and a primitive of one entity drift apart in a world-fixed frame.
 - Movable URDF joints are not articulated from `JointState`; `axis`, `limit` and `mimic` are not parsed.
 - Embedded assets (resolver step 0) are inert in the app: no caller passes a source's asset map to
   `Scene3DDockWidget::setEmbeddedAssets`.

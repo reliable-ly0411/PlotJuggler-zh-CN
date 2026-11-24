@@ -72,6 +72,10 @@ else lets the loader find `libQt6Widgets`, and a failed load there reads as a re
 `extension_manager_check_plugin_management` remains
 a standalone, network-dependent harness excluded from CTest.
 
+A test's store root is a `PJ::test::StoreTempDir` (`cmake/test_mains/pj_test_store_dir.h`), never a bare
+`QTemporaryDir`: the store keeps its siblings (`.artifacts`, `.extraction`, `.profiles`, `.state`, `.install_stage`,
+the lease file) beside the root, and beside a temp dir's own path they leak into TMPDIR.
+
 ## Docs
 
 | For | Read |

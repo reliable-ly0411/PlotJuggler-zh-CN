@@ -1197,6 +1197,55 @@ TEST(ToolRegistry, CreateDerivedSeriesFromExpression) {
   EXPECT_NE(dp.last_script.find("return (value * 2)"), std::string::npos);
 }
 
+// output_type "string" makes a text series (a state label per sample); anything else but "number" is refused.
+TEST(ToolRegistry, CreateDerivedSeriesWithTextOutput) {
+  ToolRegistry reg;
+  PJ::testing::ToolboxTestStore store;
+  populate(store);
+  RecordingDpHost dp;
+  auto ctx = makeCtx(store, &dp);
+  auto r = reg.execute(
+      "create_derived_series",
+      {{"name", "state"},
+       {"inputs", json::array({"/imu/x"})},
+       {"expression", "value > 0 and 'up' or 'down'"},
+       {"output_type", "string"}},
+      ctx);
+  ASSERT_TRUE(r.ok) << r.content;
+  EXPECT_NE(dp.last_script.find("output = \"string\""), std::string::npos) << dp.last_script;
+  EXPECT_NE(dp.last_validate_script.find("output = \"string\""), std::string::npos);
+
+  auto number = reg.execute(
+      "create_derived_series", {{"name", "x2"}, {"inputs", json::array({"/imu/x"})}, {"expression", "value * 2"}}, ctx);
+  ASSERT_TRUE(number.ok) << number.content;
+  EXPECT_NE(dp.last_script.find("output = \"double\""), std::string::npos);
+
+  const int creates = dp.create_calls;
+  auto bad = reg.execute(
+      "create_derived_series",
+      {{"name", "bad"}, {"inputs", json::array({"/imu/x"})}, {"expression", "value"}, {"output_type", "text"}}, ctx);
+  EXPECT_FALSE(bad.ok);
+  EXPECT_NE(bad.content.find("output_type"), std::string::npos) << bad.content;
+  EXPECT_EQ(dp.create_calls, creates);
+}
+
+// The engine's advice names the class field; an agent sets it through output_type, so the failure says that.
+TEST(ToolRegistry, CreateDerivedSeriesReturningTextNamesOutputType) {
+  ToolRegistry reg;
+  PJ::testing::ToolboxTestStore store;
+  populate(store);
+  RecordingDpHost dp;
+  dp.fail_create = true;
+  dp.create_error =
+      "calculate must return a number, (time, value), or nil (declare output = \"string\" to return text)";
+  auto ctx = makeCtx(store, &dp);
+  auto r = reg.execute(
+      "create_derived_series",
+      {{"name", "state"}, {"inputs", json::array({"/imu/x"})}, {"expression", "value > 0 and 'up' or 'down'"}}, ctx);
+  ASSERT_FALSE(r.ok);
+  EXPECT_NE(r.content.find("output_type"), std::string::npos) << r.content;
+}
+
 TEST(ToolRegistry, CreateDerivedSeriesStatefulBody) {
   ToolRegistry reg;
   PJ::testing::ToolboxTestStore store;
@@ -1283,8 +1332,25 @@ TEST(ToolRegistry, CreateMarkersBuildsThresholdRule) {
   ASSERT_TRUE(r.ok) << r.content;
   EXPECT_EQ(
       dp.last_script,
-      "when(\"/imu/x\", between(2.5, math.huge)):verticalLine({label=\"exceeds 2.5\", "
+      "when(\"/imu/x\", between(2.5, math.huge)):verticalLine({label=\"at or above 2.5\", "
       "severity=\"warning\", every=true})\n");
+}
+
+// The template's default label says what the comparison marks: a "<" rule marks values below the threshold.
+TEST(ToolRegistry, CreateMarkersDefaultLabelFollowsTheComparison) {
+  ToolRegistry reg;
+  PJ::testing::ToolboxTestStore store;
+  populate(store);
+  RecordingDpHost dp;
+  auto ctx = makeCtx(store, &dp);
+  for (const auto& [comparison, label] : std::vector<std::pair<std::string, std::string>>{
+           {">", "exceeds 2.5"}, {">=", "at or above 2.5"}, {"<", "below 2.5"}, {"<=", "at or below 2.5"}}) {
+    auto r = reg.execute("create_markers", {{"series", "/imu/x"}, {"comparison", comparison}, {"threshold", 2.5}}, ctx);
+    ASSERT_TRUE(r.ok) << r.content;
+    EXPECT_NE(dp.last_script.find("label=\"" + label + "\""), std::string::npos)
+        << comparison << ": " << dp.last_script;
+    EXPECT_EQ(json::parse(r.content).value("rule", ""), label) << comparison;
+  }
 }
 
 TEST(ToolRegistry, CreateMarkersRawRulePassesThroughVerbatim) {
@@ -2490,6 +2556,9 @@ TEST(ToolRegistry, DefaultsToASingleOutputNamedAfterTheSeries) {
 // attach/detach/focus); a new tool earns its place only with a request shape no
 // existing tool's arguments fit (evaluate, create_derived_object, scene_view's
 // separate ownership scope).
+//
+// Every parameter also carries a description and, where the executor clamps or defaults it, its bounds and default
+// (EveryParameterHasADescription): about 0.5 kB of the ceiling, paid so a model reads a limit instead of guessing it.
 TEST(ToolRegistry, ToolSchemaStaysWithinItsBudget) {
   ToolRegistry reg;
   const std::size_t chars = reg.toMcpToolsList().dump().size();
@@ -2497,7 +2566,7 @@ TEST(ToolRegistry, ToolSchemaStaysWithinItsBudget) {
   for (const auto& t : reg.tools()) {
     std::cerr << "  " << t.name << ": " << t.description.size() << "\n";
   }
-  EXPECT_LT(chars, 14200u) << "the tool surface outgrew its budget — trim descriptions before adding capability";
+  EXPECT_LT(chars, 14700u) << "the tool surface outgrew its budget — trim descriptions before adding capability";
 }
 
 // --- playback / viewport tools ----------------------------------------------
@@ -2726,9 +2795,39 @@ TEST(ToolRegistry, PlotTabRefusesATabItDoesNotOwn) {
   // left unbound here), so it fails on the missing service rather than ever
   // reaching the fake -- still "every one fails" as required.
   EXPECT_FALSE(reg.execute("plot_tab", {{"action", "zoom"}, {"tab", "user-1"}}, ctx).ok);
+  EXPECT_FALSE(reg.execute("plot_tab", {{"action", "focus"}, {"tab", "user-1"}}, ctx).ok);
   EXPECT_FALSE(reg.execute("plot_tab", {{"action", "close"}, {"tab", "user-1"}}, ctx).ok);
 
   EXPECT_EQ(tabs.foreign_mutations, 0);
+  EXPECT_EQ(tabs.focused, "");
+}
+
+// focus brings the agent's own tab forward (a screenshot then shows it).
+TEST(ToolRegistry, PlotTabFocusBringsItsOwnTabForward) {
+  ToolRegistry reg;
+  PJ::testing::ToolboxTestStore store;
+  populate(store);
+  FakePlotTabsHost tabs;
+  auto ctx = makeCtx(store, nullptr);
+  ctx.plot_tabs = tabs.view();
+  ASSERT_TRUE(reg.execute("plot_tab", {{"action", "create"}, {"tab", "mine"}}, ctx).ok);
+
+  const auto r = reg.execute("plot_tab", {{"action", "focus"}, {"tab", "mine"}}, ctx);
+  ASSERT_TRUE(r.ok) << r.content;
+  EXPECT_EQ(json::parse(r.content)["focused"], "mine");
+  EXPECT_EQ(tabs.focused, "mine");
+  EXPECT_FALSE(reg.execute("plot_tab", {{"action", "focus"}}, ctx).ok) << "focus needs a tab";
+}
+
+// Every parameter of every agent tool says what it is: a model reads the schema, not the code.
+TEST(ToolRegistry, EveryParameterHasADescription) {
+  ToolRegistry reg;
+  for (const auto& tool : reg.tools()) {
+    const json properties = tool.input_schema.value("properties", json::object());
+    for (const auto& [name, property] : properties.items()) {
+      EXPECT_FALSE(property.value("description", "").empty()) << tool.name << "." << name;
+    }
+  }
 }
 
 // The structural version of the property above: loop over every registered

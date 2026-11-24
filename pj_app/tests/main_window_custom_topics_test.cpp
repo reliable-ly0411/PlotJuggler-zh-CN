@@ -58,8 +58,8 @@ class MainWindowCustomTopicsTestPeer {
     window.refreshCustomTopicsPanel();
   }
   // These windows load no plugin, so the tests name the toolbox that would declare `custom_topics_editor`.
-  static void setCustomTopicsEditorId(MainWindow& window, const QString& plugin_id) {
-    window.session_->extensionCatalog().setCustomTopicsEditorIdForTest(plugin_id);
+  static void setCustomTopicsEditorId(MainWindow& window, const QString& plugin_id, bool views = false) {
+    window.session_->extensionCatalog().setCustomTopicsEditorIdForTest(plugin_id, views);
     window.syncCustomTopicsEditor();
   }
   [[nodiscard]] static int customTopicsSyncs(const MainWindow& window) {
@@ -268,6 +268,22 @@ TEST(MainWindowCustomTopicsTest, EditIsEnabledOnlyForEditorRows) {
   EXPECT_TRUE(fx.edit->isEnabled());
 }
 
+// An editor that declares `custom_topics_viewer` opens other owners' rows as a view: the pencil is enabled on them,
+// and says so; Delete stays theirs.
+TEST(MainWindowCustomTopicsTest, AViewingEditorOffersThePencilOnOtherOwnersRows) {
+  CustomTopicsFixture fx;
+  ASSERT_TRUE(fx.setUp());
+  ASSERT_TRUE(fx.install(cropRecipe("assistant", "crop")));
+  MainWindowCustomTopicsTestPeer::setCustomTopicsEditorId(fx.window, QString::fromLatin1(kEditor), /*views=*/true);
+
+  fx.select("assistant/crop/cropped");
+  EXPECT_TRUE(fx.edit->isEnabled());
+  EXPECT_EQ(fx.edit->toolTip(), u"View the formula (created by assistant; read-only)"_s);
+
+  MainWindowCustomTopicsTestPeer::setCustomTopicsEditorId(fx.window, QString::fromLatin1(kEditor), /*views=*/false);
+  EXPECT_FALSE(fx.edit->isEnabled());
+}
+
 // The delete handler refuses another plugin's recipe on its own (the panel disables the action, but nothing
 // else may reach it), and the editor's own recipe goes with its topic and rows.
 TEST(MainWindowCustomTopicsTest, DeleteOfAnotherPluginsRecipeIsRefused) {
@@ -318,6 +334,59 @@ TEST(MainWindowCustomTopicsTest, DeleteOfAnotherPluginsTransformIsRefused) {
   MainWindowCustomTopicsTestPeer::setCustomTopicsEditorId(fx.window, QString::fromLatin1(kEditor));
   MainWindowCustomTopicsTestPeer::deleteCustomTopic(fx.window, mine_key);
   EXPECT_TRUE(transforms.transformIdsForPlugin(kEditor).empty()) << "the editor's own goes";
+}
+
+// A text series is not plottable, but its Custom Topics row resolves to its transform like any other: Delete removes
+// it.
+TEST(MainWindowCustomTopicsTest, DeleteOfATextSeriesRemovesItsTransform) {
+  constexpr const char* kLabel = R"LUAU(-- pj-script: luau
+return { id="label", name="Label", output="string",
+  create = function(p) return { calculate = function(t, v) return v > 0 and "up" or "down" end } end }
+)LUAU";
+  CustomTopicsFixture fx;
+  ASSERT_TRUE(fx.setUp());
+  PJ::DataProcessorService& transforms = fx.app().sessionManager().dataProcessorService();
+  ASSERT_TRUE(transforms.upsertTransform(kEditor, "label", {"sensor/value"}, {"sensor/state"}, kLabel, "{}"));
+  fx.app().catalogModel().rebuildFromDatastore();
+  MainWindowCustomTopicsTestPeer::syncCustomTopicsPanel(fx.window);
+  const QString key = fx.keyOf("sensor/state");
+  ASSERT_FALSE(key.isEmpty());
+
+  MainWindowCustomTopicsTestPeer::deleteCustomTopic(fx.window, key);
+  EXPECT_TRUE(transforms.transformIdsForPlugin(kEditor).empty()) << "the text series' transform goes";
+}
+
+// A transform's row is its own output topic, found by topic id. A create refuses an output name already in use, but
+// a topic of that name can arrive later in another dataset (a stream, a reload); in an earlier dataset a name lookup
+// finds it first. It is neither listed nor deleted in the output's place.
+TEST(MainWindowCustomTopicsTest, ATransformRowIsItsOutputNotATopicOfTheSameName) {
+  CustomTopicsFixture fx;
+  ASSERT_TRUE(fx.setUp());
+  const PJ::DatasetId second = pj_test::createDataset(fx.app(), "second.mcap", /*own_time_domain=*/true);
+  ASSERT_NE(second, 0U);
+  ASSERT_NE(pj_test::addScalarTopic(fx.app(), second, "other"), 0U);
+  PJ::DataProcessorService& transforms = fx.app().sessionManager().dataProcessorService();
+  const auto created = transforms.upsertTransform(kEditor, "neg", {"other/value"}, {"out"}, kNegate, "{}");
+  ASSERT_TRUE(created.has_value()) << created.error();
+  ASSERT_NE(pj_test::addScalarTopic(fx.app(), fx.dataset, "out"), 0U) << "a topic named like the output arrives";
+  fx.app().catalogModel().rebuildFromDatastore();
+  MainWindowCustomTopicsTestPeer::syncCustomTopicsPanel(fx.window);
+
+  QString loaded_key;
+  QString output_key;
+  for (const PJ::CatalogItem& item : fx.app().catalogModel().items()) {
+    if (item.topic_name == u"out"_s) {
+      (item.dataset_id == second ? output_key : loaded_key) = item.key;
+    }
+  }
+  ASSERT_FALSE(loaded_key.isEmpty());
+  ASSERT_FALSE(output_key.isEmpty()) << "the transform writes into its input's dataset";
+  EXPECT_NE(findRowByKey(fx.custom->invisibleRootItem(), output_key), nullptr) << "the transform's output is listed";
+  EXPECT_EQ(findRowByKey(fx.custom->invisibleRootItem(), loaded_key), nullptr) << "the loaded topic is not";
+
+  MainWindowCustomTopicsTestPeer::deleteCustomTopic(fx.window, output_key);
+  EXPECT_TRUE(transforms.transformIdsForPlugin(kEditor).empty());
+  EXPECT_TRUE(fx.app().catalogModel().itemDescriptor(loaded_key).has_value()) << "the loaded topic stays";
 }
 
 // Deleting the editor's transform never cascades into another plugin's: a reader owned elsewhere refuses the

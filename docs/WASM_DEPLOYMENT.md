@@ -188,11 +188,12 @@ precompressed variants automatically.
 ### Third-party notices
 
 `plotjuggler4.wasm` links every library statically. `cmake/PjWasmNotices.cmake`
-writes `THIRD_PARTY_NOTICES.txt` beside `plotjuggler4.js` at configure time: one
+(on the helpers of `cmake/PjNotices.cmake`, which also writes the desktop
+notices: [packaging/README.md](../packaging/README.md#licences)) writes `THIRD_PARTY_NOTICES.txt` beside `plotjuggler4.js` at configure time: one
 section per library with its SPDX licence expression and its licence text,
 copied from its source (Qt's modules, plugins and bundled third-party code from
 the kit's SBOM, `sbom/*.spdx.json`, followed by the text of every standard
-licence they name, one file each in `cmake/wasm_notices/<SPDX id>.txt`; the
+licence they name, one file each in `cmake/notices/<SPDX id>.txt`; the
 configure fails, naming the id, when one is missing), and CPython's notices when
 Python is on.
 `package_wasm.mjs` refuses a build without the file. `npm run test:package`
@@ -201,9 +202,10 @@ WASM build has no `pj_wasm_notice()` entry. What that test cannot see is kept
 by hand in the same file: a Qt module or plugin added to the link
 (`_PJ_QT_NOTICE_PACKAGES`), a vendored directory or font, third-party code
 bundled inside a dependency (assimp's `contrib/`, the plugins' `contrib/`,
-rosx_introspection's `contrib/`), and the Emscripten runtime. The About dialog's
-"Third-party licences" link (browser build only) opens `THIRD_PARTY_NOTICES.txt`
-by that relative name, so the package serves a copy at the deployment root
+rosx_introspection's `contrib/`), and the Emscripten runtime. In the browser build the About
+dialog states the bundle's GPL-3.0 licence, and its "Third-party licences" and
+"Source code" links open `THIRD_PARTY_NOTICES.txt` and `sources/SOURCE-OFFER.txt`
+by those relative names, so the package serves a copy at the deployment root
 (`no-cache`), beside the immutable one in the bundle directory;
 `tests/wasm/package_wasm.test.mjs` fails if the link and the package disagree.
 
@@ -474,15 +476,21 @@ together.
 - **Malformed index** (bad JSON, an entry without `id` or `layout`, a duplicate
   id, a reference that is not http(s)): the same, plus one console warning,
   `PJ_PRESET_INDEX_INVALID url=… reason=…`.
-- **Deep link:** `?preset=<id>` opens that preset directly, the dialog showing
-  its progress. An id the index does not list, the `preset` key given twice, or
+- **Deep link:** `?preset=<id>` opens that preset directly: the dialog shows
+  only its progress and Cancel, never the list, which appears only if the load
+  fails or is cancelled. An id the index does not list, the `preset` key given twice, or
   a deep link on a page without a usable index reports an error and loads
   nothing. Other query keys are ignored.
 
-The repository ships three samples in `resources/wasm-presets/` (a car's gyro
-through a built-in filter; an ANYmal walking a forest trail; a self-driving car
-with its camera and lidar; their recordings and models load from
-`https://assets.plotjuggler.io`), deployed with `--presets`. Preset files are served `no-cache`. How to author a preset,
+The repository ships five samples, listed by `resources/wasm-presets/index.json`
+and deployed with `--presets` (a car's gyro through a built-in filter; an ANYmal
+walking a forest trail; a car from PandaSet with its six cameras, lidar and 3D
+boxes; an office robot from LILocBench with its camera, depth cloud and laser
+scans on the floor map; a racing quadrotor from UZH-FPV with its fisheye and event
+cameras and its racing line). The welcome dialog lists the first three; the office
+robot and the racing drone are unlisted and open from their links,
+`?preset=lilocbench` and `?preset=uzhfpv`, which the website's examples page uses. Their layouts, thumbnails, recordings and models load from
+`https://assets.plotjuggler.io`. Preset files are served `no-cache`. How to author a preset,
 what the packager refuses, and the hosting limits are in
 [`WASM_PRESETS.md`](./WASM_PRESETS.md).
 

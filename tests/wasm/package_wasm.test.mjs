@@ -274,8 +274,8 @@ test('the robot Caddyfile repeats every deployable type and forwards to the stoc
   assert.match(caddyfile, /reverse_proxy \{\$PJ_BRIDGE_UPSTREAM:127\.0\.0\.1:9090\}/);
 });
 
-// A preset tree shaped like resources/wasm-presets: nested folders, data, a
-// model package with an extensionless license, and the index beside them. The
+// A preset tree with nested folders, data, a model package with an
+// extensionless license, and the index beside them. The
 // large files are over the size floor below which nothing is precompressed.
 const MCAP_MAGIC = Buffer.from([0x89, 0x4d, 0x43, 0x41, 0x50, 0x30, 0x0d, 0x0a]);
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -461,6 +461,7 @@ test('a preset index must list only deployed files', async t => {
     ['a numeric layout', { 'index.json': index([{ ...fr3, layout: 7 }]) }, /#1 has a field that is not a string/],
     ['a boolean thumbnail', { 'index.json': index([{ ...fr3, thumbnail: true }]) },
       /#1 has a field that is not a string/],
+    ['a string listed', { 'index.json': index([{ ...fr3, listed: 'no' }]) }, /#1 has a listed that is not true or false/],
     ['an entry that is not an object', { 'index.json': index([fr3, 'nav']) }, /#2 is not an object/],
     ['a null entry', { 'index.json': index([null]) }, /#1 is not an object/],
   ];

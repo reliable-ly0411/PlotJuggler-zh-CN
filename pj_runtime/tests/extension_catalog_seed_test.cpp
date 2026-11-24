@@ -37,6 +37,7 @@
 #include "pj_runtime/ExtensionCatalogService.h"
 #include "pj_runtime/LocalizedPluginSeed.h"
 #include "pj_runtime/UsageCounters.h"
+#include "pj_test_store_dir.h"
 #include "plugin_test_utils.h"
 
 namespace PJ {

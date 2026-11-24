@@ -12,6 +12,7 @@
 
 #include "../../cmake/test_mains/pj_test_owned_directory.h"
 #include "pj_runtime/ExtensionCatalogService.h"
+#include "pj_test_store_dir.h"
 
 namespace PJ::test {
 
