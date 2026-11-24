@@ -79,6 +79,10 @@
   workflow_dispatch/dev builds, where the built commit's short hash
   disambiguates otherwise-identical-looking artifacts.
 
+.PARAMETER ExperimentalTraditionalChinese
+  Build an isolated, offline IFW QA installer with a third language choice.
+  Not accepted for tagged release naming or the update repository.
+
 .PARAMETER StageDir
   Scratch directory for the staged package tree (default: $env:TEMP\pj4-installer-stage).
   Wiped at the start of every run.
@@ -112,6 +116,7 @@ param(
   [string]$QtDir      = "",
   [string]$IfwDir     = "",
   [switch]$SkipPlugins,
+  [switch]$ExperimentalTraditionalChinese,
   [string]$PluginRegistryUrl = "https://raw.githubusercontent.com/PlotJuggler/pj-plugin-registry/refs/heads/development/registry.json",
   [string[]]$PluginIds = @(
     "mcap-loader", "csv-loader", "parquet-loader", "ulog-loader",
@@ -138,6 +143,15 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+if ($ExperimentalTraditionalChinese) {
+  if ($CleanReleaseName -or $RepoOutDir -or $UpdateUrl) {
+    throw "Traditional Chinese IFW is limited to offline QA; release naming and update publishing are disallowed."
+  }
+  if (-not $StageDir -or (Test-Path -LiteralPath $StageDir)) {
+    throw "Traditional Chinese IFW QA requires an explicit, nonexistent -StageDir."
+  }
+  $NameSuffix += "-ifw-zhtw-qa"
+}
 function Info($m)  { Write-Host "[installer] $m" -ForegroundColor Cyan }
 function Warn($m)  { Write-Host "[installer] WARNING: $m" -ForegroundColor Yellow }
 function Die($m)   { Write-Host "[installer] ERROR: $m" -ForegroundColor Red; exit 1 }
@@ -259,6 +273,9 @@ if (-not $ifwVersion -or $ifwVersion -lt [version]'4.10.0') {
   $binarycreator = Resolve-IfwTool "binarycreator.exe"
   $ifwVersion = Get-IfwVersion $binarycreator
   if (-not $ifwVersion -or $ifwVersion -lt [version]'4.10.0') { Die "Verified IFW setup did not yield a compatible runtime." }
+}
+if ($ExperimentalTraditionalChinese -and $ifwVersion -ne [version]'4.10.0') {
+  Die "Traditional Chinese IFW QA requires the catalog-matching pinned Qt Installer Framework 4.10.0."
 }
 # Keep repogen and binarycreator from the same validated tool installation.
 $IfwDir = Split-Path $binarycreator -Parent
@@ -694,6 +711,9 @@ $translationQrc = Join-Path $translationStage "translations.qrc"
   <file>qt_zh_CN.qm</file>
 </qresource></RCC>
 '@ | Set-Content -Encoding UTF8 $translationQrc
+if ($ExperimentalTraditionalChinese) {
+  & (Join-Path $installerRoot "prepare_traditional_stage.ps1") -QtBin (Split-Path $lrelease -Parent) -StageDir $StageDir
+}
 $ifwLicenseDir = Join-Path $stageData "share/licenses/QtInstallerFramework"
 New-Item -ItemType Directory -Force -Path $ifwLicenseDir | Out-Null
 Copy-Item (Join-Path $installerRoot "translations/LICENSE.GPL3-EXCEPT") $ifwLicenseDir

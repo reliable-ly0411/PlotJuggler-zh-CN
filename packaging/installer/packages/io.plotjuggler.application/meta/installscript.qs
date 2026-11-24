@@ -65,7 +65,7 @@ Component.prototype.installerLoaded = function()
     // language page last so it appears before directory selection, after welcome.
     installer.addWizardPage(component, "LanguageWidget", QInstaller.TargetDirectory);
     var languageWidget = component.userInterface("LanguageWidget");
-    languageWidget.language.currentIndex = installer.value("UILanguage").indexOf("zh") === 0 ? 0 : 1;
+    languageWidget.language.currentIndex = installerLanguageIndex(installer.value("UILanguage"), languageWidget.language.count);
     languageWidget.applyLanguage.clicked.connect(this, this.applyLanguage);
 
     targetDirectoryPage = gui.pageWidgetByObjectName("DynamicTargetWidget");
@@ -162,6 +162,28 @@ function quoteWindowsArgument(argument)
     }).replace(/(\\+)$/g, function(slashes) { return slashes + slashes; }) + '"';
 }
 
+// Preserve the shipped two-choice behavior; only the prepared three-choice
+// QA stage uses the normalized Traditional locale aliases.
+function installerLanguageIndex(locale, count)
+{
+    var raw = String(locale);
+    if (count < 3)
+        return raw.indexOf("zh") === 0 ? 0 : 1;
+    var normalized = raw.replace(/-/g, "_");
+    if (/^zh_(TW|HK|MO|Hant)(_|$)/i.test(normalized))
+        return 2;
+    return /^zh(_|$)/i.test(normalized) ? 0 : 1;
+}
+
+function installerLanguageForIndex(index, count)
+{
+    if (index === 0)
+        return "zh_CN";
+    if (index === 2 && count >= 3)
+        return "zh_TW";
+    return "en_US";
+}
+
 function restartArguments(originalArgv, language, target)
 {
     var result = ["--lang", language];
@@ -213,7 +235,7 @@ Component.prototype.applyLanguage = function()
 {
     console.log("PJ_LANGUAGE_RESTART:clicked");
     var widget = component.userInterface("LanguageWidget");
-    var language = widget.language.currentIndex === 0 ? "zh_CN" : "en_US";
+    var language = installerLanguageForIndex(widget.language.currentIndex, widget.language.count);
     if (installer.value("UILanguage") === language)
         return;
     var executable = installer.value("InstallerFilePath").replace(/'/g, "''");
@@ -283,8 +305,12 @@ Component.prototype.applyLanguage = function()
 Component.prototype.languageRestartFailed = function(reason)
 {
     console.log("PJ_LANGUAGE_RESTART_FAILED:" + reason);
-    QMessageBox.warning("language.restart", qsTranslate("PlotJugglerInstaller", "Language selection"),
-        qsTranslate("PlotJugglerInstaller", "Could not restart the installer. Close it and run it with --lang zh_CN or --lang en_US."));
+    var languageWidget = component.userInterface("LanguageWidget");
+    var message = languageWidget && languageWidget.language && languageWidget.language.count >= 3
+        ? qsTranslate("PlotJugglerInstaller", "Could not restart the installer. Close it and run it with --lang followed by one of: %1.")
+            .replace("%1", "zh_CN, en_US, zh_TW")
+        : qsTranslate("PlotJugglerInstaller", "Could not restart the installer. Close it and run it with --lang zh_CN or --lang en_US.");
+    QMessageBox.warning("language.restart", qsTranslate("PlotJugglerInstaller", "Language selection"), message);
 }
 
 // IFW 4.10 xml:lang metadata uses the OS QLocale, independently of --lang.
