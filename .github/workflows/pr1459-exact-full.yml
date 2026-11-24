@@ -1,0 +1,1324 @@
+# Exact product checkout; fork controller has no product edits or release.
+name: PR 1459 exact upstream full test (fork)
+'on':
+  push:
+    branches:
+    - zh-CN-4.x-ci/1459-full-fc74a66a
+permissions:
+  contents: read
+jobs:
+  linux-native:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    steps:
+    - name: Free up runner disk space
+      run: |
+        sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+          /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/lib/node_modules
+        sudo docker image prune --all --force >/dev/null 2>&1 || true
+        df -h /
+    - name: Use HTTPS for github.com submodules
+      run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+        ref: fc74a66a2416c06f265a087d21d8f3601d0a28b8
+        persist-credentials: false
+    - name: Prove exact unmodified upstream PR source
+      shell: bash
+      run: |
+        set -euo pipefail
+        test "$(git rev-parse HEAD)" = "fc74a66a2416c06f265a087d21d8f3601d0a28b8"
+        test "$(git show -s --format=%T HEAD)" = "25d3cf279349490cbd9d8562ddf59cdf013180f2"
+        test "$(git cat-file -p HEAD | sed -n 's/^parent //p')" = "c744d97a3a29399300c7252c6ad00ed06a978b05"
+        printf 'PR_1459_SOURCE=%s TREE=%s
+        ' "$(git rev-parse HEAD)" "$(git show -s --format=%T HEAD)"
+    - name: Read versions
+      id: versions
+      shell: bash
+      run: |
+        set -euo pipefail
+        source ./versions.env
+        echo "PJ_APP_VERSION=${PJ_APP_VERSION}" >> "${GITHUB_ENV}"
+        echo "PJ_QT_VERSION=${PJ_QT_VERSION}" >> "${GITHUB_ENV}"
+        echo "PJ_APPIMAGE_ARCH=${PJ_APPIMAGE_ARCH}" >> "${GITHUB_ENV}"
+        echo "app_version=${PJ_APP_VERSION}" >> "${GITHUB_OUTPUT}"
+        echo "qt_version=${PJ_QT_VERSION}" >> "${GITHUB_OUTPUT}"
+        echo "appimage_arch=${PJ_APPIMAGE_ARCH}" >> "${GITHUB_OUTPUT}"
+    - uses: conan-io/setup-conan@v1
+      with:
+        cache_packages: false
+    - name: Compute Conan cache hash
+      id: conan_cache
+      shell: bash
+      run: |
+        set -euo pipefail
+        # Hash every conanfile.txt and conan.lock under the tree so the key
+        # invalidates when any of them changes.
+        # "luau-fpic": the conan install below builds luau with -fPIC under its own
+        # package_id; a new key lets the run save the closure that holds it (the
+        # prefix restore still brings back everything else).
+        hash=$( { find . \( -name conanfile.txt -o -name conan.lock \) -not -path './build/*' -not -path './.git/*' \
+                -print0 | sort -z | xargs -0 sha256sum; echo luau-fpic; } | sha256sum | cut -c1-16)
+        echo "hash=${hash}" >> "${GITHUB_OUTPUT}"
+    - name: Restore Conan cache
+      id: conan-gha-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.conan2
+        key: conan-linux-gcc-release-v2-${{ steps.conan_cache.outputs.hash }}
+        restore-keys: |
+          conan-linux-gcc-release-v2-
+    - name: Seed Conan source download cache
+      shell: bash
+      run: |
+        set -euo pipefail
+        cache_dir="${RUNNER_TEMP}/conan-source-cache"
+        mkdir -p "${cache_dir}/s"
+        find .github/conan/source-backup -maxdepth 1 -type f ! -name README.md \
+          -exec cp -f {} "${cache_dir}/s/" \;
+
+        conan_home="$(conan config home)"
+        conf="${conan_home}/global.conf"
+        mkdir -p "${conan_home}"
+        if [[ -f "$conf" ]]; then
+          grep -vE '^core\.sources:(download_cache|download_urls)=' "$conf" > "${conf}.tmp" || true
+          mv "${conf}.tmp" "$conf"
+        fi
+        echo "core.sources:download_cache=${cache_dir}" >> "$conf"
+        # When a recipe's own host refuses a datacenter IP (sourceware.org 403s
+        # for elfutils, zlib.net 415s for minizip), retry through ConanCenter's
+        # sha256-addressed mirror instead of failing the build. 'origin' stays
+        # FIRST deliberately: Conan aborts the whole download if a backup entry
+        # answers 401/403 (only 404 falls through), so a mirror-first list would
+        # put every cold build at the mercy of that one server.
+        echo 'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources/"]' >> "$conf"
+        cat "$conf"
+    - name: Cache Qt
+      id: qt-cache
+      uses: actions/cache@v5
+      with:
+        path: .qt
+        key: qt-${{ steps.versions.outputs.qt_version }}-linux-gcc_64
+    - name: Install Qt via aqt
+      if: steps.qt-cache.outputs.cache-hit != 'true'
+      run: ./scripts/install_qt6.sh
+    - name: Install Qt 6 + FFmpeg VAAPI system dependencies
+      run: |
+        sudo apt-get update
+        # libva-dev / libdrm-dev are required by the FFmpeg Conan build:
+        # with_vaapi=True pulls vaapi/system, whose package_info resolves libva
+        # and libva-drm via pkg-config — they must exist on the build host.
+        sudo apt-get install -y \
+          libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev \
+          libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+          libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 \
+          libxcb-xkb1 libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 \
+          libva-dev libdrm-dev \
+          xvfb ccache zstd locales \
+          mesa-vulkan-drivers libvulkan-dev
+        # A decimal-comma locale: the tests that need one skip themselves without it.
+        sudo locale-gen de_DE.UTF-8
+    - name: Configure ccache
+      id: ccache_restore
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.cache/ccache
+        key: ccache-linux-g1-${{ github.ref_name }}-${{ github.sha }}
+        restore-keys: |
+          ccache-linux-g1-${{ github.ref_name }}-
+          ccache-linux-g1-${{ github.head_ref }}-
+          ccache-linux-g1-${{ github.base_ref }}-
+          ccache-linux-g1-main-
+    - name: Set ccache limits
+      run: |
+        ccache --set-config=max_size=2G
+        ccache --set-config=compression=true
+        ccache --set-config=compiler_check=content
+        ccache --set-config=hash_dir=false
+        ccache --set-config=base_dir="${GITHUB_WORKSPACE}"
+        ccache -z
+    - name: Conan install
+      id: conan_install
+      shell: bash
+      run: |
+        set -euo pipefail
+        conan profile detect --force
+        scripts/configure_conan_remote.sh
+        conan_log="${RUNNER_TEMP}/pj4-conan-install.log"
+        # luau: ConanCenter's Release binary is not PIC (no fPIC option); -fPIC in
+        # its package_id makes Conan build it instead. Same flags as build.sh.
+        conan install . --output-folder=build --build=missing -r=plotjuggler-conan -r=conancenter \
+          --lockfile=conan.lock --lockfile-partial \
+          -s build_type=Release -s compiler.cppstd=20 \
+          -c "luau/*:tools.build:cxxflags=['-fPIC']" \
+          -c "luau/*:tools.info.package_id:confs=['tools.build:cxxflags']" \
+          2>&1 | tee "$conan_log"
+        if grep -q "Building from source" "$conan_log"; then
+          echo "::notice::Conan built missing Linux binaries; the cache saves below persist them."
+        fi
+    - name: Build
+      run: ./build.sh --skip-conan-install
+    - name: Trim Conan cache before saving
+      if: always() && steps.conan-gha-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: conan cache clean "*" --build --source --temp || true
+    - name: Save Conan cache
+      if: ${{ false }}
+      uses: actions/cache/save@v5
+      with:
+        path: ~/.conan2
+        key: conan-linux-gcc-release-v2-${{ steps.conan_cache.outputs.hash }}
+    - name: Save ccache
+      if: ${{ false }}
+      uses: actions/cache/save@v5
+      with:
+        path: ~/.cache/ccache
+        key: ccache-linux-g1-${{ github.ref_name }}-${{ github.sha }}
+    - name: ccache stats
+      if: success()
+      run: ccache -s
+    - name: Test
+      env:
+        PJ_REQUIRE_GPU_TESTS: '1'
+        PJ_POINTCLOUD_GOLDEN_OUT: ${{ runner.temp }}/golden-out
+        PJ_RHI_TEST_DUMP_DIR: ${{ runner.temp }}/rhi-dump
+      run: |
+        mkdir -p "${PJ_POINTCLOUD_GOLDEN_OUT}"
+        # Mesa's software Vulkan driver (the manifest name carries the arch on
+        # Ubuntu).
+        VK_ICD_FILENAMES="$(ls /usr/share/vulkan/icd.d/lvp_icd*.json | head -n1)"
+        test -f "${VK_ICD_FILENAMES}"
+        export VK_ICD_FILENAMES
+        # Parallel except the QRhi display passes, which share the one xvfb
+        # screen and include frame benchmarks (as scripts/perf/gate_par.sh).
+        # Those need their QPA named: no test picks a real display on its own.
+        status=0
+        xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 -j"$(nproc)" -LE qrhi || status=1
+        QT_QPA_PLATFORM=xcb xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 -L qrhi || status=1
+        exit "${status}"
+    - name: Test the QRhi renderer at the OpenGL floor (3.3 core)
+      env:
+        PJ_REQUIRE_GPU_TESTS: '1'
+        MESA_GL_VERSION_OVERRIDE: '3.3'
+        MESA_GLSL_VERSION_OVERRIDE: '330'
+        PJ_RHI_TEST_DUMP_DIR: ${{ runner.temp }}/rhi-dump-gl33
+        QT_QPA_PLATFORM: xcb
+      run: |
+        xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --no-tests=error \
+          -R '^(scene3d_rhi_render_test|rhi_dock_lifecycle_test|media_viewer_render_test)\.opengl\.'
+    - name: Test floating docks moved to a screen of another pixel ratio
+      env:
+        PJ_REQUIRE_GPU_TESTS: '1'
+        PJ_REQUIRE_MIXED_DPR: '1'
+        QT_QPA_PLATFORM: xcb
+        QT_SCREEN_SCALE_FACTORS: 1;2
+      run: |
+        sudo apt-get install -y --no-install-recommends mutter xwayland
+        export XDG_RUNTIME_DIR="${RUNNER_TEMP}/mutter-run"
+        mkdir -p "${XDG_RUNTIME_DIR}"
+        chmod 700 "${XDG_RUNTIME_DIR}"
+        log="${RUNNER_TEMP}/mutter.log"
+        dbus-run-session -- mutter --wayland --headless --virtual-monitor 1024x768 \
+          --virtual-monitor 1024x768 --wayland-display pj-mixed-dpr > "${log}" 2>&1 &
+        for _ in $(seq 60); do grep -q "Using public X11 display" "${log}" && break; sleep 0.5; done
+        DISPLAY="$(grep -o 'Using public X11 display :[0-9]*' "${log}" | grep -o ':[0-9]*$' || true)"
+        if [[ -z "${DISPLAY}" ]]; then cat "${log}"; exit 1; fi
+        export DISPLAY
+        XAUTHORITY="$(ls "${XDG_RUNTIME_DIR}"/.mutter-Xwaylandauth.* | head -n1)"
+        export XAUTHORITY
+        VK_ICD_FILENAMES="$(ls /usr/share/vulkan/icd.d/lvp_icd*.json | head -n1)"
+        export VK_ICD_FILENAMES
+        ctest --test-dir build --output-on-failure --timeout 120 --no-tests=error \
+          -R '^(rhi_dock_lifecycle_test|rhi_mixed_dock_test)\.(opengl|vulkan)\..*AnotherPixelRatio$'
+    - name: QA regression scripts
+      timeout-minutes: 10
+      env:
+        GH_TOKEN: ${{ github.token }}
+        CSV_LOADER_TAG: data_load_csv/v1.0.11
+        DUMMY_STREAMER_TAG: data_stream_dummy/v1.0.1
+        UDP_SERVER_TAG: data_stream_udp/v0.9.2
+        MCAP_LOADER_TAG: data_load_mcap/v1.3.1
+        ROS_PARSER_TAG: parser_ros/v1.4.2
+        TMPDIR: ${{ runner.temp }}/pjqa
+      run: |
+        mkdir -p "${TMPDIR}"
+        plugins="${RUNNER_TEMP}/pjqa-plugins"
+        gh release download "${CSV_LOADER_TAG}" -R PlotJuggler/pj-official-plugins \
+          -p 'csv-loader-*-linux-x86_64.zip' -D "${plugins}"
+        gh release download "${DUMMY_STREAMER_TAG}" -R PlotJuggler/pj-official-plugins \
+          -p 'dummy-streamer-*-linux-x86_64.zip' -D "${plugins}"
+        gh release download "${UDP_SERVER_TAG}" -R PlotJuggler/pj-official-plugins \
+          -p 'udp-server-*-linux-x86_64.zip' -D "${plugins}"
+        gh release download "${MCAP_LOADER_TAG}" -R PlotJuggler/pj-official-plugins \
+          -p 'mcap-loader-*-linux-x86_64.zip' -D "${plugins}"
+        gh release download "${ROS_PARSER_TAG}" -R PlotJuggler/pj-official-plugins \
+          -p 'ros-parser-*-linux-x86_64.zip' -D "${plugins}"
+        # One archive per call: `unzip a.zip b.zip` reads b.zip as a member name of a.zip.
+        for z in "${plugins}"/*.zip; do unzip -q "$z" -d "${plugins}"; done
+        python3 scripts/qa/pjqa.py regress --plugin-dir "${plugins}"
+    - name: Upload failed QA regression homes
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: qa-regressions-linux-failures
+        path: ${{ runner.temp }}/pjqa
+        if-no-files-found: ignore
+    - name: Upload point-cloud golden and QRhi failure images
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: scene3d-linux-failures
+        path: |
+          ${{ runner.temp }}/golden-out
+          ${{ runner.temp }}/rhi-dump
+          ${{ runner.temp }}/rhi-dump-gl33
+        if-no-files-found: ignore
+  windows-native:
+    name: build
+    runs-on: windows-2022
+    timeout-minutes: 150
+    permissions:
+      contents: read
+    env:
+      SCCACHE_GHA_ENABLED: 'true'
+    steps:
+    - name: Use HTTPS for github.com submodules
+      shell: bash
+      run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+        ref: fc74a66a2416c06f265a087d21d8f3601d0a28b8
+        persist-credentials: false
+    - name: Prove exact unmodified upstream PR source
+      shell: bash
+      run: |
+        set -euo pipefail
+        test "$(git rev-parse HEAD)" = "fc74a66a2416c06f265a087d21d8f3601d0a28b8"
+        test "$(git show -s --format=%T HEAD)" = "25d3cf279349490cbd9d8562ddf59cdf013180f2"
+        test "$(git cat-file -p HEAD | sed -n 's/^parent //p')" = "c744d97a3a29399300c7252c6ad00ed06a978b05"
+        printf 'PR_1459_SOURCE=%s TREE=%s
+        ' "$(git rev-parse HEAD)" "$(git show -s --format=%T HEAD)"
+    - name: Read versions
+      id: versions
+      shell: bash
+      run: |
+        set -euo pipefail
+        source ./versions.env
+        echo "PJ_APP_VERSION=${PJ_APP_VERSION}" >> "${GITHUB_ENV}"
+        echo "PJ_QT_VERSION=${PJ_QT_VERSION}" >> "${GITHUB_ENV}"
+        echo "PJ_APPIMAGE_ARCH=${PJ_APPIMAGE_ARCH}" >> "${GITHUB_ENV}"
+        echo "app_version=${PJ_APP_VERSION}" >> "${GITHUB_OUTPUT}"
+        echo "qt_version=${PJ_QT_VERSION}" >> "${GITHUB_OUTPUT}"
+        echo "appimage_arch=${PJ_APPIMAGE_ARCH}" >> "${GITHUB_OUTPUT}"
+    - uses: conan-io/setup-conan@v1
+      with:
+        cache_packages: false
+    - name: Setup MSVC environment
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+    - name: Compute Conan cache key
+      id: public_conan_cache
+      shell: pwsh
+      run: |
+        # The runner is pinned to windows-2022 above, so this identity maps to
+        # one stable MSVC/Release graph. The Actions cache is the
+        # binary store; ConanCenter is the source-build fallback.
+        $cacheVersion = "v6"
+        $combined = (Get-FileHash conanfile.txt -Algorithm SHA256).Hash + (Get-FileHash conan.lock -Algorithm SHA256).Hash
+        $stream = [System.IO.MemoryStream]::new([System.Text.Encoding]::UTF8.GetBytes($combined))
+        $fileHash = (Get-FileHash -InputStream $stream -Algorithm SHA256).Hash.Substring(0, 16).ToLower()
+        $hash = "$cacheVersion-$fileHash"
+        "hash=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        "restore_prefix=conan-windows-msvc-release-$cacheVersion-" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+    - name: Restore Conan cache
+      id: conan-gha-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.conan2
+        key: conan-windows-msvc-release-${{ steps.public_conan_cache.outputs.hash }}
+        restore-keys: |
+          ${{ steps.public_conan_cache.outputs.restore_prefix }}
+    - name: Seed Conan source download cache
+      shell: pwsh
+      run: |
+        $cacheDir = (Join-Path $env:RUNNER_TEMP "conan-source-cache").Replace('\', '/')
+        New-Item -ItemType Directory -Force -Path "$cacheDir/s" | Out-Null
+        Get-ChildItem ".github/conan/source-backup" -Exclude "README.md" |
+          Copy-Item -Destination "$cacheDir/s"
+        $conanHome = (conan config home | Out-String).Trim()
+        $conf = Join-Path $conanHome "global.conf"
+        $lines = @()
+        if (Test-Path $conf) {
+          $lines = @(Get-Content $conf | Where-Object { $_ -notmatch '^core\.sources:(download_cache|download_urls)=' })
+        }
+        $lines += "core.sources:download_cache=$cacheDir"
+        # Retry through ConanCenter's sha256-addressed mirror when a recipe's own
+        # host refuses a datacenter IP. 'origin' stays FIRST: Conan aborts the
+        # download if a backup entry answers 401/403 (only 404 falls through).
+        $lines += 'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources/"]'
+        $lines | Set-Content $conf
+        # Surface the effective conf in the log so a clobber regression is
+        # visible at a glance.
+        Get-Content $conf
+    - name: Restore Qt SDK cache
+      id: qt-sdk-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: .qt/${{ steps.versions.outputs.qt_version }}/msvc2022_64
+        key: qt-sdk-${{ steps.versions.outputs.qt_version }}-windows-msvc2022_64-v1
+    - name: Restore canonical main Qt cache
+      if: steps.qt-sdk-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/restore@v5
+      with:
+        path: .qt
+        key: qt-${{ steps.versions.outputs.qt_version }}-windows-msvc2022_64
+    - name: Verify Qt cache content
+      id: qt-sdk-verify
+      shell: bash
+      run: |
+        if [[ -x ".qt/${PJ_QT_VERSION}/msvc2022_64/bin/qmake.exe" ]]; then
+          echo "valid=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "valid=false" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Install Qt via aqt
+      if: steps.qt-sdk-verify.outputs.valid != 'true'
+      shell: bash
+      run: |
+        # Released aqt (<=3.3.0) can't install the pinned Qt on Windows: Qt moved
+        # the Windows repo to per-arch folders and released aqt still requests
+        # the old nested path (miurahr/aqtinstall#959 / #1007), failing with
+        # "Failed to locate XML data for Qt version". The fix (PR #1000)
+        # is merged but unreleased, so pin to that merge commit.
+        # TODO: revert to `pip install 'aqtinstall>=3.3.1'` once it ships.
+        pip install "git+https://github.com/miurahr/aqtinstall.git@8c3695d4a4e1ceabf6a74dc6c79681656dc6b74b"
+        # Retry with backoff for transient mirror failures.
+        rm -rf ".qt/${PJ_QT_VERSION}/msvc2022_64"
+        attempt=0
+        until aqt install-qt windows desktop "${PJ_QT_VERSION}" win64_msvc2022_64 --outputdir ./.qt; do
+          attempt=$((attempt + 1))
+          if [ "$attempt" -ge 5 ]; then echo "aqt failed after ${attempt} attempts" >&2; exit 1; fi
+          echo "aqt attempt ${attempt} failed (transient mirror?); retrying in $((attempt * 15))s..."
+          sleep $((attempt * 15))
+        done
+    - name: Save Qt SDK cache
+      if: ${{ false }}
+      uses: actions/cache/save@v5
+      with:
+        path: .qt/${{ steps.versions.outputs.qt_version }}/msvc2022_64
+        key: qt-sdk-${{ steps.versions.outputs.qt_version }}-windows-msvc2022_64-v1
+    - name: Install sccache
+      uses: mozilla-actions/sccache-action@v0.0.10
+      with:
+        version: v0.16.0
+    - name: Conan install
+      id: conan_install
+      shell: bash
+      run: |
+        conan profile detect --force
+        scripts/configure_conan_remote.sh
+        # Tell Conan to generate a Ninja-compatible toolchain. Without this
+        # override Conan auto-picks "Visual Studio 17 2022" and stamps the
+        # toolchain with CMAKE_GENERATOR_PLATFORM=x64 + CMAKE_GENERATOR_TOOLSET=v143.
+        # Then our `cmake -G "Ninja Multi-Config"` below errors with:
+        #   Generator Ninja Multi-Config does not support platform specification,
+        #   but platform x64 was specified.
+        # CPython's Conan recipe disables the STATIC MSVC build (>=3.10), so the
+        # embedded Python backend (pj_scripting) must link it shared here.
+        conan_log="${RUNNER_TEMP}/pj4-conan-install.log"
+        conan install . --output-folder=build --build=missing -r=plotjuggler-conan -r=conancenter \
+          --lockfile=conan.lock --lockfile-partial \
+          -s build_type=Release -s compiler.cppstd=20 \
+          -o "cpython/*:shared=True" \
+          -c tools.cmake.cmaketoolchain:generator="Ninja Multi-Config" \
+          2>&1 | tee "$conan_log"
+        if grep -q "Building from source" "$conan_log"; then
+          echo "::notice::Conan built missing binaries; the cache save below persists them."
+        fi
+    - name: Trim Conan cache before saving
+      if: always() && steps.conan-gha-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: conan cache clean "*" --build --source --temp || true
+    - name: Save Conan cache
+      if: ${{ false }}
+      uses: actions/cache/save@v5
+      with:
+        path: ~/.conan2
+        key: conan-windows-msvc-release-${{ steps.public_conan_cache.outputs.hash }}
+    - name: Build
+      shell: bash
+      run: |
+        QT_DIR="$(pwd)/.qt/${PJ_QT_VERSION}/msvc2022_64"
+        if [[ ! -d "$QT_DIR" ]]; then
+          echo "::error::Qt ${PJ_QT_VERSION} not found at $QT_DIR"
+          exit 1
+        fi
+
+        # Use Ninja Multi-Config so sccache is actually invoked: CMake's
+        # CMAKE_<LANG>_COMPILER_LAUNCHER is honored by the Ninja and
+        # Makefile generators only — the Visual Studio (MSBuild) generator
+        # silently ignores it ("Compile requests: 0" in sccache --show-stats).
+        #
+        # CMAKE_MSVC_DEBUG_INFORMATION_FORMAT compiles Release, the
+        # configuration built here, without debug information. MSVC has no
+        # line-tables-only level, and full debug info writes the types of
+        # every included header into every .obj, which costs compile time,
+        # sccache storage and link time. The linker's /DEBUG (added to Release
+        # links by cmake/PjDebugInfo.cmake) still writes a PDB of public
+        # symbols, so a crash backtrace names its functions.
+        # Debug gets /Z7, never /Zi: /Zi writes a shared PDB through
+        # mspdbsrv.exe, which sccache cannot cache and parallel cl.exe
+        # workers race on (fatal C1041 on pj_base.pdb).
+        #
+        # CMAKE_POLICY_DEFAULT_CMP0141=NEW is required for CMake to honor
+        # CMAKE_MSVC_DEBUG_INFORMATION_FORMAT at all. The variable was added
+        # in CMake 3.25 behind policy CMP0141; without NEW, CMake silently
+        # falls back to the legacy /Zi flag. We can't bump
+        # cmake_minimum_required past 3.22 because Ubuntu 22.04 LTS ships
+        # CMake 3.22.1, so the opt-in lives here in the CI invocation.
+        launcher_args=(-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache)
+
+        cmake -S . -B build -G "Ninja Multi-Config" \
+          -DCMAKE_TOOLCHAIN_FILE="build/conan_toolchain.cmake" \
+          -DCMAKE_PREFIX_PATH="$QT_DIR" \
+          -DCMAKE_POLICY_DEFAULT_CMP0141=NEW \
+          '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=$<$<CONFIG:Debug>:Embedded>' \
+          "${launcher_args[@]}"
+
+        # -k 0: one run lists every compile error.
+        cmake --build build --config Release --parallel -- -k 0
+
+        # Surface sccache stats before the post-action does, so they
+        # appear in the Build step's log next to the compile output.
+        sccache --show-stats
+    - name: Put the runtime DLLs on PATH
+      shell: bash
+      run: |
+        echo "$(cygpath -w "$(pwd)/.qt/${PJ_QT_VERSION}/msvc2022_64/bin")" >> "$GITHUB_PATH"
+        # FFmpeg's Conan bin dir(s) are emitted at configure time by
+        # pj_scene2D/core/CMakeLists.txt (Conan's package path is hashed and not
+        # knowable here). Prepend each so every exe that transitively links
+        # pj_scene2d_core resolves the FFmpeg DLLs — covers all such tests at once,
+        # no per-target list.
+        # CPython runtime dir (pythonXY.dll) for python_engine_test — emitted by
+        # pj_scripting/CMakeLists.txt when cpython is built shared (Windows only).
+        # Same rationale as the FFmpeg dirs above.
+        for f in build/pj_ffmpeg_bin_dirs.txt build/pj_python_bin_dirs.txt; do
+          [[ -f "$f" ]] || continue
+          while IFS= read -r _d; do
+            [[ -n "$_d" ]] && echo "$_d" >> "$GITHUB_PATH"
+          done < "$f"
+        done
+    - name: Test
+      shell: bash
+      run: |
+        # --timeout kills any single test after 2 min so a deadlocked test
+        # fails loudly with its name in the log instead of stalling the job.
+        # The QRhi display runners (label qrhi) run in the D3D11 step below.
+        ctest --test-dir build --build-config Release --output-on-failure --timeout 120 -LE qrhi \
+          -j "${NUMBER_OF_PROCESSORS}"
+    - name: Test the QRhi display runners on D3D11 (WARP)
+      shell: bash
+      env:
+        PJ_POINTCLOUD_GOLDEN_OUT: ${{ runner.temp }}/golden-out
+        PJ_RHI_TEST_DUMP_DIR: ${{ runner.temp }}/rhi-dump
+      run: |
+        # The native `windows` QPA (the test main defaults to `offscreen`, which
+        # cannot render the 3D view), WARP as the adapter (the flag Qt's widget
+        # backing store honours; the runner has no GPU), a missing backend fails
+        # instead of skipping, and every view logs the backend and adapter it got.
+        export QT_QPA_PLATFORM=windows
+        export QSG_RHI_PREFER_SOFTWARE_RENDERER=1
+        export PJ_REQUIRE_GPU_TESTS=1
+        export QT_LOGGING_RULES="pj.graphics.info=true"
+        # Without a console Qt logs to OutputDebugString, which ctest never sees.
+        export QT_FORCE_STDERR_LOGGING=1
+        mkdir -p "$PJ_POINTCLOUD_GOLDEN_OUT"
+        log="${RUNNER_TEMP}/qrhi-d3d11-ctest.log"
+        ctest --test-dir build --build-config Release -V --timeout 120 --no-tests=error -L qrhi-d3d11 2>&1 | tee "$log" ||
+          status=$?
+        # Every view must report D3D11 on a software (Cpu) adapter, i.e. WARP,
+        # and at least one plot canvas must have run on D3D11.
+        bash scripts/ci/check_qrhi_backend.sh "$log" 'D3D11, .*deviceType=Cpu\)' D3D11
+        exit "${status:-0}"
+    - name: Upload QRhi D3D11 failure images
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: qrhi-d3d11-failures
+        path: |
+          ${{ runner.temp }}/golden-out
+          ${{ runner.temp }}/rhi-dump
+        if-no-files-found: ignore
+  macos-native:
+    runs-on: macos-15
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    env:
+      SCCACHE_GHA_ENABLED: 'true'
+    steps:
+    - name: Probe Metal (device and presentation)
+      shell: bash
+      run: |
+        sw_vers
+        echo "cores: $(sysctl -n hw.ncpu)"
+        system_profiler SPDisplaysDataType
+        cat > "${RUNNER_TEMP}/metal_probe.swift" <<'SWIFT'
+        import AppKit
+        import Metal
+        import QuartzCore
+
+        guard let device = MTLCreateSystemDefaultDevice() else {
+          print("no Metal device"); exit(1)
+        }
+        print("Metal device: \(device.name), low power \(device.isLowPower), headless \(device.isHeadless)")
+        let app = NSApplication.shared
+        app.setActivationPolicy(.regular)
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 64, height: 64),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        let layer = CAMetalLayer()
+        layer.device = device
+        layer.pixelFormat = .bgra8Unorm
+        layer.drawableSize = CGSize(width: 64, height: 64)
+        window.contentView!.wantsLayer = true
+        window.contentView!.layer = layer
+        window.makeKeyAndOrderFront(nil)
+        guard let drawable = layer.nextDrawable(), let queue = device.makeCommandQueue(),
+              let buffer = queue.makeCommandBuffer() else {
+          print("no drawable to present"); exit(1)
+        }
+        let pass = MTLRenderPassDescriptor()
+        pass.colorAttachments[0].texture = drawable.texture
+        pass.colorAttachments[0].loadAction = .clear
+        pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 1, blue: 0, alpha: 1)
+        pass.colorAttachments[0].storeAction = .store
+        buffer.makeRenderCommandEncoder(descriptor: pass)!.endEncoding()
+        buffer.present(drawable)
+        buffer.commit()
+        buffer.waitUntilCompleted()
+        guard buffer.status == .completed else {
+          print("present failed: \(String(describing: buffer.error))"); exit(1)
+        }
+        print("presented a drawable")
+        SWIFT
+        swift "${RUNNER_TEMP}/metal_probe.swift"
+    - name: Use HTTPS for github.com submodules
+      shell: bash
+      run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+        ref: fc74a66a2416c06f265a087d21d8f3601d0a28b8
+        persist-credentials: false
+    - name: Prove exact unmodified upstream PR source
+      shell: bash
+      run: |
+        set -euo pipefail
+        test "$(git rev-parse HEAD)" = "fc74a66a2416c06f265a087d21d8f3601d0a28b8"
+        test "$(git show -s --format=%T HEAD)" = "25d3cf279349490cbd9d8562ddf59cdf013180f2"
+        test "$(git cat-file -p HEAD | sed -n 's/^parent //p')" = "c744d97a3a29399300c7252c6ad00ed06a978b05"
+        printf 'PR_1459_SOURCE=%s TREE=%s
+        ' "$(git rev-parse HEAD)" "$(git show -s --format=%T HEAD)"
+    - name: Read versions
+      id: versions
+      shell: bash
+      run: |
+        set -euo pipefail
+        source ./versions.env
+        echo "PJ_QT_VERSION=${PJ_QT_VERSION}" >> "${GITHUB_ENV}"
+        echo "qt_version=${PJ_QT_VERSION}" >> "${GITHUB_OUTPUT}"
+    - name: Install build tools
+      shell: bash
+      run: |
+        command -v ninja || HOMEBREW_NO_AUTO_UPDATE=1 brew install ninja
+        xcodebuild -version
+        clang --version
+    - name: Install sccache
+      uses: mozilla-actions/sccache-action@v0.0.10
+      with:
+        version: v0.16.0
+    - uses: conan-io/setup-conan@v1
+      with:
+        cache_packages: false
+    - name: Compute Conan cache key
+      id: conan_cache
+      shell: bash
+      run: |
+        hash=$( (cat conanfile.txt conan.lock; clang --version) | shasum -a 256 | cut -c1-16)
+        echo "hash=v1-${hash}" >> "$GITHUB_OUTPUT"
+    - name: Restore Conan cache
+      id: conan-gha-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.conan2
+        key: conan-macos-arm64-release-${{ steps.conan_cache.outputs.hash }}
+        restore-keys: conan-macos-arm64-release-v1-
+    - name: Seed Conan source download cache
+      shell: bash
+      run: |
+        set -euo pipefail
+        cache_dir="${RUNNER_TEMP}/conan-source-cache"
+        mkdir -p "${cache_dir}/s"
+        find .github/conan/source-backup -maxdepth 1 -type f ! -name README.md \
+          -exec cp -f {} "${cache_dir}/s/" \;
+        conan_home="$(conan config home)"
+        conf="${conan_home}/global.conf"
+        mkdir -p "${conan_home}"
+        if [[ -f "$conf" ]]; then
+          grep -v '^core\.sources:download_cache=' "$conf" > "${conf}.tmp" || true
+          mv "${conf}.tmp" "$conf"
+        fi
+        echo "core.sources:download_cache=${cache_dir}" >> "$conf"
+        cat "$conf"
+    - name: Restore Qt SDK cache
+      id: qt-sdk-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: .qt/${{ steps.versions.outputs.qt_version }}/macos
+        key: qt-sdk-${{ steps.versions.outputs.qt_version }}-macos-v1
+    - name: Install Qt via aqt
+      if: steps.qt-sdk-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        # Same aqt pin as windows-ci.yml (released aqt cannot resolve the new repo layout).
+        pip3 install --break-system-packages \
+          "git+https://github.com/miurahr/aqtinstall.git@8c3695d4a4e1ceabf6a74dc6c79681656dc6b74b"
+        attempt=0
+        until aqt install-qt mac desktop "${PJ_QT_VERSION}" clang_64 --outputdir ./.qt; do
+          attempt=$((attempt + 1))
+          if [ "$attempt" -ge 5 ]; then echo "aqt failed after ${attempt} attempts" >&2; exit 1; fi
+          sleep $((attempt * 15))
+        done
+        test -x ".qt/${PJ_QT_VERSION}/macos/bin/qmake"
+    - name: Save Qt SDK cache
+      if: ${{ false }}
+      uses: actions/cache/save@v5
+      with:
+        path: .qt/${{ steps.versions.outputs.qt_version }}/macos
+        key: qt-sdk-${{ steps.versions.outputs.qt_version }}-macos-v1
+    - name: Conan install
+      shell: bash
+      run: |
+        set -euo pipefail
+        conan profile detect --force
+        scripts/configure_conan_remote.sh
+        conan_log="${RUNNER_TEMP}/pj4-conan-install.log"
+        conan install . --output-folder=build --build=missing -r=plotjuggler-conan -r=conancenter \
+          --lockfile=conan.lock --lockfile-partial \
+          -s build_type=Release -s compiler.cppstd=20 \
+          -c tools.cmake.cmaketoolchain:generator=Ninja \
+          2>&1 | tee "$conan_log"
+        if grep -q "Building from source" "$conan_log"; then
+          echo "::notice::Conan built missing macOS binaries; the cache save below persists them."
+        fi
+    - name: Trim Conan cache before saving
+      if: always() && steps.conan-gha-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: conan cache clean "*" --build --source --temp || true
+    - name: Save Conan cache
+      if: ${{ false }}
+      uses: actions/cache/save@v5
+      with:
+        path: ~/.conan2
+        key: conan-macos-arm64-release-${{ steps.conan_cache.outputs.hash }}
+    - name: Build (QRhi)
+      id: build
+      shell: bash
+      run: |
+        launcher_args=(-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache)
+        cmake -S . -B build -G Ninja \
+          "-DCMAKE_TOOLCHAIN_FILE=${PWD}/build/conan_toolchain.cmake" \
+          -DCMAKE_BUILD_TYPE=Release \
+          "-DCMAKE_PREFIX_PATH=${PWD}/.qt/${PJ_QT_VERSION}/macos" \
+          "${launcher_args[@]}" \
+          -DPJ_DEBUG_INFO=lines \
+          -DPJ_BUILD_DEMOS=OFF
+        # -k 0: one run lists every compile error.
+        cmake --build build --parallel -- -k 0
+        sccache --show-stats
+    - name: Test the QRhi renderer (Metal)
+      if: always() && steps.build.outcome == 'success'
+      shell: bash
+      env:
+        QT_QPA_PLATFORM: cocoa
+        PJ_REQUIRE_GPU_TESTS: '1'
+        QT_LOGGING_RULES: pj.graphics.info=true
+        QT_FORCE_STDERR_LOGGING: '1'
+        PJ_POINTCLOUD_GOLDEN_OUT: ${{ runner.temp }}/golden-out
+        PJ_RHI_TEST_DUMP_DIR: ${{ runner.temp }}/rhi-dump
+      run: |
+        mkdir -p "$PJ_POINTCLOUD_GOLDEN_OUT"
+        log="${RUNNER_TEMP}/qrhi-metal-ctest.log"
+        ctest --test-dir build -V --timeout 120 -L qrhi-metal 2>&1 | tee "$log" || status=$?
+        # Every view on Metal, and at least one plot canvas among them.
+        bash scripts/ci/check_qrhi_backend.sh "$log" 'Metal, ' Metal
+        exit "${status:-0}"
+    - name: Test the QRhi renderer (OpenGL)
+      if: always() && steps.build.outcome == 'success' && github.event_name != 'pull_request'
+      shell: bash
+      env:
+        QT_QPA_PLATFORM: cocoa
+        PJ_REQUIRE_GPU_TESTS: '1'
+        QT_LOGGING_RULES: pj.graphics.info=true
+        QT_FORCE_STDERR_LOGGING: '1'
+        PJ_POINTCLOUD_GOLDEN_OUT: ${{ runner.temp }}/golden-out
+        PJ_RHI_TEST_DUMP_DIR: ${{ runner.temp }}/rhi-dump
+      run: |
+        mkdir -p "$PJ_POINTCLOUD_GOLDEN_OUT"
+        log="${RUNNER_TEMP}/qrhi-opengl-ctest.log"
+        exclude='^pointcloud_golden_test\.|SubPixelCubeCloudBecomesColouredSprites|FilledGridLinesFollowOddCellEdges|ShadowToggleRebindsKeptMeshes|^rhi_mixed_dock_test\.opengl_dpr2\.'
+        ctest --test-dir build -V --timeout 120 -L qrhi-opengl -E "${exclude}" \
+          2>&1 | tee "$log" || status=$?
+        bash scripts/ci/check_qrhi_backend.sh "$log" 'OpenGL, ' OpenGL
+        exit "${status:-0}"
+    - name: Backtrace the failed QRhi cases
+      if: failure() && steps.build.outcome == 'success'
+      shell: bash
+      env:
+        QT_QPA_PLATFORM: cocoa
+        PJ_REQUIRE_GPU_TESTS: '1'
+        QT_FORCE_STDERR_LOGGING: '1'
+      run: |
+        failed=$(cat "${RUNNER_TEMP}"/qrhi-*-ctest.log 2>/dev/null |
+          sed -n '/The following tests FAILED:/,$p' | grep -oE '[0-9]+ - [^ ]+' | awk '{print $3}' | sort -u | head -n 3 || true)
+        for name in $failed; do
+          # <runner>.<backend>.<Suite>.<Case>
+          runner=${name%%.*}
+          rest=${name#*.}
+          backend=${rest%%.*}
+          rest=${rest#*.}
+          scale=1
+          if [[ $backend == opengl_dpr2 ]]; then
+            backend=opengl
+            scale=2
+          fi
+          exe=$(find build -type f -name "$runner" -perm -u+x | head -n 1)
+          [[ -n $exe ]] || continue
+          echo "::group::lldb $name"
+          PJ_GRAPHICS_API=$backend QT_SCALE_FACTOR=$scale \
+            lldb --batch -o run -k "thread backtrace all" -k quit -- "$exe" --gtest_filter="$rest" 2>&1 |
+            head -n 400 || true
+          echo "::endgroup::"
+        done
+    - name: Test (unit)
+      if: always() && steps.build.outcome == 'success'
+      shell: bash
+      run: ctest --test-dir build --output-on-failure --timeout 120 -LE qrhi -j "$(sysctl -n hw.ncpu)"
+    - name: Slowest QRhi cases
+      if: always() && steps.build.outcome == 'success'
+      shell: bash
+      run: |
+        for backend in metal opengl; do
+          log="${RUNNER_TEMP}/qrhi-${backend}-ctest.log"
+          [[ -f "${log}" ]] || continue
+          {
+            echo "### Slowest QRhi cases (${backend})"
+            echo '```'
+            # sed reads all its input: head would exit early and macOS sort fails the pipefail step with
+            # "stdout: Broken pipe" (exit 2) whenever the log outgrows the pipe buffer.
+            awk '/Test +#[0-9]+:/ && / sec$/ {print $(NF-1), $0}' "${log}" | sort -rn | sed -n '1,15p' | cut -d' ' -f2-
+            awk '/Test +#[0-9]+:/ && / sec$/ {t += $(NF-1)} END {printf "total %.0f s in tests\n", t}' "${log}"
+            echo '```'
+          } | tee -a "${GITHUB_STEP_SUMMARY}"
+        done
+    - name: Upload QRhi Metal failure images
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: qrhi-metal-failures
+        path: |
+          ${{ runner.temp }}/golden-out
+          ${{ runner.temp }}/rhi-dump
+        if-no-files-found: ignore
+  pre-commit:
+    name: pre-commit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        ref: fc74a66a2416c06f265a087d21d8f3601d0a28b8
+        persist-credentials: false
+    - name: Prove exact unmodified upstream PR source
+      shell: bash
+      run: |
+        set -euo pipefail
+        test "$(git rev-parse HEAD)" = "fc74a66a2416c06f265a087d21d8f3601d0a28b8"
+        test "$(git show -s --format=%T HEAD)" = "25d3cf279349490cbd9d8562ddf59cdf013180f2"
+        test "$(git cat-file -p HEAD | sed -n 's/^parent //p')" = "c744d97a3a29399300c7252c6ad00ed06a978b05"
+        printf 'PR_1459_SOURCE=%s TREE=%s
+        ' "$(git rev-parse HEAD)" "$(git show -s --format=%T HEAD)"
+    - uses: actions/setup-python@v6
+    - uses: pre-commit/action@v3.0.1
+  wasm:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+    - name: Free up runner disk space
+      run: |
+        sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+          /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/lib/node_modules
+        sudo docker image prune --all --force >/dev/null 2>&1 || true
+        df -h /
+    - name: Use HTTPS for github.com submodules
+      run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        submodules: recursive
+        ref: fc74a66a2416c06f265a087d21d8f3601d0a28b8
+        persist-credentials: false
+    - name: Prove exact unmodified upstream PR source
+      shell: bash
+      run: |
+        set -euo pipefail
+        test "$(git rev-parse HEAD)" = "fc74a66a2416c06f265a087d21d8f3601d0a28b8"
+        test "$(git show -s --format=%T HEAD)" = "25d3cf279349490cbd9d8562ddf59cdf013180f2"
+        test "$(git cat-file -p HEAD | sed -n 's/^parent //p')" = "c744d97a3a29399300c7252c6ad00ed06a978b05"
+        printf 'PR_1459_SOURCE=%s TREE=%s
+        ' "$(git rev-parse HEAD)" "$(git show -s --format=%T HEAD)"
+    - name: Read toolchain versions
+      id: versions
+      shell: bash
+      run: |
+        set -euo pipefail
+        source ./versions.env
+        for name in PJ_QT_VERSION PJ_EMSCRIPTEN_VERSION PJ_WASM_NODE_VERSION; do
+          echo "${name}=${!name}" >> "${GITHUB_ENV}"
+        done
+        echo "wasm_qt=${PJ_QT_VERSION}" >> "${GITHUB_OUTPUT}"
+        echo "emscripten=${PJ_EMSCRIPTEN_VERSION}" >> "${GITHUB_OUTPUT}"
+        echo "node=${PJ_WASM_NODE_VERSION}" >> "${GITHUB_OUTPUT}"
+    - name: Install pinned packaging runtime
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ steps.versions.outputs.node }}
+    - name: Install build tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends ccache ninja-build python3-pip make pkg-config
+        # Scene2D video cross-compiles dav1d, whose build system is meson.
+        python3 -m pip install --user meson
+        # Runtime libraries for the desktop host Qt tools (qsb bakes the QRhi
+        # shaders offline and transitively links the full Qt GUI stack, even
+        # headless). The lean runner ships none of these, so qsb would die at
+        # load time with exit 127.
+        sudo apt-get install -y --no-install-recommends \
+          libgl1 libegl1 libfontconfig1 libfreetype6 libxkbcommon0 \
+          libx11-6 libxcb1 libglib2.0-0 libdbus-1-3
+    - name: Cache Qt WebAssembly and host kits
+      id: qt-cache
+      uses: actions/cache@v5
+      with:
+        path: .qt-wasm
+        key: qt-wasm-${{ steps.versions.outputs.wasm_qt }}-multithread-shadertools-v1
+    - name: Install Qt WebAssembly and host kits
+      if: steps.qt-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        python3 -m pip install --user 'aqtinstall==3.3.0'
+        "${HOME}/.local/bin/aqt" install-qt linux desktop \
+          "${PJ_QT_VERSION}" linux_gcc_64 --outputdir .qt-wasm \
+          -m qtshadertools
+        "${HOME}/.local/bin/aqt" install-qt all_os wasm \
+          "${PJ_QT_VERSION}" wasm_multithread --outputdir .qt-wasm \
+          -m qtshadertools
+    - name: Cache Emscripten SDK
+      id: emsdk-cache
+      uses: actions/cache@v5
+      with:
+        path: .emsdk
+        key: emsdk-${{ steps.versions.outputs.emscripten }}-linux-x64-v1
+    - name: Install Emscripten SDK
+      if: steps.emsdk-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        git clone --depth 1 --branch "${PJ_EMSCRIPTEN_VERSION}" \
+          https://github.com/emscripten-core/emsdk.git .emsdk
+        .emsdk/emsdk install "${PJ_EMSCRIPTEN_VERSION}"
+        .emsdk/emsdk activate "${PJ_EMSCRIPTEN_VERSION}"
+    - name: Restore WebAssembly compiler cache
+      id: ccache_restore
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.cache/ccache
+        key: ccache-wasm-ci-${{ github.sha }}
+        restore-keys: |
+          ccache-wasm-ci-
+    - name: Configure compiler cache
+      run: |
+        ccache --set-config=max_size=4G
+        ccache --set-config=compression=true
+        ccache --set-config=compiler_check=content
+        ccache --set-config=hash_dir=false
+        ccache --set-config=base_dir="${GITHUB_WORKSPACE}"
+        ccache --zero-stats
+    - name: Cache the WebAssembly CPython build
+      uses: actions/cache@v5
+      with:
+        path: ~/.cache/pj-wasm-cpython
+        key: wasm-cpython-${{ hashFiles('cmake/PjWasmPython.cmake', 'cmake/wasm_python/**') }}-emsdk-${{ steps.versions.outputs.emscripten
+          }}
+    - name: Build production package (shipped defaults, probes off)
+      shell: bash
+      run: |
+        set -euo pipefail
+        source .emsdk/emsdk_env.sh >/dev/null
+        # Scene2D's find_package(ZLIB 1.3.1 EXACT) resolves against Emscripten's
+        # lazily materialized sysroot zlib port; build it before configuring.
+        embuilder build zlib
+        cmake -S . -B build-wasm-prod -G Ninja \
+          -DCMAKE_TOOLCHAIN_FILE="${PWD}/.qt-wasm/${PJ_QT_VERSION}/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
+          -DQT_HOST_PATH="${PWD}/.qt-wasm/${PJ_QT_VERSION}/gcc_64" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DPJ_BUILD_TESTS=OFF \
+          -DPJ_BUILD_DEMOS=OFF \
+          -DPJ_WASM_ENABLE_INGRESS_PROBE=OFF \
+          -DPJ_WASM_PYTHON_CACHE_DIR="${HOME}/.cache/pj-wasm-cpython"
+        cmake --build build-wasm-prod --target pj_app --parallel 4
+    - name: Package production build and verify packaging scripts
+      shell: bash
+      run: |
+        set -euo pipefail
+        npm --prefix tests/wasm run test:package
+        node scripts/package_wasm.mjs --presets resources/wasm-presets \
+          --source build-wasm-prod/pj_app --output build-wasm-prod/deploy
+        node scripts/package_wasm.mjs --presets resources/wasm-presets \
+          --source build-wasm-prod/pj_app --output build-wasm-prod/deploy-b
+        diff -qr build-wasm-prod/deploy build-wasm-prod/deploy-b
+    - name: Download budget of the production package
+      run: node scripts/wasm_size_budget.mjs build-wasm-prod/deploy/manifest.json 20000000
+    - name: Cache Playwright browsers
+      uses: actions/cache@v5
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-chromium-${{ hashFiles('tests/wasm/package-lock.json') }}
+    - name: Install browser gate
+      working-directory: tests/wasm
+      run: |
+        npm ci
+        npx playwright install --with-deps chromium
+    - name: Deployment contract and cold threaded boot (production package)
+      working-directory: tests/wasm
+      env:
+        PJ_WASM_PACKAGE_DIR: ${{ github.workspace }}/build-wasm-prod/deploy
+      run: npm run test:deployment
+    - name: Build acceptance configuration (shipped defaults, ingress probe on)
+      shell: bash
+      run: |
+        set -euo pipefail
+        source .emsdk/emsdk_env.sh >/dev/null
+        cmake -S . -B build-wasm-probe -G Ninja \
+          -DCMAKE_TOOLCHAIN_FILE="${PWD}/.qt-wasm/${PJ_QT_VERSION}/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
+          -DQT_HOST_PATH="${PWD}/.qt-wasm/${PJ_QT_VERSION}/gcc_64" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DPJ_BUILD_TESTS=OFF \
+          -DPJ_BUILD_DEMOS=OFF \
+          -DPJ_WASM_ENABLE_INGRESS_PROBE=ON \
+          -DPJ_WASM_SCENE3D_CAPABILITY_PROBE=ON \
+          -DPJ_WASM_WITH_SCENE2D=ON \
+          -DPJ_WASM_WITH_SCENE3D=ON \
+          -DPJ_WASM_WITH_PYTHON=ON \
+          -DPJ_WASM_PYTHON_CACHE_DIR="${HOME}/.cache/pj-wasm-cpython"
+        cmake --build build-wasm-probe \
+          --target pj_app pj_scene3d_wasm_capability_probe --parallel 4
+        ccache --show-stats
+    - name: Save WebAssembly compiler cache
+      if: ${{ false }}
+      uses: actions/cache/save@v5
+      with:
+        path: ~/.cache/ccache
+        key: ccache-wasm-ci-${{ github.sha }}
+    - name: Retained Scene3D capability probe (Chromium)
+      shell: bash
+      run: |
+        set -euo pipefail
+        source .emsdk/emsdk_env.sh >/dev/null
+        emrun --no-browser --serve-after-exit --port 6932 \
+          build-wasm-probe/pj_app/scene3d_capability_probe.html &
+        server_pid=$!
+        trap 'kill "${server_pid}" 2>/dev/null || true' EXIT
+        for _ in $(seq 1 50); do
+          curl -fsS -o /dev/null http://127.0.0.1:6932/scene3d_capability_probe.html && break
+          sleep 0.2
+        done
+        PJ_WASM_SCENE3D_CAP_URL="http://127.0.0.1:6932/scene3d_capability_probe.html" \
+          npm --prefix tests/wasm run test:scene3d-capability
+    - name: Package acceptance build
+      run: |
+        node scripts/package_wasm.mjs \
+          --source build-wasm-probe/pj_app --output build-wasm-probe/deploy
+        node scripts/package_wasm.mjs --presets resources/wasm-presets \
+          --source build-wasm-probe/pj_app --output build-wasm-probe/deploy-presets
+    - name: Upload acceptance package for the browser jobs
+      uses: actions/upload-artifact@v4
+      with:
+        name: wasm-acceptance
+        path: |
+          build-wasm-probe/deploy
+          build-wasm-probe/deploy-presets
+          build-wasm-probe/pj_app/scene3d_capability_probe.*
+          build-wasm-probe/pj_app/qtloader.js
+          build-wasm-probe/pj_app/qtlogo.svg
+          .emsdk/upstream/emscripten/emrun.py
+        include-hidden-files: true
+        compression-level: 0
+        if-no-files-found: error
+        retention-days: 3
+    - name: Save exact 20 MB production evidence
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: 1459-production-manifest
+        path: build-wasm-prod/deploy/manifest.json
+        if-no-files-found: ignore
+        retention-days: 7
+    permissions:
+      contents: read
+  wasm-chromium:
+    needs: wasm
+    if: ${{ !cancelled() && needs.wasm.result == 'success' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    env:
+      PJ_WASM_URL: http://127.0.0.1:6931/
+      PJ_WASM_BUILD_DIR: build-wasm-probe
+      PJ_WASM_PYTHON: '1'
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        ref: fc74a66a2416c06f265a087d21d8f3601d0a28b8
+        persist-credentials: false
+    - name: Prove exact unmodified upstream PR source
+      shell: bash
+      run: |
+        set -euo pipefail
+        test "$(git rev-parse HEAD)" = "fc74a66a2416c06f265a087d21d8f3601d0a28b8"
+        test "$(git show -s --format=%T HEAD)" = "25d3cf279349490cbd9d8562ddf59cdf013180f2"
+        test "$(git cat-file -p HEAD | sed -n 's/^parent //p')" = "c744d97a3a29399300c7252c6ad00ed06a978b05"
+        printf 'PR_1459_SOURCE=%s TREE=%s
+        ' "$(git rev-parse HEAD)" "$(git show -s --format=%T HEAD)"
+    - name: Read toolchain versions
+      id: versions
+      run: |
+        source ./versions.env
+        echo "node=${PJ_WASM_NODE_VERSION}" >> "${GITHUB_OUTPUT}"
+        echo "PJ_CADDY_VERSION=${PJ_CADDY_VERSION}" >> "${GITHUB_ENV}"
+        echo "PJ_CADDY_LINUX_AMD64_SHA512=${PJ_CADDY_LINUX_AMD64_SHA512}" >> "${GITHUB_ENV}"
+    - name: Install pinned packaging runtime
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ steps.versions.outputs.node }}
+    - name: Download acceptance package
+      uses: actions/download-artifact@v4
+      with:
+        name: wasm-acceptance
+    - name: Cache Playwright browsers
+      uses: actions/cache@v5
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-chromium-${{ hashFiles('tests/wasm/package-lock.json') }}
+    - name: Install browser gate
+      working-directory: tests/wasm
+      run: |
+        npm ci
+        npx playwright install --with-deps chromium
+    - name: Install the fake bridge's Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.14'
+    - name: Install Caddy for the robot hosting spec
+      shell: bash
+      run: |
+        set -euo pipefail
+        archive="caddy_${PJ_CADDY_VERSION}_linux_amd64.tar.gz"
+        curl -fsSL --retry 3 -o "${RUNNER_TEMP}/${archive}" \
+          "https://github.com/caddyserver/caddy/releases/download/v${PJ_CADDY_VERSION}/${archive}"
+        echo "${PJ_CADDY_LINUX_AMD64_SHA512}  ${RUNNER_TEMP}/${archive}" | sha512sum -c -
+        mkdir -p "${RUNNER_TEMP}/caddy"
+        tar -xzf "${RUNNER_TEMP}/${archive}" -C "${RUNNER_TEMP}/caddy" caddy
+        echo "PJ_CADDY=${RUNNER_TEMP}/caddy/caddy" >> "${GITHUB_ENV}"
+        # The guide's example configuration (Caddy's local CA, default ports) stays valid too.
+        PJ_ROBOT_HOST=robot.local PJ_WASM_ROOT="${PWD}/build-wasm-probe/deploy" \
+          XDG_DATA_HOME="${RUNNER_TEMP}/caddy-state" XDG_CONFIG_HOME="${RUNNER_TEMP}/caddy-state" \
+          "${RUNNER_TEMP}/caddy/caddy" validate --config docs/wasm/Caddyfile --adapter caddyfile
+    - name: Mirror the hosted sample assets
+      uses: actions/cache@v5
+      with:
+        path: build-wasm-assets
+        key: wasm-hosted-assets-${{ hashFiles('tests/wasm/fixtures/hosted_assets.json') }}
+    - name: Fetch the hosted sample assets the cache lacks
+      run: npm --prefix tests/wasm run fetch:assets
+    - name: Serve acceptance package
+      run: |
+        node scripts/serve_wasm.mjs --root build-wasm-probe/deploy --port 6931 > /dev/null 2>&1 &
+        for _ in $(seq 1 50); do
+          curl -fsS -o /dev/null "${PJ_WASM_URL}" && break
+          sleep 0.2
+        done
+        curl -fsS -o /dev/null "${PJ_WASM_URL}" || { echo "wasm server failed to start"; exit 1; }
+    - name: Choose the suite
+      id: scope
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        WASM_PATHS: (^|/)wasm/|^tests/wasm/|^cmake/PjWasm|^cmake/wasm_|^pj_scripting/|^scripts/[^/]*wasm|^resources/wasm-presets/|^\.github/workflows/wasm-ci\.yml$
+      run: |
+        set -euo pipefail
+        full=true
+        if [ "${{ github.event_name }}" = pull_request ]; then
+          files=$(gh pr diff "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" --name-only)
+          grep -qE "${WASM_PATHS}" <<<"${files}" || full=false
+        fi
+        echo "full=${full}" >> "${GITHUB_OUTPUT}"
+        echo "Full Chromium suite: ${full}"
+    - name: Functional browser suite (acceptance package)
+      if: steps.scope.outputs.full == 'true'
+      run: |
+        npm --prefix tests/wasm run test -- --reporter=line,json
+      env:
+        PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ runner.temp }}/1459-chromium.json
+    - name: Serial cases (acceptance package)
+      if: ${{ !cancelled() && steps.scope.outputs.full == 'true' }}
+      run: |
+        npm --prefix tests/wasm run test:serial -- --reporter=line,json
+      env:
+        PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ runner.temp }}/1459-chromium-serial.json
+    - name: Smoke specs (acceptance package)
+      if: steps.scope.outputs.full != 'true'
+      run: npm --prefix tests/wasm run test:smoke
+    - name: Upload failure output
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: wasm-chromium-failures
+        path: tests/wasm/test-results
+        if-no-files-found: ignore
+        retention-days: 14
+    - name: Save browser case receipts
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: 1459-wasm-chromium
+        path: ${{ runner.temp }}/1459-*.json
+        if-no-files-found: ignore
+        retention-days: 7
+    permissions:
+      contents: read
+  wasm-firefox:
+    needs: wasm
+    strategy:
+      fail-fast: false
+      matrix:
+        shard:
+        - 1
+        - 2
+    if: ${{ !cancelled() && needs.wasm.result == 'success' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    env:
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      PJ_WASM_URL: http://127.0.0.1:6931/
+      PJ_WASM_PYTHON: '1'
+      PJ_WASM_SCENE3D_CAP_URL: http://127.0.0.1:6932/scene3d_capability_probe.html
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        ref: fc74a66a2416c06f265a087d21d8f3601d0a28b8
+        persist-credentials: false
+    - name: Prove exact unmodified upstream PR source
+      shell: bash
+      run: |
+        set -euo pipefail
+        test "$(git rev-parse HEAD)" = "fc74a66a2416c06f265a087d21d8f3601d0a28b8"
+        test "$(git show -s --format=%T HEAD)" = "25d3cf279349490cbd9d8562ddf59cdf013180f2"
+        test "$(git cat-file -p HEAD | sed -n 's/^parent //p')" = "c744d97a3a29399300c7252c6ad00ed06a978b05"
+        printf 'PR_1459_SOURCE=%s TREE=%s
+        ' "$(git rev-parse HEAD)" "$(git show -s --format=%T HEAD)"
+    - name: Read toolchain versions
+      id: versions
+      run: |
+        source ./versions.env
+        echo "node=${PJ_WASM_NODE_VERSION}" >> "${GITHUB_OUTPUT}"
+    - name: Install pinned packaging runtime
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ steps.versions.outputs.node }}
+    - name: Download acceptance package
+      uses: actions/download-artifact@v4
+      with:
+        name: wasm-acceptance
+    - name: Cache Playwright browsers
+      uses: actions/cache@v5
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-firefox-${{ hashFiles('tests/wasm/package-lock.json') }}
+    - name: Install browser gate
+      working-directory: tests/wasm
+      run: |
+        sudo apt-get install -y --no-install-recommends \
+          libgl1 libegl1 libgl1-mesa-dri libegl-mesa0
+        npm ci
+        npx playwright install --with-deps firefox
+    - name: Install the fake bridge's Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.14'
+    - name: Mirror the hosted sample assets
+      uses: actions/cache@v5
+      with:
+        path: build-wasm-assets
+        key: wasm-hosted-assets-${{ hashFiles('tests/wasm/fixtures/hosted_assets.json') }}
+    - name: Fetch the hosted sample assets the cache lacks
+      run: npm --prefix tests/wasm run fetch:assets
+    - name: Serve acceptance package and capability probe
+      run: |
+        python3 .emsdk/upstream/emscripten/emrun.py --no-browser --serve-after-exit \
+          --port 6932 build-wasm-probe/pj_app/scene3d_capability_probe.html > /dev/null 2>&1 &
+        node scripts/serve_wasm.mjs --root build-wasm-probe/deploy --port 6931 > /dev/null 2>&1 &
+        for url in "${PJ_WASM_URL}" "${PJ_WASM_SCENE3D_CAP_URL}"; do
+          for _ in $(seq 1 50); do
+            curl -fsS -o /dev/null "${url}" && break
+            sleep 0.2
+          done
+          curl -fsS -o /dev/null "${url}" || { echo "server for ${url} failed to start"; exit 1; }
+        done
+    - name: Retained Scene3D capability probe (Firefox)
+      if: matrix.shard == 1
+      run: xvfb-run -a npm --prefix tests/wasm run test:scene3d-capability:firefox
+    - name: Functional browser suite (Firefox)
+      run: |
+        xvfb-run -a npm --prefix tests/wasm run test:firefox -- --grep-invert editors.spec.js --shard=${{ matrix.shard }}/2 --reporter=line,json
+      env:
+        PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ runner.temp }}/1459-firefox-shard-${{ matrix.shard }}.json
+    - name: Editors suite (Firefox)
+      if: ${{ !cancelled() && matrix.shard == 1 }}
+      run: |
+        xvfb-run -a npm --prefix tests/wasm run test:firefox -- --grep editors.spec.js --reporter=line,json
+      env:
+        PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ runner.temp }}/1459-firefox-editors.json
+    - name: Save browser case receipts
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: 1459-wasm-firefox-${{ matrix.shard }}
+        path: ${{ runner.temp }}/1459-*.json
+        if-no-files-found: ignore
+        retention-days: 7
+    permissions:
+      contents: read
