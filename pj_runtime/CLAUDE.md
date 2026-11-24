@@ -71,9 +71,9 @@ Session, catalog and time:
 - `Time.h`: display-axis time vocabulary (`DisplayOffset`, `DisplaySeconds`, `DisplayRange`) over the SDK's absolute
   `pj_base/time.hpp`.
 - `PlaybackEngine.h`: time cursor and transport; `currentTimeChanged(double)` stays `double` (fleet-wide moc/vtable
-  contract). `PlaybackRate.h` (Qt-free) is the one speed range and step: the engine snaps every rate to it
-  (`snapPlaybackRate`), the speed scrubber takes its bounds, step and decimals from it and the MCP `playback` tool snaps
-  to it.
+  contract), and `coarseTimeChanged` is the same cursor at a reduced rate for controls that only show the position.
+  `PlaybackRate.h` (Qt-free) is the one speed range and step: the engine snaps every rate to it (`snapPlaybackRate`),
+  the speed scrubber takes its bounds, step and decimals from it and the MCP `playback` tool snaps to it.
 - `HistoryScope.h`: `SnapshotScope` / `RestoreIntent`, what a capture includes and what a restore may touch.
 - `IDataWidget.h`, `IObjectViewer.h`: the contracts data widgets and object-store viewers implement for the shell.
   `IDataWidget::aboutToBeDiscarded()` runs once before the dock schedules a widget for deletion, so one that owns
@@ -93,6 +93,9 @@ Session, catalog and time:
   configuration; any other `${deployment.*}` name is an error.
 - `QSettingsBackend.h`, `XmlCdata.h`: `sdk::SettingsBackend` over `QSettings`; CDATA helpers shared with `pj_app`'s
   layout code.
+- `XmlStateOptions.h`: the reporting XML readers behind `IDataWidget::xmlValidateState`; an `XmlOptionsRecorder`
+  collects the options and the first refused value they report (the MCP `widget_state` tool serves them);
+  `xmlSelfDescriptionProblems` is the one check every widget family's test runs on its own saved state.
 
 Plugin hosts and extensions:
 - `DataSourceRuntimeHost.h`: runs `DataSource` plugins: DSO keepalive, advertised-topic classification, idempotent
@@ -186,6 +189,10 @@ like the code). Whole module:
   delayed `FakeRun`, a raw-points parser, store readers); `tests/on_demand_session_test_utils.h` drives a real
   `AppSession`; `OnDemandService::setRunForTest` swaps the run in `session_manager_test`. `NodeSchedulerBench` runs the
   real Luau run with `PJ_BENCH=1`.
+- **Store roots**: a test's extension store root (`ExtensionCatalogService::Paths`, `ExtensionManager`) is a
+  `PJ::test::StoreTempDir` (`cmake/test_mains/pj_test_store_dir.h`; `HermeticCatalog` has one), never a bare
+  `QTemporaryDir`: the store's `.artifacts`/`.extraction`/`.profiles` siblings would land in TMPDIR, where nothing
+  removes them.
 - **Recording fixtures**: `tests/recording_test_utils.h` (the `pj.recording` lookup and the `IsolatedQtSettings`
   sandbox) and `tests/runtime_host_test_fixture.h` (a real `DataSourceRuntimeHost` over the hermetic catalog and the
   mock object parser). `tests/recording_pipeline_test.cpp` (desktop) runs real hosts → `RecordTap` → `Recorder` →

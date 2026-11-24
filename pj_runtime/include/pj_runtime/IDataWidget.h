@@ -78,6 +78,29 @@ class IDataWidget {
     return true;
   }
 
+  /// Parse-only check of an `xmlLoadState` payload: true when xmlLoadState would accept it, changing nothing. It reads
+  /// every attribute xmlLoadState reads, including those only used in some modes, through readers that report to an
+  /// active `XmlOptionsRecorder` (XmlStateOptions.h): validating the widget's own saved state lists the options it
+  /// accepts, and the MCP widget_state tool serves that list. Default: accepts anything, reports nothing (a widget
+  /// whose state is opaque to the host).
+  [[nodiscard]] virtual bool xmlValidateState(const QDomElement& /*element*/) const {
+    return true;
+  }
+
+  /// The saved elements a load kept aside because their data is not loaded (a scene layer's topic, a Log topic),
+  /// each named by its topic. The MCP widget_state tool refuses a `set` that adds to this list, since the change
+  /// would otherwise show nothing and report success. Default: none.
+  [[nodiscard]] virtual QStringList unresolvedRestores() const {
+    return {};
+  }
+
+  /// Why this widget dropped an element it was given (a scene refuses a layer of another dataset than the one it
+  /// shows), cleared by the read; empty when it dropped none. The MCP widget_state tool refuses a `set` that leaves a
+  /// reason, since the user hears of the drop only through a toast. Default: none.
+  [[nodiscard]] virtual QString takeRefusalReason() {
+    return {};
+  }
+
   /// Host call once the data a just-loaded `xmlLoadState` refers to is final: the shell
   /// after its whole load, or a dock after a paste/family switch into a session whose data
   /// is already loaded. A widget that defers saved elements until their data arrives

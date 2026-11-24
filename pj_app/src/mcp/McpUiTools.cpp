@@ -124,7 +124,7 @@ QString shownText(QWidget* w) {
     return label->text();
   }
   if (auto* edit = qobject_cast<QLineEdit*>(w)) {
-    return edit->text();
+    return edit->displayText();  // a password field reads as its mask, as the user sees it
   }
   if (auto* spin = qobject_cast<QAbstractSpinBox*>(w)) {
     return spin->text();
@@ -825,12 +825,11 @@ json UiDriver::plot(const json& args) {
           curves.push_back({{"title", info.curve->title().text().toStdString()}, {"visible", info.curve->isVisible()}});
         }
       }
-      // The value box as the user reads it: one row per line, the &nbsp; padding collapsed.
+      // The value box as the user reads it: one row per line, the alignment padding collapsed.
       json tracker = json::array();
       if (plot->trackerValueBoxVisible()) {
-        const QString text = QTextDocumentFragment::fromHtml(plot->trackerValueBoxText()).toPlainText();
-        for (const QString& row : text.split(u'\n', Qt::SkipEmptyParts)) {
-          tracker.push_back(row.simplified().toStdString());
+        for (const ValueBoxRow& row : plot->trackerValueBoxRows()) {
+          tracker.push_back(row.text.simplified().toStdString());
         }
       }
       plots.push_back(

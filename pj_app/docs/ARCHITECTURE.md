@@ -572,6 +572,14 @@ glyph and tooltip.
   `refreshCustomTopicsPanel` per event-loop turn, which rebuilds the on-demand rows and reuses the transform rows of
   the last sync until the catalog changes.
 - **Editing.** "+", the pencil and Delete belong to the toolbox whose manifest declares `custom_topics_editor`.
+  The pencil opens the editor on its own recipe's `params_json`. The `custom_topics_viewer` tag in that manifest
+  (`ExtensionCatalogService::customTopicsEditorViews`, `CurveListPanel::setEditorViewsOthers`) gates the view: with it,
+  the pencil stays enabled on rows another owner made (an MCP agent, another plugin, none) and opens the editor on
+  `{"view": {owner, name, kind, language, script, inputs, outputs, params}}`, the recipe as it runs, which the editor
+  shows read-only; `name` is what the row shows (a transform's output topic, an on-demand recipe's id). Without the
+  tag the pencil stays disabled on those rows and the handler launches nothing. A view is not workspace state:
+  `savePinnedToolboxes` skips a toolbox whose saved config is a JSON object with a top-level `view`, so a layout never
+  holds a snapshot of a recipe its owner can change. Delete stays the owner's.
   `deleteCustomTopics` asks `pj_runtime`'s `CustomTopicsPolicy.h` who may delete what, and asks again once a prompt is
   answered (the session may have changed under the prompt); the shell only words the refusals and runs the prompts.
 - **Series.** One row per number column (`id/output`), deleted with its recipe. `SeriesProgressController` (wired by
@@ -709,7 +717,9 @@ anchors robot resources at the layout URL. In WASM a redirect leaves the final U
 relies on a redirect to another directory resolves its files against the wrong base. Every call ends in exactly one
 `layoutUrlLoadFinished(url, ok, reason)`; each source download reports throttled `layoutUrlLoadProgress(url,
 received, total)` ending at received == total. A success replaces only what the previous successful preset load
-brought (`BrowserLayoutRuntime::preset_data`).
+brought (`BrowserLayoutRuntime::preset_data`), after its layout applies. Unless a stream is followed, the playhead
+moves to the start of the range before the layout applies, and a rollback puts it back: left where the previous
+preset had it, every restored scene view would fold its marker history up to that time.
 
 A preset may record streaming sources (`<previouslyLoaded_StreamingSources>`, `pj4_version="5"`, `pj-stream://<id>`
 qualifiers). Its configuration is a template: `${deployment.ws_origin}` expands from the page URL through
@@ -735,7 +745,7 @@ discovery, the user-first rules, security, tests) is [`../../docs/MCP_SERVER.md`
 
 Here: `McpProtocol` (shared vocabulary, QtCore only), `McpBridge.cpp` (desktop), `McpServer` (with `McpEndpointHost`,
 desktop), `McpBrowserLink`, `McpServerTools.cpp` (app tools over `MainWindow`'s public "agent control" block),
-`McpUiTools` (`--mcp-ui-tools`), `ui/McpJobsDialog`. The agent tools come from `pj_runtime`'s `pj_agent_tools`. The
+`McpWidgetState.cpp` (`widget_state`, `set_widget_state`, over the same block), `McpUiTools` (`--mcp-ui-tools`), `ui/McpJobsDialog`. The agent tools come from `pj_runtime`'s `pj_agent_tools`. The
 shell's part of the teardown order: `~ToolboxPanelSession` resets `mcp_endpoint` after `handle` and before every
 service, and `~MainWindow` destroys the server right after `teardownAllToolboxes`.
 
@@ -825,6 +835,13 @@ output and a Linux ELF fixture linked both with and without `--exclude-libs,ALL`
   leaves its other topics unqualified, so its layers from another file stay pending: a scene shows one dataset. The
   fix belongs to the scene: `Scene3DDockWidget::representativeDatasetId` would also read robot-model and trail
   sources, or the scene would bind as one dataset.
+- Marker rules have no view: a rule another owner made (an MCP agent's `create_markers`) is drawn and listed in the
+  plot's marker status, but no UI shows its script. The Marker Editor's `loadConfig` (`code`, `source`) would show it;
+  nothing opens it on a rule.
+- The view of another owner's recipe is a snapshot taken at launch: a recipe changed or removed while the editor shows
+  it is not reflected. It omits an on-demand recipe's `pinned_t` and query time, and its outputs' types.
+- Opening a view replaces a live editor instance, an unsaved draft in it included, without asking, as the pencil and
+  "+" already do.
 - A series key resolves to a topic by name alone (the longest loaded topic naming a prefix of it), while marker rules
   bind by series (`CatalogModel::findScalarForMarkerKey`). When another loaded dataset has a topic literally named
   `sensor/value` and the chosen ones carry topic `sensor` with field `value`, a rule over `sensor/value` is left

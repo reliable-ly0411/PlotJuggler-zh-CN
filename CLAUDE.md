@@ -36,7 +36,7 @@ PJ4/
 ├── pj_custom_widgets/ # Custom Widget panel: a dock hosting a Widget plugin's Qt widget
 ├── pj_log/            # Log panel: log topics merged by time in a filterable list
 ├── pj_app/            # main window shell
-├── resources/         # SVG icons + resources.qrc; wasm-presets/ browser sample presets
+├── resources/         # SVG icons + resources.qrc; wasm-presets/ browser sample index
 ├── raster/            # helper/ executable + ipc/ wire contract
 ├── scripts/           # setup, worktrees, pre-commit, windows/ entry points
 ├── packaging/         # Nix, conda, AppImage, Debian package, Windows installer, macOS dmg, hosted browser app
@@ -85,7 +85,8 @@ boundaries, ask before proceeding and suggest the closest fit.
   stays out of `pj_app` and the widget modules, except UI/editor code.
 - `resources/`: shared resources in `resources.qrc`, desktop-only splash memes in `memes.qrc`; module-local test and
   demo assets stay with their module. `resources/wasm-presets/` is not compiled in: it holds the browser sample
-  presets `scripts/package_wasm.mjs --presets` deploys ([docs/WASM_PRESETS.md](./docs/WASM_PRESETS.md)).
+  presets' index that `scripts/package_wasm.mjs --presets` deploys; their layouts, thumbnails and data live on the
+  asset host ([docs/WASM_PRESETS.md](./docs/WASM_PRESETS.md)).
 - `3rdparty/`: vendored source deps plus `retro/` (compliance artifacts installed next to `pj-raster-helper`).
   Conan and system deps do not belong here.
 - `raster/`: `helper/` is the standalone GPL-2.0 `pj-raster-helper`; `ipc/` its header-only MPL-2.0 wire contract
@@ -173,9 +174,10 @@ Conan or `.qt/`): [packaging/nix/README.md](./packaging/nix/README.md).
 - **Portability:** Linux, Windows and macOS (arm64) are shipped targets. No Linux-only APIs or POSIX-specific paths
   in module code; gate platform code behind CMake / `#ifdef` ([pitfalls](./docs/BUILDING.md#portability)).
 - **Third-party:** vendored deps live in `3rdparty/`, never taken from Conan or the system (only distribution builds
-  opt out, with `PJ_SYSTEM_*`); everything else comes from Conan. Qwt is fetched as a pinned release and not
-  patched: PJ-specific Qwt behavior lives in `pj_plotting` / `pj_dialog_host`
-  ([details](./docs/BUILDING.md#third-party-dependencies)).
+  opt out, with `PJ_SYSTEM_*`); everything else comes from Conan. Every package ships `THIRD_PARTY_NOTICES.txt`
+  (`cmake/PjNotices.cmake`, [Licences](./packaging/README.md#licences)): a new dependency needs its licence there.
+  Qwt is fetched as a pinned release and not patched: PJ-specific Qwt behavior lives in `pj_plotting` /
+  `pj_dialog_host` ([details](./docs/BUILDING.md#third-party-dependencies)).
 - **Browser build** ([docs/WASM_DEPLOYMENT.md](./docs/WASM_DEPLOYMENT.md)): browser policy (file picking, bounded
   loading) stays on `PJ_TARGET_WASM`; the Assimp, point-cloud-codec and CPython graphs enter only through
   `PJ_WASM_WITH_SCENE2D` / `_SCENE3D` / `_PYTHON`. Shader packs are committed `.qsb` files, re-baked with the
@@ -231,6 +233,9 @@ Calibrate the claim to what you actually checked:
   - creating, merging, closing or commenting on a PR or an issue;
   - tags and releases, Conan and plugin-registry uploads, production deploys (`app.plotjuggler.io`);
   - `./scripts/worktree-rm.sh` and deleting a branch.
+- **A PR merges when every check is green.** `main` has no required checks, and merges made seconds after opening
+  broke it. `.claude/hooks/pr-merge-check.py` warns (never refuses) when `gh pr merge` runs while a check fails or
+  runs, or before CI has registered.
 - **A go-ahead names the action and comes after I have seen the diff.** One given for an earlier task does not
   carry over to the next.
 - **Exception, documentation only:** a change that touches nothing but documentation (`docs/`, module `docs/`,

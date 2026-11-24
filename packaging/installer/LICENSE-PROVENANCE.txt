@@ -8,7 +8,9 @@ license_lgpl.txt; independent MPL, Qt LGPL and GPL texts remain in share/license
 
 This directory preserves the upstream PlotJuggler installer license_lgpl.txt,
 including its historical Davide Faconti copyright header, byte-for-byte from
-packaging/installer/packages/io.plotjuggler.application/meta/license_lgpl.txt.
+the pre-sync upstream installer metadata (now archived as
+packaging/installer/license_lgpl_historical.txt). The current upstream metadata
+retains the canonical Free Software Foundation LGPL text independently.
 It is an additional historical notice, not a replacement for the application's
 MPL-2.0 license or any bundled dependency's license. No license terms, copyright
 attribution or component licensing are changed by the packaging arrangement.

@@ -577,6 +577,17 @@ const RecipeGraph::Node* onDemandNodeOfCatalogKey(AppSession& session, const QSt
   return key.has_value() ? on_demand.graph().find(*key) : nullptr;
 }
 
+// The top-level key of the config that opens the Custom Topics editor on another owner's recipe, read-only.
+constexpr const char* kCustomTopicsViewKey = "view";
+
+// An editor that saves the config it was opened with saves a view. A layout must not hold one: it is a snapshot of a
+// recipe its owner can change or remove, and a load would hand it to the editor stale, even to a build that does not
+// show views.
+bool isCustomTopicsView(const QString& saved_config) {
+  const nlohmann::json config = nlohmann::json::parse(saved_config.toStdString(), nullptr, /*allow_exceptions=*/false);
+  return config.is_object() && config.contains(kCustomTopicsViewKey);
+}
+
 // Spans one workspace restore (apply, rollback, toolbox relaunch). Its steps hide or delete the widget holding the
 // keyboard focus, or switch the shown tab, and Qt then moves focus along the tab chain, possibly into a line edit
 // that takes Space from playback. On exit focus goes back to the widget that held it at the start if it is still
@@ -665,8 +676,8 @@ struct MainWindow::BrowserLayoutRuntime {
     std::vector<ReplayStream> streams;
     // The streams this replay started so far: its rollback stops and removes them.
     std::vector<DatasetId> stream_datasets;
-    // Captured just before the first stream starts; empty while none has.
-    std::optional<Transport> transport_before_streams;
+    // Captured before the first stream starts or a preset moves the playhead, for the rollback; empty otherwise.
+    std::optional<Transport> transport_before_apply;
     // Every file this replay stages, in staging order: each source's data file (files[i] is sources[i]'s), then
     // every side file. selection_index walks it; a downloaded layout's source_urls follow it.
     QList<ReplayFile> files = {};
@@ -1104,27 +1115,60 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
       launchToolbox(editor);
     }
   });
-  // Opens the editor on the recipe's params_json. The panel shows the pencil only on the editor's own rows; the owner
-  // is checked again here.
+  // Opens the editor on the recipe: its own on the params_json it stored, another owner's (when the editor declares
+  // `custom_topics_viewer`) on a `view` of it, which the editor shows read-only. The panel enables the pencil only on
+  // those rows; the owner is checked again here.
   connect(ui_->curveListPanel, &CurveListPanel::editCustomTopicRequested, this, [this](const QString& catalog_key) {
     const ExtensionCatalogService& extensions = session_->extensionCatalog();
-    QString initial_config;
+    std::string owner;
+    std::string params_json;
+    // The `view` config, the host's contract with a `custom_topics_viewer` editor: the recipe as it runs.
+    nlohmann::json view;
     if (const RecipeGraph::Node* node = onDemandNodeOfCatalogKey(*session_, catalog_key)) {
-      if (!extensions.isCustomTopicsEditor(QString::fromStdString(node->recipe.owner_plugin))) {
-        return;
+      const RecipeGraph::Recipe& recipe = node->recipe;
+      owner = recipe.owner_plugin;
+      params_json = recipe.params_json;
+      nlohmann::json outputs = nlohmann::json::array();
+      for (const scripting::OutputSpec& output : recipe.outputs) {
+        outputs.push_back(output.name);
       }
-      initial_config = QString::fromStdString(node->recipe.params_json);
+      view = {{"name", recipe.user_id},  {"kind", "on_demand"},     {"language", recipe.language},
+              {"script", recipe.script}, {"inputs", recipe.inputs}, {"outputs", std::move(outputs)}};
     } else {
-      const std::optional<CurveDescriptor> output = session_->catalogModel().curveDescriptor(catalog_key);
+      const std::optional<CurveDescriptor> output =
+          session_->catalogModel().curveDescriptor(catalog_key, SeriesCapability::kAny);
       const auto transform = output.has_value()
                                  ? session_->sessionManager().dataProcessorService().transformOwning(output->topic_id)
                                  : std::nullopt;
-      if (!transform.has_value() || !extensions.isCustomTopicsEditor(QString::fromStdString(transform->owner_plugin))) {
+      if (!transform.has_value()) {
         return;
       }
-      initial_config = QString::fromStdString(transform->params_json);
+      owner = transform->owner_plugin;
+      params_json = transform->params_json;
+      // The row's name, not `user_id`: an agent's transform id is its series name with the bytes outside
+      // [A-Za-z0-9] escaped.
+      view = {
+          {"name", output->topic_name.toStdString()},
+          {"kind", "transform"},
+          {"language", transform->backend},
+          {"script", transform->script},
+          {"inputs", transform->inputs},
+          {"outputs", transform->outputs}};
     }
-    launchToolbox(extensions.customTopicsEditorId(), initial_config);
+    const QString owner_id = QString::fromStdString(owner);
+    if (extensions.isCustomTopicsEditor(owner_id)) {
+      launchToolbox(extensions.customTopicsEditorId(), QString::fromStdString(params_json));
+      return;
+    }
+    if (extensions.customTopicsEditorId().isEmpty() || !extensions.customTopicsEditorViews()) {
+      return;
+    }
+    view["owner"] = owner.empty() ? std::string{} : extensions.toolboxDisplayName(owner_id).toStdString();
+    view["params"] = params_json;
+    // `replace`: a script is binary-safe, and a strict dump throws on bytes that are not UTF-8.
+    const std::string config =
+        nlohmann::json{{kCustomTopicsViewKey, view}}.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
+    launchToolbox(extensions.customTopicsEditorId(), QString::fromStdString(config));
   });
   connect(ui_->curveListPanel, &CurveListPanel::deleteCustomTopicsRequested, this, &MainWindow::deleteCustomTopics);
   // A series replay is a stoppable bar on its Custom Topics rows.
@@ -3279,7 +3323,7 @@ void MainWindow::onCatalogTrashRequested(QStringList keys, bool covers_all) {
   }
   std::vector<TopicId> removed_topics;
   for (const QString& key : keys) {
-    if (const auto d = catalog.curveDescriptor(key)) {
+    if (const auto d = catalog.curveDescriptor(key, SeriesCapability::kAny)) {
       removed_topics.push_back(d->topic_id);
     }
   }
@@ -3586,6 +3630,13 @@ void MainWindow::bindScenePreferences([[maybe_unused]] PreferencesDialog& dialog
     forEachSceneDock([](SceneDockWidget* scene) {
       if (auto* scene3d = qobject_cast<Scene3DDockWidget*>(scene)) {
         scene3d->reloadPackageSearchFolders();
+      }
+    });
+  });
+  connect(&dialog, &PreferencesDialog::transformInterpolationChanged, this, [this]() {
+    forEachSceneDock([](SceneDockWidget* scene) {
+      if (auto* scene3d = qobject_cast<Scene3DDockWidget*>(scene)) {
+        scene3d->redrawWithTransformSampling();
       }
     });
   });
@@ -4700,11 +4751,14 @@ void MainWindow::refreshCustomWidgetsAvailability() {
 }
 
 void MainWindow::forEachDock(const std::function<void(DockWidget*)>& operation) {
+  forEachTabDock([&operation](PlotDocker*, DockWidget* dock) { operation(dock); });
+}
+
+void MainWindow::forEachTabDock(const std::function<void(PlotDocker*, DockWidget*)>& operation) {
   ui_->tabbedPlotWidget->forEachDocker([&operation](PlotDocker* docker) {
     for (int index = 0; index < docker->plotCount(); ++index) {
-      DockWidget* dock = docker->plotAt(index);
-      if (dock != nullptr) {
-        operation(dock);
+      if (DockWidget* dock = docker->plotAt(index); dock != nullptr) {
+        operation(docker, dock);
       }
     }
   });
@@ -5795,7 +5849,7 @@ void MainWindow::beginBrowserSourceReplay(
           .receiver = std::make_unique<QObject>(),
           .streams = std::move(streams),
           .stream_datasets = {},
-          .transport_before_streams = std::nullopt,
+          .transport_before_apply = std::nullopt,
       });
 
   BrowserLayoutRuntime::Replay& replay = *browser_layout_runtime_->replay;
@@ -6520,9 +6574,10 @@ void MainWindow::applyBrowserReplay(QDomDocument apply_doc, const QString& apply
 
 QString MainWindow::startReplayStreamsAndApply(QDomDocument apply_doc, const QString& apply_failure) {
   BrowserLayoutRuntime::Replay& replay = *browser_layout_runtime_->replay;
-  if (!replay.streams.empty()) {
-    const PlaybackEngine& engine = session_->playbackEngine();
-    replay.transport_before_streams = BrowserLayoutRuntime::Transport{
+  const bool preset = !browser_layout_runtime_->loading_url.isEmpty();
+  PlaybackEngine& engine = session_->playbackEngine();
+  if (!replay.streams.empty() || preset) {
+    replay.transport_before_apply = BrowserLayoutRuntime::Transport{
         .followed_stream = active_streaming_dataset_id_,
         .seeded = streaming_playback_seeded_,
         .playing = engine.isPlaying(),
@@ -6543,6 +6598,11 @@ QString MainWindow::startReplayStreamsAndApply(QDomDocument apply_doc, const QSt
   }
   // Stream-bound items bind to the fresh sessions' DatasetIds and wait for their topics.
   layout_xml::bindStreamQualifiers(apply_doc, streams.dataset_for_identity);
+  // The previous preset's data goes only after this layout applies, and the restore drives every new view to the
+  // playhead: left where the previous preset had it, a scene view folds its marker history up to that time.
+  if (preset && active_streaming_dataset_id_ == 0) {
+    engine.setCurrentTime(engine.rangeMin());
+  }
   return applyBrowserRestoredLayout(std::move(apply_doc), replay.layout_name, streams.tracks) ? QString{}
                                                                                               : apply_failure;
 }
@@ -6616,7 +6676,7 @@ void MainWindow::rollbackBrowserReplayImports() {
         DiagnosticLevel::kWarning, "Layout", "browser-source-rollback-failed",
         tr("The failed source replay was removed, but the previous workspace could not be restored exactly."));
   }
-  const std::optional<BrowserLayoutRuntime::Transport> transport = replay.transport_before_streams;
+  const std::optional<BrowserLayoutRuntime::Transport> transport = replay.transport_before_apply;
   PlaybackEngine& engine = session_->playbackEngine();
   // Removing the replay's streams handed live-follow to another stream, or ended it; follow the previous stream
   // again first, so the range below is its window.
@@ -6792,12 +6852,13 @@ void MainWindow::startBrowserPresets(const QUrl& page_url) {
         if (mcp_relay_link_ != nullptr && deep_link.isEmpty() && deep_link_error.isEmpty()) {
           return;
         }
-        presets_dialog_->show();
+        // A deep link's load starts before the dialog first shows, so the list never flashes up.
         if (!deep_link_error.isEmpty()) {
           presets_dialog_->showError(deep_link_error);
         } else if (!deep_link.isEmpty()) {
-          presets_dialog_->selectPreset(deep_link);
+          presets_dialog_->openDeepLink(deep_link);
         }
+        presets_dialog_->show();
       });
   discovery->start(page_url);
 }
@@ -7910,21 +7971,11 @@ void MainWindow::refreshCustomTopicsPanel() {
     custom_topic_transform_rows_.clear();
     // Not filtered by owner: a restored transform's plugin may not be loaded (the layout carries the script).
     const auto transforms = session_->sessionManager().dataProcessorService().transformRecipes();
-    if (!transforms.empty()) {
-      // First key wins for a repeated topic name, as a plotted curve resolves it.
-      QHash<QString, QString> key_by_topic;
-      for (const auto& item : catalog.items()) {
-        if (!key_by_topic.contains(item.topic_name)) {
-          key_by_topic.insert(item.topic_name, item.key);
-        }
-      }
-      for (const auto& recipe : transforms) {
-        for (const auto& output_name : recipe.outputs) {
-          if (const auto found = key_by_topic.constFind(QString::fromStdString(output_name));
-              found != key_by_topic.constEnd()) {
-            custom_topic_transform_rows_.push_back(
-                {.key = found.value(), .owner = QString::fromStdString(recipe.owner_plugin)});
-          }
+    // By the output's topic id, never its name: a topic of the same name can arrive later in another dataset.
+    for (const auto& recipe : transforms) {
+      for (const TopicId output : recipe.output_topic_ids) {
+        if (const std::optional<QString> key = catalog.scalarColumnKey(recipe.dataset_id, output, 0)) {
+          custom_topic_transform_rows_.push_back({.key = *key, .owner = QString::fromStdString(recipe.owner_plugin)});
         }
       }
     }
@@ -7995,6 +8046,7 @@ void MainWindow::scheduleCustomTopicsSync() {
 
 void MainWindow::syncCustomTopicsEditor() {
   ui_->curveListPanel->setEditorPluginId(session_->extensionCatalog().customTopicsEditorId());
+  ui_->curveListPanel->setEditorViewsOthers(session_->extensionCatalog().customTopicsEditorViews());
 }
 
 void MainWindow::reportDeleteRefusal(const CustomTopicDeleteRefusal& refusal) {
@@ -8124,7 +8176,8 @@ bool MainWindow::mayDeleteTransformWriting(TopicId output_topic) {
 }
 
 void MainWindow::deleteTransformOutput(const QString& catalog_key) {
-  const std::optional<CurveDescriptor> output = session_->catalogModel().curveDescriptor(catalog_key);
+  const std::optional<CurveDescriptor> output =
+      session_->catalogModel().curveDescriptor(catalog_key, SeriesCapability::kAny);
   if (!output.has_value()) {
     syncCustomTopicsPanel();  // the row outlived its catalog item: clearing it is all there is to do
     return;
@@ -8247,6 +8300,29 @@ void MainWindow::onUndoableChange(bool force_new_state) {
     return;
   }
   pushUndoState(force_new_state);
+}
+
+bool MainWindow::beginAgentDockChange() {
+  if (applying_state_ || progressive_layout_in_flight_) {
+    return false;
+  }
+  if (scene_undo_debounce_.isActive()) {
+    scene_undo_debounce_.stop();
+    onUndoableChange();
+  }
+  return true;
+}
+
+void MainWindow::endAgentDockChange(DockWidget* dock) {
+  if (PlotWidget* plot = dock->plotWidget(); plot != nullptr) {
+    onPlotZoomChanged(plot, plot->currentBoundingRect());
+  }
+  if (dock == activeFocusedDock()) {
+    onDockFocused(nullptr);  // the panels skip a re-bind to the dock they show
+    onDockFocused(dock);
+  }
+  scene_undo_debounce_.stop();  // the load's own workspaceChanged: recorded by the forced step
+  onUndoableChange(/*force_new_state=*/true);
 }
 
 QList<layout_xml::SeriesPath> MainWindow::rebindCurvesToLoadedDatasets(QDomDocument& doc) {
@@ -10777,12 +10853,16 @@ void MainWindow::teardownAllToolboxes() {
 QDomElement MainWindow::savePinnedToolboxes(QDomDocument& doc) const {
   QDomElement root = doc.createElement(u"pinned_toolboxes"_s);
   const auto append_toolbox = [&doc, &root](const QString& plugin_id, const ToolboxPresenter& toolbox) {
+    const QString config = toolbox.saveConfig();
+    if (isCustomTopicsView(config)) {
+      return;
+    }
     QDomElement element = doc.createElement(u"toolbox"_s);
     element.setAttribute(u"plugin_id"_s, plugin_id);
     if (const QString tab_name = toolbox.title(); !tab_name.isEmpty()) {
       element.setAttribute(u"tab_name"_s, tab_name);
     }
-    if (const QString config = toolbox.saveConfig(); !config.isEmpty()) {
+    if (!config.isEmpty()) {
       // A plain text node would entity-escape on each round trip.
       appendJsonAsCdata(doc, element, config);
     }

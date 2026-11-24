@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #include <QString>
-
+#include <QStringList>
 #include <QStringView>
 #include <cstdint>
 #include <optional>
@@ -35,6 +35,8 @@ inline constexpr int kColormapCount = 4;
 /// one mapping shared by every view that saves a colormap by name: colormapName()
 /// lowercased, so a renamed label changes the saved layouts too.
 [[nodiscard]] QString colormapToken(Colormap colormap);
+/// Every colormapToken(), in enum order.
+[[nodiscard]] QStringList colormapTokens();
 
 /// The colormap `token` spells: an exact, case-sensitive match of a colormapToken(); nullopt otherwise (the caller
 /// picks the fallback).

@@ -22,6 +22,15 @@ fps on the same file.
 **Why.** A cancel discards the forward-continuation state, so the next request re-seeks from the keyframe.
 **Re-test** when the decoder can resume after a cancel, or when the threshold changes.
 
+## RGB frames at upload
+
+**Measured (2026-11-22, i7-13700H, Iris Xe, Qt 6.12.0, `perf` during looping playback).** A JPEG decoded to RGB888
+was expanded to RGBA by a per-pixel loop in `MediaViewerWidget::uploadDecodedFrameToTexture`, on the GUI thread, at
+every upload: with three JPEG cameras that render-and-upload path was 0.9 % of a core of GUI-thread CPU.
+**What the code does.** The image worker decodes JPEG and PNG to RGBA (`ColorOutput::kRgba`), at no extra decode
+cost for JPEG; the same path then costs 0.3 % of a core.
+**Re-test.** If raw `rgb8` / `bgr8` cameras show up in a profile: they still take the loop.
+
 ## Repaint cadence
 
 **Observed.** `MediaViewerWidget` renders non-natively inside the dock hierarchy, so every repaint pays a
@@ -216,8 +225,16 @@ hwaccel. They are imported under the desktop target names, so the core builds un
 with the pool exhausted starts only once the main thread yields, so a main-thread `join()` on it never returns. A
 failed layout replay builds and discards each camera dock twice in one pass, which exhausted the pool with three
 camera docks.
+**Observed (2026-11-23, glibc 2.35, Ubuntu 22.04 CI runner).** Detaching after releasing the gate segfaulted in
+`pthread_detach`: glibc 2.42 and older read the thread descriptor after marking it detached, the abandoned thread
+can exit in that window and free its own descriptor, and the read faults once the stack cache unmaps the stack. A
+replay of `NoDecodeStartsAfterStopReturns` in an Ubuntu 22.04 container crashed 12 of 720 processes (20000 stops
+each, 60 at once); glibc 2.43 rewrote `pthread_detach` and does not show it.
 **What the code does.** `AsyncFrameWorker::stop()` joins only a thread that has entered its loop and detaches one
-that has not; that thread checks a shared start gate before touching the worker and returns at once.
+that has not, holding the start gate so the thread cannot exit during the detach; that thread checks the gate
+before touching the worker and returns at once. With the detach under the gate the same replay ran 600 processes
+without a crash.
+**Re-test** not needed: the locked detach is correct on any libc and costs nothing.
 
 ## Thumbnail cache
 

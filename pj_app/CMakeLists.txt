@@ -119,6 +119,7 @@ add_library(pj_app_shell OBJECT
     src/ui/AboutDialog.cpp
     src/ui/AboutDialog.h
     src/ui/AboutDialog.ui
+    src/ui/NoticesDialog.ui
     src/ui/BatchLoadDialog.cpp
     src/ui/BatchLoadDialog.h
     src/ui/BatchLoadDialog.ui
@@ -159,7 +160,8 @@ target_sources(pj_app_shell PRIVATE
     src/mcp/McpProtocol.h
     src/mcp/McpServer.cpp
     src/mcp/McpServer.h
-    src/mcp/McpServerTools.cpp)
+    src/mcp/McpServerTools.cpp
+    src/mcp/McpWidgetState.cpp)
 if(NOT EMSCRIPTEN)
     # The UI tools are desktop only: only a command-line flag turns them on. Qt6::GuiPrivate:
     # <qpa/qwindowsysteminterface.h>, their real input path.
@@ -253,6 +255,11 @@ if(EMSCRIPTEN)
         ${CMAKE_SOURCE_DIR}/resources/fonts/NotoSansSC/wasm-cjk.qrc)
 else()
     add_executable(pj_app src/main.cpp src/AppProfile.cpp src/AppProfile.h src/BundledFont.cpp)
+    # Shown by the About box and copied beside the executable by every desktop package (packaging/).
+    include(${CMAKE_SOURCE_DIR}/cmake/PjNotices.cmake)
+    pj_desktop_write_notices("${CMAKE_CURRENT_BINARY_DIR}/THIRD_PARTY_NOTICES.txt")
+    qt_add_resources(pj_app pj_app_notices PREFIX "/" BASE "${CMAKE_CURRENT_BINARY_DIR}"
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/THIRD_PARTY_NOTICES.txt")
 endif()
 set_target_properties(pj_app PROPERTIES
     # The user-facing command packaging ships; the target id stays pj_app.
@@ -726,6 +733,12 @@ if(PJ_BUILD_TESTS)
     # The 2D scene panel's layer rows carry each layer's warning from the start.
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/scene2d_config_panel_test.cpp)
+
+    # The 3D scene panel's Settings area follows the last row clicked, a robot model row included.
+    if(TARGET pj_scene3d_widgets)
+        list(APPEND PJ_APP_GUI_TEST_SOURCES
+            tests/scene3d_config_panel_test.cpp)
+    endif()
 
     # Window frame: the system title bar by default, the frameless custom one
     # only when Preferences -> Appearance opts in (bar contents, the double-click

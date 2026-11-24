@@ -8092,12 +8092,12 @@ Details: %1</source>
     </message>
     <message>
         <location line="+16"/>
-        <source>Depth:    %1 m</source>
+        <source>Depth: %1 m</source>
         <translation>深度：%1 m</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Depth:    — (no data)</source>
+        <source>Depth: — (no data)</source>
         <translation>深度：—（无数据）</translation>
     </message>
 </context>

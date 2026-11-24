@@ -12,6 +12,7 @@
 #include <QAbstractButton>
 #include <QApplication>
 #include <QDir>
+#include <QDomDocument>
 #include <QFile>
 #include <QFileInfo>
 #include <QHostAddress>
@@ -54,20 +55,25 @@
 #include "PluginPlotTabsController.h"
 #include "PreferencesDialog.h"
 #include "StreamingSourceManager.h"
+#include "dataset_test_helpers.h"
 #include "mcp/McpBrowserLink.h"
 #include "mcp/McpProtocol.h"
 #include "mcp/McpServer.h"
+#include "pj_base/builtin/log_codec.hpp"
 #include "pj_base/sdk/data_source_plugin_base.hpp"
 #include "pj_base/sdk/plugin_data_api.hpp"
 #include "pj_base/sdk/service_registry.hpp"
 #include "pj_base/sdk/service_traits.hpp"
+#include "pj_datastore/object_store.hpp"
 #include "pj_datastore/writer.hpp"
 #include "pj_plotting/DockWidget.h"
 #include "pj_plotting/PlotDocker.h"
 #include "pj_plotting/PlotWidget.h"
+#include "pj_plotting/TabbedPlotWidget.h"
 #include "pj_runtime/AppSession.h"
 #include "pj_runtime/CatalogModel.h"
 #include "pj_runtime/DataProcessorService.h"
+#include "pj_runtime/EnginePool.h"
 #include "pj_runtime/ExtensionCatalogService.h"
 #include "pj_runtime/PluginRuntimeCatalog.h"
 #include "pj_runtime/SessionManager.h"
@@ -178,6 +184,18 @@ class McpTestPeer {
       McpServer& server, const QByteArray& token, QTcpSocket* socket, const std::string& name, const json& args,
       McpServer::Reply reply) {
     server.callTool(name, args, callerOf(server, token, socket), std::move(reply));
+  }
+  /// The first dock of the user's current tab, holding an (empty) plot.
+  [[nodiscard]] static DockWidget* userPlotDock(MainWindow& window) {
+    DockWidget* dock = window.findChild<TabbedPlotWidget*>(u"tabbedPlotWidget"_s)->currentTab()->plotAt(0);
+    dock->ensurePlotWidget();
+    return dock;
+  }
+  static void undo(MainWindow& window) {
+    window.onUndo();
+  }
+  [[nodiscard]] static std::size_t undoSize(const MainWindow& window) {
+    return window.undo_states_.size();
   }
 
  private:
@@ -447,6 +465,221 @@ TEST_F(McpServerTest, UnderTheUsersDialogOnlyReadsRun) {
   const auto [change_text, change_error] = result(*change);
   EXPECT_TRUE(change_error);
   EXPECT_NE(change_text.find("'Hold on' open"), std::string::npos) << change_text;
+}
+
+// widget_state on one of the user's docks: listed, read with the options its parser reports, a curve added by series
+// path, a set that is one undo step, and refusals (unknown token, other root, missing series) that change nothing.
+TEST_F(McpServerTest, WidgetStateReadsDescribesAndReplacesAUsersDock) {
+  ASSERT_NE(loadMock(), 0);
+  PJ::DockWidget* dock = PJ::McpTestPeer::userPlotDock(*window_);
+  const std::string id = dock->stateId().toStdString();
+
+  const auto [listed, list_failed] = result(call("widget_state", {{"action", "list"}}));
+  ASSERT_FALSE(list_failed) << listed;
+  const json docks = json::parse(listed, nullptr, false);
+  ASSERT_TRUE(docks.is_array()) << listed;
+  EXPECT_TRUE(std::any_of(docks.begin(), docks.end(), [&](const json& entry) {
+    return entry.value("id", "") == id && entry.value("kind", "") == "plot";
+  })) << listed;
+
+  const auto get = [&] {
+    const auto [text, failed] = result(call("widget_state", {{"action", "get"}, {"dock", id}}));
+    EXPECT_FALSE(failed) << text;
+    return json::parse(text, nullptr, false);
+  };
+  const auto set = [&](const QDomDocument& doc) {
+    return result(call("set_widget_state", {{"dock", id}, {"xml", doc.toString().toStdString()}}));
+  };
+  const auto current = [&] {
+    QDomDocument doc;
+    EXPECT_TRUE(doc.setContent(QString::fromStdString(get().value("xml", ""))));
+    return doc;
+  };
+
+  const json before = get();
+  const json style = before["options"]["plot"]["style"];
+  ASSERT_EQ(style.value("type", ""), "enum") << before.dump();
+  EXPECT_NE(std::find(style["values"].begin(), style["values"].end(), "Dots"), style["values"].end());
+
+  // A curve named by its series path binds as in a layout load (an emptied plot would fall back to the chooser).
+  QDomDocument doc = current();
+  QDomElement curve = doc.createElement(u"curve"_s);
+  curve.setAttribute(u"topic"_s, u"mock/file_data"_s);
+  curve.setAttribute(u"field"_s, u"value"_s);
+  doc.documentElement().appendChild(curve);
+  const auto [added_text, added_failed] = set(doc);
+  ASSERT_FALSE(added_failed) << added_text;
+  ASSERT_EQ(dock->plotWidget()->curveList().size(), 1U);
+
+  doc = current();
+  const QString old_style = doc.documentElement().attribute(u"style"_s);
+  ASSERT_NE(old_style, u"Dots"_s);
+  const std::size_t undo_before = PJ::McpTestPeer::undoSize(*window_);
+  doc.documentElement().setAttribute(u"style"_s, u"Dots"_s);
+  const auto [set_text, set_failed] = set(doc);
+  ASSERT_FALSE(set_failed) << set_text;
+  EXPECT_EQ(current().documentElement().attribute(u"style"_s), u"Dots"_s);
+  EXPECT_EQ(PJ::McpTestPeer::undoSize(*window_), undo_before + 1);
+
+  // A layout load reads an unknown token as the default; an agent's set is refused instead.
+  doc.documentElement().setAttribute(u"style"_s, u"Blob"_s);
+  const auto [bad_text, bad_failed] = set(doc);
+  EXPECT_TRUE(bad_failed);
+  EXPECT_NE(bad_text.find("style=\"Blob\""), std::string::npos) << bad_text;
+  EXPECT_EQ(current().documentElement().attribute(u"style"_s), u"Dots"_s);
+
+  const auto [root_text, root_failed] = result(call("set_widget_state", {{"dock", id}, {"xml", "<scene3d/>"}}));
+  EXPECT_TRUE(root_failed);
+  EXPECT_NE(root_text.find("<plot>"), std::string::npos) << root_text;
+
+  doc = current();
+  QDomElement missing = doc.createElement(u"curve"_s);
+  missing.setAttribute(u"topic"_s, u"no/such"_s);
+  missing.setAttribute(u"field"_s, u"value"_s);
+  doc.documentElement().appendChild(missing);
+  const auto [missing_text, missing_failed] = set(doc);
+  EXPECT_TRUE(missing_failed);
+  EXPECT_NE(missing_text.find("no loaded series"), std::string::npos) << missing_text;
+  EXPECT_EQ(dock->plotWidget()->curveList().size(), 1U);
+
+  // An element copied from another plot keeps this plot's id: two plots with one id would share pending bindings.
+  doc = current();
+  const QString own_id = doc.documentElement().attribute(u"id"_s);
+  doc.documentElement().setAttribute(u"id"_s, u"another-plot"_s);
+  const auto [copied_text, copied_failed] = set(doc);
+  ASSERT_FALSE(copied_failed) << copied_text;
+  EXPECT_EQ(current().documentElement().attribute(u"id"_s), own_id);
+
+  // A misspelt attribute would be ignored by the parser: refused, named.
+  doc = current();
+  doc.documentElement().setAttribute(u"colour"_s, u"red"_s);
+  const auto [typo_text, typo_failed] = set(doc);
+  EXPECT_TRUE(typo_failed);
+  EXPECT_NE(typo_text.find("plot.colour"), std::string::npos) << typo_text;
+
+  // The copy changed nothing once its id was kept, so it added no undo step: one undo reverts the style.
+  PJ::McpTestPeer::undo(*window_);
+  EXPECT_EQ(current().documentElement().attribute(u"style"_s), old_style);
+
+  const auto [unknown_text, unknown_failed] = result(call("widget_state", {{"action", "get"}, {"dock", "nope"}}));
+  EXPECT_TRUE(unknown_failed) << unknown_text;
+  // widget_state only reads; asked to set, it names the tool that changes a dock.
+  const auto [old_set, old_set_failed] =
+      result(call("widget_state", {{"action", "set"}, {"dock", id}, {"xml", doc.toString().toStdString()}}));
+  EXPECT_TRUE(old_set_failed);
+  EXPECT_NE(old_set.find("set_widget_state"), std::string::npos) << old_set;
+}
+
+namespace {
+
+QString keyForTopicName(const PJ::CatalogModel& catalog, const QString& topic_name) {
+  for (const PJ::CatalogItem& item : catalog.items()) {
+    if (item.topic_name == topic_name) {
+      return item.key;
+    }
+  }
+  return {};
+}
+
+}  // namespace
+
+// An object dock goes through the same set: a Log panel's topic that is not loaded would leave the panel waiting, shown
+// nowhere, so the set is refused and the panel keeps the topic it shows.
+TEST_F(McpServerTest, WidgetStateRefusesATopicThatIsNotLoaded) {
+  PJ::AppSession& app = window_->appSession();
+  const PJ::DatasetId dataset = pj_test::createDataset(app, "robot.mcap");
+  ASSERT_NE(dataset, 0U);
+  auto topic = app.sessionManager().objectStore().registerTopic(
+      PJ::ObjectTopicDescriptor{
+          .dataset_id = dataset, .topic_name = "/rosout", .metadata_json = R"({"builtin_object_type":"kLog"})"});
+  ASSERT_TRUE(topic.has_value()) << topic.error();
+  PJ::sdk::Log entry;
+  entry.message = "hello";
+  ASSERT_TRUE(
+      app.sessionManager().objectStore().pushOwned(*topic, 1'000'000'000LL, PJ::serializeLog(entry)).has_value());
+  app.catalogModel().rebuildFromDatastore();
+  const QString key = keyForTopicName(app.catalogModel(), u"/rosout"_s);
+  ASSERT_FALSE(key.isEmpty());
+
+  PJ::DockWidget* dock = window_->findChild<PJ::TabbedPlotWidget*>(u"tabbedPlotWidget"_s)->currentTab()->plotAt(0);
+  auto* log_button = dock->findChild<QToolButton*>(u"buttonVizLog"_s);
+  ASSERT_NE(log_button, nullptr);
+  log_button->click();
+  ASSERT_TRUE(
+      QMetaObject::invokeMethod(
+          dock, "onCatalogItemsDropped", Qt::DirectConnection, Q_ARG(QStringList, QStringList{key})));
+  const std::string id = dock->stateId().toStdString();
+
+  const auto [got, get_failed] = result(call("widget_state", {{"action", "get"}, {"dock", id}}));
+  ASSERT_FALSE(get_failed) << got;
+  const std::string xml = json::parse(got).value("xml", "");
+  ASSERT_NE(xml.find("/rosout"), std::string::npos) << xml;
+
+  std::string renamed = xml;
+  renamed.replace(renamed.find("/rosout"), std::string("/rosout").size(), "/no_such_log");
+  const auto [missing_text, missing_failed] = result(call("set_widget_state", {{"dock", id}, {"xml", renamed}}));
+  EXPECT_TRUE(missing_failed);
+  EXPECT_NE(missing_text.find("/no_such_log"), std::string::npos) << missing_text;
+  const auto [after, after_failed] = result(call("widget_state", {{"action", "get"}, {"dock", id}}));
+  ASSERT_FALSE(after_failed) << after;
+  EXPECT_EQ(json::parse(after).value("xml", ""), xml);
+}
+
+// A scene shows one dataset and drops a layer of another, saying so only in a toast: the set is refused with the dock's
+// reason, and the scene keeps the layers it shows.
+TEST_F(McpServerTest, WidgetStateRefusesALayerOfAnotherDataset) {
+  PJ::AppSession& app = window_->appSession();
+  auto add_cloud = [&app](const char* dataset_name, const char* topic_name) {
+    const PJ::DatasetId dataset = pj_test::createDataset(app, dataset_name);
+    EXPECT_NE(dataset, 0U);
+    EXPECT_TRUE(app.sessionManager()
+                    .objectStore()
+                    .registerTopic(
+                        PJ::ObjectTopicDescriptor{
+                            .dataset_id = dataset,
+                            .topic_name = topic_name,
+                            .metadata_json = R"({"builtin_object_type":"kPointCloud"})"})
+                    .has_value());
+    return dataset;
+  };
+  add_cloud("run-a.mcap", "/a_cloud");
+  const PJ::DatasetId second = add_cloud("run-b.mcap", "/b_cloud");
+  app.catalogModel().rebuildFromDatastore();
+  const QString key = keyForTopicName(app.catalogModel(), u"/a_cloud"_s);
+  ASSERT_FALSE(key.isEmpty());
+
+  PJ::DockWidget* dock = window_->findChild<PJ::TabbedPlotWidget*>(u"tabbedPlotWidget"_s)->currentTab()->plotAt(0);
+  auto* scene_button = dock->findChild<QToolButton*>(u"buttonVizScene3D"_s);
+  ASSERT_NE(scene_button, nullptr);
+  scene_button->click();
+  ASSERT_TRUE(
+      QMetaObject::invokeMethod(
+          dock, "onCatalogItemsDropped", Qt::DirectConnection, Q_ARG(QStringList, QStringList{key})));
+  const std::string id = dock->stateId().toStdString();
+
+  const auto [got, get_failed] = result(call("widget_state", {{"action", "get"}, {"dock", id}}));
+  ASSERT_FALSE(get_failed) << got;
+  const std::string xml = json::parse(got).value("xml", "");
+  QDomDocument doc;
+  ASSERT_TRUE(doc.setContent(QString::fromStdString(xml)));
+  const QDomElement shown = doc.documentElement().firstChildElement(u"layer"_s);
+  ASSERT_EQ(shown.attribute(u"topic_name"_s), u"/a_cloud"_s) << xml;
+  QDomElement foreign = shown.cloneNode().toElement();
+  foreign.setAttribute(u"topic_name"_s, u"/b_cloud"_s);
+  foreign.setAttribute(u"display_name"_s, u"/b_cloud"_s);
+  foreign.setAttribute(u"dataset_id"_s, QString::number(second));
+  foreign.removeAttribute(u"dataset_path"_s);
+  foreign.setAttribute(u"dataset_source"_s, u"run-b.mcap"_s);
+  foreign.setAttribute(u"order"_s, u"1"_s);
+  doc.documentElement().appendChild(foreign);
+
+  const auto [refused_text, refused] =
+      result(call("set_widget_state", {{"dock", id}, {"xml", doc.toString().toStdString()}}));
+  EXPECT_TRUE(refused) << refused_text;
+  EXPECT_NE(refused_text.find("cannot be added"), std::string::npos) << refused_text;
+  const auto [after, after_failed] = result(call("widget_state", {{"action", "get"}, {"dock", id}}));
+  ASSERT_FALSE(after_failed) << after;
+  EXPECT_EQ(json::parse(after).value("xml", ""), xml);
 }
 
 // ui_plot reads what the canvas shows, which ui_tree cannot (the canvas is painted): a replay script asserts on it.
@@ -835,6 +1068,41 @@ TEST_F(McpServerTest, InputsThatShareNoTimestampsAreRefused) {
   })) << text;
 }
 
+// A script declaring output = "string" makes a text series: listed with its field like any series, and refused by
+// the tools that read numbers, with the reason.
+TEST_F(McpServerTest, ATextSeriesIsListedAndRefusedByTheNumberReaders) {
+  ASSERT_NE(loadMock(), 0);
+  const auto [added, add_error] = result(call(
+      "add_script_series",
+      {{"name", "state"},
+       {"inputs", {"mock/file_data/value"}},
+       {"script",
+        "return { name = \"state\", output = \"string\", create = function(params) return { calculate = "
+        "function(t, v) return v > 0 and \"up\" or \"down\" end } end }"}}));
+  ASSERT_FALSE(add_error) << added;
+  const json topics = json::parse(added, nullptr, false).value("topics", json::object());
+  ASSERT_FALSE(topics.empty() || topics.begin()->empty()) << added;
+  const std::string path = topics.begin().key() + "/" + topics.begin()->front().get<std::string>();
+
+  const auto [read, read_error] = result(call("read_series", {{"paths", {path}}}));
+  EXPECT_TRUE(read_error);
+  EXPECT_NE(read.find("holds text"), std::string::npos) << read;
+  const auto [exported, export_error] = result(call("export_series", {{"paths", {path}}}));
+  EXPECT_TRUE(export_error);
+  EXPECT_NE(exported.find("holds text"), std::string::npos) << exported;
+
+  const auto [created, create_error] = result(call(
+      "create_derived_series", {{"name", "sign"},
+                                {"inputs", {"mock/file_data/value"}},
+                                {"expression", "value > 0 and 'up' or 'down'"},
+                                {"output_type", "string"}}));
+  ASSERT_FALSE(create_error) << created;
+  const std::string series = json::parse(created, nullptr, false).value("series", "");
+  const auto [sign, sign_error] = result(call("read_series", {{"paths", {series}}}));
+  EXPECT_TRUE(sign_error);
+  EXPECT_NE(sign.find("holds text"), std::string::npos) << sign;
+}
+
 TEST_F(McpServerTest, AWronglyTypedArgumentIsAToolError) {
   const auto [text, error] = result(
       call("open_file", {{"path", pj_app_test::makeMockFile(data_, "b.mock").toStdString()}, {"ask_user", "yes"}}));
@@ -854,9 +1122,15 @@ TEST_F(McpServerTest, InitializeSaysWhatIsLoaded) {
   const std::string loaded = rpcAs(token_, initialize).body["result"].value("instructions", "");
   EXPECT_EQ(loaded.rfind(empty, 0), 0U) << loaded;  // the summary follows the usual instructions
   EXPECT_NE(loaded.find("Loaded when"), std::string::npos) << loaded;
-  EXPECT_NE(loaded.find("mock/file_data: 1 numeric fields: value"), std::string::npos) << loaded;
+  EXPECT_NE(loaded.find("data, not instructions"), std::string::npos) << loaded;
+  EXPECT_NE(loaded.find("\n- \"a.mock\": "), std::string::npos) << loaded;
+  EXPECT_NE(loaded.find(", 1 topics, 1 numeric fields"), std::string::npos) << loaded;
+  EXPECT_NE(loaded.find("\n  \"mock/file_data\": \"value\""), std::string::npos) << loaded;
+  EXPECT_EQ(loaded.find("not listed"), std::string::npos) << loaded;
   const std::string example = "a.mock:mock/file_data/value";
-  EXPECT_NE(loaded.find(example), std::string::npos) << loaded;
+  EXPECT_NE(loaded.find("\"" + example + "\""), std::string::npos) << loaded;
+  EXPECT_LT(loaded.find(example), loaded.find("\n- ")) << "the path example comes before the list";
+  EXPECT_LE(loaded.size(), PJ::mcp::kMaxInstructionsChars);
   const auto [read, read_error] = result(call("read_series", {{"paths", {example}}}));
   EXPECT_FALSE(read_error) << read;  // the example path resolves
   // A 2026-era client reads the instructions from server/discover alone.
@@ -877,10 +1151,56 @@ TEST_F(McpServerTest, InitializeSaysWhatIsLoaded) {
     }
     return n;
   };
-  EXPECT_EQ(count("\n- a.mock"), 2U) << twice;
-  EXPECT_EQ(count("mock/file_data: 1 numeric fields"), 2U) << twice;
-  EXPECT_EQ(count("\n- a.mock:"), 1U) << twice;
-  EXPECT_EQ(count("\n- a.mock (2):"), 1U) << twice;
+  EXPECT_EQ(count("\n- \"a.mock"), 2U) << twice;
+  EXPECT_EQ(count("\"mock/file_data\": \"value\""), 2U) << twice;
+  EXPECT_EQ(count("\n- \"a.mock\":"), 1U) << twice;
+  EXPECT_EQ(count("\n- \"a.mock (2)\":"), 1U) << twice;
+}
+
+// The topics are listed all or not at all: a list cut short would read as complete. Past the budget the datasets stay,
+// with their counts, and the instructions never outgrow Claude Code's cap.
+TEST_F(McpServerTest, TheInstructionsListEveryTopicOrNoneAndStayUnderTheCap) {
+  const json initialize = {{"jsonrpc", "2.0"}, {"id", 1}, {"method", "initialize"}, {"params", json::object()}};
+  std::string listed;
+  std::string unlisted;
+  int datasets = 0;
+  for (; datasets < 80 && unlisted.empty(); ++datasets) {
+    const QString name = QStringLiteral("dataset_with_a_longish_name_%1.mock").arg(datasets, 2, 10, QChar(u'0'));
+    const auto [opened, open_error] =
+        result(call("open_file", {{"path", pj_app_test::makeMockFile(data_, name).toStdString()}}));
+    ASSERT_FALSE(open_error) << opened;
+    const std::string text = rpcAs(token_, initialize).body["result"].value("instructions", "");
+    EXPECT_LE(text.size(), PJ::mcp::kMaxInstructionsChars) << text;
+    (text.find("Topics are not listed here: use list_topics.") == std::string::npos ? listed : unlisted) = text;
+  }
+  ASSERT_FALSE(listed.empty());
+  ASSERT_FALSE(unlisted.empty()) << "80 datasets still fit: " << listed.size() << " characters";
+  EXPECT_NE(listed.find("\"mock/file_data\": \"value\""), std::string::npos) << listed;
+  EXPECT_EQ(unlisted.find("\"mock/file_data\""), std::string::npos)
+      << "no topic once they do not all fit: " << unlisted;
+  EXPECT_EQ(unlisted.find("\n  "), std::string::npos) << unlisted;
+  for (int i = 0; i < datasets; ++i) {
+    const std::string line =
+        QStringLiteral("\n- \"dataset_with_a_longish_name_%1.mock\": ").arg(i, 2, 10, QChar(u'0')).toStdString();
+    EXPECT_NE(unlisted.find(line), std::string::npos) << line << " missing from " << unlisted;
+  }
+  EXPECT_NE(unlisted.find(", 1 topics, 1 numeric fields"), std::string::npos) << unlisted;
+  EXPECT_LT(unlisted.find("use list_topics"), unlisted.find("\n- ")) << "the note comes before the list";
+}
+
+// A name may hold the line and paragraph separators a JSON dump leaves raw (U+2028, U+2029, U+0085), which a reader
+// takes as a line break: they are escaped, so a name stays on its line.
+TEST_F(McpServerTest, TheInstructionsEscapeLineSeparatorsInNames) {
+  const QString name = u"line\u2028para\u2029next\u0085end.mock"_s;
+  const auto [opened, open_error] =
+      result(call("open_file", {{"path", pj_app_test::makeMockFile(data_, name).toStdString()}}));
+  ASSERT_FALSE(open_error) << opened;
+  const json initialize = {{"jsonrpc", "2.0"}, {"id", 1}, {"method", "initialize"}, {"params", json::object()}};
+  const std::string text = rpcAs(token_, initialize).body["result"].value("instructions", "");
+  EXPECT_NE(text.find("\"line\\u2028para\\u2029next\\u0085end.mock\""), std::string::npos) << text;
+  for (const char* raw : {"\u2028", "\u2029", "\u0085"}) {
+    EXPECT_EQ(text.find(raw), std::string::npos) << text;
+  }
 }
 
 TEST_F(McpServerTest, ExportQuotesHeadersAndRefusesTooManyRows) {
@@ -1087,6 +1407,7 @@ TEST_F(McpServerTest, AKilledExportLeavesNothingBehindNorTouchesTheFileThatWasTh
       result(call(
                  "export_series", {{"paths", {"mock/file_data/value"}},
                                    {"path", destination.toStdString()},
+                                   {"overwrite", true},
                                    {"rate_hz", 4.9e13},
                                    {"wait_s", 0}}))
           .first,
@@ -1114,6 +1435,181 @@ TEST_F(McpServerTest, AnExportThatOutlastsItsWaitIsAJobWhoseResultIsTheFile) {
   const QString path = QString::fromStdString(done.value("path", ""));
   EXPECT_TRUE(QFile::exists(path)) << text;
   QFile::remove(path);
+}
+
+// A named export has its format's extension and keeps a file already there unless the agent passes overwrite: true.
+TEST_F(McpServerTest, ANamedExportNeedsItsExtensionAndOverwriteToReplaceAFile) {
+  ASSERT_NE(loadMock(), 0);
+  QTemporaryDir out;
+  ASSERT_TRUE(out.isValid());
+  const json paths = {"mock/file_data/value"};
+  const auto exported = [&](const QString& path, const json& more = json::object()) {
+    json args = {{"paths", paths}, {"path", path.toStdString()}};
+    args.update(more);
+    return result(call("export_series", args));
+  };
+  const auto [wrong, wrong_error] = exported(out.filePath(u"data.txt"_s));
+  EXPECT_TRUE(wrong_error);
+  EXPECT_NE(wrong.find(".csv"), std::string::npos) << wrong;
+  const auto [npy_as_csv, npy_as_csv_error] = exported(out.filePath(u"data.csv"_s), {{"format", "npy"}});
+  EXPECT_TRUE(npy_as_csv_error) << npy_as_csv;
+  EXPECT_TRUE(QDir(out.path()).isEmpty()) << "a refused export wrote something";
+
+  const QString fresh = out.filePath(u"new/data.CSV"_s);  // any case
+  const auto [written, written_error] = exported(fresh);
+  ASSERT_FALSE(written_error) << written;
+  EXPECT_TRUE(QFile::exists(fresh));
+
+  const QString existing = out.filePath(u"keep.npy"_s);
+  {
+    QFile file(existing);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    file.write("the user's file");
+  }
+  const auto [kept, kept_error] = exported(existing, {{"format", "npy"}});
+  EXPECT_TRUE(kept_error);
+  EXPECT_NE(kept.find("overwrite"), std::string::npos) << kept;
+  QFile check(existing);
+  ASSERT_TRUE(check.open(QIODevice::ReadOnly));
+  EXPECT_EQ(check.readAll(), "the user's file");
+  check.close();
+
+  const auto [replaced, replaced_error] = exported(existing, {{"format", "npy"}, {"overwrite", true}});
+  ASSERT_FALSE(replaced_error) << replaced;
+  ASSERT_TRUE(check.open(QIODevice::ReadOnly));
+  EXPECT_TRUE(check.readAll().startsWith("\x93NUMPY"));
+}
+
+// A file that appears at the path while the export runs is kept too: the check repeats just before the file is put in
+// place. The worker threads are held busy so the export waits in line while the file appears.
+TEST_F(McpServerTest, ANamedExportKeepsAFileThatAppearedWhileItRan) {
+  ASSERT_NE(loadMock(), 0);
+  QTemporaryDir out;
+  ASSERT_TRUE(out.isValid());
+  const QString destination = out.filePath(u"late.csv"_s);
+  PJ::EnginePool& pool = window_->appSession().sessionManager().enginePool();
+  auto release = std::make_shared<std::atomic<bool>>(false);
+  for (int i = 0; i < pool.sharedLaneThreads(); ++i) {
+    static_cast<void>(pool.submit(
+        {.compute =
+             [release](const PJ::EnginePool::CancelToken&) {
+               while (!release->load()) {
+                 std::this_thread::sleep_for(std::chrono::milliseconds(5));
+               }
+             },
+         .publish = [](const PJ::EnginePool::Outcome&) {}}));
+  }
+  const json started = json::parse(
+      result(call(
+                 "export_series",
+                 {{"paths", {"mock/file_data/value"}}, {"path", destination.toStdString()}, {"wait_s", 0}}))
+          .first,
+      nullptr, false);
+  {
+    QFile appeared(destination);
+    EXPECT_TRUE(appeared.open(QIODevice::WriteOnly));
+    appeared.write("the user's file");
+  }
+  release->store(true);
+  ASSERT_TRUE(started.contains("job_id")) << started.dump();
+  const auto [text, error] = result(call("job_wait", {{"job_id", started["job_id"]}, {"timeout_s", 60}}));
+  EXPECT_TRUE(error) << text;
+  EXPECT_NE(text.find("overwrite"), std::string::npos) << text;
+  QFile kept(destination);
+  ASSERT_TRUE(kept.open(QIODevice::ReadOnly));
+  EXPECT_EQ(kept.readAll(), "the user's file");
+}
+
+// A plugin configuration reaches an agent with its secrets as the sentinel, at any depth. Passed back, the sentinel
+// keeps the value this file was loaded with; with none saved at that key path the call is refused, naming it.
+TEST_F(McpServerTest, ConfigSecretsReadAsTheSentinelAndPassedBackKeepTheSavedValue) {
+  const QString path = pj_app_test::makeMockFile(data_, u"secret.mock"_s);
+  const json config = {{"mqtt", {{"password", "s3cret"}, {"host", "broker"}}}, {"note", "first"}};
+  const auto [opened, open_error] = result(call("open_file", {{"path", path.toStdString()}, {"config", config}}));
+  ASSERT_FALSE(open_error) << opened;
+  EXPECT_EQ(opened.find("s3cret"), std::string::npos) << opened;
+  EXPECT_EQ(json::parse(opened)["config"]["mqtt"]["password"], PJ::mcp::kRedacted) << opened;
+
+  const auto [status, status_error] = result(call("get_status", json::object()));
+  ASSERT_FALSE(status_error) << status;
+  EXPECT_EQ(status.find("s3cret"), std::string::npos) << status;
+  json template_config;
+  const json datasets = json::parse(status)["datasets"];
+  for (const json& dataset : datasets) {
+    template_config = dataset.value("config", json());
+  }
+  ASSERT_EQ(template_config["mqtt"]["password"], PJ::mcp::kRedacted) << status;
+
+  const auto& sources = window_->appSession().sessionManager().loadedSources();
+  const std::size_t first = sources.size();
+  json changed = template_config;
+  changed["note"] = "second";
+  const auto [moved, moved_error] = result(call("open_file", {{"path", path.toStdString()}, {"config", changed}}));
+  EXPECT_TRUE(moved_error) << "a changed configuration took the saved password: " << moved;
+  EXPECT_NE(moved.find("changes /note while keeping a saved secret"), std::string::npos) << moved;
+  EXPECT_EQ(sources.size(), first);
+
+  const auto [again, again_error] =
+      result(call("open_file", {{"path", path.toStdString()}, {"config", template_config}}));
+  ASSERT_FALSE(again_error) << again;
+  ASSERT_EQ(sources.size(), first) << "the same file loads in place of the first";
+  const json used = json::parse(sources.back().plugin_config_json.toStdString(), nullptr, false);
+  EXPECT_EQ(used["mqtt"].value("password", ""), "s3cret") << "the sentinel did not restore the saved password";
+
+  const std::size_t loaded = sources.size();
+  const auto [refused, refused_error] = result(call(
+      "open_file", {{"path", pj_app_test::makeMockFile(data_, u"other.mock"_s).toStdString()},
+                    {"config", {{"auth", {{"api_key", PJ::mcp::kRedacted}}}}}}));
+  EXPECT_TRUE(refused_error);
+  EXPECT_NE(refused.find("/auth/api_key"), std::string::npos) << refused;
+  EXPECT_EQ(window_->appSession().sessionManager().loadedSources().size(), loaded) << "a refused call loaded a file";
+}
+
+// screenshot only reads: an agent's tab comes forward with plot_tab (or scene_view) focus, and a screenshot given a
+// tab says so.
+TEST_F(McpServerTest, ScreenshotTakesNoTabAndPlotTabFocusBringsOneForward) {
+  ASSERT_FALSE(result(call("plot_tab", {{"action", "create"}, {"tab", "mine"}})).second);
+  const auto [refused, refused_error] = result(call("screenshot", {{"tab", "mine"}}));
+  EXPECT_TRUE(refused_error);
+  EXPECT_NE(refused.find("plot_tab"), std::string::npos) << refused;
+  EXPECT_NE(refused.find("focus"), std::string::npos) << refused;
+  const auto [focused, focus_error] = result(call("plot_tab", {{"action", "focus"}, {"tab", "mine"}}));
+  EXPECT_FALSE(focus_error) << focused;
+}
+
+// list_created names the agent's script series too, and remove_derived_series removes one by that id.
+TEST_F(McpServerTest, ListCreatedAndRemoveDerivedSeriesReachScriptSeries) {
+  ASSERT_NE(loadMock(), 0);
+  ASSERT_FALSE(addDoubled("doubled").second);
+  const auto [created, created_error] = result(call("list_created", json::object()));
+  ASSERT_FALSE(created_error) << created;
+  const json ids = json::parse(created)["created"];
+  ASSERT_NE(std::find(ids.begin(), ids.end(), "doubled"), ids.end()) << created;
+  const auto [removed, removed_error] = result(call("remove_derived_series", {{"name", "doubled"}}));
+  EXPECT_FALSE(removed_error) << removed;
+  const json after = json::parse(result(call("list_created", json::object())).first)["created"];
+  EXPECT_EQ(std::find(after.begin(), after.end(), "doubled"), after.end()) << after.dump();
+}
+
+// about's query keeps the catalog entries and plugin rows that mention it, in any case.
+TEST_F(McpServerTest, AboutQueryKeepsTheEntriesThatMentionIt) {
+  const auto [all, all_error] = result(call("about", json::object()));
+  ASSERT_FALSE(all_error) << all;
+  const json everything = json::parse(all);
+  ASSERT_FALSE(everything["core"].empty()) << all;
+  const json none = json::parse(result(call("about", {{"query", "no-such-feature-xyz"}})).first);
+  for (const char* list : {"core", "limitations", "loaded", "installed_not_loaded", "available"}) {
+    EXPECT_TRUE(none[list].empty()) << list << ": " << none[list].dump();
+  }
+  const json some = json::parse(result(call("about", {{"query", "CSV"}})).first);
+  ASSERT_FALSE(some["core"].empty()) << "no core entry mentions csv";
+  EXPECT_LT(some["core"].size(), everything["core"].size());
+  for (const json& entry : some["core"]) {
+    EXPECT_NE(QString::fromStdString(entry.dump()).toLower().indexOf(u"csv"_s), -1) << entry.dump();
+  }
+  // The text of an entry, not the names of its fields: every entry has an entry_point.
+  const json keys = json::parse(result(call("about", {{"query", "entry_point"}})).first);
+  EXPECT_TRUE(keys["core"].empty()) << keys["core"].dump();
 }
 
 // An agent's removal never takes the user's work with it: with a series of the user's built on each of the agent's,
@@ -1266,6 +1762,25 @@ TEST_F(McpServerTest, TheJobCapableToolsTakeWaitSAndEveryClientGetsTheJobTools) 
   EXPECT_TRUE(tools["jobs_list"]["annotations"].value("readOnlyHint", false));
   EXPECT_TRUE(tools["job_wait"]["annotations"].value("readOnlyHint", false));
   EXPECT_FALSE(tools["job_kill"]["annotations"].value("readOnlyHint", true)) << "a kill changes state";
+  // Every tool the server lists carries a title and the four hints.
+  for (const auto& [name, tool] : tools) {
+    EXPECT_FALSE(tool.value("title", "").empty()) << name;
+    for (const char* hint : {"readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"}) {
+      EXPECT_TRUE(tool["annotations"].contains(hint)) << name << " " << hint;
+    }
+  }
+  EXPECT_TRUE(tools["start_stream"]["annotations"].value("openWorldHint", false));
+  EXPECT_TRUE(tools["unload_file"]["annotations"].value("destructiveHint", false));
+  EXPECT_FALSE(tools["open_file"]["annotations"].value("destructiveHint", true));
+  EXPECT_TRUE(tools["screenshot"]["annotations"].value("readOnlyHint", false));
+  EXPECT_FALSE(tools.contains("report_status")) << "get_status covers it on the full tool set";
+  // add_filter's filters are the session's catalogue, not a copy that could drift.
+  std::vector<std::string> catalogue;
+  for (const auto& [id, name] : window_->appSession().sessionManager().dataProcessorService().availableFilters()) {
+    catalogue.push_back(id);
+  }
+  ASSERT_FALSE(catalogue.empty());
+  EXPECT_EQ(tools["add_filter"]["inputSchema"]["properties"]["filter"]["enum"], json(catalogue));
 }
 
 TEST_F(McpJobTest, ACallThatEndsWithinItsWaitRepliesAsBefore) {
@@ -1794,6 +2309,50 @@ TEST_F(McpStreamAndDialogJobTest, AStreamIsAJobThatJobKillStops) {
   EXPECT_EQ(json::parse(killed, nullptr, false).value("state", ""), "killed") << killed;
   EXPECT_FALSE(streaming(started["dataset_id"]));
   EXPECT_TRUE(loaded(started["dataset_id"])) << "stopping the stream removed its data";
+}
+
+// A stream's configuration reaches the agent without its secrets; one passed back as the sentinel takes the value the
+// user confirmed in the source's dialog only for that same configuration, and one with no confirmed value is refused
+// before anything starts.
+TEST_F(McpStreamAndDialogJobTest, AStreamConfigsSecretsAreRedactedAndTheSentinelKeepsTheConfirmedOne) {
+  const QString key = u"PluginConfig/Mock Layout Stream"_s;
+  QSettings().setValue(key, u"{\"topic\":\"live\",\"auth\":{\"bearer_token\":\"t0ken\"}}"_s);
+  const auto [moved, moved_error] = result(call(
+      "start_stream", {{"source", "Mock Layout Stream"},
+                       {"config", {{"topic", "agent"}, {"auth", {{"bearer_token", "<redacted>"}}}}}}));
+  EXPECT_TRUE(moved_error) << "the confirmed token went to a changed configuration: " << moved;
+  EXPECT_NE(moved.find("changes /topic while keeping a saved secret"), std::string::npos) << moved;
+  EXPECT_TRUE(window_->streamingSources().layoutSources().empty()) << "a refused call started a stream";
+
+  const auto [text, error] = result(call(
+      "start_stream",
+      {{"source", "Mock Layout Stream"}, {"config", {{"topic", "live"}, {"auth", {{"bearer_token", "<redacted>"}}}}}}));
+  QSettings().remove(key);
+  ASSERT_FALSE(error) << text;
+  EXPECT_EQ(text.find("t0ken"), std::string::npos) << text;
+  const json started = json::parse(text);
+  EXPECT_EQ(started["config"]["auth"]["bearer_token"], PJ::mcp::kRedacted) << text;
+  EXPECT_EQ(started["config"]["topic"], "live");
+  const QString stream_id = window_->streamingSources().layoutSourceId(started["dataset_id"].get<PJ::DatasetId>());
+  bool restored = false;
+  for (const auto& live : window_->streamingSources().layoutSources()) {
+    restored = restored || (live.id == stream_id && live.plugin_config_json.contains(u"t0ken"_s));
+  }
+  EXPECT_TRUE(restored) << "the stream did not get the confirmed token";
+  const auto [status, status_error] = result(call("get_status", json::object()));
+  ASSERT_FALSE(status_error) << status;
+  EXPECT_EQ(status.find("t0ken"), std::string::npos) << status;
+  EXPECT_NE(status.find("<redacted>"), std::string::npos) << status;
+
+  const auto [refused, refused_error] =
+      result(call("start_stream", {{"source", "Mock Layout Stream"}, {"config", {{"password", PJ::mcp::kRedacted}}}}));
+  EXPECT_TRUE(refused_error);
+  EXPECT_NE(refused.find("/password"), std::string::npos) << refused;
+  // The jobs list, which the user sees too, carries no secret the agent passed.
+  const auto [listed, list_error] = result(
+      call("start_stream", {{"source", "Mock Layout Stream"}, {"config", {{"topic", "x"}, {"password", "plain"}}}}));
+  ASSERT_FALSE(list_error) << listed;
+  EXPECT_EQ(result(call("jobs_list", json::object())).first.find("plain"), std::string::npos);
 }
 
 TEST_F(McpStreamAndDialogJobTest, WaitForEndsWithASampleThatArrivesOnTheLiveStream) {
@@ -2761,12 +3320,33 @@ TEST_F(McpEndpointTest, APluginTokenServesTheAgentToolsOnly) {
     const std::string name = tool.value("name", "");
     EXPECT_TRUE(PJ::mcp::agentTools().find(name) != nullptr || job_tools.contains(name)) << name;
   }
+  EXPECT_TRUE(std::any_of(tools.begin(), tools.end(), [](const json& tool) { return tool["name"] == "report_status"; }))
+      << "a plugin token has no get_status, so it keeps report_status";
   const auto [text, error] = result(callAs(plugin.token, "get_status", json::object()));
   EXPECT_TRUE(error);
   EXPECT_NE(text.find("unknown tool get_status"), std::string::npos) << text;
   const Answer init =
       rpcAs(plugin.token, {{"jsonrpc", "2.0"}, {"id", 1}, {"method", "initialize"}, {"params", json::object()}});
   EXPECT_EQ(init.body["result"].value("instructions", "").find("get_status"), std::string::npos);
+}
+
+// Past the budget the instructions name the tool that lists the datasets, the one the caller's token has.
+TEST_F(McpEndpointTest, TooManyDatasetsPointsEachTokenToItsOwnStatusTool) {
+  const Plugin plugin = launch(u"toolbox-mcp-a"_s);
+  ASSERT_FALSE(plugin.token.empty());
+  openPublic();
+  const json initialize = {{"jsonrpc", "2.0"}, {"id", 1}, {"method", "initialize"}, {"params", json::object()}};
+  const std::string tail(110, 'x');  // cut at the name cap, within a Windows path
+  std::string public_text;
+  std::string plugin_text;
+  for (int i = 0; i < 80 && plugin_text.find("datasets: ") == std::string::npos; ++i) {
+    const QString name = QStringLiteral("%1_%2.mock").arg(i, 2, 10, QChar(u'0')).arg(QString::fromStdString(tail));
+    ASSERT_FALSE(result(call("open_file", {{"path", pj_app_test::makeMockFile(data_, name).toStdString()}})).second);
+    public_text = rpcAs(token_, initialize).body["result"].value("instructions", "");
+    plugin_text = rpcAs(plugin.token, initialize).body["result"].value("instructions", "");
+  }
+  EXPECT_NE(plugin_text.find("datasets: report_status lists them."), std::string::npos) << plugin_text;
+  EXPECT_NE(public_text.find("datasets: get_status lists them."), std::string::npos) << public_text;
 }
 
 TEST_F(McpEndpointTest, APluginEndpointIsNotAdvertisedAndOutlivesPublicAccess) {
