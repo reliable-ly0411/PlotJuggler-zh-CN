@@ -186,7 +186,9 @@ class ExtensionCatalogService : public QObject {
   [[nodiscard]] std::optional<sdk::BuiltinObjectType> classifyParserObjectRoute(
       std::string_view encoding, std::string_view type_name, Span<const uint8_t> schema) const;
 
-  QString buildFileFilter() const;
+  // Builds a QFileDialog-compatible filter string from all file-import sources.
+  QString buildFileFilter(
+      const std::function<std::string(const RuntimeDataSourcePlugin&)>& display_name = {}) const;
 
   // User plugin folders (Preferences::plugin_folders): an authoritative scan tier below --plugin-dir, above the
   // marketplace dir. Changes apply on next launch (no hot reload): the setter only writes the key.

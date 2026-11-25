@@ -8,8 +8,13 @@
 
 namespace PJ {
 
-// Installed extension discovered from an embedded plugin manifest on disk. name/description/category mirror
-// Extension's but come from the manifest, so an extension no registry lists (a sideload) can still render as a row.
+// Installed extension discovered from an embedded plugin manifest on disk.
+//
+// Display metadata mirrors the same fields on Extension, but
+// is sourced from the manifest rather than the registry. It exists so an
+// extension NO registry lists can still be rendered as an ordinary row: without
+// it, the manifest metadata read during discovery would be discarded and the
+// UI would have nothing to display for a sideloaded plugin.
 struct InstalledExtension {
   QString id;  ///< Matches Extension::id from the registry
   QString version;
@@ -24,8 +29,13 @@ struct InstalledExtension {
   /// what the filter row matches against. A plugin declaring anything else simply
   /// matches no category facet.
   QString category;
-  /// ABI major from SDK DSO discovery. Zero means an older descriptor did not expose it; the loader's ABI-symbol
-  /// check then stays the authoritative gate.
+  QString author;
+  QString license;
+  QString website;
+  QString repository;
+  /// ABI major read from the DSO protocol. Zero means an older descriptor did
+  /// not expose it, in which case the loader's ABI-symbol check remains the
+  /// authoritative gate.
   uint32_t abi_major = 0;
   /// Manifest `min_sdk_required`: the oldest SDK contract whose API the plugin requires; empty means undeclared. A hard
   /// host-side gate.

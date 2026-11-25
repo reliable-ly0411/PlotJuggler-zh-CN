@@ -1,7 +1,6 @@
+#include <pj_widgets/BundledPluginText.h>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
-
-#include "StreamingSourceManager.h"
 
 #include <QLoggingCategory>
 #include <QMetaObject>
@@ -20,6 +19,7 @@
 #include <vector>
 
 #include "DialogPresenter.h"
+#include "StreamingSourceManager.h"
 #include "pj_base/data_source_protocol.h"
 #include "pj_base/dataset.hpp"
 #include "pj_base/span.hpp"
@@ -63,8 +63,9 @@ QString pluginConfigKey(const std::string& plugin_id) {
 }  // namespace
 
 struct StreamingSourceManager::StreamingSession {
-  std::string plugin_id;    ///< display name, as shown in the streaming combo
-  std::string manifest_id;  ///< the plugin's stable manifest id, for provenance
+  std::string plugin_id;        ///< canonical legacy name; never localized
+  QString plugin_display_name;  ///< presentation only
+  std::string manifest_id;      ///< the plugin's stable manifest id, for provenance
   /// The dataset is "[stream] <label>": the layout record's source_name, else the plugin name.
   QString label;
   /// The layout record this session started from; empty for an interactive start.
@@ -214,7 +215,7 @@ RecordingTargets StreamingSourceManager::recordingTargets() {
     // The recorder taps the delegated-ingest seam. A source that writes decoded samples straight into the datastore
     // never passes through it, so a tap on it would produce an empty, channel-less file.
     if ((session->capabilities & kCapabilityDelegatedIngest) == 0) {
-      result.excluded << QString::fromStdString(session->plugin_id);
+      result.excluded << session->plugin_display_name;
       continue;
     }
     result.targets.push_back(
@@ -335,10 +336,13 @@ void StreamingSourceManager::flushSecondaryIntoPrimary() {
 std::unique_ptr<StreamingSourceManager::StreamingSession> StreamingSourceManager::createSession(
     const LoadedDataSource& source, const QString& label, QString& error) {
   const QString source_name = QString::fromStdString(source.name);
+  const QString source_display_name =
+      bundledPluginText(QString::fromStdString(source.id), QString::fromStdString(source.version), source_name);
+
   DataSourceHandle handle = source.library.createHandle();
   if (!handle.valid()) {
     qCWarning(lcStream) << "createHandle failed for" << source_name;
-    error = tr("Plugin '%1': createHandle failed.").arg(source_name);
+    error = tr("Plugin '%1': createHandle failed.").arg(source_display_name);
     return nullptr;
   }
 
@@ -385,6 +389,7 @@ std::unique_ptr<StreamingSourceManager::StreamingSession> StreamingSourceManager
   auto library_keepalive = handle.libraryOwner();
   auto session = std::make_unique<StreamingSession>(std::move(handle));
   session->plugin_id = source.name;
+  session->plugin_display_name = source_display_name;
   session->manifest_id = source.id;
   session->label = label;
   session->dataset_id = dataset_id;
@@ -421,13 +426,14 @@ std::unique_ptr<StreamingSourceManager::StreamingSession> StreamingSourceManager
 
   ServiceRegistryBuilder registry;
   if (auto status = session->runtime_host->registerServices(registry); !status) {
-    error = tr("Plugin '%1': service registration failed: %2").arg(source_name, QString::fromStdString(status.error()));
+    error = tr("Plugin '%1': service registration failed: %2")
+                .arg(source_display_name, QString::fromStdString(status.error()));
     session.reset();
     discardDataset(dataset_id);
     return nullptr;
   }
   if (auto status = session->handle.bind(registry.view()); !status) {
-    error = tr("Plugin '%1': bind failed: %2").arg(source_name, QString::fromStdString(status.error()));
+    error = tr("Plugin '%1': bind failed: %2").arg(source_display_name, QString::fromStdString(status.error()));
     session.reset();
     discardDataset(dataset_id);
     return nullptr;
@@ -640,11 +646,17 @@ bool StreamingSourceManager::launchSession(std::unique_ptr<StreamingSession> ses
   applyWriteTargetsForCurrentPauseState(*session->runtime_host);
 
   if (auto status = session->handle.start(); !status) {
-    error = tr("Plugin '%1': start failed: %2")
-                .arg(QString::fromStdString(session->plugin_id), QString::fromStdString(status.error()));
+    error =
+        tr("Plugin '%1': start failed: %2").arg(session->plugin_display_name, QString::fromStdString(status.error()));
     return false;
   }
 
+  // Only the catalog label is localized; engine/time-domain/recording identities stay raw.
+  catalog_.setDatasetDisplayName(
+      dataset_id, tr("[stream] %1")
+                      .arg(
+                          session->label == QString::fromStdString(session->plugin_id) ? session->plugin_display_name
+                                                                                       : session->label));
   session->capabilities = session->handle.capabilities();
   usageCounters().countPlugin(PluginUse::kStreamStart, session->manifest_id);
   // CurveListPanel dims a topic as unsubscribed only for a dataset that supports the pause.

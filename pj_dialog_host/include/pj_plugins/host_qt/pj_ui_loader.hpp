@@ -16,7 +16,8 @@ class PjUiLoader : public QUiLoader {
 
   QWidget* createWidget(const QString& class_name, QWidget* parent, const QString& name) override;
 
-  // Hides QUiLoader::load (not virtual): call it through a PjUiLoader. After the load, every button or action icon
+  // Hides QUiLoader::load (not virtual): call it through a PjUiLoader. Localize reviewed bundled UIs only.
+  // After the load, every button or action icon
   // the .ui names by a host resource path (`:/resources/svg/...`) is replaced by the loadSvg rendering for the active
   // theme, as host-built icons are: a raw <iconset> keeps the SVG's authoring ink, near-invisible in the dark theme.
   // Each re-rendered object keeps its path in the dynamic property `_pj_host_icon`, for retintHostIcons.

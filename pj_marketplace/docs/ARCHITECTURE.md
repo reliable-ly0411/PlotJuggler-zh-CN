@@ -11,292 +11,560 @@ consumed by `pj_app` through `pj_runtime`'s `ExtensionCatalogService`.
 
 ![Architecture](diagrams/architecture.png)
 
-## Components
+<details>
+<summary>PlantUML source</summary>
 
-Public headers live under `include/pj_marketplace/`; sources under `src/core/` (managers, store, extraction),
-`src/models/` (pure value types: content manifest, generation digest, loaded profile, store policy), `src/ui/` and
-`helper/` (`pj-plugin-check`). Targets: `pj_marketplace` (core, static), `pj_marketplace_ui` (`MarketplaceWindow`,
-static), `pj-plugin-check` (the Qt-free admission helper) and `pj_marketplace_app`, a standalone harness built when
-`PJ_BUILD_MARKETPLACE_APP` is on (default `PJ_BUILD_TESTS`) so the marketplace can be iterated without the PJ4 shell.
-The embedded and standalone entry points consume the same libraries.
+```plantuml
+@startuml
+skinparam backgroundColor white
 
-| Component | Responsibility |
-|---|---|
-| `RegistryManager` | Fetch the registry JSON (never cached), parse every record, then run the resolver. |
-| `resolveRegistryCandidates()` | Pure function: validate versions and SDK floors, pick one release per id. No network, filesystem or UI. |
-| `ExtensionManager` | Install, sideload, update, uninstall, downgrade-to-bundled, enable/disable, staged promotion, the removal journal, the writer lease, diagnostics. |
-| `DownloadManager` | HTTP GET with progress, SHA-256 verification and ZIP extraction on a worker thread, under the archive budgets. |
-| `PluginCheckRunner` + `pj-plugin-check` | Out-of-process admission of freshly arrived bytes. |
-| `StoreSession`, `StoreWriteLease`, `ArtifactStore`, `loaded_profile`, `content_manifest` | Single-writer lease and the content-addressed object store. |
-| `PlatformUtils` | Platform id, standard directories, `canonicalStoreRoot()`. |
-| `QtDiagnosticBridge` | Adapts a `PJ::DiagnosticSink` to a queued Qt signal `diagnosticReported(level, source, id, message)`; the returned sink is thread-safe and may outlive the bridge (queued delivery is guarded by `QPointer`). |
-| `MarketplaceWindow` | The UI (see "UI and host integration"). |
+title PlotJuggler Marketplace Architecture
 
-Helpers worth reusing before writing another: `sha256.hpp` (incremental SHA-256, file streaming; Qt-free because the
-helper links no Qt), `fs_walk.hpp` (recursive regular-file walk that fails closed on symlinks), `version_compare.hpp`
-(`comparePluginVersions`, the one version ordering every badge and lock uses), `archive_limits.hpp` (entry, size and
-depth budgets), `utf8_path.hpp` (path to UTF-8 text for messages, logs and JSON: never `path::string()` or
-`path(qstring.toStdString())`, which go through the Windows code page; `pj_runtime`'s plugin catalog reuses it),
-`plugin_compatibility.hpp` (the ABI major and `min_sdk_required` gate).
+rectangle "GitHub" {
+  database "Registry\nregistry.json" as reg
+  rectangle "Extension Repos" as ext
+  ext -right-> reg : Automatic PR
+}
 
-**Data models.** `Extension` is one registry release: identity and presentation fields, `min_sdk_required`,
-`suggested_sdk_version`, `platforms` (platform id such as `linux-x86_64` to `{url, checksum}`, the checksum as
-`sha256:<hex>`) and a changelog. `InstalledExtension` is one installed directory, read from the DSO's embedded
-manifest, so a plugin the registry does not list still shows as a row and is gated on every host contract it declares.
-`min_plotjuggler_version` is parsed and displayed in both, and never gates.
+rectangle "PlotJuggler" {
+  component "Marketplace UI" as ui
+  component "Extension Manager" as em
+  folder "extensions/" as local
+  ui --> em
+  em --> local : scan plugin DSOs
+}
 
-**Construction.** `ExtensionManager` takes its downloader, extensions dir, pending dir and an optional `DiagnosticSink`
-as constructor arguments, so tests point it at temp directories; a no-argument overload owns a `DownloadManager` and
-uses the standard user directories. The installed set is a private cache populated by scanning the extensions dir;
-there are no installed-state sidecars. The constructor drains restart-deferred work before it snapshots disk (see
-"Install and update").
+reg ..> ui : HTTPS fetch
+ext ..> em : Download ZIP
 
-## Registry and compatibility
+@enduml
+```
+</details>
 
-**Ingestion.** `RegistryManager` parses every record before making a host-specific choice, rejects the whole registry
-on a missing `id`, `name` or `version`, and then calls the resolver, which validates every extension version and SDK
-floor as strict SemVer and returns one row per id: the highest release compatible with this host for the current
-platform; if none is compatible, the highest release for the platform (visible, blocked); if the platform has no
-artifact, the highest release overall (visible to consumers that do not filter by platform). A registry that repeats
-one semantic `(id, version)` slot is rejected, build metadata included; all platform artifacts of a release belong in
-one immutable record. Fields the client reads are listed in the spec ("Registry — Format and Hosting"); `registry_version`,
-`last_updated`, `plugins` and `size_bytes` are ignored. Nothing is destructively discarded before eligibility is known,
-and the resolver is testable without network, filesystem or UI.
+### 1.2 Design Principles
 
-**Contract with the published registry.** `pj-plugin-registry` (`scripts/validate_registry.py`, fed by
-`scripts/submit_to_registry.py` in `pj-official-plugins`) keeps a release for a platform only while its
-`min_sdk_required` is strictly lower than that of every newer release shipping that platform, and trims an older
-record's `platforms` to the ones it still serves. That pruning is lossless only because admission is monotonic in the
-SDK floor: a host that admits a floor admits every lower one, there is no upper bound and no ABI check on registry
-records, and the platform filter runs before the compatibility filter. Change any of these here and the pruning rule
-must change first, or released hosts lose releases they could still load.
+| Principle | Rationale | Implementation |
+|-----------|-----------|----------------|
+| **Serverless** | Zero infrastructure costs | GitHub hosts everything |
+| **CI-first** | Lower barrier for developers | Template with automated release |
+| **Cross-platform** | PlotJuggler runs everywhere | Matrix build in CI |
+| **Static linking** | Avoid dependency hell | Single .so/.dll per plugin |
+| **No Qt in data plugins** | ABI stability | Plugins talk to the host through the SDK's C ABI; Widget plugins are the one family that links Qt (§6) |
+| **Dogfooding** | Ensure process works | Official plugins use same template |
 
-**Compatibility policy.**
-- The gate is the ABI major plus `min_sdk_required`. The registry and the embedded manifest both declare the SDK floor;
-  SDK discovery supplies the ABI major. A plugin that needs a newer host declares the SDK release that added the surface
-  it needs. `min_plotjuggler_version` never gates.
-- One evaluator (`evaluatePluginCompatibility`, backed by the SDK's strict `PJ::SemVer`) serves registry and local-ZIP
-  admission, staged promotion, bundled-seed rescue, static registration and runtime DSO loading. Malformed plugin
-  versions and floors fail closed. A directory with several DSOs is one extension: they must agree on `id` and
-  `version`, and it keeps the highest valid floor; malformed metadata rejects new admission, keeps the installed row
-  visible and uninstallable, and keeps the extension unloadable.
-- Registry metadata is a pre-screen: after extraction the embedded ABI and floor are re-checked before promotion, and
-  staged work is checked again at the restart that promotes it. `platforms` is registry-only: a foreign binary fails DSO
-  discovery before the embedded gate.
-- An incompatible authoritative copy (`--plugin-dir`, a Preferences folder) suppresses a managed same-id fallback and is
-  itself not loaded, so a developer override failure is explicit.
+---
 
-**Qt and plugins.** Data plugins (sources, parsers, toolboxes) link no Qt: they use the SDK's C ABI and their dialogs
-are `.ui` files loaded by the host through `pj_dialog_host`, so a Qt upgrade does not touch them. Widget plugins create
-Qt widgets and link Qt; the host compares each library's `build_info()` with its own Qt major.minor and compiler family
-before creating anything (`pj_runtime/docs/ARCHITECTURE.md`, "Widget plugins").
+## 2. Design Decisions
 
-**Registry URL.** The host owns it: `pj_app` resolves it from Preferences ▸ Plugins (key `Marketplace/registryUrl`,
-empty means the built-in default; http, https and file schemes) and passes it in. The window captures it at
-construction and never reads settings; `setRegistryUrl()` re-fetches when the host pushes a new one. The standalone
-harness uses a built-in URL.
+### 2.1 PlotJuggler Integration
 
-## Install and update
+Two approaches were considered: create an external plugin management tool (like `pip` or `npm`) or integrate it directly into PlotJuggler. The decision was clear: **native integration**.
 
-An install lands in one of three ways, all extracting into a hidden transaction directory
-`extensions.install_stage/.pj_install_<id>_<uuid>/`, a **sibling** of the extensions dir. As a sibling it shares that
-dir's filesystem (the promoting rename stays atomic) and sits outside the recursive plugin scan, which has no exclusion
-rule: an unpacked DSO inside the scanned tree would be discoverable, loadable content, and it survives a crash. An
-install whose staging area is on another filesystem is refused, never degraded to a copy.
+The reasoning is that the typical PlotJuggler user doesn't want to leave the application to install plugins. They want to open a window inside PlotJuggler, search for what they need, install it, and keep working. It's the VSCode experience, not managing packages from a terminal.
 
-- **Fresh registry install** (`install()`, all platforms): download, verify SHA-256, extract; the DSO is opened by the
-  admission helper inside the transaction directory and its embedded manifest checked against the registry id and
-  version, ABI and floor; the directory is renamed to `extensions/<id>/`, re-validated at its final location (catches
-  rpath and relative-path assumptions that hold in staging and break there) and registered. Any failure removes the
-  transaction directory and promoted copy: no partial state survives. The new extension is picked up when the host
-  reloads its plugin catalog.
-- **Update** (`update()`, all platforms): the same download and validation, then the transaction directory is renamed
-  to `.extension_staging/<id>/` and a transient `.pj_pending_install` intent (id and version, one per line) is written.
-  Nothing is hot-swapped: the installed version stays live until the next start, and the row shows "Needs Restart".
-- **Sideload** (`installFromLocalZip()`): a ZIP with exactly one top-level directory holding the plugin. Id and version
-  come from the embedded manifest and no checksum exists (a local file has no provenance), so the manifest scan and
-  the compatibility gate are the whole admission. A fresh id installs as above. An installed id asks the host's
-  `ReplaceConfirmation` and, if confirmed, is staged like an update with no version comparison (rebuilding without a
-  version bump is normal); with no confirmation registered the conflict is refused. See "Identical-payload
-  short-circuit".
+The module ships **both as static libraries embedded in PJ4 and as a standalone Qt app**:
 
-**Startup promotion.** The constructor runs `applyPendingUninstalls()`, then `applyPendingInstalls()`, then scans disk,
-then `reconcileStore()`. For each staged directory `applyPendingInstalls()` reads the intent (id and version are
-validated against the same safe-path and character rules used elsewhere, so a tampered intent cannot escape the
-extensions dir), moves any existing install to `.backup/<id>-<uuid>/` without opening it, renames the stage into
-`extensions/<id>/`, validates the promoted payload out of process against the intent and the compatibility gate, and
-retires the intent. A failed rename restores the backup; a failed validation drops the payload and restores the
-backup; if even the restore fails the diagnostic names both paths. A stage it cannot remove (a locked DSO on Windows)
-is renamed `.pj_quarantine_<name>_<uuid>/` so every start does not re-report it. Duplicate-directory cleanup
-(`replaceConflictingInstallDirs`) runs after the whole promotion loop, for the reasons in TECHNICAL_NOTES, "dlopen
-pins the first image".
+- `pj_marketplace` — static library with the core (`DownloadManager`, `ExtensionManager`, `RegistryManager`, the store layer, `PlatformUtils`, `QtDiagnosticBridge`).
+- `pj_marketplace_ui` — static library with the Qt UI (`marketplace_window`).
+- `pj-plugin-check` — the Qt-free admission helper executable (§4.9).
+- `pj_marketplace_app` — standalone executable that links both libraries, built when `PJ_BUILD_MARKETPLACE_APP` is on (it defaults to `PJ_BUILD_TESTS`).
 
-**Backups.** Every promotion moves the previous version into `.backup/`; restoring from it after a plugin that fails to
-load later is manual.
+The standalone executable continues to exist precisely because it lets us iterate on the marketplace without rebuilding the whole PJ4 shell. The embedded `pj_app` integration consumes the same `pj_marketplace` / `pj_marketplace_ui` libraries, so behaviour stays in sync between the two entry points.
 
-**Guards.** One install or update runs at a time per manager. `install()` refuses an installed id and `update()` refuses
-a downgrade; both refuse an id with a staged removal (`update()` also one with a staged install), and an incompatible
-release (platform, ABI, SDK floor). A download is cancelled when free space is below a multiple of its size. `ExtensionManager`'s signals report
-progress, phases, success, failure, and the staged outcomes (`installPendingRestart`, `uninstallPendingRestart`,
-`downgradePendingRestart`, `installUnchanged`).
+### 2.2 Artifacts are independent of the build tool
 
-**Download and extraction.** The whole archive is buffered in memory, verified (an absent checksum skips verification;
-`sha256:` with no digest fails as a malformed registry field; digest case is ignored) and extracted on a worker thread.
-`ArchiveLimits` bounds entry count, per-entry and total expanded size and path depth, charges a declared entry size up
-front and an undeclared one while its bytes arrive, refuses non-regular entries and paths no extension has a reason to
-carry (absolute, drive letters, backslashes, `..`, device aliases), and a traversal guard runs as the second line of
-defence. Cancellation is observed at each entry and data block.
+A ZIP with one or more plugin DSOs installs the same whether it was built with Conan, Pixi or by hand: installed metadata is read from each DSO's embedded manifest, and the registry only needs direct URLs to the ZIP artifacts. How an extension repository builds and releases is not this module's concern (plugin authoring is documented in the SDK and in `pj-official-plugins`).
 
-## Removal journal
+### 2.3 Sizing
 
-A removal cannot happen when the user asks for it: the DSO is loaded, and on Windows locked. `uninstall()` and
-`downgradeToBundled()` record the intent and `applyPendingUninstalls()` performs it at the next launch.
+The system is designed for a modest catalog:
 
-The intent lives in `extensions.state/<id>.json` holding `{schema, operation, id, path}`, committed with `QSaveFile` so
-a reader never sees a half-written record. The root derives from the canonical store root, so two aliases of a symlinked
-store share one journal.
+- **Current plugins:** ~20
+- **Expected short-term:** ~30
+- **Maximum estimate:** 40-50
 
-**Why outside the payload.** It is a sibling for the same reasons as the install staging area, plus one specific to
-removals: `QDir::removeRecursively()` deletes children before it can fail on the one it cannot unlink, so a record
-inside the directory being deleted would be destroyed by its own partially failed deletion (TECHNICAL_NOTES, "Removal
-records outside the payload").
+This means a simple JSON file is more than sufficient as a registry. We don't need a database, we don't need sophisticated search. A JSON with 50 entries loads in milliseconds.
 
-**A record is a capability, so every record is validated.** Processing one runs `removeRecursively()` on the path it
-names, and the store lease does not protect against this: records sit in the rightful writer's own state directory, so
-corruption or anything able to drop a file there would otherwise inherit the privilege. `parseRemovalIntent()` refuses a
-record unless all of these hold, with nothing defaulted or repaired: it declares the current `schema`; `operation` is
-exactly `uninstall`, `downgrade` or `cleanup` (absent never reads as the destructive `uninstall`); for an id-bearing
-operation `id` is filesystem-safe and equals the filename stem, so a record cannot speak for another extension; `path`
-is absolute and a direct child of the canonical store root, which excludes the root, its ancestors, `..` and the sibling
-state, staging and lease paths, and is re-checked on the canonical target so a planted symlink cannot carry the delete
-out. The store root is canonicalized once at construction so a symlinked config or home does not strand valid records.
-Confinement runs again at deletion time, because parsing skips the canonical check for a target that did not exist yet:
-a managed payload is a real directory, so a symlink at the target is refused. A refused record is quarantined
-(`*.rejected-<uuid>`, which keeps the evidence and takes it out of the `*.json` glob) and reported, never silently
-skipped; on success the exact record file that was parsed is retired.
+---
 
-**Write order.** `uninstall()` persists the disabled entry first, syncs it and checks `QSettings::status()`, then
-commits the record. The loader decides what to load from the disabled list alone, so a crash mid-stage can only leave
-"unloadable but still installed", never a removed plugin quietly returning. A step that cannot be persisted rolls the
-enable state back and fails the operation.
+## 3. Component Design
 
-**Tombstones.** A successful removal drops the record but keeps the id's disabled entry, so journal processing needs
-no authority over enable state: no record, however corrupt, can make a plugin loadable, and a same-id copy elsewhere
-cannot be resurrected by a deletion. A fresh install clears the tombstone (`registerInstalledExtension`). `downgrade`
-writes none: it is a version change, and the restored bundled version inherits the user's enable choice.
+### 3.1 Core Components
 
-**Payload markers.** A `.pj_pending_uninstall` marker found inside a payload (a package can ship one) is converted into
-a path-only `cleanup` record before anything is deleted. Its content is never read, so the record carries no id and no
-authority over any extension's state; conversion is idempotent (a directory a live cleanup record already covers is
-skipped).
+Public headers live under `include/pj_marketplace/`; sources under `src/core/` (managers, store, extraction), `src/models/` (the pure value types: content manifest, generation digest, loaded profile, store policy), `src/ui/` (`marketplace_window.{cpp,ui}`) and `helper/` (`pj-plugin-check`). The headers by role, so nothing here gets written twice:
 
-## Single-writer lease
+- **Managers:** `extension_manager.hpp` (install, update, uninstall, enable, staged promotion, diagnostics), `registry_manager.hpp` and `registry_resolver.hpp` (fetch, then the pure candidate selection), `download_manager.hpp` (HTTP, checksum, extraction).
+- **Admission:** `plugin_compatibility.hpp` (the ABI major / `min_sdk_required` claims of one descriptor and their gate), `plugin_check_runner.hpp` (parent side of the `pj-plugin-check` child process), `version_compare.hpp` (`comparePluginVersions`, the one version ordering every badge and lock uses).
+- **Store layer:** `store_session.hpp` and `store_lease.hpp` (canonical store root, its sibling directories, the single-writer lease), `artifact_store.hpp` (immutable content-addressed objects), `loaded_profile.hpp` (id → object digest), `content_manifest.hpp` and `generation_digest.hpp` (the content identity), `store_policy.hpp` and `archive_limits.hpp` (size, entry and depth budgets), `store_rejection.hpp` (the stable refusal codes), `stored_file.hpp`.
+- **Helpers:** `sha256.hpp` (incremental SHA-256, file streaming), `fs_walk.hpp` (recursive regular-file walk that fails closed on symlinks), `utf8_path.hpp` (path ↔ UTF-8 text for messages, logs, JSON and QString-held roots: never `path::string()` or `path(qstring.toStdString())`, which go through the Windows code page; `pj_runtime`'s plugin catalog reuses it), `platform_utils.hpp` (platform id, standard paths, `canonicalStoreRoot`), `qt_diagnostic_bridge.hpp`.
+- **Value types and UI:** `extension.hpp` (a registry entry), `installed_extension.hpp` (an installed one), `marketplace_window.hpp`, `marketplace.hpp` (aggregate include).
 
-A managed store has one writer at a time across processes. Constructing an `ExtensionManager` takes a `QLockFile` on
-`.extensions.lock` beside the extensions dir (through `StoreSession`, before any cleanup runs). An instance that cannot
-take it runs read-only: it still scans and reports installed state, but install, sideload, update, uninstall,
-downgrade, enable/disable and the startup drains refuse with "Another PlotJuggler instance is managing extensions."
-`hasStoreWriteAccess()` lets a UI disable those actions up front. `ExtensionCatalogService::seedBundledPlugins()` is
-the one store writer outside `ExtensionManager`'s mutating API and is gated on it too.
+### 3.2 Data Models
 
-Why: startup cleanup deletes every `.pj_install_*` directory it finds and nothing in the name says which process owns it;
-without the lease a second PlotJuggler would delete the extraction directory of a download the first is running. With
-it, cleanup runs only in the lease holder and every live writer holds it, so a drain meets only its own transactions or
-those of a dead process. Staleness is decided by the owner PID's liveness alone (`setStaleLockTime(0)`): a crashed
-writer's lock is reclaimed, a slow writer's is never stolen. Contention ("close the other instance and restart") and
-an uncreatable lock file (a config dir that cannot hold one) produce different messages, because they call for opposite
-actions. Nothing reacquires the lease mid-session, so a read-only session stays read-only until the next launch.
+`Extension` (`extension.hpp`) is one registry release: identity and presentation fields, `min_sdk_required`, its plugins, and `platforms`, a map from platform id (`linux-x86_64`, ...) to `{url, checksum}` with the checksum as `sha256:<hex>`. `InstalledExtension` (`installed_extension.hpp`) is one installed directory; its fields are read from the DSO's embedded manifest, so a plugin the registry does not list can still be shown as a row and gated on every host contract it declares. `min_plotjuggler_version` is parsed and shown in both, and never gates. Display-only author, license, website and repository metadata is retained on installed records; it does not replace admission identity or registry download metadata.
 
-The lock file and every staging sibling derive from `PlatformUtils::canonicalStoreRoot()`: a `--plugin-dir` session or a
-test over its own temp dir never contends with the default store, while two names for one store (a symlinked install)
-always contend. The destructor cancels in-flight work first and releases the lease last, because an extraction worker
-writes into the store.
+### 3.3 Component Responsibilities
 
-## Identical-payload short-circuit
+| Component | Responsibility | Dependencies |
+|-----------|---------------|--------------|
+| **RegistryManager** | Fetch and parse JSON (no cache today — see REQUIREMENTS F-11), then invoke the headless resolver | QNetworkAccessManager, PlatformUtils, RegistryResolver |
+| **RegistryResolver** | Validate registry SemVer/invariants and select one platform/host-appropriate release per id | Qt Core value types, SDK SemVer |
+| **ExtensionManager** | Install, uninstall, update, staged promotion, ring-buffer diagnostics, optional `PJ::DiagnosticSink` fan-out | DownloadManager, PlatformUtils, plugin catalog |
+| **DownloadManager** | HTTP GET with progress, SHA256 verification, ZIP extraction | QNetworkAccessManager, QCryptographicHash, libarchive |
+| **PlatformUtils** | Detect OS, get paths | Qt platform macros |
+| **QtDiagnosticBridge** | Exposes a `PJ::DiagnosticSink` via `sink()` and re-emits each received `PJ::Diagnostic` as a thread-safe queued Qt signal `diagnosticReported(int level, QString source, QString id, QString message)` (queued delivery guarded by `QPointer`). Lets a host hand a Qt-free sink to non-GUI components (e.g. `ExtensionManager`, which takes a `DiagnosticSink` ctor param) and connect the signal to its UI. | Qt signals/slots |
 
-Rebuilding a plugin and sideloading it again usually changes nothing, and replacing a live extension is the expensive
-step (a staged copy and a restart). `installFromLocalZip()` therefore compares identity after the compatibility gate and
-before the replacement question. Identity is `inspectContentManifest()` (every regular file as a relative path plus its
-SHA-256) folded by `aggregateContentManifestDigest()`: paths count, archive timestamps and compression do not, and a
-symlink or special entry makes the tree unreadable, which yields an empty digest that never matches. Both trees are
-hashed at that moment, not from a digest recorded at install time, so an installed tree edited underneath is repaired by
-the ordinary path. The comparison targets the copy the scan resolved to (two directories can embed one id and the scan
-keeps the highest version), and is skipped while an install is staged for the id, because the stage is what the next
-launch promotes. A match emits `installUnchanged` and nothing else. The extraction and hashing still happen; what is
-saved is the promotion and the restart.
+#### Registry ingestion and headless candidate resolution
 
-## Content-addressed store
+`RegistryManager` parses every record before making a host-specific choice. The
+pure `resolveRegistryCandidates()` function then validates every extension
+version and SDK floor with SDK `PJ::SemVer` and returns one
+row per id. It selects the highest compatible release for the current platform;
+if none is compatible, the highest release for that platform remains visible as
+blocked; if the platform has no artifact, the highest release overall remains
+available to non-filtering consumers. A registry that repeats the same semantic
+`(id, version)` slot is rejected, including versions that differ only in build
+metadata. All platform artifacts for one release belong in one immutable record.
+Parsing therefore never destructively discards a candidate before eligibility is
+known, and the resolver can be tested without network, filesystem, QObject, or UI.
 
-Every successful install is also mirrored into an immutable object store, and the runtime prefers that copy.
+The published registry depends on these admission rules. It keeps a release for a
+platform only while its `min_sdk_required` is strictly lower than that of every
+newer release shipping that platform, and trims an older record's `platforms` to
+the ones it still serves (enforced by `scripts/validate_registry.py` in
+`pj-plugin-registry`, produced by `scripts/submit_to_registry.py` in
+`pj-official-plugins`). That pruning is lossless only because admission is
+monotonic in the SDK floor: a host that admits a floor admits every lower one,
+with no upper bound and no ABI check on registry records, and the platform filter
+runs before the compatibility filter. Change any of these here and the pruning
+rule must change first, or released hosts lose releases they could still load.
 
-- **Layout.** `StoreSession::open()` canonicalizes the store root once and prepares siblings on the same volume:
-  `extensions.artifacts/<digest>/` (objects), `extensions.extraction/` (scratch, swept when a writer opens) and
-  `extensions.profiles/loaded.json` (extension id to object digest). The session carries the single-writer lease, so the
-  store has one lock.
-- **Identity.** An object is named by its content-manifest digest, computed the same way for an extracted archive and an
-  adopted directory, so identical bytes share one object whatever their origin.
-- **Write path.** After the visible install is final, `ExtensionManager::registerInstalledExtension` adopts
-  `extensions/<id>/` (`ArtifactStore::adoptDirectory`, write-once) and records the digest in the loaded profile. It is
-  best-effort and never gates the user's result: a refused tree (a symlink, a budget, an I/O fault) drops the id's
-  mapping and the directory remains what loads.
-- **Load path.** `managedPluginDirs()` is what `ExtensionCatalogService` scans for the managed tier: one directory per
-  id, the store object when the profile names one and its bytes still verify against the recorded manifest
-  (`verifyArtifact`, a rehash), else `extensions/<id>/`. A present object that fails the check is never loaded and is
-  reported. A writer that changes `extensions/<id>/` outside the adopt path (the bundled seed) calls
-  `dropStoreMapping()`.
-- **Collection.** `reconcileStore()` runs at startup after the pending queues drain: it drops profile entries whose
-  `extensions/<id>/` is gone, then deletes objects no entry references. It skips the sweep when the profile is empty
-  while extensions are installed, which means the profile failed to load and an empty root set would erase the store.
+#### ExtensionManager — Constructor Design
 
-## Out-of-process admission
+All dependencies are injected via constructor. The extensions directory defaults to
+`PlatformUtils::extensionsDir()`, allowing tests to point to a temp directory without
+mocking `PlatformUtils`:
 
-The first look at bytes that just arrived (a registry download, a local archive, a promoted directory re-validated at
-its final path) is taken by `pj-plugin-check`, a Qt-free child process `PluginCheckRunner` starts on one directory with a
-wall-clock timeout. A plugin that aborts in a static initializer cannot take the application down, and opening a
-payload at its staging path in this process would pin that image. The helper prints one JSON document (schema 1:
-`plugins`, `diagnostics`, `outcome` `admitted` or `rejected`) and exits 0 (admitted), 2 (usage) or 4 (no valid plugin);
-the runner reports a helper that produced no verdict (spawn failure, crash, timeout, malformed JSON) as unproven rather
-than as a bad plugin. The helper reports the Widget family as `"widget"`. Directories already admitted are inspected
-in-process. The runner blocks the calling thread (the GUI thread, in the install handlers) until the child exits or the
-timeout expires.
+```cpp
+explicit ExtensionManager(DownloadManager* downloader,
+                          const QString& extensions_dir = PlatformUtils::extensionsDir(),
+                          const QString& pending_dir = PlatformUtils::pendingDir(),
+                          DiagnosticSink sink = {},
+                          QObject* parent = nullptr);
+```
 
-## Bundled (core) extensions
+A companion no-arg `ExtensionManager()` overload also exists; it creates an owned
+`DownloadManager` and uses the standard user directories.
 
-Plugins shipped inside an installed build or AppImage live in the bundled dir (`<prefix>/lib/plotjuggler/plugins`,
-resolved relative to the executable). It is a seed source only and never a load path. The host side
-(`ExtensionCatalogService`, described in `pj_runtime/docs/ARCHITECTURE.md`, "Extension catalog and parser routing")
-syncs it into the default extensions dir at every start, in every mode, before the plugin scan and after
-`ExtensionManager` applied pending work: an absent or unreadable id is copied, an older installed copy is refreshed
-(staged copy plus a rename swap, so a failed refresh keeps the working copy), a same-or-newer copy is left alone. The
-comparison is version-only (`comparePluginVersions`, the rule the uninstall lock, downgrade and badges use), so shipping
-a change requires a version bump.
+**Design decisions:**
+- The extensions directory is fixed at construction time; the platform id comes from `PlatformUtils::currentPlatform()`
+- Local installation state (`QMap<QString, InstalledExtension>`) is a private cache in `ExtensionManager` — populated at construction by scanning `extensions_dir`, loading plugin DSOs, and reading their embedded manifests; testability is preserved via the `extensions_dir` parameter pointing to a temp directory
+- No local installed-state sidecars — disk is scanned, but `id` and `version` come from the embedded DSO manifest
+- Display-only `author`, `license`, `website` and `repository` travel with the installed record and the admission helper's JSON. SDK 0.34.1's `PluginDescriptor` does not contain them: `internal/plugin_display_metadata.hpp` uses the SDK's validated public family loaders to read the embedded manifest, requiring the admitted ID/version to match. Direct-vtable families are not instantiated. SDK headers, ABI and admission identity are unchanged; missing/malformed optional display fields stay empty. Sidecar display values are not trusted.
+- Registry display fields take precedence when nonempty. Installed metadata fills empty author/license/website/repository fields and supplies local-only or staged-uninstall rows. The website action uses trimmed `website`, then `repository`; no URL means no action. This fallback never provides download artifacts, update versions or checksums.
+- Staged updates write a transient `.pj_pending_install` intent containing the registry id/version. It is deleted after promotion and exists only so restart-time validation can compare the staged DSO against the registry request that created it. Both the id and the version inside the intent file are validated against the same safe-path/regex rules used elsewhere, so a tampered intent cannot escape `extensions_dir`.
+- Embedding apps may seed the marketplace with a loaded-plugin snapshot before first render. That snapshot is initialization data, not a second source of truth; the embedded manifest remains the authority for installed state.
+- **Pending queues drained at construction.** `ExtensionManager::initComponents()` runs `applyPendingUninstalls()` then `applyPendingInstalls()` before computing the installed snapshot, so restart-deferred work is processed regardless of which `MarketplaceWindow` constructor (or host wiring) ends up using the manager.
+- **Duplicate-directory cleanup runs after the whole promotion loop.** `applyPendingInstalls()` first promotes every staged directory, then replaces prior same-id directories (`replaceConflictingInstallDirs`). The cleanup scan dlopens sibling directories to read their embedded ids, and opening a sibling's not-yet-promoted DSO would pin its old image in the process (glibc never unloads a DSO whose `STB_GNU_UNIQUE` symbols were bound), making the post-drain rescan report pre-update versions and the marketplace re-offer updates already on disk.
+- **Removal intent is journalled outside the payload, and honors write failures.** `uninstall()` and `downgradeToBundled()` record `{schema, operation, id, path}` under `extensions.state/` (see §4.6) instead of writing a marker into the directory being deleted — a partially failed recursive delete would otherwise destroy its own retry record. Every record is a deletion capability and is fully validated before use (schema, exact operation, id matching the filename, target confined to a direct child of the canonical store root); a refused record is quarantined and reported, never acted on. `writeRemovalIntent` returns `bool`; if the record cannot be committed the in-memory entry is left intact, the enable state is rolled back, and `uninstallError` is emitted, so a removal that cannot be recorded does not silently revert on the next start. Markers older builds left inside payloads become path-only `cleanup` records that carry no id authority; their content is never trusted.
+- **Broken staged installs are quarantined, not retried forever.** When `applyPendingInstalls` fails to remove a rejected stage, the directory is renamed to `.pj_quarantine_<name>_<uuid>/` next to it. The next startup ignores quarantine entries and reports the path in the diagnostic so the user can inspect and clean it up.
 
-The marketplace side: the host hands the bundled id-to-version map to `setBundledVersions()` and the versions the seed
-actually wrote to `setSeededVersions()`. Membership in the bundled map makes an id **core**: `isBundled()` locks its
-uninstall while the installed version is at the bundled one, and `downgradeToBundled()` stages a revert when the
-installed version is ahead (applied on restart, like any staged action, and keeping the enable state). The lock is by
-id, so it survives updates. The map is handed over only when the manager is rooted on the default extensions dir; in a
-`--plugin-dir` session the manager governs the override folder, where a same-id copy is user-owned and nothing is core.
-A user cannot hold a core extension below the bundled version through the marketplace (the seed lifts it back); placing
-the older build in a custom Preferences folder does, because user-explicit tiers win version-blind. Folder precedence
-at load time is host policy (`PluginRuntimeCatalog`): `--plugin-dir`, then custom Preferences folders, then the
-extensions dir.
+#### ExtensionManager — Diagnostic propagation
 
-## Diagnostics
+`ExtensionManager` exposes its diagnostics three ways simultaneously:
 
-`ExtensionManager` reports lifecycle events (install, promotion, quarantine, removal failures, registry-fetch errors) on
-three channels at once: `diagnostics()` (a bounded ring buffer, `kMaxDiagnostics`) read by the window's Diagnostics
-dialog; the `diagnosticReported(id, message, is_error)` signal that feeds the status bar; and an optional
-`PJ::DiagnosticSink` constructor argument, so a host can fold marketplace events and its own plugin-load events into
-one chronological stream. The sink contract is the SDK's `pj_base/diagnostic_sink.hpp`; the standalone harness passes
-none. `hasUnsurfacedDiagnostics()` / `markDiagnosticsSurfaced()` let a re-opened window show a diagnostic once.
+| Channel | Audience | Notes |
+|---------|----------|-------|
+| `diagnostics()` accessor + 50-entry ring buffer | UI snapshot at any time | The marketplace window's "Diagnostics" dialog reads this. |
+| `diagnosticReported(QString id, QString message, bool is_error)` Qt signal | Standalone marketplace UI | Pushes into the status bar. |
+| Optional `PJ::DiagnosticSink` constructor parameter | Embedding hosts | Lets `PluginRegistry`, `ExtensionManager`, and any other module feed one chronological stream into a single GUI sink. |
 
-## Disk layout
+See the SDK's `pj_base/diagnostic_sink.hpp` for the sink contract; the standalone `pj_marketplace_app` does not pass a sink, preserving the previous behavior unchanged.
 
-The root is `QStandardPaths::AppDataLocation` (org/app pair `PlotJuggler`/`PlotJuggler4`, shared by the embedded host and
-the standalone app): Linux `~/.local/share/PlotJuggler/PlotJuggler4/`, macOS `~/Library/Application Support/...`,
-Windows `%LOCALAPPDATA%/PlotJuggler/PlotJuggler4/`. Every sibling below is named from the canonical extensions dir
-(`<extensions dir>.<suffix>`), so under `--plugin-dir` they sit beside the override folder.
+---
+
+## 4. Key Flows
+
+### 4.1 Installation Flow
+
+Both the immediate (Linux/macOS) and deferred (Windows) paths extract the
+download into a hidden transaction directory (`.pj_install_<id>_<uuid>/`) under
+`extensions.install_stage/` — a **sibling** of the extensions dir, so it shares
+that dir's filesystem (the promoting rename stays atomic) while staying outside
+the recursive plugin scan. Inside the scanned tree, a transaction holding an
+unpacked DSO would be discoverable, loadable content, and it survives a crash;
+the scanner applies no exclusion rule of its own. The DSO is **opened and its
+embedded manifest validated** inside
+the transaction directory before promotion (by a child process, §4.9), then **re-validated at the final
+location** after the rename — this catches DSOs that depend on rpath/relative
+paths that hold in the staging area but break in `extensions/`. On failure
+the transaction directory is removed and no partial state survives.
+
+A sideloaded archive gets one extra gate between the compatibility check and the
+replacement question: if the extracted tree hashes identically to the installed
+one, the operation finishes there. Nothing is asked, staged, or promoted, because
+the bytes being offered are the bytes already running — see
+[§4.7](#47-identical-payload-short-circuit).
+
+![Installation Flow](diagrams/installation-flow.png)
+
+<details>
+<summary>PlantUML source</summary>
+
+```plantuml
+@startuml
+skinparam backgroundColor white
+title Installation Flow
+
+start
+:Click Install;
+:Detect platform;
+:Download ZIP;
+:Verify SHA256;
+if (Checksum OK?) then (yes)
+  if (Is update?) then (yes)
+    :Backup current;
+  endif
+  :Extract to extensions.install_stage/.pj_install_<id>_<uuid>/;
+  :Load DSO manifest;
+  :Validate registry id/version;
+  :Atomic rename to extensions/<id>/;
+  :Re-validate promoted DSO (post-promotion gate);
+  if (Re-validation OK?) then (yes)
+    :Register discovery cache;
+  else (no)
+    :Move to .pj_quarantine_<id>_<uuid>/;
+    :Notify install error;
+  endif
+else (no)
+  :Error: invalid checksum;
+endif
+stop
+@enduml
+```
+</details>
+
+### 4.2 Windows Staging Flow
+
+![Windows Staging Flow](diagrams/windows-staging.png)
+
+<details>
+<summary>PlantUML source</summary>
+
+```plantuml
+@startuml
+skinparam backgroundColor white
+
+title Windows Staging Flow
+
+start
+:Download ZIP;
+:Extract to extensions.install_stage/.pj_install_<id>_<uuid>/;
+:Load DSO manifest;
+:Validate registry id/version;
+:Atomic rename to .extension_staging/<id>/;
+:Write .extension_staging/<id>/.pj_pending_install intent;
+:Notify "Restart required";
+stop
+
+start
+:PlotJuggler restarts;
+:applyPendingInstalls() scans .extension_staging/;
+:Read .pj_pending_install intent;
+:Validate staged DSO manifest;
+if (Valid?) then (yes)
+  :Move .extension_staging/<id>/ to extensions/<id>/;
+  :Plugin active;
+else (no)
+  :Move to .pj_quarantine_<id>_<uuid>/;
+  :Notify install error;
+endif
+stop
+@enduml
+```
+</details>
+
+### 4.3 Rollback Flow
+
+Every successful update — Linux, macOS, and Windows — moves the previous
+version into `.backup/<id>-<oldversion>/` before the new version takes its
+place. On Linux/macOS this happens synchronously inside `update()`; on
+Windows it happens at restart inside `applyPendingInstalls()`, just before
+the staged directory is renamed over the existing one. If the staged
+promotion fails after the backup move, `applyPendingInstalls()` attempts
+to roll the backup back into place; if even the rollback fails, the
+diagnostic surfaces both paths so the user can recover manually.
+
+Automatic *post-load* rollback (restoring from backup if the freshly
+installed plugin later fails to load) is deferred. The backup directory
+is the manual recovery point.
+
+![Rollback Flow](diagrams/rollback-flow.png)
+
+<details>
+<summary>PlantUML source</summary>
+
+```plantuml
+@startuml
+skinparam backgroundColor white
+title Rollback Flow (Deferred)
+
+start
+:PlotJuggler starts;
+:Load plugins;
+while (More plugins?) is (yes)
+  :Load next plugin;
+  if (Load OK?) then (yes)
+    :Plugin active;
+  else (no)
+    :Report load failure;
+    note right
+      Automatic backup restore
+      is deferred.
+    end note
+  endif
+endwhile (no)
+:System ready;
+stop
+@enduml
+```
+</details>
+
+### 4.4 Bundled (Core) Extensions
+
+Plugins shipped inside an installed build or AppImage live in the **bundled
+dir** (`<prefix>/lib/plotjuggler/plugins`, resolved relative to the
+executable). That dir is a **seed source only** — it is never scanned as a load
+path. The split of responsibilities:
+
+- **Host side** (`pj_runtime`'s `ExtensionCatalogService`, at every startup, in
+  every mode): syncs the bundled dir into the default extensions dir *before*
+  the plugin scan and *after* `ExtensionManager` applied pending staged
+  actions. Per bundled id — absent/unreadable → copy; installed older than
+  bundled → refresh (staged copy in an `extensions.seed_stage/` **sibling** of
+  the extensions dir — outside the scanned tree — then a rename swap, so a
+  failed refresh keeps the working copy); installed same-or-newer → untouched.
+  Comparison is version-only (`PJ::comparePluginVersions` from
+  `pj_marketplace/version_compare.hpp` — the same rule the uninstall lock,
+  downgrade, and update badges use), never content; in the steady state a
+  size+mtime signature match against the bundled DSO (copies are stamped with
+  the bundled mtime) skips the installed-side manifest read entirely.
+- **Marketplace side**: the host hands the bundled id → version map to
+  `ExtensionManager::setBundledVersions()`. Membership makes an id **core**:
+  `isBundled()` locks uninstall, and `downgradeToBundled()` stages a revert to
+  the shipped version when the installed one is ahead (applied on restart, like
+  any staged action). No per-folder marker — the lock is by id, so it survives
+  updates.
+- **Mode scoping**: the map is handed over only when the `ExtensionManager` is
+  rooted on the default extensions dir. In a `--plugin-dir` session the manager
+  governs the override folder, where a same-id copy is user-owned — nothing is
+  core there, while the seed still targets the default dir.
+
+Folder precedence at load time is host policy (`PluginRuntimeCatalog`):
+`--plugin-dir` override → custom Preferences folders → extensions dir; the
+user-explicit tiers win duplicate ids version-blind.
+
+### 4.5 Single-Writer Lock
+
+A managed store has **one writer at a time across processes**. Constructing an
+`ExtensionManager` takes a `QLockFile` on `<config-root>/.extensions.lock`
+(`acquireStoreLock`, before any cleanup runs). The holder behaves as described
+everywhere else in this document; an instance that cannot take the lock runs
+**read-only** — it still scans and reports installed state, but install,
+sideload, update, uninstall, downgrade-to-bundled, enable/disable and the
+startup drains all refuse with *"Another PlotJuggler instance is managing
+extensions."* `hasStoreWriteAccess()` exposes the mode so a UI can disable those
+actions up front.
+
+Why it exists: startup cleanup deletes every `.pj_install_*` transaction
+directory it finds, and nothing in the name says which process owns it. Without
+the lock, a second PlotJuggler starting up deletes the extraction directory of a
+download the first one is still running. With it, cleanup only ever runs in the
+process holding the lock and every live writer holds it, so the only
+transactions a drain can meet are its own or those of a process that is no
+longer alive. Staleness is decided by the owner PID's liveness alone
+(`setStaleLockTime(0)`): a crashed writer's lock is reclaimed, a slow writer's
+is never stolen.
+
+Two failures reach the user through separate messages, because they call for
+opposite actions: `LockFailedError` is a live competitor ("close it and restart
+PlotJuggler"), while `PermissionError`/`UnknownError` mean this config dir cannot
+hold a lock file at all and name the file instead. Neither promises a retry —
+nothing reacquires the lease mid-session, so a read-only session stays read-only
+until the next launch.
+
+The lock file is a **sibling** of `extensions/`, never a file inside it
+(everything under the store is treated as extension payload). Its name is derived
+from the store's **canonical** path — via `PlatformUtils::canonicalStoreRoot()`,
+the one policy every store sibling follows (writer lease,
+`extensions.install_stage/`, and the seed's `extensions.seed_stage/` in
+`pj_runtime`). A test using its own managed store (including an explicit
+`--profile-dir`) never contends with the default store; `--plugin-dir` alone
+only changes discovery and retains the default managed store. Two *names* for one store (a symlinked
+install) always contend instead of handing out two leases. The same resolution
+keeps every staging sibling on the store's filesystem, which is what makes
+promote-by-rename atomic; an install whose staging area lands on a different
+filesystem is refused rather than degraded to a copy.
+
+Native hosts can activate `PlatformUtils::initializeProfile()` once, before any
+QSettings or service construction. Both INI scopes are then rooted under
+`<profile>/settings`, and `configDir()`/`localDataDir()` resolve to
+`<profile>/data`. The normal store and its lifecycle siblings consequently stay
+inside that dedicated root, including backup and seed staging. Invalid or
+unwritable paths fail startup rather than falling back to production; no-profile
+behavior remains unchanged. The profile is a test-data boundary, not an OS or
+third-party-plugin sandbox.
+
+`ExtensionCatalogService::seedBundledPlugins()` (`pj_runtime`) is the one store
+writer outside `ExtensionManager`'s mutating API, so it is gated on
+`hasStoreWriteAccess()` too and skips with a diagnostic in a read-only session.
+### 4.6 Removal Journal (staged uninstall / downgrade)
+
+A removal cannot happen when the user asks for it: the DSO is loaded, and on
+Windows locked. Both `uninstall()` and `downgradeToBundled()` therefore record the
+intent and let `applyPendingUninstalls()` perform it at the next launch.
+
+That intent lives in `extensions.state/<id>.json`, holding
+`{schema, operation, id, path}` — committed with `QSaveFile`, so a reader never
+sees a half-written record and a crash mid-write leaves the previous state. The
+journal root is derived from the **canonical** store root, so two aliases of a
+symlinked store share one journal rather than keeping divergent records.
+
+**Why outside the payload.** The journal is a sibling of `extensions/` for the
+same reason as `extensions.install_stage/` (outside the recursive plugin scan),
+plus one that is specific to removals: `QDir::removeRecursively()` deletes
+children *before* it can fail on the one it cannot unlink. An intent stored
+inside the directory being deleted is therefore destroyed by its own partially
+failed deletion — the payload survives with its locked DSO while the record that
+would have retried the removal is gone. The journal cannot be consumed by the
+deletion it describes.
+
+**A record is a capability, so every record is validated.** Processing one runs
+`QDir::removeRecursively()` on the path it names, and the store lease does not
+protect against this: records live inside the rightful writer's own state
+directory, so corruption — or anything able to drop a file there — would
+otherwise inherit that privilege. `parseRemovalIntent()` refuses a record unless
+**all** of the following hold, and nothing is defaulted, inferred, or repaired:
+
+- it declares the current `schema`;
+- `operation` is exactly `uninstall`, `downgrade`, or `cleanup` (absent or
+  unrecognised is invalid — never read as `uninstall`, the destructive choice);
+- for an id-bearing operation, `id` passes the filesystem-safety rule **and
+  equals the filename stem**, so a record cannot be filed under one name and
+  speak for a different extension;
+- `path` is absolute and a **direct child of the canonical store root**. That one
+  rule rejects the store root itself, any ancestor, an unrelated absolute path,
+  anything reached through `..`, and the sibling `state` / `install_stage` /
+  `seed_stage` roots and lease file (siblings are not children). Confinement is
+  re-checked on the *canonical* target, so a symlink planted inside the store
+  cannot carry the deletion out of it.
+
+The store root the comparison is made against is canonicalized **once at
+construction**, so a symlinked config or home does not put a record's lexical
+parent and the canonical root on different footings and strand every valid
+uninstall.
+
+Confinement runs a **second time at the moment of deletion**, because
+parse-time skips the canonical check for a target that did not exist yet (there
+was nothing to abuse then) — leaving a startup-race window in which a
+matching-named symlink could be planted before the drain. A managed payload is a
+real directory, so a symlink at the target is refused outright (`removeRecursively`
+would otherwise follow it), and confinement is re-evaluated against what is on
+disk now.
+
+A refused record is **quarantined** (renamed `*.rejected-<uuid>`, keeping the
+evidence while taking it out of the `*.json` glob so it is not re-refused every
+launch) and reported as a diagnostic — never silently skipped. On success the
+**exact record file that was parsed** is retired, never a name recomputed from
+the id it claims.
+
+**Write order.** `uninstall()` persists the disabled entry *first*, syncs it, and
+**checks `QSettings::status()`** — an unwritten setting is not persistence, and
+the staged-removal contract depends on that entry surviving a crash. Only then is
+the record committed. The loader decides what to load from the disabled list
+alone, so the only state a crash can expose mid-stage is "unloadable but still
+installed": recoverable, and never a removed plugin quietly coming back. Any step
+that cannot be persisted rolls the enable state back (itself synced and checked)
+and fails the operation.
+
+**Tombstones: the drain can never enable anything.** A successful removal drops
+the record but **keeps** the id's disabled entry, as a tombstone. The files are
+gone, so the entry costs nothing — and because it is never cleared here, journal
+processing needs no authority over enable state at all. No record, however
+corrupt or hostile, can make a plugin loadable, and a same-id copy left elsewhere
+on disk cannot be resurrected by a deletion elsewhere. A fresh install clears the
+tombstone (`registerInstalledExtension` with `preserve_disabled_state=false`), so
+reinstalling is what brings an id back. `downgrade` never writes a tombstone: it
+is a version change, and the restored bundled version inherits the user's
+enable/disable choice unchanged.
+
+**Trust boundary — legacy in-payload markers.** Older builds wrote a
+`.pj_pending_uninstall` marker inside the payload. Each such directory is
+converted into an external record *before* anything is deleted, so the retry
+survives a partial failure like any other. The marker's *content* is never read:
+it is package-controlled filesystem content — an archive can ship one naming any
+id — so honouring it would let a package steer an unrelated extension's state.
+The derived record is `cleanup`, which carries **no id and therefore no authority
+over any extension**; it only deletes, and is path-confined exactly like every
+other record. Externalization is idempotent: a marker whose delete keeps failing
+is not re-filed while a live `cleanup` record already targets its directory, so
+the journal does not grow a record per launch.
+
+### 4.7 Identical-payload short-circuit
+
+Rebuilding a plugin and sideloading it again is routine, and most of those
+rebuilds change nothing. Replacing a live extension is the expensive, risky part
+of an install — it stages a copy and defers promotion to the next launch, because
+the running session may hold the DSO open. Doing that to install the bytes
+already on disk is pure cost, so `installFromLocalZip()` refuses to.
+
+**Identity.** `inspectContentManifest()` walks the tree and returns every file as
+a relative path plus the SHA-256 of its contents;
+`aggregateContentManifestDigest()` folds that sorted list into one digest. Paths
+take part in the identity, so moving a file is a change. Archive timestamps and
+compression do not, so the same sources repackaged twice still match. The walk
+refuses anything it cannot characterise — a symlink describes a target outside
+the tree that can move underneath it — and reports the tree as unreadable rather
+than guessing.
+
+**When it fires.** After the compatibility gate, so an archive that would be
+refused is still refused whatever it holds, and before the replacement question,
+so no dialog is raised for a non-replacement. Both trees are hashed at that
+moment rather than trusting a value recorded at install time: an installed tree
+edited underneath us then compares different and takes the ordinary path,
+repairing itself. An unreadable tree yields an empty digest, which never counts
+as a match — two unreadable trees must not pass for the same tree.
+
+It stays out of the way when an install is already staged for that id: the stage,
+not the live directory, is what the next launch promotes, so matching against the
+live bytes there would drop the archive while leaving a different payload queued.
+
+**What it does not do.** The digest is computed over the *extracted* tree, so the
+download and the extraction still happen. What is saved is the promotion, not the
+wait. The registry path is untouched — `install()` already refuses an installed
+id and `update()` implies a different version.
+
+### 4.8 Content-addressed store
+
+Every successful install is also mirrored into an immutable object store, and the runtime prefers that copy as its load path.
+
+- **Layout.** `StoreSession::open()` canonicalizes the store root once and prepares its siblings on the same volume: `extensions.artifacts/<digest>/` (objects), `extensions.extraction/` (staging) and `extensions.profiles/loaded.json` (extension id → object digest). The session also carries the single-writer lease of §4.5, so the store has exactly one lock.
+- **Identity.** An object is named by its content-manifest digest (§4.7), computed the same way for an extracted archive and an adopted directory, so identical bytes share one object whatever their origin.
+- **Write path.** After the visible install is final, `ExtensionManager::registerInstalledExtension` adopts `extensions/<id>/` into the store (`ArtifactStore::adoptDirectory`, write-once) and records the digest in the loaded profile. It is best-effort and never gates the user's result: a refused tree (a symlink, a budget, an I/O fault) drops the id's mapping and leaves the classic directory as what loads.
+- **Load path.** `ExtensionManager::managedPluginDirs()` is what `pj_runtime`'s `ExtensionCatalogService` scans for the managed tier: one directory per id, the store object when the profile names one and its bytes still verify against the recorded manifest (`verifyArtifact`, a rehash, not an existence check), else `extensions/<id>/`. A present object that fails the check is never loaded and is reported.
+- **Collection.** `reconcileStore()` runs at startup after the pending queues drain: it drops profile entries whose `extensions/<id>/` is gone, then deletes objects no entry references. It skips the sweep when the profile is empty while extensions are installed, because that means the profile failed to load and an empty root set would erase the store.
+
+### 4.9 Out-of-process admission
+
+The first look at bytes that just arrived (a registry download, a local archive, a promoted directory being re-validated) is taken by `pj-plugin-check`, a Qt-free child process that `PluginCheckRunner` starts on one directory, with a wall-clock timeout, and whose JSON descriptor list it parses. Two reasons: a plugin that aborts in a static initializer cannot take the application down, and opening a payload at its staging path in this process would pin that image (§3.3, the glibc note) and poison the check at its final path. A helper that produced no verdict (spawn failure, crash, timeout) is reported as unproven, not as a bad plugin. Directories already admitted are still inspected in-process. The runner puts Qt's library directory first on the loader path, because a Widget plugin links Qt.
+
+---
+
+## 5. Directory Structure
+
+### 5.1 Installation Directories
+
+The root is `QStandardPaths::AppDataLocation` (the `PlotJuggler/PlotJuggler4` org/app pair, shared by the embedded host and the standalone app): Linux `~/.local/share/PlotJuggler/PlotJuggler4/`, macOS `~/Library/Application Support/PlotJuggler/PlotJuggler4/`, Windows `%LOCALAPPDATA%/PlotJuggler/PlotJuggler4/`.
 
 ```
 <config-root>/

@@ -7,7 +7,6 @@
 #include <gtest/gtest.h>
 
 #include <QLibraryInfo>
-#include <QTemporaryDir>
 #include <QVersionNumber>
 #include <algorithm>
 #include <chrono>
@@ -16,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "../../cmake/test_mains/pj_test_owned_directory.h"
 #include "hermetic_catalog.h"
 #include "mock_widget_vtable.h"
 #include "pj_plugins/widget_types.hpp"
@@ -62,12 +62,10 @@ const PJ_widget_vtable_t* staticWidgetSharingDsoIdVtable() {
 
 class WidgetCatalogTest : public ::testing::Test {
  protected:
-  // A folder no other test process shares: ctest runs every test as its own process, in parallel, and a name made
-  // from the clock let two of them meet (one's TearDown then deleted the other's files mid-test). Removed with it.
-  QTemporaryDir tmp_;
-
   void SetUp() override {
-    ASSERT_TRUE(tmp_.isValid()) << tmp_.errorString().toStdString();
+    ASSERT_TRUE(owner_.ownsTree());
+    dir_ = std::filesystem::path((owner_.path() + "/catalog").toStdU16String());
+    ASSERT_TRUE(std::filesystem::create_directory(dir_));
   }
 
   std::filesystem::path install(const char* fixture_path, const char* stem) const {
@@ -87,7 +85,12 @@ class WidgetCatalogTest : public ::testing::Test {
         diagnostics_, [&](const Diagnostic& d) { return d.message.find(needle) != std::string::npos; }));
   }
 
-  std::filesystem::path dir_{tmp_.path().toStdU16String()};
+#ifdef Q_OS_WIN
+  PjTestOwnedDirectory owner_{PjTestOwnedDirectory::Cleanup::AfterChildExit};
+#else
+  PjTestOwnedDirectory owner_;
+#endif
+  std::filesystem::path dir_;
   std::vector<Diagnostic> diagnostics_;
 };
 

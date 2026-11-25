@@ -140,7 +140,8 @@
       <item>
        <widget class="QTextBrowser" name="detail_text_">
         <property name="frameShape"><enum>QFrame::NoFrame</enum></property>
-        <property name="openExternalLinks"><bool>true</bool></property>
+        <property name="openExternalLinks"><bool>false</bool></property>
+        <property name="openLinks"><bool>false</bool></property>
        </widget>
       </item>
       <!-- Action row at the bottom-right (rebuilt per selection in

@@ -1,3 +1,4 @@
+#include "pj_plugins/host_qt/bundled_translations.hpp"
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
@@ -449,7 +450,13 @@ struct DialogEngine::AsyncRunner {
         }
       };
       auto filter = view.filePickerFilter(widget_name).value_or("");
-      auto title = view.filePickerTitle(widget_name).value_or("Select File");
+      filter = bundledNamedDisplayText(
+                   target_widget, QString::fromStdString(widget_name), "pickerFilter", QString::fromStdString(filter))
+                   .toStdString();
+      auto title = view.filePickerTitle(widget_name).value_or(QObject::tr("Select File").toStdString());
+      title = bundledNamedDisplayText(
+                  target_widget, QString::fromStdString(widget_name), "pickerTitle", QString::fromStdString(title))
+                  .toStdString();
       if (config_.file_selector) {
         if (file_picker_active) {
           return;
@@ -505,7 +512,10 @@ struct DialogEngine::AsyncRunner {
       Q_UNUSED(target_memo)
       qWarning("DialogEngine: plugin folder pickers are unavailable on WebAssembly");
 #else
-      auto title = view.folderPickerTitle(widget_name).value_or("Select Folder");
+      auto title = view.folderPickerTitle(widget_name).value_or(QObject::tr("Select Folder").toStdString());
+      title = bundledNamedDisplayText(
+                  target_widget, QString::fromStdString(widget_name), "pickerTitle", QString::fromStdString(title))
+                  .toStdString();
       QString path = PJ::FileDialog::getExistingDirectory(
           dialog, QString::fromStdString(title), filePickerStart(view, widget_name).dir);
       if (!path.isEmpty()) {
@@ -541,7 +551,13 @@ struct DialogEngine::AsyncRunner {
       qWarning("DialogEngine: path-returning plugin save pickers are unavailable on WebAssembly");
 #else
       auto filter = view.filePickerFilter(widget_name).value_or("");
-      auto title = view.filePickerTitle(widget_name).value_or("Save File");
+      filter = bundledNamedDisplayText(
+                   target_widget, QString::fromStdString(widget_name), "pickerFilter", QString::fromStdString(filter))
+                   .toStdString();
+      auto title = view.filePickerTitle(widget_name).value_or(QObject::tr("Save File").toStdString());
+      title = bundledNamedDisplayText(
+                  target_widget, QString::fromStdString(widget_name), "pickerTitle", QString::fromStdString(title))
+                  .toStdString();
       auto suffix = view.saveFilePickerDefaultSuffix(widget_name).value_or("");
       const FilePickerStart start = filePickerStart(view, widget_name);
       QString path = PJ::FileDialog::getSaveFileName(

@@ -7,8 +7,10 @@
 
 namespace PJ {
 
-// Static helpers for platform detection and standard directory resolution. Path helpers return absolute paths without
-// a trailing separator; directories are NOT created here, callers mkpath.
+// Static helpers for platform detection and standard directory resolution.
+//
+// Path getters do not create directories. initializeProfile() is the explicit
+// startup-only exception; without it, platform defaults remain unchanged.
 class PlatformUtils {
  public:
   // The platform id used as key in registry artifact maps: "<os>-<arch>", e.g. "linux-x86_64", "windows-x86_64",
@@ -21,12 +23,33 @@ class PlatformUtils {
   // The shared-library extension of the platform: ".so", ".dll" or ".dylib".
   static std::string pluginExtension();
 
-  // Root of all PlotJuggler user data (QStandardPaths::AppDataLocation, i.e. the
+  // Install a dedicated native profile before any app-owned QSettings, store,
+  // cache, or widget is constructed. Requires an absolute, writable directory.
+  // Validates core subdirectories and both INI settings scopes before publishing
+  // the root; failure leaves the process defaults unchanged. Call once, on the
+  // main thread. This is data separation, not a sandbox for external plugins.
+  [[nodiscard]] static bool initializeProfile(const QString& directory, QString* error);
+
+  // Empty unless initializeProfile() succeeded for this process.
+  static QString profileDir();
+
+  // <profile>/data when explicitly isolated; otherwise AppDataLocation, i.e. the
   // PlotJuggler/PlotJuggler4 org/app pair):
   //   Linux:   ~/.local/share/PlotJuggler/PlotJuggler4/
   //   Windows: %LOCALAPPDATA%/PlotJuggler/PlotJuggler4/
   //   macOS:   ~/Library/Application Support/PlotJuggler/PlotJuggler4/
   static QString configDir();
+
+  // <profile>/data, or the unchanged platform AppLocalDataLocation.
+  static QString localDataDir();
+
+  // <profile>/tmp, or the platform temporary directory. Use an explicit
+  // QTemporaryDir template with this parent for core-owned temporary assets.
+  static QString temporaryDir();
+
+  // <profile>/data/models takes precedence over PJ_MODEL_CACHE_DIR. With no
+  // profile, retain the environment override and AppDataLocation fallback.
+  static QString modelCacheDir();
 
   // <config-root>/extensions/ — active, loaded extensions.
   static QString extensionsDir();

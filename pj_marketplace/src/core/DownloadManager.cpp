@@ -4,12 +4,14 @@
 #include <archive.h>
 #include <archive_entry.h>
 
+#include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QFutureWatcher>
 #include <QNetworkRequest>
+#include <QRegularExpression>
 #include <QtConcurrent>
 #include <algorithm>
 
@@ -20,18 +22,98 @@ using namespace Qt::StringLiterals;
 
 namespace PJ {
 
+namespace {
+// Translate only known archive-policy diagnostics. The Qt-free validator and
+// arbitrary plugin/system details retain their original values.
+QString archiveRejectionText(const std::string& reason) {
+  const QString text = QString::fromStdString(reason);
+  if (text == QLatin1String("archive entry is neither a regular file nor a directory")) {
+    return QCoreApplication::translate(
+        "PJ::ArchiveDiagnostics", "archive entry is neither a regular file nor a directory");
+  }
+  if (text == QLatin1String("archive entry has an empty path")) {
+    return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive entry has an empty path");
+  }
+  if (text == QLatin1String("archive entry path uses a backslash separator")) {
+    return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive entry path uses a backslash separator");
+  }
+  if (text == QLatin1String("archive entry path is absolute")) {
+    return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive entry path is absolute");
+  }
+  if (text == QLatin1String("archive entry path carries a drive letter")) {
+    return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive entry path carries a drive letter");
+  }
+  if (text == QLatin1String("archive entry path has an empty segment")) {
+    return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive entry path has an empty segment");
+  }
+  if (text == QLatin1String("archive entry path has a dot segment")) {
+    return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive entry path has a dot segment");
+  }
+  if (text == QLatin1String("archive entry path segment ends in a dot or space")) {
+    return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive entry path segment ends in a dot or space");
+  }
+  if (text == QLatin1String("archive entry path uses a reserved device name")) {
+    return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive entry path uses a reserved device name");
+  }
+  if (text == QLatin1String("archive entry path holds a control byte")) {
+    return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive entry path holds a control byte");
+  }
+  {
+    const QRegularExpression pattern(QStringLiteral("^archive holds more than ([0-9]+) entries$"));
+    const auto match = pattern.match(text);
+    if (match.hasMatch()) {
+      return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive holds more than %1 entries")
+          .arg(match.captured(1));
+    }
+  }
+  {
+    const QRegularExpression pattern(QStringLiteral("^archive entry expands to more than ([0-9]+) bytes$"));
+    const auto match = pattern.match(text);
+    if (match.hasMatch()) {
+      return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive entry expands to more than %1 bytes")
+          .arg(match.captured(1));
+    }
+  }
+  {
+    const QRegularExpression pattern(QStringLiteral("^archive expands to more than ([0-9]+) bytes in total$"));
+    const auto match = pattern.match(text);
+    if (match.hasMatch()) {
+      return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive expands to more than %1 bytes in total")
+          .arg(match.captured(1));
+    }
+  }
+  {
+    const QRegularExpression pattern(QStringLiteral("^archive entry path is deeper than ([0-9]+) segments$"));
+    const auto match = pattern.match(text);
+    if (match.hasMatch()) {
+      return QCoreApplication::translate("PJ::ArchiveDiagnostics", "archive entry path is deeper than %1 segments")
+          .arg(match.captured(1));
+    }
+  }
+  return text;
+}
+}  // namespace
+
+// ---------------------------------------------------------------------------
+// Private helpers
+// ---------------------------------------------------------------------------
+
 PJ::Expected<void, QString> DownloadManager::extractFromMemory(
     const QByteArray& data, const QString& destination_dir, const std::atomic<bool>& cancel_requested,
     const ArchiveLimits& limits) const {
   ArchiveBudget budget;
 
   if (static_cast<uint64_t>(data.size()) > limits.maximum_compressed_bytes) {
-    return PJ::unexpected(u"Archive is larger than the %1-byte limit"_s.arg(limits.maximum_compressed_bytes));
+    return PJ::unexpected(
+        QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Archive is larger than the %1-byte limit")
+            .arg(limits.maximum_compressed_bytes));
   }
 
   QDir dest_dir(destination_dir);
   if (!dest_dir.exists() && !dest_dir.mkpath(u"."_s)) {
-    return PJ::unexpected(u"Could not create destination directory: %1"_s.arg(destination_dir));
+    return PJ::unexpected(
+        QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not create destination directory: %1")
+            .arg(destination_dir));
   }
 
   // The trailing separator makes the prefix check exact: /tmp/foo must not match /tmp/foo_evil.
@@ -43,7 +125,9 @@ PJ::Expected<void, QString> DownloadManager::extractFromMemory(
   archive_read_support_format_zip(a.get());
 
   if (archive_read_open_memory(a.get(), data.constData(), static_cast<size_t>(data.size())) != ARCHIVE_OK) {
-    return PJ::unexpected(u"Could not open ZIP: %1"_s.arg(QString::fromUtf8(archive_error_string(a.get()))));
+    return PJ::unexpected(
+        QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not open ZIP: %1")
+            .arg(QString::fromUtf8(archive_error_string(a.get()))));
   }
 
   struct archive_entry* entry;
@@ -52,7 +136,7 @@ PJ::Expected<void, QString> DownloadManager::extractFromMemory(
     // Cancel checkpoint per entry. The consumer wipes the whole transaction dir on cancel, so returning mid-file is
     // safe.
     if (cancel_requested.load(std::memory_order_relaxed)) {
-      return PJ::unexpected(u"Cancelled"_s);
+      return PJ::unexpected(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Cancelled"));
     }
 
     const QString entry_name = QString::fromUtf8(archive_entry_pathname(entry));
@@ -60,14 +144,16 @@ PJ::Expected<void, QString> DownloadManager::extractFromMemory(
     // Refuse the path's shape before it reaches the filesystem, so a name harmless here but unusable on Windows fails
     // on both.
     if (const auto refusal = admitEntryPath(entry_name.toStdString(), limits.maximum_path_segments)) {
-      return PJ::unexpected(u"%1: %2"_s.arg(QString::fromStdString(*refusal), entry_name));
+      return PJ::unexpected(u"%1: %2"_s.arg(archiveRejectionText(*refusal), entry_name));
     }
 
     const QString target_path = dest_dir.filePath(entry_name);
 
     // Path traversal (entries containing "../").
     if (!QFileInfo(target_path).absoluteFilePath().startsWith(safe_root)) {
-      return PJ::unexpected(u"Unsafe path detected in ZIP entry: %1"_s.arg(entry_name));
+      return PJ::unexpected(
+          QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Unsafe path detected in ZIP entry: %1")
+              .arg(entry_name));
     }
 
     // Deduced, not spelled: archive_entry_filetype() returns __LA_MODE_T, which is mode_t only where POSIX provides it
@@ -77,7 +163,7 @@ PJ::Expected<void, QString> DownloadManager::extractFromMemory(
                                         : entry_type == AE_IFREG ? ArchiveEntryKind::kRegularFile
                                                                  : ArchiveEntryKind::kOther;
     if (const auto refusal = admitEntryKind(entry_kind)) {
-      return PJ::unexpected(u"%1: %2"_s.arg(QString::fromStdString(*refusal), entry_name));
+      return PJ::unexpected(u"%1: %2"_s.arg(archiveRejectionText(*refusal), entry_name));
     }
 
     // An entry may not declare its size: a ZIP written without seeking defers sizes to a descriptor after the payload,
@@ -92,7 +178,9 @@ PJ::Expected<void, QString> DownloadManager::extractFromMemory(
     // Always called: it counts the entry against the entry-count cap. Undeclared entries charge zero here and settle at
     // EOF.
     if (const auto refusal = admitEntry(limits, budget, declared_bytes)) {
-      return PJ::unexpected(u"%1 (at \"%2\")"_s.arg(QString::fromStdString(*refusal), entry_name));
+      return PJ::unexpected(
+          QCoreApplication::translate("PJ::MarketplaceDiagnostics", "%1 (at \"%2\")")
+              .arg(archiveRejectionText(*refusal), entry_name));
     }
 
     if (entry_kind == ArchiveEntryKind::kDirectory) {
@@ -114,7 +202,8 @@ PJ::Expected<void, QString> DownloadManager::extractFromMemory(
 
     QFile out_file(target_path);
     if (!out_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-      return PJ::unexpected(u"No write permission for: %1"_s.arg(target_path));
+      return PJ::unexpected(
+          QCoreApplication::translate("PJ::MarketplaceDiagnostics", "No write permission for: %1").arg(target_path));
     }
 
     const void* buf;
@@ -124,7 +213,7 @@ PJ::Expected<void, QString> DownloadManager::extractFromMemory(
     for (;;) {
       // Cancel checkpoint per block, so one huge entry does not pin cancel latency to its whole write.
       if (cancel_requested.load(std::memory_order_relaxed)) {
-        return PJ::unexpected(u"Cancelled"_s);
+        return PJ::unexpected(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Cancelled"));
       }
       int rc = archive_read_data_block(a.get(), &buf, &size, &offset);
       if (rc == ARCHIVE_EOF) {
@@ -133,16 +222,21 @@ PJ::Expected<void, QString> DownloadManager::extractFromMemory(
       if (rc != ARCHIVE_OK) {
         out_file.close();
         return PJ::unexpected(
-            u"Error reading ZIP entry '%1': %2"_s.arg(entry_name, QString::fromUtf8(archive_error_string(a.get()))));
+            QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Error reading ZIP entry '%1': %2")
+                .arg(entry_name, QString::fromUtf8(archive_error_string(a.get()))));
       }
       // Bytes past the ceiling are unaccounted for: a decompression bomb whose header lies, or an undeclared entry
       // outgrowing what is left of the budget. Stop at the first block that crosses it.
       if (size > write_cap - written_bytes) {
         out_file.close();
         return PJ::unexpected(
-            size_declared
-                ? u"ZIP entry '%1' holds more bytes than it declares"_s.arg(entry_name)
-                : u"ZIP entry '%1' does not declare its size and expands past the remaining budget"_s.arg(entry_name));
+            size_declared ? QCoreApplication::translate(
+                                "PJ::MarketplaceDiagnostics", "ZIP entry '%1' holds more bytes than it declares")
+                                .arg(entry_name)
+                          : QCoreApplication::translate(
+                                "PJ::MarketplaceDiagnostics",
+                                "ZIP entry '%1' does not declare its size and expands past the remaining budget")
+                                .arg(entry_name));
       }
       out_file.write(static_cast<const char*>(buf), static_cast<qint64>(size));
       written_bytes += size;
@@ -157,7 +251,9 @@ PJ::Expected<void, QString> DownloadManager::extractFromMemory(
   }
 
   if (r != ARCHIVE_EOF) {
-    return PJ::unexpected(u"Error during extraction: %1"_s.arg(QString::fromUtf8(archive_error_string(a.get()))));
+    return PJ::unexpected(
+        QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Error during extraction: %1")
+            .arg(QString::fromUtf8(archive_error_string(a.get()))));
   }
 
   return {};
@@ -280,23 +376,27 @@ void DownloadManager::onReplyFinished(QNetworkReply* reply) {
     // The checksum is a single-shot hash, so the cancel flag is not threaded through it; a cancel during it is caught
     // at the boundary check below or inside extractFromMemory. Not measured (docs/TECHNICAL_NOTES.md "Cancel latency").
     if (!expected.isEmpty()) {
-      // A "sha256:" prefix with no digest is a malformed registry field: fail with a message that points at the
-      // registry, since "Checksum mismatch" would send whoever debugs it after a corrupt artifact. An empty checksum
-      // skips verification (the emptiness gate above).
+      // A "sha256:" prefix with no digest is a malformed registry field, not a
+      // real hash. Fail (a garbage checksum should not silently pass), but with
+      // a message that points at the registry. A mismatch instead suggests that
+      // the downloaded artifact is corrupt or tampered with. An empty/absent
+      // checksum still skips verification via the emptiness gate above.
       QString digest = expected;
       if (digest.startsWith("sha256:"_L1, Qt::CaseInsensitive)) {
         digest = digest.mid(7);
       }
       if (digest.isEmpty()) {
-        return u"Malformed checksum in registry (\"%1\" has no digest)"_s.arg(expected);
+        return QCoreApplication::translate(
+                   "PJ::MarketplaceDiagnostics", "Malformed checksum in registry (\"%1\" has no digest)")
+            .arg(expected);
       }
       emit phaseChanged(id, WorkPhase::Verifying);
       if (!verifyChecksum(data, expected)) {
-        return u"Checksum mismatch"_s;
+        return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Checksum mismatch");
       }
     }
     if (cancel_flag->load(std::memory_order_relaxed)) {
-      return u"Cancelled"_s;
+      return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Cancelled");
     }
     emit phaseChanged(id, WorkPhase::Extracting);
     if (auto extract_result = extractFromMemory(data, destination, *cancel_flag, limits); !extract_result) {

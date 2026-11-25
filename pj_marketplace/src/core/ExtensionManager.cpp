@@ -22,6 +22,7 @@
 #include <optional>
 #include <utility>
 
+#include "internal/plugin_display_metadata.hpp"
 #include "pj_marketplace/artifact_store.hpp"
 #include "pj_marketplace/content_manifest.hpp"
 #include "pj_marketplace/download_manager.hpp"
@@ -96,10 +97,13 @@ QString pendingUninstallMarkerPath(const QString& root) {
 
 QString invalidExtensionIdReason(const QString& id) {
   if (id.isEmpty()) {
-    return "Extension id is empty";
+    return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Extension id is empty");
   }
   if (id == "." || id == ".." || id.contains('/') || id.contains('\\')) {
-    return QString("Extension id \"%1\" is not safe for filesystem paths").arg(id);
+    return QString(
+               QCoreApplication::translate(
+                   "PJ::MarketplaceDiagnostics", "Extension id \"%1\" is not safe for filesystem paths"))
+        .arg(id);
   }
   return {};
 }
@@ -160,28 +164,30 @@ QString removalOperationToken(RemovalOperation operation) {
 // nothing to delete.
 QString unmanagedPayloadRejection(const QString& store_root, const QString& path) {
   if (path.isEmpty()) {
-    return u"record names no path"_s;
+    return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "record names no path");
   }
   if (QDir::isRelativePath(path)) {
-    return u"record path is not absolute"_s;
+    return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "record path is not absolute");
   }
   // `store_root` is already canonical; only the record's target needs resolving.
   const QString root = QDir::cleanPath(store_root);
   const QString target = QDir::cleanPath(path);
   if (target == root) {
-    return u"record targets the extensions store itself"_s;
+    return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "record targets the extensions store itself");
   }
   if (QFileInfo(target).absolutePath() != root) {
-    return u"record targets a path outside the extensions store"_s;
+    return QCoreApplication::translate(
+        "PJ::MarketplaceDiagnostics", "record targets a path outside the extensions store");
   }
   // Empty for a path that does not exist (already drained): not an error.
   const QString canonical = QFileInfo(target).canonicalFilePath();
   if (!canonical.isEmpty()) {
     if (QFileInfo(canonical).absolutePath() != root) {
-      return u"record path resolves outside the extensions store"_s;
+      return QCoreApplication::translate(
+          "PJ::MarketplaceDiagnostics", "record path resolves outside the extensions store");
     }
     if (!QFileInfo(canonical).isDir()) {
-      return u"record path is not a directory"_s;
+      return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "record path is not a directory");
     }
   }
   return {};
@@ -208,10 +214,11 @@ std::optional<RemovalOperation> parseRemovalOperationToken(const QJsonObject& ob
 QString removalIdentityRejection(RemovalOperation operation, const QString& id, const QString& stem) {
   if (operation == RemovalOperation::kCleanup) {
     if (!id.isEmpty()) {
-      return u"a cleanup record must carry no extension id"_s;
+      return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "a cleanup record must carry no extension id");
     }
     if (!stem.startsWith(u"cleanup-"_s)) {
-      return u"a cleanup record must be filed under a cleanup name"_s;
+      return QCoreApplication::translate(
+          "PJ::MarketplaceDiagnostics", "a cleanup record must be filed under a cleanup name");
     }
     return {};
   }
@@ -219,7 +226,8 @@ QString removalIdentityRejection(RemovalOperation operation, const QString& id, 
     return id_error;
   }
   if (stem != id) {
-    return u"record for \"%1\" is filed under the name \"%2\""_s.arg(id, stem);
+    return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "record for \"%1\" is filed under the name \"%2\"")
+        .arg(id, stem);
   }
   return {};
 }
@@ -229,23 +237,24 @@ QString removalIdentityRejection(RemovalOperation operation, const QString& id, 
 QString parseRemovalIntent(const QString& store_root, const QString& file_path, RemovalIntent* out) {
   QFile record(file_path);
   if (!record.open(QIODevice::ReadOnly)) {
-    return u"record could not be opened"_s;
+    return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "record could not be opened");
   }
   QJsonParseError parse_error;
   const QJsonDocument document = QJsonDocument::fromJson(record.readAll(), &parse_error);
   if (parse_error.error != QJsonParseError::NoError || !document.isObject()) {
-    return u"record is not a JSON object"_s;
+    return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "record is not a JSON object");
   }
   const QJsonObject object = document.object();
 
   const QJsonValue schema = object.value(u"schema"_s);
   if (!schema.isDouble() || schema.toInt() != kRemovalJournalSchema) {
-    return u"record does not declare schema %1"_s.arg(kRemovalJournalSchema);
+    return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "record does not declare schema %1")
+        .arg(kRemovalJournalSchema);
   }
 
   const std::optional<RemovalOperation> operation = parseRemovalOperationToken(object);
   if (!operation) {
-    return u"record declares no known operation"_s;
+    return QCoreApplication::translate("PJ::MarketplaceDiagnostics", "record declares no known operation");
   }
 
   RemovalIntent intent;
@@ -335,8 +344,13 @@ QList<RemovalIntent> readRemovalIntents(const QString& extensions_dir, QStringLi
     }
     const bool moved = quarantineRemovalIntent(record_path);
     rejections->append(
-        QString("Ignored a removal record: %1 (\"%2\")%3")
-            .arg(rejection, record_path, moved ? QString() : QString(" and it could not be quarantined")));
+        QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Ignored a removal record: %1 (\"%2\")%3"))
+            .arg(
+                rejection, record_path,
+                moved ? QString()
+                      : QString(
+                            QCoreApplication::translate(
+                                "PJ::MarketplaceDiagnostics", " and it could not be quarantined"))));
   }
   return intents;
 }
@@ -394,14 +408,18 @@ QString soleTopLevelDirectory(const QString& transaction_root) {
 QString validateTransactionContents(const QString& transaction_root, const QString& expected_id) {
   const QString root = soleTopLevelDirectory(transaction_root);
   if (root.isEmpty() || QFileInfo(root).fileName() != expected_id) {
-    return QString("Downloaded artifact must contain exactly one top-level directory named \"%1\"").arg(expected_id);
+    return QString(
+               QCoreApplication::translate(
+                   "PJ::MarketplaceDiagnostics",
+                   "Downloaded artifact must contain exactly one top-level directory named \"%1\""))
+        .arg(expected_id);
   }
   return {};
 }
 
 DirectoryDiscovery discoverExtensionDirectory(const QString& ext_root) {
   DirectoryDiscovery result;
-  const auto scan = scanPluginDsos(std::filesystem::path(ext_root.toStdU16String()));
+  const auto scan = scanPluginDsos(pathFromUtf8(ext_root.toUtf8().toStdString()));
   if (!scan) {
     result.error = QString::fromStdString(scan.error());
     return result;
@@ -409,7 +427,7 @@ DirectoryDiscovery discoverExtensionDirectory(const QString& ext_root) {
 
   for (const auto& diag : scan->diagnostics) {
     qWarning(
-        "ExtensionManager: plugin discovery diagnostic for '%s': %s", pathToUtf8(diag.path).c_str(),
+        "ExtensionManager: plugin discovery diagnostic for '%s': %s", genericUtf8(diag.path).c_str(),
         diag.message.c_str());
   }
 
@@ -418,7 +436,7 @@ DirectoryDiscovery discoverExtensionDirectory(const QString& ext_root) {
       result.error = QString::fromStdString(scan->diagnostics.front().message);
       return result;
     }
-    result.error = u"no valid plugin DSO found"_s;
+    result.error = QCoreApplication::translate("PJ::MarketplaceDiagnostics", "no valid plugin DSO found");
     return result;
   }
 
@@ -448,13 +466,17 @@ DirectoryDiscovery discoverExtensionDirectory(const QString& ext_root) {
 
   for (const PluginDescriptor& descriptor : scan->plugins) {
     if (descriptor.id != first.id) {
-      result.error = u"multiple embedded plugin ids in one extension directory: \"%1\" and \"%2\""_s.arg(
-          QString::fromStdString(first.id), QString::fromStdString(descriptor.id));
+      result.error = QCoreApplication::translate(
+                         "PJ::MarketplaceDiagnostics",
+                         "multiple embedded plugin ids in one extension directory: \"%1\" and \"%2\"")
+                         .arg(QString::fromStdString(first.id), QString::fromStdString(descriptor.id));
       return result;
     }
     if (descriptor.version != first.version) {
-      result.error = u"multiple embedded plugin versions in one extension directory for \"%1\""_s.arg(
-          QString::fromStdString(first.id));
+      result.error =
+          QCoreApplication::translate(
+              "PJ::MarketplaceDiagnostics", "multiple embedded plugin versions in one extension directory for \"%1\"")
+              .arg(QString::fromStdString(first.id));
       return result;
     }
     retainHighestFloor(descriptor.min_plotjuggler_version, effective_min_plotjuggler_version);
@@ -471,6 +493,11 @@ DirectoryDiscovery discoverExtensionDirectory(const QString& ext_root) {
   result.record.name = first.name.empty() ? result.record.id : QString::fromStdString(first.name);
   result.record.description = QString::fromStdString(first.description);
   result.record.category = QString::fromStdString(first.category);
+  const auto display = marketplace_internal::readPluginDisplayMetadata(first);
+  result.record.author = QString::fromStdString(display.author);
+  result.record.license = QString::fromStdString(display.license);
+  result.record.website = QString::fromStdString(display.website);
+  result.record.repository = QString::fromStdString(display.repository);
   result.record.abi_major = first.abi_major;
   result.record.min_sdk_required = QString::fromStdString(effective_min_sdk_required);
   result.record.suggested_sdk_version = QString::fromStdString(effective_suggested_sdk_version);
@@ -495,13 +522,16 @@ DirectoryDiscovery discoverExtensionDirectoryOutOfProcess(const QString& ext_roo
   if (!check.ok) {
     // A helper that never produced a verdict (spawn failure, crash, timeout) is
     // reported as-is: the payload is unproven, not proven bad.
-    result.error = check.parent_error.isEmpty() ? u"plugin admission helper failed"_s : check.parent_error;
+    result.error = check.parent_error.isEmpty()
+                       ? QCoreApplication::translate("PJ::MarketplaceDiagnostics", "plugin admission helper failed")
+                       : check.parent_error;
     return result;
   }
 
   if (check.plugins.isEmpty()) {
-    result.error =
-        check.diagnostics.isEmpty() ? u"no valid plugin DSO found"_s : check.diagnostics.constFirst().message;
+    result.error = check.diagnostics.isEmpty()
+                       ? QCoreApplication::translate("PJ::MarketplaceDiagnostics", "no valid plugin DSO found")
+                       : check.diagnostics.constFirst().message;
     return result;
   }
 
@@ -529,12 +559,17 @@ DirectoryDiscovery discoverExtensionDirectoryOutOfProcess(const QString& ext_roo
 
   for (const PluginCheckDescriptor& descriptor : check.plugins) {
     if (descriptor.id != first.id) {
-      result.error =
-          u"multiple embedded plugin ids in one extension directory: \"%1\" and \"%2\""_s.arg(first.id, descriptor.id);
+      result.error = QCoreApplication::translate(
+                         "PJ::MarketplaceDiagnostics",
+                         "multiple embedded plugin ids in one extension directory: \"%1\" and \"%2\"")
+                         .arg(first.id, descriptor.id);
       return result;
     }
     if (descriptor.version != first.version) {
-      result.error = u"multiple embedded plugin versions in one extension directory for \"%1\""_s.arg(first.id);
+      result.error =
+          QCoreApplication::translate(
+              "PJ::MarketplaceDiagnostics", "multiple embedded plugin versions in one extension directory for \"%1\"")
+              .arg(first.id);
       return result;
     }
     retainHighestFloor(descriptor.min_plotjuggler_version, effective_min_plotjuggler_version);
@@ -551,6 +586,10 @@ DirectoryDiscovery discoverExtensionDirectoryOutOfProcess(const QString& ext_roo
   result.record.name = first.name.isEmpty() ? first.id : first.name;
   result.record.description = first.description;
   result.record.category = first.category;
+  result.record.author = first.author;
+  result.record.license = first.license;
+  result.record.website = first.website;
+  result.record.repository = first.repository;
   result.record.abi_major = first.abi_major;
   result.record.min_sdk_required = effective_min_sdk_required;
   result.record.min_plotjuggler_version = effective_min_plotjuggler_version;
@@ -561,14 +600,22 @@ DirectoryDiscovery discoverExtensionDirectoryOutOfProcess(const QString& ext_roo
 QString validateRegistryIntent(
     const DirectoryDiscovery& discovered, const QString& registry_id, const QString& registry_version) {
   if (!discovered.found_plugin) {
-    return QString("Installed artifact is not a valid plugin: %1").arg(discovered.error);
+    return QString(
+               QCoreApplication::translate(
+                   "PJ::MarketplaceDiagnostics", "Installed artifact is not a valid plugin: %1"))
+        .arg(discovered.error);
   }
   if (discovered.record.id != registry_id) {
-    return QString("Embedded plugin id \"%1\" does not match registry id \"%2\"")
+    return QString(
+               QCoreApplication::translate(
+                   "PJ::MarketplaceDiagnostics", "Embedded plugin id \"%1\" does not match registry id \"%2\""))
         .arg(discovered.record.id, registry_id);
   }
   if (discovered.record.version != registry_version) {
-    return QString("Embedded plugin version \"%1\" does not match registry version \"%2\"")
+    return QString(
+               QCoreApplication::translate(
+                   "PJ::MarketplaceDiagnostics",
+                   "Embedded plugin version \"%1\" does not match registry version \"%2\""))
         .arg(discovered.record.version, registry_version);
   }
   return {};
@@ -578,7 +625,10 @@ bool writePendingInstallIntent(const QString& root, const QString& id, const QSt
   QFile file(pendingInstallIntentPath(root));
   if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
     if (error != nullptr) {
-      *error = QString("Could not write staged install intent: %1").arg(file.errorString());
+      *error =
+          QString(
+              QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not write staged install intent: %1"))
+              .arg(file.errorString());
     }
     return false;
   }
@@ -586,7 +636,10 @@ bool writePendingInstallIntent(const QString& root, const QString& id, const QSt
   const QByteArray data = id.toUtf8() + '\n' + version.toUtf8() + '\n';
   if (file.write(data) != data.size()) {
     if (error != nullptr) {
-      *error = QString("Could not write staged install intent: %1").arg(file.errorString());
+      *error =
+          QString(
+              QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not write staged install intent: %1"))
+              .arg(file.errorString());
     }
     return false;
   }
@@ -597,17 +650,21 @@ PendingInstallIntent readPendingInstallIntent(const QString& root) {
   PendingInstallIntent intent;
   QFile file(pendingInstallIntentPath(root));
   if (!file.exists()) {
-    intent.error = "Staged install is missing registry intent";
+    intent.error =
+        QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Staged install is missing registry intent");
     return intent;
   }
   if (!file.open(QIODevice::ReadOnly)) {
-    intent.error = QString("Could not read staged install intent: %1").arg(file.errorString());
+    intent.error =
+        QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not read staged install intent: %1"))
+            .arg(file.errorString());
     return intent;
   }
 
   const QList<QByteArray> lines = file.readAll().split('\n');
   if (lines.size() < 2 || lines[0].trimmed().isEmpty() || lines[1].trimmed().isEmpty()) {
-    intent.error = "Staged install registry intent is invalid";
+    intent.error =
+        QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Staged install registry intent is invalid");
     return intent;
   }
 
@@ -617,12 +674,18 @@ PendingInstallIntent readPendingInstallIntent(const QString& root) {
   // version that contains anything outside the semver alphabet, must not be
   // trusted later as a directory name or version comparison input.
   if (const QString id_error = invalidExtensionIdReason(id); !id_error.isEmpty()) {
-    intent.error = QString("Staged install registry intent has unsafe id: %1").arg(id_error);
+    intent.error = QString(
+                       QCoreApplication::translate(
+                           "PJ::MarketplaceDiagnostics", "Staged install registry intent has unsafe id: %1"))
+                       .arg(id_error);
     return intent;
   }
   static const QRegularExpression k_version_re(u"^[0-9A-Za-z._+-]+$"_s);
   if (!k_version_re.match(version).hasMatch()) {
-    intent.error = QString("Staged install registry intent has unsafe version \"%1\"").arg(version);
+    intent.error = QString(
+                       QCoreApplication::translate(
+                           "PJ::MarketplaceDiagnostics", "Staged install registry intent has unsafe version \"%1\""))
+                       .arg(version);
     return intent;
   }
 
@@ -641,13 +704,13 @@ ExtensionManager::ExtensionManager()
 
 ExtensionManager::ExtensionManager(
     DownloadManager* downloader, const QString& extensions_dir, const QString& pending_dir, DiagnosticSink sink,
-    QObject* parent)
+    QObject* parent, bool defer_initial_scan)
     : QObject(parent),
       downloader_(downloader),
       extensions_dir_(extensions_dir),
       pending_dir_(pending_dir),
       sink_(std::move(sink)) {
-  initComponents();
+  initComponents(defer_initial_scan);
 }
 
 ExtensionManager::~ExtensionManager() {
@@ -696,19 +759,24 @@ void ExtensionManager::acquireStoreLock() {
   // the config dir), so the text shown depends on the cause.
   const auto refusalText = [](const StoreRejection* refusal) -> QString {
     if (refusal != nullptr && refusal->code == StoreRejectionCode::kWriterLeaseUnavailable) {
-      return u"Another PlotJuggler instance is managing extensions. Close it and restart PlotJuggler to manage "
-             u"extensions here."_s;
+      return QCoreApplication::translate(
+          "PJ::MarketplaceDiagnostics",
+          "Another PlotJuggler instance is managing extensions. Close it and restart PlotJuggler to manage extensions "
+          "here.");
     }
-    return u"Cannot create the extensions lock file. Extensions cannot be installed, updated or removed this "
-           u"session."_s;
+    return QCoreApplication::translate(
+        "PJ::MarketplaceDiagnostics",
+        "Cannot create the extensions lock file. Extensions cannot be installed, updated or removed this session.");
   };
   auto session = StoreSession::open(extensions_dir_);
   if (!session) {
     store_lock_refusal_ = refusalText(&session.error());
     reportDiagnostic(
         {},
-        u"%1 This session can browse installed extensions but cannot install, update or remove them."_s.arg(
-            store_lock_refusal_),
+        QCoreApplication::translate(
+            "PJ::MarketplaceDiagnostics",
+            "%1 This session can browse installed extensions but cannot install, update or remove them.")
+            .arg(store_lock_refusal_),
         false);
     return;
   }
@@ -717,22 +785,29 @@ void ExtensionManager::acquireStoreLock() {
     store_lock_refusal_ = refusalText(store_session_->writeRefusal());
     reportDiagnostic(
         {},
-        u"%1 This session can browse installed extensions but cannot install, update or remove them."_s.arg(
-            store_lock_refusal_),
+        QCoreApplication::translate(
+            "PJ::MarketplaceDiagnostics",
+            "%1 This session can browse installed extensions but cannot install, update or remove them.")
+            .arg(store_lock_refusal_),
         false);
     return;
   }
   store_lock_refusal_.clear();
 }
 
-void ExtensionManager::initComponents() {
+void ExtensionManager::initComponents(bool defer_initial_scan) {
   if (!downloader_) {
     // Not a child of `this`: the destructor deletes it before releasing the lease; a child would die after.
     downloader_ = new DownloadManager();
     owns_downloader_ = true;
   }
   if (!QDir().mkpath(extensions_dir_)) {
-    reportDiagnostic({}, QString("Could not create extensions directory \"%1\"").arg(extensions_dir_), true);
+    reportDiagnostic(
+        {},
+        QString(
+            QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not create extensions directory \"%1\""))
+            .arg(extensions_dir_),
+        true);
   }
   // Canonicalize once the directory exists: the lease, the staging and journal siblings and record confinement all
   // compare against the canonical root, so a symlinked config or home would otherwise quarantine every valid uninstall.
@@ -751,6 +826,12 @@ void ExtensionManager::initComponents() {
   // may be opened before a pending update replaces it (docs/TECHNICAL_NOTES.md "dlopen pins the first image").
   applyPendingUninstalls();
   applyPendingInstalls();
+  if (!defer_initial_scan) {
+    finishInitialScan();
+  }
+}
+
+void ExtensionManager::finishInitialScan() {
   refreshInstalledFromDisk();
   // Drop store objects no surviving install references, before the runtime maps any object.
   reconcileStore();
@@ -878,11 +959,16 @@ void ExtensionManager::installFromLocalZip(const QString& zip_path) {
     return;
   }
   if (!pending_id_.isEmpty()) {
-    emitInstallFailure(file_label, QString("Install of \"%1\" is already in progress").arg(pending_id_));
+    emitInstallFailure(
+        file_label,
+        QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Install of \"%1\" is already in progress"))
+            .arg(pending_id_));
     return;
   }
   if (const QFileInfo info(zip_path); !info.isFile() || !info.isReadable()) {
-    emitInstallFailure(file_label, QString("Cannot read \"%1\"").arg(zip_path));
+    emitInstallFailure(
+        file_label,
+        QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Cannot read \"%1\"")).arg(zip_path));
     return;
   }
 
@@ -899,9 +985,11 @@ void ExtensionManager::installFromLocalZip(const QString& zip_path) {
     // Refuse rather than copy across devices: promotion is a rename so that a half-installed extension is unreachable.
     removeTransactionRoot(transaction_root);
     emitInstallFailure(
-        file_label,
-        u"Extraction area \"%1\" is on a different filesystem than \"%2\", so the install could not be "
-        u"completed atomically"_s.arg(transactionStageRoot(extensions_dir_), extensions_dir_));
+        file_label, QCoreApplication::translate(
+                        "PJ::MarketplaceDiagnostics",
+                        "Extraction area \"%1\" is on a different filesystem than \"%2\", so the install could not be "
+                        "completed atomically")
+                        .arg(transactionStageRoot(extensions_dir_), extensions_dir_));
     return;
   }
 
@@ -924,14 +1012,18 @@ void ExtensionManager::installFromLocalZip(const QString& zip_path) {
 
     const QString root = soleTopLevelDirectory(transaction_root);
     if (root.isEmpty()) {
-      fail({}, u"ZIP must contain exactly one top-level directory holding the plugin"_s);
+      fail(
+          {}, QCoreApplication::translate(
+                  "PJ::MarketplaceDiagnostics", "ZIP must contain exactly one top-level directory holding the plugin"));
       return;
     }
 
     // The manifest read (out of process) is the whole validation: it reports the id and version the DSO declares.
     const DirectoryDiscovery discovered = discoverExtensionDirectoryOutOfProcess(root);
     if (!discovered.found_plugin) {
-      fail({}, QString("Not a valid plugin package: %1").arg(discovered.error));
+      fail(
+          {}, QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Not a valid plugin package: %1"))
+                  .arg(discovered.error));
       return;
     }
 
@@ -943,7 +1035,12 @@ void ExtensionManager::installFromLocalZip(const QString& zip_path) {
     // A staged uninstall already dropped the id from installed_: without this check the fresh-install branch below
     // would clear the destination and the pending removal would vanish. doInstall() refuses the same case.
     if (hasPendingUninstall(ext_id)) {
-      fail(ext_id, QString("Uninstall of \"%1\" is staged; restart to apply it before installing again").arg(ext_id));
+      fail(
+          ext_id, QString(
+                      QCoreApplication::translate(
+                          "PJ::MarketplaceDiagnostics",
+                          "Uninstall of \"%1\" is staged; restart to apply it before installing again"))
+                      .arg(ext_id));
       return;
     }
 
@@ -987,20 +1084,34 @@ void ExtensionManager::installFromLocalZip(const QString& zip_path) {
     if (isInstalled(ext_id)) {
       switch (askReplaceConfirmation(ext_id, discovered.record.version)) {
         case ReplaceDecision::kNoConfirmation:
-          fail(ext_id, QString("Extension \"%1\" is already installed").arg(ext_id));
+          fail(
+              ext_id,
+              QString(
+                  QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Extension \"%1\" is already installed"))
+                  .arg(ext_id));
           return;
         case ReplaceDecision::kOwnerGone:
-          fail(ext_id, QString("Replacing \"%1\" was cancelled: no window is left to confirm it").arg(ext_id));
+          fail(
+              ext_id,
+              QString(
+                  QCoreApplication::translate(
+                      "PJ::MarketplaceDiagnostics", "Replacing \"%1\" was cancelled: no window is left to confirm it"))
+                  .arg(ext_id));
           return;
         case ReplaceDecision::kSuperseded:
           fail(
-              ext_id, QString(
-                          "Replacing \"%1\" was cancelled: the window that asked was replaced while the question "
-                          "was open")
-                          .arg(ext_id));
+              ext_id,
+              QString(
+                  QCoreApplication::translate(
+                      "PJ::MarketplaceDiagnostics",
+                      "Replacing \"%1\" was cancelled: the window that asked was replaced while the question was open"))
+                  .arg(ext_id));
           return;
         case ReplaceDecision::kDeclined:
-          fail(ext_id, QString("Replacing \"%1\" was cancelled").arg(ext_id));
+          fail(
+              ext_id,
+              QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Replacing \"%1\" was cancelled"))
+                  .arg(ext_id));
           return;
         case ReplaceDecision::kAccepted:
           break;
@@ -1019,11 +1130,18 @@ void ExtensionManager::installFromLocalZip(const QString& zip_path) {
       QDir().mkpath(pending_dir_);
       const QString staged_root = pendingRoot(pending_dir_, ext_id);
       if (QDir(staged_root).exists() && !QDir(staged_root).removeRecursively()) {
-        fail(ext_id, QString("Could not replace existing staged install directory \"%1\"").arg(staged_root));
+        fail(
+            ext_id, QString(
+                        QCoreApplication::translate(
+                            "PJ::MarketplaceDiagnostics", "Could not replace existing staged install directory \"%1\""))
+                        .arg(staged_root));
         return;
       }
       if (!QDir().rename(root, staged_root)) {
-        fail(ext_id, QString("Could not stage install to \"%1\"").arg(staged_root));
+        fail(
+            ext_id,
+            QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not stage install to \"%1\""))
+                .arg(staged_root));
         return;
       }
 
@@ -1039,11 +1157,17 @@ void ExtensionManager::installFromLocalZip(const QString& zip_path) {
     const QString dst = extRoot(extensions_dir_, ext_id);
     replaceConflictingInstallDirs(ext_id, dst);
     if (QDir(dst).exists() && !QDir(dst).removeRecursively()) {
-      fail(ext_id, QString("Could not replace existing extension directory \"%1\"").arg(dst));
+      fail(
+          ext_id, QString(
+                      QCoreApplication::translate(
+                          "PJ::MarketplaceDiagnostics", "Could not replace existing extension directory \"%1\""))
+                      .arg(dst));
       return;
     }
     if (!QDir().rename(root, dst)) {
-      fail(ext_id, QString("Could not install to \"%1\"").arg(dst));
+      fail(
+          ext_id,
+          QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not install to \"%1\"")).arg(dst));
       return;
     }
 
@@ -1053,15 +1177,22 @@ void ExtensionManager::installFromLocalZip(const QString& zip_path) {
     if (!final_check.found_plugin || final_check.record.id != ext_id) {
       QDir(dst).removeRecursively();
       fail(
-          ext_id, QString("Post-install validation failed: %1")
-                      .arg(
-                          final_check.found_plugin ? QString("embedded id changed to \"%1\"").arg(final_check.record.id)
-                                                   : final_check.error));
+          ext_id,
+          QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Post-install validation failed: %1"))
+              .arg(
+                  final_check.found_plugin
+                      ? QString(
+                            QCoreApplication::translate("PJ::MarketplaceDiagnostics", "embedded id changed to \"%1\""))
+                            .arg(final_check.record.id)
+                      : final_check.error));
       return;
     }
     if (const HostCompatibility compat = hostCompatibility(final_check.record); !compat.ok) {
       QDir(dst).removeRecursively();
-      fail(ext_id, QString("Post-install validation failed: %1").arg(compat.reason));
+      fail(
+          ext_id,
+          QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Post-install validation failed: %1"))
+              .arg(compat.reason));
       return;
     }
 
@@ -1103,12 +1234,18 @@ void ExtensionManager::doInstall(const Extension& ext, bool staging, bool allow_
   }
 
   if (!pending_id_.isEmpty()) {
-    emitInstallFailure(ext.id, QString("Install of \"%1\" is already in progress").arg(pending_id_));
+    emitInstallFailure(
+        ext.id,
+        QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Install of \"%1\" is already in progress"))
+            .arg(pending_id_));
     return;
   }
 
   if (!allow_existing && isInstalled(ext.id)) {
-    emitInstallFailure(ext.id, QString("Extension \"%1\" is already installed").arg(ext.id));
+    emitInstallFailure(
+        ext.id,
+        QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Extension \"%1\" is already installed"))
+            .arg(ext.id));
     return;
   }
 
@@ -1116,7 +1253,11 @@ void ExtensionManager::doInstall(const Extension& ext, bool staging, bool allow_
   // whatever occupies that name: refuse until the removal has been applied.
   if (hasPendingUninstall(ext.id)) {
     emitInstallFailure(
-        ext.id, QString("Uninstall of \"%1\" is staged; restart to apply it before installing again").arg(ext.id));
+        ext.id, QString(
+                    QCoreApplication::translate(
+                        "PJ::MarketplaceDiagnostics",
+                        "Uninstall of \"%1\" is staged; restart to apply it before installing again"))
+                    .arg(ext.id));
     return;
   }
 
@@ -1141,9 +1282,11 @@ void ExtensionManager::doInstall(const Extension& ext, bool staging, bool allow_
     // Refuse rather than copy across devices: promotion is a rename so that a half-installed extension is unreachable.
     removeTransactionRoot(transaction_root);
     emitInstallFailure(
-        ext.id,
-        u"Extraction area \"%1\" is on a different filesystem than \"%2\", so the install could not be "
-        u"completed atomically"_s.arg(transactionStageRoot(extensions_dir_), dest_dir));
+        ext.id, QCoreApplication::translate(
+                    "PJ::MarketplaceDiagnostics",
+                    "Extraction area \"%1\" is on a different filesystem than \"%2\", so the install could not be "
+                    "completed atomically")
+                    .arg(transactionStageRoot(extensions_dir_), dest_dir));
     return;
   }
 
@@ -1161,7 +1304,8 @@ void ExtensionManager::doInstall(const Extension& ext, bool staging, bool allow_
           disk_space_checked_ = true;
           constexpr qint64 kExtractionOverheadFactor = 3;
           if (QStorageInfo(extensions_dir_).bytesAvailable() < total * kExtractionOverheadFactor) {
-            cancel_reason_ = "Not enough disk space to install the extension";
+            cancel_reason_ = QCoreApplication::translate(
+                "PJ::MarketplaceDiagnostics", "Not enough disk space to install the extension");
             downloader_->cancel(pending_op_id_);
             return;
           }
@@ -1224,11 +1368,16 @@ void ExtensionManager::doInstall(const Extension& ext, bool staging, bool allow_
           const QString staged_root = pendingRoot(pending_dir_, ext.id);
           if (QDir(staged_root).exists() && !QDir(staged_root).removeRecursively()) {
             fail_after_extraction(
-                QString("Could not replace existing staged install directory \"%1\"").arg(staged_root));
+                QString(
+                    QCoreApplication::translate(
+                        "PJ::MarketplaceDiagnostics", "Could not replace existing staged install directory \"%1\""))
+                    .arg(staged_root));
             return;
           }
           if (!QDir().rename(root, staged_root)) {
-            fail_after_extraction(QString("Could not stage install to \"%1\"").arg(staged_root));
+            fail_after_extraction(
+                QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not stage install to \"%1\""))
+                    .arg(staged_root));
             return;
           }
 
@@ -1243,11 +1392,17 @@ void ExtensionManager::doInstall(const Extension& ext, bool staging, bool allow_
         // Replace a prior copy of this id stored under another directory name, so "<id>" is the sole install.
         replaceConflictingInstallDirs(ext.id, dst);
         if (QDir(dst).exists() && !QDir(dst).removeRecursively()) {
-          fail_after_extraction(QString("Could not replace existing extension directory \"%1\"").arg(dst));
+          fail_after_extraction(
+              QString(
+                  QCoreApplication::translate(
+                      "PJ::MarketplaceDiagnostics", "Could not replace existing extension directory \"%1\""))
+                  .arg(dst));
           return;
         }
         if (!QDir().rename(root, dst)) {
-          fail_after_extraction(QString("Could not promote install to \"%1\"").arg(dst));
+          fail_after_extraction(
+              QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not promote install to \"%1\""))
+                  .arg(dst));
           return;
         }
 
@@ -1257,12 +1412,16 @@ void ExtensionManager::doInstall(const Extension& ext, bool staging, bool allow_
         const QString final_error = validateRegistryIntent(final_check, ext.id, ext.version);
         if (!final_error.isEmpty()) {
           QDir(dst).removeRecursively();
-          fail_after_extraction(QString("Post-promotion validation failed: %1").arg(final_error));
+          fail_after_extraction(
+              QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Post-promotion validation failed: %1"))
+                  .arg(final_error));
           return;
         }
         if (const HostCompatibility compat = hostCompatibility(final_check.record); !compat.ok) {
           QDir(dst).removeRecursively();
-          fail_after_extraction(QString("Post-promotion validation failed: %1").arg(compat.reason));
+          fail_after_extraction(
+              QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Post-promotion validation failed: %1"))
+                  .arg(compat.reason));
           return;
         }
 
@@ -1304,7 +1463,9 @@ void ExtensionManager::doInstall(const Extension& ext, bool staging, bool allow_
 
     removeTransactionRoot(transaction_root);
 
-    const QString reason = cancel_reason_.isEmpty() ? "Installation was cancelled" : cancel_reason_;
+    const QString reason = cancel_reason_.isEmpty()
+                               ? QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Installation was cancelled")
+                               : cancel_reason_;
     cancel_reason_.clear();
     emitInstallFailure(cancelled_id, reason);
   });
@@ -1320,7 +1481,10 @@ void ExtensionManager::uninstall(const QString& extension_id) {
   refreshInstalledFromDisk();
 
   if (!installed_.contains(extension_id)) {
-    emitUninstallFailure(extension_id, QString("Extension \"%1\" is not installed").arg(extension_id));
+    emitUninstallFailure(
+        extension_id,
+        QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Extension \"%1\" is not installed"))
+            .arg(extension_id));
     return;
   }
 
@@ -1330,8 +1494,11 @@ void ExtensionManager::uninstall(const QString& extension_id) {
     if (comparePluginVersions(
             installedVersion(extension_id).toStdString(), bundledVersion(extension_id).toStdString()) <= 0) {
       emitUninstallFailure(
-          extension_id,
-          QString("Extension \"%1\" ships with the application and cannot be uninstalled").arg(extension_id));
+          extension_id, QString(
+                            QCoreApplication::translate(
+                                "PJ::MarketplaceDiagnostics",
+                                "Extension \"%1\" ships with the application and cannot be uninstalled"))
+                            .arg(extension_id));
       return;
     }
   }
@@ -1350,8 +1517,11 @@ void ExtensionManager::uninstall(const QString& extension_id) {
   if (!writeDisabledState(extension_id, false)) {
     restoreEnabledState(extension_id, was_enabled);
     emitUninstallFailure(
-        extension_id,
-        QString("Could not persist the disabled state for \"%1\"; uninstall not scheduled").arg(extension_id));
+        extension_id, QString(
+                          QCoreApplication::translate(
+                              "PJ::MarketplaceDiagnostics",
+                              "Could not persist the disabled state for \"%1\"; uninstall not scheduled"))
+                          .arg(extension_id));
     return;
   }
 
@@ -1359,7 +1529,11 @@ void ExtensionManager::uninstall(const QString& extension_id) {
     // Nothing was scheduled: restore the user's own enable/disable choice.
     restoreEnabledState(extension_id, was_enabled);
     emitUninstallFailure(
-        extension_id, QString("Could not record the removal of \"%1\"; uninstall not scheduled").arg(dir_path));
+        extension_id,
+        QString(
+            QCoreApplication::translate(
+                "PJ::MarketplaceDiagnostics", "Could not record the removal of \"%1\"; uninstall not scheduled"))
+            .arg(dir_path));
     return;
   }
 
@@ -1378,17 +1552,27 @@ void ExtensionManager::downgradeToBundled(const QString& extension_id) {
   refreshInstalledFromDisk();
 
   if (!installed_.contains(extension_id)) {
-    emitUninstallFailure(extension_id, QString("Extension \"%1\" is not installed").arg(extension_id));
+    emitUninstallFailure(
+        extension_id,
+        QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Extension \"%1\" is not installed"))
+            .arg(extension_id));
     return;
   }
   if (!isBundled(extension_id)) {
     emitUninstallFailure(
-        extension_id, QString("Extension \"%1\" does not ship with the application").arg(extension_id));
+        extension_id, QString(
+                          QCoreApplication::translate(
+                              "PJ::MarketplaceDiagnostics", "Extension \"%1\" does not ship with the application"))
+                          .arg(extension_id));
     return;
   }
   if (comparePluginVersions(installedVersion(extension_id).toStdString(), bundledVersion(extension_id).toStdString()) <=
       0) {
-    emitUninstallFailure(extension_id, QString("Extension \"%1\" is already at its bundled version").arg(extension_id));
+    emitUninstallFailure(
+        extension_id, QString(
+                          QCoreApplication::translate(
+                              "PJ::MarketplaceDiagnostics", "Extension \"%1\" is already at its bundled version"))
+                          .arg(extension_id));
     return;
   }
 
@@ -1397,7 +1581,10 @@ void ExtensionManager::downgradeToBundled(const QString& extension_id) {
   const QString dir_path = installed_[extension_id].path;
   // Journalled as a downgrade: it leaves the user's enable/disable choice untouched and no tombstone.
   if (!writeRemovalIntent(makeIdRemovalIntent(RemovalOperation::kDowngrade, extensions_dir_, extension_id, dir_path))) {
-    emitUninstallFailure(extension_id, QString("Could not stage the downgrade of \"%1\"").arg(extension_id));
+    emitUninstallFailure(
+        extension_id,
+        QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not stage the downgrade of \"%1\""))
+            .arg(extension_id));
     return;
   }
   // The record stays in installed_ (the plugin is live until the next launch, so the row keeps "Installed vN" with
@@ -1420,7 +1607,10 @@ void ExtensionManager::update(const Extension& ext) {
   // can clash with it.
   if (hasNewerInstalledVersion(ext)) {
     emitInstallFailure(
-        ext.id, QString("Installed version \"%1\" is newer than registry version \"%2\"; downgrade is not allowed")
+        ext.id, QString(
+                    QCoreApplication::translate(
+                        "PJ::MarketplaceDiagnostics",
+                        "Installed version \"%1\" is newer than registry version \"%2\"; downgrade is not allowed"))
                     .arg(installedVersion(ext.id), ext.version));
     return;
   }
@@ -1428,7 +1618,11 @@ void ExtensionManager::update(const Extension& ext) {
   // A staged install or removal for this id: refuse rather than re-download on top of it, or resurrect an id the user
   // just asked to remove.
   if (hasPendingInstall(ext.id) || hasPendingUninstall(ext.id)) {
-    emitInstallFailure(ext.id, QString("Update for \"%1\" is already staged; restart to apply it").arg(ext.id));
+    emitInstallFailure(
+        ext.id, QString(
+                    QCoreApplication::translate(
+                        "PJ::MarketplaceDiagnostics", "Update for \"%1\" is already staged; restart to apply it"))
+                    .arg(ext.id));
     return;
   }
 
@@ -1518,16 +1712,23 @@ void ExtensionManager::applyPendingInstalls() {
                 .absoluteFilePath(
                     QString(kQuarantinePrefix) + entry.fileName() + "_" + QUuid::createUuid().toString(QUuid::Id128));
         if (QDir().rename(staged_dir, quarantine)) {
-          final_message += QString(" Moved to quarantine: \"%1\".").arg(quarantine);
+          final_message +=
+              QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", " Moved to quarantine: \"%1\"."))
+                  .arg(quarantine);
         } else {
-          final_message += QString(" Could not remove or quarantine \"%1\" — manual cleanup required.").arg(staged_dir);
+          final_message += QString(
+                               QCoreApplication::translate(
+                                   "PJ::MarketplaceDiagnostics",
+                                   " Could not remove or quarantine \"%1\" — manual cleanup required."))
+                               .arg(staged_dir);
         }
       }
       emitInstallFailure(signal_id, final_message);
     };
 
     if (staged_name.isEmpty()) {
-      fail_staged_install(staged_name, "Staged install directory has no id");
+      fail_staged_install(
+          staged_name, QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Staged install directory has no id"));
       continue;
     }
 
@@ -1539,7 +1740,10 @@ void ExtensionManager::applyPendingInstalls() {
     if (intent.id != staged_name) {
       fail_staged_install(
           staged_name,
-          QString("Staged install directory \"%1\" does not match registry id \"%2\"").arg(staged_name, intent.id));
+          QString(
+              QCoreApplication::translate(
+                  "PJ::MarketplaceDiagnostics", "Staged install directory \"%1\" does not match registry id \"%2\""))
+              .arg(staged_name, intent.id));
       continue;
     }
 
@@ -1558,8 +1762,11 @@ void ExtensionManager::applyPendingInstalls() {
       if (!QDir().rename(dst, candidate)) {
         qWarning("ExtensionManager: failed to back up '%s' before promoting staged install", qUtf8Printable(dst));
         emitInstallFailure(
-            intent.id,
-            QString("Could not back up \"%1\" before update — staged install left in \"%2\"").arg(dst, staged_dir));
+            intent.id, QString(
+                           QCoreApplication::translate(
+                               "PJ::MarketplaceDiagnostics",
+                               "Could not back up \"%1\" before update — staged install left in \"%2\""))
+                           .arg(dst, staged_dir));
         continue;
       }
       pending_backup_path_ = candidate;
@@ -1570,12 +1777,15 @@ void ExtensionManager::applyPendingInstalls() {
       qWarning(
           "ExtensionManager: failed to promote staged install '%s' to '%s'", qUtf8Printable(staged_dir),
           qUtf8Printable(dst));
-      QString message = QString("Could not promote staged install to \"%1\"").arg(dst);
+      QString message =
+          QString(
+              QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not promote staged install to \"%1\""))
+              .arg(dst);
 
       // Best-effort rollback so the user is not left without the extension. If it fails pending_backup_path_ stays set
       // and emitInstallFailure names the backup. The next refreshInstalledFromDisk() re-registers the restored copy.
       if (!pending_backup_path_.isEmpty() && QDir().rename(pending_backup_path_, dst)) {
-        message += " Previous version restored.";
+        message += QCoreApplication::translate("PJ::MarketplaceDiagnostics", " Previous version restored.");
         pending_backup_path_.clear();
       }
       emitInstallFailure(intent.id, message);
@@ -1644,12 +1854,18 @@ void ExtensionManager::applyPendingUninstalls() {
     // against the disk now.
     const QFileInfo target(intent.path);
     if (target.isSymLink() || target.exists()) {
-      const QString rejection = target.isSymLink() ? u"record path became a symlink before deletion"_s
-                                                   : unmanagedPayloadRejection(extensions_dir_, intent.path);
+      const QString rejection = target.isSymLink()
+                                    ? QCoreApplication::translate(
+                                          "PJ::MarketplaceDiagnostics", "record path became a symlink before deletion")
+                                    : unmanagedPayloadRejection(extensions_dir_, intent.path);
       if (!rejection.isEmpty()) {
         quarantineRemovalIntent(intent.record_path);
         reportDiagnostic(
-            intent.id, QString("Refused a removal record at deletion time: %1 (\"%2\")").arg(rejection, intent.path),
+            intent.id,
+            QString(
+                QCoreApplication::translate(
+                    "PJ::MarketplaceDiagnostics", "Refused a removal record at deletion time: %1 (\"%2\")"))
+                .arg(rejection, intent.path),
             true);
         continue;
       }
@@ -1662,7 +1878,10 @@ void ExtensionManager::applyPendingUninstalls() {
       // outside it.
       reportDiagnostic(
           intent.id,
-          QString("Could not remove extension directory \"%1\"; restart the application or close any process using it")
+          QString(
+              QCoreApplication::translate(
+                  "PJ::MarketplaceDiagnostics",
+                  "Could not remove extension directory \"%1\"; restart the application or close any process using it"))
               .arg(intent.path),
           true);
       continue;
@@ -1706,13 +1925,21 @@ void ExtensionManager::externalizeLegacyUninstallMarkers() {
     }
     // Confined like any record: a directory reached through a symlink must not authorise a delete outside the store.
     if (const QString rejection = unmanagedPayloadRejection(extensions_dir_, root); !rejection.isEmpty()) {
-      reportDiagnostic(entry.fileName(), QString("Ignored a legacy uninstall marker: %1").arg(rejection), true);
+      reportDiagnostic(
+          entry.fileName(),
+          QString(QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Ignored a legacy uninstall marker: %1"))
+              .arg(rejection),
+          true);
       continue;
     }
     if (!writeRemovalIntent(makeCleanupIntent(extensions_dir_, root))) {
       reportDiagnostic(
           entry.fileName(),
-          QString("Could not record the cleanup of \"%1\"; it stays scheduled by its in-payload marker").arg(root),
+          QString(
+              QCoreApplication::translate(
+                  "PJ::MarketplaceDiagnostics",
+                  "Could not record the cleanup of \"%1\"; it stays scheduled by its in-payload marker"))
+              .arg(root),
           true);
     }
   }
@@ -1850,7 +2077,10 @@ void ExtensionManager::reportDiagnostic(const QString& id, const QString& messag
 void ExtensionManager::emitInstallFailure(const QString& id, const QString& message) {
   QString diagnostic = message;
   if (!pending_backup_path_.isEmpty()) {
-    diagnostic += QString(" Previous version remains in backup: \"%1\".").arg(pending_backup_path_);
+    diagnostic +=
+        QString(
+            QCoreApplication::translate("PJ::MarketplaceDiagnostics", " Previous version remains in backup: \"%1\"."))
+            .arg(pending_backup_path_);
   }
   pending_backup_path_.clear();
   reportDiagnostic(id, diagnostic, true);
@@ -1895,7 +2125,9 @@ void ExtensionManager::shadowAdoptIntoStore(const QString& id, const QString& di
     // The store object no longer matches the installed bytes: drop the mapping so the runtime loads extensions/<id>/.
     reportDiagnostic(
         id,
-        QString("Content-addressed shadow skipped for \"%1\": %2")
+        QString(
+            QCoreApplication::translate(
+                "PJ::MarketplaceDiagnostics", "Content-addressed shadow skipped for \"%1\": %2"))
             .arg(id, QString::fromStdString(adopted.error().message)),
         false);
     if (loaded_digests_.remove(id) > 0) {
@@ -1912,7 +2144,11 @@ void ExtensionManager::persistLoadedProfile() {
     return;
   }
   if (!writeLoadedProfile(store_session_->layout().profilesRoot(), loaded_digests_)) {
-    reportDiagnostic({}, u"Could not persist the content-addressed load profile"_s, false);
+    reportDiagnostic(
+        {},
+        QCoreApplication::translate(
+            "PJ::MarketplaceDiagnostics", "Could not persist the content-addressed load profile"),
+        false);
   }
 }
 
@@ -1924,11 +2160,22 @@ void ExtensionManager::dropStoreMapping(const QString& id) {
 
 std::vector<QString> ExtensionManager::managedPluginDirs() {
   std::vector<QString> dirs;
-  // Enumerate from disk, not the cached set: the bundled seed writes extensions/<id>/ after that snapshot. The
-  // subdirectory name is the id.
+  const QFileInfo pending_info(pending_dir_);
+  // Enumerate the managed dir from disk rather than the cached installed set: the
+  // bundled seed writes extensions/<id>/ AFTER that snapshot is taken, so a cached
+  // view would miss freshly-seeded plugins. The subdirectory name is the id.
   for (const QFileInfo& entry : QDir(extensions_dir_).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-    // Prefer the store object when it backs this id and verifies against its recorded manifest; otherwise the classic
-    // directory.
+    // A dot prefix is not the Windows Hidden attribute. Never expose an
+    // in-store staging area or transaction/quarantine scratch as a load root.
+    if (entry == pending_info || isTransactionDirectoryName(entry.fileName()) ||
+        entry.fileName().startsWith(kQuarantinePrefix)) {
+      continue;
+    }
+    // Prefer the immutable store object when it backs this id and its bytes still
+    // verify against the recorded content manifest; fall back to the classic
+    // directory when the store does not (yet) hold it, was rejected, has been
+    // collected, or — the integrity guard — when the resident object no longer
+    // matches its digest.
     if (artifact_store_ != nullptr) {
       const auto digest_it = loaded_digests_.constFind(entry.fileName());
       if (digest_it != loaded_digests_.constEnd()) {
@@ -1944,9 +2191,10 @@ std::vector<QString> ExtensionManager::managedPluginDirs() {
             // until reinstall.
             reportDiagnostic(
                 entry.fileName(),
-                QStringLiteral(
-                    "Content-addressed object for \"%1\" failed its integrity check; "
-                    "loading the local copy instead. Reinstall to regenerate it.")
+                QCoreApplication::translate(
+                    "PJ::MarketplaceDiagnostics",
+                    "Content-addressed object for \"%1\" failed its integrity check; loading the local copy "
+                    "instead. Reinstall to regenerate it.")
                     .arg(entry.fileName()),
                 true);
           }
@@ -2116,7 +2364,12 @@ void ExtensionManager::restoreEnabledState(const QString& id, bool enabled) {
   if (!writeDisabledState(id, enabled)) {
     // Say so: otherwise the user is left guessing why a plugin whose uninstall failed also stopped loading.
     reportDiagnostic(
-        id, QString("Could not restore the enabled state of \"%1\"; it may load differently next launch").arg(id),
+        id,
+        QString(
+            QCoreApplication::translate(
+                "PJ::MarketplaceDiagnostics",
+                "Could not restore the enabled state of \"%1\"; it may load differently next launch"))
+            .arg(id),
         true);
   }
 }
@@ -2128,7 +2381,12 @@ void ExtensionManager::setEnabled(const QString& id, bool enabled) {
     return;
   }
   if (!writeDisabledState(id, enabled)) {
-    reportDiagnostic(id, QString("Could not persist the enabled state of \"%1\"").arg(id), true);
+    reportDiagnostic(
+        id,
+        QString(
+            QCoreApplication::translate("PJ::MarketplaceDiagnostics", "Could not persist the enabled state of \"%1\""))
+            .arg(id),
+        true);
   }
 }
 

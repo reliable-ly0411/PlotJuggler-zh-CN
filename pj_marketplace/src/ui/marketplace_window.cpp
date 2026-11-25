@@ -4,7 +4,6 @@
 #include "pj_marketplace/marketplace_window.hpp"
 
 #include <QColor>
-#include <QDesktopServices>
 #include <QDialog>
 #include <QDir>
 #include <QEvent>
@@ -35,12 +34,14 @@
 
 #include "pj_marketplace/download_manager.hpp"
 #include "pj_marketplace/extension_manager.hpp"
+#include "pj_marketplace/marketplace_text.hpp"
 #include "pj_marketplace/platform_utils.hpp"
 #include "pj_marketplace/registry_manager.hpp"
 #include "pj_marketplace/version_compare.hpp"
 #include "pj_widgets/CheckButton.h"
 #include "pj_widgets/ChromeMetrics.h"
 #include "pj_widgets/ElidingLabel.h"
+#include "pj_widgets/ExternalUrl.h"
 #include "pj_widgets/FileDialog.h"
 #include "pj_widgets/FrameworkTokens.h"
 #include "pj_widgets/MessageBox.h"
@@ -67,14 +68,37 @@ enum Column {
 
 // Item data on the Category cell carrying the row's plugin name: CategoryItem's tie-break within a category.
 constexpr int kCategoryNameKeyRole = Qt::UserRole + 2;
+constexpr int kCategoryTokenRole = Qt::UserRole + 3;
 
-// Sort key for the Category column: category text, then plugin name (both case-insensitive), so the default sort reads
-// as grouped by category, alphabetical within. Descending flips both keys.
+// Registry tokens remain the sorting/filtering identity; only known category labels translate.
+QString displayCategory(const QString& category) {
+  if (category == u"data_loader"_s) {
+    return QCoreApplication::translate("PJ::MarketplaceWindow", "Data loaders");
+  }
+  if (category == u"data_stream"_s) {
+    return QCoreApplication::translate("PJ::MarketplaceWindow", "Data streams");
+  }
+  if (category == u"message_parser"_s) {
+    return QCoreApplication::translate("PJ::MarketplaceWindow", "Message parsers");
+  }
+  if (category == u"toolbox"_s) {
+    return QCoreApplication::translate("PJ::MarketplaceWindow", "Toolboxes");
+  }
+  return category;
+}
+
+// Sort compound for the Category column: primary key = canonical category token,
+// secondary key = plugin name (case-insensitive). Grouping by category with an
+// alphabetical run inside each group is the PJ3-era default sort Davide asked
+// to restore. Applied uniformly for both ascending and descending — descending
+// flips both keys (reverse-category, then reverse-name within), which keeps
+// Category a single toggle rather than a stateful multi-dimension picker.
 class CategoryItem : public QTableWidgetItem {
  public:
   using QTableWidgetItem::QTableWidgetItem;
   [[nodiscard]] bool operator<(const QTableWidgetItem& other) const override {
-    const int cat_cmp = QString::compare(text(), other.text(), Qt::CaseInsensitive);
+    const int cat_cmp = QString::compare(
+        data(kCategoryTokenRole).toString(), other.data(kCategoryTokenRole).toString(), Qt::CaseInsensitive);
     if (cat_cmp != 0) {
       return cat_cmp < 0;
     }
@@ -137,6 +161,22 @@ class MarketplaceCellDelegate : public QStyledItemDelegate {
   QColor fg_;
 };
 
+// Only presentation fields may fall back from a local manifest into a registry row.
+void fillInstalledDisplayMetadata(Extension& extension, const InstalledExtension& installed) {
+  if (extension.author.trimmed().isEmpty()) {
+    extension.author = installed.author;
+  }
+  if (extension.license.trimmed().isEmpty()) {
+    extension.license = installed.license;
+  }
+  if (extension.website.trimmed().isEmpty()) {
+    extension.website = installed.website;
+  }
+  if (extension.repository.trimmed().isEmpty()) {
+    extension.repository = installed.repository;
+  }
+}
+
 bool installedStatesEqual(const QMap<QString, InstalledExtension>& lhs, const QMap<QString, InstalledExtension>& rhs) {
   if (lhs.size() != rhs.size()) {
     return false;
@@ -149,6 +189,8 @@ bool installedStatesEqual(const QMap<QString, InstalledExtension>& lhs, const QM
     const InstalledExtension& a = it.value();
     const InstalledExtension& b = rhs_it.value();
     if (a.id != b.id || a.version != b.version || a.enabled != b.enabled || a.abi_major != b.abi_major ||
+        a.name != b.name || a.description != b.description || a.category != b.category || a.author != b.author ||
+        a.license != b.license || a.website != b.website || a.repository != b.repository ||
         a.min_sdk_required != b.min_sdk_required || a.min_plotjuggler_version != b.min_plotjuggler_version ||
         a.suggested_sdk_version != b.suggested_sdk_version) {
       return false;
@@ -234,6 +276,17 @@ void MarketplaceWindow::setupUi() {
   ui_->setupUi(body);
   contentLayout()->addWidget(body);
   content_widget_ = body;  // exposed via contentWidget() for embedding
+
+  connect(ui_->detail_text_, &QTextBrowser::anchorClicked, this, [this](const QUrl& url) {
+    // Keep Qt's local/relative document navigation, without a second automatic
+    // open that would bypass the host-environment restoration for web links.
+    const auto scheme = url.scheme();
+    if (scheme.isEmpty() || scheme == u"file" || scheme == u"qrc") {
+      ui_->detail_text_->setSource(url);
+    } else {
+      openExternalUrl(url);
+    }
+  });
 
   ui_->update_all_btn_->setFixedWidth(90);
   ui_->update_all_btn_->setEnabled(false);
@@ -367,11 +420,12 @@ void MarketplaceWindow::setupSignals() {
         return choice == 0;
       });
 
-  connect(registry_mgr_, &RegistryManager::fetchStarted, this, [this]() { setInfoStatus("Loading registry..."); });
+  // RegistryManager
+  connect(registry_mgr_, &RegistryManager::fetchStarted, this, [this]() { setInfoStatus(tr("Loading registry...")); });
 
   connect(registry_mgr_, &RegistryManager::fetchFinished, this, [this](bool success) {
     if (!success) {
-      setStatus("Failed to load registry", true);
+      setStatus(tr("Failed to load registry"), true);
       showInvalidRegistryDialog();
       return;
     }
@@ -380,7 +434,7 @@ void MarketplaceWindow::setupSignals() {
     registry_extensions_ = registry_mgr_->compatibleExtensions(PlatformUtils::currentPlatform());
     rebuildExtensionList();
     applyFilters();
-    setInfoStatus("Ready — " + QString::number(extensions_.size()) + " extensions loaded");
+    setInfoStatus(tr("Ready — %1 extensions loaded").arg(extensions_.size()));
   });
 
   connect(ext_mgr_, &ExtensionManager::installPendingRestart, this, [this](const QString& id) {
@@ -395,7 +449,7 @@ void MarketplaceWindow::setupSignals() {
     status_error_sticky_ = false;
     ++restart_pending_count_;
     refreshAfterInstalledChange();
-    setStatus(QString("Extension %1 staged — will be active after restart").arg(id));
+    setStatus(tr("Extension %1 staged — will be active after restart").arg(id));
     processInstallQueue();
     maybeShowRestartRequiredDialog();
     // Staging is how every successful update ends, so this handler, not installFinished, closes a typical mixed batch.
@@ -417,8 +471,8 @@ void MarketplaceWindow::setupSignals() {
     const QString version = ext_mgr_->installedVersion(id);
     setStatus(
         version.isEmpty()
-            ? QString("%1 is already installed — the archive is identical, nothing changed").arg(id)
-            : QString("%1 v%2 is already installed — the archive is identical, nothing changed").arg(id, version));
+            ? tr("%1 is already installed — the archive is identical, nothing changed").arg(id)
+            : tr("%1 v%2 is already installed — the archive is identical, nothing changed").arg(id, version));
     processInstallQueue();
     maybeShowRestartRequiredDialog();
     maybeShowBatchSummary();
@@ -429,7 +483,7 @@ void MarketplaceWindow::setupSignals() {
     status_error_sticky_ = false;
     ++restart_pending_count_;
     refreshAfterInstalledChange();
-    setStatus(QString("Extension %1 staged — will be uninstalled after restart").arg(id));
+    setStatus(tr("Extension %1 staged — will be uninstalled after restart").arg(id));
     maybeShowRestartRequiredDialog();
   });
 
@@ -438,14 +492,14 @@ void MarketplaceWindow::setupSignals() {
     status_error_sticky_ = false;
     ++restart_pending_count_;
     refreshAfterInstalledChange();
-    setStatus(QString("Extension %1 will revert to its bundled version after restart").arg(id));
+    setStatus(tr("Extension %1 will revert to its bundled version after restart").arg(id));
     maybeShowRestartRequiredDialog();
   });
 
   connect(registry_mgr_, &RegistryManager::fetchError, this, [this](const QString& error) {
     // Keep the reason for the invalid-registry dialog (raised from fetchFinished(false), which carries no message).
     last_registry_error_ = error;
-    setStatus("Registry error: " + error, true);
+    setStatus(tr("Registry error: %1").arg(error), true);
   });
 
   connect(ext_mgr_, &ExtensionManager::installStarted, this, [this](const QString& id) {
@@ -472,10 +526,10 @@ void MarketplaceWindow::setupSignals() {
         QString verb;
         switch (phase) {
           case DownloadManager::WorkPhase::Verifying:
-            verb = u"Verifying"_s;
+            verb = tr("Verifying");
             break;
           case DownloadManager::WorkPhase::Extracting:
-            verb = u"Extracting"_s;
+            verb = tr("Extracting");
             break;
         }
         showInstallProgress(verb);
@@ -511,9 +565,9 @@ void MarketplaceWindow::setupSignals() {
 
   connect(ext_mgr_, &ExtensionManager::installError, this, [this](const QString& /*id*/, const QString& error) {
     ui_->progress_bar_->setVisible(false);
-    setStatus("Installation failed: " + error, true);
-    // Queue advance lives in installFinished only: emitInstallFailure fires both signals, so advancing here would pop
-    // twice.
+    setStatus(tr("Installation failed: %1").arg(error), true);
+    // Queue advance lives in installFinished only — installError + installFinished both
+    // fire from emitInstallFailure, so advancing here would double-pop the queue.
   });
 
   connect(ext_mgr_, &ExtensionManager::uninstallFinished, this, [this](const QString& id, bool success) {
@@ -524,18 +578,18 @@ void MarketplaceWindow::setupSignals() {
       QString name = id;
       for (const auto& ext : extensions_) {
         if (ext.id == id) {
-          name = ext.name;
+          name = PJ::marketplacePluginText(ext.id, ext.version, ext.name);
           break;
         }
       }
       refreshAfterInstalledChange();
-      setStatus("Uninstalled " + name);
+      setStatus(tr("Uninstalled %1").arg(name));
     }
     // On failure the status was already set by uninstallError — do not overwrite it.
   });
 
   connect(ext_mgr_, &ExtensionManager::uninstallError, this, [this](const QString& /*id*/, const QString& error) {
-    setStatus("Uninstall failed: " + error, true);
+    setStatus(tr("Uninstall failed: %1").arg(error), true);
   });
 
   connect(
@@ -545,7 +599,7 @@ void MarketplaceWindow::setupSignals() {
         // Seen live: mark it surfaced so a re-open does not show it as new.
         ext_mgr_->markDiagnosticsSurfaced();
         if (is_error) {
-          setStatus("Marketplace diagnostic: " + message, true);
+          setStatus(tr("Marketplace diagnostic: %1").arg(message), true);
         }
       });
 }
@@ -579,15 +633,20 @@ void MarketplaceWindow::rebuildTable(bool preserve_scroll) {
     const bool has_update = ext_mgr_->hasUpdate(ext);
     const auto compat = displayedCompatibility(*ext_mgr_, registry_extensions_, ext);
 
-    // Name, with the description as tooltip.
-    auto* name_item = new QTableWidgetItem(ext.name);
-    name_item->setToolTip(ext.description);
+    // Name, with the full description as tooltip. Plain QTableWidgetItem — the
+    // Name column sorts by case-insensitive text.
+    auto* name_item = new QTableWidgetItem(PJ::marketplacePluginText(ext.id, ext.version, ext.name));
+    name_item->setToolTip(PJ::marketplacePluginText(ext.id, ext.version, ext.description));
     name_item->setData(Qt::UserRole, ext.id);
     table->setItem(row, kColName, name_item);
 
-    // Category: the registry value verbatim; CategoryItem breaks ties by plugin name (kCategoryNameKeyRole).
-    auto* category_item = new CategoryItem(ext.category);
-    category_item->setToolTip(ext.category);
+    // Category — display labels for registry category tokens (data_loader,
+    // data_stream, message_parser, toolbox). CategoryItem breaks category ties
+    // alphabetically by the plugin name it stores in kCategoryNameKeyRole, so
+    // the default sort reads as "grouped by category, alphabetical within".
+    auto* category_item = new CategoryItem(displayCategory(ext.category));
+    category_item->setToolTip(displayCategory(ext.category));
+    category_item->setData(kCategoryTokenRole, ext.category);
     category_item->setData(kCategoryNameKeyRole, ext.name);
     table->setItem(row, kColCategory, category_item);
 
@@ -616,8 +675,10 @@ void MarketplaceWindow::rebuildTable(bool preserve_scroll) {
     }
     table->setItem(row, kColMarketplaceVersion, market_item);
 
-    // Description: the full text wraps in the stretched column; no tooltip, which would only repeat it.
-    auto* desc_item = new QTableWidgetItem(ext.description);
+    // Description: full text, wraps within the stretched column. No tooltip —
+    // the cell already renders the whole string, so a tooltip repeating it
+    // adds nothing and covers the row on hover.
+    auto* desc_item = new QTableWidgetItem(PJ::marketplacePluginText(ext.id, ext.version, ext.description));
     table->setItem(row, kColDescription, desc_item);
   }
 
@@ -709,9 +770,9 @@ void MarketplaceWindow::updateDetailFooter() {
   const QString installed_version = ext_mgr_->installedVersion(ext->id);
   const auto esc = [](const QString& s) { return s.toHtmlEscaped(); };
 
-  // Title (plugin name) as a header-row label so the enable toggle sits at its height; the toggle shows only for
-  // installed plugins.
-  ui_->detail_title_->setText(ext->name);
+  // Title (plugin name) — a real header-row label so the enable toggle can sit
+  // at its height. The green toggle is shown only for installed plugins.
+  ui_->detail_title_->setText(PJ::marketplacePluginText(ext->id, ext->version, ext->name));
   {
     const bool title_installed = installed.contains(ext->id);
     ui_->detail_enable_toggle_->setVisible(title_installed);
@@ -751,16 +812,16 @@ void MarketplaceWindow::updateDetailFooter() {
     meta << esc(ext->author);
   }
   if (!ext->category.isEmpty()) {
-    meta << esc(ext->category);
+    meta << esc(displayCategory(ext->category));
   }
   if (!ext->license.isEmpty()) {
     meta << esc(ext->license);
   }
   if (!ext->min_plotjuggler_version.isEmpty()) {
-    meta << u"requires PJ %1+"_s.arg(esc(ext->min_plotjuggler_version));
+    meta << tr("requires PJ %1+").arg(esc(ext->min_plotjuggler_version));
   }
   if (!installed_version.isEmpty()) {
-    meta << u"installed: v%1"_s.arg(esc(installed_version));
+    meta << tr("installed: v%1").arg(esc(installed_version));
   }
   if (!meta.isEmpty()) {
     html += u"<p style='margin:0 0 6px 0;'>%1</p>"_s.arg(meta.join(u"  •  "_s));
@@ -768,7 +829,8 @@ void MarketplaceWindow::updateDetailFooter() {
 
   // Description.
   if (!ext->description.isEmpty()) {
-    html += u"<p style='margin:0 0 6px 0;'>%1</p>"_s.arg(esc(ext->description));
+    html += u"<p style='margin:0 0 6px 0;'>%1</p>"_s.arg(
+        esc(PJ::marketplacePluginText(ext->id, ext->version, ext->description)));
   }
 
   // Changelog, newest first. The map is keyed by version string (lexicographic: "1.10.0" before "1.9.0"), so sort the
@@ -778,7 +840,8 @@ void MarketplaceWindow::updateDetailFooter() {
     std::sort(versions.begin(), versions.end(), [](const QString& a, const QString& b) {
       return comparePluginVersions(a.toStdString(), b.toStdString()) > 0;
     });
-    html += u"<p style='margin:0 0 2px 0; font-weight:600;'>Changelog</p><ul style='margin:0 0 0 -20px;'>"_s;
+    html += u"<p style='margin:0 0 2px 0; font-weight:600;'>"_s + tr("Changelog").toHtmlEscaped() +
+            u"</p><ul style='margin:0 0 0 -20px;'>"_s;
     for (const QString& version : versions) {
       html += u"<li><span style='font-weight:600;'>%1</span> — %2</li>"_s.arg(
           esc(version), esc(ext->changelog.value(version)));
@@ -874,11 +937,11 @@ void MarketplaceWindow::updateDetailFooter() {
   }
 
   // Visit Website / repository (right edge).
-  const QString url = !ext->website.isEmpty() ? ext->website : ext->repository;
+  const QString url = !ext->website.trimmed().isEmpty() ? ext->website.trimmed() : ext->repository.trimmed();
   if (!url.isEmpty()) {
     auto* web = new QPushButton(tr("Visit Website"));
     mark_footer_button(web);
-    connect(web, &QPushButton::clicked, this, [url]() { QDesktopServices::openUrl(QUrl(url)); });
+    connect(web, &QPushButton::clicked, this, [url]() { openExternalUrl(QUrl(url)); });
     ui_->detail_buttons_layout->addWidget(web);
   }
 }
@@ -892,14 +955,14 @@ bool MarketplaceWindow::rebuildExtensionList() {
 
   extensions_ = registry_extensions_;
 
-  // An installed id the registry does not list has no row: build one from what the plugin declares about itself.
-  // Registry-sourced fields stay empty (consumers guard with isEmpty()), and the primary action is disabled for an
-  // installed extension, so no install path runs off this row.
+  // Registry metadata wins when present. Installed manifests fill display gaps;
+  // they never supply registry download URLs, checksums or update versions.
   const auto installed = ext_mgr_->installedExtensions();
   for (auto it = installed.cbegin(); it != installed.cend(); ++it) {
-    if (std::any_of(registry_extensions_.cbegin(), registry_extensions_.cend(), [&](const Extension& ext) {
-          return ext.id == it.key();
-        })) {
+    const auto registered =
+        std::find_if(extensions_.begin(), extensions_.end(), [&](const Extension& ext) { return ext.id == it.key(); });
+    if (registered != extensions_.end()) {
+      fillInstalledDisplayMetadata(*registered, it.value());
       continue;
     }
     const InstalledExtension& record = it.value();
@@ -908,8 +971,12 @@ bool MarketplaceWindow::rebuildExtensionList() {
     local.name = record.name;
     local.description = record.description;
     local.category = record.category;
-    // installedVersion(), not record.version: the scan snapshot can be stale when the startup seed refreshed a bundled
-    // plugin, which would render a bogus "Local newer" badge.
+    fillInstalledDisplayMetadata(local, record);
+    // Use installedVersion(), not record.version: the scan snapshot can be stale
+    // when the seed refreshed a bundled plugin to a newer version than the scan
+    // saw (installedVersion() reports what the seed wrote). Reading record.version
+    // here makes hasNewerInstalledVersion() compare the seeded version against the
+    // stale one and render a bogus "Local newer" badge plus an outdated version.
     local.version = ext_mgr_->installedVersion(record.id);
     local.min_plotjuggler_version = record.min_plotjuggler_version;
     extensions_.append(local);
@@ -929,6 +996,7 @@ bool MarketplaceWindow::rebuildExtensionList() {
     staged.name = record.name;
     staged.description = record.description;
     staged.category = record.category;
+    fillInstalledDisplayMetadata(staged, record);
     staged.version = record.version;
     staged.min_plotjuggler_version = record.min_plotjuggler_version;
     extensions_.append(staged);
@@ -989,7 +1057,10 @@ void MarketplaceWindow::applyFilters() {
     // Version incompatibility does not hide a row: it stays listed with its reason and a disabled install action.
     // Platform is excluded upstream (compatibleExtensions(currentPlatform()); synthesized rows carry no platforms map).
     if (!search.isEmpty()) {
-      bool match = ext.name.toLower().contains(search) || ext.description.toLower().contains(search);
+      bool match = ext.name.toLower().contains(search) || ext.description.toLower().contains(search) ||
+                   ext.id.toLower().contains(search) ||
+                   PJ::marketplacePluginText(ext.id, ext.version, ext.name).toLower().contains(search) ||
+                   PJ::marketplacePluginText(ext.id, ext.version, ext.description).toLower().contains(search);
       if (!match) {
         for (const auto& tag : ext.tags) {
           if (tag.toLower().contains(search)) {
@@ -1006,7 +1077,7 @@ void MarketplaceWindow::applyFilters() {
   }
 
   rebuildTable(/*preserve_scroll=*/false);
-  setInfoStatus(QString::number(filtered_.size()) + " of " + QString::number(extensions_.size()) + " extensions shown");
+  setInfoStatus(tr("%1 of %2 extensions shown").arg(filtered_.size()).arg(extensions_.size()));
 }
 
 void MarketplaceWindow::setStatus(const QString& msg, bool is_error) {
@@ -1030,11 +1101,11 @@ QString MarketplaceWindow::queueSuffix() const {
   const int queued = queuedCount();
   QString suffix;
   if (queued > 0) {
-    suffix += u"  ·  "_s + QString::number(queued) + u" queued"_s;
+    suffix += tr("  ·  %1 queued").arg(queued);
   }
   // Failures show live, so a mid-batch failure is visible while the queue still runs.
   if (batch_failed_count_ > 0) {
-    suffix += u"  ·  "_s + QString::number(batch_failed_count_) + u" failed"_s;
+    suffix += tr("  ·  %1 failed").arg(batch_failed_count_);
   }
   return suffix;
 }
@@ -1059,7 +1130,7 @@ void MarketplaceWindow::showInstallProgress(const QString& verb) {
     name = active_install_id_;
     for (const auto& ext : extensions_) {
       if (ext.id == active_install_id_) {
-        name = ext.name;
+        name = PJ::marketplacePluginText(ext.id, ext.version, ext.name);
         break;
       }
     }
@@ -1073,9 +1144,9 @@ void MarketplaceWindow::showLatestDiagnostic() {
   if (!ext_mgr_->hasUnsurfacedDiagnostics()) {
     return;
   }
-  const ExtensionDiagnostic& diagnostic = ext_mgr_->diagnostics().back();
+  const ExtensionDiagnostic diagnostic = ext_mgr_->diagnostics().back();
   ext_mgr_->markDiagnosticsSurfaced();
-  setStatus("Marketplace diagnostic: " + diagnostic.message, diagnostic.is_error);
+  setStatus(tr("Marketplace diagnostic: %1").arg(diagnostic.message), diagnostic.is_error);
 }
 
 void MarketplaceWindow::updateDiagnosticsButton() {
@@ -1086,7 +1157,7 @@ void MarketplaceWindow::updateDiagnosticsButton() {
       diagnostics.cbegin(), diagnostics.cend(),
       [this](const ExtensionDiagnostic& diagnostic) { return diagnostic.timestamp >= opened_at_; }));
   ui_->diagnostics_btn_->setVisible(count > 0);
-  ui_->diagnostics_btn_->setText(count > 1 ? QString("Details (%1)").arg(count) : "Details");
+  ui_->diagnostics_btn_->setText(count > 1 ? tr("Details (%1)").arg(count) : tr("Details"));
 }
 
 void MarketplaceWindow::onSearchChanged(const QString& /*text*/) {
@@ -1139,15 +1210,14 @@ QString MarketplaceWindow::installedStatusText(const QString& id, bool from_file
   // archive through installUnchanged.
   if (from_file) {
     const QString version = ext_mgr_->installedVersion(id);
-    return version.isEmpty() ? QString("Installed %1 from file").arg(id)
-                             : QString("Installed %1 v%2 from file").arg(id, version);
+    return version.isEmpty() ? tr("Installed %1 from file").arg(id) : tr("Installed %1 v%2 from file").arg(id, version);
   }
   for (const auto& ext : extensions_) {
     if (ext.id == id) {
-      return "Installed " + ext.name + " v" + ext.version;
+      return tr("Installed %1 v%2").arg(PJ::marketplacePluginText(ext.id, ext.version, ext.name), ext.version);
     }
   }
-  return "Installed " + id;
+  return tr("Installed %1").arg(id);
 }
 
 void MarketplaceWindow::showEvent(QShowEvent* event) {
@@ -1221,7 +1291,7 @@ void MarketplaceWindow::onActionButtonClicked(const QString& ext_id) {
     if (ext_mgr_->hasUpdate(ext)) {
       ext_mgr_->update(ext);
     } else if (ext_mgr_->hasNewerInstalledVersion(ext)) {
-      setStatus("Installed version is newer than registry version", true);
+      setStatus(tr("Installed version is newer than registry version"), true);
     } else if (!ext_mgr_->isInstalled(ext.id)) {
       ext_mgr_->install(ext);
     }
@@ -1255,7 +1325,7 @@ void MarketplaceWindow::onUpdateAllClicked() {
     return;
   }
   ui_->update_all_btn_->setEnabled(false);
-  setStatus("Updating " + QString::number(update_queue_.size()) + " extensions...");
+  setStatus(tr("Updating %1 extensions...").arg(update_queue_.size()));
   rebuildTable();  // repaint so all queued cards show the "Installing" badge
   processInstallQueue();
 }
@@ -1272,12 +1342,12 @@ void MarketplaceWindow::onDiagnosticsClicked() {
 
   QStringList lines;
   for (const ExtensionDiagnostic& diagnostic : ext_mgr_->diagnostics()) {
-    const QString level = diagnostic.is_error ? "ERROR" : "INFO";
+    const QString level = diagnostic.is_error ? tr("ERROR") : tr("INFO");
     const QString id = diagnostic.id.isEmpty() ? "-" : diagnostic.id;
     lines.append(QString("[%1] %2 %3: %4")
                      .arg(diagnostic.timestamp.toLocalTime().toString(Qt::ISODate), level, id, diagnostic.message));
   }
-  text->setPlainText(lines.isEmpty() ? "No diagnostics." : lines.join('\n'));
+  text->setPlainText(lines.isEmpty() ? tr("No diagnostics.") : lines.join('\n'));
   layout->addWidget(text);
 
   auto* close_row = new QHBoxLayout;

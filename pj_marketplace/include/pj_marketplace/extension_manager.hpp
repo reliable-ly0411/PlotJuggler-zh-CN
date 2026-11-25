@@ -47,11 +47,15 @@ class ExtensionManager : public QObject {
   // Creates an owned DownloadManager and uses the standard user directories.
   ExtensionManager();
 
-  // Uses the supplied downloader and directories (tests pass isolated temp paths). The optional sink receives the same
-  // diagnostics as diagnosticReported(), so a host can merge them with non-marketplace events into one stream.
+  // Uses the supplied downloader and directories; tests pass isolated temp paths.
+  // The optional sink receives the same diagnostics as diagnosticReported() —
+  // hosts can subscribe to one stream that also carries non-marketplace events.
+  // A host replacing bundled files during startup can defer the initial DSO
+  // scan, then call finishInitialScan() after its transaction.
   explicit ExtensionManager(
       DownloadManager* downloader, const QString& extensions_dir = PlatformUtils::extensionsDir(),
-      const QString& pending_dir = PlatformUtils::pendingDir(), DiagnosticSink sink = {}, QObject* parent = nullptr);
+      const QString& pending_dir = PlatformUtils::pendingDir(), DiagnosticSink sink = {}, QObject* parent = nullptr,
+      bool defer_initial_scan = false);
 
   // Cancels all in-flight work, THEN releases the single-writer lock: an extraction worker writes into the store, so
   // releasing the lock first would hand the store to the next process mid-write. Blocks for as long as cancelling the
@@ -186,6 +190,11 @@ class ExtensionManager : public QObject {
   // The persisted set of disabled extension ids, read straight from QSettings. Static so the runtime catalog can honor
   // it without an instance (the single source of truth for the key).
   static QStringList disabledExtensionIds();
+
+  // Completes a deferred startup after the host seeds bundled payloads. Pending
+  // installs and the writer lease are already initialized by the constructor.
+  // Must run before querying installed state or loading managed plugin DSOs.
+  void finishInitialScan();
 
   // Rebuilds installed state by scanning extension directories for plugin DSOs.
   void refreshInstalledFromDisk();
@@ -342,7 +351,8 @@ class ExtensionManager : public QObject {
   // through here.
   void dropReplaceConfirmation();
 
-  void initComponents();
+  // Called by both constructors to finish setup after members are assigned.
+  void initComponents(bool defer_initial_scan = false);
 
   // Takes the store's single-writer lock, or leaves this instance read-only and
   // reports why. Must run before any startup cleanup.

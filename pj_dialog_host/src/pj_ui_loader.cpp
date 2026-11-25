@@ -20,6 +20,8 @@
 #include <utility>
 #include <vector>
 
+#include "pj_plugins/host_qt/bundled_translations.hpp"
+
 namespace PJ {
 
 namespace {
@@ -70,6 +72,35 @@ PjUiLoader::PjUiLoader(QObject* parent) : QUiLoader(parent) {
   setLanguageChangeEnabled(false);
 }
 
+QWidget* PjUiLoader::load(QIODevice* device, QWidget* parent) {
+  const QByteArray original = device->readAll();
+  QByteArray scope;
+  QByteArray localized = localizeBundledUi(original, &scope);
+  QBuffer buffer(&localized);
+  buffer.open(QIODevice::ReadOnly);
+  // The known UI is translated explicitly. Unknown UIs keep Qt's normal behavior.
+  setTranslationEnabled(scope.isEmpty());
+  auto* root = QUiLoader::load(&buffer, parent);
+  if (root && !scope.isEmpty()) {
+    initializeBundledWidgets(root, original, scope);
+  }
+  if (root == nullptr) {
+    return nullptr;
+  }
+  for (const auto& [name, path] : hostIconRefs(original)) {
+    // An unnamed widget would make findChild match any object.
+    if (name.isEmpty()) {
+      continue;
+    }
+    QObject* target = root->objectName() == name ? root : root->findChild<QObject*>(name);
+    if (qobject_cast<QAbstractButton*>(target) != nullptr || qobject_cast<QAction*>(target) != nullptr) {
+      target->setProperty("_pj_host_icon", path);
+    }
+  }
+  retintHostIcons(root);
+  return root;
+}
+
 QWidget* PjUiLoader::createWidget(const QString& class_name, QWidget* parent, const QString& name) {
   QWidget* w = nullptr;
   if (class_name == QLatin1String("RangeSlider")) {
@@ -99,28 +130,6 @@ QWidget* PjUiLoader::createWidget(const QString& class_name, QWidget* parent, co
     return w;
   }
   return QUiLoader::createWidget(class_name, parent, name);
-}
-
-QWidget* PjUiLoader::load(QIODevice* device, QWidget* parent) {
-  QBuffer buffer;
-  buffer.setData(device->readAll());
-  buffer.open(QIODevice::ReadOnly);
-  QWidget* root = QUiLoader::load(&buffer, parent);
-  if (root == nullptr) {
-    return nullptr;
-  }
-  for (const auto& [name, path] : hostIconRefs(buffer.data())) {
-    // An unnamed widget would make findChild match any object.
-    if (name.isEmpty()) {
-      continue;
-    }
-    QObject* target = root->objectName() == name ? root : root->findChild<QObject*>(name);
-    if (qobject_cast<QAbstractButton*>(target) != nullptr || qobject_cast<QAction*>(target) != nullptr) {
-      target->setProperty("_pj_host_icon", path);
-    }
-  }
-  retintHostIcons(root);
-  return root;
 }
 
 void PjUiLoader::retintHostIcons(QObject* root) {

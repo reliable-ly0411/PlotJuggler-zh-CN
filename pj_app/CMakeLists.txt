@@ -827,7 +827,8 @@ if(PJ_BUILD_TESTS)
     # The left column's width belongs to the user: neither a window resize nor a
     # chart-area takeover may move the separator they dragged.
     list(APPEND PJ_APP_GUI_TEST_SOURCES
-        tests/main_window_panel_geometry_test.cpp)
+        tests/main_window_panel_geometry_test.cpp
+        tests/left_panel_localized_sources_test.cpp)
 
     # A toolbox panel with a download in flight folds into a background tab
     # instead of being destroyed: the banner X, the folded tab's own close, the
@@ -948,6 +949,46 @@ if(PJ_BUILD_TESTS)
         target_compile_options(file_loader_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME FileLoaderTest COMMAND file_loader_test)
+    if(WIN32)
+        target_link_libraries(file_loader_test PRIVATE advapi32)
+    endif()
+
+    # Explicit opt-in: requires the checksum-verified, rebuilt fixed CSV DSO.
+    # No mock substitutes and no silent skip when a requested path is missing.
+    option(PJ_NATIVE_BUNDLE_MODE "Use launcher-owned native test output directories" OFF)
+    set(PJ_CSV_RUNTIME_PLUGIN "" CACHE FILEPATH "Fixed CSV DSO for runtime localization acceptance")
+    if(PJ_CSV_RUNTIME_PLUGIN)
+        if(NOT EXISTS "${PJ_CSV_RUNTIME_PLUGIN}")
+            message(FATAL_ERROR "PJ_CSV_RUNTIME_PLUGIN does not exist: ${PJ_CSV_RUNTIME_PLUGIN}")
+        endif()
+        add_executable(csv_runtime_file_loader_test tests/csv_runtime_language_test.cpp
+            src/DiagnosticDump.cpp src/DiagnosticDump.h)
+        set_target_properties(csv_runtime_file_loader_test PROPERTIES AUTOMOC ON)
+        target_compile_definitions(csv_runtime_file_loader_test PRIVATE PJ_CSV_RUNTIME_PLUGIN="${PJ_CSV_RUNTIME_PLUGIN}")
+        target_link_libraries(csv_runtime_file_loader_test PRIVATE pj_app_loader_testlib pj_app_language pj_plotting pj_resources)
+        target_compile_options(csv_runtime_file_loader_test PRIVATE ${PJ_WARNING_FLAGS})
+        if(WIN32)
+            target_include_directories(csv_runtime_file_loader_test PRIVATE "${PROJECT_SOURCE_DIR}/cmake/test_mains")
+            target_link_libraries(csv_runtime_file_loader_test PRIVATE advapi32)
+        endif()
+        if(MSVC)
+            target_compile_options(csv_runtime_file_loader_test PRIVATE /utf-8)
+        endif()
+        foreach(language IN ITEMS zh_CN zh_TW en_US)
+            add_test(NAME CsvRuntimeFileLoader_${language} COMMAND csv_runtime_file_loader_test)
+            if(PJ_NATIVE_BUNDLE_MODE)
+                # The launcher supplies a fresh suite-owned diagnostic directory.
+                set(csv_test_environment "PLOTJUGGLER_UI_LANGUAGE=${language};QT_QPA_PLATFORM=offscreen")
+            else()
+                set(csv_test_environment "PLOTJUGGLER_UI_LANGUAGE=${language};QT_QPA_PLATFORM=offscreen;PJ_CSV_DIAGNOSTIC_DIR=${CMAKE_BINARY_DIR}/csv-runtime-diagnostics")
+            endif()
+            set_tests_properties(CsvRuntimeFileLoader_${language} PROPERTIES
+                TIMEOUT 120 ENVIRONMENT "${csv_test_environment}")
+        endforeach()
+    endif()
+
+    # Explicit opt-in: requires the checksum-verified, rebuilt fixed CSV DSO.
+    # No mock substitutes and no silent skip when a requested path is missing.
 
     # Host side of the SDK's "pj.source_promotion.v1" service: drives the real
     # FileLoader replace pipeline through the C ABI. Same standalone shape and

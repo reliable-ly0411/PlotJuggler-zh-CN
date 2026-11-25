@@ -35,27 +35,42 @@ consumes it through `pj_runtime`'s `ExtensionCatalogService`, which also seeds t
 
 ## Key headers (`include/pj_marketplace/`)
 
-- `extension_manager.hpp`: the lifecycle, staged promotion, the removal journal, the writer lease, diagnostics.
-- `registry_manager.hpp`, `registry_resolver.hpp`: fetch and parse, then the pure candidate selection.
-- `download_manager.hpp`, `archive_limits.hpp`: HTTP, checksum, extraction under size, count and depth budgets.
-- `plugin_compatibility.hpp`, `version_compare.hpp`, `plugin_check_runner.hpp`: admission gate, version ordering, the
-  out-of-process helper.
-- `store_session.hpp`, `store_lease.hpp`, `artifact_store.hpp`, `loaded_profile.hpp`, `content_manifest.hpp`,
-  `generation_digest.hpp`, `store_policy.hpp`, `store_rejection.hpp`, `stored_file.hpp`: the lease and the
-  content-addressed store.
-- `sha256.hpp`, `fs_walk.hpp`, `utf8_path.hpp`, `platform_utils.hpp`: reusable helpers.
-- `extension.hpp`, `installed_extension.hpp`: a registry release and an installed one.
-- `marketplace_window.hpp`, `qt_diagnostic_bridge.hpp`, `marketplace.hpp` (aggregate include): UI and diagnostics glue.
+`PlatformUtils::initializeProfile` is the native host's opt-in startup seam for
+an absolute dedicated test root. It validates/probes paths before installing
+both QSettings INI scopes, and routes store, staging, backup and all canonical
+store siblings under the profile. No argument means no global behavior change.
+`--plugin-dir` alone is a discovery override, not profile isolation. This is not
+a filesystem sandbox for arbitrary plugin code or the IFW installer.
+
+- `include/pj_marketplace/` — public headers (`marketplace.hpp`, `registry_manager.hpp`,
+  `registry_resolver.hpp`,
+  `download_manager.hpp`, `extension_manager.hpp`, `installed_extension.hpp`,
+  `marketplace_window.hpp`, `platform_utils.hpp`,
+  `qt_diagnostic_bridge.hpp`, and the store layer). Every header by role, so a helper
+  that already exists (SHA-256, the file walk, version ordering, archive budgets) is
+  found before it is rewritten: `docs/ARCHITECTURE.md` §3.1.
+- `src/core/` — registry/download/extension managers plus the pure registry candidate
+  resolver; `src/ui/` — `MarketplaceWindow`
+  (`.ui`-driven); `tests/` — manager and store suites share
+  the `pj_marketplace_tests` gtest runner and its offscreen-capable `QApplication` main.
 
 ## Tests
 
-`./test.sh -R '^(pj_marketplace_tests\.|plugin_check_runner_test$|extension_manager_test$)'`. `gtest_discover_tests`
-registers each `pj_marketplace_tests` case as its own process. `plugin_check_runner_test` stays separate because it
-checks the helper's process exit results; `extension_manager_test` keeps its own `main` because it re-executes itself
-in lock-holder mode for the interprocess lease test, and `pj-plugin-check` is copied beside it for the default helper
-lookup. `PJ_MARKETPLACE_TESTING` exposes test hooks on `ExtensionManager`. The runner starts the helper with Qt's
-library directory first on the loader path (a Widget plugin links Qt: docs/TECHNICAL_NOTES.md "Qt libraries for the
-admission helper"). `extension_manager_check_plugin_management` is a network-dependent harness outside CTest.
+`gtest_discover_tests` registers each runner case as
+`pj_marketplace_tests.<suite>.<case>` and runs it in its own process.
+`plugin_check_runner_test` stays separate because it checks admission-helper
+process exit results. `extension_manager_test` keeps its mock-target guard,
+private temporary profile, settings identity, and entry point because it re-executes
+itself in lock-holder mode for the interprocess store lease test. Each process initializes
+its own profile before that branch; the child still receives the parent's explicit
+store path, preserving the shared store lease. Backups never use a default user
+directory. For this runner, `pj-plugin-check` is copied beside the executable for default helper lookup. The helper names the Widget family `"widget"`,
+and `PluginCheckRunner` starts it with Qt's library directory first on `LD_LIBRARY_PATH` (Linux) / `PATH`
+(Windows), because it `dlopen`s every candidate and a Widget plugin links Qt: outside the AppImage nothing
+else lets the loader find `libQt6Widgets`, and a failed load there reads as a rejected plugin. Run the module's registered tests with
+`./test.sh -R '^(pj_marketplace_tests\.|plugin_check_runner_test$|extension_manager_test$)'`.
+`extension_manager_check_plugin_management` remains
+a standalone, network-dependent harness excluded from CTest.
 
 A test's store root is a `PJ::test::StoreTempDir` (`cmake/test_mains/pj_test_store_dir.h`), never a bare
 `QTemporaryDir`: the store keeps its siblings (`.artifacts`, `.extraction`, `.profiles`, `.state`, `.install_stage`,
@@ -63,11 +78,39 @@ the lease file) beside the root, and beside a temp dir's own path they leak into
 
 ## Docs
 
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): components, registry and compatibility, install and update, removal
-  journal, single-writer lease, content-addressed store, admission, bundled extensions, disk layout, behaviour
-  contracts, UI integration, known gaps.
-- [docs/TECHNICAL_NOTES.md](./docs/TECHNICAL_NOTES.md): observations behind the code (dlopen pinning, journal placement,
-  Qt libraries for the helper, libarchive, TSan).
-- [docs/USER_MANUAL.md](./docs/USER_MANUAL.md): the end-user flow.
-- [docs/plotjuggler-marketplace-spec-v1.0.0-en.md](./docs/plotjuggler-marketplace-spec-v1.0.0-en.md): the registry and
-  package formats shared with `pj-plugin-registry` and the extension repositories.
+| For | Read |
+|---|---|
+| Module purpose + Conan deps | [`README.md`](./README.md) |
+| What it must do | [`docs/REQUIREMENTS.md`](./docs/REQUIREMENTS.md) |
+| How it works | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) |
+| End-user flow | [`docs/USER_MANUAL.md`](./docs/USER_MANUAL.md) |
+| Registry/package wire format | [`docs/plotjuggler-marketplace-spec-v1.0.0-en.md`](./docs/plotjuggler-marketplace-spec-v1.0.0-en.md) |
+
+## Diagnostic localization
+
+User-facing install, extraction and registry error templates are translated at
+their Qt boundary before interpolating paths and IDs. The Qt-free archive policy
+keeps its original diagnostics; DownloadManager translates only recognized
+complete templates. Unknown plugin, system and library details remain verbatim.
+
+All 34 entries in the pinned official registry have display-only name and description
+translations, including uninstalled plugins. The exact ID and English source text
+select the translation independently of version; unknown/changed metadata falls
+back unchanged. `marketplace_text.hpp` uses the same display mapping in
+list rows and the detail panel, before HTML escaping. Known category labels are
+translated only for presentation; category filtering and compound sorting retain
+registry tokens and original plugin names. Unknown categories remain verbatim.
+
+The host can construct `ExtensionManager` with `defer_initial_scan=true`: pending
+transactions and the store lease still initialize, but installed discovery and
+store reconciliation wait until `finishInitialScan()`. This lets bundled seeding
+replace DLLs before the initial installed-side DSO scan. Default callers retain
+the eager snapshot. A deferred caller must finish startup before consuming
+installed state or loading managed DSOs.
+
+
+Website buttons and externally activated detail links use
+`pj_widgets/ExternalUrl.h`; HTTP(S) desktop openers in AppImage get the host
+environment without changing the marketplace process. Detail-browser relative,
+fragment, `file:` and `qrc:` links retain local QTextBrowser navigation; other
+schemes retain Qt desktop-services handling.

@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets UiTools SvgWidgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets UiTools SvgWidgets Xml)
 
 # Workaround: some Qt packages still list the AGL framework in transitive OpenGL links, but newer macOS SDKs no
 # longer ship it.
@@ -26,6 +26,7 @@ add_library(pj_dialog_engine_qt STATIC
     src/browser_save_target.cpp
     src/browser_save_target.hpp
     src/pj_ui_loader.cpp
+    src/bundled_translations.cpp
     src/chart_preview_widget.cpp
     src/chart_placeholder_overlay.hpp
     src/host_info.hpp
@@ -61,6 +62,7 @@ target_link_libraries(pj_dialog_engine_qt
     PRIVATE
         pj_plotting       # PlotWidget for embedded chart containers
         pj_runtime        # AppSession + CatalogModel
+        Qt6::Xml
 )
 
 if(PJ_BUILD_TESTS)
@@ -80,11 +82,29 @@ if(PJ_BUILD_TESTS)
     )
     set_target_properties(pj_dialog_host_tests PROPERTIES AUTOMOC ON)
 
-    pj_add_test_runner(pj_dialog_host_panel_tests MAIN gui WARNINGS
+    pj_add_test_runner(pj_dialog_host_panel_tests MANAGED_PROFILE MAIN gui WARNINGS
         SOURCES
             tests/panel_engine_test.cpp
+            tests/parsed_widget_data_test.cpp
             tests/mock_panel_plugin.cpp
         LIBS pj_dialog_engine_qt plotjuggler_sdk::plugin_sdk pj_plotting pj_runtime
     )
     set_target_properties(pj_dialog_host_panel_tests PROPERTIES AUTOMOC ON)
+    add_executable(pj_bundled_translations_test tests/bundled_translations_qtest.cpp)
+    set_target_properties(pj_bundled_translations_test PROPERTIES AUTOMOC ON WIN32_EXECUTABLE FALSE)
+    target_link_libraries(pj_bundled_translations_test PRIVATE pj_dialog_engine_qt Qt6::Xml Qt6::UiTools Qt6::Test)
+    if(PJ4_BUILD_APP)
+        # pj_app is configured later; CMake resolves this target at generation.
+        target_link_libraries(pj_bundled_translations_test PRIVATE pj_app_language)
+        target_compile_definitions(pj_bundled_translations_test PRIVATE PJ_TEST_PRODUCTION_CATALOG)
+    endif()
+    target_compile_options(pj_bundled_translations_test PRIVATE ${PJ_WARNING_FLAGS})
+    if(MSVC)
+        target_compile_options(pj_bundled_translations_test PRIVATE /utf-8)
+    endif()
+    target_compile_definitions(pj_bundled_translations_test PRIVATE
+        PJ_CSV_UI_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/csv_1_0_7.ui")
+    add_test(NAME pj_bundled_translations_test COMMAND pj_bundled_translations_test
+        -o -,txt -o "${CMAKE_BINARY_DIR}/Testing/Temporary/bundled-translations.txt,txt")
+    set_tests_properties(pj_bundled_translations_test PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()

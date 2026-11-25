@@ -149,10 +149,15 @@ class MarketplaceWindow : public Dialog {
     return !active_install_id_.isEmpty() || !local_install_path_.isEmpty();
   }
 
-  // Shows the in-flight install with the queue depth ("Installing mcap…  ·  2 queued"); `verb` is the phase word.
-  // No-op when nothing is active, so it never clobbers a terminal "Installed"/"Failed" message. A sideload is named
-  // by its file name until its manifest gives an id.
-  void showInstallProgress(const QString& verb = QStringLiteral("Installing"));
+  // Shows the status of the in-flight install together with the queue depth,
+  // e.g. "Installing mcap…  ·  2 queued". `verb` is the current phase word
+  // ("Installing", "Verifying", "Extracting"). No-op when nothing is active, so
+  // it never clobbers a terminal "Installed"/"Failed" message. Called on every
+  // event that changes the active id or the queue, so the count stays live and
+  // an enqueue no longer hides what is currently installing. A sideload has no
+  // active_install_id_ until its manifest is read, so it is named by its file
+  // name instead — otherwise the whole download/extract window is silent.
+  void showInstallProgress(const QString& verb = tr("Installing"));
 
   // "  ·  N queued" for the combined depth of every queue, then "  ·  M failed" once this run has failures. Empty
   // when nothing is waiting and nothing has failed.

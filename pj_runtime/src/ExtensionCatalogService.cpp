@@ -23,6 +23,7 @@
 #include "pj_marketplace/extension_manager.hpp"
 #include "pj_marketplace/platform_utils.hpp"
 #include "pj_marketplace/version_compare.hpp"
+#include "pj_runtime/LocalizedPluginSeed.h"
 #endif
 #include "pj_base/plugin_data_api.h"
 #include "pj_marketplace/plugin_compatibility.hpp"
@@ -34,6 +35,18 @@ namespace PJ {
 
 namespace {
 Q_LOGGING_CATEGORY(lcCatalog, "pj.app_core.extensions")
+
+// std::filesystem's narrow-string constructor uses the Windows ANSI code page,
+// not QString::toStdString()'s UTF-8. Preserve native Unicode paths both ways.
+std::filesystem::path filesystemPath(const QString& path) {
+  return std::filesystem::path(path.toStdU16String());
+}
+
+#ifndef PJ_TARGET_WASM
+QString qStringPath(const std::filesystem::path& path) {
+  return QString::fromStdU16String(path.u16string());
+}
+#endif
 
 QString defaultExtensionsDir() {
 #ifdef PJ_TARGET_WASM
@@ -214,15 +227,18 @@ ExtensionCatalogService::ExtensionCatalogService(
     reportDiagnostic(DiagnosticLevel::kError, message);
   }
 
-  // The ExtensionManager tracks what the marketplace INSTALLS and MANAGES: always marketplace_dir_, independent of any
-  // --plugin-dir override (which only reorders the LOAD scan hierarchy via buildScanHierarchy). Passing extensions_dir_
-  // would make the marketplace UI look at the override dir and lose sight of every plugin the user installed.
-  extension_manager_ = std::make_unique<ExtensionManager>(nullptr, marketplace_dir_, pending_dir, sink_, this);
+  // The ExtensionManager tracks what the marketplace INSTALLS and MANAGES; that
+  // is always marketplace_dir_, independent of any --plugin-dir override (which
+  // only reorders the LOAD scan hierarchy via buildScanHierarchy). Passing
+  // extensions_dir_ here would make the marketplace UI look at the CLI override
+  // dir and lose sight of every plugin the user actually installed.
+  extension_manager_ = std::make_unique<ExtensionManager>(nullptr, marketplace_dir_, pending_dir, sink_, this, true);
 
   // Sync bundled plugins into the marketplace dir BEFORE the scan: the bundled dir is never scanned, so the seed is the
   // only route by which shipped plugins load. Runs in every mode, after the ExtensionManager applied pending staged
   // installs, so a staged upgrade is promoted before the seed's version comparison sees it.
   seedBundledPlugins();
+  extension_manager_->finishInitialScan();
 #else
   (void)pending_dir;
 #endif
@@ -295,7 +311,7 @@ std::vector<PluginDirEntry> ExtensionCatalogService::buildScanHierarchy(bool ext
   // folder already shown in red in Preferences) is noise masking real plugin-load errors.
   const auto add_if_exists = [&dirs](const QString& folder, bool authoritative) {
     if (!folder.isEmpty() && QDir(folder).exists()) {
-      dirs.push_back({std::filesystem::path(folder.toStdU16String()), authoritative});
+      dirs.push_back({filesystemPath(folder), authoritative});
     }
   };
   // Priority: the --plugin-dir override, then the custom Preferences folders, then the managed marketplace dir. The
@@ -313,7 +329,7 @@ std::vector<PluginDirEntry> ExtensionCatalogService::buildScanHierarchy(bool ext
   // a store tier) discovers each managed plugin once, with no duplicate-id churn, and loads it from the immutable
   // object when available. managedPluginDirs() returns only existing dirs, so they skip the add_if_exists gate.
   for (const QString& plugin_dir : extension_manager_->managedPluginDirs()) {
-    dirs.push_back({std::filesystem::path(plugin_dir.toStdU16String()), false});
+    dirs.push_back({filesystemPath(plugin_dir), false});
   }
 #else
   add_if_exists(marketplace_dir_, false);
@@ -329,7 +345,7 @@ void ExtensionCatalogService::seedBundledPlugins() {
   std::optional<PluginScanResult> scan;
   QMap<QString, QString> bundled_versions;
   if (QDir(bundled_dir_).exists()) {
-    auto scanned = scanPluginDsos(std::filesystem::path(bundled_dir_.toStdU16String()));
+    auto scanned = scanPluginDsos(filesystemPath(bundled_dir_));
     if (!scanned) {
       reportDiagnostic(
           DiagnosticLevel::kWarning,
@@ -364,15 +380,18 @@ void ExtensionCatalogService::seedBundledPlugins() {
     return;
   }
 
-  // Refresh staging area: a SIBLING of the marketplace dir, so the promote rename never crosses a filesystem, yet an
-  // interrupted seed cannot leak a stale payload into the plugin scan (which walks the marketplace dir recursively).
-  // Leftovers from a crashed launch are cleared first, even when the bundled dir is absent. Derived from the RESOLVED
-  // store like every other sibling kept next to the extensions dir (PlatformUtils::canonicalStoreRoot): beside a
-  // symlinked store the staging area could land on another filesystem, making the promoting rename EXDEV instead of
-  // atomic.
-  const std::filesystem::path market_root(marketplace_dir_.toStdU16String());
-  const std::filesystem::path stage_root(
-      (PlatformUtils::canonicalStoreRoot(marketplace_dir_) + u".seed_stage"_s).toStdU16String());
+  // Refresh staging area: a SIBLING of the marketplace dir, so the promote
+  // rename never crosses a filesystem, yet an interrupted seed can never leak
+  // a stale payload into the plugin scan (which walks the marketplace dir
+  // recursively). Leftovers from a crashed launch are cleared before anything
+  // else — even when the bundled dir is absent this run.
+  // Derived from the RESOLVED store, like every other sibling PlotJuggler keeps
+  // next to the extensions dir (see PlatformUtils::canonicalStoreRoot): beside a
+  // symlinked store the staging area can land on another filesystem, and then the
+  // promoting rename below is EXDEV instead of an atomic move.
+  const std::filesystem::path market_root = filesystemPath(PlatformUtils::canonicalStoreRoot(marketplace_dir_));
+  const std::filesystem::path stage_root =
+      filesystemPath(PlatformUtils::canonicalStoreRoot(marketplace_dir_) + u".seed_stage"_s);
   std::error_code ec;
   std::filesystem::remove_all(stage_root, ec);
 
@@ -391,8 +410,7 @@ void ExtensionCatalogService::seedBundledPlugins() {
   // The payload sources resolve against the canonical bundled root (computed
   // once — it is loop-invariant).
   ec.clear();
-  const std::filesystem::path root =
-      std::filesystem::weakly_canonical(std::filesystem::path(bundled_dir_.toStdU16String()), ec);
+  const std::filesystem::path root = std::filesystem::weakly_canonical(filesystemPath(bundled_dir_), ec);
   if (ec) {
     reportDiagnostic(
         DiagnosticLevel::kWarning, u"Cannot resolve the bundled plugin directory \"%1\": %2"_s.arg(
@@ -404,6 +422,7 @@ void ExtensionCatalogService::seedBundledPlugins() {
   // them: reading an installed version opens its DSO, and glibc serves every later dlopen of that path from the
   // first-loaded image, so the scan snapshot stays at the pre-seed version for the rest of the process.
   QMap<QString, QString> seeded_versions;
+  QSettings localized_seed_settings;
   // Set when a failed promote could not restore the old copy: the stage dir
   // then holds the only surviving payload and must not be deleted below.
   bool stage_has_orphans = false;
@@ -428,25 +447,71 @@ void ExtensionCatalogService::seedBundledPlugins() {
     const std::filesystem::path src = root / *rel.begin();
     const std::filesystem::path installed_dso = installedDsoPath(dst, rel);
 
+    const QString payload_path = qStringPath(src);
+    const auto localized_build =
+        LocalizedPluginSeed::readBuild(payload_path, qStringPath(dso), id, QString::fromStdString(descriptor.version));
+    const bool has_marker =
+        QFileInfo::exists(QDir(payload_path).filePath(QString::fromLatin1(LocalizedPluginSeed::kMarker)));
+    const QString receipt_key =
+        LocalizedPluginSeed::receiptKey(qStringPath(market_root), id, QString::fromStdString(descriptor.version));
+    bool localized_migration = false;
+    std::error_code localized_exists_ec;
+    const bool destination_exists = std::filesystem::exists(dst, localized_exists_ec);
+    if (localized_exists_ec) {
+      continue;
+    }
+    if (has_marker && !localized_build) {
+      qCWarning(lcCatalog) << "Invalid localized plugin build marker; preserving installed plugin" << id;
+      continue;
+    }
+    if (localized_build && destination_exists) {
+      const auto decision = LocalizedPluginSeed::decide(
+          *localized_build, LocalizedPluginSeed::fileHash(qStringPath(installed_dso)),
+          localized_seed_settings.value(receipt_key + u"/applied"_s).toString(),
+          localized_seed_settings.contains(receipt_key + u"/pending"_s));
+      if (decision == LocalizedPluginSeed::Decision::AlreadyCurrent) {
+        // A previous launch may have promoted the localized bytes but stopped
+        // before dropping the old marketplace object mapping (or persisting it).
+        // Repair the load route before clearing the transaction receipt too.
+        extension_manager_->dropStoreMapping(id);
+        if (!LocalizedPluginSeed::complete(localized_seed_settings, receipt_key, localized_build->sha256)) {
+          qCWarning(lcCatalog) << "Could not save localized plugin seed receipt" << id;
+        }
+        continue;
+      }
+      if (decision == LocalizedPluginSeed::Decision::Preserve) {
+        continue;
+      }
+      localized_migration = true;
+    }
+
     // Steady-state fast path: an installed DSO matching the bundled one by
     // size and (seed-stamped) mtime is the same build — skip without paying
     // the installed-side dlopen.
-    if (sameDsoSignature(installed_dso, dso)) {
+    if (!localized_build && sameDsoSignature(installed_dso, dso)) {
       continue;
     }
 
-    // The marketplace dir stays at least as new as the bundled set: absent or unreadable -> copy; older -> refresh;
-    // same-or-newer -> untouched (a marketplace update above the bundled version is never downgraded, and an equal
-    // version never refreshes: ship a change by bumping the version).
+    // For packages without a localized marker, the marketplace dir stays at
+    // least as new as the bundled set: absent or
+    // unreadable -> copy; older -> refresh; same-or-newer -> untouched (a
+    // marketplace update above the bundled version is never downgraded, and an
+    // equal version never refreshes — ship a change by bumping the version).
     //
-    // Exception: an installed copy above the bundled version that the current host would reject at load time (ABI/SDK
-    // drift, a malformed floor, min_sdk_required too high) would be a dead "installed" that never loads, with no
-    // bundled fallback (the bundled dir is never scanned). Rescue by refreshing to the bundled build, compatible by
-    // construction since it ships with this host.
-    const std::optional<PluginDescriptor> installed = installedPluginDescriptor(dst, descriptor.id);
+    // Exception to "never downgrade": an installed copy above the bundled
+    // version that the current host would reject at load time (ABI/SDK drift,
+    // a malformed floor, or min_sdk_required too high). Leaving it in place gives the user a
+    // dead "installed" that never loads and no bundled fallback (the bundled
+    // dir is never scanned as a load path). Rescue by refreshing to the bundled
+    // build — compatible by construction, since it ships with this host.
+    // Exact migration hashes already bind the installed ID/version. Do not dlopen
+    // a Windows DLL that must be renamed by this transaction.
+    const std::optional<PluginDescriptor> installed = localized_migration
+                                                          ? std::optional<PluginDescriptor>{descriptor}
+                                                          : installedPluginDescriptor(dst, descriptor.id);
     bool rescue_incompat = false;
     QString rescue_reason;
-    if (installed && comparePluginVersions(descriptor.version, installed->version) <= 0) {
+    if (!localized_migration && installed && comparePluginVersions(descriptor.version, installed->version) <= 0) {
       const QString installed_reason = ExtensionCatalogService::descriptorIncompatReason(*installed);
       if (installed_reason.isEmpty()) {
         continue;  // Installed is compatible — user's marketplace update wins.
@@ -472,7 +537,23 @@ void ExtensionCatalogService::seedBundledPlugins() {
     const std::filesystem::path stage_new = stage_root / pathFromUtf8(descriptor.id);
     const std::filesystem::path aside = stage_root / pathFromUtf8(descriptor.id + ".old");
     bool aside_orphaned = false;
-    std::error_code step_ec = stagePayload(src, dso, stage_new);
+    std::error_code step_ec;
+    // Preserve user-added files for an identity-authorized same-version refresh.
+    // Reject symlinks rather than following a user path while overlaying a package.
+    if (localized_migration) {
+      step_ec = LocalizedPluginSeed::preserveFiles(dst, stage_new);
+    }
+    if (!step_ec) {
+      step_ec = stagePayload(src, dso, stage_new);
+    }
+    if (!step_ec && localized_build &&
+        LocalizedPluginSeed::fileHash(qStringPath(installedDsoPath(stage_new, rel))) != localized_build->sha256) {
+      step_ec = std::make_error_code(std::errc::io_error);
+    }
+    if (!step_ec && localized_build &&
+        !LocalizedPluginSeed::begin(localized_seed_settings, receipt_key, localized_build->sha256)) {
+      step_ec = std::make_error_code(std::errc::io_error);
+    }
     if (!step_ec) {
       step_ec = promoteStaged(stage_new, dst, aside, &aside_orphaned);
     }
@@ -484,17 +565,20 @@ void ExtensionCatalogService::seedBundledPlugins() {
       reportDiagnostic(
           DiagnosticLevel::kError,
           u"Refreshing plugin \"%1\" failed and the previous copy could not be restored; it is preserved at "
-          u"\"%2\" until the next launch"_s.arg(id, QString::fromStdU16String(aside.u16string())),
+          u"\"%2\" until the next launch"_s.arg(id, qStringPath(aside)),
           id);
     }
     if (step_ec) {
+      if (localized_build && !aside_orphaned) {
+        LocalizedPluginSeed::failed(localized_seed_settings, receipt_key);
+      }
       std::error_code cleanup_ec;
       std::filesystem::remove_all(stage_new, cleanup_ec);
       const QString context = rescue_incompat ? u" (attempted rescue of an incompatible installed copy)"_s : QString{};
       reportDiagnostic(
           DiagnosticLevel::kWarning,
           u"Failed to seed bundled plugin \"%1\" into \"%2\"%3: %4"_s.arg(
-              id, QString::fromStdU16String(dst.u16string()), context, QString::fromStdString(step_ec.message())),
+              id, qStringPath(dst), context, QString::fromStdString(step_ec.message())),
           id);
       continue;
     }
@@ -507,6 +591,10 @@ void ExtensionCatalogService::seedBundledPlugins() {
       std::filesystem::last_write_time(installed_dso, bundled_mtime, stamp_ec);
     }
 
+    if (localized_build &&
+        !LocalizedPluginSeed::complete(localized_seed_settings, receipt_key, localized_build->sha256)) {
+      qCWarning(lcCatalog) << "Could not save localized plugin seed receipt after promotion" << id;
+    }
     seeded_versions.insert(id, QString::fromStdString(descriptor.version));
 
     // The seed wrote extensions/<id>/ outside the adopt path, so any store object recorded for this id no longer
@@ -528,7 +616,7 @@ void ExtensionCatalogService::seedBundledPlugins() {
         reportDiagnostic(DiagnosticLevel::kInfo, message, id);
       }
     } else {
-      qCInfo(lcCatalog) << "Seeded bundled plugin" << id << "into" << QString::fromStdU16String(dst.u16string());
+      qCInfo(lcCatalog) << "Seeded bundled plugin" << id << "into" << qStringPath(dst);
     }
   }
 
@@ -622,7 +710,7 @@ ParserClaimProvenance ExtensionCatalogService::provenanceForParser(const LoadedM
   // ids and versions alone cannot forge the top trust tier.
   const auto bundled = bundled_plugin_versions_.find(parser.id);
   if (bundled != bundled_plugin_versions_.end() && bundled->second.version == parser.version &&
-      sameDsoSignature(pathFromUtf8(parser.path), bundled->second.dso_path)) {
+      sameDsoSignature(filesystemPath(QString::fromStdString(parser.path)), bundled->second.dso_path)) {
     return ParserClaimProvenance::kBundled;
   }
   return ParserClaimProvenance::kMarketplace;
@@ -779,8 +867,10 @@ void ExtensionCatalogService::resolveCustomTopicsEditor() {
   }
 }
 
-QString ExtensionCatalogService::buildFileFilter() const {
-  return QString::fromStdString(plugin_catalog_->buildFileFilter());
+QString ExtensionCatalogService::buildFileFilter(
+    const std::function<std::string(const RuntimeDataSourcePlugin&)>& display_name) const {
+  return QString::fromStdString(plugin_catalog_->buildFileFilter(
+      tr("All supported files").toStdString(), tr("All files").toStdString(), display_name));
 }
 
 void ExtensionCatalogService::reportDiagnostic(DiagnosticLevel level, const QString& message, const QString& id) const {

@@ -5,6 +5,7 @@
 #include <pj_runtime/AppSession.h>
 #include <pj_runtime/CatalogModel.h>
 #include <pj_widgets/DateRangePicker.h>
+#include <pj_widgets/ExternalUrl.h>
 #include <pj_widgets/FileDialog.h>
 #include <pj_widgets/HeaderDividerHighlight.h>
 #include <pj_widgets/HeaderResizePolicy.h>
@@ -25,7 +26,6 @@
 #include <QDate>
 #include <QDateTime>
 #include <QDateTimeEdit>
-#include <QDesktopServices>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QDoubleSpinBox>
@@ -92,6 +92,7 @@
 
 #include "chart_placeholder_overlay.hpp"
 #include "lua_syntax_highlighter.hpp"
+#include "pj_plugins/host_qt/bundled_translations.hpp"
 #include "pj_widgets/FrameworkTokens.h"
 #include "pj_widgets/TailFollowOverlay.h"
 #include "python_syntax_highlighter.hpp"
@@ -1271,7 +1272,7 @@ static void configureMarkdownBrowser(QTextBrowser* browser) {
     const QString scheme = url.scheme();
     if (url.isValid() &&
         (scheme.compare(u"http", Qt::CaseInsensitive) == 0 || scheme.compare(u"https", Qt::CaseInsensitive) == 0)) {
-      QDesktopServices::openUrl(url);
+      PJ::openExternalUrl(url);
     }
   });
 }
@@ -1509,7 +1510,7 @@ static void applyToWidget(
   // reads as "needs attention" without a red wash.
   if (auto ok = view.fieldValid(name)) {
     if (auto tip = view.fieldValidTooltip(name)) {
-      w->setToolTip(QString::fromStdString(*tip));
+      w->setToolTip(bundledDisplayText(w, "toolTip", QString::fromStdString(*tip)));
     }
     const QString sel = w->objectName().isEmpty() ? QString() : QStringLiteral("#%1").arg(w->objectName());
     if (*ok || sel.isEmpty()) {
@@ -1534,7 +1535,7 @@ static void applyToWidget(
       }
     }
     if (auto v = view.placeholder(name)) {
-      le->setPlaceholderText(QString::fromStdString(*v));
+      le->setPlaceholderText(bundledDisplayText(le, "placeholderText", QString::fromStdString(*v)));
     }
     if (auto v = view.readOnly(name)) {
       le->setReadOnly(*v);
@@ -1637,12 +1638,17 @@ static void applyToWidget(
       QStringList current;
       current.reserve(cb->count());
       for (int i = 0; i < cb->count(); ++i) {
-        current << cb->itemText(i);
+        current << (cb->isEditable() ? cb->itemText(i) : canonicalComboText(cb, i));
       }
       if (current != incoming) {
         const QString saved = cb->isEditable() ? cb->currentText() : QString();
         cb->clear();
-        cb->addItems(incoming);
+        for (const auto& source : incoming) {
+          cb->addItem(cb->isEditable() ? source : bundledDisplayText(cb, "text", source));
+          if (!cb->isEditable()) {
+            cb->setItemData(cb->count() - 1, source, kCanonicalComboTextRole);
+          }
+        }
         if (cb->isEditable()) {
           cb->setCurrentText(saved);
         }
@@ -1669,7 +1675,7 @@ static void applyToWidget(
       ck->setChecked(*v);
     }
     if (auto v = view.text(name)) {
-      ck->setText(QString::fromStdString(*v));
+      ck->setText(bundledDisplayText(ck, "text", QString::fromStdString(*v)));
     }
     // A styled replacement is kept in sync, and the checkbox is adapted now if it just became adaptable (its text
     // arrived through data).
@@ -1766,7 +1772,7 @@ static void applyToWidget(
       if (overlay == nullptr) {
         overlay = new ChartPlaceholderOverlay(lw->viewport());
       }
-      overlay->setText(QString::fromStdString(*ph));
+      overlay->setText(bundledDisplayText(w, "placeholderText", QString::fromStdString(*ph)));
       overlay->setVisible(lw->count() == 0);
       overlay->recenter();
       // Re-centered after the layout settles: on initial injection the viewport may still grow to its final height, and
@@ -1802,7 +1808,7 @@ static void applyToWidget(
     if (auto v = view.tableHeaders(name)) {
       QStringList hdr;
       for (const auto& h : *v) {
-        hdr << QString::fromStdString(h);
+        hdr << bundledDisplayText(tw, "headerText", QString::fromStdString(h));
       }
       // Re-setting labels reconfigures the header (not free): only when they changed.
       if (!tableMatchesHeaders(tw, hdr)) {
@@ -2018,7 +2024,7 @@ static void applyToWidget(
       if (overlay == nullptr) {
         overlay = new ChartPlaceholderOverlay(tw->viewport());
       }
-      overlay->setText(QString::fromStdString(*ph));
+      overlay->setText(bundledDisplayText(w, "placeholderText", QString::fromStdString(*ph)));
       overlay->setVisible(tw->rowCount() == 0);
       overlay->recenter();
       QTimer::singleShot(0, overlay, [overlay]() { overlay->recenter(); });
@@ -2028,17 +2034,19 @@ static void applyToWidget(
 
   if (auto* lbl = qobject_cast<QLabel*>(w)) {
     if (auto v = view.label(name)) {
-      lbl->setText(QString::fromStdString(*v));
+      lbl->setText(bundledDisplayText(
+          lbl, "text", QString::fromStdString(*v), [&](const char* control) { return view.enabled(control); }));
     }
     if (auto v = view.text(name)) {
-      lbl->setText(QString::fromStdString(*v));
+      lbl->setText(bundledDisplayText(
+          lbl, "text", QString::fromStdString(*v), [&](const char* control) { return view.enabled(control); }));
     }
     return;
   }
 
   if (auto* btn = qobject_cast<QPushButton*>(w)) {
     if (auto v = view.buttonText(name)) {
-      btn->setText(QString::fromStdString(*v));
+      btn->setText(bundledDisplayText(btn, "text", QString::fromStdString(*v)));
     }
     if (auto svg = view.buttonIconSvg(name)) {
       QByteArray svg_data = QByteArray::fromStdString(*svg);
@@ -2375,7 +2383,7 @@ static void applyToWidget(
         if (overlay == nullptr) {
           overlay = new ChartPlaceholderOverlay(frame);
         }
-        overlay->setMessage(QString::fromStdString(placeholder_text));
+        overlay->setMessage(bundledDisplayText(frame, "chartPlaceholder", QString::fromStdString(placeholder_text)));
         overlay->setVisible(!has_data && !placeholder_text.empty());
       } else if (series_data) {
         // Series delivered without re-sending chart_placeholder: the existing overlay is recomputed, so it auto-hides
@@ -2507,7 +2515,7 @@ void connectWidgetSignals(QWidget* root, WidgetEventCallback callback) {
     }
     if (auto* cb = qobject_cast<QComboBox*>(w)) {
       QObject::connect(cb, &QComboBox::currentIndexChanged, cb, [callback, name, cb](int index) {
-        callback(name, WidgetEventBuilder::indexChanged(index, cb->currentText().toStdString()));
+        callback(name, WidgetEventBuilder::indexChanged(index, canonicalComboText(cb, index).toStdString()));
       });
       // Editable combos let the user type a free value (a server URI). currentIndexChanged alone never fires while
       // typing, and the typed dispatcher routes index events to onIndexChanged, so a plugin reading the value through

@@ -3,7 +3,7 @@
 
 #include <gtest/gtest.h>
 
-#include <QTemporaryDir>
+#include <QScopeGuard>
 #include <algorithm>
 #include <cstdint>
 #include <filesystem>
@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "../../cmake/test_mains/pj_test_owned_directory.h"
 #include "mock_data_source_vtable.h"
 #include "mock_message_parser_vtable.h"
 #include "mock_toolbox_vtable.h"
@@ -77,16 +78,40 @@ const PJ_dialog_vtable_t kStaticDialogVtable = {
 
 class PluginCatalogTest : public ::testing::Test {
  protected:
-  // A folder no other test process shares: ctest runs every test as its own process, in parallel, and a name made
-  // from the clock let two of them meet (one's TearDown then deleted the other's files mid-test). Removed with it.
-  QTemporaryDir tmp_;
-
   void SetUp() override {
-    ASSERT_TRUE(tmp_.isValid()) << tmp_.errorString().toStdString();
+    ASSERT_TRUE(owner_.ownsTree());
+    dir_ = std::filesystem::path((owner_.path() + "/catalog").toStdU16String());
+    ASSERT_TRUE(std::filesystem::create_directory(dir_));
   }
 
-  std::filesystem::path dir_{tmp_.path().toStdU16String()};
+  PjTestOwnedDirectory owner_;
+  std::filesystem::path dir_;
 };
+
+// Exercise native loading, UTF-8 identities, duplicate diagnostics and reload
+// under a path that cannot be represented by common Windows ANSI code pages.
+TEST_F(PluginCatalogTest, RuntimeCatalogPreservesUnicodePaths) {
+  const auto first = dir_ / std::filesystem::path(u"插件 first");
+  const auto second = dir_ / std::filesystem::path(u"随包 second");
+  std::filesystem::create_directories(first);
+  std::filesystem::create_directories(second);
+  const auto filename = pluginFileName("ds");
+  std::filesystem::copy_file(PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, first / filename);
+  std::filesystem::copy_file(PJ_MOCK_DATA_SOURCE_PLUGIN_PATH, second / filename);
+  std::vector<std::string> messages;
+  PluginRuntimeCatalog catalog({}, [&](const Diagnostic& d) { messages.push_back(d.message); });
+  catalog.setPluginDirs({{first}, {first}, {second}});
+  ASSERT_NO_THROW(catalog.scanDirectory());
+  ASSERT_EQ(catalog.dataSources().size(), 1U);
+  const auto expected = std::filesystem::weakly_canonical(first / filename).u8string();
+  EXPECT_EQ(catalog.dataSources().front().path, std::string(expected.begin(), expected.end()));
+  EXPECT_TRUE(std::ranges::any_of(messages, [](const std::string& message) {
+    return message.find("ignoring duplicate") != std::string::npos;
+  }));
+  EXPECT_NO_THROW((void)catalog.reload());
+  ASSERT_EQ(catalog.dataSources().size(), 1U);
+  EXPECT_EQ(catalog.dataSources().front().path, std::string(expected.begin(), expected.end()));
+}
 
 TEST_F(PluginCatalogTest, RuntimeCatalogDedupsDuplicateIdFirstFolderWins) {
   // The same data-source DSO (manifest id "mock-data-source") placed in two
@@ -105,9 +130,10 @@ TEST_F(PluginCatalogTest, RuntimeCatalogDedupsDuplicateIdFirstFolderWins) {
 
   ASSERT_EQ(catalog.dataSources().size(), 1U);
   EXPECT_EQ(catalog.dataSources()[0].id, "mock-data-source");
-  // The winner must come from the first folder; compared with std::filesystem::equivalent so it holds however the
-  // stored path is spelled (slashes, drive-letter case, canonicalisation).
-  const std::filesystem::path winner(catalog.dataSources()[0].path);
+  // The winner must come from the first folder. Compare at the filesystem level
+  // (std::filesystem::equivalent) so it holds regardless of how the stored path
+  // is spelled — Windows back/forward slashes, drive-letter case, canonicalisation.
+  const auto winner = std::filesystem::u8path(catalog.dataSources()[0].path);
   EXPECT_TRUE(std::filesystem::equivalent(winner.parent_path(), dir_a))
       << "winner " << winner << " is not in the first folder " << dir_a;
 }
@@ -149,7 +175,7 @@ TEST_F(PluginCatalogTest, RuntimeCatalogPrefersHigherVersionOverFolderPriority) 
   ASSERT_EQ(catalog.dataSources().size(), 1U);
   EXPECT_EQ(catalog.dataSources()[0].id, "mock-data-source");
   EXPECT_EQ(catalog.dataSources()[0].version, "2.0.0");
-  const std::filesystem::path winner(catalog.dataSources()[0].path);
+  const auto winner = std::filesystem::u8path(catalog.dataSources()[0].path);
   EXPECT_TRUE(std::filesystem::equivalent(winner.parent_path(), dir_b))
       << "winner " << winner << " should be the newer v2 in " << dir_b;
 }
@@ -169,7 +195,7 @@ TEST_F(PluginCatalogTest, RuntimeCatalogKeepsHigherPriorityWhenNewerVersionIsHig
 
   ASSERT_EQ(catalog.dataSources().size(), 1U);
   EXPECT_EQ(catalog.dataSources()[0].version, "2.0.0");
-  const std::filesystem::path winner(catalog.dataSources()[0].path);
+  const auto winner = std::filesystem::u8path(catalog.dataSources()[0].path);
   EXPECT_TRUE(std::filesystem::equivalent(winner.parent_path(), dir_a));
 }
 
@@ -191,7 +217,7 @@ TEST_F(PluginCatalogTest, RuntimeCatalogPrefersCompatibleOverHigherIncompatibleV
 
   ASSERT_EQ(catalog.dataSources().size(), 1U);
   EXPECT_EQ(catalog.dataSources()[0].version, "2.0.0");
-  const std::filesystem::path winner(catalog.dataSources()[0].path);
+  const auto winner = std::filesystem::u8path(catalog.dataSources()[0].path);
   EXPECT_TRUE(std::filesystem::equivalent(winner.parent_path(), dir_b))
       << "winner " << winner << " should be the compatible v2 in " << dir_b;
 }
@@ -279,7 +305,7 @@ TEST_F(PluginCatalogTest, RuntimeCatalogPrefersTheOnlyCompatibleAmongMixedCandid
 
   ASSERT_EQ(catalog.dataSources().size(), 1U);
   EXPECT_EQ(catalog.dataSources()[0].version, "2.0.0");
-  const std::filesystem::path winner(catalog.dataSources()[0].path);
+  const auto winner = std::filesystem::u8path(catalog.dataSources()[0].path);
   EXPECT_TRUE(std::filesystem::equivalent(winner.parent_path(), dir_b))
       << "winner " << winner << " should be the only compatible candidate in " << dir_b;
 }
@@ -301,7 +327,7 @@ TEST_F(PluginCatalogTest, RuntimeCatalogAuthoritativeFolderOverridesHigherVersio
 
   ASSERT_EQ(catalog.dataSources().size(), 1U);
   EXPECT_EQ(catalog.dataSources()[0].version, "1.0.0");
-  const std::filesystem::path winner(catalog.dataSources()[0].path);
+  const auto winner = std::filesystem::u8path(catalog.dataSources()[0].path);
   EXPECT_TRUE(std::filesystem::equivalent(winner.parent_path(), dir_a));
 }
 
@@ -338,6 +364,14 @@ TEST_F(PluginCatalogTest, RuntimeCatalogAuthoritativeFolderMayBeASymlink) {
   if (ec) {
     GTEST_SKIP() << "filesystem does not support directory symlinks: " << ec.message();
   }
+  // We own exactly the link whose creation just succeeded. Unlink it after
+  // catalog destruction, before the parent rejects any remaining links.
+  const auto remove_created_link = qScopeGuard([&] {
+    std::error_code cleanup_error;
+    if (!std::filesystem::remove(link_dir, cleanup_error) || cleanup_error) {
+      qFatal("Cannot unlink this test's directory symlink");
+    }
+  });
 
   PluginRuntimeCatalog catalog;
   catalog.setPluginDirs({{link_dir, true}, {dir_b}});
@@ -345,7 +379,7 @@ TEST_F(PluginCatalogTest, RuntimeCatalogAuthoritativeFolderMayBeASymlink) {
 
   ASSERT_EQ(catalog.dataSources().size(), 1U);
   EXPECT_EQ(catalog.dataSources()[0].version, "1.0.0") << "authoritative override must hold for a symlinked scan entry";
-  const std::filesystem::path winner(catalog.dataSources()[0].path);
+  const auto winner = std::filesystem::u8path(catalog.dataSources()[0].path);
   EXPECT_TRUE(std::filesystem::equivalent(winner.parent_path(), real_dir));
 }
 
@@ -367,7 +401,7 @@ TEST_F(PluginCatalogTest, RuntimeCatalogAuthoritativeFolderSupersedesEarlierMana
   ASSERT_EQ(catalog.dataSources().size(), 1U);
   EXPECT_EQ(catalog.dataSources()[0].version, "1.0.0")
       << "an authoritative folder must override an already-recorded managed incumbent";
-  const std::filesystem::path winner(catalog.dataSources()[0].path);
+  const auto winner = std::filesystem::u8path(catalog.dataSources()[0].path);
   EXPECT_TRUE(std::filesystem::equivalent(winner.parent_path(), dir_auth));
 }
 
@@ -435,6 +469,18 @@ TEST_F(PluginCatalogTest, StaticPluginSetParticipatesInFilteringAndHandleCreatio
   ASSERT_TRUE(dialog.has_value());
   EXPECT_EQ(*dialog, &kStaticDialogVtable);
   EXPECT_NE(catalog.buildFileFilter().find("*.probe"), std::string::npos);
+  EXPECT_EQ(catalog.buildFileFilter("Supported", "Any"), "Supported (*.probe);;Static File (*.probe);;Any (*)");
+
+  EXPECT_EQ(
+      catalog.buildFileFilter(
+          "Supported", "Any",
+          [](const RuntimeDataSourcePlugin& source) {
+            EXPECT_EQ(source.id, "static-file");
+            EXPECT_EQ(source.name, "Static File");
+            return std::string("显示名称 %1");
+          }),
+      "Supported (*.probe);;显示名称 %1 (*.probe);;Any (*)");
+  EXPECT_EQ(catalog.dataSources().front().name, "Static File");
 
   catalog.scanDirectory();
   ASSERT_EQ(catalog.dataSources().size(), 1U);

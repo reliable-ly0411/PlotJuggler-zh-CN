@@ -1,3 +1,4 @@
+#include "pj_plugins/host_qt/bundled_translations.hpp"
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MIT
 #include <pj_widgets/Dialog.h>
@@ -32,6 +33,7 @@
 
 #include "browser_save_target.hpp"
 #include "host_info.hpp"
+#include "parsed_widget_data.hpp"
 using namespace Qt::StringLiterals;
 
 namespace PJ {
@@ -202,22 +204,16 @@ struct PanelEngine::Impl {
       return std::nullopt;
     }
     prev_raw = raw;
-    WidgetDataView next_view(raw);
-    auto close_reason = next_view.requestClose();
-    // A payload that asks to close is not diffed or applied: the panel is being torn down, and its full parse, diff
-    // and apply would hold the thread in the tick that closes it. A declined close applies the state on the next
-    // tick, whose bytes differ and are diffed against the last applied payload.
-    nlohmann::json new_data;
-    if (!close_reason.has_value()) {
-      new_data = nlohmann::json::parse(raw, nullptr, false);
-      if (new_data.is_discarded()) {
-        return std::nullopt;
-      }
+    auto parsed_view = detail::parseWidgetDataView(raw);
+    if (!parsed_view) {
+      return std::nullopt;
     }
-    prev_view = std::move(next_view);
-    // An alias: a nested applyAndDiff (during the modal sub-dialog below) reassigns prev_view, so `view` is not
-    // read after that exec returns.
+    prev_view = std::move(*parsed_view);
+    // Alias, not a copy. A nested applyAndDiff (modal sub-dialog exec below)
+    // reassigns prev_view, so `view` must not be read after that exec returns —
+    // today every use precedes it.
     const WidgetDataView& view = prev_view;
+    auto close_reason = view.requestClose();
     auto sub_dialog_ui = view.subDialogUi();
     auto sub_panel_ui = view.subPanelUi();
     const bool sub_panel_close = view.subPanelClose();
@@ -226,9 +222,12 @@ struct PanelEngine::Impl {
     // them: a plugin that answers "" while idle (the documented "no update") leaves prev_raw on this request, and
     // an identical request later (Settings, Cancel, Settings) would be dropped as a repeat.
     const bool consumed_one_shot = close_reason.has_value() || sub_dialog_ui.has_value() || sub_panel_ui.has_value() ||
-                                   sub_panel_close || new_data.contains("__request_accept");
+                                   sub_panel_close || view.raw().contains("__request_accept");
 
+    // A closing panel must not paint or advance the last-applied baseline. If the owner
+    // declines, the next ordinary payload is diffed against the last state the user saw.
     if (!close_reason.has_value()) {
+      nlohmann::json new_data = view.raw();
       new_data.erase("__request_close");
       new_data.erase("__request_sub_dialog");
       new_data.erase("__request_sub_panel");
@@ -466,11 +465,16 @@ QWidget* PanelEngine::openPanel() {
     // cached view: a handled event just refreshed it, and re-polling widget_data() doubled the cost of every
     // high-frequency event (a slider drag) for metadata that changes at most once per tick.
     const PJ::WidgetDataView& picker_view = impl_->prev_view;
+    const auto picker_text = [&](const char* property, const std::string& text) {
+      return bundledNamedDisplayText(impl_->root, QString::fromStdString(name), property, QString::fromStdString(text));
+    };
     if (picker_view.isFilePicker(name)) {
       const FilePickerStart start = filePickerStart(picker_view, name);
       const QString path = PJ::FileDialog::getOpenFileName(
-          impl_->root, QString::fromStdString(picker_view.filePickerTitle(name).value_or("Select File")), start.dir,
-          QString::fromStdString(picker_view.filePickerFilter(name).value_or("")), start.name);
+          impl_->root,
+          picker_text(
+              "pickerTitle", picker_view.filePickerTitle(name).value_or(QObject::tr("Select File").toStdString())),
+          start.dir, picker_text("pickerFilter", picker_view.filePickerFilter(name).value_or("")), start.name);
       if (!path.isEmpty()) {
         forward(name, PJ::WidgetEventBuilder::fileSelected(path.toStdString()));
       }
@@ -487,8 +491,10 @@ QWidget* PanelEngine::openPanel() {
 #else
       const FilePickerStart start = filePickerStart(picker_view, name);
       const QString path = PJ::FileDialog::getSaveFileName(
-          impl_->root, QString::fromStdString(picker_view.filePickerTitle(name).value_or("Save File")), start.dir,
-          QString::fromStdString(picker_view.filePickerFilter(name).value_or("")),
+          impl_->root,
+          picker_text(
+              "pickerTitle", picker_view.filePickerTitle(name).value_or(QObject::tr("Save File").toStdString())),
+          start.dir, picker_text("pickerFilter", picker_view.filePickerFilter(name).value_or("")),
           QString::fromStdString(picker_view.saveFilePickerDefaultSuffix(name).value_or("")), start.name);
       if (!path.isEmpty()) {
         forward(name, PJ::WidgetEventBuilder::fileSelected(path.toStdString()));
@@ -503,7 +509,9 @@ QWidget* PanelEngine::openPanel() {
       }
 #else
       const QString path = PJ::FileDialog::getExistingDirectory(
-          impl_->root, QString::fromStdString(picker_view.folderPickerTitle(name).value_or("Select Folder")),
+          impl_->root,
+          picker_text(
+              "pickerTitle", picker_view.folderPickerTitle(name).value_or(QObject::tr("Select Folder").toStdString())),
           filePickerStart(picker_view, name).dir);
       if (!path.isEmpty()) {
         forward(name, PJ::WidgetEventBuilder::folderSelected(path.toStdString()));

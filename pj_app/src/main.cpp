@@ -438,7 +438,8 @@ int main(int argc, char* argv[]) {
       u"test-data"_s, u"Populate the datastore with generated sin/cos samples and one image."_s);
   parser.addOption(test_data_option);
   const QCommandLineOption plugin_dir_option(
-      u"plugin-dir"_s, u"Override the directory where extensions are discovered and managed."_s, u"path"_s);
+      u"plugin-dir"_s, u"Override plugin discovery priority without changing the managed marketplace store."_s,
+      u"path"_s);
   parser.addOption(plugin_dir_option);
 #ifndef PJ_TARGET_WASM
   const QCommandLineOption validate_plugins_option(

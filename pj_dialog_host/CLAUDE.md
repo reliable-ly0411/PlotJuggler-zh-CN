@@ -20,27 +20,15 @@ Private links: `pj_plotting` (the full `PlotWidget` for embedded chart frames) a
 
 ## Invariants
 
-- `DialogEngine` runs no nested event loop: `openDialog()` shows the dialog application-modal with `show()`. `open()`
-  would downgrade it to window-modal, which leaves floating dock tool-windows interactive. `showDialog()` is a
-  desktop-only blocking wrapper (refused on WebAssembly): add no caller.
-- Widget callbacks captured by reference are wrapped in `guardedCallback` and severed when the dialog completes: the
-  widgets outlive the engine's coroutine frame, and a late signal would call into a destroyed one.
-- `cancelActiveDialog()` must be called while the plugin context borrowed by the `DialogHandle` is alive; it delivers
-  exactly one `on_rejected`, and afterwards nothing reaches the plugin.
-- Both engines skip a byte-identical widget-data re-read. One-shot requests (accept, sub-dialog, close) change the
-  bytes, and `PanelEngine` clears its memo after consuming one: a plugin answering "" while idle would otherwise
-  leave it on the old request, and an identical request later would be dropped as a repeat.
-- `PanelEngine` neither diffs nor applies a payload that requests its close: the panel is being torn down, and the
-  full-payload parse, diff and apply would hold the main thread in the tick that closes it. A declined close applies
-  that state on the next tick, which diffs against the last applied payload.
-- `PanelEngineConfig` grows by appending members only: callers use positional initializers.
-- Plugin widget data is applied by name to the tree the engine loaded (plus widgets recorded in `pjHoistedWidgets`).
-  A sub-dialog or an injected parser dialog is a separate tree: its field states come from the declarative rules.
-- A table row is identified by its `kPluginRowRole` tag, not its view position or text: with `sortingEnabled` the user
-  re-orders the view, and every index the plugin sends or receives is translated through the tag.
-- A table column never mixes typed (`TypedTableItem`) and plain cells: the comparison is then not a strict weak
-  ordering and `std::stable_sort` is undefined. Code that writes cells keeps each column homogeneous.
-- The `.ui` contracts name no plugin widget: behaviour comes from properties and protocol keys.
+Panel refreshes reuse `WidgetDataView::raw()` for the diff's owned copy rather
+than parsing the same numeric preview payload twice. The SDK normalizes malformed
+JSON to an empty object, so that ambiguous result is separately validated before
+replacing the previous view. One-shot commands remain in the typed view while
+the diff copy strips them; rejection, identical-data and command replay semantics
+remain unchanged. A close payload skips the diff and apply without advancing the
+last-applied baseline; a declined close can apply the next ordinary payload.
+
+## What belongs here
 
 ## Public headers (`include/pj_plugins/host_qt/`)
 
@@ -113,14 +101,36 @@ Two gtest runners on the shared gui test main (`pj_add_test_runner`, `cmake/PjTe
 - `pj_dialog_host_panel_tests`: `panel_engine_test.cpp` with `mock_panel_plugin.cpp`. A separate runner because both
   mocks define the plugin entry point `PJ_get_dialog_vtable`: never merge them.
 
-Run a runner with `./test.sh -R '^pj_dialog_host_tests\.'`.
+Run one runner with `./test.sh -R '^pj_dialog_host_tests\.'`.
+## Fixed bundled-plugin display localization
 
-## Known gaps
+`bundled_translations.hpp` implements the fork's pinned UI display boundary.
+`PjUiLoader::load` admits only exact reviewed UI hashes (CRLF normalized to LF
+for identity only); object name, property and source text must also match.
+Unknown UI bytes or dynamic values are returned unchanged. Noneditable combo
+items retain canonical text in a separate role for comparisons/events; editable
+inputs and raw data/code/table bodies are never translated by a broad matcher.
+Mixed user/internal prose is localized at its typed construction site in the
+five rebuilt source-patched plugins; Mosaico retains its official binary and
+remaining mixed English (issue #20), not by searching arbitrary plain-text bodies.
+See `packaging/localization/plugin-patches/README.md` for build provenance and
+`tests/test_bundled_translations.py` plus native Qt regressions for guards.
 
-- `PanelEngine::openPanel` stores the initial payload as `prev_raw`, so the first poll skips as identical and a
-  one-shot request in the initial widget data waits for the payload to change; `DialogEngine` keeps its memo empty
-  for that reason.
-- `PanelEngine` forwards events for the main panel and its drop filter through two inline copies of what
-  `Impl::forwardEvent` does for the sub-panel.
-- `PreviewScaleDraw` in `chart_preview_widget.cpp` duplicates `pj_plotting`'s `PlotScaleDraw`, which this target can
-  link privately.
+Official FFT 1.0.1 is also admitted by its exact reviewed UI hash, without
+rebuilding its binary. Fixed statuses and anchored templates belong only to its
+`status_label`; captured field names, numeric formatting and external error
+details are appended verbatim. `selected_value` can contain an arbitrary field
+name: its empty-state text is translated only when the same widget-data payload
+explicitly disables `btn_compute` (or during static UI loading). Missing state
+never consults a stale painted button. See
+`docs/localization/PLUGIN-FEEDBACK.zh-CN.md` at the repository root for provenance
+and the optional official-binary acceptance harness, including its integration
+limits.
+
+The same pinned FFT UI also receives a display-only layout adaptation: the
+existing status label and calculate/export buttons move into a full-width footer
+outside the chart splitter. Wrapped status text cannot consume the narrow input
+column's action height. Widget identities, bindings, enabled states, official
+plugin bytes and data semantics remain unchanged; unknown UI hashes receive no
+layout adaptation. Qt-only geometry tests and the full-shell acceptance cover
+three languages and compact sizes, including dynamic computed/exported text.

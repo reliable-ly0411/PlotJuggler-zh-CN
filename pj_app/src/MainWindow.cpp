@@ -1,3 +1,6 @@
+#include <pj_widgets/BundledPluginText.h>
+
+#include <pj_plugins/host_qt/bundled_translations.hpp>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
@@ -1170,7 +1173,15 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
       session_->sessionManager(), *new SeriesProgressController(this), *ui_->curveListPanel, /*context=*/this);
   ui_->curveListPanel->setOwnerResolver([this](const QString& plugin_id) {
     const ExtensionCatalogService& extensions = session_->extensionCatalog();
-    return CurveListPanel::OwnerInfo{extensions.toolboxDisplayName(plugin_id), extensions.toolboxBadge(plugin_id)};
+    QString name = extensions.toolboxDisplayName(plugin_id);
+    QString badge = extensions.toolboxBadge(plugin_id);
+    if (const LoadedToolbox* toolbox = extensions.findToolbox(plugin_id)) {
+      name = bundledPluginText(plugin_id, QString::fromStdString(toolbox->version), name);
+      if (toolbox->badge.empty()) {
+        badge = name;
+      }
+    }
+    return CurveListPanel::OwnerInfo{name, badge};
   });
   ui_->curveListPanel->setDisplayTimeResolver([this](DatasetId dataset_id, Timestamp raw_ns) {
     return displayTimeForSource({static_cast<uint32_t>(dataset_id)}, raw_ns);
@@ -4570,9 +4581,11 @@ void MainWindow::emitDiagnostic(DiagnosticLevel level, const char* source, const
 }
 
 void MainWindow::refreshStreamingCombo() {
-  QStringList names;
+  QList<QPair<QString, QString>> names;
   for (const auto* ds : session_->extensionCatalog().streamSources()) {
-    names << QString::fromStdString(ds->name);
+    const QString canonical = QString::fromStdString(ds->name);
+    names.push_back(
+        {canonical, bundledPluginText(QString::fromStdString(ds->id), QString::fromStdString(ds->version), canonical)});
   }
   ui_->leftPanel->setStreamingSources(names);
 }
@@ -5114,7 +5127,9 @@ void MainWindow::onRebuildExtensionsMenu() {
   bool added_any = false;
   const auto append_plugins = [&]<typename Plugin>(const std::vector<Plugin>& plugins) {
     for (const auto& plugin : plugins) {
-      const QString name = QString::fromStdString(plugin.name);
+      const QString name = bundledPluginText(
+          QString::fromStdString(plugin.id), QString::fromStdString(plugin.version),
+          QString::fromStdString(plugin.name));
       const QString version = QString::fromStdString(plugin.version);
       const QString label = version.isEmpty() ? name : u"%1 (%2)"_s.arg(name, version);
       QAction* action = menu->addAction(label);
@@ -5232,11 +5247,15 @@ void MainWindow::onRebuildToolboxMenu() {
     }
 
     const QString id = QString::fromStdString(toolbox.id);
-    const QString name = toolbox.name.empty() ? id : QString::fromStdString(toolbox.name);
+    const QString name =
+        toolbox.name.empty()
+            ? id
+            : bundledPluginText(id, QString::fromStdString(toolbox.version), QString::fromStdString(toolbox.name));
     QAction* action = menu->addAction(name);
     if (manifest.is_object()) {
       if (auto desc = manifest.find("description"); desc != manifest.end() && desc->is_string()) {
-        action->setToolTip(QString::fromStdString(desc->get<std::string>()));
+        action->setToolTip(bundledPluginText(
+            id, QString::fromStdString(toolbox.version), QString::fromStdString(desc->get<std::string>())));
       }
     }
     connect(action, &QAction::triggered, this, [this, id]() { launchToolbox(id); });
@@ -8007,7 +8026,11 @@ void MainWindow::reportDeleteRefusal(const CustomTopicDeleteRefusal& refusal) {
   using Reason = CustomTopicDeleteRefusal::Reason;
   const QString user_id = QString::fromStdString(refusal.user_id);
   const auto owner_name = [this, &refusal]() {
-    return session_->extensionCatalog().toolboxDisplayName(QString::fromStdString(refusal.owner_plugin));
+    const auto& extensions = session_->extensionCatalog();
+    const QString id = QString::fromStdString(refusal.owner_plugin);
+    const QString name = extensions.toolboxDisplayName(id);
+    const LoadedToolbox* toolbox = extensions.findToolbox(id);
+    return toolbox == nullptr ? name : bundledPluginText(id, QString::fromStdString(toolbox->version), name);
   };
   switch (refusal.reason) {
     case Reason::kGone:
@@ -10713,7 +10736,7 @@ void MainWindow::launchToolbox(
   // The presenter owns the session, and so the plugin, from here. The chrome hooks look it up by id: a click queued
   // across a teardown must find nothing, not a dangling presenter.
   WrappedToolboxPanel wrapped = wrapToolboxPanel(
-      panel, source,
+      panel, bundledPluginText(plugin_id, QString::fromStdString(toolbox->version), source),
       ToolboxChromeHooks{
           .on_close = [this,
                        plugin_id]() { withToolbox(plugin_id, [](ToolboxPresenter& shown) { shown.requestClose(); }); },
@@ -10732,7 +10755,9 @@ void MainWindow::launchToolbox(
                      .engine = engine,
                      .session = session,
                      .host = session->host.get(),
-                     .title = pin_tab_name.isEmpty() ? source : pin_tab_name,
+                     .title = pin_tab_name.isEmpty()
+                                  ? bundledPluginText(plugin_id, QString::fromStdString(toolbox->version), source)
+                                  : pin_tab_name,
                      // The presenter owns `session`, so its raw pointer outlives this closure.
                      .save_config = [session = session.get()]() -> QString {
                        std::string config_json;

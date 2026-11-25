@@ -1,7 +1,6 @@
+#include <pj_widgets/BundledPluginText.h>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
-
-#include "PluginPlotTabsController.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -10,6 +9,7 @@
 #include <memory>
 #include <optional>
 
+#include "PluginPlotTabsController.h"
 #include "pj_plotting/DockWidget.h"
 #include "pj_plotting/PlotDocker.h"
 #include "pj_plotting/PlotWidget.h"
@@ -48,6 +48,15 @@ Unexpected<std::string> sceneTabError(const QString& tab_id, const QString& kind
 /// The ABI error for a scene-only operation aimed at a plot tab; `slot` is the plot twin.
 Unexpected<std::string> plotTabError(const QString& tab_id, const char* slot) {
   return unexpected(("tab '" + tab_id + "' is a plot tab: use " + QString::fromUtf8(slot)).toStdString());
+}
+
+/// Localize only a reviewed plugin name; explicit badges remain plugin-authored.
+QString displayToolboxBadge(const ExtensionCatalogService& extensions, const QString& id) {
+  const LoadedToolbox* toolbox = extensions.findToolbox(id);
+  if (toolbox == nullptr || !toolbox->badge.empty() || toolbox->name.empty()) {
+    return extensions.toolboxBadge(id);
+  }
+  return bundledPluginText(id, QString::fromStdString(toolbox->version), QString::fromStdString(toolbox->name));
 }
 
 /// The curve a plugin names: `dataset` is a dataset label (CatalogModel::datasetByLabel), as the catalog snapshot
@@ -204,7 +213,7 @@ PlotDocker* PluginPlotTabsController::newOwnedTab(
   docker->setStateId(ownedTabKey(plugin_id, tab_id));
   docker->setHistoryExempt(true);
   docker->setOwnerMetadata(plugin_id, tab_id);
-  docker->setOwnerBadge(extensions_.toolboxBadge(plugin_id));
+  docker->setOwnerBadge(displayToolboxBadge(extensions_, plugin_id));
   return docker;
 }
 
@@ -259,7 +268,7 @@ Status PluginPlotTabsController::createTabOfKind(
 void PluginPlotTabsController::refreshAvailability() {
   tabs_.forEachDocker([this](PlotDocker* docker) {
     if (!docker->ownerPlugin().isEmpty()) {
-      docker->setOwnerBadge(extensions_.toolboxBadge(docker->ownerPlugin()));
+      docker->setOwnerBadge(displayToolboxBadge(extensions_, docker->ownerPlugin()));
     }
   });
 }
