@@ -19,14 +19,65 @@
 #include <Qt>
 #include <algorithm>
 
+#include "LocalizedOriginalMeme.h"
 #include "pj_widgets/FrameworkTokens.h"
 using namespace Qt::StringLiterals;
 
 namespace PJ {
 namespace {
 
-// Avoids the most recently shown memes (persisted in QSettings). Null when the pool is empty.
+// Text-free artwork already shipped by the application. Captions are composed
+// as meme panels, not painted over the English raster meme pool.
+QPixmap makeLocalizedMeme(int index) {
+  const QStringList captions = localizedMemeCaptions();
+  const qsizetype pair = (qMax(0, index) % (captions.size() / 2)) * 2;
+  const qreal dpr = qMax(1.0, qApp->devicePixelRatio());
+  QPixmap pixmap(QSize(600, 390) * dpr);
+  pixmap.setDevicePixelRatio(dpr);
+  pixmap.fill(Qt::white);
+  QPainter painter(&pixmap);
+  painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
+  const QPixmap disappointed(u":/resources/crying_cat.png"_s);
+  const QPixmap victorious(u":/resources/success_kid.png"_s);
+  painter.drawPixmap(QRect(22, 112, 256, 256), disappointed);
+  painter.drawPixmap(QRect(322, 112, 256, 256), victorious);
+  painter.setPen(Qt::black);
+  QFont font;
+  font.setPixelSize(24);
+  font.setBold(true);
+  painter.setFont(font);
+  painter.drawText(QRect(18, 12, 264, 92), Qt::AlignCenter | Qt::TextWordWrap, captions.at(pair));
+  painter.drawText(QRect(318, 12, 264, 92), Qt::AlignCenter | Qt::TextWordWrap, captions.at(pair + 1));
+  return pixmap;
+}
+
+// Picks a random "funny meme" from the bundled pool (:/resources/memes),
+// avoiding the handful most recently shown (persisted in QSettings) so
+// consecutive launches don't repeat until the pool cycles. The pool is
+// enumerated at runtime, so adding a meme is a pure resource change — no code
+// edit. Returns a null QPixmap when the pool is empty.
 QPixmap getFunnySplashscreen() {
+  const QString language = QCoreApplication::instance()->property("interfaceLanguage").toString();
+  if (language == "zh_CN"_L1 || language == "zh_TW"_L1) {
+    const QStringList ids = chineseMemeIds();
+    if (ids.isEmpty()) {
+      return {};
+    }
+    QSettings settings;
+    QStringList recent = settings.value(u"previousLocalizedFunnyMemesList"_s).toStringList();
+    const qsizetype avoid_count = std::min<qsizetype>(recent.size(), ids.size() - 1);
+    QStringList choices = ids;
+    for (const auto& id : recent.mid(recent.size() - avoid_count)) {
+      choices.removeAll(id);
+    }
+    const QString chosen = choices.at(QRandomGenerator::global()->bounded(static_cast<int>(choices.size())));
+    recent.append(chosen);
+    while (recent.size() > 10) {
+      recent.removeFirst();
+    }
+    settings.setValue(u"previousLocalizedFunnyMemesList"_s, recent);
+    return capMemeToSplashBox(chineseMemePixmap(chosen));
+  }
   QDir memes_dir(u":/resources/memes"_s);
   const QStringList files = memes_dir.entryList({u"*.jpg"_s}, QDir::Files, QDir::Name);
   if (files.isEmpty()) {
@@ -53,28 +104,12 @@ QPixmap getFunnySplashscreen() {
   return capMemeToSplashBox(QPixmap(memes_dir.filePath(chosen)));
 }
 
-const QStringList& seriousSubtitles() {
-  static const QStringList kSubtitles = {
-      u"Now you're plotting"_s,
-      u"The plot thickens"_s,
-      u"Hold my rosbag"_s,
-      u"Make your data confess"_s,
-      u"More than just curves now"_s,
-      u"Better than it has any right to be"_s,
-      u"Objectively the best. Probably."_s,
-      u"Still better than printf"_s,
-      u"Friends don't let friends use printf"_s,
-      u"Lovingly over-engineered"_s,
-      u"Suspiciously good for a free tool"_s,
-      u"Opening PlotJuggler. Again."_s,
-      u"Curves were just the beginning"_s,
-      u"Mostly written by an AI"_s,
-      u"An AI helped. Allegedly."_s,
-  };
-  return kSubtitles;
-}
-
-// Painted rather than an image, so it stays crisp at any DPI and the subtitle can vary.
+// The pool of subtitles for the "serious" splashscreen; one is picked at random
+// each launch.
+// Renders the "serious" splashscreen: the PlotJuggler logo + wordmark over
+// framework surface and brand-gradient tokens, with a random
+// subtitle underneath. Composed with QPainter rather than baked into an image
+// so every element stays crisp at any DPI and the subtitle can vary per launch.
 QPixmap makeSeriousSplashscreen() {
   constexpr int kW = 720;
   constexpr int kH = 300;
@@ -136,7 +171,7 @@ QPixmap makeSeriousSplashscreen() {
   subtitle_font.setWeight(QFont::Light);
   p.setFont(subtitle_font);
   p.setPen(wordmark_ink);
-  const QStringList& subs = seriousSubtitles();
+  const QStringList subs = seriousSplashSubtitles();
   const QString subtitle = subs.at(QRandomGenerator::global()->bounded(static_cast<int>(subs.size())));
   const qreal subtitle_width = QFontMetricsF(subtitle_font).horizontalAdvance(subtitle);
   p.drawText(QPointF(text_x + (wordmark_width - subtitle_width) / 2.0, wordmark_baseline + 56), subtitle);
@@ -154,6 +189,77 @@ QPixmap makeSeriousSplashscreen() {
 
 }  // namespace
 
+QStringList seriousSplashSubtitles() {
+  return {
+      QCoreApplication::translate("PJ::Splashscreen", "Now you're plotting"),
+      QCoreApplication::translate("PJ::Splashscreen", "The plot thickens"),
+      QCoreApplication::translate("PJ::Splashscreen", "Hold my rosbag"),
+      QCoreApplication::translate("PJ::Splashscreen", "Make your data confess"),
+      QCoreApplication::translate("PJ::Splashscreen", "More than just curves now"),
+      QCoreApplication::translate("PJ::Splashscreen", "Better than it has any right to be"),
+      QCoreApplication::translate("PJ::Splashscreen", "Objectively the best. Probably."),
+      QCoreApplication::translate("PJ::Splashscreen", "Still better than printf"),
+      QCoreApplication::translate("PJ::Splashscreen", "Friends don't let friends use printf"),
+      QCoreApplication::translate("PJ::Splashscreen", "Lovingly over-engineered"),
+      QCoreApplication::translate("PJ::Splashscreen", "Suspiciously good for a free tool"),
+      QCoreApplication::translate("PJ::Splashscreen", "Opening PlotJuggler. Again."),
+      QCoreApplication::translate("PJ::Splashscreen", "Curves were just the beginning"),
+      QCoreApplication::translate("PJ::Splashscreen", "Mostly written by an AI"),
+      QCoreApplication::translate("PJ::Splashscreen", "An AI helped. Allegedly."),
+  };
+}
+
+QStringList localizedMemeCaptions() {
+  return {
+      QCoreApplication::translate("PJ::Splashscreen", "The bug only happens in production"),
+      QCoreApplication::translate("PJ::Splashscreen", "Good thing I recorded the data"),
+      QCoreApplication::translate("PJ::Splashscreen", "Staring at ten thousand log lines"),
+      QCoreApplication::translate("PJ::Splashscreen", "One plot later: found it"),
+      QCoreApplication::translate("PJ::Splashscreen", "It must be the sensor"),
+      QCoreApplication::translate("PJ::Splashscreen", "It was milliseconds versus seconds"),
+      QCoreApplication::translate("PJ::Splashscreen", "Just one more printf"),
+      QCoreApplication::translate("PJ::Splashscreen", "Drag, drop, mystery solved"),
+      QCoreApplication::translate("PJ::Splashscreen", "The demo worked yesterday"),
+      QCoreApplication::translate("PJ::Splashscreen", "Replay the good recording"),
+      QCoreApplication::translate("PJ::Splashscreen", "My signal is all noise"),
+      QCoreApplication::translate("PJ::Splashscreen", "FFT: allow me to introduce myself"),
+      QCoreApplication::translate("PJ::Splashscreen", "Two curves, two different clocks"),
+      QCoreApplication::translate("PJ::Splashscreen", "Time offset to the rescue"),
+      QCoreApplication::translate("PJ::Splashscreen", "I forgot to save the layout"),
+      QCoreApplication::translate("PJ::Splashscreen", "This time I saved the layout"),
+  };
+}
+
+QStringList chineseMemeIds() {
+  // The reviewed raster variants contain Simplified Chinese pixels. Traditional
+  // Chinese uses only text-free artwork with captions from its own Qt catalog.
+  const bool traditional = QCoreApplication::instance()->property("interfaceLanguage").toString() == "zh_TW"_L1;
+  QStringList ids = traditional ? QStringList{} : localizedOriginalMemeIds();
+  for (qsizetype i = 0; i < localizedMemeCaptions().size() / 2; ++i) {
+    ids.append(u"extra:%1"_s.arg(i));
+  }
+  return ids;
+}
+
+QPixmap chineseMemePixmap(const QString& id) {
+  if (!chineseMemeIds().contains(id)) {
+    return {};
+  }
+  if (id.startsWith(u"extra:"_s)) {
+    return makeLocalizedMeme(id.mid(6).toInt());
+  }
+  return localizedOriginalMeme(id.toInt());
+}
+
+QPixmap localizedMemeForTest(int index) {
+  return makeLocalizedMeme(index);
+}
+
+QString startupSplashMode(const QSettings& settings) {
+  const QString mode = settings.value(kSplashModeKey, kSplashModeMemes).toString();
+  return mode == kSplashModeSerious ? kSplashModeSerious : kSplashModeMemes;
+}
+
 QPixmap capMemeToSplashBox(const QPixmap& pixmap) {
   if (pixmap.width() <= kMaxMemeExtent && pixmap.height() <= kMaxMemeExtent) {
     return pixmap;
@@ -163,9 +269,9 @@ QPixmap capMemeToSplashBox(const QPixmap& pixmap) {
 
 QPixmap makeStartupSplash() {
   QSettings settings;
-  const QString mode = settings.value(kSplashModeKey, kSplashModeMemes).toString();
+  const QString mode = startupSplashMode(settings);
   if (mode != kSplashModeSerious) {
-    // No meme pool in the browser build: fall back to the serious splash.
+    // Fall back to the serious splash if no image can be loaded.
     if (QPixmap meme = getFunnySplashscreen(); !meme.isNull()) {
       return meme;
     }

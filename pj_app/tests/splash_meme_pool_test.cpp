@@ -7,10 +7,13 @@
 #include <QColor>
 #include <QDir>
 #include <QPixmap>
+#include <QSettings>
 #include <QStandardPaths>
 #include <QString>
 #include <QStringList>
+#include <QTemporaryDir>
 
+#include "AppLanguage.h"
 #include "Splashscreen.h"
 
 // Q_INIT_RESOURCE / Q_CLEANUP_RESOURCE declare their functions in the current scope, so they must be used outside
@@ -41,8 +44,61 @@ QStringList sourcePool() {
   return memesIn(QString::fromUtf8(PJ_MEMES_SOURCE_DIR));
 }
 
-// rcc has no globbing: a meme reaches the splash only if memes.qrc lists it. A file left out of the manifest is
-// invisible at runtime, with no build error or warning.
+// rcc has no globbing, so a meme reaches the splash only if memes.qrc lists
+// it explicitly. A file added to the directory but left out of the manifest is
+// invisible at runtime with no build error and no warning — it simply never
+// shows, and the only symptom is a meme nobody ever sees.
+TEST(SplashLocalization, ChineseHonorsExplicitMemePreference) {
+  QTemporaryDir directory;
+  ASSERT_TRUE(directory.isValid());
+  QSettings settings(directory.filePath(u"settings.ini"_s), QSettings::IniFormat);
+  const AppLanguage language(*QCoreApplication::instance(), u"zh_CN"_s);
+  ASSERT_TRUE(language.catalogLoaded());
+  EXPECT_EQ(startupSplashMode(settings), kSplashModeMemes);
+  EXPECT_FALSE(settings.contains(kSplashModeKey));
+  settings.setValue(kSplashModeKey, kSplashModeMemes);
+  EXPECT_EQ(startupSplashMode(settings), kSplashModeMemes);
+  EXPECT_EQ(settings.value(kSplashModeKey).toString(), kSplashModeMemes);
+}
+
+TEST(SplashLocalization, SavedMemeChoiceSurvivesLanguageRoundTrip) {
+  QTemporaryDir directory;
+  ASSERT_TRUE(directory.isValid());
+  QSettings settings(directory.filePath(u"settings.ini"_s), QSettings::IniFormat);
+  settings.setValue(kSplashModeKey, kSplashModeMemes);
+  for (const QString& code : {u"zh_CN"_s, u"zh_TW"_s, u"en_US"_s, u"zh_CN"_s}) {
+    const AppLanguage language(*QCoreApplication::instance(), code);
+    EXPECT_EQ(startupSplashMode(settings), kSplashModeMemes);
+    EXPECT_EQ(settings.value(kSplashModeKey).toString(), kSplashModeMemes);
+  }
+}
+
+TEST(SplashLocalization, AllSubtitlesTranslateAndDoNotLeakIntoEnglish) {
+  QStringList english;
+  {
+    const AppLanguage language(*QCoreApplication::instance(), u"en_US"_s);
+    english = seriousSplashSubtitles();
+    QTemporaryDir directory;
+    const QSettings settings(directory.filePath(u"settings.ini"_s), QSettings::IniFormat);
+    EXPECT_EQ(startupSplashMode(settings), kSplashModeMemes);
+  }
+  ASSERT_EQ(english.size(), 15);
+  for (const QString& code : {u"zh_CN"_s, u"zh_TW"_s, u"zh_CN"_s}) {
+    {
+      const AppLanguage language(*QCoreApplication::instance(), code);
+      ASSERT_TRUE(language.catalogLoaded());
+      const QStringList chinese = seriousSplashSubtitles();
+      ASSERT_EQ(chinese.size(), english.size());
+      for (qsizetype i = 0; i < chinese.size(); ++i) {
+        EXPECT_FALSE(chinese.at(i).isEmpty());
+        EXPECT_NE(chinese.at(i), english.at(i));
+      }
+    }
+    const AppLanguage language(*QCoreApplication::instance(), u"en_US"_s);
+    EXPECT_EQ(seriousSplashSubtitles(), english);
+  }
+}
+
 TEST(SplashMemePool, EveryMemeOnDiskIsListedInTheManifest) {
   const QStringList on_disk = sourcePool();
   ASSERT_FALSE(on_disk.isEmpty()) << "no memes found under " << PJ_MEMES_SOURCE_DIR;
@@ -117,13 +173,19 @@ TEST(SplashMemePool, CapLeavesImagesInsideTheBoxUntouched) {
   EXPECT_EQ(capMemeToSplashBox(exactly_at_the_bound).size(), exactly_at_the_bound.size());
 }
 
-// The browser build compiles no memes: a funny splash request over an empty pool must still show the serious
-// banner, not nothing.
+// A funny splash request over an empty image pool must still show the serious
+// banner. Localized catalog metadata is not an image in the English pool.
 TEST(SplashMemePool, EmptyPoolFallsBackToTheSeriousSplash) {
+  const AppLanguage language(*qApp, u"en_US"_s);
+  QSettings settings;
+  settings.setValue(kSplashModeKey, kSplashModeMemes);
   unregisterMemePool();
-  EXPECT_TRUE(QDir(QStringLiteral(":/resources/memes")).entryList(QDir::Files).isEmpty());
-  EXPECT_FALSE(makeStartupSplash().isNull());
+  EXPECT_TRUE(compiledPool().isEmpty());
+  const QPixmap splash = makeStartupSplash();
+  EXPECT_FALSE(splash.isNull());
+  EXPECT_EQ(splash.deviceIndependentSize(), QSizeF(720, 300));
   registerMemePool();
+  EXPECT_FALSE(compiledPool().isEmpty());
 }
 
 }  // namespace
@@ -135,6 +197,14 @@ int main(int argc, char** argv) {
   }
   QStandardPaths::setTestModeEnabled(true);
   QApplication app(argc, argv);
+  QTemporaryDir profile;
+  if (!profile.isValid()) {
+    return 1;
+  }
+  QSettings::setDefaultFormat(QSettings::IniFormat);
+  QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, profile.path());
+  QCoreApplication::setOrganizationName(u"PlotJugglerTest"_s);
+  QCoreApplication::setApplicationName(u"SplashMemePool"_s);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

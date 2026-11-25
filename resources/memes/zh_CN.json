@@ -1,0 +1,1299 @@
+{
+  "schema": 2,
+  "language": "zh_CN",
+  "source_release": "v3.18.0-zh.4",
+  "policy": "Original 4.x pool remains byte-identical. Existing 3.x lossless caption crops are reused, with pixel review rather than output hashes as acceptance. Incomplete originals are not silently substituted.",
+  "images": [
+    {
+      "id": 1,
+      "original_sha256": "51a830ca768fadd033a45623bafdaccf75696670ea9a2f8a1735c5c2787ff847",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: generated asset individually inspected; original subject, framing and joke retained; Chinese readable and unclipped; English captions replaced",
+      "regions": [
+        {
+          "source": "TO-DOLIST new memes for PlotJuggler",
+          "text": "待办清单：为 PlotJuggler 制作新表情包"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_01.png"
+      },
+      "retained_english": "Original product/technical names and source attribution only"
+    },
+    {
+      "id": 2,
+      "original_sha256": "538f797739a75f7da1bd337b61dc8227c90ecc0072e9c7d763a74b57b71a3c39",
+      "localization_status": "original-technical-labels",
+      "pixel_review": "passed: only product names/version numbers, intentionally preserved verbatim",
+      "regions": [],
+      "retained_english": "PlotJuggler 3 / PlotJuggler 4"
+    },
+    {
+      "id": 3,
+      "original_sha256": "123fa929b570d3f2d86cdaed9302c264855ea4e7dc0058be3aadcc5815be0d31",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: generated asset individually inspected; original subject, framing and joke retained; Chinese readable and unclipped; English captions replaced",
+      "regions": [
+        {
+          "source": "More features",
+          "text": "更多功能"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_03.png"
+      },
+      "retained_english": "Original product/technical names and source attribution only"
+    },
+    {
+      "id": 4,
+      "original_sha256": "48c43e914d46b172cab2e83534468a310e9acf49def095a47296e8f0b44453e2",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: generated asset individually inspected; original subject, framing and joke retained; Chinese readable and unclipped; English captions replaced",
+      "regions": [
+        {
+          "source": "YOU ARE THE BEST VISUALIZATION TOOL",
+          "text": "你是最棒的可视化工具"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_04.png"
+      },
+      "retained_english": "Original product/technical names and source attribution only"
+    },
+    {
+      "id": 5,
+      "original_sha256": "fd50bca20905c90319f3d6c847799f5dd9059126e4cd7226872c5cd1fbf49f00",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: generated asset individually inspected; original subject, framing and joke retained; Chinese readable and unclipped; English captions replaced",
+      "regions": [
+        {
+          "source": "now add 3D visualization...",
+          "text": "现在，加上 3D 可视化……"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_05.png"
+      },
+      "retained_english": "Original product/technical names and source attribution only"
+    },
+    {
+      "id": 6,
+      "original_sha256": "ac8047bcd81ed06bcd25d876bc9d6986ac7ecab2a6699ac8ca22ca34570e6673",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: generated asset individually inspected; original subject, framing and joke retained; Chinese readable and unclipped; English captions replaced",
+      "regions": [
+        {
+          "source": "PLOTS",
+          "text": "绘图"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_06.png"
+      },
+      "retained_english": "2D / 3D technical labels and source attribution"
+    },
+    {
+      "id": 7,
+      "original_sha256": "66ea1de5d197d21c52f3925311e626e6740cf7c1de993dcecc783496ad0f0f85",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: original imagery and joke preserved; caption legible and unclipped; product spelling checked",
+      "regions": [
+        {
+          "source": "THIS IS PLOTJUGGLER",
+          "text": "这就是 PlotJuggler！"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_07.png"
+      },
+      "note": "Same base photo as 3.x36, different caption position. Newly localized from 4.x original instead of misaligned patch reuse."
+    },
+    {
+      "id": 8,
+      "original_sha256": "5513e1624aaae9d43ce006990f85f3ce1edd7692ba848201b8b9e13e85594ee9",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: generated asset individually inspected; original subject, framing and joke retained; Chinese readable and unclipped; English captions replaced",
+      "regions": [
+        {
+          "source": "After all... why not? / ...supporting multi-modal data",
+          "text": "毕竟……有何不可？ / ……支持多模态数据"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_08.png"
+      },
+      "retained_english": "Original product/technical names and source attribution only"
+    },
+    {
+      "id": 9,
+      "original_sha256": "4ffd2d7846dc25939809586adfe46e1c87939ec4b721a203c90967417b2396c1",
+      "localization_status": "unavailable",
+      "pixel_review": "not completed: localization unavailable; not included in Chinese pool",
+      "regions": [
+        {
+          "source": "PLOTJUGGLER FOREVER!!",
+          "text": "PLOTJUGGLER 万岁！！"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "original_sha256": "91ce795f106c637af8e0e4ed7a60ddabf3bb170fc2485aa0f24366a456225ce0",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: generated asset individually inspected; original subject, framing and joke retained; Chinese readable and unclipped; English captions replaced",
+      "regions": [
+        {
+          "source": "SOMEHOW / PLOTJUGGLER RETURNED",
+          "text": "不知怎么的 / PLOTJUGGLER 又回来了"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_10.png"
+      },
+      "retained_english": "Original product/technical names and source attribution only"
+    },
+    {
+      "id": 11,
+      "original_sha256": "2d242125c1cc1119d4e2baf63e821c98164889a0590e146305fae84411b28a64",
+      "localization_status": "unavailable",
+      "pixel_review": "not completed: localization unavailable; not included in Chinese pool",
+      "regions": [
+        {
+          "source": "CAN I HAVE MORE PLOTS?",
+          "text": "能再给我多一点图表吗？"
+        }
+      ],
+      "source_3x_id": 54
+    },
+    {
+      "id": 12,
+      "original_sha256": "5d4c986723a195699ee54e7948d2b1a58feddcc2ecd12f354d4a593e0e150576",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: generated asset individually inspected; original subject, framing and joke retained; Chinese readable and unclipped; English captions replaced",
+      "regions": [
+        {
+          "source": "ROBOTICISTS / MULTI-MODAL VISUALIZATION TOOLS",
+          "text": "机器人工程师 / 多模态可视化工具"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_12.png"
+      },
+      "retained_english": "Original product/technical names and source attribution only"
+    },
+    {
+      "id": 13,
+      "original_sha256": "b8ed0a798bffd5900a90e06c86e47447a9dcc6fe0489e0b521741828a6f60cb1",
+      "localization_status": "unavailable",
+      "pixel_review": "not completed: localization unavailable; not included in Chinese pool",
+      "regions": [
+        {
+          "source": "I AM THE ONE PLOTTING",
+          "text": "我才是那个画图的人"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "original_sha256": "eb46aa962d77b5431221465283653c9ee26ec31cadf9e48625fe253f790cccf8",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: generated asset individually inspected; original subject, framing and joke retained; Chinese readable and unclipped; English captions replaced",
+      "regions": [
+        {
+          "source": "ABSOLUTE VISUALIZATION",
+          "text": "顶级可视化"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_14.png"
+      },
+      "retained_english": "Original product/technical names and source attribution only"
+    },
+    {
+      "id": 15,
+      "original_sha256": "2a8354b9f307c53c8d5c8ad1e02a1c1de6a6ff6925b9339ee5051fe37077661b",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            37,
+            26,
+            43,
+            7
+          ],
+          "source": "YOUR LOG",
+          "text": "你的日志",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "full",
+        "reason": "Subject geometry changes across the crop boundary."
+      },
+      "variant": {
+        "image": "zh_CN/meme_00.png"
+      },
+      "source_3x_id": 0,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 16,
+      "original_sha256": "3d7c6fff2bdb8e7a4cafaffc9b8701708a3fd4bda6ac4ede2563b6be5af8e5d2",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            13,
+            2,
+            75,
+            19
+          ],
+          "source": "YOUR DEBUGGING WORKFLOW",
+          "text": "你的调试流程",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1162,
+          1354
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_14.png",
+            "source": [
+              0,
+              0,
+              942,
+              325
+            ],
+            "at": [
+              116,
+              0
+            ]
+          }
+        ]
+      },
+      "source_3x_id": 14,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 17,
+      "original_sha256": "44e2da9458fb75c25e9a493bef3f659087075094142a9dc3f2794f0e89ce2bf3",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            16,
+            2,
+            66,
+            17
+          ],
+          "source": "I DON'T ALWAYS VISUALIZE DATA",
+          "text": "我不常做数据可视化",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            9,
+            82,
+            82,
+            16
+          ],
+          "source": "BUT WHEN I DO, I USE PLOTJUGGLER",
+          "text": "但只要做，就用 PlotJuggler",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "full",
+        "reason": "The proposed crop clips caption glyphs at the right edge."
+      },
+      "variant": {
+        "image": "zh_CN/meme_08.png"
+      },
+      "source_3x_id": 8,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 18,
+      "original_sha256": "7cd888e8813d007ad9de74c718257e9796f99df8d91ff7e8efda893738ca73a5",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            13,
+            1,
+            74,
+            13
+          ],
+          "source": "I HAVE FOUND THE BUG",
+          "text": "我找到问题了",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            16,
+            84,
+            67,
+            13
+          ],
+          "source": "WITH PLOTJUGGLER",
+          "text": "多亏了 PlotJuggler",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1536,
+          1024
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_25.png",
+            "source": [
+              0,
+              0,
+              1230,
+              175
+            ],
+            "at": [
+              153,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_25.png",
+            "source": [
+              0,
+              175,
+              1122,
+              195
+            ],
+            "at": [
+              199,
+              829
+            ]
+          }
+        ]
+      },
+      "source_3x_id": 25,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 19,
+      "original_sha256": "8b88db1272c23570ff2fc7336b22a81b7d230bb86ac8b73120263b68b30b2609",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            18,
+            86,
+            64,
+            12
+          ],
+          "source": "SO HOT RIGHT NOW",
+          "text": "最近火得很",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1402,
+          1122
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_35.png",
+            "source": [
+              0,
+              0,
+              982,
+              191
+            ],
+            "at": [
+              210,
+              931
+            ]
+          }
+        ]
+      },
+      "source_3x_id": 35,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 20,
+      "original_sha256": "31b6489b1dc0730c574e9a5bfb29a26e8ffa7d166068450237b7d2be6e8f8bcc",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            27,
+            5,
+            46,
+            13
+          ],
+          "source": "MY COLLEAGUES",
+          "text": "我的同事们",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            16,
+            79,
+            69,
+            14
+          ],
+          "source": "DON'T USE PLOTJUGGLER",
+          "text": "居然不用 PlotJuggler",
+          "style": "dark"
+        }
+      ],
+      "preserve": [
+        [
+          2,
+          90,
+          30,
+          8
+        ]
+      ],
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1532,
+          1026
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_42.png",
+            "source": [
+              0,
+              0,
+              798,
+              196
+            ],
+            "at": [
+              367,
+              20
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_42.png",
+            "source": [
+              0,
+              196,
+              1150,
+              206
+            ],
+            "at": [
+              199,
+              779
+            ]
+          }
+        ]
+      },
+      "source_3x_id": 42,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 21,
+      "original_sha256": "fb3ca1ded4d36082902d7ad0e33d1b5193cb65fda401df5b98fc077fda1014fc",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            16,
+            1,
+            68,
+            14
+          ],
+          "source": "I TRIED PLOTJUGGLER",
+          "text": "我试了 PlotJuggler",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            14,
+            83,
+            73,
+            15
+          ],
+          "source": "AND IT WAS GLORIOUS",
+          "text": "简直太棒了",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1539,
+          1022
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_45.png",
+            "source": [
+              0,
+              0,
+              1139,
+              184
+            ],
+            "at": [
+              200,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_45.png",
+            "source": [
+              0,
+              184,
+              1217,
+              205
+            ],
+            "at": [
+              169,
+              817
+            ]
+          }
+        ]
+      },
+      "source_3x_id": 45,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 22,
+      "original_sha256": "aac57fb36130b4711d5d8b879507281b7ba89610f004a7a75caa263bda46857b",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: original subjects, composition and joke retained; Chinese captions legible without clipping",
+      "regions": [
+        {
+          "source": "I USE PLOTJUGGLER / TO DEBUG",
+          "text": "我用 PlotJuggler / 来调试"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_22.png"
+      },
+      "retained_english": "PlotJuggler product name and imgflip.com attribution"
+    },
+    {
+      "id": 23,
+      "original_sha256": "7fae677aa3706e1ea3774e35680980e6c9404f539650c4011404813c04eda70a",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            15,
+            7,
+            70,
+            12
+          ],
+          "source": "NEW PLOTJUGGLER USER",
+          "text": "PlotJuggler 新用户",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            19,
+            89,
+            62,
+            8
+          ],
+          "source": "You son of a bitch, I'm in",
+          "text": "好家伙，我加入！",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "full",
+        "reason": "Actual Qt5 display review found clipped top strokes in the footer caption."
+      },
+      "variant": {
+        "image": "zh_CN/meme_52.png"
+      },
+      "source_3x_id": 52,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 24,
+      "original_sha256": "093165ecbaf3fc5b88480701d0191b60c79e7e1356976acfb050151e92b5e739",
+      "localization_status": "unavailable",
+      "pixel_review": "not completed: localization unavailable; not included in Chinese pool",
+      "regions": [
+        {
+          "source": "DEBUGGING... / WITH PLOTJUGGLER",
+          "text": "调试中…… / 用上 PlotJuggler"
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "original_sha256": "3fc9682dcac46a7d4219c0fe147822fb5f1eac58fd2c2f61188d4d6dbae2b316",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            35,
+            38,
+            34,
+            20
+          ],
+          "source": "my data",
+          "text": "我的数据",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "full",
+        "reason": "Lettering follows a curved weapon."
+      },
+      "variant": {
+        "image": "zh_CN/meme_60.png"
+      },
+      "source_3x_id": 60,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 26,
+      "original_sha256": "612fc436058472784784f9b6ae4994e15d09edd3089e62aeccbe76489cd33af5",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            31,
+            3,
+            68,
+            6
+          ],
+          "source": "WHAT IS MY PURPOSE MASTER?",
+          "text": "主人，我的使命是什么？",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            40,
+            40,
+            44,
+            11
+          ],
+          "source": "PLOT TIME SERIES",
+          "text": "绘制时间序列",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            50,
+            69,
+            43,
+            9
+          ],
+          "source": "OH MY GOD",
+          "text": "我的天哪",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1025,
+          1534
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_61.png",
+            "source": [
+              0,
+              0,
+              738,
+              185
+            ],
+            "at": [
+              287,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_61.png",
+            "source": [
+              0,
+              185,
+              513,
+              262
+            ],
+            "at": [
+              379,
+              567
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_61.png",
+            "source": [
+              0,
+              447,
+              503,
+              231
+            ],
+            "at": [
+              481,
+              1012
+            ]
+          }
+        ]
+      },
+      "source_3x_id": 61,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 27,
+      "original_sha256": "1d2a59bd09873ceeda4f57c99035141ec18f33acae0f3c7781d516aba1ac6345",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            15,
+            32,
+            22,
+            7
+          ],
+          "source": "DATA",
+          "text": "数据",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            61,
+            31,
+            27,
+            8
+          ],
+          "source": "PLOTS",
+          "text": "图表",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1058,
+          1487
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_71.png",
+            "source": [
+              0,
+              0,
+              298,
+              194
+            ],
+            "at": [
+              126,
+              431
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_71.png",
+            "source": [
+              0,
+              194,
+              350,
+              209
+            ],
+            "at": [
+              613,
+              416
+            ]
+          }
+        ]
+      },
+      "source_3x_id": 71,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 28,
+      "original_sha256": "5535b409dca2cb63b47538a10fa3f631cd5728f4e82f99c7aba76e4bba8d7a93",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: original imagery and joke preserved; caption legible and unclipped; product spelling checked",
+      "regions": [
+        {
+          "rect": [
+            13,
+            18,
+            56,
+            25
+          ],
+          "source": "OL RELIABLE",
+          "text": "老伙计，靠得住",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "full",
+        "reason": "Perspective lettering is printed on a briefcase."
+      },
+      "variant": {
+        "image": "zh_CN/meme_4x_28.png"
+      },
+      "source_3x_id": 78,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained",
+      "note": "3.x78 full image contained misspelled product name; corrected PLOTJUGGLER with image editing and re-reviewed."
+    },
+    {
+      "id": 29,
+      "original_sha256": "40bec7ac404b929241f96a45d4b1deb86d10b4605017be9df90b8e4872791171",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            9,
+            40,
+            81,
+            7
+          ],
+          "source": "Let's go. In and out. 20 minute adventure.",
+          "text": "走吧，速去速回，二十分钟的小冒险。",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            20,
+            91,
+            62,
+            8
+          ],
+          "source": "3 HOURS LATER",
+          "text": "三小时后",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1211,
+          1299
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_79.png",
+            "source": [
+              0,
+              0,
+              1055,
+              170
+            ],
+            "at": [
+              72,
+              480
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_79.png",
+            "source": [
+              0,
+              170,
+              825,
+              156
+            ],
+            "at": [
+              205,
+              1143
+            ]
+          }
+        ]
+      },
+      "source_3x_id": 79,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 30,
+      "original_sha256": "a181b533a812bba24374d635acb77544b69fa7295a49eb4d47c2628b668e9789",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            35,
+            16,
+            21,
+            9
+          ],
+          "source": "BUG",
+          "text": "程序缺陷",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            29,
+            28,
+            42,
+            5
+          ],
+          "source": "You can't defeat me.",
+          "text": "你打不过我。",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            30,
+            61,
+            39,
+            5
+          ],
+          "source": "I know, but he can.",
+          "text": "我知道，但他可以。",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1135,
+          1386
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_89.png",
+            "source": [
+              0,
+              0,
+              545,
+              319
+            ],
+            "at": [
+              295,
+              180
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_89.png",
+            "source": [
+              0,
+              319,
+              512,
+              154
+            ],
+            "at": [
+              306,
+              803
+            ]
+          }
+        ]
+      },
+      "source_3x_id": 89,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 31,
+      "original_sha256": "922968f66f01ebed4d3adfe77e5c984fc67d2f8321b86047b2d127991945d307",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            1,
+            0,
+            98,
+            11
+          ],
+          "source": "THE PERFECT, DELICATE ART OF JUGGLING",
+          "text": "完美而精妙的杂耍艺术",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            36,
+            82,
+            30,
+            14
+          ],
+          "source": "... PLOTS",
+          "text": "…玩转图表",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          1536,
+          1024
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_95.png",
+            "source": [
+              0,
+              0,
+              1536,
+              144
+            ],
+            "at": [
+              0,
+              0
+            ]
+          },
+          {
+            "file": "zh_CN/patches/atlas_95.png",
+            "source": [
+              0,
+              144,
+              554,
+              206
+            ],
+            "at": [
+              506,
+              808
+            ]
+          }
+        ]
+      },
+      "source_3x_id": 95,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 32,
+      "original_sha256": "6ae68657aebdf187ed68d4795dc4b6efe2c7c7716f2b32df094d7f3369efd14a",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            47,
+            12,
+            17,
+            22
+          ],
+          "source": "C BLOCK",
+          "text": "C 区",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            47,
+            62,
+            17,
+            22
+          ],
+          "source": "C BLOCK",
+          "text": "C 区",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            37,
+            0,
+            27,
+            10
+          ],
+          "source": "Carl...",
+          "text": "卡尔…",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            41,
+            51,
+            38,
+            20
+          ],
+          "source": "...just open PlotJuggler",
+          "text": "只要打开\nPlotJuggler",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "full",
+        "reason": "Perspective wall lettering and subtitles span multiple panels."
+      },
+      "variant": {
+        "image": "zh_CN/meme_97.png"
+      },
+      "source_3x_id": 97,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 33,
+      "original_sha256": "d3461c91ccac44af5156769d1a9be0ccaed8a0bcfb698ccc2251076d462f45a7",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            12,
+            0,
+            77,
+            11
+          ],
+          "source": "SPOTTING THE BUG",
+          "text": "发现问题",
+          "style": "dark"
+        },
+        {
+          "rect": [
+            15,
+            87,
+            67,
+            11
+          ],
+          "source": "IN PLOTJUGGLER",
+          "text": "就在 PlotJuggler 里",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "full",
+        "reason": "Actual Qt5 display review found clipped rightmost strokes in the final Chinese glyph."
+      },
+      "variant": {
+        "image": "zh_CN/meme_93.png"
+      },
+      "source_3x_id": 93,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 34,
+      "original_sha256": "d5ade662219cd9b9d46c091901d388fa44d4b9d81580603123c8b9bb207125ca",
+      "localization_status": "original-technical-labels",
+      "pixel_review": "passed: only product names/version numbers, intentionally preserved verbatim",
+      "regions": [],
+      "note": "Product names PlotJuggler, Rerun and Foxglove; preserved verbatim.",
+      "source_3x_id": 99,
+      "retained_english": "PlotJuggler / Rerun / Foxglove"
+    },
+    {
+      "id": 35,
+      "original_sha256": "7a5b655197e2c69b72f1b66e23e8f05036f501914070536f16c5d0e6a3ce61ab",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: Qt-composed pixels inspected individually; readable Chinese, intact subjects and original joke, no clipping or English caption remnants",
+      "regions": [
+        {
+          "rect": [
+            4,
+            4,
+            93,
+            8
+          ],
+          "source": "Average PlotJuggler user",
+          "text": "普普通通的 PlotJuggler 用户",
+          "style": "dark"
+        }
+      ],
+      "variant_review": {
+        "mode": "patches",
+        "reason": "Reviewed native-resolution caption crops on the intact original background."
+      },
+      "variant": {
+        "canvas": [
+          943,
+          1668
+        ],
+        "patches": [
+          {
+            "file": "zh_CN/patches/atlas_103.png",
+            "source": [
+              0,
+              0,
+              934,
+              235
+            ],
+            "at": [
+              9,
+              16
+            ]
+          }
+        ]
+      },
+      "source_3x_id": 103,
+      "retained_english": "Product names and source/scene attribution marks only; original photographic branding retained"
+    },
+    {
+      "id": 36,
+      "original_sha256": "71cd81245fbbcc75e59efe3c97c41faa09e8cf574235c961dbb70038ba3f67fc",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: main joke and small signs preserved; all readable ordinary UI menus, tabs, controls, status and source-panel labels translated; no English UI label remnants; data identifiers and units retained",
+      "regions": [
+        {
+          "source": "PLOTS MIXED, NOT STIRRED.",
+          "text": "曲线混合，无需搅拌。"
+        },
+        {
+          "source": "Shaken? Stirred? I juggle.",
+          "text": "摇匀？搅拌？我玩转曲线。"
+        },
+        {
+          "source": "DATA. OUR MOST VALUABLE ASSET.",
+          "text": "数据，我们最宝贵的资产。"
+        },
+        {
+          "source": "File / View / Tools / Help / TIMESERIES / Filter / Streaming / DATA SOURCES / Selected source / Start / End / Duration / Add Source / Transform / curve / Axes / Display / Advanced / Operation / Scale / Offset / Invert / Enabled / Reset / Cancel / Apply / Trajectory / Diagnostics / Battery / transforms",
+          "text": "文件 / 视图 / 工具 / 帮助 / 时间序列 / 筛选 / 实时流 / 数据源 / 所选数据源 / 开始 / 结束 / 时长 / 添加数据源 / 变换 / 曲线 / 坐标轴 / 显示 / 高级 / 操作 / 缩放 / 偏移 / 反转 / 启用 / 重置 / 取消 / 应用 / 轨迹 / 诊断 / 电池 / 变换"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_36.png"
+      },
+      "retained_english": "PlotJuggler product name, real data/topic paths and source identifiers, IMU, numerical values and units only"
+    },
+    {
+      "id": 37,
+      "original_sha256": "786cec1ef11ecb4aa01e89cb54e2c5b82d2a6617d89bfc204207f7a0fc40e44c",
+      "localization_status": "ai-localized",
+      "pixel_review": "passed: generated asset individually inspected; original subject, framing and joke retained; Chinese readable and unclipped; English captions replaced",
+      "regions": [
+        {
+          "source": "PlotJuggler was not multi-modal / ...and I took that personally",
+          "text": "PlotJuggler 还不支持多模态 / ……我觉得这是在针对我"
+        }
+      ],
+      "variant": {
+        "image": "zh_CN/meme_4x_37.png"
+      },
+      "retained_english": "Original product/technical names and source attribution only"
+    }
+  ]
+}
