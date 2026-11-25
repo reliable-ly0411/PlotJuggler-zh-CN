@@ -1,15 +1,14 @@
 # PlotJuggler 三语言与 ArduPilot Qt5 版本
 
-## 3.18.1 候选使用方式
+## 3.18.1-rc.17 使用方式
 
-本轮是 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44) 的下游维护候选
-`3.18.1-rc.14`，不是上游 3.18.1。使用上游 Qt5 / C++17 `main-3.x`
-`df5cbaad9bb087413470e818fa5cdb88d6357ce5`（仍声明 3.17.2），开发起点为
-`cbc7b7287884208b5a9042de45bcab4b5dcd79c0`。
-历史流程及基线见 [验收记录](localization/3.18.1-validation.md)。
-当前 rc.14 正在准备定向验收；此前候选的测试不代表新候选已经通过。
-集中修复及复测顺序见[本轮说明](localization/3.18.1-rc14-catalog-cleanup.md)。
-完成该记录中的门槛后才发布新的 Pre-release；已有标签和资产保持不变。
+当前已公开的 3.x 版本为 [v3.18.1-rc.17](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v3.18.1-rc.17)（预发布），不是上游 3.18.1 正式版。
+上游 Qt5 / C++17 `main-3.x` 为 `df5cbaad9bb087413470e818fa5cdb88d6357ce5`（声明 3.17.2）；
+产品源码为 `baf7d62133db26bb14911d446a1ce623fe704274`。
+[固定运行](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/43577802686)已通过原生、GUI 和七包验收；
+Windows 安装器/便携 ZIP、两架构 AppImage、三个发行版 DEB 及 SHA-256 见 Release。
+旧候选证据保留在[历史验收记录](localization/3.18.1-validation.md)，不把旧失败当作 rc.17 结果，
+也不把 rc.17 通过扩大为未覆盖的环境。已有标签和资产保持不变。
 
 安装/解压后可运行 `plotjuggler-launcher.exe`（Windows）或 `plotjuggler-launcher`（Linux），
 普通启动直接进入主程序，不再显示语言选择窗口。首次运行跟随系统界面语言：
@@ -54,14 +53,14 @@ Linux 分发副本可移除 DWARF 源码行信息并保留原有普通符号表�
 该候选没有接入 4.x 的插件市场或 SDK，也没有宣称全部日志格式已经验证。
 版权及随包文本清单见 [3.x 第三方说明](THIRD-PARTY-3X.md)。
 
-## 3.18.0 历史记录
+## 3.18.0 历史记录（以下状态均为当时记录）
 
 以下保留 zh.2～zh.4 的历史设计和验证范围，不代表 3.18.1 的验收结果。
 
 本分支对应本机使用的 Qt5 PlotJuggler 3.17.2，初始基线为官方
 `3.17.2` 标签（`034a5cc919909aebb124e0dc1abbe2029c3eed0f`）。
-官方主项目已发布 Qt6 的 4.0.0；其插件接口与 3.x 不兼容。
-这里仅同步官方 `main` 的 3.x 维护线，禁止自动跨到 4.x。
+官方 [4.x 发行线](https://github.com/PlotJuggler/PlotJuggler/releases/latest) 使用 Qt6，其插件接口与 3.x 不兼容。
+本 3.x 汉化线的上游应为 [官方 `main-3.x`](https://github.com/PlotJuggler/PlotJuggler/tree/main-3.x)，禁止自动跨到 4.x。
 
 ## 使用
 
@@ -69,19 +68,21 @@ Linux 分发副本可移除 DWARF 源码行信息并保留原有普通符号表�
 `PlotJuggler-zh-CN` 独立目录；配置也使用独立应用标识，不覆盖原版设置。
 文件名和安装路径均不要求使用中文。
 
-默认使用简体中文。通过“帮助 → 语言 → English”切换并重启，或直接运行：
+3.18.1 首次启动跟随系统界面语言，之后使用已保存选项。可在语言菜单切换并重启，或直接运行：
 
 ```text
 plotjuggler.exe --language en_US
 plotjuggler.exe --language zh_CN
 ```
 
-版本号采用 `3.18.0-zh.3+upstream.3.17.2.apbin.1.g<提交号>` 形式：3.18.0 是兼容新增功能的 fork 次版本，zh.3 是第三个先行候选，
+### 历史版本记录（3.18.0 周期）
+
+当时版本号采用 `3.18.0-zh.3+upstream.3.17.2.apbin.1.g<提交号>` 形式：3.18.0 是兼容新增功能的 fork 次版本，zh.3 是第三个先行候选，
 加号后的信息标明官方基线、解析修订和源码提交，符合 SemVer 2.0.0。
 构建信息不参与版本优先级比较；已发布标签和包不得覆盖，后续功能或修复必须递增适当版本。
 Qt Installer Framework 内部组件版本采用数字先行版 3.18.0-3；程序和文件名显示完整 SemVer。包内 `BUILD-INFO.json` 记录准确源码提交和解析器版本。
 
-最新已发布版本为 `3.18.0-zh.2`。本次仅修复启动图的中文嵌字方式，API、CLI、配置与布局文件格式保持兼容，
+以下为 `3.18.0-zh.2` 发布后的历史说明，不描述当前 rc.17。该次仅修复启动图的中文嵌字方式，API、CLI、配置与布局文件格式保持兼容，
 仍处于同一 `3.18.0` 开发周期。按用户明确要求，本对话的图库及补充修复统一归入尚未正式发布的 `zh.3`，
 统一标签应指向包含所有补充改进的最终提交，不为本轮补充另增先行编号；已发布的 `zh.2` 标签及制品保持原样。
 本次提交不等于已发布新的安装包；发布仍需对应提交的构建及验收结果。
@@ -139,7 +140,9 @@ python tests/check_translations.py --fresh
 
 ## 同步和自动构建
 
-`zh-sync.yml` 每日 03:23 UTC 以及手动触发。它将官方 `main` 合并到 `zh-CN-dev`，
+仓库当前默认分支 `zh-CN-4.x` 上的 [源码同步工作流](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/workflows/zh-source-sync.yml)负责定时与手动同步；它为 3.x 明确选择官方 `main-3.x`，同步目标是 `zh-CN-dev`。可在工作流记录中核对实际触发时间和结果。
+3.x 分支保留的旧 `zh-sync.yml` 仍写 `--upstream-ref main`，不应把它作为当前 Qt5 同步入口；`main` 是 4.x，版本保护拒绝跨代合并。
+当前同步只处理开发线，
 保留定制提交，不使用强推、重置或自动选择冲突一方。
 稳定线 `zh-CN` 通过审阅 PR 接收开发线成果，详见 [分支与发布规则](BRANCHING.zh-CN.md)。
 冲突、版本跨代或翻译校验失败时，取消本次合并，保留远端定制分支，
@@ -231,3 +234,4 @@ Qt5 标准按钮的简体中文翻译随应用嵌入，不依赖用户另装 qtb
 
 本次验收与发布记录归档于 [Issue #1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/1)。
 用户要求报告归档完成后再清理本机构建缓存；安装回退备份独立保留。
+
