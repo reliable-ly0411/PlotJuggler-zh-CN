@@ -8,14 +8,15 @@
 
 | 范围 | 如何判断 |
 | --- | --- |
-| 已发布的 4.x 中文包 | [本仓 Releases](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases)，查找标为 Latest 的正式版或单独的预发布 |
+| 4.x 中文正式版（Latest） | [4.1.0+zh.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)；Windows x64 安装器/便携包，Linux x86_64 AppImage/amd64 DEB |
+| 4.x 中文预发布 | [4.1.1-zh.1.rc.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.1-zh.1.rc.1)；四种原生包，不替换 Latest；以试用说明及平台验收为准 |
 | 稳定维护线 | `zh-CN-4.x`；默认分支，源码晋级不等于安装包发布 |
 | 开发集成线 | `zh-CN-4.x-dev`；工具链、源码基线和测试记录与已发布包分别核对 |
-| 独立维护的 3.x | `zh-CN` / `zh-CN-dev`，Qt5；`main-3.x` 为上游镜像 |
+| 独立维护的 3.x | [3.18.1-rc.17 预发布](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v3.18.1-rc.17)；`zh-CN` / `zh-CN-dev` 使用 Qt5，`main-3.x` 为上游镜像 |
 | 4.x 上游镜像 | `main`，不混入汉化改动 |
 
 新包的系统兼容性、插件和实际回归范围以该包的验收与 Release 说明为准。
-[4.1.0+zh.1 正式包记录](RELEASE-4.1.0+zh.1.md)与[历史定向验证](VALIDATION-4X-20261113.md)不用于替代后续包验收。
+[4.1.0+zh.1 正式包记录](RELEASE-4.1.0+zh.1.md)、[4.1.1 中文预发布记录](RELEASE-4.1.1-zh.1.rc.1.md)和[历史定向验证](VALIDATION-4X-20261113.md)各有独立范围，不用旧包验收替代新包验收。稳定源码分支也不等同于 GitHub 的 Latest。
 [上游 #1459](https://github.com/PlotJuggler/PlotJuggler/pull/1459)跟踪独立的上游汉化 PR，不等同于本仓开发线或发布状态。
 参见[分支规范](../BRANCHING.zh-CN.md)和[发布规范](../../RELEASING.md)。
 
