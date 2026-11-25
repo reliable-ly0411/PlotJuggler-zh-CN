@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 #pragma once
 
-// Shared async URL/file fetcher for the scene layers (robot-model kUrl source,
-// SceneEntities ModelPrimitive URLs). Replaces the nested-QEventLoop blocking
-// fetches those layers used to spin from attach()/render() paths.
+// Shared async URL/file fetcher for the scene layers (robot-model kUrl source, SceneEntities ModelPrimitive URLs);
+// never spins a nested QEventLoop.
 
 #include <QByteArray>
 #include <QObject>
@@ -18,7 +17,6 @@ class QNetworkAccessManager;
 
 namespace pj::scene3d {
 
-// Outcome of one UrlFetcher::fetch. `bytes` and `final_url` are meaningful only when `ok`.
 struct FetchResult {
   bool ok{false};
   QByteArray bytes;
@@ -66,22 +64,18 @@ struct FetchResult {
 class UrlFetcher : public QObject {
   Q_OBJECT
  public:
-  // Hard cap on accepted response bytes: the scene's model-source limit.
   static constexpr qint64 kMaxFetchBytes = static_cast<qint64>(kSceneLimits.max_model_source_bytes);
 
   explicit UrlFetcher(QObject* parent = nullptr);
 
-  // Start one fetch. `on_done` is invoked exactly once, via the event loop,
-  // unless the fetcher is destroyed first (then never).
+  // `on_done` is invoked exactly once, via the event loop, unless the fetcher is destroyed first (then never).
   void fetch(const QUrl& url, std::function<void(FetchResult)> on_done);
 
  private:
-  // Queue `result` to `on_done` through the event loop — the never-synchronous
-  // delivery guarantee for the local-file / immediate-error paths. Parented to
-  // `this`, so destruction drops pending deliveries too.
+  // Queues `result` to `on_done` through the event loop (the never-synchronous delivery guarantee for the local-file /
+  // immediate-error paths). Parented to `this`, so destruction drops pending deliveries too.
   void deliverLater(std::function<void(FetchResult)> on_done, FetchResult result);
 
-  // Desktop: the disk-cached manager, owned by `this`; null in the browser.
   QNetworkAccessManager* network_ = nullptr;
 };
 

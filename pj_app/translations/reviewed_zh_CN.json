@@ -392,29 +392,20 @@
     },
     {
       "context": "PJ::MainWindow",
-      "source": "Data source '%1' could not be downloaded: %2",
+      "source": "'%1' is not the file its layout was saved with (its content fingerprint differs).",
       "comment": "",
       "numerus": false,
       "translations": [
-        "无法下载数据源“%1”：%2"
+        "'%1' 不是保存此布局时使用的文件（内容指纹不同）。"
       ]
     },
     {
       "context": "PJ::MainWindow",
-      "source": "Data source '%1' is not the file its layout was saved with (its content fingerprint differs).",
+      "source": "'%1' records a malformed content fingerprint.",
       "comment": "",
       "numerus": false,
       "translations": [
-        "数据源“%1”不是保存布局时所用的文件（内容指纹不同）。"
-      ]
-    },
-    {
-      "context": "PJ::MainWindow",
-      "source": "Data source '%1' records a malformed content fingerprint.",
-      "comment": "",
-      "numerus": false,
-      "translations": [
-        "数据源“%1”记录的内容指纹格式错误。"
+        "'%1' 记录的内容指纹格式无效。"
       ]
     },
     {
@@ -437,11 +428,11 @@
     },
     {
       "context": "PJ::MainWindow",
-      "source": "Layout '%1' records %n streaming source(s); the desktop loader does not start them.",
+      "source": "Some of the layout's streaming sources could not be started:\n\n%1",
       "comment": "",
-      "numerus": true,
+      "numerus": false,
       "translations": [
-        "布局“%1”包含 %n 个流式数据源；桌面加载器不会启动它们。"
+        "布局中的部分流数据源无法启动：\n\n%1"
       ]
     },
     {

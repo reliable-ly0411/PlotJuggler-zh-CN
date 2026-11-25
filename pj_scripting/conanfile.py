@@ -5,7 +5,7 @@ from conan.tools.files import copy
 
 class PjScriptingCoreConan(ConanFile):
     """The Luau scripting engine + whole-series marker analysis, packaged so the
-    standalone official-plugins repo (the GUI Anomaly Detector + the headless
+    standalone official-plugins repo (the GUI Marker Editor + the headless
     anomaly_runner) can link the SAME engine the app uses — one engine, GUI ==
     headless. Depends only on pj_base (via plotjuggler_sdk) + Luau + pocketfft; the
     SISO DataProcessor adapter (which needs pj_datastore) is NOT part of this
@@ -23,6 +23,7 @@ class PjScriptingCoreConan(ConanFile):
         "CMakeLists.txt",
         "src/luau_engine.cpp",
         "src/marker_engine.cpp",
+        "src/marker_color_names.inc",
         "src/luau_sandbox_state.h",
         "include/*",
         "cmake/*",
@@ -37,7 +38,7 @@ class PjScriptingCoreConan(ConanFile):
         # *references* the Luau symbols, so consumers must link them at the
         # final link. They are therefore propagated (visible), even though they are
         # not in any public header.
-        self.requires("luau/0.700")
+        self.requires("luau/0.747")
         self.requires("pocketfft/0.0.0.cci.20240801")  # header-only: bandPower's FFT
 
     def layout(self):

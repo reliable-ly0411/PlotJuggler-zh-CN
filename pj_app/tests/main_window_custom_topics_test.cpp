@@ -8,11 +8,9 @@
 #include <gtest/gtest.h>
 
 #include <QApplication>
-#include <QPointer>
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QTemporaryDir>
-#include <QTimer>
 #include <QToolButton>
 #include <QTreeWidgetItem>
 #include <algorithm>
@@ -36,6 +34,7 @@
 #include "pj_runtime/Time.h"
 #include "pj_widgets/CurveTreeView.h"
 #include "support/isolated_main_window.h"
+#include "support/modal_answerer.h"
 #include "ui/CurveListPanel.h"
 
 using namespace Qt::StringLiterals;
@@ -59,8 +58,8 @@ class MainWindowCustomTopicsTestPeer {
     window.refreshCustomTopicsPanel();
   }
   // These windows load no plugin, so the tests name the toolbox that would declare `custom_topics_editor`.
-  static void setCustomTopicsEditorId(MainWindow& window, const QString& plugin_id) {
-    window.session_->extensionCatalog().setCustomTopicsEditorIdForTest(plugin_id);
+  static void setCustomTopicsEditorId(MainWindow& window, const QString& plugin_id, bool views = false) {
+    window.session_->extensionCatalog().setCustomTopicsEditorIdForTest(plugin_id, views);
     window.syncCustomTopicsEditor();
   }
   [[nodiscard]] static int customTopicsSyncs(const MainWindow& window) {
@@ -128,38 +127,28 @@ QTreeWidgetItem* findRowByKey(QTreeWidgetItem* item, const QString& key) {
   return nullptr;
 }
 
-// Presses the first button (the destructive "Delete") of every themed message box that opens while it lives, after
-// running `meanwhile` with the box still open: what a user changing the session behind a pending prompt does.
+// Presses button `button` (0 the destructive "Delete", 1 Cancel) of every themed message box that opens while it lives,
+// after running `meanwhile` with the box still open: what a user changing the session behind a pending prompt does.
 class MessageBoxAnswerer {
  public:
-  explicit MessageBoxAnswerer(std::function<void()> meanwhile = {}, int button = 0)
-      : meanwhile_(std::move(meanwhile)), button_(button) {
-    timer_.setInterval(5);
-    QObject::connect(&timer_, &QTimer::timeout, &timer_, [this]() {
-      QWidget* modal = QApplication::activeModalWidget();
-      if (modal == nullptr || modal == answered_box_ || modal->objectName() != u"pjMessageBox"_s) {
-        return;
-      }
-      const auto buttons = modal->findChildren<QPushButton*>(u"pjMessageBoxButton"_s);
-      if (buttons.size() <= button_) {
-        return;
-      }
-      answered_box_ = modal;
-      ++answered;
-      if (meanwhile_) {
-        meanwhile_();
-      }
-      QMetaObject::invokeMethod(buttons.at(button_), "click", Qt::QueuedConnection);
-    });
-    timer_.start();
+  explicit MessageBoxAnswerer(std::function<void()> meanwhile = {}, int button = 0) : answerer_(5) {
+    answerer_.every(
+        [button](QWidget* dialog) {
+          return pj_app_test::isMessageBox(dialog) && pj_app_test::messageBoxButtons(dialog).size() > button;
+        },
+        [this, button, meanwhile = std::move(meanwhile)](QWidget* box) {
+          ++answered;
+          if (meanwhile) {
+            meanwhile();
+          }
+          QMetaObject::invokeMethod(
+              pj_app_test::messageBoxButtons(box).at(button), &QAbstractButton::click, Qt::QueuedConnection);
+        });
   }
   int answered = 0;
 
  private:
-  std::function<void()> meanwhile_;
-  int button_ = 0;  ///< which button it presses: 0 the destructive one, 1 Cancel
-  QPointer<QWidget> answered_box_;
-  QTimer timer_;
+  pj_app_test::ModalAnswerer answerer_;
 };
 
 // One window with a dataset holding an (empty) cloud topic and a scalar topic, and the editor named.
@@ -231,7 +220,7 @@ struct CustomTopicsFixture {
   }
 };
 
-// UI-02: persistent recipes (a finding included) list their object topics in Custom Topics and leave the Datasets
+// Persistent recipes (a finding included) list their object topics in Custom Topics and leave the Datasets
 // tree; a preview is in neither, yet stays resolvable in the catalog; its removal leaves nothing behind.
 TEST(MainWindowCustomTopicsTest, CustomTopicsListsPersistentRecipesOnly) {
   CustomTopicsFixture fx;
@@ -265,7 +254,7 @@ TEST(MainWindowCustomTopicsTest, CustomTopicsListsPersistentRecipesOnly) {
   EXPECT_EQ(fx.panel->customTopicNames().size(), 2);
 }
 
-// UI-03: use-only unless the declared editor made it: the pencil follows the row's owner.
+// Use-only unless the declared editor made it: the pencil follows the row's owner.
 TEST(MainWindowCustomTopicsTest, EditIsEnabledOnlyForEditorRows) {
   CustomTopicsFixture fx;
   ASSERT_TRUE(fx.setUp());
@@ -279,7 +268,23 @@ TEST(MainWindowCustomTopicsTest, EditIsEnabledOnlyForEditorRows) {
   EXPECT_TRUE(fx.edit->isEnabled());
 }
 
-// UI-04: the delete handler refuses another plugin's recipe on its own (the panel disables the action, but nothing
+// An editor that declares `custom_topics_viewer` opens other owners' rows as a view: the pencil is enabled on them,
+// and says so; Delete stays theirs.
+TEST(MainWindowCustomTopicsTest, AViewingEditorOffersThePencilOnOtherOwnersRows) {
+  CustomTopicsFixture fx;
+  ASSERT_TRUE(fx.setUp());
+  ASSERT_TRUE(fx.install(cropRecipe("assistant", "crop")));
+  MainWindowCustomTopicsTestPeer::setCustomTopicsEditorId(fx.window, QString::fromLatin1(kEditor), /*views=*/true);
+
+  fx.select("assistant/crop/cropped");
+  EXPECT_TRUE(fx.edit->isEnabled());
+  EXPECT_EQ(fx.edit->toolTip(), u"View the formula (created by assistant; read-only)"_s);
+
+  MainWindowCustomTopicsTestPeer::setCustomTopicsEditorId(fx.window, QString::fromLatin1(kEditor), /*views=*/false);
+  EXPECT_FALSE(fx.edit->isEnabled());
+}
+
+// The delete handler refuses another plugin's recipe on its own (the panel disables the action, but nothing
 // else may reach it), and the editor's own recipe goes with its topic and rows.
 TEST(MainWindowCustomTopicsTest, DeleteOfAnotherPluginsRecipeIsRefused) {
   CustomTopicsFixture fx;
@@ -304,7 +309,7 @@ TEST(MainWindowCustomTopicsTest, DeleteOfAnotherPluginsRecipeIsRefused) {
   EXPECT_EQ(fx.panel->customTopicNames(), QStringList{u"assistant/crop/cropped"_s});
 }
 
-// UI-04: the same backstop for a transform output: another plugin's is use-only, with no editor declared nothing is
+// The same backstop for a transform output: another plugin's is use-only, with no editor declared nothing is
 // deletable, and the editor's own goes.
 TEST(MainWindowCustomTopicsTest, DeleteOfAnotherPluginsTransformIsRefused) {
   CustomTopicsFixture fx;
@@ -331,7 +336,60 @@ TEST(MainWindowCustomTopicsTest, DeleteOfAnotherPluginsTransformIsRefused) {
   EXPECT_TRUE(transforms.transformIdsForPlugin(kEditor).empty()) << "the editor's own goes";
 }
 
-// UI-04: deleting the editor's transform never cascades into another plugin's: a reader owned elsewhere refuses the
+// A text series is not plottable, but its Custom Topics row resolves to its transform like any other: Delete removes
+// it.
+TEST(MainWindowCustomTopicsTest, DeleteOfATextSeriesRemovesItsTransform) {
+  constexpr const char* kLabel = R"LUAU(-- pj-script: luau
+return { id="label", name="Label", output="string",
+  create = function(p) return { calculate = function(t, v) return v > 0 and "up" or "down" end } end }
+)LUAU";
+  CustomTopicsFixture fx;
+  ASSERT_TRUE(fx.setUp());
+  PJ::DataProcessorService& transforms = fx.app().sessionManager().dataProcessorService();
+  ASSERT_TRUE(transforms.upsertTransform(kEditor, "label", {"sensor/value"}, {"sensor/state"}, kLabel, "{}"));
+  fx.app().catalogModel().rebuildFromDatastore();
+  MainWindowCustomTopicsTestPeer::syncCustomTopicsPanel(fx.window);
+  const QString key = fx.keyOf("sensor/state");
+  ASSERT_FALSE(key.isEmpty());
+
+  MainWindowCustomTopicsTestPeer::deleteCustomTopic(fx.window, key);
+  EXPECT_TRUE(transforms.transformIdsForPlugin(kEditor).empty()) << "the text series' transform goes";
+}
+
+// A transform's row is its own output topic, found by topic id. A create refuses an output name already in use, but
+// a topic of that name can arrive later in another dataset (a stream, a reload); in an earlier dataset a name lookup
+// finds it first. It is neither listed nor deleted in the output's place.
+TEST(MainWindowCustomTopicsTest, ATransformRowIsItsOutputNotATopicOfTheSameName) {
+  CustomTopicsFixture fx;
+  ASSERT_TRUE(fx.setUp());
+  const PJ::DatasetId second = pj_test::createDataset(fx.app(), "second.mcap", /*own_time_domain=*/true);
+  ASSERT_NE(second, 0U);
+  ASSERT_NE(pj_test::addScalarTopic(fx.app(), second, "other"), 0U);
+  PJ::DataProcessorService& transforms = fx.app().sessionManager().dataProcessorService();
+  const auto created = transforms.upsertTransform(kEditor, "neg", {"other/value"}, {"out"}, kNegate, "{}");
+  ASSERT_TRUE(created.has_value()) << created.error();
+  ASSERT_NE(pj_test::addScalarTopic(fx.app(), fx.dataset, "out"), 0U) << "a topic named like the output arrives";
+  fx.app().catalogModel().rebuildFromDatastore();
+  MainWindowCustomTopicsTestPeer::syncCustomTopicsPanel(fx.window);
+
+  QString loaded_key;
+  QString output_key;
+  for (const PJ::CatalogItem& item : fx.app().catalogModel().items()) {
+    if (item.topic_name == u"out"_s) {
+      (item.dataset_id == second ? output_key : loaded_key) = item.key;
+    }
+  }
+  ASSERT_FALSE(loaded_key.isEmpty());
+  ASSERT_FALSE(output_key.isEmpty()) << "the transform writes into its input's dataset";
+  EXPECT_NE(findRowByKey(fx.custom->invisibleRootItem(), output_key), nullptr) << "the transform's output is listed";
+  EXPECT_EQ(findRowByKey(fx.custom->invisibleRootItem(), loaded_key), nullptr) << "the loaded topic is not";
+
+  MainWindowCustomTopicsTestPeer::deleteCustomTopic(fx.window, output_key);
+  EXPECT_TRUE(transforms.transformIdsForPlugin(kEditor).empty());
+  EXPECT_TRUE(fx.app().catalogModel().itemDescriptor(loaded_key).has_value()) << "the loaded topic stays";
+}
+
+// Deleting the editor's transform never cascades into another plugin's: a reader owned elsewhere refuses the
 // delete up front, by name, and nothing is removed.
 TEST(MainWindowCustomTopicsTest, DeleteCascadingIntoAnotherPluginsTransformIsRefused) {
   CustomTopicsFixture fx;
@@ -355,7 +413,7 @@ TEST(MainWindowCustomTopicsTest, DeleteCascadingIntoAnotherPluginsTransformIsRef
       fx.reported.front(), u"delete-cascade-read-only: 'neg' cannot be deleted: 'neg' of assistant reads its output"_s);
 }
 
-// UI-04: the owner is checked again when the prompt is answered: an editor unloaded while the dependents prompt of an
+// The owner is checked again when the prompt is answered: an editor unloaded while the dependents prompt of an
 // on-demand delete is open leaves its recipe in place.
 TEST(MainWindowCustomTopicsTest, OnDemandDeleteRechecksTheOwnerAfterThePrompt) {
   CustomTopicsFixture fx;
@@ -378,7 +436,7 @@ TEST(MainWindowCustomTopicsTest, OnDemandDeleteRechecksTheOwnerAfterThePrompt) {
   EXPECT_TRUE(fx.reported.join(u"; "_s).contains(u"delete-read-only"_s)) << fx.reported.join(u"; "_s).toStdString();
 }
 
-// UI-04: selecting several rows of one recipe (its `id/output` rows) and pressing Delete asks about the recipe once:
+// Selecting several rows of one recipe (its `id/output` rows) and pressing Delete asks about the recipe once:
 // a Cancel is not asked again for the next row, and a Delete removes it as one undo step.
 TEST(MainWindowCustomTopicsTest, DeletingTwoRowsOfOneRecipeDeletesItOnce) {
   CustomTopicsFixture fx;
@@ -424,7 +482,7 @@ TEST(MainWindowCustomTopicsTest, DeletingTwoRowsOfOneRecipeDeletesItOnce) {
   EXPECT_EQ(MainWindowCustomTopicsTestPeer::undoSize(fx.window), before + 1) << "one undo step";
 }
 
-// UI-04: the same recheck on the transform path, before the dependents go: unloading the editor behind the prompt
+// The same recheck on the transform path, before the dependents go: unloading the editor behind the prompt
 // leaves the whole chain.
 TEST(MainWindowCustomTopicsTest, TransformDeleteRechecksTheOwnerBeforeRemovingDependents) {
   CustomTopicsFixture fx;
@@ -445,7 +503,7 @@ TEST(MainWindowCustomTopicsTest, TransformDeleteRechecksTheOwnerBeforeRemovingDe
   EXPECT_EQ(transforms.transformIdsForPlugin(kEditor).size(), 2U) << "neither the transform nor its dependent goes";
 }
 
-// UI-04: a delete never strands a history-exempt reader: the delete is an undo step, and its redo would be refused
+// A delete never strands a history-exempt reader: the delete is an undo step, and its redo would be refused
 // for the reader it strands. Refused up front, naming the reader, and nothing is removed.
 TEST(MainWindowCustomTopicsTest, DeleteReadByAHistoryExemptRecipeIsRefused) {
   CustomTopicsFixture fx;
@@ -469,7 +527,7 @@ TEST(MainWindowCustomTopicsTest, DeleteReadByAHistoryExemptRecipeIsRefused) {
       u"delete-exempt-reader: 'crop' cannot be deleted: the protected 'assistant/finding/cropped' reads its output"_s);
 }
 
-// LAY-12 across a file load: a derived topic is no part of the data universe history is checked against, so the load
+// Across a file load: a derived topic is no part of the data universe history is checked against, so the load
 // after a delete keeps the undo step, and the undo brings the recipe back.
 TEST(MainWindowCustomTopicsTest, ADeleteKeepsItsUndoAcrossTheNextFileLoad) {
   CustomTopicsFixture fx;
@@ -493,7 +551,7 @@ TEST(MainWindowCustomTopicsTest, ADeleteKeepsItsUndoAcrossTheNextFileLoad) {
   EXPECT_NE(fx.service().graph().find(mine.key()), nullptr) << "the undo brings the recipe back";
 }
 
-// UI-07: the scheduled refresh (a node state, an offset) rebuilds the on-demand rows only. The transform rows come from
+// The scheduled refresh (a node state, an offset) rebuilds the on-demand rows only. The transform rows come from
 // the last full sync, rebuilt once more after the catalog changed.
 TEST(MainWindowCustomTopicsTest, AScheduledRefreshReusesTheTransformRows) {
   CustomTopicsFixture fx;
@@ -524,7 +582,7 @@ TEST(MainWindowCustomTopicsTest, AScheduledRefreshReusesTheTransformRows) {
   EXPECT_TRUE(fx.panel->customTopicNames().contains(u"sensor/chain"_s));
 }
 
-// UI-05: "+" exists only while a toolbox declares `custom_topics_editor`; with none every row is read-only.
+// "+" exists only while a toolbox declares `custom_topics_editor`; with none every row is read-only.
 TEST(MainWindowCustomTopicsTest, NoDeclaredEditorHidesPlusAndMakesRowsReadOnly) {
   CustomTopicsFixture fx;
   ASSERT_TRUE(fx.setUp());
@@ -538,7 +596,7 @@ TEST(MainWindowCustomTopicsTest, NoDeclaredEditorHidesPlusAndMakesRowsReadOnly) 
   EXPECT_FALSE(fx.edit->isEnabled());
 }
 
-// UI-06: rows are flat and named by recipe (the id, or `id/output` for several object outputs); an external owner
+// Rows are flat and named by recipe (the id, or `id/output` for several object outputs); an external owner
 // is badged, by its id when it is not loaded; the tooltip names the dataset.
 TEST(MainWindowCustomTopicsTest, CustomTopicsRowsAreFlatNamedByRecipe) {
   CustomTopicsFixture fx;
@@ -568,7 +626,7 @@ TEST(MainWindowCustomTopicsTest, CustomTopicsRowsAreFlatNamedByRecipe) {
   EXPECT_TRUE(crop->toolTip(0).contains(u"dataset run.mcap"_s)) << crop->toolTip(0).toStdString();
 }
 
-// PIN-08 (the panel half): removing a finding, announced by whoever removed it, takes its row out of Custom Topics
+// Removing a finding, announced by whoever removed it, takes its row out of Custom Topics
 // and the catalog with no further call from the shell.
 TEST(MainWindowCustomTopicsTest, RemovingAFindingRemovesItsRowEverywhere) {
   CustomTopicsFixture fx;
@@ -585,7 +643,7 @@ TEST(MainWindowCustomTopicsTest, RemovingAFindingRemovesItsRowEverywhere) {
   EXPECT_TRUE(fx.keyOf("assistant/pin/cropped").isEmpty());
 }
 
-// UI-07 through the session: the row glyph follows the node state, and a burst of state changes is one refresh
+// Through the session: the row glyph follows the node state, and a burst of state changes is one refresh
 // at the next event-loop turn, not one per change.
 TEST(MainWindowCustomTopicsTest, RowGlyphFollowsTheNodeStateAndBurstsCoalesce) {
   CustomTopicsFixture fx;
@@ -614,7 +672,7 @@ TEST(MainWindowCustomTopicsTest, RowGlyphFollowsTheNodeStateAndBurstsCoalesce) {
   EXPECT_EQ(MainWindowCustomTopicsTestPeer::customTopicsSyncs(fx.window), before + 1);
 }
 
-// PIN-09 through the shell: a finding's "Pinned at" follows the Source Timeline: a drag of its dataset (the
+// Through the shell: a finding's "Pinned at" follows the Source Timeline: a drag of its dataset (the
 // per-dataset offset signal) re-words it although no recipe row changed.
 TEST(MainWindowCustomTopicsTest, PinnedTooltipFollowsTheDatasetOffset) {
   CustomTopicsFixture fx;

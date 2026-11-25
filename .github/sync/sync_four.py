@@ -48,8 +48,13 @@ def sync(config, push=False):
     held = git('diff', '--name-only', before + '...' + approved, '--', '.github').stdout.splitlines()
     result = git('merge', '--no-ff', '--no-commit', approved, check=False)
     if result.returncode:
-        git('merge', '--abort', check=False)
-        raise RuntimeError('Upstream conflict; source branch unchanged: ' + result.stdout + result.stderr)
+        conflicts = git('diff', '--name-only', '--diff-filter=U').stdout.splitlines()
+        # Automation is intentionally held at the trusted local revision below.
+        # Its conflicts must not block a clean source merge, but product conflicts
+        # still require review rather than choosing either side automatically.
+        if not conflicts or any(not path.startswith('.github/') for path in conflicts):
+            git('merge', '--abort', check=False)
+            raise RuntimeError('Upstream conflict; source branch unchanged: ' + result.stdout + result.stderr)
     try:
         # Preserve trusted maintenance code, policy and every local workflow. Upstream
         # CI changes are reported, never automatically granted local token access.

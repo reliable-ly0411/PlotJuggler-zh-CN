@@ -3,7 +3,6 @@
 
 #include "BrowserPersistence.h"
 
-#include <QAbstractEventDispatcher>
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDir>
@@ -17,7 +16,9 @@
 #include <QSet>
 #include <QSettings>
 #include <QStringList>
+#include <QTimer>
 #include <array>
+#include <chrono>
 #include <utility>
 
 #include "LoadInput.h"
@@ -55,6 +56,8 @@ constexpr qsizetype kMaxLayoutBytes = 256 * 1024;
 constexpr qsizetype kMaxTotalLayoutBytes = 1024 * 1024;
 constexpr qsizetype kMaxGeometryBytes = 4 * 1024;
 constexpr qsizetype kMaxIdentifierLength = 256;
+// Upper bound on how long a preference change stays page-lifetime only; a reload sooner loses it.
+[[maybe_unused]] constexpr std::chrono::milliseconds kPreferenceSyncInterval{1000};
 
 enum class ValueKind {
   kBool,
@@ -73,8 +76,8 @@ struct PreferenceRule {
   int maximum = 0;
 };
 
-// Exact keys only. Prefixes such as PluginConfig/, DialogGeometry/, arbitrary
-// pj.settings.v1 plugin keys, and filesystem recents are intentionally absent.
+// Exact keys only. PluginConfig/, DialogGeometry/, pj.settings.v1 plugin keys and filesystem recents must never
+// be added: they carry paths, credentials or plugin state.
 constexpr std::array kPreferenceRules{
     PreferenceRule{"StyleSheet::theme", ValueKind::kTheme},
     PreferenceRule{"Preferences::language", ValueKind::kLanguage},
@@ -365,9 +368,8 @@ BrowserPersistence::BrowserPersistence(QObject* parent) : QObject(parent), impl_
   g_instance = this;
 
 #ifdef PJ_TARGET_WASM
-  // Quarantine every existing/default QSettings caller in page-lifetime MEMFS.
-  // This must run after QApplication + org/app identity, and before the splash,
-  // Theme, WidgetTuner, MainWindow, or any plugin host is constructed.
+  // Moves every default QSettings caller to page-lifetime MEMFS. Runs after QApplication and its org/app
+  // identity, and before the splash, Theme, WidgetTuner, MainWindow or any plugin host: those read settings.
   QDir().mkpath(QString::fromLatin1(kSessionSettingsRoot));
   QSettings::setDefaultFormat(QSettings::IniFormat);
   QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QString::fromLatin1(kSessionSettingsRoot));
@@ -379,10 +381,9 @@ BrowserPersistence::BrowserPersistence(QObject* parent) : QObject(parent), impl_
       QCoreApplication::applicationName());
   impl_->durable->setFallbacksEnabled(false);
 
-  // The WebLocalStorageFormat codec loses scalar QVariant types, so the bridge
-  // owns a typed JSON envelope stored as QByteArray. Migrate canonical values
-  // from Qt's former per-key NativeFormat namespace, then delete every legacy
-  // key (including unknown/path-bearing/plugin-owned settings).
+  // The WebLocalStorageFormat codec loses scalar QVariant types, hence a typed JSON envelope stored as
+  // QByteArray. Any other key (per-key values of Qt's NativeFormat backend) is migrated when allowlisted, then
+  // deleted, path-bearing and plugin-owned keys included.
   const QVariant stored_preferences = impl_->durable->value(QLatin1String(kPreferencesKey));
   DecodedPreferences decoded_preferences = decodePreferences(stored_preferences);
   QHash<QString, QVariant> restored_preferences = std::move(decoded_preferences.values);
@@ -402,10 +403,8 @@ BrowserPersistence::BrowserPersistence(QObject* parent) : QObject(parent), impl_
     impl_->durable->remove(key);
   }
   if (decoded_preferences.status == PreferenceDecodeStatus::kRejected) {
-    // A malformed, oversized, or newer-version envelope has no values this
-    // version can safely restore. Do not turn that decode failure into data
-    // loss: leave the exact durable value in place. A later explicit
-    // preference change will replace it through syncPreferences().
+    // A malformed, oversized or newer-version envelope stays exactly as stored, never deleted: a later
+    // preference change replaces it through syncPreferences().
   } else if (restored_preferences.isEmpty()) {
     impl_->durable->remove(QLatin1String(kPreferencesKey));
   } else {
@@ -435,9 +434,11 @@ BrowserPersistence::BrowserPersistence(QObject* parent) : QObject(parent), impl_
         << "Browser preference storage is unavailable; continuing with page-lifetime settings";
   }
 
-  if (QAbstractEventDispatcher* dispatcher = QAbstractEventDispatcher::instance()) {
-    connect(dispatcher, &QAbstractEventDispatcher::aboutToBlock, this, &BrowserPersistence::syncPreferences);
-  }
+  // A poll, because nothing else fires in time: Qt 6.12's WASM event dispatcher never emits aboutToBlock, and a
+  // closed or reloaded tab never runs aboutToQuit (pj_app TECHNICAL_NOTES "Browser preferences flush on a timer").
+  auto* sync_timer = new QTimer(this);
+  connect(sync_timer, &QTimer::timeout, this, &BrowserPersistence::syncPreferences);
+  sync_timer->start(kPreferenceSyncInterval);
   connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, this, &BrowserPersistence::syncPreferences);
 #ifdef PJ_WASM_ENABLE_INGRESS_PROBE
   pj_wasm_install_persistence_test_probes();
@@ -697,8 +698,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void pj_wasm_test_seed_browser_persistence() {
   session.setValue(u"File/recent"_s, QStringList{u"/home/user/private.csv"_s});
   persistence->syncPreferences();
 
-  // Simulate keys left by the pre-W9d NativeFormat backend. They intentionally
-  // survive this turn so the next page construction must scrub them.
+  // Keys as the NativeFormat backend leaves them; they survive this page so the next construction must scrub them.
   persistence->seedLegacyUnsafeValuesForTest();
 
   for (int index = 0; index < 7; ++index) {

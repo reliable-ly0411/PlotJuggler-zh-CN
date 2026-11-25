@@ -55,6 +55,7 @@ add_library(pj_widgets STATIC
     src/ToggleSwitch.cpp
     src/VisualizationPlaceholderWidget.cpp
     include/pj_widgets/CheckButton.h
+    include/pj_widgets/ColorContrast.h
     include/pj_widgets/ChromeMetrics.h
     include/pj_widgets/SideDrawer.h
     include/pj_widgets/DualOptionsWidget.h
@@ -99,6 +100,7 @@ add_library(pj_widgets STATIC
     include/pj_widgets/StateTransitionsView.h
     include/pj_widgets/Style.h
     include/pj_widgets/SvgButton.h
+    include/pj_widgets/AppSettings.h
     include/pj_widgets/SvgUtil.h
     include/pj_widgets/Scrollbar.h
     include/pj_widgets/TailFollowOverlay.h
@@ -108,6 +110,14 @@ add_library(pj_widgets STATIC
     include/pj_widgets/ToggleSwitch.h
     include/pj_widgets/VisualizationPlaceholderWidget.h
 )
+
+# The easter egg GIFs are committed encrypted. Release CI passes the key (the PJ_EASTER_EGG_KEY GitHub secret) through
+# the environment at configure time; without it the easter egg is off. Set on one source file so a key change
+# recompiles only it.
+if(NOT "$ENV{PJ_EASTER_EGG_KEY}" STREQUAL "")
+    set_source_files_properties(src/VisualizationPlaceholderWidget.cpp PROPERTIES
+        COMPILE_DEFINITIONS "PJ_EASTER_EGG_KEY=\"$ENV{PJ_EASTER_EGG_KEY}\"")
+endif()
 
 # The retro helper uses QProcess, QLocalSocket, and QSharedMemory, none of which
 # represent a browser capability. Browser rendering stays in-process.
@@ -143,10 +153,9 @@ if(PJ_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
-# Both demo trees are pj_widgets demo apps: demos/ (the gallery of standalone
-# widget demos) and demo/ (the framework demo). PJ_BUILD_WIDGET_DEMOS governs
-# both, so --no-widget-demos removes all of them; demos/ additionally follows
-# the global PJ_BUILD_DEMOS like every other module's demos.
+# Both demo trees are pj_widgets demo apps: demos/ (standalone widget demos) and demo/ (the framework demo).
+# PJ_BUILD_WIDGET_DEMOS governs both, so --no-widget-demos removes all of them; demos/ also follows the global
+# PJ_BUILD_DEMOS like every other module's demos.
 option(PJ_BUILD_WIDGET_DEMOS "Build pj_widgets demo apps" ${PJ_BUILD_TESTS})
 if(PJ_BUILD_DEMOS AND PJ_BUILD_WIDGET_DEMOS AND NOT EMSCRIPTEN)
     add_subdirectory(demos)

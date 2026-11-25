@@ -27,13 +27,13 @@
   This does NOT build the app or any plugins. Run it AFTER a Windows build of
   the app, e.g.
     conan install . --output-folder=build --build=missing \
-        -s build_type=RelWithDebInfo -s compiler.cppstd=20 \
-        -o "cpython/*:shared=True" -s "cpython/*:build_type=Release"
-    cmake --preset ... && cmake --build build --config RelWithDebInfo
+        -s build_type=Release -s compiler.cppstd=20 \
+        -o "cpython/*:shared=True"
+    cmake --preset ... && cmake --build build --config Release
 
 .PARAMETER BuildDir
   The PJ4 build directory (default: build). Searched for plotjuggler4.exe /
-  pj_app.exe under RelWithDebInfo/ (preferred) then Release/.
+  pj_app.exe under Release/ (preferred) then RelWithDebInfo/.
 
 .PARAMETER QtDir
   Qt kit dir that owns windeployqt.exe, e.g. C:\Qt\6.12.0\msvc2022_64.
@@ -79,6 +79,10 @@
   workflow_dispatch/dev builds, where the built commit's short hash
   disambiguates otherwise-identical-looking artifacts.
 
+.PARAMETER ExperimentalTraditionalChinese
+  Build an isolated, offline IFW QA installer with a third language choice.
+  Not accepted for tagged release naming or the update repository.
+
 .PARAMETER StageDir
   Scratch directory for the staged package tree (default: $env:TEMP\pj4-installer-stage).
   Wiped at the start of every run.
@@ -112,6 +116,7 @@ param(
   [string]$QtDir      = "",
   [string]$IfwDir     = "",
   [switch]$SkipPlugins,
+  [switch]$ExperimentalTraditionalChinese,
   [string]$PluginRegistryUrl = "https://raw.githubusercontent.com/PlotJuggler/pj-plugin-registry/refs/heads/development/registry.json",
   [string[]]$PluginIds = @(
     "mcap-loader", "csv-loader", "parquet-loader", "ulog-loader",
@@ -119,7 +124,10 @@ param(
     "dummy-streamer", "foxglove-bridge", "plotjuggler-bridge", "webrtc-client",
     "ros-parser", "protobuf-parser", "json-parser", "data-tamer-parser",
     "toolbox-quaternion", "toolbox-transform-editor", "toolbox-mosaico",
-    "arrow-parser"
+    "arrow-parser",
+    # Also in the browser build (cmake/PjWasmOfficialPlugins.cmake).
+    "toolbox-fft", "toolbox-anomaly-detector", "toolbox-data-exporter",
+    "influx-parser", "navmap-parser", "candump-loader", "blf-loader", "mf4-loader"
   ),
   [string]$PluginPlatform = "windows-x86_64",
   [string]$ConanHome  = "$env:USERPROFILE\.conan2",
@@ -135,6 +143,15 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+if ($ExperimentalTraditionalChinese) {
+  if ($CleanReleaseName -or $RepoOutDir -or $UpdateUrl) {
+    throw "Traditional Chinese IFW is limited to offline QA; release naming and update publishing are disallowed."
+  }
+  if (-not $StageDir -or (Test-Path -LiteralPath $StageDir)) {
+    throw "Traditional Chinese IFW QA requires an explicit, nonexistent -StageDir."
+  }
+  $NameSuffix += "-ifw-zhtw-qa"
+}
 function Info($m)  { Write-Host "[installer] $m" -ForegroundColor Cyan }
 function Warn($m)  { Write-Host "[installer] WARNING: $m" -ForegroundColor Yellow }
 function Die($m)   { Write-Host "[installer] ERROR: $m" -ForegroundColor Red; exit 1 }
@@ -257,6 +274,9 @@ if (-not $ifwVersion -or $ifwVersion -lt [version]'4.10.0') {
   $ifwVersion = Get-IfwVersion $binarycreator
   if (-not $ifwVersion -or $ifwVersion -lt [version]'4.10.0') { Die "Verified IFW setup did not yield a compatible runtime." }
 }
+if ($ExperimentalTraditionalChinese -and $ifwVersion -ne [version]'4.10.0') {
+  Die "Traditional Chinese IFW QA requires the catalog-matching pinned Qt Installer Framework 4.10.0."
+}
 # Keep repogen and binarycreator from the same validated tool installation.
 $IfwDir = Split-Path $binarycreator -Parent
 Info "binarycreator: $binarycreator (IFW $ifwVersion)"
@@ -271,11 +291,10 @@ if ($RepoOutDir) {
 }
 
 # --- locate the built app --------------------------------------------------
-# Prefer RelWithDebInfo (CI default), then Release, then any config. The CMake
-# target 'pj_app' has OUTPUT_NAME plotjuggler4 on main, but older builds still
-# ship as pj_app.exe — accept either.
+# Prefer Release (CI default), then RelWithDebInfo, then any config. The CMake
+# target 'pj_app' has OUTPUT_NAME plotjuggler4; a pj_app.exe is accepted too.
 function Find-AppExe {
-  foreach ($cfg in @("RelWithDebInfo","Release","*")) {
+  foreach ($cfg in @("Release","RelWithDebInfo","*")) {
     foreach ($name in @("plotjuggler4.exe","pj_app.exe")) {
       $glob = if ($cfg -eq "*") { $name } else { "$cfg\$name" }
       $hit = Get-ChildItem -LiteralPath $BuildDir -Recurse -Filter $name -ErrorAction SilentlyContinue |
@@ -287,7 +306,7 @@ function Find-AppExe {
   return $null
 }
 $appExe = Find-AppExe
-if (-not $appExe) { Die "plotjuggler4.exe / pj_app.exe not found under '$BuildDir'. Build PJ4 first (cmake --build build --config RelWithDebInfo)." }
+if (-not $appExe) { Die "plotjuggler4.exe / pj_app.exe not found under '$BuildDir'. Build PJ4 first (cmake --build build --config Release)." }
 Info "app binary  : $($appExe.FullName)"
 
 # --- stage the data payload ------------------------------------------------
@@ -309,6 +328,18 @@ if (-not (Test-Path $helperExe)) {
 Copy-Item $helperExe (Join-Path $stageBin "pj-plugin-check.exe")
 Info "staged bin\pj-plugin-check.exe"
 
+# Licences, installed with the app and carried by the portable ZIP: PlotJuggler's MPL-2.0, the LGPL-3.0 the installer
+# pages show, and the third-party notices the build wrote (cmake/PjNotices.cmake), with every other licence text.
+$stageLicenses = Join-Path $stageData "licenses"
+New-Item -ItemType Directory -Force -Path $stageLicenses | Out-Null
+$notices = Join-Path $BuildDir "pj_app\THIRD_PARTY_NOTICES.txt"
+if (-not (Test-Path $notices)) { Die "$notices not found. Configure PJ4 first; the packages must ship it." }
+Copy-Item $notices $stageLicenses
+foreach ($name in @("license_mpl.txt", "license_lgpl.txt")) {
+  Copy-Item (Join-Path $pkgSrc "meta\$name") $stageLicenses
+}
+Info "staged licenses\"
+
 # --- download published plugins from pj-plugin-registry ---------------------------
 # Plugin release ZIPs are the same marketplace artifacts the Linux AppImage bundles.
 # They carry the plugin DLL + embedded-manifest sidecar and statically link their
@@ -326,6 +357,15 @@ function Read-PluginRegistry([string]$source) {
     return $localRegistry
   } catch {
     Die "failed to read plugin registry '$source': $_"
+  }
+}
+
+function Convert-Semver([string]$value, [string]$label) {
+  $numeric = ($value -split '[-+]', 2)[0]
+  try {
+    return [System.Version]::Parse($numeric)
+  } catch {
+    Die "$label is not a numeric semantic version: '$value'"
   }
 }
 
@@ -347,17 +387,21 @@ function Download-RegistryPlugins {
     if ($seen.ContainsKey($id)) { Die "duplicate plugin registry id '$id'" }
     $seen[$id] = $true
 
-    $registryMatches = @($registry.extensions | Where-Object { $_.id -eq $id })
-    if ($registryMatches.Count -ne 1) {
-      Die "plugin registry must contain exactly one '$id' entry (found $($registryMatches.Count))"
-    }
-    $extension = $registryMatches[0]
-    $extensionVersion = [string]$extension.version
-    if (-not $extensionVersion) { Die "plugin '$id' has an empty registry version" }
-    $platformProperty = $extension.platforms.PSObject.Properties[$PluginPlatform]
-    if (-not $platformProperty) {
+    # The registry keeps older releases of an id for older hosts: take the newest that ships our platform.
+    $registryMatches = @($registry.extensions | Where-Object {
+        $_.id -eq $id -and $_.platforms -and $_.platforms.PSObject.Properties[$PluginPlatform]
+      })
+    if ($registryMatches.Count -eq 0) {
       Die "plugin '$id' has no '$PluginPlatform' artifact in the registry"
     }
+    foreach ($match in $registryMatches) {
+      if (-not [string]$match.version) { Die "plugin '$id' has an empty registry version" }
+    }
+    $extension = $registryMatches |
+      Sort-Object { Convert-Semver ([string]$_.version) "plugin '$id' registry version" } -Descending |
+      Select-Object -First 1
+    $extensionVersion = [string]$extension.version
+    $platformProperty = $extension.platforms.PSObject.Properties[$PluginPlatform]
     $artifact = $platformProperty.Value
     $url = [string]$artifact.url
     $checksum = [string]$artifact.checksum
@@ -603,8 +647,8 @@ Render-Template $packageXmlSrc (Join-Path $stageMeta "package.xml")
 
 # --- remote updates (optional) ---------------------------------------------
 # Injected here rather than templated into config.xml so that a build without
-# -UpdateUrl stays byte-identical to one from before this existed: an empty
-# <Url/> would leave every maintenance tool polling nothing on each launch.
+# -UpdateUrl carries no <RemoteRepositories>: an empty <Url/> would leave every
+# maintenance tool polling nothing on each launch.
 if ($UpdateUrl) {
   $cfgPath = Join-Path $StageDir "config.xml"
   $closing = "</Installer>"
@@ -667,6 +711,9 @@ $translationQrc = Join-Path $translationStage "translations.qrc"
   <file>qt_zh_CN.qm</file>
 </qresource></RCC>
 '@ | Set-Content -Encoding UTF8 $translationQrc
+if ($ExperimentalTraditionalChinese) {
+  & (Join-Path $installerRoot "prepare_traditional_stage.ps1") -QtBin (Split-Path $lrelease -Parent) -StageDir $StageDir
+}
 $ifwLicenseDir = Join-Path $stageData "share/licenses/QtInstallerFramework"
 New-Item -ItemType Directory -Force -Path $ifwLicenseDir | Out-Null
 Copy-Item (Join-Path $installerRoot "translations/LICENSE.GPL3-EXCEPT") $ifwLicenseDir
@@ -676,7 +723,7 @@ Copy-Item (Join-Path $installerRoot "translations/README.md") $ifwLicenseDir
 # payload formats, separately from the canonical Qt license shown by IFW.
 $historyDir = Join-Path $stageData "share/licenses/PlotJuggler-installer-history"
 New-Item -ItemType Directory -Force -Path $historyDir | Out-Null
-Copy-Item (Join-Path $pkgSrc "meta/license_lgpl.txt") (Join-Path $historyDir "license_lgpl.txt") -Force
+Copy-Item (Join-Path $installerRoot "license_lgpl_historical.txt") (Join-Path $historyDir "license_lgpl.txt") -Force
 Copy-Item (Join-Path $installerRoot "LICENSE-PROVENANCE.txt") $historyDir -Force
 
 if ($ExtraPrefix) {

@@ -15,17 +15,50 @@ class OriginalMemeCatalogTest(unittest.TestCase):
     def setUpClass(cls):
         cls.catalog = json.loads((MEMES / 'zh_CN.json').read_text(encoding='utf-8'))
         cls.images = cls.catalog['images']
+        cls.additions = json.loads((MEMES / 'upstream-38-47.json').read_text(encoding='utf-8'))
         cls.aliases = {x.get('alias') for x in ET.parse(ROOT / 'resources/resources.qrc').iter('file')}
 
     def test_exact_original_slots(self):
         self.assertEqual([e['id'] for e in self.images], list(range(1, 38)))
-        self.assertEqual(len(list(MEMES.glob('meme_*.jpg'))), 37)
+        self.assertEqual([e['id'] for e in self.additions['images']], list(range(38, 48)))
+        originals = {f'meme_{slot:02}.jpg' for slot in range(1, 48)}
+        self.assertEqual({p.name for p in MEMES.glob('meme_*.jpg')}, originals)
+        desktop = {node.get('alias'): node.text for node in
+                   ET.parse(ROOT / 'resources/memes.qrc').iter('file') if node.get('alias') is not None}
+        self.assertEqual(desktop, {f'memes/{name}': f'memes/{name}' for name in originals})
+        self.assertTrue({f'memes/{name}' for name in originals}.isdisjoint(self.aliases))
+
+    def test_new_desktop_originals_have_pinned_upstream_hashes(self):
+        self.assertEqual(self.additions['source_repository'], 'https://github.com/PlotJuggler/PlotJuggler')
+        self.assertEqual(self.additions['source_commit'], '7fb21b41de4b9b83bb859e547311a9fca268d7ec')
+        for entry in self.additions['images']:
+            with self.subTest(id=entry['id']):
+                self.assertEqual(entry['file'], f"meme_{entry['id']:02}.jpg")
+                data = (MEMES / entry['file']).read_bytes()
+                self.assertEqual(data[:2], b'\xff\xd8')
+                self.assertEqual(hashlib.sha256(data).hexdigest(), entry['sha256'])
 
     def test_original_source_hashes(self):
         for e in self.images:
             with self.subTest(id=e['id']):
                 source = (MEMES / f"meme_{e['id']:02}.jpg").read_bytes()
                 self.assertEqual(hashlib.sha256(source).hexdigest(), e['original_sha256'])
+
+    def test_reviewed_jpeg_derivatives_preserve_sources_and_resource_aliases(self):
+        manifest = json.loads((MEMES / 'jpeg-q90-manifest.json').read_text(encoding='utf-8'))
+        mapping = {e.get('alias'): e.text for e in ET.parse(ROOT / 'resources/resources.qrc').iter('file')}
+        self.assertEqual(len(manifest['images']), 31)
+        self.assertEqual(manifest['quality'], 90)
+        self.assertEqual(manifest['chroma_subsampling'], '4:4:4')
+        for item in manifest['images']:
+            with self.subTest(source=item['source']):
+                source = (ROOT / 'resources' / item['source']).read_bytes()
+                jpeg = (ROOT / 'resources' / item['jpeg']).read_bytes()
+                self.assertEqual(hashlib.sha256(source).hexdigest(), item['source_sha256'])
+                self.assertEqual(hashlib.sha256(jpeg).hexdigest(), item['jpeg_sha256'])
+                self.assertEqual(source[:8], b'\x89PNG\r\n\x1a\n')
+                self.assertEqual(jpeg[:2], b'\xff\xd8')
+                self.assertEqual(mapping[item['source']], item['jpeg'])
 
     def test_variants_are_packaged_and_bounded(self):
         for e in self.images:

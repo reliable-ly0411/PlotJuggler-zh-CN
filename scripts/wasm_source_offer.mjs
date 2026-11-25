@@ -11,7 +11,7 @@
 // its output directory), into <deployment>/sources, where the THIRD_PARTY_NOTICES.txt of the build points. Writes
 // ~300 MB. A pinned hash is verified (a mismatch, a missing hash, or a Qt version without hashes fails); a git pin is
 // resolved to its commit and archived from GitHub's tarball of that commit, whose hash is recorded. With --links, only
-// PlotJuggler 4 (a private repository) is archived: the offer gives every library's public address instead, which
+// PlotJuggler 4 (the built revision) is archived: the offer gives every library's public address instead, which
 // the GPL accepts beside the object code as long as those addresses keep serving it; each is checked to answer.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -26,14 +26,15 @@ import { readVersion } from './wasm_manifest.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ADS_DIRECTORY = '3rdparty/Qt-Advanced-Docking';
-const ISSUES = 'https://github.com/PlotJuggler/PJ4/issues';
+const ISSUES = 'https://github.com/PlotJuggler/PlotJuggler/issues';
 // protobuf fetches it in its own build, at the abseil-cpp-version of its cmake/dependencies.cmake.
 const ABSEIL = 'https://github.com/abseil/abseil-cpp.git';
-// The Qt modules on pj_app's link line (the SBOMs read by cmake/PjWasmNotices.cmake), and the libraries each provides.
+// Qt modules linked or embedded in pj_app and their corresponding source archives.
 const QT_MODULES = {
   qtbase: 'Core, Gui, Widgets, Network, OpenGL, OpenGLWidgets, PrintSupport, Xml, Concurrent and the plugins',
   qtsvg: 'Svg, SvgWidgets and their plugins',
   qttools: 'UiTools',
+  qttranslations: 'Translation sources for qtbase_zh_CN and qtbase_zh_TW, merged into the embedded Chinese catalogs',
 };
 // SHA-256 of Qt's source archives per release: the .sha256 file beside each on download.qt.io.
 const QT_SHA256 = {
@@ -41,6 +42,7 @@ const QT_SHA256 = {
     qtbase: 'a951bd163c7b80fc6b8c88d7668fb56abf91c152373e13c10666763238131307',
     qtsvg: 'e4ab39534ec97987b1b9b60ef7f4d3253d5912a69f8c713a01753174a4029331',
     qttools: '8dab8f3611496486a470ad5f115ceea584f36bc22a2b8b6f6ebdbafbb8160693',
+    qttranslations: '85929c0c30d6f273f23bd879bb69803ea17b010ab73cab2f8abf95357f6f6bbb',
   },
 };
 
@@ -81,6 +83,8 @@ export async function declaredDependencies() {
     '3rdparty/qwt/CMakeLists.txt',
     // Shared with the desktop build, which prefers an installed pocketfft over this fetch.
     'pj_scripting/cmake/PjPocketfft.cmake',
+    // Shared with the desktop builds, which prefer an installed nanoarrow 0.9.0 over this fetch.
+    'pj_datastore/cmake/PjNanoarrow.cmake',
   ];
   // The root CMakeLists.txt derives the SDK version from the conanfile.
   const sdkVersion = (await read('conanfile.txt')).match(/^plotjuggler_sdk\/([0-9][0-9A-Za-z.-]*)/m)?.[1];
@@ -136,7 +140,7 @@ export async function planSourceOffer({ qtVersion } = {}) {
   const qt = qtVersion ?? await readVersion('PJ_QT_VERSION');
   const hashes = QT_SHA256[qt];
   if (!hashes) {
-    throw new Error(`no pinned SHA-256 for Qt ${qt}: add the .sha256 of its qtbase, qtsvg and qttools archives `
+    throw new Error(`no pinned SHA-256 for Qt ${qt}: add the .sha256 of its qtbase, qtsvg, qttools and qttranslations archives `
       + '(download.qt.io/official_releases/qt) to QT_SHA256');
   }
   const series = qt.split('.').slice(0, 2).join('.');
@@ -232,7 +236,7 @@ behind the About dialog's "Third-party licences" link.
 
   ${pj4.name}
     PlotJuggler 4: \`git archive\` of revision ${pj4.commit}, including the
-    build scripts and the libraries vendored under 3rdparty/; also at https://github.com/PlotJuggler/PJ4
+    build scripts and the libraries vendored under 3rdparty/; also at https://github.com/PlotJuggler/PlotJuggler
 
 ${listing}
 
@@ -251,7 +255,8 @@ pj_app/src/wasm/qt612_rhi_flush_override.cpp in the PlotJuggler 4 archive above.
 ${gitPins}
 The libraries are named with their licences in THIRD_PARTY_NOTICES.txt. The Emscripten
 runtime linked into the module (musl, libc++, compiler-rt, the zlib port) comes with the Emscripten SDK ${emscripten}
-pinned in versions.env, whose source is public at https://github.com/emscripten-core/emscripten; it is not copied here.
+pinned in versions.env, whose source is public at https://github.com/emscripten-core/emscripten/tree/${emscripten}; its
+zlib port builds zlib 1.3.1, https://github.com/madler/zlib/releases/tag/v1.3.1. Neither is copied here.
 
 Relinking against a modified library
 ------------------------------------

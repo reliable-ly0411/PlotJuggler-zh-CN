@@ -46,7 +46,9 @@ jammy container the release build runs in.
                                 plotjuggler/plugins/<id>/ (bundled extensions)
 /opt/plotjuggler4/plugins/      Qt platform + imageformat plugins
 /opt/plotjuggler4/translations/ Qt translations
-/opt/plotjuggler4/share/doc/    licenses of the bundled libraries
+/opt/plotjuggler4/share/doc/    plotjuggler4/: LICENSE, THIRD_PARTY_NOTICES.txt,
+                                DISTRIBUTION-PACKAGES.txt; <package>/copyright of
+                                the bundled distribution libraries
 /usr/bin/plotjuggler4           launcher (packaging/deb/plotjuggler4.wrapper.in)
 /usr/share/applications/        desktop entry
 /usr/share/icons/hicolor/…      icons (256px PNG + scalable SVG)
@@ -61,7 +63,7 @@ uninstall keep working against a root-owned, read-only `/opt`.
 linuxdeploy fills `AppDir/usr/share/doc/<distro-pkg>/` with the copyright file
 of every bundled system library; inside an AppImage those paths are private, but
 in a `.deb` they would collide with the real `libglib2.0-0t64`,
-`libkrb5support0` and ~36 other packages. They stay under `/opt`.
+`libkrb5support0` and dozens of other packages. They stay under `/opt`.
 
 ## Bundled plugins (seeding)
 

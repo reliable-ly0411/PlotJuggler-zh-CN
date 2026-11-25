@@ -1,12 +1,13 @@
-# PlotJuggler Marketplace — Architecture
+# pj_marketplace architecture
 
-How the marketplace is designed and built, as it is now. The original March 2026 proposal (plugin template, release CI for extension repositories, UI mock-ups) is kept verbatim in the frozen [v1.0.0 spec](./plotjuggler-marketplace-spec-v1.0.0-en.md); it is history, not guidance.
+How the module works today. Per-method contracts live in the headers; measurements and tried alternatives live in
+[TECHNICAL_NOTES.md](./TECHNICAL_NOTES.md); end-user behaviour is in [USER_MANUAL.md](./USER_MANUAL.md); the registry
+and package formats are in the [marketplace spec](./plotjuggler-marketplace-spec-v1.0.0-en.md).
 
----
-
-## 1. System Overview
-
-### 1.1 High-Level Architecture
+The module lets a user discover extensions in a registry, install, update and remove them, and manage what is
+installed. An extension is a ZIP holding one or more plugin DSOs. Everything is serverless: the registry is one JSON
+file and the artifacts are plain URLs. The module is desktop-only (the browser build hides the marketplace) and is
+consumed by `pj_app` through `pj_runtime`'s `ExtensionCatalogService`.
 
 ![Architecture](diagrams/architecture.png)
 
@@ -95,7 +96,7 @@ Public headers live under `include/pj_marketplace/`; sources under `src/core/` (
 - **Managers:** `extension_manager.hpp` (install, update, uninstall, enable, staged promotion, diagnostics), `registry_manager.hpp` and `registry_resolver.hpp` (fetch, then the pure candidate selection), `download_manager.hpp` (HTTP, checksum, extraction).
 - **Admission:** `plugin_compatibility.hpp` (the ABI major / `min_sdk_required` claims of one descriptor and their gate), `plugin_check_runner.hpp` (parent side of the `pj-plugin-check` child process), `version_compare.hpp` (`comparePluginVersions`, the one version ordering every badge and lock uses).
 - **Store layer:** `store_session.hpp` and `store_lease.hpp` (canonical store root, its sibling directories, the single-writer lease), `artifact_store.hpp` (immutable content-addressed objects), `loaded_profile.hpp` (id → object digest), `content_manifest.hpp` and `generation_digest.hpp` (the content identity), `store_policy.hpp` and `archive_limits.hpp` (size, entry and depth budgets), `store_rejection.hpp` (the stable refusal codes), `stored_file.hpp`.
-- **Helpers:** `sha256.hpp` (incremental SHA-256, file streaming), `fs_walk.hpp` (recursive regular-file walk that fails closed on symlinks), `platform_utils.hpp` (platform id, standard paths, `canonicalStoreRoot`), `qt_diagnostic_bridge.hpp`.
+- **Helpers:** `sha256.hpp` (incremental SHA-256, file streaming), `fs_walk.hpp` (recursive regular-file walk that fails closed on symlinks), `utf8_path.hpp` (path ↔ UTF-8 text for messages, logs, JSON and QString-held roots: never `path::string()` or `path(qstring.toStdString())`, which go through the Windows code page; `pj_runtime`'s plugin catalog reuses it), `platform_utils.hpp` (platform id, standard paths, `canonicalStoreRoot`), `qt_diagnostic_bridge.hpp`.
 - **Value types and UI:** `extension.hpp` (a registry entry), `installed_extension.hpp` (an installed one), `marketplace_window.hpp`, `marketplace.hpp` (aggregate include).
 
 ### 3.2 Data Models
@@ -567,102 +568,118 @@ The root is `QStandardPaths::AppDataLocation` (the `PlotJuggler/PlotJuggler4` or
 
 ```
 <config-root>/
-├── extensions/                      # Active plugins (marketplace installs and
-│   ├── ros2-streaming/              # seeded core extensions alike)
-│   │   ├── libros2_streaming.so
-│   │   └── ros2_streaming.ui
-│   └── csv-loader/
-│       └── libcsv_loader.so
-├── extensions.seed_stage/           # Transient: bundled-refresh staging,
-│                                    # sibling of extensions/ so the scan
-│                                    # never sees a half-written payload
-├── extensions.install_stage/        # Transient: every install (registry and
-│   └── .pj_install_<id>_<uuid>/     # sideload alike) extracts here, another
-│                                    # sibling of extensions/ for the same
-│                                    # reason; removed once the transaction
-│                                    # promotes, swept if a crash orphans it
-├── extensions.state/                # Removal journal: one record per pending
-│   └── <id>.json                    # uninstall/downgrade, {operation,id,path}.
-│                                    # A third sibling, and deliberately NOT
-│                                    # inside the payload it describes — see §4.6
-├── extensions.artifacts/            # Immutable content-addressed objects (§4.8)
-│   └── <digest>/
-├── extensions.extraction/           # Transient: store extraction staging
-├── extensions.profiles/             # loaded.json: extension id -> object digest
-├── .extensions.lock                 # Single-writer lock over extensions/ (§4.5);
-│                                    # a second live instance runs read-only
-├── .extension_staging/      # Staging area: updates land here and are promoted
-│   │                                # on the next startup; a fresh install uses it
-│   │                                # only as the post-promotion validation gate
-│   └── ros2-streaming/              # Staged update, applied on restart
-│       └── .pj_pending_install      # Intent file for restart-time update apply
-└── .backup/                         # Pre-update backups (all platforms); automatic rollback deferred — restore manually
-    ├── ros2-streaming-1.2.2/
-    └── csv-loader-0.9.0/
+├── extensions/<id>/             # active plugins: marketplace installs and seeded core extensions
+├── extensions.install_stage/    # transaction directories .pj_install_<id>_<uuid>/, removed once promoted or swept
+├── extensions.state/<id>.json   # removal journal (cleanup-<uuid>.json for path-only records)
+├── extensions.artifacts/<digest>/   # immutable content-addressed objects
+├── extensions.extraction/       # store extraction scratch
+├── extensions.profiles/loaded.json  # extension id -> object digest
+├── extensions.seed_stage/       # bundled-refresh staging (pj_runtime)
+├── .extensions.lock             # single-writer lease
+├── .extension_staging/<id>/     # staged updates with .pj_pending_install; quarantined stages .pj_quarantine_*
+└── .backup/<id>-<uuid>/         # previous versions; also <id>-replaced-<uuid> for a displaced duplicate
 ```
 
-### 5.2 Extension ZIP Structure
+The ZIP layout an extension must have is in the spec ("Extensions — Package Structure").
 
-```
-ros2-streaming-linux-x86_64.zip
-├── libros2_streaming.so       # Required: compiled plugin(s)
-├── ros2_streaming.ui          # Optional: Qt Creator UI file
-├── README.md                  # Optional: description
-└── LICENSE                    # Required: license file
-```
+## Behaviour contracts
 
----
+What the marketplace must do, as implemented.
 
-## 6. ABI Compatibility Strategy
+**Discovery.** The table lists name, category, installed version (an em dash when not installed; a locally newer build
+shows its own), marketplace version (highlighted for an available update, amber for an incompatible release) and
+description. Search matches name, description and tags, case-insensitively on the trimmed text. Four category toggles
+(Data Sources, Data Streamers, Parsers, Toolboxes; the registry values `data_loader`, `data_stream`, `message_parser`,
+`toolbox`) combine as a union; a category with no toggle is never hidden, or a plugin with no category could not be
+found to install. An incompatible release stays listed with its reason, and its install action is disabled. Platform
+exclusion happens upstream in the registry list. Selecting a row fills the details footer (metadata, description,
+changelog, the primary action, Uninstall or Downgrade, enable toggle, Visit Website).
 
-### 6.1 Qt and plugins
+**Installed state.** Derived from disk by scanning DSOs; each embedded manifest is the source of truth. Fields read: `id`,
+`version`, `name` (falls back to `id`), `description`, `category`, ABI major (from SDK discovery; zero means an older
+descriptor), `min_sdk_required`, `min_plotjuggler_version`, `suggested_sdk_version`; `install_date` is the extension
+directory's mtime, `path` the scanned directory and `enabled` is true unless the id is on the persisted disabled list. A
+host may seed the window with a loaded-plugin snapshot before the first render; it is initialization data, not a second
+source of truth.
 
-A plugin compiled against one Qt breaks when the host moves to another, so the data families (sources, parsers, toolboxes) link no Qt: they talk to the host through the SDK's C ABI, and their dialogs are `.ui` files (plain XML) that the host loads through `pj_dialog_host`. A Qt upgrade of PlotJuggler therefore does not touch them.
+**Install and update.** Install requires a compatible, not-yet-installed extension; update requires a newer registry
+version and is staged, and a registry version older than the installed one is rejected with a diagnostic that keeps the
+local install. "Update All" stages every compatible update that is not already staged. A sideload over an installed id,
+whatever its version, asks for confirmation and is staged; with a byte-identical payload it reports success and
+changes nothing. An archive whose embedded ABI or SDK floor the host cannot satisfy is refused before anything is
+written.
 
-Widget plugins are the exception: they create real Qt widgets, so they link Qt. The host compares each library's `build_info()` with its own Qt major.minor and compiler family before creating anything, and lists a mismatching library as unusable with its reason (`pj_runtime/docs/ARCHITECTURE.md`, "Widget plugins").
+**Uninstall and enable.** Uninstall is staged: the row shows "Needs Restart", the plugin stays loaded for the session,
+the directory is removed at the next start, and the same id cannot be reinstalled until then. A deletion that fails at
+that start (locked file, antivirus, permissions) is reported and retried every start while the id stays disabled.
+Core extensions cannot be uninstalled while at their bundled version. Enable/disable persists in `QSettings`
+(`Marketplace/disabledExtensions`, read by the runtime catalog through `ExtensionManager::disabledExtensionIds()`) and
+applies on the next launch; the marketplace does not decide what the loader instantiates.
 
-### 6.2 Compatibility Policy
+**Errors.**
 
-- The gate is the ABI major plus `min_sdk_required`: the registry and the embedded plugin manifest both declare the SDK floor, while discovery supplies the ABI major. A plugin that needs a newer host declares the SDK release that added the surface it needs. `min_plotjuggler_version` is still parsed and shown, but never gates.
-- One headless admission evaluator, backed by the SDK's strict `PJ::SemVer`, is shared by registry/local-ZIP admission, pending-install promotion, bundled-seed rescue, static registration, and runtime DSO loading. Plugin versions and floors fail closed when malformed. A multi-DSO extension retains the highest valid floor; invalid metadata keeps the complete extension unloadable without removing its installed marketplace row.
-- Registry metadata is only a pre-screen: after extraction the embedded ABI and SDK floor are rechecked before promotion, and staged work is rechecked again at restart. `platforms` remains registry-only; a foreign binary fails DSO discovery before the embedded gate.
-- Compatibility is a hard runtime gate. `--plugin-dir` and Preferences folders retain strict shadow priority: an incompatible authoritative copy suppresses a managed same-id fallback but is itself not loaded, making developer override failures explicit instead of silently testing another build.
-- The Qt baseline is `PJ_QT_VERSION` in the root `versions.env`.
+| Situation | Behaviour |
+|---|---|
+| Registry unreachable or malformed | The error is shown and a dialog explains that only installed extensions are listed; installed extensions stay listed. |
+| Download fails or is cancelled | Nothing is written; the transaction directory is removed. |
+| Checksum mismatch, corrupt ZIP, unsafe entry, limit exceeded | The install fails with the reason; nothing is promoted. |
+| Not enough disk space | The download is cancelled before extraction. |
+| Extensions dir missing | Created. |
+| Embedded manifest missing or invalid, id or version differs from the registry | The install or promotion is rejected with a diagnostic. |
+| Update fails during staging | The live install is untouched, nothing is staged, no backup is made. |
+| Staged update invalid at restart | The stage is removed or quarantined; the active install stays. |
+| Crash before an update is applied | The pending update remains for the next start. |
+| Second PlotJuggler opens the same store | Read-only (see "Single-writer lease"). |
+| Plugin fails to load after an install | The host reports the load failure; the backup is the manual recovery point. |
 
----
+**Non-functional.** C++20, the pinned Qt (`PJ_QT_VERSION` in `versions.env`), Linux, Windows and macOS. Dependencies are
+Qt, libarchive and `plotjuggler_sdk::plugin_host`. Downloads and extraction run off the GUI thread. No backend server,
+database, accounts or telemetry; the registry is a static JSON file and installed state is discovered from DSOs. Sizing
+assumes a catalog of tens of extensions, each a few megabytes compressed; the registry and filtering are not tuned or
+measured beyond that.
 
-## 7. Build System
+**Out of scope.** Deciding what the loader instantiates and hot-reloading running plugin instances (host concerns),
+paid extensions, dependency resolution between extensions, automatic updates (always user-initiated), plugin
+sandboxing.
 
-### 7.1 CMakeLists.txt (Marketplace)
+## UI and host integration
 
-The actual CMakeLists.txt is the source of truth — see `pj_marketplace/CMakeLists.txt`. Notable points:
+`MarketplaceWindow` is one `.ui`-driven window on the app chrome (`PJ::Dialog`): a toolbar (category filters, search,
+Install local..., Update All, a gear button), the table, a details footer and a status line with a progress bar and a
+diagnostics button. There is no per-row button and no separate detail dialog: every action lives in the footer. While
+an install runs, further Install and Update clicks, local ZIPs and the Update All batch queue behind it (clicks first,
+then local ZIPs, then the batch), because the manager runs one install at a time; a restart-required dialog appears once per settled
+batch and a failure summary replaces a trailing success status.
 
-- Targets: see §2.1.
-- `pj_marketplace` links `plotjuggler_sdk::plugin_host` for embedded-DSO-manifest discovery; a standalone configure (this directory as the CMake root) resolves the SDK itself. `pj-plugin-check` links only that and `nlohmann_json`, so its packaging closure stays Qt-free.
-- C++20, `-Wall -Wextra -Werror -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-qual -Wconversion -Woverloaded-virtual -Wpedantic`.
-- Tests are gated on `PJ_BUILD_TESTS`; the runners and why three suites keep their own executable are in `../CLAUDE.md`.
+`pj_app` opens it from File ▸ Extensions Marketplace... (Ctrl+Shift+M, `MainWindow::onOpenMarketplace`): a
+`MarketplaceWindow` over the session's `ExtensionManager` is kept as a hidden controller and its `contentWidget()` is
+lifted into a closable, tab-migratable panel. When the panel closes and `installationsChanged()` is true the shell calls
+`ExtensionCatalogService::reload()`, which loads new plugins without a restart. The gear button emits
+`pluginPreferencesRequested`, which the shell answers by opening Preferences ▸ Plugins; the marketplace depends on no
+preferences UI. The Help ▸ Installed Extensions submenu is informational and lists loaded plugins.
 
----
+**Recipes.**
+- A new registry field: add it to `Extension`, parse it in `RegistryManager::parseJson`, document it in the spec; a field
+  that gates admission also needs the resolver, the embedded-manifest check and the registry pruning contract above.
+- A new admission rule: extend `evaluatePluginCompatibility` only (every admission point shares it), and check the
+  registry pruning contract first.
+- Anything that writes under the store: gate it on `hasStoreWriteAccess()`, derive paths from the canonical store root,
+  and never open a payload directory in-process before the drain that may replace it.
 
-## 8. UI
+## Known gaps
 
-`MarketplaceWindow` is one `.ui`-driven window: a table of extensions (name, category, installed version, marketplace version, description) with a search box and filter toggles, and a details footer for the selected row that carries the secondary actions (uninstall, enable/disable). There is no separate detail dialog. End-user behaviour is in [`USER_MANUAL.md`](./USER_MANUAL.md).
-
----
-
-## 9. Technology Decisions
-
-| Decision | Choice | Alternatives Considered | Rationale |
-|----------|--------|------------------------|-----------|
-| GUI Framework | Qt 6 Widgets | QML | Consistency with PlotJuggler |
-| HTTP Client | QNetworkAccessManager | libcurl | Already in Qt, no extra deps |
-| JSON Parsing | QJsonDocument | nlohmann/json | Already in Qt |
-| ZIP Library | libarchive | QuaZip, minizip, libzip | Already used by `DownloadManager`; supports ZIP extraction without Qt-specific archive wrappers |
-| Checksum | QCryptographicHash | OpenSSL | Already in Qt |
-| Build System | CMake + Conan | Meson, Bazel | Industry standard, team experience |
-
----
-
-## 10. Integration with PlotJuggler
-
-`pj_app` opens the marketplace from **File ▸ Extensions Marketplace…** (`MainWindow::onOpenMarketplace`). It is embedded in the central area like a toolbox, not shown as a modal dialog: `MainWindow` constructs a `MarketplaceWindow` over the session's `ExtensionManager` and the registry URL from Preferences, keeps it alive as a hidden controller, and lifts its `contentWidget()` into a banner-wrapped panel that can be closed or moved to a tab. When the panel closes and `installationsChanged()` is true, the shell reloads the plugin catalog. The gear button emits `pluginPreferencesRequested`, which the shell answers by opening Preferences ▸ Plugins; the marketplace has no dependency on the preferences UI.
+- No confirmation dialog before install, update or uninstall; only the sideload replace question is asked.
+- `DownloadManager::cancel()` exists, but the window has no cancel action.
+- No automatic restore from a backup after a plugin fails to load; backups are a manual recovery point.
+- The registry is fetched fresh each time (no cache, no TTL), and only one registry URL is supported.
+- Extension icons (`icon_url` is parsed, not shown), popularity metrics and an "N updates available" notification do not
+  exist.
+- The "Installed only" filter toggle exists in `marketplace_window.ui` but is hidden, so the installed filter cannot be
+  reached from the UI.
+- Registry `plugins` entries (`Extension::plugins`, `ExtensionPlugin`) are never parsed, and `size_bytes` is ignored.
+- The whole archive is buffered in memory, and the compressed-size cap is checked only after the download completes.
+- The admission helper runs on the calling (GUI) thread and blocks it for up to the helper's timeout.
+- Two archive-policy implementations exist: `archive_limits.hpp` (used by `DownloadManager`) and `store_policy.hpp` with
+  `ArchiveExtractor` (reached only through `ArtifactStore::commitArchive`, which no install path calls). `commitArchive`,
+  `ArtifactStore::acquire` and `materializeArtifact` have no production caller, and most descriptor and profile
+  rejection codes in `generation_digest.hpp` and `store_rejection.hpp` are never produced.

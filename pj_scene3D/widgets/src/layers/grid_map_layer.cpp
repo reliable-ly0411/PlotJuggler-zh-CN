@@ -35,7 +35,6 @@ namespace pj::scene3d {
 namespace {
 Q_LOGGING_CATEGORY(lcGridMap, "pj.scene3d.grid_map")
 
-// The scalar field named `name`, or nullptr when absent or not single-element.
 const PJ::sdk::PointField* scalarField(const std::vector<PJ::sdk::PointField>& fields, const std::string& name) {
   const PJ::sdk::PointField* field = name.empty() ? nullptr : findField(fields, name);
   return field != nullptr && isScalarGridMapField(*field) ? field : nullptr;
@@ -78,9 +77,8 @@ QString GridMapLayer::sourceFrame() const {
 }
 
 uint64_t GridMapLayer::renderKey(PJ::Timepoint time) const {
-  // Sample identity by SequentialUID from latestEntryIdAt() (a binary search that
-  // never resolves payload bytes) folded with the fixed<-source transform, the
-  // same recipe as PointCloudLayer::renderKey.
+  // Sample identity by SequentialUID from latestEntryIdAt() (a binary search that never resolves payload bytes) folded
+  // with the fixed<-source transform, as PointCloudLayer::renderKey does.
   uint64_t key =
       0x9e3779b97f4a7c15ULL ^
       PJ::latestEntryRenderKey(ctx_.session != nullptr ? &ctx_.session->objectStore() : nullptr, topic_id_, time);
@@ -98,26 +96,40 @@ QDomElement GridMapLayer::xmlSaveState(QDomDocument& doc) const {
   return el;
 }
 
-bool GridMapLayer::xmlLoadState(const QDomElement& element) {
+std::optional<GridMapLayer::ParsedSettings> GridMapLayer::parseSettings(const QDomElement& element) {
   if (element.isNull() || element.tagName() != "grid_map"_L1 || !detail::isLeafPayload(element)) {
+    return std::nullopt;
+  }
+  ParsedSettings settings;
+  // Requests are kept verbatim: a missing field falls back at render time and the request is honoured again once a
+  // sample carrying it arrives.
+  settings.elevation_field = PJ::readXmlText(element, u"elevation_field"_s);
+  settings.color_field = PJ::readXmlText(element, u"color_field"_s);
+  auto coloring = ChannelColoring::parseXml(element);
+  if (!coloring.has_value() || !detail::readZeroOne(element, u"lighting"_s, true, settings.lighting) ||
+      !PJ::readXmlDouble(element, u"opacity"_s, 1.0, 0.0, 1.0, settings.opacity)) {
+    return std::nullopt;
+  }
+  settings.coloring = *coloring;
+  return settings;
+}
+
+bool GridMapLayer::validateXml(const QDomElement& element) {
+  return parseSettings(element).has_value();
+}
+
+bool GridMapLayer::xmlLoadState(const QDomElement& element) {
+  const std::optional<ParsedSettings> settings = parseSettings(element);
+  if (!settings.has_value()) {
     return false;
   }
-  const auto coloring = ChannelColoring::parseXml(element);
-  bool lighting = true;
-  double opacity = 1.0;
-  if (!coloring.has_value() || !detail::parseZeroOne(element, "lighting", true, lighting) ||
-      !detail::parseFiniteDouble(element, "opacity", 1.0, 0.0, 1.0, opacity)) {
-    return false;
-  }
-  // Requests are restored verbatim: a missing field falls back at render time and
-  // the request is honoured again once a sample carrying it arrives.
-  setElevationField(element.attribute(u"elevation_field"_s));
-  setColorField(element.attribute(u"color_field"_s));
-  setColormap(coloring->colormap());
-  setAutoRange(coloring->autoRange());
-  setManualRange(coloring->manualRange().first, coloring->manualRange().second);
-  setLighting(lighting);
-  setOpacity(opacity);
+  setElevationField(settings->elevation_field);
+  setColorField(settings->color_field);
+  setColormap(settings->coloring.colormap());
+  setAutoRange(settings->coloring.autoRange());
+  setManualRange(settings->coloring.manualRange().first, settings->coloring.manualRange().second);
+  setLighting(settings->lighting);
+  setOpacity(settings->opacity);
   pushDisplayParamsToPass();
   return true;
 }
@@ -321,8 +333,8 @@ void GridMapLayer::renderAt(int64_t time_ns) {
     emit fallbackFramesChanged(fallbackFrames());
   }
 
-  // Wire dims are untrusted until validated: the host splice path does not yet
-  // validate attached bytes (SDK follow-up), so every consumer checks here.
+  // Wire dims are untrusted until validated: the host splice path does not validate attached bytes, so every consumer
+  // checks here.
   if (const auto valid = PJ::validateGridMap(grid); !valid) {
     bail(tr("Invalid grid map: %1").arg(QString::fromStdString(valid.error())));
     return;
@@ -375,7 +387,7 @@ void GridMapLayer::setFixedFrame(const QString& frame) {
   if (fixed_frame_ == frame) {
     return;
   }
-  fixed_frame_ = frame;  // placement is resolved per frame via FrameContext
+  fixed_frame_ = frame;  // the view resolves placement per frame
   emit repaintRequested();
 }
 

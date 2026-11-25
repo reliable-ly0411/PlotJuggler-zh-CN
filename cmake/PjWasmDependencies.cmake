@@ -15,19 +15,8 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 
 option(PJ_WASM_WITH_LUAU "Build Luau Data Processors in the wasm app" ON)
-option(PJ_WASM_WITH_CSV "Build the official CSV importer into the wasm app" ON)
-option(PJ_WASM_WITH_MCAP "Build the official MCAP container importer into the wasm app" ON)
-option(PJ_WASM_WITH_ROS "Build the official ROS1/ROS2 message parser into the wasm app" ON)
-option(PJ_WASM_WITH_PROTOBUF "Build the official Protobuf/Foxglove parser into the wasm app" ON)
-option(PJ_WASM_WITH_TRANSFORM_EDITOR "Build the official Transform Editor toolbox into the wasm app" ON)
-option(PJ_WASM_WITH_DUMMY_STREAM "Build the official Dummy Streamer into the wasm app" ON)
-option(PJ_WASM_WITH_PJ_BRIDGE "Build the official PlotJuggler Bridge WebSocket streamer into the wasm app" ON)
-option(PJ_WASM_WITH_JSON "Build the official JSON message parser into the wasm app" ON)
-option(PJ_WASM_WITH_DATA_TAMER "Build the official DataTamer message parser into the wasm app" ON)
-option(PJ_WASM_WITH_3D_LOADER "Build the official PCD/PLY point-cloud and mesh importer into the wasm app" ON)
-option(PJ_WASM_WITH_QUATERNION "Build the official Quaternion toolbox into the wasm app" ON)
-option(PJ_WASM_WITH_FFT "Build the official FFT toolbox into the wasm app" ON)
-option(PJ_WASM_WITH_ANOMALY_DETECTOR "Build the official Anomaly Detector toolbox into the wasm app" ON)
+# The official plugins' PJ_WASM_WITH_<NAME> options.
+include(${CMAKE_CURRENT_LIST_DIR}/PjWasmOfficialPlugins.cmake)
 option(PJ_WASM_WITH_SCENE2D "Build the accelerated Scene2D wasm port" ON)
 option(PJ_WASM_WITH_SCENE3D "Build the accelerated Scene3D wasm port" ON)
 option(PJ_WASM_WITH_VIDEO
@@ -75,15 +64,6 @@ FetchContent_Declare(tsl-robin-map
     OVERRIDE_FIND_PACKAGE
     SYSTEM)
 
-set(NANOARROW_IPC ON CACHE BOOL "" FORCE)
-set(NANOARROW_NAMESPACE "PJ" CACHE STRING "" FORCE)
-FetchContent_Declare(nanoarrow
-    GIT_REPOSITORY https://github.com/apache/arrow-nanoarrow.git
-    GIT_TAG apache-arrow-nanoarrow-0.7.0
-    GIT_SHALLOW TRUE
-    OVERRIDE_FIND_PACKAGE
-    SYSTEM)
-
 set(GLM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(glm
@@ -99,13 +79,17 @@ FetchContent_MakeAvailable(
     fmt
     FastFloat
     tsl-robin-map
-    nanoarrow
     glm)
 
+# The same pinned nanoarrow source the desktop builds fall back to.
+set(NANOARROW_NAMESPACE "PJ" CACHE STRING "" FORCE)
+include(${CMAKE_SOURCE_DIR}/pj_datastore/cmake/PjNanoarrow.cmake)
 
-if(PJ_WASM_WITH_CSV)
-    # CSV timestamp parsing needs only date/date.h; keep the timezone library,
-    # database, and upstream tests out of the browser binary.
+
+if(PJ_WASM_WITH_CSV OR PJ_WASM_WITH_PARQUET)
+    # CSV timestamp parsing needs only date/date.h, and the Parquet loader
+    # compiles date's tz.cpp itself; keep date's own timezone library, database,
+    # and upstream tests out of the browser binary.
     set(BUILD_TZ_LIB OFF CACHE BOOL "" FORCE)
     set(USE_SYSTEM_TZ_DB OFF CACHE BOOL "" FORCE)
     set(ENABLE_DATE_TESTING OFF CACHE BOOL "" FORCE)
@@ -119,21 +103,20 @@ if(PJ_WASM_WITH_CSV)
     FetchContent_MakeAvailable(date)
 endif()
 
-if(PJ_WASM_WITH_CSV OR PJ_WASM_WITH_MCAP OR PJ_WASM_WITH_ROS OR PJ_WASM_WITH_PROTOBUF OR
-   PJ_WASM_WITH_TRANSFORM_EDITOR OR PJ_WASM_WITH_DUMMY_STREAM OR PJ_WASM_WITH_PJ_BRIDGE OR PJ_WASM_WITH_JSON OR
-   PJ_WASM_WITH_DATA_TAMER OR PJ_WASM_WITH_3D_LOADER OR PJ_WASM_WITH_QUATERNION OR
-   PJ_WASM_WITH_FFT OR PJ_WASM_WITH_ANOMALY_DETECTOR)
-    # Source-only population shared by the narrowly-scoped static plugin
-    # targets. Pin the reviewed upstream integration commit by immutable archive
-    # and hash so PJ4 consumes the official sources without a local patch layer.
-    FetchContent_Declare(pj_official_plugins
-        URL https://codeload.github.com/PlotJuggler/pj-official-plugins/tar.gz/7ed9067d003fdf8f15decf5995651488d8bb937f
-        URL_HASH SHA256=b48dd47fc8d9181670d6596506d1f4570bdebcabe0ad94334b62fd8b78573fee
-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-        SOURCE_SUBDIR _pj_source_only_no_cmakelists)
-    FetchContent_MakeAvailable(pj_official_plugins)
-    set(PJ_OFFICIAL_PLUGINS_SOURCE_DIR "${pj_official_plugins_SOURCE_DIR}" CACHE INTERNAL "")
-endif()
+# The official plugins' sources and their wasm.cmake files (PjWasmOfficialPlugins.cmake): a
+# source-only tarball, fetched whatever plugins are enabled.
+# Pin the reviewed upstream commit by immutable archive and hash. It contains
+# CSV #397 / Log #391 upstream; verify the adopted bytes without reapplying patches.
+set(_pj_official_plugins_commit ec172a436b801e00d23d5e66de00741e659b4efa)
+FetchContent_Declare(pj_official_plugins
+    URL https://codeload.github.com/PlotJuggler/pj-official-plugins/tar.gz/${_pj_official_plugins_commit}
+    URL_HASH SHA256=28f740c36f313c6fbb9e435a9984b29644964c879e2f54b5be3e73420296b557
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    SOURCE_SUBDIR _pj_source_only_no_cmakelists)
+FetchContent_MakeAvailable(pj_official_plugins)
+include("${CMAKE_CURRENT_LIST_DIR}/PjOfficialPluginCompatibility.cmake")
+pj_verify_official_plugin_compatibility("${pj_official_plugins_SOURCE_DIR}" "${_pj_official_plugins_commit}")
+set(PJ_OFFICIAL_PLUGINS_SOURCE_DIR "${pj_official_plugins_SOURCE_DIR}" CACHE INTERNAL "")
 
 if(PJ_WASM_WITH_PROTOBUF)
     # Match the official plugin's native dependency pin. The runtime parser uses
@@ -153,7 +136,7 @@ if(PJ_WASM_WITH_PROTOBUF)
     set(ABSL_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(protobuf
         GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-        GIT_TAG v33.5
+        GIT_TAG v36.2
         GIT_SHALLOW TRUE
         GIT_SUBMODULES_RECURSE TRUE
         OVERRIDE_FIND_PACKAGE
@@ -184,6 +167,77 @@ if(PJ_WASM_WITH_ROS)
     unset(_pj_rosx_includes)
 endif()
 
+if(PJ_WASM_WITH_ULOG)
+    # data_load_ulog's pinned PX4 ULog reader (its CPM pin).
+    FetchContent_Declare(ulog_cpp
+        URL https://github.com/PX4/ulog_cpp/archive/refs/tags/v1.0.1.zip
+        URL_HASH SHA256=bb556d4c515f12707be816061c6ca7c0a8125917a0c4911ef1770ed9e1a85cb0
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        SYSTEM)
+    FetchContent_MakeAvailable(ulog_cpp)
+    set_target_properties(ulog_cpp PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
+
+if(PJ_WASM_WITH_CANDUMP OR PJ_WASM_WITH_BLF OR PJ_WASM_WITH_MF4)
+    # The CAN loaders' shared DBC decoder (common/can_dbc) builds dbc_parser_cpp
+    # at the plugins' pin; the plugins' own function applies their fixes to it.
+    FetchContent_Declare(dbc_parser_cpp
+        URL https://github.com/LinuxDevon/dbc_parser_cpp/archive/2c8acdbd2d1ea33545f99f9a0d23e10b7f8e0852.tar.gz
+        URL_HASH SHA256=91e12166d83c56f1ff945f6c94f14a7fe80e105219111f984645614ef8e09c57
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        SOURCE_SUBDIR _pj_source_only_no_cmakelists)
+    # dbc_parser_cpp is compiled against the plugins' fast_float pin (header-only),
+    # not the app's newer fast_float, so it parses exactly as the shipped plugins.
+    FetchContent_Declare(dbc_fast_float
+        URL https://github.com/fastfloat/fast_float/archive/1ea4f27b2aeee2859a1354a3c24cff52a116cad1.tar.gz
+        URL_HASH SHA256=06f860e3adb994b9c8523bb53a76a335c4182e27fe5a077246146d283efdc9da
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        SOURCE_SUBDIR _pj_source_only_no_cmakelists)
+    FetchContent_MakeAvailable(dbc_parser_cpp dbc_fast_float)
+endif()
+
+if(PJ_WASM_WITH_BLF OR PJ_WASM_WITH_MF4)
+    # Emscripten's sysroot zlib, as for Scene2D's libpng.
+    find_package(ZLIB 1.3.1 EXACT REQUIRED)
+endif()
+
+if(PJ_WASM_WITH_BLF)
+    # data_load_blf's pinned BLF reader, hardened by the plugin's own function.
+    FetchContent_Declare(lblf
+        URL https://github.com/PetStr/lblf/archive/a453f188f67637a75e470c272cc76b475080f778.tar.gz
+        URL_HASH SHA256=1ed25162dcab2316d7d8b896ac6d85f9d2f97ca2bfdf40b32165c0e4405046ff
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        SOURCE_SUBDIR _pj_source_only_no_cmakelists)
+    FetchContent_MakeAvailable(lblf)
+endif()
+
+if(PJ_WASM_WITH_MF4)
+    # data_load_mf4's pinned MDF reader and the XML parser it needs (the
+    # plugins' Conan version). Only the expat library is built.
+    FetchContent_Declare(mdflib
+        URL https://github.com/ihedvall/mdflib/archive/5ad85af2c943a1ab810d0768d3873246a3920ebf.tar.gz
+        URL_HASH SHA256=700e11196d570cb480cddc0258d7a1e74adc0562f2d2dfb3ee60f124f79c8cd4
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        SOURCE_SUBDIR _pj_source_only_no_cmakelists)
+    set(EXPAT_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+    set(EXPAT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(EXPAT_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(EXPAT_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+    set(EXPAT_BUILD_FUZZERS OFF CACHE BOOL "" FORCE)
+    set(EXPAT_BUILD_PKGCONFIG OFF CACHE BOOL "" FORCE)
+    set(EXPAT_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    set(EXPAT_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(expat
+        URL https://github.com/libexpat/libexpat/releases/download/R_2_10_0/expat-2.10.0.tar.gz
+        URL_HASH SHA256=5466a341f9c692ef7a958a6881311be597f8e1ce345984cf78414f54793dea4c
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        SYSTEM)
+    FetchContent_MakeAvailable(mdflib expat)
+    if(NOT TARGET EXPAT::EXPAT)
+        add_library(EXPAT::EXPAT ALIAS expat)
+    endif()
+endif()
+
 if(PJ_WASM_WITH_ROS OR PJ_WASM_WITH_DATA_TAMER)
     # Header-only DataTamer schema/snapshot parser: parser_ros embeds it for its
     # DataTamer specialization, parser_data_tamer is built on it.
@@ -194,12 +248,21 @@ if(PJ_WASM_WITH_ROS OR PJ_WASM_WITH_DATA_TAMER)
         SOURCE_SUBDIR _pj_source_only_no_cmakelists
         SYSTEM)
     FetchContent_MakeAvailable(data_tamer)
+    add_library(data_tamer_parser INTERFACE)
+    target_include_directories(data_tamer_parser SYSTEM INTERFACE "${data_tamer_SOURCE_DIR}/data_tamer_cpp/include")
 endif()
 
-if(PJ_WASM_WITH_MCAP OR PJ_WASM_WITH_PJ_BRIDGE OR (PJ_WASM_WITH_SCENE3D AND PJ_WASM_WITH_COMPRESSED_POINTCLOUDS))
+set(PJ_WASM_WITH_ARROW OFF)
+if(PJ_WASM_WITH_ARROW_PARSER OR PJ_WASM_WITH_PARQUET OR PJ_WASM_WITH_DATA_EXPORTER)
+    set(PJ_WASM_WITH_ARROW ON)
+endif()
+
+if(PJ_WASM_WITH_MCAP OR PJ_WASM_WITH_PJ_BRIDGE OR (PJ_WASM_WITH_SCENE3D AND PJ_WASM_WITH_COMPRESSED_POINTCLOUDS) OR
+   PJ_WASM_WITH_ARROW)
     # Match the native Conan graph exactly. MCAP uses these libraries for chunk
-    # decompression, the PlotJuggler Bridge zstd for its data frames, and
-    # Cloudini the same pinned static targets for its second compression stage.
+    # decompression, the PlotJuggler Bridge zstd for its data frames, Arrow both
+    # for its Parquet/IPC codecs, and Cloudini the same pinned static targets for
+    # its second compression stage.
     # Populate them once when any of these browser features needs them.
     set(LZ4_BUILD_CLI OFF CACHE BOOL "" FORCE)
     set(LZ4_BUILD_LEGACY_LZ4C OFF CACHE BOOL "" FORCE)
@@ -241,12 +304,26 @@ if(PJ_WASM_WITH_MCAP OR PJ_WASM_WITH_PJ_BRIDGE OR (PJ_WASM_WITH_SCENE3D AND PJ_W
         add_library(LZ4::lz4_static ALIAS lz4_static)
     endif()
     if(NOT TARGET zstd::libzstd_static AND TARGET libzstd_static)
+        # Zstd's build/cmake target does not publish its source-tree include directory (build
+        # interface only: the target is in zstd's install export).
+        target_include_directories(libzstd_static SYSTEM INTERFACE "$<BUILD_INTERFACE:${zstd_SOURCE_DIR}/lib>")
         add_library(zstd::libzstd_static ALIAS libzstd_static)
     endif()
 endif()
 
+if(PJ_WASM_WITH_FFT)
+    include(${CMAKE_SOURCE_DIR}/pj_scripting/cmake/PjPocketfft.cmake)
+endif()
+
 if(PJ_WASM_WITH_SCENE3D)
     include(${CMAKE_CURRENT_LIST_DIR}/PjWasmScene3DDependencies.cmake)
+endif()
+
+if(PJ_WASM_WITH_ARROW)
+    include(${CMAKE_CURRENT_LIST_DIR}/PjWasmArrowDependencies.cmake)
+    # The Arrow and Parquet names the plugins link natively.
+    add_library(Arrow::arrow_static ALIAS pj_wasm_arrow)
+    add_library(Parquet::parquet_static ALIAS pj_wasm_arrow)
 endif()
 
 if(PJ_WASM_WITH_LUAU)
@@ -255,7 +332,7 @@ if(PJ_WASM_WITH_LUAU)
     set(LUAU_BUILD_WEB OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(Luau
         GIT_REPOSITORY https://github.com/luau-lang/luau.git
-        GIT_TAG 0.700
+        GIT_TAG 0.747
         GIT_SHALLOW TRUE
         OVERRIDE_FIND_PACKAGE
         SYSTEM)

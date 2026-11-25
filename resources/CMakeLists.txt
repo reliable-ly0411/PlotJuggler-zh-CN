@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 if(EMSCRIPTEN)
-    add_library(pj_resources OBJECT resources.qrc)
+    add_library(pj_resources OBJECT resources.qrc memes.qrc)
     set_target_properties(pj_resources PROPERTIES AUTORCC ON)
     target_link_libraries(pj_resources PRIVATE Qt6::Core)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -14,7 +14,7 @@ else()
     # Qt's RCC helper does not inherit PIC from Qt6::Core. Keep its object
     # position-independent to avoid exporting Qt data through ELF copy relocations.
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-    qt6_add_big_resources(pj_resource_objects resources.qrc OPTIONS --threshold 0)
+    qt6_add_big_resources(pj_resource_objects resources.qrc memes.qrc OPTIONS --threshold 0)
     add_custom_target(pj_resources_object DEPENDS ${pj_resource_objects})
     add_library(pj_resources INTERFACE)
     add_dependencies(pj_resources pj_resources_object)

@@ -23,6 +23,31 @@ spec.loader.exec_module(smoke)
 
 
 class InstallerResourceSmokeTests(unittest.TestCase):
+    def test_workflow_stops_before_portable_when_installer_fails(self):
+        shell = shutil.which('pwsh') or shutil.which('powershell')
+        if not shell:
+            self.skipTest('PowerShell unavailable; exit propagation requires its actual script semantics')
+        workflow = (ROOT / '.github/workflows/zh-4x-packages.yml').read_text(encoding='utf-8')
+        start = workflow.index('          ./packaging/installer/build_windows_installer.ps1')
+        block = workflow[start:workflow.index('      - name: Record original package hashes', start)]
+        block = '\n'.join(line[10:] for line in block.splitlines())
+        for installer_exit, portable_exit in [(31, 0), (0, 37), (0, 0)]:
+            with self.subTest(installer=installer_exit, portable=portable_exit), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                scripts = root / 'packaging/installer'
+                scripts.mkdir(parents=True)
+                for name, code in [('installer', installer_exit), ('portable', portable_exit)]:
+                    (scripts / f'build_windows_{name}.ps1').write_text(
+                        f"Set-Content -Path '{name}.called' -Value called; exit {code}\n", encoding='utf-8')
+                driver = root / 'driver.ps1'
+                driver.write_text("$ErrorActionPreference='Stop'; $packageVersion='4.1.0.1';\n" + block,
+                                  encoding='utf-8')
+                result = subprocess.run([shell, '-NoProfile', '-NonInteractive', '-File', str(driver)],
+                                        cwd=root, capture_output=True, text=True, timeout=30)
+                self.assertEqual(result.returncode == 0, installer_exit == portable_exit == 0,
+                                 result.stdout + result.stderr)
+                self.assertEqual((root / 'portable.called').exists(), installer_exit == 0)
+
     def test_stage_real_metadata_and_only_synthetic_payload(self):
         with tempfile.TemporaryDirectory(prefix='smoke space ') as directory:
             config, packages, meta, translations, qrc = smoke.stage_inputs(ROOT, Path(directory))
@@ -77,12 +102,15 @@ class InstallerResourceSmokeTests(unittest.TestCase):
                     self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
     def test_license_sources_and_historical_notice_are_preserved(self):
         root = ROOT / 'packaging/installer'
-        original = root / 'packages/io.plotjuggler.application/meta/license_lgpl.txt'
+        original = root / 'license_lgpl_historical.txt'
         # Git LF and Windows CRLF checkouts contain the same unedited notice.
         self.assertEqual(hashlib.sha256(original.read_bytes().replace(b'\r\n', b'\n')).hexdigest(),
                          '0a81c0c611ee9d06f6c247045ae7fa79316cf220431acdf5330e195abbac78c5')
+        current = root / 'packages/io.plotjuggler.application/meta/license_lgpl.txt'
+        self.assertEqual(hashlib.sha256(current.read_bytes().replace(b'\r\n', b'\n')).hexdigest(),
+                         'e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118')
         builder = (root / 'build_windows_installer.ps1').read_text(encoding='utf-8')
-        self.assertIn('Copy-Item (Join-Path $pkgSrc "meta/license_lgpl.txt") (Join-Path $historyDir "license_lgpl.txt")', builder)
+        self.assertIn('Copy-Item (Join-Path $installerRoot "license_lgpl_historical.txt") (Join-Path $historyDir "license_lgpl.txt")', builder)
         self.assertLess(builder.index('$historyDir ='), builder.index('Copy-Item (Join-Path $stageData "share/licenses/Qt-LGPL.txt")'))
         portable = (root / 'build_windows_portable.ps1').read_text(encoding='utf-8')
         self.assertIn('$metadata = Join-Path $StageDir "packages/io.plotjuggler.application/meta"', portable)
@@ -145,7 +173,7 @@ class InstallerResourceSmokeTests(unittest.TestCase):
                        '-StageDir', str(stage), '-OutFile', str(archive)]
             run = subprocess.run(command, capture_output=True, text=True, timeout=30)
             self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
-            original = (root / 'packages/io.plotjuggler.application/meta/license_lgpl.txt').read_bytes()
+            original = (root / 'license_lgpl_historical.txt').read_bytes()
             with zipfile.ZipFile(archive) as package:
                 self.assertEqual(package.read('licenses/license_lgpl.txt'), canonical)
                 self.assertEqual(package.read('licenses/license_mpl.txt'), mpl)

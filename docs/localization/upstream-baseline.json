@@ -1,9 +1,9 @@
 {
   "upstream_repository": "https://github.com/PlotJuggler/PlotJuggler",
   "upstream_branch": "main",
-  "upstream_commit": "904c48bfbb5371033ecc104e48e11bb442aa61a9",
+  "upstream_commit": "a7814caa0c20c6115613e71638fe61ccadd6131c",
   "upstream_version_file": "versions.env",
-  "baseline_recorded_utc": "2026-11-14",
+  "baseline_recorded_utc": "2026-11-22",
   "localization_source_repository": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN",
   "localization_source_branch": "zh-CN",
   "localization_source_commit": "766a88d8e689c7803f32acb315ac872a0a67a57b",
@@ -17,21 +17,24 @@
     "upstream_commit": "3e2f9253adc2d41e17b2f0fec74f4b2487c42fb0",
     "repository": "https://github.com/reliable-ly0411/plotjuggler-apbin-plugins",
     "branch": "plotjuggler-4.x-sdk",
-    "commit": "fc6065fd64305479946552a757d78e6afdd2c506",
+    "commit": "bda1161851395ba3c7499546fdabb4269ffc8ff2",
     "path": "3rdparty/plotjuggler-apbin-plugins",
-    "sdk_version": "1.0.0-dev.2",
-    "sdk_source_commit": "a8766632ad50c8ff7183e42ccf78dbde4f90a57a",
+    "sdk_version": "1.1.0",
+    "sdk_source_commit": "d65923cd11ab7a822ef7b802523e2fc7b281f515",
     "license": "LGPL-3.0-only",
     "linkage": "Separate native shared library; no static embedding in the application.",
-    "version": "1.2.0-pj4.rc.1",
-    "release_tag": "v1.2.0-pj4.rc.1"
+    "version": "1.3.0-pj4.rc.1",
+    "release_tag": "v1.3.0-pj4.rc.1",
+    "release_commit": "55f75c4214deabda952b9114c7cb4c3005593158",
+    "source_manifest_sha256": "f2ef42dc0d80405dbeb7e2d23cf6831f2c5f2a1c846d39b8643af3fff4b5901d",
+    "sdk_scope": "Host source rebuild; standalone release remains SDK 0.34.1 with unchanged tag, source manifest and assets."
   },
   "upstream_release": {
     "tag": "4.1.0",
     "tag_object": "da079f6670d3a1873ed1011dedc15556e6f838de",
     "commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
     "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.1.0",
-    "relationship": "Development snapshot with 70 upstream commits after official 4.1.0."
+    "relationship": "Development snapshot after official 4.1.0; upstream target declares 4.2.0, not a localized accepted release."
   },
   "csv_path_fix": {
     "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
@@ -40,8 +43,9 @@
     "module": "data_load_csv",
     "sdk_version": "0.34.1",
     "patch": "packaging/localization/plugin-patches/csv-loader.patch",
-    "patch_sha256": "0f0b6ceaca36e914d8beb458156aeb6c07e87ebe5668d517b1f8d1e69597a442",
-    "scope": "UTF-8 filesystem paths in preview and import; synthetic ABI regressions; no parsing-locale or data-value changes"
+    "patch_sha256": "6b4d6bbb54c6ecec4c3a2b20d86a5228954db8fb1f0ffa06323f48c939324a01",
+    "scope": "UTF-8 filesystem paths, display localization and #397 empty-import rejection; synthetic ABI regressions; no parsing-locale or data-value changes",
+    "compatibility_fix_commit": "bae7e986a7bae7a9ac7d029fcd806e2b9c8c892b"
   },
   "fft_display_mapping": {
     "repository": "https://github.com/PlotJuggler/pj-official-plugins",
@@ -52,12 +56,12 @@
     "license": "MIT",
     "strategy": "Host display mapping for the unchanged official binary; no plugin rebuild or SDK change."
   },
-  "host_sdk_version": "1.0.0-dev.2",
+  "host_sdk_version": "1.1.0",
   "qt_version": "6.12.0",
-  "previous_upstream_commit": "ea8bb4c721049e9cf6bd7ed36b6eff210f40cdbd",
+  "previous_upstream_commit": "690f2c5066991eb3c624d863705528c006ad68ac",
   "integration_parents": {
-    "development": "7c7f591ea43e60131566aa3fe842d231adda11a4",
-    "upstream": "904c48bfbb5371033ecc104e48e11bb442aa61a9"
+    "development": "56d552ddd0906a4f1da2768c377bd7c7349a58bf",
+    "upstream": "aa365846c3e5f5f1ed4f17fb54845ad6413c8de3"
   },
   "published_localization_release": {
     "version": "4.0.0-zh.1.rc.4",
@@ -66,22 +70,76 @@
     "note": "Historical released package scope; not an acceptance claim for the new development snapshot."
   },
   "latest_sync": {
-    "previous_upstream_commit": "5a8f2583b0ae336930910c84307bde1a65c31fd3",
-    "development_parent": "add1a6df9731826642555fb733334c7547432232",
+    "previous_upstream_commit": "904c48bfbb5371033ecc104e48e11bb442aa61a9",
+    "development_parent": "1613eaec28e7c4aee13f7efc72f5e2b2d73a35ae",
     "upstream_commits": [
-      "c2e97fbf8ed287d53f6dcaa97984db27b418ae2c",
-      "3773bd145ff931ba4cb59469e48b7e218a65f299",
-      "cc2dfed3543e6a2e1e34b307e59a955465b2c1dc",
-      "1f5347e415ef980b1859141d63ff1e344fb0487f",
-      "515858a7650a52a9f1866897d0c1633f2c6f845f",
-      "766d6c6acd230d6a9f8dac533eac826aa228bacb",
-      "2a54395cb4d07112b13074c07897b2288579a02d",
-      "ea8bb4c721049e9cf6bd7ed36b6eff210f40cdbd",
-      "694ff471a7a8c867f9caa808e2fc50be742f005c",
-      "904c48bfbb5371033ecc104e48e11bb442aa61a9"
+      "c5d1f65a85614c8d3220f717fbe6fdd041b6f312",
+      "5968a081a7a4bb7a1fe323f8a064057307fbb956",
+      "f0b98263158e99745ecb8532ed0e85ff3648fd4f",
+      "a20294276f996af6b36d0515bb6ffc1c606774a1",
+      "d88af5d4a6a88911c75da49b65fc56d794b40ad7",
+      "6e9a8a07e98ba60e8d2eb7756190bd6bd601dd29",
+      "a38576dfc1afa53404baeb86d1884c399754739f",
+      "11914532783a194e85cffecb6b0a2ac7f954b046",
+      "1ff6cd21f9260920697459a71fae838367ae9781",
+      "8c8c6170698e6cdd4894a241eea32685f843b6a0",
+      "1262195075677576caa4b2f10352f1c6be8ff49f",
+      "1d866784a0c826365971573b76cafaef27f00713",
+      "a8d27db44ee363dfb556b7c768c891d0507124f5",
+      "970172746d079fff319ce3f72749ab843c252d5d",
+      "6a91f8da854a50d8a264111ec0bf87bf24f775f2",
+      "5cb22f8e4fee92244bb53bef3fa0a19027faeecb",
+      "ebe9e1ff6f3596215eeeede4f6c0f0221f2097c4",
+      "8a483b496af4744ea6ff0ef107cdcd41a1b5ba67",
+      "2b65d90623ecd518f54f4de5d65a66ad3099c082",
+      "b293626b27528378204443c07fdb86ea169684ea",
+      "44024d7ac4fab68e62cee00e67b7a9f5f8400fec",
+      "a149194cf35030e6ac6f7e5e3b4a08924f1d81b6",
+      "ced7a3444dfea74e84f57169231ca2aa61d93624",
+      "be2d469aa3f9fa6ca9ef74098139a0d188df230d",
+      "46f1d91025675d765de9a87927199f88664fab5e",
+      "3e5921857b10ac3e2f7f8d2144f2af740a99f8aa",
+      "a8889b2140e29770255af0e319be7a6634682298",
+      "b9027453be6e5b9151a960b0f5a1b61c85616bfb",
+      "71d6f57d44dbbf9544a08a8c6156907380d537f5",
+      "c74c6361ba240c977dde1be38c5cf553782d4ded",
+      "652b0726d16aad0de8bb0c494da474eb92bc3465",
+      "f8d8ae2305cdf46c66f54a39468c2b584b5c662f",
+      "a53602626506f9880be1d20fd1d83338fa7b8a1b",
+      "2dbe133c221cf5155d6bf99c5bc709138b2c484f",
+      "2ede19a12f959b06ef6df6768aef5dfe50f01c18",
+      "1acdfcf92f18dcd1bdb6d8a0c78d0c216aa0b5a3",
+      "031cec8a1bc73e128a0ecfb3dd27d90696ea6c58",
+      "73b2c8647307429360deb396240dfb85d5a8ebf1",
+      "9d98cfa9ea0c7979f7cd6353d58e141268e38b59",
+      "3738fe5a65f80d1c660cf4807c142da9832cc9c2",
+      "af758cabf3f712e63cf18f4be96cea2ea2084493",
+      "eaaa58ddab832db782b0261344b66d4a353484b9",
+      "8267521e593947fd860a74ae42875eb3a9c5a0b1",
+      "a2dd0fad499d4c02789df581d7acf336a7ae82d6",
+      "84b39a77acb856e5bd8498db2662432445a290e1",
+      "445173886352fc614e85c960132c9ac82ecbb8b0",
+      "18ff9b061a59f3dc7dfe5af8290f6bf0986ffaa5",
+      "133ba85b40dfceac9f7de92691ef5d73d22f0266",
+      "ac7117beb5fcabb789c425cbfb96721e028de013",
+      "fe52dd435c7bcc101b401bc6212b2c7cec6afc3e",
+      "99f9e7572818583556a1ff441412c102d8b8a69d",
+      "87a4dbc1073c0ff2e2647963c182f5ad11cfe6a6",
+      "8800f77ef1ca5ace1d7819d29804e6b209c579a1",
+      "4e97f25dc03df3b3de14e8f63004b969fc9314b1",
+      "b4c4da4615fba0d4be790fd30544d62e3e8758c6",
+      "986bd463689757fa86f385adf6d7d75bbbc26815",
+      "9c60d244e2df67dfc6c840f7423d106d19c9a383",
+      "baad3d5fa22753554338ff57d9df12c43bab3e9b",
+      "2a816fc8ba90bd8a5e99fd0ae0811d3b9bfb1d75",
+      "841fd4c93212856a01f1801baa1ffe055dae5ae2",
+      "69d7de1173794a60d18c175f292a897e8731d192",
+      "e76910b2d621d7890f744cf6635edfc85f6b28b2",
+      "057df4ba9bfd9a9459f89fc6289a294c5887c39c",
+      "5002da40a6499cb99c1073d5b8c611f1e825cb4b"
     ],
-    "upstream_commits_after_release": 70,
-    "package_status": "Targeted source and native validation; published tags and packages unchanged."
+    "upstream_commits_after_release": 134,
+    "package_status": "Independent merge candidate; exact-head host, Windows, WASM and GUI/package acceptance pending; no stable/development promotion or publication."
   },
   "forward_port_source": "0113492d7a7f96e486de1f9adcde6e43893ab630",
   "official_plugin_source_sync": {
@@ -89,5 +147,24 @@
     "commit": "7f089a2271600c632f24c6f082dabec2d8295704",
     "upstream_commit": "7ed9067d003fdf8f15decf5995651488d8bb937f",
     "status": "Source translations synchronized; existing binary registry and legacy rebuild locks unchanged pending per-plugin package acceptance."
+  },
+  "incremental_sync": {
+    "candidate_parent": "9906bd9df491643a9302e5986fb0eb931eaf2928",
+    "upstream_parent": "1877b40120414b8590349cb9ef66ae7a5878f63a",
+    "previous_upstream_parent": "690f2c5066991eb3c624d863705528c006ad68ac",
+    "upstream_commit_count": 8,
+    "status": "Independent source integration candidate; no promotion or release."
+  },
+  "development_checkpoint_20261121": {
+    "development": "b5832136100b7b4ce15b5587a506ac69bfe335bb",
+    "upstream": "9671c907aa11210832987cb6eac5419b07c44b12",
+    "observed_upstream_tip": "55caa38bcfb19a9a9d1b8f92970981cd97c99686",
+    "status": "Development integration candidate; not promoted or released.",
+    "evidence": "docs/localization/UPSTREAM-CHECKPOINT-20261121.md"
+  },
+  "candidate_validation": {
+    "branch": "zh-CN-4.x-feat/upstream-main-audit-20261117",
+    "report": "docs/localization/SDK101-CANDIDATE-VALIDATION-20261117.md",
+    "status": "Targeted DSO/source checks passed; original SDK 0.34.1 -O3 warning failure retained; complete acceptance pending."
   }
 }

@@ -1,0 +1,90 @@
+{
+  "format": 1,
+  "registry_repository": "https://github.com/PlotJuggler/pj-plugin-registry",
+  "sources": [
+    {
+      "commit": "2696403e106c6960541b8da19987ece35a24597e",
+      "registry_sha256": "6741ed4b42a0342bc4d5201b2bb5d80a6b1f977dcafa1a9a61d652501bf27487",
+      "entries": {
+        "arrow-parser": "3a526015cd28e60531d039b86503fc7e33e4f9e352648031ebc20c9546ff5c50",
+        "blf-loader": "c3f8c9db88ee2c53f5c2b76e339cad368ba8fdbe62b17993b06de1a191c01a4c",
+        "csv-loader": "2a8ac7009d8db9fd707edc30b38fb95fe06a765567fe15dce7338b0404bd02ac",
+        "data-tamer-parser": "b1ba64d7f961eb2c5bbb089608eb45be950a5b064cea90c0bd296dd4c0f91489",
+        "dummy-streamer": "2676c38386a5ad66f3c2ebe0bbacc23eea3e640d5c1c3c105735124912b7fe77",
+        "foxglove-bridge": "699819535da99250b6dab910a532621cf053c1f780366d0358ce352d56bdc13b",
+        "json-parser": "f499c3cc4989ff8630e7b7a042076a47cd9e96aca6829fb02018c20a46303cdb",
+        "lerobot-loader": "00b33eee4fa80caad3d42efbc2727d71361ec5cfc63ae01ea0d929ba8d5e426f",
+        "lsl-streaming": "f54f96ee5869bc8c4f00024f808e588338426dcc0c91f24d34dd6c2658c4ab5c",
+        "mcap-loader": "5d5c3eb399248d3d7e03e400bdeb692a19d2390e2562817af4d7ce9fbfd1fc09",
+        "mf4-loader": "646dc3fb6ac3f54a6aed6bbf38066acd69eaeb28661452c73dbd45daf2e02057",
+        "mp4-loader": "af9795f75472d2bb43657b0b14bbf9140187eb6a57861d258865c46ed2cfe662",
+        "mqtt-subscriber": "b414ab0cdf3cc99502e1e925010652e53b6168a3ba0a5ff922f0304ba4e6b2ac",
+        "parquet-loader": "b9a8434ae4cd84bd15e07e3b800f2b1835a04443e323efe32d69cfae1aef46cd",
+        "plotjuggler-bridge": "478e4e3a9743b011137634c715dbce907ed3a83c2fa03d4ded1e4f9586c9ed51",
+        "pointcloud-3d-loader": "44b99d6ea885881fa196343163f001083253039ceb3811fc331663f8abcdc707",
+        "protobuf-parser": "bff7d4cab4c3b693756e8f339c45f3374a5a0cde830ae905debc4fed4362402d",
+        "ros-parser": "98c867777b853af3ab3c14c8de2ff456dc03e2a3576b6a0702442e7d8e1dc166",
+        "ros2-topic-subscriber": "18021661a42f907b49cbb808064e2729282c9f997f103c1cf9860d8dd9046787",
+        "toolbox-anomaly-detector": "be8566fcc9030ca8bf7e74896446ac23c6fc23969b47204a5d3f897e2d88bf54",
+        "toolbox-assistant-agent": "7efbcda5f415e3e6651f4d44d16f2029c52e16c470cebdc4eabb9303785962cc",
+        "toolbox-data-exporter": "23c5643d0467c9c5c382be7e5e63690cfde56a41c00f153d7f6c9b6263c493b9",
+        "toolbox-fft": "04e205573b9467eaf5bf849d98823150f08843d52411846a78524167dc1fdaf5",
+        "toolbox-mosaico": "f5d6021b1567130692a27edead8897741c476e74592b56d7ad8fb7c30e1d625e",
+        "toolbox-quaternion": "837d56f64e7392f74727f0d4bacac9cc11e4be4e5fbe7b98a5cabd3b735e93ed",
+        "toolbox-transform-editor": "f8fafa203a960644f7cf94cd6165525de65d23d7bc5f0940c828d537534afe89",
+        "udp-server": "919d1a32f26268275b79a7d92af71edf5c77c612e249ab0c72d1425ed045882b",
+        "ulog-loader": "f40f18620b25461d89e3865ae10d814fda71347bf16d4760c80eeb7565983b68",
+        "webrtc-client": "86c27104183c059d3b08248ef6a5018489c0fe062b11a5317cc8fedb2cc80e73",
+        "zmq-subscriber": "cc3dc3221c50cc1f34ab2fdb5a61d8686fab456dc81903b90e0e9c20c5cb3765"
+      }
+    },
+    {
+      "commit": "1fd3df7de604fa6490a67d510e5cf34c03be2364",
+      "registry_sha256": "eb6991cde0817227ad82d17511f92b9b83b62752248dd952d89f265f97fb8c39",
+      "entries": {
+        "candump-loader": "8720ee20b1163d572d6b9f0c4aff5c276b407654f3cd37fa9626715ee7563802",
+        "influx-parser": "6cb744f540fbfed3cfc9f16d508961784245637528117c2f3c5f1648984ce9d3",
+        "log-widget": "8de1d1a0b01e9aa9faa6a1e1a73bbfcd6999e87463be2e9d3b9f6b4486ae06b5",
+        "navmap-parser": "0e7d9664d915f139def7d4520c2d116d7e6d230efbefda6c1a3e2b656efe862a"
+      }
+    }
+  ],
+  "supplement_notices": [
+    {
+      "id": "candump-loader",
+      "repository": "https://github.com/PlotJuggler/pj-official-plugins",
+      "tag": "data_load_candump/v0.1.1",
+      "commit": "4fae248c0fa01562b4365b4113bb9ebfd6d24c1b",
+      "source_path": "LICENSE",
+      "path": "packaging/localization/registry-notices/candump-loader/LICENSE",
+      "sha256": "3701f21353125c50abb10b6a440148a00e41a43a10da994f6d240264030dfe2b"
+    },
+    {
+      "id": "influx-parser",
+      "repository": "https://github.com/PlotJuggler/pj-official-plugins",
+      "tag": "parser_influx/v0.1.0",
+      "commit": "39a1971e00b6175ef21aaf5c2b56f4952f288e37",
+      "source_path": "LICENSE",
+      "path": "packaging/localization/registry-notices/influx-parser/LICENSE",
+      "sha256": "3701f21353125c50abb10b6a440148a00e41a43a10da994f6d240264030dfe2b"
+    },
+    {
+      "id": "log-widget",
+      "repository": "https://github.com/PlotJuggler/pj-official-plugins",
+      "tag": "widget_log/v1.0.1",
+      "commit": "66d6e544c74b9499f31527b7a79ea8ab3c148770",
+      "source_path": "LICENSE",
+      "path": "packaging/localization/registry-notices/log-widget/LICENSE",
+      "sha256": "3701f21353125c50abb10b6a440148a00e41a43a10da994f6d240264030dfe2b"
+    },
+    {
+      "id": "navmap-parser",
+      "repository": "https://github.com/PlotJuggler/pj-official-plugins",
+      "tag": "parser_navmap/v0.1.0",
+      "commit": "71511521dea2cbd615908c68dcfcf0f707e92719",
+      "source_path": "LICENSE",
+      "path": "packaging/localization/registry-notices/navmap-parser/LICENSE",
+      "sha256": "3701f21353125c50abb10b6a440148a00e41a43a10da994f6d240264030dfe2b"
+    }
+  ]
+}

@@ -13,6 +13,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'packaging/localization'))
 import create_release_manifest as manifest
+from registry_inventory import read_inventory
+from verify_package import expected_plugin_inventory
 
 
 class ReleaseManifestTests(unittest.TestCase):
@@ -55,19 +57,19 @@ class ReleaseManifestTests(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 manifest.verify_checksums(root, files)
 
-    def test_manifest_requires_six_reports_eighteen_screenshots_four_assets(self):
+    def check_manifest(self, version, development_candidate=False):
+        """Exercise identical evidence and tamper gates for both package channels."""
         with tempfile.TemporaryDirectory() as directory:
             previous = Path.cwd()
             os.chdir(directory)
             try:
-                version = '4.0.0-zh.1.rc.1'
                 Path('versions.env').write_text(f'PJ_APP_VERSION={version}\n', encoding='utf-8')
                 candidate = Path('candidate')
                 candidate.mkdir()
                 names = [f'PlotJuggler-{version}-Windows-x64-zh-CN.exe',
                          f'PlotJuggler-{version}-Windows-x64-portable-zh-CN.zip',
                          f'PlotJuggler-{version}-x86_64-zh-CN.AppImage',
-                         f'plotjuggler4_{manifest.versions(version)["deb"]}_amd64-zh-CN.deb']
+                         f'plotjuggler4_{manifest.package_versions(version, development_candidate=development_candidate)["deb"]}_amd64-zh-CN.deb']
                 for name in names:
                     (candidate / name).write_bytes(name.encode())
                 sums = ''.join(f'{manifest.sha256(candidate / n)}  {n}\n' for n in names)
@@ -76,11 +78,16 @@ class ReleaseManifestTests(unittest.TestCase):
                     path = Path('reports') / relative
                     path.parent.mkdir(parents=True)
                     windows = platform == 'windows-2022'
+                    _, provenance = read_inventory(ROOT)
+                    inventory = expected_plugin_inventory(ROOT, 'windows-x86_64' if windows else 'linux-x86_64')
                     report = {'status': 'automated_checks_passed',
                               'languages': list(manifest.ACCEPTANCE_LANGUAGES),
-                              'release': {'source_commit': 'source', 'source_tree': 'tree', 'version': version},
-                              'plugin_count': 19 if windows else 21,
-                              'loaded_plugin_count': 19 if windows else 20,
+                              'release': {'source_commit': 'source', 'source_tree': 'tree', 'version': version,
+                                          'expected_plugins': [f'{k}={v}' for k, v in sorted(inventory.items())],
+                                          'bin_plugin_version': inventory['ardupilot-dataflash'],
+                                          'registry_sources': provenance['sources']},
+                              'plugin_count': len(inventory),
+                              'loaded_plugin_count': len(inventory) - (0 if windows else 1),
                               'unavailable_plugins': [] if windows else [{
                                   'id': 'ros2-topic-subscriber',
                                   'status': 'not_tested_missing_external_dependency'}], 'checks': []}
@@ -96,19 +103,48 @@ class ReleaseManifestTests(unittest.TestCase):
                        'GITHUB_RUN_ID': '1', 'GITHUB_RUN_ATTEMPT': '1'}
                 with mock.patch.dict(os.environ, env), mock.patch.object(
                         manifest.subprocess, 'check_output', return_value='tree'):
-                    manifest.main()
+                    manifest.main(development_candidate=development_candidate)
                     result = json.loads(Path('release-manifest.json').read_text(encoding='utf-8'))
+                    self.assertEqual(result['publishable'], not development_candidate)
+                    self.assertEqual(result['tag'], None if development_candidate else 'v' + version)
+                    if development_candidate:
+                        with self.assertRaises(ValueError):
+                            manifest.main()
                     self.assertEqual(len(result['assets']), 4)
                     self.assertEqual(len(result['acceptance_reports']), 6)
                     self.assertEqual(len(result['screenshots']), 18)
+                    report_path = Path('reports/zh4-final-linux-0/deb/acceptance.json')
+                    source_report = json.loads(report_path.read_text(encoding='utf-8'))
+                    self.assertEqual(sorted(row['plugin_count'] for row in result['acceptance_reports']),
+                                     [27, 27, 29, 29, 29, 29])
+                    for invalid in (
+                        dict(source_report, plugin_count=21, loaded_plugin_count=20),
+                        dict(source_report, loaded_plugin_count=source_report['plugin_count']),
+                        dict(source_report, unavailable_plugins=[]),
+                        dict(source_report, unavailable_plugins=[
+                            {'id': 'csv-loader', 'status': 'not_tested_missing_external_dependency'}]),
+                        dict(source_report, release=dict(source_report['release'], expected_plugins=[])),
+                        dict(source_report, release=dict(source_report['release'], bin_plugin_version='999.0.0')),
+                        dict(source_report, release=dict(source_report['release'], registry_sources=[])),
+                    ):
+                        report_path.write_text(json.dumps(invalid), encoding='utf-8')
+                        with self.assertRaises(AssertionError):
+                            manifest.main(development_candidate=development_candidate)
+                    report_path.write_text(json.dumps(source_report), encoding='utf-8')
                     integrity = Path('reports/zh4-final-Windows-portable/runtime/package-integrity.json')
                     data = json.loads(integrity.read_text(encoding='utf-8'))
                     data['after'] = '0' * 64
                     integrity.write_text(json.dumps(data), encoding='utf-8')
                     with self.assertRaises(AssertionError):
-                        manifest.main()
+                        manifest.main(development_candidate=development_candidate)
             finally:
                 os.chdir(previous)
+
+    def test_manifest_requires_six_reports_eighteen_screenshots_four_assets(self):
+        self.check_manifest('4.0.0-zh.1.rc.1')
+
+    def test_development_manifest_retains_all_acceptance_gates(self):
+        self.check_manifest('4.1.0-zh.1.dev.3', development_candidate=True)
 
     def test_portable_job_is_independent_and_required(self):
         workflow = (ROOT / '.github/workflows/zh-4x-packages.yml').read_text(encoding='utf-8')

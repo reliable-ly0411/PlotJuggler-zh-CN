@@ -1,0 +1,95 @@
+# SPDX-License-Identifier: MPL-2.0
+# Apply the reviewed CSV #397 and Log #391 changes to the fixed official source.
+# Exact output hashes also guard FetchContent source overrides and reconfiguration.
+function(pj_apply_official_plugin_compatibility source_dir)
+    set(_patch_dir "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../packaging/localization/plugin-patches/compatibility-candidates")
+    file(READ "${_patch_dir}/provenance.json" _record)
+    set(_patches "wasm-csv397.patch" "wasm-log391.patch")
+    foreach(_patch IN LISTS _patches)
+        string(JSON _expected GET "${_record}" patches_sha256 "${_patch}")
+        file(SHA256 "${_patch_dir}/${_patch}" _actual)
+        if(NOT _actual STREQUAL _expected)
+            message(FATAL_ERROR "Official plugin compatibility patch hash mismatch: ${_patch}")
+        endif()
+    endforeach()
+
+    string(JSON _count LENGTH "${_record}" wasm_result_files_sha256)
+    if(_count LESS 1)
+        message(FATAL_ERROR "Official plugin compatibility result hashes are missing")
+    endif()
+    math(EXPR _last "${_count} - 1")
+    set(_complete TRUE)
+    foreach(_index RANGE 0 ${_last})
+        string(JSON _file MEMBER "${_record}" wasm_result_files_sha256 ${_index})
+        string(JSON _expected GET "${_record}" wasm_result_files_sha256 "${_file}")
+        set(_actual "")
+        if(EXISTS "${source_dir}/${_file}")
+            file(SHA256 "${source_dir}/${_file}" _actual)
+        endif()
+        if(NOT _actual STREQUAL _expected)
+            set(_complete FALSE)
+        endif()
+    endforeach()
+    if(_complete)
+        return()
+    endif()
+
+    find_package(Git REQUIRED)
+    # FetchContent lives under the host checkout. Stop discovery at its parent:
+    # git apply otherwise treats these source-relative paths as outside the host's
+    # current subdirectory and silently skips them, even with --check.
+    get_filename_component(_source_parent "${source_dir}/.." REALPATH)
+    # Archive provenance is byte-exact LF regardless of the user's Git CRLF policy.
+    set(_git "${CMAKE_COMMAND}" -E env --unset=GIT_DIR --unset=GIT_WORK_TREE
+        --unset=GIT_INDEX_FILE "GIT_CEILING_DIRECTORIES=${_source_parent}" "${GIT_EXECUTABLE}"
+        -c core.autocrlf=false -c core.eol=lf)
+    set(_args "${_patch_dir}/wasm-csv397.patch" "${_patch_dir}/wasm-log391.patch")
+    execute_process(COMMAND ${_git} apply --check ${_args}
+        WORKING_DIRECTORY "${source_dir}" RESULT_VARIABLE _check ERROR_VARIABLE _error)
+    if(NOT _check EQUAL 0)
+        message(FATAL_ERROR "Official plugin compatibility input mismatch: ${_error}")
+    endif()
+    execute_process(COMMAND ${_git} apply ${_args}
+        WORKING_DIRECTORY "${source_dir}" RESULT_VARIABLE _apply ERROR_VARIABLE _error)
+    if(NOT _apply EQUAL 0)
+        message(FATAL_ERROR "Official plugin compatibility apply failed: ${_error}")
+    endif()
+    foreach(_index RANGE 0 ${_last})
+        string(JSON _file MEMBER "${_record}" wasm_result_files_sha256 ${_index})
+        string(JSON _expected GET "${_record}" wasm_result_files_sha256 "${_file}")
+        file(SHA256 "${source_dir}/${_file}" _actual)
+        if(NOT _actual STREQUAL _expected)
+            message(FATAL_ERROR "Official plugin compatibility output hash mismatch: ${_file}")
+        endif()
+    endforeach()
+endfunction()
+
+
+# CSV #397 and Log #391 are already part of the current upstream archive.
+# Prove every previously patched path instead of mutating the fetched input.
+# This also detects a stale or tampered FetchContent source override.
+function(pj_verify_official_plugin_compatibility source_dir source_commit)
+    set(_patch_dir "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../packaging/localization/plugin-patches/compatibility-candidates")
+    file(READ "${_patch_dir}/provenance.json" _record)
+    string(JSON _commit GET "${_record}" wasm_adopted_upstream commit)
+    if(NOT "${source_commit}" STREQUAL "${_commit}")
+        message(FATAL_ERROR "Official plugin compatibility commit mismatch")
+    endif()
+    string(JSON _old_count LENGTH "${_record}" wasm_result_files_sha256)
+    string(JSON _count LENGTH "${_record}" wasm_adopted_upstream files_sha256)
+    if(_old_count LESS 1 OR NOT _count EQUAL _old_count)
+        message(FATAL_ERROR "Official plugin compatibility adopted path set mismatch")
+    endif()
+    math(EXPR _last "${_old_count} - 1")
+    foreach(_index RANGE 0 ${_last})
+        string(JSON _file MEMBER "${_record}" wasm_result_files_sha256 ${_index})
+        string(JSON _expected GET "${_record}" wasm_adopted_upstream files_sha256 "${_file}")
+        if(NOT EXISTS "${source_dir}/${_file}")
+            message(FATAL_ERROR "Official plugin compatibility adopted file missing: ${_file}")
+        endif()
+        file(SHA256 "${source_dir}/${_file}" _actual)
+        if(NOT _actual STREQUAL _expected)
+            message(FATAL_ERROR "Official plugin compatibility adopted file hash mismatch: ${_file}")
+        endif()
+    endforeach()
+endfunction()

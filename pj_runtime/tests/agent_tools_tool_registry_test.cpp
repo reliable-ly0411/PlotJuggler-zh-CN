@@ -30,6 +30,7 @@
 #include "fake_object_read_host.hpp"
 #include "fake_playback_viewport_hosts.hpp"
 #include "fake_plot_tabs_host.hpp"
+#include "pj_runtime/PlaybackRate.h"
 #include "pj_runtime/agent_tools/object_ops_catalog.hpp"
 #include "pj_runtime/agent_tools/tool_registry.hpp"
 #include "recording_dp_host.hpp"
@@ -81,9 +82,8 @@ TEST(ToolRegistry, ListsAllToolsAndSchemas) {
   EXPECT_EQ(reg.find("play"), nullptr);
   EXPECT_NE(reg.find("plot_tab"), nullptr);
   EXPECT_NE(reg.find("scene_view"), nullptr);
-  // zoom_to_time_range/zoom_reset were folded into plot_tab's 'zoom' action:
-  // the user's plots are no longer reachable from any tool, only the tabs
-  // this assistant composed itself.
+  // The user's plots are not reachable from any tool, only the tabs this assistant composed itself (zoom lives in
+  // plot_tab's 'zoom' action).
   EXPECT_EQ(reg.find("zoom_to_time_range"), nullptr);
   EXPECT_EQ(reg.find("zoom_reset"), nullptr);
   // remove_markers exists but is scoped to the assistant's own marker set;
@@ -232,6 +232,57 @@ TEST(ToolRegistry, DescribeObjectTopicHonoursTheDatasetQualifierAndReportsAmbigu
   auto a = reg.execute("describe_topic", {{"topic", "runA:/cloud"}}, ctx);
   ASSERT_TRUE(a.ok) << a.content;
   EXPECT_EQ(json::parse(a.content)["type"], "kPointCloud");
+}
+
+// The dataset filter matches the dataset's label even when one dataset is loaded and the entries omit it.
+TEST(ToolRegistry, ListTopicsFiltersByTheOnlyDatasetsLabel) {
+  ToolRegistry reg;
+  FakeMultiDatasetHost host;
+  host.addDataset("data.csv", {"/imu", "/speed"});
+  ToolContext ctx;
+  ctx.host = PJ::sdk::ToolboxHostView(host.makeHost());
+  for (const std::string filter : {"data.csv", "data"}) {
+    const auto r = reg.execute("list_topics", {{"dataset", filter}}, ctx);
+    ASSERT_TRUE(r.ok) << r.content;
+    EXPECT_EQ(json::parse(r.content)["count"], 2) << filter << ": " << r.content;
+  }
+  EXPECT_EQ(json::parse(reg.execute("list_topics", {{"dataset", "other"}}, ctx).content)["count"], 0);
+
+  FakeCatalogHost objects;
+  objects.addObjectTopic("/cloud", "kPointCloud", 2, 0, kSec, "{}", "clouds.mcap");
+  ctx.host = PJ::sdk::ToolboxHostView(objects.makeHost());
+  EXPECT_EQ(json::parse(reg.execute("list_topics", {{"dataset", "clouds.mcap"}}, ctx).content)["count"], 1);
+}
+
+// A filter that is a dataset's whole label keeps that dataset only, though another label contains it; a partial one
+// still matches every label containing it.
+TEST(ToolRegistry, ListTopicsPrefersTheExactDatasetLabel) {
+  ToolRegistry reg;
+  FakeMultiDatasetHost host;
+  host.addDataset("data.csv", {"/imu"});
+  host.addDataset("data.csv (2)", {"/speed"});
+  ToolContext ctx;
+  ctx.host = PJ::sdk::ToolboxHostView(host.makeHost());
+  const auto topics_for = [&](const std::string& dataset) {
+    const auto r = reg.execute("list_topics", {{"dataset", dataset}}, ctx);
+    EXPECT_TRUE(r.ok) << r.content;
+    const json listed = json::parse(r.content);
+    std::vector<std::string> names;
+    for (const auto& entry : listed["topics"]) {
+      names.push_back(entry["topic"].get<std::string>());
+    }
+    return names;
+  };
+  EXPECT_EQ(topics_for("data.csv"), (std::vector<std::string>{"/imu"}));
+  EXPECT_EQ(topics_for("data.csv (2)"), (std::vector<std::string>{"/speed"}));
+  EXPECT_EQ(topics_for("data"), (std::vector<std::string>{"/imu", "/speed"}));
+
+  FakeCatalogHost objects;
+  objects.addObjectTopic("/cloud", "kPointCloud", 2, 0, kSec, "{}", "clouds.mcap");
+  objects.addObjectTopic("/cloud", "kPointCloud", 2, 0, kSec, "{}", "clouds.mcap (2)");
+  ctx.host = PJ::sdk::ToolboxHostView(objects.makeHost());
+  EXPECT_EQ(json::parse(reg.execute("list_topics", {{"dataset", "clouds.mcap"}}, ctx).content)["count"], 1);
+  EXPECT_EQ(json::parse(reg.execute("list_topics", {{"dataset", "clouds"}}, ctx).content)["count"], 2);
 }
 
 // A scalar topic on two datasets: "dataset:name" describes that dataset's topic, and its field paths keep the
@@ -498,9 +549,8 @@ TEST(ToolRegistry, ReadSeriesBuckets) {
   EXPECT_EQ(j["buckets"]["mean"].size(), j["buckets"]["n"].size());
 }
 
-// Regular buckets (an even time grid, none dropped) reconstruct from t0/dt
-// alone -- no explicit "t" array, and t0/dt exactly reproduce what the old
-// per-bucket "t" values were.
+// Regular buckets (an even time grid, none dropped) reconstruct from t0/dt alone: no explicit "t" array, and t0/dt
+// exactly reproduce the per-bucket times.
 TEST(ToolRegistry, BucketsAreColumnar) {
   ToolRegistry reg;
   PJ::testing::ToolboxTestStore store;
@@ -534,10 +584,8 @@ TEST(ToolRegistry, BucketsAreColumnar) {
   EXPECT_NEAR(dt, 0.499, 0.05);
 }
 
-// bucketize's degenerate "one bucket per sample" path (fewer samples than
-// max_points) over UNEVEN timestamps cannot be reconstructed from t0/dt, so
-// the explicit "t" array must carry the true per-sample times -- same values
-// the old per-bucket "t" field held.
+// bucketize's degenerate "one bucket per sample" path (fewer samples than max_points) over UNEVEN timestamps cannot be
+// reconstructed from t0/dt, so the explicit "t" array must carry the true per-sample times.
 TEST(ToolRegistry, IrregularBucketsCarryExplicitTimes) {
   ToolRegistry reg;
   PJ::testing::ToolboxTestStore store;
@@ -595,11 +643,9 @@ TEST(ToolRegistry, EmptyBucketIsNull) {
   EXPECT_TRUE(found_null_bucket) << b.dump();
 }
 
-// The whole point of going columnar: under the same 16 KiB response cap, many
-// more buckets fit than the old one-object-per-bucket shape allowed (~240 for
-// a spiky series measured on real data). A 5000-sample series should now keep
-// several hundred buckets instead of coarsening down toward the 16-bucket
-// floor.
+// Columnar output: under the 16 KiB response cap many more buckets fit than a one-object-per-bucket shape would allow
+// (~240 for a spiky series measured on real data): a 5000-sample series keeps several hundred buckets instead of
+// coarsening toward the 16-bucket floor.
 TEST(ToolRegistry, ColumnarFitsMoreBucketsUnderTheCap) {
   ToolRegistry reg;
   PJ::testing::ToolboxTestStore store;
@@ -626,10 +672,8 @@ TEST(ToolRegistry, ColumnarFitsMoreBucketsUnderTheCap) {
   const std::size_t bucket_count = b["n"].size();
   EXPECT_GE(bucket_count, 400u) << "columnar buckets should fit far more than the old shape did: " << bucket_count;
 
-  // Reconstruct the equivalent old one-object-per-bucket array from this
-  // response's own arrays (same bucket count, same values) and dump it, so
-  // the before/after byte-per-bucket comparison below is measured on the
-  // exact same data rather than a hand-picked example.
+  // Reconstruct the equivalent one-object-per-bucket array from this response's own arrays (same bucket count, same
+  // values) and dump it, so the byte-per-bucket comparison below is measured on the same data.
   json old_shape = json::array();
   for (std::size_t i = 0; i < bucket_count; ++i) {
     const double t = b.contains("t") ? b["t"][i].get<double>()
@@ -825,10 +869,9 @@ void populateWideTopic(PJ::testing::ToolboxTestStore& store, const std::string& 
   }
 }
 
-// A servo topic with a dozen array fields, read one path at a time, is the
-// real-data pattern that motivated this: models asked for channel 0-4 and
-// never noticed the jammed surface sat on channel 5. A bare topic path now
-// reads every numeric field at once.
+// A servo topic with a dozen array fields, read one path at a time, is the real-data pattern behind this: models asked
+// for channel 0-4 and never noticed the jammed surface sat on channel 5. A bare topic path reads every numeric field
+// at once.
 TEST(ToolRegistry, WholeTopicExpandsToItsNumericFields) {
   ToolRegistry reg;
   PJ::testing::ToolboxTestStore store;
@@ -1154,6 +1197,55 @@ TEST(ToolRegistry, CreateDerivedSeriesFromExpression) {
   EXPECT_NE(dp.last_script.find("return (value * 2)"), std::string::npos);
 }
 
+// output_type "string" makes a text series (a state label per sample); anything else but "number" is refused.
+TEST(ToolRegistry, CreateDerivedSeriesWithTextOutput) {
+  ToolRegistry reg;
+  PJ::testing::ToolboxTestStore store;
+  populate(store);
+  RecordingDpHost dp;
+  auto ctx = makeCtx(store, &dp);
+  auto r = reg.execute(
+      "create_derived_series",
+      {{"name", "state"},
+       {"inputs", json::array({"/imu/x"})},
+       {"expression", "value > 0 and 'up' or 'down'"},
+       {"output_type", "string"}},
+      ctx);
+  ASSERT_TRUE(r.ok) << r.content;
+  EXPECT_NE(dp.last_script.find("output = \"string\""), std::string::npos) << dp.last_script;
+  EXPECT_NE(dp.last_validate_script.find("output = \"string\""), std::string::npos);
+
+  auto number = reg.execute(
+      "create_derived_series", {{"name", "x2"}, {"inputs", json::array({"/imu/x"})}, {"expression", "value * 2"}}, ctx);
+  ASSERT_TRUE(number.ok) << number.content;
+  EXPECT_NE(dp.last_script.find("output = \"double\""), std::string::npos);
+
+  const int creates = dp.create_calls;
+  auto bad = reg.execute(
+      "create_derived_series",
+      {{"name", "bad"}, {"inputs", json::array({"/imu/x"})}, {"expression", "value"}, {"output_type", "text"}}, ctx);
+  EXPECT_FALSE(bad.ok);
+  EXPECT_NE(bad.content.find("output_type"), std::string::npos) << bad.content;
+  EXPECT_EQ(dp.create_calls, creates);
+}
+
+// The engine's advice names the class field; an agent sets it through output_type, so the failure says that.
+TEST(ToolRegistry, CreateDerivedSeriesReturningTextNamesOutputType) {
+  ToolRegistry reg;
+  PJ::testing::ToolboxTestStore store;
+  populate(store);
+  RecordingDpHost dp;
+  dp.fail_create = true;
+  dp.create_error =
+      "calculate must return a number, (time, value), or nil (declare output = \"string\" to return text)";
+  auto ctx = makeCtx(store, &dp);
+  auto r = reg.execute(
+      "create_derived_series",
+      {{"name", "state"}, {"inputs", json::array({"/imu/x"})}, {"expression", "value > 0 and 'up' or 'down'"}}, ctx);
+  ASSERT_FALSE(r.ok);
+  EXPECT_NE(r.content.find("output_type"), std::string::npos) << r.content;
+}
+
 TEST(ToolRegistry, CreateDerivedSeriesStatefulBody) {
   ToolRegistry reg;
   PJ::testing::ToolboxTestStore store;
@@ -1229,16 +1321,36 @@ TEST(ToolRegistry, CreateMarkersBuildsThresholdRule) {
   auto r = reg.execute("create_markers", {{"series", "/imu/x"}, {"comparison", ">"}, {"threshold", 2.5}}, ctx);
   ASSERT_TRUE(r.ok) << r.content;
   EXPECT_EQ(dp.last_kind, "markers");
-  // Default style is "region": one shaded band per exceedance stretch.
-  EXPECT_NE(dp.last_script.find("startMarker"), std::string::npos);
-  EXPECT_NE(dp.last_script.find("closeMarker"), std::string::npos);
-  EXPECT_NE(dp.last_script.find("> 2.5"), std::string::npos);
+  // Default style is "region": one shaded band per exceedance stretch, written as the when() rule an agent would write.
+  EXPECT_EQ(
+      dp.last_script,
+      "when(\"/imu/x\", above(2.5)):backgroundColor(nil, {label=\"exceeds 2.5\", severity=\"warning\"})\n");
 
-  // style="line" keeps the per-sample vertical markers.
+  // style="line" keeps the per-sample vertical markers; a non-strict comparison is an open-ended between().
   r = reg.execute(
-      "create_markers", {{"series", "/imu/x"}, {"comparison", ">"}, {"threshold", 2.5}, {"style", "line"}}, ctx);
+      "create_markers", {{"series", "/imu/x"}, {"comparison", ">="}, {"threshold", 2.5}, {"style", "line"}}, ctx);
   ASSERT_TRUE(r.ok) << r.content;
-  EXPECT_NE(dp.last_script.find("createVerticalMarker"), std::string::npos);
+  EXPECT_EQ(
+      dp.last_script,
+      "when(\"/imu/x\", between(2.5, math.huge)):verticalLine({label=\"at or above 2.5\", "
+      "severity=\"warning\", every=true})\n");
+}
+
+// The template's default label says what the comparison marks: a "<" rule marks values below the threshold.
+TEST(ToolRegistry, CreateMarkersDefaultLabelFollowsTheComparison) {
+  ToolRegistry reg;
+  PJ::testing::ToolboxTestStore store;
+  populate(store);
+  RecordingDpHost dp;
+  auto ctx = makeCtx(store, &dp);
+  for (const auto& [comparison, label] : std::vector<std::pair<std::string, std::string>>{
+           {">", "exceeds 2.5"}, {">=", "at or above 2.5"}, {"<", "below 2.5"}, {"<=", "at or below 2.5"}}) {
+    auto r = reg.execute("create_markers", {{"series", "/imu/x"}, {"comparison", comparison}, {"threshold", 2.5}}, ctx);
+    ASSERT_TRUE(r.ok) << r.content;
+    EXPECT_NE(dp.last_script.find("label=\"" + label + "\""), std::string::npos)
+        << comparison << ": " << dp.last_script;
+    EXPECT_EQ(json::parse(r.content).value("rule", ""), label) << comparison;
+  }
 }
 
 TEST(ToolRegistry, CreateMarkersRawRulePassesThroughVerbatim) {
@@ -1529,10 +1641,8 @@ TEST(ToolRegistry, ReportsHowManyPointsSurviveAPartialJoin) {
   const json j = json::parse(r.content);
   EXPECT_EQ(j["points"], 1) << "only t=0 is common";
   EXPECT_EQ(j["shortest_input_points"], 4);
-  // The result states the outcome and stops there. It used to append
-  // "verify_with: read_series on ...", and models obliged — a full round trip
-  // spent fetching a number this response already had. What to do about the
-  // result is the model's call; this tool's job is to report it.
+  // The result states the outcome and stops there: a "verify_with: read_series on ..." hint makes models spend a full
+  // round trip fetching a number this response already had. What to do about the result is the model's call.
   EXPECT_FALSE(j.contains("verify_with")) << "a tool result must not prescribe the next call";
 }
 
@@ -2234,8 +2344,7 @@ TEST(ResolveSeriesPath, QualifiedPathPicksItsDataset) {
   EXPECT_EQ(monday.resolved->path, "run_monday.mcap:/speed/value");
 }
 
-// The failure the correctness sweep caught on screen: the bare path used to
-// resolve silently to whichever file loaded first, for reads AND installs.
+// The bare path must not resolve silently to whichever file loaded first, for reads and installs.
 TEST(ResolveSeriesPath, RefusesABarePathThatExistsInSeveralDatasets) {
   FakeMultiDatasetHost host;
   host.addDataset("run_monday.mcap", {"/imu", "/speed"}).addDataset("run_friday.mcap", {"/imu", "/speed"});
@@ -2317,7 +2426,7 @@ TEST(ToolRegistry, QualifiedCreateOnAUniqueNameHandsTheHostItsBareForm) {
   auto r = reg.execute(
       "create_markers", {{"series", "run_friday.mcap:/speed/value"}, {"comparison", ">"}, {"threshold", 1.0}}, ctx);
   ASSERT_TRUE(r.ok) << r.content;
-  EXPECT_NE(dp.last_script.find("series(\"/speed/value\")"), std::string::npos) << dp.last_script;
+  EXPECT_NE(dp.last_script.find("when(\"/speed/value\""), std::string::npos) << dp.last_script;
   EXPECT_EQ(json::parse(r.content)["created_markers_on"], "run_friday.mcap:/speed/value");
 }
 
@@ -2447,6 +2556,9 @@ TEST(ToolRegistry, DefaultsToASingleOutputNamedAfterTheSeries) {
 // attach/detach/focus); a new tool earns its place only with a request shape no
 // existing tool's arguments fit (evaluate, create_derived_object, scene_view's
 // separate ownership scope).
+//
+// Every parameter also carries a description and, where the executor clamps or defaults it, its bounds and default
+// (EveryParameterHasADescription): about 0.5 kB of the ceiling, paid so a model reads a limit instead of guessing it.
 TEST(ToolRegistry, ToolSchemaStaysWithinItsBudget) {
   ToolRegistry reg;
   const std::size_t chars = reg.toMcpToolsList().dump().size();
@@ -2454,7 +2566,7 @@ TEST(ToolRegistry, ToolSchemaStaysWithinItsBudget) {
   for (const auto& t : reg.tools()) {
     std::cerr << "  " << t.name << ": " << t.description.size() << "\n";
   }
-  EXPECT_LT(chars, 14200u) << "the tool surface outgrew its budget — trim descriptions before adding capability";
+  EXPECT_LT(chars, 14700u) << "the tool surface outgrew its budget — trim descriptions before adding capability";
 }
 
 // --- playback / viewport tools ----------------------------------------------
@@ -2548,12 +2660,20 @@ TEST(ToolRegistry, SetPlaybackRateClampsPluginSide) {
   auto ctx = makeCtx(store, nullptr);
   ctx.playback = pb.view();
 
-  ASSERT_TRUE(reg.execute("playback", {{"action", "rate"}, {"rate", 0.25}}, ctx).ok);
-  EXPECT_DOUBLE_EQ(pb.last_rate, 0.25);
-  ASSERT_TRUE(reg.execute("playback", {{"action", "rate"}, {"rate", 10000.0}}, ctx).ok);
-  EXPECT_DOUBLE_EQ(pb.last_rate, 20.0);  // clamped high
-  ASSERT_TRUE(reg.execute("playback", {{"action", "rate"}, {"rate", 0.0}}, ctx).ok);
-  EXPECT_DOUBLE_EQ(pb.last_rate, 0.05);  // clamped low (never 0 -> host reject loop)
+  // The tool sends the rate the speed scrubber can show, and the reply reports the applied one.
+  const auto applied = [&](double requested) {
+    const auto r = reg.execute("playback", {{"action", "rate"}, {"rate", requested}}, ctx);
+    EXPECT_TRUE(r.ok) << r.content;
+    return json::parse(r.content)["rate"].get<double>();
+  };
+  EXPECT_DOUBLE_EQ(applied(0.3), 0.3);
+  EXPECT_DOUBLE_EQ(pb.last_rate, 0.3);
+  EXPECT_DOUBLE_EQ(applied(0.25), 0.3);  // rounded to the scrubber's step
+  EXPECT_DOUBLE_EQ(pb.last_rate, 0.3);
+  EXPECT_DOUBLE_EQ(applied(10000.0), PJ::kMaxPlaybackRate);  // clamped high, to the engine's range
+  EXPECT_DOUBLE_EQ(pb.last_rate, PJ::kMaxPlaybackRate);
+  EXPECT_DOUBLE_EQ(applied(0.0), PJ::kMinPlaybackRate);  // clamped low (never 0 -> host reject loop)
+  EXPECT_DOUBLE_EQ(pb.last_rate, PJ::kMinPlaybackRate);
 }
 
 TEST(ToolRegistry, PlaybackToolsDegradeWithoutHost) {
@@ -2675,9 +2795,39 @@ TEST(ToolRegistry, PlotTabRefusesATabItDoesNotOwn) {
   // left unbound here), so it fails on the missing service rather than ever
   // reaching the fake -- still "every one fails" as required.
   EXPECT_FALSE(reg.execute("plot_tab", {{"action", "zoom"}, {"tab", "user-1"}}, ctx).ok);
+  EXPECT_FALSE(reg.execute("plot_tab", {{"action", "focus"}, {"tab", "user-1"}}, ctx).ok);
   EXPECT_FALSE(reg.execute("plot_tab", {{"action", "close"}, {"tab", "user-1"}}, ctx).ok);
 
   EXPECT_EQ(tabs.foreign_mutations, 0);
+  EXPECT_EQ(tabs.focused, "");
+}
+
+// focus brings the agent's own tab forward (a screenshot then shows it).
+TEST(ToolRegistry, PlotTabFocusBringsItsOwnTabForward) {
+  ToolRegistry reg;
+  PJ::testing::ToolboxTestStore store;
+  populate(store);
+  FakePlotTabsHost tabs;
+  auto ctx = makeCtx(store, nullptr);
+  ctx.plot_tabs = tabs.view();
+  ASSERT_TRUE(reg.execute("plot_tab", {{"action", "create"}, {"tab", "mine"}}, ctx).ok);
+
+  const auto r = reg.execute("plot_tab", {{"action", "focus"}, {"tab", "mine"}}, ctx);
+  ASSERT_TRUE(r.ok) << r.content;
+  EXPECT_EQ(json::parse(r.content)["focused"], "mine");
+  EXPECT_EQ(tabs.focused, "mine");
+  EXPECT_FALSE(reg.execute("plot_tab", {{"action", "focus"}}, ctx).ok) << "focus needs a tab";
+}
+
+// Every parameter of every agent tool says what it is: a model reads the schema, not the code.
+TEST(ToolRegistry, EveryParameterHasADescription) {
+  ToolRegistry reg;
+  for (const auto& tool : reg.tools()) {
+    const json properties = tool.input_schema.value("properties", json::object());
+    for (const auto& [name, property] : properties.items()) {
+      EXPECT_FALSE(property.value("description", "").empty()) << tool.name << "." << name;
+    }
+  }
 }
 
 // The structural version of the property above: loop over every registered
@@ -2852,6 +3002,50 @@ TEST(ToolRegistry, PlotTabZoomFramesOnlyTheNamedOwnTab) {
   EXPECT_EQ(vp.zoom_calls, 0);
   EXPECT_FALSE(vp.reset_called);
   EXPECT_EQ(tabs.foreign_mutations, 0);
+}
+
+// An add that fills an empty tab frames it once, after the whole batch, so every curve of the call is in view; an add
+// to a tab that already holds curves leaves the view, and one that lands nothing frames nothing. The frame is the
+// host's per-tab zoom, never the viewport's every-tab one.
+TEST(ToolRegistry, PlotTabAddFramesATabThatWasEmptyOnce) {
+  ToolRegistry reg;
+  PJ::testing::ToolboxTestStore store;
+  populate(store);
+  store.addTopic("/left");
+  store.addField("/left", "speed", {0, kSec}, {1.0, 2.0});
+  FakePlotTabsHost tabs;
+  tabs.unresolvable.insert("/left");
+  FakeViewportHost vp;
+  auto ctx = makeCtx(store, nullptr);
+  ctx.plot_tabs = tabs.view();
+  ctx.viewport = vp.view();
+  std::vector<std::pair<std::string, std::optional<std::pair<double, double>>>> zooms;
+  ctx.zoom_tab = [&zooms](const std::string& tab, std::optional<std::pair<double, double>> range) {
+    zooms.emplace_back(tab, range);
+    return PJ::okStatus();
+  };
+  ASSERT_TRUE(reg.execute("plot_tab", {{"action", "create"}, {"tab", "a"}}, ctx).ok);
+  ASSERT_TRUE(reg.execute("plot_tab", {{"action", "create"}, {"tab", "b"}}, ctx).ok);
+
+  EXPECT_FALSE(reg.execute("plot_tab", {{"action", "add"}, {"tab", "a"}, {"curves", "/left/speed"}}, ctx).ok);
+  EXPECT_TRUE(zooms.empty()) << "nothing landed, so there is nothing to frame";
+
+  ASSERT_TRUE(
+      reg.execute("plot_tab", {{"action", "add"}, {"tab", "a"}, {"curves", json::array({"/imu/x", "/imu/y"})}}, ctx)
+          .ok);
+  ASSERT_EQ(zooms.size(), 1U) << "one frame for the batch, not one per curve";
+  EXPECT_EQ(zooms[0].first, "a");
+  EXPECT_FALSE(zooms[0].second.has_value());
+
+  ASSERT_TRUE(reg.execute("plot_tab", {{"action", "remove"}, {"tab", "a"}, {"curves", "/imu/y"}}, ctx).ok);
+  ASSERT_TRUE(reg.execute("plot_tab", {{"action", "add"}, {"tab", "a"}, {"curves", "/imu/y"}}, ctx).ok);
+  EXPECT_EQ(zooms.size(), 1U) << "the tab still held a curve: the view stays where the caller put it";
+
+  ASSERT_TRUE(reg.execute("plot_tab", {{"action", "add"}, {"tab", "b"}, {"curves", "/imu/x"}}, ctx).ok);
+  ASSERT_EQ(zooms.size(), 2U);
+  EXPECT_EQ(zooms[1].first, "b");
+  EXPECT_EQ(vp.zoom_calls, 0);
+  EXPECT_FALSE(vp.reset_called);
 }
 
 TEST(ToolRegistry, PlotTabDegradesWithoutTheService) {
@@ -3253,11 +3447,9 @@ TEST(ToolRegistry, RawBatchCappedAtFour) {
   EXPECT_NE(r.content.find("at most 4"), std::string::npos) << r.content;
 }
 
-// The 4-paths/200-samples raw caps are a guess, not a measurement: a
-// realistic batch of long (dataset-qualified-looking) paths at 200 samples
-// each can still overrun kMaxResponseBytes. The raw envelope now measures
-// its own dump and shrinks the per-series sample count in lockstep, the same
-// way buckets' batch envelope already does, until it fits.
+// The 4-paths/200-samples raw caps are a guess, not a measurement: a realistic batch of long
+// (dataset-qualified-looking) paths at 200 samples each can overrun kMaxResponseBytes. The raw envelope measures its
+// own dump and shrinks the per-series sample count in lockstep, as buckets' batch envelope does, until it fits.
 TEST(ToolRegistry, RawBatchMeasuresAndShrinksToFitTheResponseCap) {
   ToolRegistry reg;
   PJ::testing::ToolboxTestStore store;
@@ -3359,9 +3551,8 @@ TEST(ToolRegistry, FlatSpanSurvivesAWindowOverAMovingPart) {
 
 // The host hooks a windowed read_series decodes only the window with, built over the store's whole read: read_window
 // serves the samples stamped in [first, last] plus the one before from a store of their own, so a read that leaned on
-// the rest of the series would find it missing; scan_values hands out blocks cut every third sample as chunk
-// boundaries cut them, a block of equal values as its one value as a constant chunk is. Each hook counts its calls
-// into `calls`.
+// the rest of the series would find it missing; scan_values hands out blocks cut every third sample as chunk boundaries
+// cut them, a block of equal values as its one value as a constant chunk is. Each hook counts its calls into `calls`.
 void addWindowHooks(ToolContext& ctx, int& calls) {
   ctx.read_window = [host = ctx.host, &calls](
                         PJ::sdk::FieldHandle field, std::int64_t first,
@@ -3622,10 +3813,8 @@ TEST(ToolRegistry, SinglePathKeepsTheOldShape) {
   EXPECT_EQ(legacy, batch) << "'series' still works so a conversation in flight does not break";
 }
 
-// The measured problem: the model reads 6-7 sibling channels one buckets call
-// at a time over the same stretch, and each was a full round trip. Several
-// paths now come back as a 'stats'-shaped envelope, each entry carrying its
-// own buckets.
+// The model reads 6-7 sibling channels one buckets call at a time over the same stretch, each a full round trip;
+// several paths come back as a 'stats'-shaped envelope, each entry carrying its own buckets.
 TEST(ToolRegistry, BucketsAcceptABatch) {
   ToolRegistry reg;
   PJ::testing::ToolboxTestStore store;
@@ -3738,11 +3927,9 @@ TEST(ToolRegistry, RejectsAnOversizedBatch) {
 
 }  // namespace
 
-// A name that is already taken is not a judgement call: installing over it
-// shadows something the user already has, and "create" was not asked to replace
-// anything. The tool description used to send the model to list_created "before
-// creating something that may already exist" — an instruction it had to
-// remember, in place of a check that costs nothing.
+// A name that is already taken is not a judgement call: installing over it shadows something the user already has, and
+// "create" was not asked to replace anything. The check costs nothing, whereas an instruction in the tool description
+// ("list_created before creating something that may already exist") has to be remembered by the model.
 TEST(ToolRegistry, RefusesToCreateOverAnExistingName) {
   ToolRegistry reg;
   PJ::testing::ToolboxTestStore store;

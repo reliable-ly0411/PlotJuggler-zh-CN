@@ -104,8 +104,6 @@ bool GridRhiPass::createShadowReceiver(
           QRhiShaderResourceBinding::uniformBuffer(
               8, QRhiShaderResourceBinding::FragmentStage, setup_.render_mode_uniforms),
       });
-  // Optional: a GPU that cannot build it draws the cells unshadowed, and the
-  // view turns shadows off (shadowReceiverFailed()), instead of failing the scene.
   shadow_pipeline_ = registry.add(
       {
           .vertex = loadRhiShader(QStringLiteral(":/scene3d_rhi/grid_cell.vert.qsb")),
@@ -171,7 +169,13 @@ void GridRhiPass::build(
   }
 
   ConnectionKey connection_key{
-      settings.connections_visible, tf, tf != nullptr ? tf->revision() : 0U, fixed_frame, time, render_origin};
+      settings.connections_visible,
+      tf,
+      tf != nullptr ? tf->revision() : 0U,
+      viewSampling(),
+      fixed_frame,
+      time,
+      render_origin};
   if (connection_key_ != connection_key) {
     connection_key_ = std::move(connection_key);
     connection_vertices_.clear();

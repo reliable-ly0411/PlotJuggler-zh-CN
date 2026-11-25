@@ -13,9 +13,8 @@
 #
 # The package is a BUNDLED ("vendor") .deb in the Chrome / VS Code mould —
 # everything under /opt/plotjuggler4 plus a wrapper in /usr/bin. A distro-native
-# package is impossible: PJ4 pins Qt 6.12.0 (no Ubuntu ships it) and much of the
-# Conan graph is not packaged by Debian at all. See
-# docs/plans/2026-08-03-debian-packaging.md.
+# package is not possible: PJ4 pins Qt 6.12.0 (no Ubuntu ships it) and much of the
+# Conan graph is not packaged by Debian at all. See packaging/deb/README.md.
 #
 # Options:
 #   --appdir <path>       AppDir to package (default: build/AppDir)
@@ -85,6 +84,7 @@ VERSION="${VERSION#v}"
 VERSION="${VERSION#V}"
 # Preserve SemVer prerelease ordering in dpkg.
 VERSION="${VERSION/-zh./~zh.}"
+VERSION="${VERSION/.dev./~dev.}"
 VERSION="${VERSION/.rc./~rc.}"
 [[ -n "${COMMIT_HASH}" ]] && VERSION="${VERSION}~${COMMIT_HASH}"
 DEB_VERSION="${VERSION}-1"
@@ -161,7 +161,7 @@ fi
 # Bundled-library copyright files stay under the private prefix. linuxdeploy
 # names them after the DISTRO packages it harvested them from, so installing
 # them into /usr/share/doc would make this package claim paths owned by
-# libglib2.0-0t64, libkrb5support0 and ~36 others.
+# libglib2.0-0t64, libkrb5support0 and dozens of others.
 if [[ -d "${APPDIR}/usr/share/doc" ]]; then
   mkdir -p "${PREFIX_DIR}/share"
   cp -a "${APPDIR}/usr/share/doc" "${PREFIX_DIR}/share/doc"
@@ -303,7 +303,7 @@ if [[ -n "${SOURCE_DATE_EPOCH:-}" ]]; then
 else
   changelog_date="$(date -uR)"
 fi
-printf '%s (%s) stable; urgency=medium\n\n  * PlotJuggler %s.\n    Release notes: https://github.com/PlotJuggler/PJ4/releases\n\n -- PlotJuggler <noreply@plotjuggler.io>  %s\n' \
+printf '%s (%s) stable; urgency=medium\n\n  * PlotJuggler %s.\n    Release notes: https://github.com/PlotJuggler/PlotJuggler/releases\n\n -- PlotJuggler <noreply@plotjuggler.io>  %s\n' \
   "${PACKAGE}" "${DEB_VERSION}" "${VERSION}" "${changelog_date}" \
   | gzip -9n > "${STAGE}/usr/share/doc/${PACKAGE}/changelog.Debian.gz"
 

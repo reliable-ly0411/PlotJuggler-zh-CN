@@ -2,7 +2,8 @@ name: Chinese 4.x development checks
 
 on:
   push:
-    branches: [zh-CN-4.x, zh-CN-4.x-dev, 'zh-CN-4.x-*/**']
+    # Feature/fix/docs branches are checked by the PR event, not twice on push.
+    branches: [zh-CN-4.x, zh-CN-4.x-dev, 'zh-CN-4.x-ci/**', 'zh-CN-4.x-release/**']
   pull_request:
     branches: [zh-CN-4.x, zh-CN-4.x-dev]
   workflow_dispatch:

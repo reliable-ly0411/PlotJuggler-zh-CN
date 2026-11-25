@@ -1,11 +1,10 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
-// An interactive stream start creates its dataset before the plugin's dialog
-// opens. Whatever ends the start without launching the session (the user
-// cancelling, a plugin contract violation, a refused configuration, a failed
-// start) must take that dataset back out of both engines and the catalog, so a
-// later start of the same source is named as the first one would be.
+// An interactive stream start creates its dataset before the plugin's dialog opens. Whatever ends the start without
+// launching the session (cancel, plugin contract violation, refused configuration, failed start) must take that
+// dataset back out of both engines and the catalog, so a later start of the same source is named as the first
+// would be.
 
 #include <gtest/gtest.h>
 
@@ -49,8 +48,7 @@ class StreamingDialogExitTest : public ::testing::Test {
   void SetUp() override {
     ASSERT_TRUE(extensions_dir_.isValid());
     ASSERT_TRUE(settings_dir_.isValid());
-    // Settings of this process only: every pj_app_gui_tests process on the machine
-    // (parallel ctest, other checkouts) clears the shared test file when it starts.
+    // Settings in a directory of this case's own.
     QSettings::setDefaultFormat(QSettings::IniFormat);
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings_dir_.path());
     const QString plugin = QString::fromUtf8(PJ_MOCK_LAYOUT_STREAM_PLUGIN_PATH);
@@ -60,7 +58,6 @@ class StreamingDialogExitTest : public ::testing::Test {
     manager_ = std::make_unique<StreamingSourceManager>(
         app_session_->sessionManager(), app_session_->extensionCatalog(), app_session_->catalogModel(),
         app_session_->topicDemandTracker(), /*dialog_parent=*/nullptr);
-    manager_->onSourceChanged(QString::fromLatin1(kPluginName));
     QObject::connect(manager_.get(), &StreamingSourceManager::streamStarted, [this](DatasetId) { ++started_; });
     QObject::connect(manager_.get(), &StreamingSourceManager::setupError, [this](const QString& message) {
       setup_errors_.push_back(message);
@@ -99,11 +96,10 @@ class StreamingDialogExitTest : public ::testing::Test {
 
   // Presses Start and waits until the start has settled: it does not wait for its dialog itself.
   void startAndSettle() {
-    manager_->onStartRequested();
+    manager_->onStartRequested(QString::fromLatin1(kPluginName));
     ASSERT_TRUE(pj_app_test::pumpUntil([this] { return !manager_->hasPendingStart(); }));
   }
 
-  // Both engines, the catalog and the manager hold nothing of the abandoned start.
   void expectNothingLeftBehind() {
     EXPECT_TRUE(app_session_->sessionManager().dataEngine().listDatasets().empty()) << "primary engine";
     EXPECT_TRUE(manager_->secondaryEngineForTests().listDatasets().empty()) << "secondary engine";
@@ -112,9 +108,8 @@ class StreamingDialogExitTest : public ::testing::Test {
     EXPECT_EQ(started_, 0);
   }
 
-  // Starts the source again, accepts its dialog and waits for its first sample:
-  // the dataset must carry the plain stream name, with no ordinal for an
-  // abandoned predecessor.
+  // Starts the source again, accepts its dialog and waits for its first sample: the dataset carries the plain stream
+  // name, with no ordinal for an abandoned predecessor.
   void expectRestartKeepsTheBaseName() {
     qunsetenv(kDialogConfigEnv);
     qunsetenv(kNullDialogEnv);
@@ -141,7 +136,7 @@ class StreamingDialogExitTest : public ::testing::Test {
 // A browser cannot block on a dialog, so no platform does: the start returns while its dialog is
 // open, and launches when the user accepts.
 TEST_F(StreamingDialogExitTest, TheStartDoesNotWaitForItsDialog) {
-  manager_->onStartRequested();
+  manager_->onStartRequested(QString::fromLatin1(kPluginName));
   ASSERT_TRUE(manager_->hasPendingStart());
   EXPECT_EQ(started_, 0);
 
@@ -153,7 +148,7 @@ TEST_F(StreamingDialogExitTest, TheStartDoesNotWaitForItsDialog) {
 
 // Whatever erases datasets or destroys sessions first withdraws a start still at its dialog.
 TEST_F(StreamingDialogExitTest, StoppingEverythingWithdrawsAStartAtItsDialog) {
-  manager_->onStartRequested();
+  manager_->onStartRequested(QString::fromLatin1(kPluginName));
   ASSERT_TRUE(manager_->hasPendingStart());
 
   manager_->stopAllAndWait(QString{});
@@ -169,7 +164,7 @@ TEST_F(StreamingDialogExitTest, StoppingEverythingWithdrawsAStartAtItsDialog) {
 // Erasing the dataset of a start still at its dialog withdraws that start: accepting the dialog
 // later must not launch into a dataset that is gone.
 TEST_F(StreamingDialogExitTest, StoppingItsDatasetWithdrawsAStartAtItsDialog) {
-  manager_->onStartRequested();
+  manager_->onStartRequested(QString::fromLatin1(kPluginName));
   ASSERT_TRUE(manager_->hasPendingStart());
   const std::vector<DatasetId> datasets = app_session_->sessionManager().dataEngine().listDatasets();
   ASSERT_EQ(datasets.size(), 1U);

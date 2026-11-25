@@ -1,11 +1,9 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MIT
 //
-// Agent tool executors. Each is a pure function of (args, host views) and
-// returns a ToolResult whose `content` the model reads. Every failure is
-// returned as data (ok=false), never thrown.
-//
-// This file: list_topics, describe_topic, playback, plot_tab, scene_view, report_status.
+// Agent tool executors: each a pure function of (args, host views) returning a ToolResult whose `content` the model
+// reads; every failure is returned as data (ok=false), never thrown. This file: list_topics, describe_topic, playback,
+// plot_tab, scene_view, report_status.
 
 #include <algorithm>
 #include <cstdint>
@@ -18,20 +16,20 @@
 #include <pj_base/sdk/object_topic_metadata.hpp>
 #include <span>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
+#include "pj_runtime/PlaybackRate.h"
 #include "pj_runtime/agent_tools/object_ops_catalog.hpp"
 #include "tools_internal.hpp"
 
 namespace PJ::agent_tools::detail {
 namespace {
 
-// An object topic's time range, in the best axis available: display seconds
-// when a playback view is bound and can convert both ends (matching every
-// other display-time report in this file), else the raw dataset-domain
-// seconds the host reported, flagged so the model never mistakes one axis for
-// the other.
+// An object topic's time range in the best axis available: display seconds when a playback view is bound and converts
+// both ends (as every other display-time report here), else the raw dataset-domain seconds the host reported, flagged
+// so the model never mistakes one axis for the other.
 struct ObjectTimeRange {
   double a = 0.0;
   double b = 0.0;
@@ -85,18 +83,12 @@ ObjectTimeRange objectTimeRange(
   return {static_cast<double>(t_min_ns) * 1e-9, static_cast<double>(t_max_ns) * 1e-9, true};
 }
 
-// --- object topics (catalog snapshot v2) ------------------------------------
-//
-// Object topics (point clouds, scene entities, images…) live beside the
-// scalar catalog in PJ_catalog_snapshot_v2_t. Marker sets are object topics
-// too, but they are drawn, not read — kMarkerObjectTopicPrefix filters them
-// out of everything a model sees (list_topics, describe_topic,
-// report_status), the same way pj_scene overlays already treat them.
+// Object topics (point clouds, scene entities, images...) live beside the scalar catalog in PJ_catalog_snapshot_v2_t.
+// Marker sets are object topics too but are drawn, not read: kMarkerObjectTopicPrefix filters them out of everything a
+// model sees (list_topics, describe_topic, report_status), as the scene overlays treat them.
 
-// Whether an object topic's metadata document names it as derived (produced
-// by an on-demand script, not ingested from a file/stream). Tolerant of a
-// missing or malformed document -- metadata is host-provided, not modeled
-// data, but it still crosses the plugin ABI as an untrusted string.
+// Whether an object topic's metadata document names it as derived (produced by an on-demand script, not ingested).
+// Tolerant of a missing or malformed document: it crosses the plugin ABI as an untrusted string.
 bool metadataHasKey(std::string_view metadata_json, std::string_view key) {
   const json parsed = json::parse(std::string(metadata_json), nullptr, /*allow_exceptions=*/false);
   return !parsed.is_discarded() && parsed.is_object() && parsed.contains(std::string(key));
@@ -127,14 +119,11 @@ const char* fieldKindName(PJ::sdk::FieldKind kind) {
   return "unspecified";
 }
 
-// A field table's own field list is depth 1; a nested struct or a list's
-// struct element goes one level deeper. Capped at kMaxFieldDepth so a
-// describe_topic call on a deeply nested type stays bounded -- a list shows
-// its element shape once at the next depth rather than per element (there is
-// only one shape, the field table is per-TYPE not per-instance), and a buffer
-// field (raw record bytes, e.g. PointCloud::data) carries nothing past its
-// name/kind: the bytes never reach the model, only the native operations that
-// summarize them (see object_ops_catalog.hpp).
+// A field table's own field list is depth 1; a nested struct or a list's struct element goes one level deeper. Capped
+// at kMaxFieldDepth so describe_topic on a deeply nested type stays bounded: a list shows its element shape once at
+// the next depth (the field table is per-TYPE, not per-instance), and a buffer field (raw record bytes, e.g.
+// PointCloud::data) carries nothing past its name/kind: the bytes never reach the model, only the native operations
+// that summarize them (see object_ops_catalog.hpp).
 constexpr int kMaxFieldDepth = 3;
 
 json fieldTableToJson(const PJ::sdk::FieldTableView& table, int depth) {
@@ -175,16 +164,34 @@ json objectTopicCommonJson(
   return out;
 }
 
-// --- executors -------------------------------------------------------------
+// list_topics' `dataset` argument: a dataset's whole label selects that dataset alone (so "data.csv" never also picks
+// "data.csv (2)"); any other text matches every label containing it.
+struct DatasetFilter {
+  std::string text;
+  bool exact = false;
+
+  DatasetFilter(std::string filter, std::span<const PJ_data_source_info_t> sources) : text(std::move(filter)) {
+    exact = std::any_of(sources.begin(), sources.end(), [this](const PJ_data_source_info_t& source) {
+      return !text.empty() && PJ::sdk::toStringView(source.name) == text;
+    });
+  }
+
+  [[nodiscard]] bool matches(std::string_view label) const {
+    return text.empty() || (exact ? label == text : label.find(text) != std::string_view::npos);
+  }
+};
 
 // Scalar topics matching filter/dataset_filter, capped at `limit`, in
 // list_topics' shape -- {"topic","kind":"scalar","fields"[,"dataset"]} --
 // appended to `out_topics`. `matched`/`shown` accumulate so a caller merging
 // this with object topics (listTopics) gets one combined count of both kinds.
+// The dataset filter matches the dataset's label, which an entry shows only when several datasets are loaded.
 void listScalarTopics(
-    std::span<const PJ_topic_info_t> topics, const std::map<std::uint32_t, std::string>& topic_dataset,
-    const std::string& filter, const std::string& dataset_filter, int limit, json& out_topics, int& matched,
-    int& shown) {
+    std::span<const PJ_topic_info_t> topics, std::span<const PJ_data_source_info_t> sources, const std::string& filter,
+    const DatasetFilter& dataset_filter, int limit, json& out_topics, int& matched, int& shown) {
+  const std::map<std::uint32_t, std::string> topic_dataset = datasetByTopicIndex(sources);
+  // datasetByTopicIndex() leaves a lone dataset out; the filter still matches its label.
+  const std::string_view lone_label = sources.size() == 1 ? PJ::sdk::toStringView(sources.front().name) : "";
   for (std::uint32_t ti = 0; ti < topics.size(); ++ti) {
     const auto& topic = topics[ti];
     const std::string name(PJ::sdk::toStringView(topic.name));
@@ -193,7 +200,7 @@ void listScalarTopics(
     }
     const auto ds = topic_dataset.find(ti);
     const std::string dataset = ds != topic_dataset.end() ? ds->second : std::string{};
-    if (!dataset_filter.empty() && dataset.find(dataset_filter) == std::string::npos) {
+    if (!dataset_filter.matches(dataset.empty() ? lone_label : dataset)) {
       continue;
     }
     ++matched;
@@ -249,12 +256,10 @@ ToolResult describeScalarTopic(
   return ToolResult::success(out.dump());
 }
 
-// Object-topic half of describe_topic: the field table walked recursively
-// (fieldTableToJson) plus the static operations a script may call on it
-// (object_ops_catalog.hpp). A type with no field table (kNone, buffer-only,
-// or not yet described) or an unrecognized builtin_object_type string
-// answers with empty "fields"/"operations" rather than failing -- the topic
-// itself is real, only its detail is unavailable.
+// Object-topic half of describe_topic: the field table walked recursively (fieldTableToJson) plus the static
+// operations a script may call on it (object_ops_catalog.hpp). A type with no field table (kNone, buffer-only, not yet
+// described) or an unrecognized builtin_object_type answers with empty "fields"/"operations" rather than failing: the
+// topic is real, only its detail is unavailable.
 ToolResult describeObjectTopic(
     ToolContext& ctx, std::span<const PJ_data_source_info_t> sources, const PJ_object_topic_info_t& obj) {
   json out = objectTopicCommonJson(ctx, sources, obj);
@@ -273,8 +278,6 @@ ToolResult describeObjectTopic(
   out["operations"] = std::move(op_arr);
   return ToolResult::success(out.dump());
 }
-
-// --- playback / viewport executors ------------------------------------------
 
 constexpr const char* kNoPlayback = "the host did not expose pj.playback.v1 (cannot control playback)";
 
@@ -313,8 +316,6 @@ ToolResult runPlaybackOp(ToolContext& ctx, const char* verb, Op&& op) {
   }
   return ToolResult::success(playbackStateJson(ctx).dump());
 }
-
-// --- the assistant's own plot tabs -------------------------------------------
 
 constexpr const char* kNoPlotTabs = "the host did not expose pj.plot_tabs.v1 (cannot compose plot tabs)";
 
@@ -396,8 +397,6 @@ json tabReadBack(ToolContext& ctx, const std::string& tab) {
   return readBack(ctx, tab, "tab");
 }
 
-// --- the assistant's own scene views -----------------------------------------
-
 // Names of the scene tabs this assistant currently owns, mirroring
 // ownedTabList's role in plotTabTool's errors.
 std::string ownedViewList(ToolContext& ctx) {
@@ -422,11 +421,10 @@ struct SceneTopicOutcome {
 
 ToolResult listTopics(const json& args, ToolContext& ctx) {
   const std::string filter = args.value("filter", std::string{});
-  // Clamped, not just defaulted: this response is re-sent on every remaining
-  // round-trip of the turn, so an unbounded list would be paid for repeatedly.
-  // read_series bounds its payload the same way. The truncation note below
-  // still tells the model how to narrow the search.
-  const int limit = std::clamp(args.value("limit", 100), 1, 500);
+  // Clamped, not just defaulted: this response is re-sent on every remaining round trip of the turn, so an unbounded
+  // list would be paid for repeatedly (read_series bounds its payload the same way). The truncation note below tells
+  // the model how to narrow the search.
+  const int limit = std::clamp(args.value("limit", kDefaultTopicLimit), 1, kMaxTopicLimit);
 
   // Scoping to one dataset is what makes this usable with several loaded: the
   // same topic names repeat across runs, so a name filter alone returns both.
@@ -439,8 +437,8 @@ ToolResult listTopics(const json& args, ToolContext& ctx) {
   auto v2 = ctx.host.catalogSnapshotV2();
   bool objects_listed = false;
   if (v2) {
-    listScalarTopics(
-        v2->topics(), datasetByTopicIndex(v2->dataSources()), filter, dataset_filter, limit, topics, matched, shown);
+    const DatasetFilter v2_dataset_filter(dataset_filter, v2->dataSources());
+    listScalarTopics(v2->topics(), v2->dataSources(), filter, v2_dataset_filter, limit, topics, matched, shown);
     for (const auto& obj : v2->objectTopics()) {
       const std::string name(PJ::sdk::toStringView(obj.name));
       if (isMarkerObjectTopic(name)) {
@@ -450,7 +448,7 @@ ToolResult listTopics(const json& args, ToolContext& ctx) {
         continue;
       }
       const std::string dataset = objectTopicDatasetName(v2->dataSources(), obj.source);
-      if (!dataset_filter.empty() && dataset.find(dataset_filter) == std::string::npos) {
+      if (!v2_dataset_filter.matches(dataset)) {
         continue;
       }
       ++matched;
@@ -468,8 +466,8 @@ ToolResult listTopics(const json& args, ToolContext& ctx) {
       return ToolResult::failure("catalog unavailable: " + catalog.error());
     }
     listScalarTopics(
-        catalog->topics(), datasetByTopicIndex(catalog->dataSources()), filter, dataset_filter, limit, topics, matched,
-        shown);
+        catalog->topics(), catalog->dataSources(), filter, DatasetFilter(dataset_filter, catalog->dataSources()), limit,
+        topics, matched, shown);
   }
 
   json out = {{"count", matched}, {"shown", shown}, {"topics", topics}};
@@ -542,9 +540,9 @@ ToolResult playbackTool(const json& args, ToolContext& ctx) {
     if (!args.contains("rate") || !args["rate"].is_number()) {
       return ToolResult::failure("rate requires a numeric 'rate' (> 0; 1.0 = real time)");
     }
-    // Bound the blast radius before the host sees it: a model asking for 0 or
-    // 10000x gets the nearest sane speed instead of an error loop.
-    const double rate = std::clamp(args["rate"].get<double>(), 0.05, 20.0);
+    // The engine's own snap, so the tool's rate is the one the speed scrubber shows; a model asking for 0 or
+    // 10000x gets the nearest speed instead of an error loop. The echoed state carries the applied rate.
+    const double rate = snapPlaybackRate(args["rate"].get<double>());
     return runPlaybackOp(ctx, "rate", [&] { return ctx.playback.setPlaybackRate(rate); });
   }
   return ToolResult::failure("unknown playback action '" + action + "'; use state/play/pause/seek/rate");
@@ -553,7 +551,8 @@ ToolResult playbackTool(const json& args, ToolContext& ctx) {
 ToolResult plotTabTool(const json& args, ToolContext& ctx) {
   const std::string action = args.value("action", std::string());
   if (action.empty()) {
-    return ToolResult::failure("plot_tab requires 'action': one of 'create', 'add', 'remove', 'zoom', 'close', 'list'");
+    return ToolResult::failure(
+        "plot_tab requires 'action': one of 'create', 'add', 'remove', 'zoom', 'focus', 'close', 'list'");
   }
   if (!ctx.plot_tabs.valid()) {
     return ToolResult::failure(kNoPlotTabs);
@@ -591,6 +590,12 @@ ToolResult plotTabTool(const json& args, ToolContext& ctx) {
         "). Only tabs you created can be changed; the user's tabs are not yours to touch.");
   }
 
+  if (action == "focus") {
+    if (auto status = ctx.plot_tabs.focusTab(tab); !status) {
+      return ToolResult::failure(status.error() + " (yours: " + ownedTabList(ctx) + ")");
+    }
+    return ToolResult::success(json({{"focused", tab}}).dump());
+  }
   if (action == "close") {
     if (auto status = ctx.plot_tabs.close(tab); !status) {
       return ToolResult::failure(status.error() + " (yours: " + ownedTabList(ctx) + ")");
@@ -640,7 +645,7 @@ ToolResult plotTabTool(const json& args, ToolContext& ctx) {
   }
 
   if (action != "add" && action != "remove") {
-    return ToolResult::failure("unknown plot_tab action '" + action + "'; use create/add/remove/zoom/close/list");
+    return ToolResult::failure("unknown plot_tab action '" + action + "'; use create/add/remove/zoom/focus/close/list");
   }
   const std::vector<std::string> paths = requestedPaths(args, {"curves"});
   if (paths.empty()) {
@@ -651,8 +656,15 @@ ToolResult plotTabTool(const json& args, ToolContext& ctx) {
     return ToolResult::failure("catalog unavailable: " + catalog.error());
   }
   const bool adding = action == "add";
+  // The host frames a plot to its first curve; a batch is framed once more below, so a later curve of the call that
+  // reaches beyond the first is in view too.
+  const json tab_before = adding ? fetchTabConfig(ctx, tab).parsed : json();
+  const bool was_empty = tab_before.is_object() && tab_before.contains("curves") && tab_before["curves"].empty();
   std::vector<std::string> refused;
-  std::vector<std::pair<std::string, std::string>> accepted;  // (topic, field) the host took without complaint
+  struct Accepted {
+    std::string topic, field, dataset;
+  };
+  std::vector<Accepted> accepted;  // what the host took without complaint
   for (const std::string& want : paths) {
     SeriesLookup lookup = resolveSeriesPath(*catalog, want);
     if (!lookup.resolved) {
@@ -666,29 +678,33 @@ ToolResult plotTabTool(const json& args, ToolContext& ctx) {
     auto status = adding ? ctx.plot_tabs.addCurve(tab, topic, field, lookup.resolved->dataset)
                          : ctx.plot_tabs.removeCurve(tab, topic, field, lookup.resolved->dataset);
     if (status) {
-      accepted.emplace_back(topic, field);
+      accepted.push_back({topic, field, lookup.resolved->dataset});
     } else {
       refused.push_back(status.error());
     }
   }
 
   json out = tabReadBack(ctx, tab);
-  // A call the host accepted is not yet a curve on screen: it may resolve to
-  // nothing and simply leave the tab as it was. So the verdict comes from what
-  // the tab HOLDS, not from what the calls returned — otherwise this reports a
-  // drawing that never happened, which is the one thing the read-back exists to
-  // prevent.
+  // A call the host accepted is not yet a curve on screen: it may resolve to nothing and leave the tab as it was. So
+  // the verdict comes from what the tab HOLDS, not from what the calls returned; otherwise this reports a drawing that
+  // never happened, the one thing the read-back exists to prevent.
   const json& held = out.contains("curves") ? out["curves"] : json::array();
-  for (const auto& [topic, field] : accepted) {
+  bool landed = false;
+  for (const auto& [topic, field, dataset] : accepted) {
     const bool present = std::any_of(held.begin(), held.end(), [&](const json& curve) {
-      return curve.value("topic", std::string()) == topic && curve.value("field", std::string()) == field;
+      return curve.value("topic", std::string()) == topic && curve.value("field", std::string()) == field &&
+             (dataset.empty() || curve.value("dataset", std::string()) == dataset);
     });
     if (present == adding) {
+      landed = landed || adding;
       continue;  // added and there, or removed and gone: what was asked for
     }
     refused.push_back(
         adding ? "'" + topic + "/" + field + "' did not land in the tab"
                : "'" + topic + "/" + field + "' is still drawn");
+  }
+  if (was_empty && landed && ctx.zoom_tab) {
+    static_cast<void>(ctx.zoom_tab(tab, std::nullopt));
   }
   if (!refused.empty()) {
     out["refused"] = refused;

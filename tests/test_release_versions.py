@@ -60,6 +60,44 @@ class ReleaseVersionsTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 module.versions(value)
 
+    def test_development_packages_require_explicit_opt_in(self):
+        version = '4.1.0-zh.1.dev.3'
+        with self.assertRaises(ValueError):
+            module.package_versions(version)
+        mapped = module.package_versions(version, development_candidate=True)
+        self.assertEqual(mapped['semver'], version)
+        self.assertEqual(mapped['deb'], '4.1.0~zh.1~dev.3-1')
+        self.assertEqual(mapped['ifw'], '4.1.0.1.0.0.3')
+        self.assertIsNone(mapped['tag'])
+        self.assertFalse(mapped['publishable'])
+        self.assertFalse(mapped['latest'])
+        with self.assertRaises(ValueError):
+            promotion.resolve('zh-CN-4.x-ci/publish-accepted-v4-1-0-zh-1-dev-3-run-123-attempt-1', version)
+        for invalid in ['4.1.0-zh.01.dev.3', '4.1.0-zh.1.dev.03', '4.1.0-zh.1.dev.0',
+                        '4.1.0-zh.1.dev.3.extra', '4.1.0-zh.1.dev', '3.1.0-zh.1.dev.3']:
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                module.package_versions(invalid, development_candidate=True)
+
+    def test_development_sorts_below_rc_without_remapping_releases(self):
+        sequence = ['4.1.0-zh.1.dev.3', '4.1.0-zh.1.dev.100', '4.1.0-zh.1.rc.1',
+                    '4.1.0-zh.1.rc.100', '4.1.0+zh.1']
+        mapped = [module.package_versions(v, development_candidate=True) for v in sequence]
+        for a, b in zip(mapped, mapped[1:]):
+            self.assertLess(tuple(map(int, a['ifw'].split('.'))), tuple(map(int, b['ifw'].split('.'))))
+            if shutil.which('dpkg'):
+                subprocess.run(['dpkg', '--compare-versions', a['deb'], 'lt', b['deb']], check=True)
+        for value in sequence[2:]:
+            self.assertEqual(module.package_versions(value, development_candidate=True),
+                             {**module.versions(value), 'publishable': True})
+
+    def test_development_cli_is_explicit_and_keeps_release_cli_closed(self):
+        script = str(Path(module.__file__))
+        command = [sys.executable, script, '4.1.0-zh.1.dev.3', '--format', 'ifw']
+        rejected = subprocess.run(command, text=True, capture_output=True)
+        self.assertNotEqual(rejected.returncode, 0)
+        accepted = subprocess.run(command + ['--development-candidate'], text=True, capture_output=True, check=True)
+        self.assertEqual(accepted.stdout.strip(), '4.1.0.1.0.0.3')
+
 
 class ReleasePromotionTest(unittest.TestCase):
     def test_bind_exact_run_attempt(self):

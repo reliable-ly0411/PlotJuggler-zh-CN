@@ -22,11 +22,6 @@
 namespace PJ {
 namespace {
 
-// ---------------------------------------------------------------------------
-// Helper: build and seal a test chunk with given time range.
-// Reuses the same pattern as topic_storage_test.cpp::make_test_chunk.
-// ---------------------------------------------------------------------------
-
 TopicChunk makeChunkWithRange(TopicId tid, Timestamp t_start, Timestamp t_end, uint32_t num_rows) {
   std::vector<ColumnDescriptor> cols = {{0, PrimitiveType::kFloat32, "v"}};
   TopicChunkBuilder b(tid, /*schema_id=*/1, cols, num_rows);
@@ -64,7 +59,6 @@ TEST(RegressionTest, Bug1_FlushWithRowInProgress_CorruptsChunkStats) {
   ASSERT_TRUE(writer.beginRow(tid, 200).has_value());
   writer.set(tid, 0, 2.0);
 
-  // flush() should only seal the one committed row.
   auto chunks = writer.flush(tid);
 
   ASSERT_EQ(chunks.size(), 1u);
@@ -126,15 +120,7 @@ TEST(RegressionTest, ExcessBulkColumnRowsTriggerAssertion) {
 #endif
 }
 
-// ===========================================================================
-// Bug #3 (recontracted) — out-of-order chunks are retained and reported
-//
-// Historically appendSealedChunk rejected out-of-order chunks and commitChunks
-// still reported the topic as changed (spurious derived recomputes on dropped
-// data). Under lossless out-of-order ingest the chunk is retained, so the
-// topic IS changed and must be reported.
-// ===========================================================================
-
+// An out-of-order chunk is retained, so commitChunks reports its topic as changed.
 TEST(RegressionTest, Bug3_CommitChunks_OutOfOrderChunkRetainedAndReported) {
   DataEngine engine;
   auto ds = *engine.createDataset(DatasetDescriptor{.source_name = "test", .time_domain_id = 0});
@@ -164,15 +150,9 @@ TEST(RegressionTest, Bug3_CommitChunks_OutOfOrderChunkRetainedAndReported) {
   EXPECT_EQ(storage->timeMax(), 200);
 }
 
-// ===========================================================================
-// Bug #4 (recontracted) — queries stay correct over overlapping chunks
-//
-// Chunk ranges may overlap after out-of-order ingest. latestAt() and
-// RangeCursor no longer assume disjoint, time-ordered chunks: latestAt scans
-// candidate chunks (later-committed wins timestamp ties) and the row cursor
-// merges chunks into one globally time-ordered stream.
-// ===========================================================================
-
+// Chunk time ranges may overlap after out-of-order ingest: latestAt() scans candidate chunks (the
+// later-committed chunk wins timestamp ties) and the row cursor merges chunks into one globally time-ordered
+// stream.
 TEST(RegressionTest, Bug4_QueriesStayCorrectOverOverlappingChunks) {
   TopicDescriptor desc;
   desc.name = "t";

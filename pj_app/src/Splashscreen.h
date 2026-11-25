@@ -10,22 +10,15 @@ class QSettings;
 
 namespace PJ {
 
-// Preferences::splash_mode storage key and its two values, shared between the
-// Preferences dialog (which writes them) and the startup path (which reads
-// them) so the strings can't drift out of sync.
+// Persisted QSettings key and values.
 inline const QString kSplashModeKey = QStringLiteral("Preferences::splash_mode");
 inline const QString kSplashModeMemes = QStringLiteral("memes");
 inline const QString kSplashModeSerious = QStringLiteral("serious");
 
-// Largest on-screen extent, in pixels, of a meme splash along either axis. The
-// bound is a square box rather than a width limit because the pool mixes
-// landscape and portrait art, and screen height is the scarcer dimension — a
-// tall meme overflows a typical display long before a wide one does.
+// Pixels, along either axis: the pool mixes landscape and portrait art, and screen height is the scarcer one.
 inline constexpr int kMaxMemeExtent = 600;
 
-// Shrinks `pixmap` to fit inside a kMaxMemeExtent square, preserving its aspect
-// ratio. Never upscales: a pixmap already inside the box is returned untouched,
-// which Qt::KeepAspectRatio alone would not guarantee.
+// Keeps the aspect ratio and never upscales, which scaled(..., Qt::KeepAspectRatio) alone would.
 QPixmap capMemeToSplashBox(const QPixmap& pixmap);
 
 // Read at startup without rewriting an explicit preference, in every language.
@@ -47,8 +40,8 @@ QPixmap localizedMemeForTest(int index);
 
 // Builds the startup splash pixmap honouring Preferences::splash_mode:
 // "serious" → a composed branded banner (logo + wordmark + random subtitle),
-// Otherwise use a localized meme composition or an English bundled meme. Returns a null QPixmap
-// when no image is available (e.g. an empty meme pool).
+// Otherwise use a localized meme composition or an English bundled meme, falling back
+// to the serious banner if no image can be loaded.
 QPixmap makeStartupSplash();
 
 }  // namespace PJ

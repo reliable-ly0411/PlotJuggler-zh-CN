@@ -68,12 +68,14 @@ fi
 
 # Same curated set as the Windows installer ($PluginIds in
 # packaging/installer/build_windows_installer.ps1): ros2-topic-subscriber is
-# Linux-only, and toolbox-assistant-agent ships on Linux only for now.
+# Linux-only, and toolbox-assistant-agent (POSIX-only CLI backends) ships on Linux only.
 BUNDLE_IDS=(
   csv-loader mcap-loader parquet-loader ulog-loader mp4-loader pointcloud-3d-loader
   dummy-streamer foxglove-bridge plotjuggler-bridge webrtc-client
   ros-parser protobuf-parser json-parser data-tamer-parser
   toolbox-quaternion toolbox-transform-editor toolbox-mosaico arrow-parser
+  toolbox-fft toolbox-anomaly-detector toolbox-data-exporter
+  influx-parser navmap-parser candump-loader blf-loader mf4-loader
 )
 PLATFORM="macos-arm64"
 REGISTRY_URL="https://raw.githubusercontent.com/PlotJuggler/pj-plugin-registry/refs/heads/development/registry.json"
@@ -101,6 +103,9 @@ for size in 16 32 128; do
   sips -z $((size * 2)) $((size * 2)) "${icon_png}" --out "${iconset}/icon_${size}x${size}@2x.png" >/dev/null
 done
 iconutil -c icns "${iconset}" -o "${CONTENTS}/Resources/plotjuggler.icns"
+
+# Licences: PlotJuggler's and the third-party notices the build wrote (cmake/PjNotices.cmake).
+install -m 644 "${ROOT}/LICENSE" "${BUILD}/pj_app/THIRD_PARTY_NOTICES.txt" "${CONTENTS}/Resources/"
 
 # PYTHONHOME layout: <home>/lib/python3.X. pj_scripting/CMakeLists.txt records
 # the Conan cpython prefix the build linked.
@@ -180,11 +185,12 @@ if [[ "${BUNDLE_PLUGINS}" == 1 ]]; then
     read -r url checksum < <(python3 - "${registry_json}" "${id}" "${PLATFORM}" <<'PY'
 import json, sys
 reg, want_id, plat = sys.argv[1:4]
-for ext in json.load(open(reg)).get("extensions", []):
-    if ext.get("id") == want_id:
-        p = ext.get("platforms", {}).get(plat) or {}
-        print(p.get("url", ""), p.get("checksum", ""))
-        break
+# The registry keeps older releases of an id for older hosts: take the newest that ships plat.
+found = [e for e in json.load(open(reg)).get("extensions", [])
+         if e.get("id") == want_id and plat in e.get("platforms", {})]
+if found:
+    p = max(found, key=lambda e: tuple(int(x) for x in e["version"].split(".")))["platforms"][plat]
+    print(p.get("url", ""), p.get("checksum", ""))
 PY
     ) || true
     [[ -n "${url:-}" ]] || die "the registry has no '${id}' for ${PLATFORM}"
@@ -254,7 +260,14 @@ mkdir -p "${dmg_root}"
 mv "${APP}" "${dmg_root}/"
 ln -s /Applications "${dmg_root}/Applications"
 rm -f "${dmg}"
-hdiutil create -volname "PlotJuggler ${VERSION}" -srcfolder "${dmg_root}" -fs HFS+ -format UDZO -ov "${dmg}"
+# hdiutil create fails "Resource busy" now and then on GitHub's macOS runners while a background scanner holds the
+# fresh image (actions/runner-images#7522, macOS 15 arm64 image, 2026-11); it succeeds on retry.
+for attempt in 1 2 3 4 5; do
+  hdiutil create -volname "PlotJuggler ${VERSION}" -srcfolder "${dmg_root}" -fs HFS+ -format UDZO -ov "${dmg}" && break
+  [[ ${attempt} -lt 5 ]] || exit 1
+  echo "hdiutil create failed (attempt ${attempt}); retrying in $((attempt * 5)) s" >&2
+  sleep $((attempt * 5))
+done
 if [[ "${SIGN_IDENTITY}" != "-" ]]; then
   codesign --force --timestamp --sign "${SIGN_IDENTITY}" "${dmg}"
 fi

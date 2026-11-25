@@ -22,7 +22,7 @@ class MarketplaceCatalogTest : public QObject {
     QFile file(QString::fromUtf8(PJ_REGISTRY_LOCK));
     QVERIFY(file.open(QIODevice::ReadOnly));
     const auto entries = QJsonDocument::fromJson(file.readAll()).object().value("extensions").toArray();
-    QCOMPARE(entries.size(), 30);
+    QCOMPARE(entries.size(), 34);
     for (const auto& value : entries) {
       const auto entry = value.toObject();
       for (const auto& field : {u"name"_s, u"description"_s}) {

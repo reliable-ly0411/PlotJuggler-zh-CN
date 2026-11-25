@@ -3,9 +3,9 @@
 # Build a relocatable PlotJuggler 4 AppImage.
 #
 # Bundles the plotjuggler4 shell and its Qt 6 + Conan runtime into a single
-# self-contained AppImage. Unlike PJ3 (system Qt 5), PJ4 links Qt from ./.qt and
-# most external deps from Conan, so linuxdeploy must be pointed at both — that is
-# the bulk of the env setup here.
+# self-contained AppImage. PJ4 links Qt from ./.qt and most external deps from
+# Conan, so linuxdeploy must be pointed at both — that is the bulk of the env
+# setup here.
 #
 # Prerequisites (run these first, they are NOT done here):
 #   ./scripts/install_qt6.sh      # Qt into ./.qt/<ver>/gcc_64
@@ -26,7 +26,7 @@
 #   packaging/appimage/build_appimage.sh --plugins-dir <path>  # LOCAL: copy a folder you
 #                                                    #   curated, verbatim, into
 #                                                    #   usr/lib/plotjuggler/plugins
-#   packaging/appimage/build_appimage.sh --plugins-registry [url]
+#   packaging/appimage/build_appimage.sh --plugins-registry [url-or-path]
 #                                                    # REGISTRY: download the
 #                                                    #   curated set (BUNDLE_IDS)
 #                                                    #   from the plugin registry,
@@ -100,8 +100,8 @@ REGISTRY_URL="https://raw.githubusercontent.com/PlotJuggler/pj-plugin-registry/r
 # packaging/installer/build_windows_installer.ps1 (same set, plus the Linux-only
 # ros2-topic-subscriber and toolbox-assistant-agent: the assistant's CLI
 # backends are POSIX-only, so it ships in the AppImage/.deb but not in the
-# Windows installer). Excluded by request: toolbox-colormap,
-# toolbox-reactive-scripts-editor.
+# Windows installer). It includes every plugin of the browser build
+# (cmake/PjWasmOfficialPlugins.cmake).
 BUNDLE_IDS=(
   csv-loader
   mcap-loader
@@ -121,6 +121,16 @@ BUNDLE_IDS=(
   toolbox-transform-editor
   toolbox-mosaico
   arrow-parser
+  # Also in the browser build (cmake/PjWasmOfficialPlugins.cmake): the desktop
+  # bundles carry every plugin the browser app has.
+  toolbox-fft
+  toolbox-anomaly-detector
+  toolbox-data-exporter
+  influx-parser
+  navmap-parser
+  candump-loader
+  blf-loader
+  mf4-loader
   # LLM assistant (spawns the user's claude/codex CLI; POSIX-only backends,
   # so bundled on Linux only — deliberately absent from the Windows list).
   toolbox-assistant-agent
@@ -152,8 +162,15 @@ while [[ $# -gt 0 ]]; do
       PLUGINS_LOCAL_DIR="$(realpath -m -- "${2:?--plugins-dir needs a path}")"; shift 2 ;;
     --plugins-registry)
       PLUGINS_MODE="registry"
-      # Optional URL argument (anything not starting with '-').
-      if [[ -n "${2:-}" && "${2}" != -* ]]; then REGISTRY_URL="$2"; shift; fi
+      # Resolve local snapshots before the packager changes its working directory.
+      if [[ -n "${2:-}" && "${2}" != -* ]]; then
+        REGISTRY_URL="$2"
+        case "${REGISTRY_URL}" in
+          http://*|https://*) ;;
+          *) REGISTRY_URL="$(realpath -m -- "${REGISTRY_URL}")" ;;
+        esac
+        shift
+      fi
       shift ;;
     --extra-prefix)
       EXTRA_PREFIX="$(realpath -m -- "${2:?--extra-prefix needs a path}")"; shift 2 ;;
@@ -174,8 +191,8 @@ done
 
 # Keep -asan BEFORE the architecture: the baked container entrypoint chowns
 # PlotJuggler-*-${PJ_APPIMAGE_ARCH}.AppImage; a trailing -asan would miss that glob
-# and leave the artifact root-owned on the host. For ASan, keep the optional CI
-# hash with the version too; normal artifacts retain their existing hash naming.
+# and leave the artifact root-owned on the host. For ASan, the optional CI hash
+# also goes with the version; normal artifacts keep <version>-<arch>.<hash>.
 if [[ "${PJ_SANITIZE}" == asan ]]; then
   OUTPUT_NAME="PlotJuggler-${VERSION}${COMMIT_HASH:+.${COMMIT_HASH}}${SANITIZE_INFIX}-${ARCH}.AppImage"
 else
@@ -290,25 +307,31 @@ collect_plugins_registry() {
   command -v sha256sum >/dev/null || { echo "sha256sum required for --plugins-registry"; exit 1; }
 
   local registry_json; registry_json="$(mktemp)"
-  echo "Plugins: fetching registry ${REGISTRY_URL}"
-  wget -qO "${registry_json}" "${REGISTRY_URL}" || { echo "ERROR: failed to download registry"; exit 1; }
+  echo "Plugins: reading registry ${REGISTRY_URL}"
+  case "${REGISTRY_URL}" in
+    http://*|https://*)
+      wget -qO "${registry_json}" "${REGISTRY_URL}" || { echo "ERROR: failed to download registry" >&2; exit 1; } ;;
+    *)
+      cp -- "${REGISTRY_URL}" "${registry_json}" || { echo "ERROR: failed to read registry ${REGISTRY_URL}" >&2; exit 1; } ;;
+  esac
 
   local id url checksum want got zip dest
   for id in "${BUNDLE_IDS[@]}"; do
-    # Resolve this extension's url + checksum for our platform from the registry.
-    read -r url checksum < <(python3 - "${registry_json}" "${id}" "${PLATFORM}" <<'PY'
+    # Resolve this extension's url + checksum for our platform from the registry. The registry
+    # keeps older releases of an id for older hosts, so take the newest one that ships our platform.
+    if ! read -r url checksum < <(python3 - "${registry_json}" "${id}" "${PLATFORM}" <<'PY'
 import json, sys
 reg, want_id, plat = sys.argv[1], sys.argv[2], sys.argv[3]
 data = json.load(open(reg))
-for ext in data.get("extensions", []):
-    if ext.get("id") == want_id:
-        p = ext.get("platforms", {}).get(plat)
-        if p:
-            print(p.get("url", ""), p.get("checksum", ""))
-        break
+found = [e for e in data.get("extensions", []) if e.get("id") == want_id and plat in e.get("platforms", {})]
+if found:
+    p = max(found, key=lambda e: tuple(int(x) for x in e["version"].split(".")))["platforms"][plat]
+    print(p.get("url", ""), p.get("checksum", ""))
 PY
-)
-    [[ -n "${url}" ]] || { echo "ERROR: registry has no '${id}' for ${PLATFORM}"; exit 1; }
+    ) || [[ -z "${url}" ]]; then
+      echo "ERROR: registry has no usable '${id}' for ${PLATFORM}: ${REGISTRY_URL}" >&2
+      exit 1
+    fi
 
     zip="$(mktemp --suffix=.zip)"
     echo "  ${id}: ${url}"
@@ -465,6 +488,28 @@ fi
 install -Dm644 "${ROOT}/resources/svg/plotjuggler.svg" \
   "${APPDIR}/usr/share/icons/hicolor/scalable/apps/plotjuggler4.svg"
 
+# Licences. PlotJuggler's own and the third-party notices the build wrote (cmake/PjNotices.cmake) go to
+# share/doc/plotjuggler4; linuxdeploy has put the copyright files of the distribution libraries it bundled in
+# share/doc/<package>. It looks a library up in dpkg by the path it resolved, which on merged-/usr systems
+# (Ubuntu 22.04: /lib -> usr/lib) misses the packages dpkg lists under /lib, so those are added here.
+# DISTRIBUTION-PACKAGES.txt records each one's exact version: the written source offer covers them.
+DOC_DIR="${APPDIR}/usr/share/doc/plotjuggler4"
+install -Dm644 "${ROOT}/LICENSE" "${DOC_DIR}/LICENSE"
+install -Dm644 "${BUILD}/pj_app/THIRD_PARTY_NOTICES.txt" "${DOC_DIR}/THIRD_PARTY_NOTICES.txt"
+if command -v dpkg-query >/dev/null; then
+  for lib in "${APPDIR}"/usr/lib/*.so*; do
+    [[ -L "${lib}" ]] && continue
+    pkg="$(dpkg -S "*/$(basename "${lib}")" 2>/dev/null | head -n1 | cut -d: -f1)" || true
+    [[ -n "${pkg}" && -f "/usr/share/doc/${pkg}/copyright" && ! -f "${APPDIR}/usr/share/doc/${pkg}/copyright" ]] || continue
+    install -Dm644 "/usr/share/doc/${pkg}/copyright" "${APPDIR}/usr/share/doc/${pkg}/copyright"
+  done
+  for dir in "${APPDIR}"/usr/share/doc/*/; do
+    pkg="$(basename "${dir}")"
+    [[ "${pkg}" == plotjuggler4 ]] && continue
+    dpkg-query -W -f='${binary:Package} ${Version}\n' "${pkg}" 2>/dev/null || echo "${pkg} (version not recorded)"
+  done > "${DOC_DIR}/DISTRIBUTION-PACKAGES.txt"
+fi
+
 case "${PLUGINS_MODE}" in
   local)    collect_plugins_local ;;
   registry) collect_plugins_registry ;;
@@ -472,7 +517,7 @@ case "${PLUGINS_MODE}" in
 esac
 
 # ---------------------------------------------------------------------------
-# 5a-bis. Plugin-admission helper.
+# 5a. Plugin-admission helper.
 #     The marketplace runs the first dlopen of a downloaded plugin inside
 #     pj-plugin-check instead of the application process. ExtensionManager fails
 #     closed when the helper cannot be started, so a bundle without it rejects

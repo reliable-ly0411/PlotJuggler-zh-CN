@@ -20,7 +20,29 @@ include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/PjAppLanguage.cmake")
 pj_add_app_language()
 pj_add_app_language_test()
 
+if(NOT CMAKE_CROSSCOMPILING AND TARGET Qt6::qmake)
+    add_test(NAME QtTranslationPaths
+        COMMAND "${CMAKE_COMMAND}"
+            "-DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/translation-path-tests"
+            "-DQT_QMAKE=$<TARGET_FILE:Qt6::qmake>"
+            "-DQT_CONFIG_DIR=${Qt6_DIR}"
+            "-DTEST_GENERATOR=${CMAKE_GENERATOR}"
+            "-DLANGUAGE_CMAKE=${CMAKE_CURRENT_LIST_DIR}/../../cmake/PjAppLanguage.cmake"
+            -P "${CMAKE_CURRENT_LIST_DIR}/check_translation_paths.cmake")
+    set_tests_properties(QtTranslationPaths PROPERTIES TIMEOUT 180)
+endif()
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets Xml UiTools)
+add_executable(qt_file_dialog_language_test ../qt_file_dialog_language_test.cpp)
+set_target_properties(qt_file_dialog_language_test PROPERTIES AUTOMOC ON WIN32_EXECUTABLE FALSE)
+target_link_libraries(qt_file_dialog_language_test PRIVATE pj_app_language Qt6::Widgets Qt6::Test)
+target_compile_options(qt_file_dialog_language_test PRIVATE ${PJ_WARNING_FLAGS})
+if(MSVC)
+    target_compile_options(qt_file_dialog_language_test PRIVATE /utf-8)
+endif()
+add_test(NAME QtFileDialogLanguageTest COMMAND qt_file_dialog_language_test)
+set_tests_properties(QtFileDialogLanguageTest PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 add_executable(pj_bundled_translations_test
     ../../../pj_dialog_host/tests/bundled_translations_qtest.cpp
     ../../../pj_dialog_host/src/bundled_translations.cpp)

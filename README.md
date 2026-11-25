@@ -27,6 +27,8 @@ packages. Use this fork's release page, not upstream downloads.
 
 ![](docs/plotjuggler_banner.svg)
 
+[![Linux CI](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/linux-ci.yml/badge.svg?branch=main)](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/linux-ci.yml?query=branch%3Amain) [![Windows CI](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/windows-ci.yml/badge.svg?branch=main)](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/windows-ci.yml?query=branch%3Amain) [![macOS CI](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/macos-ci.yml/badge.svg?branch=main)](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/macos-ci.yml?query=branch%3Amain) [![WASM CI](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/wasm-ci.yml/badge.svg?branch=main)](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/wasm-ci.yml?query=branch%3Amain) [![Pixi CI](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/pixi-ci.yml/badge.svg?branch=main)](https://github.com/PlotJuggler/PlotJuggler/actions/workflows/pixi-ci.yml?query=branch%3Amain)
+
 
 PlotJuggler 4 is an extensible, performant and open-source multi-modal visualization platform.
 
@@ -39,7 +41,7 @@ in a single application.
 
 ![Robot model, camera feeds, depth images and joint torque plots in a shared PJ4 workspace](docs/images/workspace.jpg)
 
-## Analyze signals interactively
+# From data to insight
 
 - **Drag and drop your data.** Drag signals into time-series and XY plots, zoom into events, and inspect individual samples.
 - **Validate changes across runs.** Load several recordings, align their timelines, and overlay signals to compare behavior.
@@ -47,7 +49,7 @@ in a single application.
 - **Add your own functions.** Create derived series with custom transforms in Lua and Python, alongside the built-in filters.
 - **Reuse your analysis.** Arrange plots in tabs and dockable panels, then save your layout and transforms for the next investigation.
 
-## Multimodal data, synchronized in time
+## Multimodal visualization
 
 Efficient data storage, GPU-accelerated rendering and on-demand media decoding
 help keep large recordings responsive as you explore.
@@ -76,7 +78,7 @@ help keep large recordings responsive as you explore.
   </tr>
 </table>
 
-## Work with the data you already have
+## Whatever your data is, we've got you covered
 
 Open supported formats directly and connect to your existing sensor and messaging
 systems. Install ready-to-use loaders, streamers and tools through
@@ -148,6 +150,37 @@ GitHub 自动生成的源码 ZIP/TAR 不含子模块；构建时需递归初始�
 [本分支 Issues](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues)。
 不要上传含私人信息的飞控日志。开发流程见[分支规范](docs/BRANCHING.zh-CN.md)与
 [发布规范](RELEASING.md)；草稿 PR 不代表已合并或已发布功能。
+
+## Upstream continuous integration
+
+### Any Linux distribution (AppImage)
+
+Download `PlotJuggler-<version>-x86_64.AppImage` from the
+[latest release](https://github.com/PlotJuggler/PlotJuggler/releases/latest),
+then make it executable and run it:
+
+```bash
+chmod +x PlotJuggler-*-x86_64.AppImage
+./PlotJuggler-*-x86_64.AppImage
+```
+
+It needs glibc 2.35 or newer (Ubuntu 22.04 and later, or equivalent).
+
+### Conda and pixi
+
+The `plotjuggler4` package on the
+[prefix.dev `plotjuggler` channel](https://prefix.dev/channels/plotjuggler)
+is built for Linux x86_64 and macOS arm64 (macOS 14+):
+
+```bash
+pixi global install -c conda-forge -c https://prefix.dev/plotjuggler plotjuggler4
+```
+
+### Building from source
+
+For compilation and development setup, see [Building from source](docs/BUILDING.md).
+For the code layout, the conventions and what CI checks on a pull request, see the
+[Developer guide](docs/DEVELOPER_GUIDE.md).
 
 ## License
 

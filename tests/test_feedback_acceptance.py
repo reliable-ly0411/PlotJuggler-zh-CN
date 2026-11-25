@@ -187,6 +187,25 @@ class FixtureTests(unittest.TestCase):
             self.prepare()
         self.assertFalse(self.output.exists())
 
+    def test_current_pin_requires_matching_baseline_and_preserves_source_identity(self):
+        current = json.loads((ROOT/'docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))['ardupilot_plugin']
+        path = self.build/'ardupilot-dataflash/ardupilot_source_plugin.pjmanifest.json'
+        data = json.loads(path.read_text(encoding='utf-8'))
+        data['version'] = current['version']
+        path.write_text(json.dumps(data), encoding='utf-8')
+        # A real newer plugin version cannot be accepted against the old fixture baseline.
+        with self.assertRaisesRegex(ValueError, 'APBIN manifest differs: expected .* got'):
+            self.prepare()
+        self.assertFalse(self.output.exists())
+        baseline_path = self.source/'docs/localization/upstream-baseline.json'
+        baseline_path.write_text(json.dumps({'ardupilot_plugin': current}), encoding='utf-8')
+        record = self.prepare()
+        self.assertEqual(record['apbin_version'], current['version'])
+        self.assertEqual(record['apbin_source_commit'], current['commit'])
+        staged = json.loads((self.output/'ardupilot-dataflash/manifest.json').read_text(encoding='utf-8'))
+        self.assertEqual(staged, data)
+        self.assertEqual(staged['license'], current['license'])
+
     def test_does_not_overwrite_existing_inputs(self):
         self.output.mkdir(); (self.output/'keep').write_bytes(b'unrelated')
         with self.assertRaisesRegex(ValueError, 'new isolated'):
@@ -203,6 +222,55 @@ class FixtureTests(unittest.TestCase):
 
 
 class SourceIdentityTests(unittest.TestCase):
+    def test_staging_retains_the_actual_embedded_ui_font_notices(self):
+        # Use the real tracked resources: a synthetic old NotoSans tree hid the
+        # upstream font rename until the full native packaging job reached it.
+        class BeforeRemotePayloads(Exception):
+            pass
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / 'source'
+            source.mkdir()
+            for name in ['LICENSE', 'versions.env', 'conanfile.txt']:
+                shutil.copy2(ROOT / name, source / name)
+            shutil.copytree(ROOT / 'resources/fonts/PlotJugglerSans',
+                            source / 'resources/fonts/PlotJugglerSans')
+            shutil.copy2(ROOT / 'resources/resources.qrc', source / 'resources/resources.qrc')
+            # Source-only CI deliberately has no initialized submodules. This
+            # font regression needs only synthetic inputs for unrelated APBIN
+            # copies; native CI retains the real plugin identity/license gates.
+            sdk = source / '3rdparty/plotjuggler-apbin-plugins/sdk4'
+            sdk.mkdir(parents=True)
+            for name in ['LICENSE', 'COPYING.GPL3', 'LICENSE.APACHE2', 'UPSTREAM.md']:
+                (sdk / name).write_text('Synthetic unrelated APBIN fixture.\n', encoding='utf-8')
+            build = Path(tmp) / 'build'
+            (build / 'ardupilot-dataflash').mkdir(parents=True)
+            binary = build / 'ardupilot.so'
+            binary.write_bytes(elf())
+            (build / 'ardupilot-package-path-Release.txt').write_text(str(binary), encoding='utf-8')
+            (build / 'ardupilot-dataflash/ardupilot_source_plugin.pjmanifest.json').write_text(
+                json.dumps({'id': 'ardupilot-dataflash', 'version': '0.0.0-test',
+                            'license': 'LGPL-3.0-only'}), encoding='utf-8')
+            prefix = Path(tmp) / 'stage'
+            with mock.patch.object(payload, 'ROOT', source), \
+                 mock.patch.object(payload, 'require_clean_source', return_value=('a' * 40, 'b' * 40)), \
+                 mock.patch.object(payload, 'download', side_effect=BeforeRemotePayloads) as download:
+                with self.assertRaises(BeforeRemotePayloads):
+                    payload.stage(build, prefix, 'Release', False, development_candidate=True)
+            download.assert_called_once()
+            family = ROOT / 'resources/fonts/PlotJugglerSans'
+            for original, staged in [('OFL.txt', 'PlotJugglerSans-OFL.txt'),
+                                     ('README.md', 'PlotJugglerSans-README.md')]:
+                self.assertEqual((prefix / 'share/licenses' / staged).read_bytes(),
+                                 (family / original).read_bytes())
+            qrc = ET.parse(ROOT / 'resources/resources.qrc')
+            embedded = [node.text for node in qrc.iter('file') if 'fonts/' in (node.text or '')]
+            self.assertEqual(set(embedded), {
+                'fonts/PlotJugglerSans/PlotJugglerSans-Regular.ttf',
+                'fonts/PlotJugglerSans/PlotJugglerSans-Bold.ttf'})
+            for name in embedded:
+                self.assertTrue((ROOT / 'resources' / name).is_file())
+
     def test_clean_source_has_exact_commit_and_tree(self):
         with mock.patch.object(payload.subprocess, 'check_output', side_effect=['', 'a'*40+'\n', 'b'*40+'\n']):
             self.assertEqual(payload.require_clean_source(), ('a'*40, 'b'*40))
@@ -509,23 +577,34 @@ class VulkanWorkflowSetupTests(unittest.TestCase):
 
 class PackageLanguagesTests(unittest.TestCase):
     def run_manifest(self, languages, png_languages):
+        _, provenance = manifest.read_inventory(ROOT)
+        inventories = {
+            platform: manifest.expected_plugin_inventory(ROOT, platform)
+            for platform in ('windows-x86_64', 'linux-x86_64')
+        }
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); old = Path.cwd()
             try:
                 os.chdir(root)
                 Path('versions.env').write_text('PJ_APP_VERSION=4.0.0-zh.1.rc.4\n', encoding='utf-8')
                 for relative, (platform, kind) in manifest.REPORT_IDENTITIES.items():
-                    i = 0 if platform == 'windows-2022' else 1
+                    windows = platform == 'windows-2022'
+                    inventory = inventories['windows-x86_64' if windows else 'linux-x86_64']
                     directory = (root/'reports'/relative).parent; directory.mkdir(parents=True)
                     report = {'status': 'automated_checks_passed', 'languages': languages,
-                              'release': {'source_commit': 'a'*40, 'source_tree': 'b'*40, 'version': '4.0.0-zh.1.rc.4'},
-                              'plugin_count': 19 if i==0 else 21, 'loaded_plugin_count': 19 if i==0 else 20,
-                              'unavailable_plugins': [] if i==0 else [{'id': 'ros2-topic-subscriber', 'status': 'not_tested_missing_external_dependency'}],
+                              'release': {'source_commit': 'a'*40, 'source_tree': 'b'*40, 'version': '4.0.0-zh.1.rc.4',
+                                          'expected_plugins': [f'{key}={value}' for key, value in sorted(inventory.items())],
+                                          'bin_plugin_version': inventory['ardupilot-dataflash'],
+                                          'registry_sources': provenance['sources']},
+                              'plugin_count': len(inventory),
+                              'loaded_plugin_count': len(inventory) - (0 if windows else 1),
+                              'unavailable_plugins': [] if windows else [
+                                  {'id': 'ros2-topic-subscriber', 'status': 'not_tested_missing_external_dependency'}],
                               'checks': ['synthetic test']}
                     (directory/'acceptance.json').write_text(json.dumps(report), encoding='utf-8')
                     for language in png_languages:
                         (directory/f'gui-{language}.png').write_bytes(b'synthetic-size-check-only'*500)
-                    if i == 0:
+                    if windows:
                         suffix = 'portable-zh-CN.zip' if kind == 'portable' else 'zh-CN.exe'
                         name = 'PlotJuggler-4.0.0-zh.1.rc.4-Windows-x64-' + suffix
                         digest = manifest.hashlib.sha256(b'synthetic package').hexdigest()

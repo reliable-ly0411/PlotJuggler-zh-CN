@@ -323,9 +323,8 @@ QDomElement RobotModelLayer::xmlSaveState(QDomDocument& doc) const {
   QDomElement el = doc.createElement(u"robot_model"_s);
   el.setAttribute(u"source_type"_s, sourceTypeToString(source_type_));
   el.setAttribute(u"source_value"_s, source_value_);
-  // For a topic source, source_value_ is only a display string. Persist the
-  // resolvable identity (dataset_id + topic_name) so restore re-binds the SAME
-  // topic even when the user switched the config combo to a different one.
+  // For a topic source, source_value_ is only a display string: persist the resolvable identity (dataset_id +
+  // topic_name) so restore re-binds the SAME topic even when the user switched the config combo to a different one.
   if (source_type_ == SourceType::kTopic && ctx_.session != nullptr) {
     const auto desc = ctx_.session->objectStore().descriptor(source_topic_id_);
     el.setAttribute(u"source_topic_name"_s, QString::fromStdString(desc.topic_name));
@@ -358,53 +357,59 @@ std::optional<RobotModelLayer::ParsedSettings> RobotModelLayer::parseSettings(co
   if (element.isNull() || element.tagName() != "robot_model"_L1 || !detail::isLeafPayload(element)) {
     return std::nullopt;
   }
-  const QString source_type_text = element.attribute(u"source_type"_s, u"topic"_s);
-  if (source_type_text != "topic"_L1 && source_type_text != "file"_L1 && source_type_text != "url"_L1) {
-    return std::nullopt;
-  }
-  const QString display_mode_text = element.attribute(u"display_mode"_s, u"auto"_s);
-  if (display_mode_text != "auto"_L1 && display_mode_text != "visual"_L1 && display_mode_text != "collision"_L1) {
+  QString source_type_text;
+  QString display_mode_text;
+  if (!PJ::readXmlEnum(element, u"source_type"_s, {u"topic"_s, u"file"_s, u"url"_s}, u"topic"_s, source_type_text) ||
+      !PJ::readXmlEnum(
+          element, u"display_mode"_s, {u"auto"_s, u"visual"_s, u"collision"_s}, u"auto"_s, display_mode_text)) {
     return std::nullopt;
   }
   ParsedSettings settings;
   settings.source_type = sourceTypeFromString(source_type_text);
   settings.display_mode = displayModeFromString(display_mode_text);
-  if (!detail::parseTrueFalse(element, "visible", true, settings.visible) ||
-      !detail::parseTrueFalse(element, "ignore_collada_up_axis", false, settings.ignore_collada_up_axis) ||
-      !detail::parseTrueFalse(element, "remote_resources_only", false, settings.remote_resources_only)) {
+  // Read by xmlLoadStateResult itself (an absent source_value keeps the current one); reported here.
+  if (PJ::XmlOptionsRecorder::active()) {
+    PJ::readXmlText(element, u"source_value"_s);
+    PJ::readXmlText(element, u"frame_prefix"_s);
+  }
+  if (!PJ::readXmlBool(element, u"visible"_s, true, settings.visible) ||
+      !PJ::readXmlBool(element, u"ignore_collada_up_axis"_s, false, settings.ignore_collada_up_axis) ||
+      !PJ::readXmlBool(element, u"remote_resources_only"_s, false, settings.remote_resources_only) ||
+      !detail::parseColor(element, "color", {}, settings.color)) {
     return std::nullopt;
   }
-  if (element.hasAttribute(u"color"_s)) {
-    settings.color = QColor(element.attribute(u"color"_s));
-    if (!settings.color->isValid()) {
-      return std::nullopt;
-    }
+  settings.topic_name = PJ::readXmlText(element, u"source_topic_name"_s);
+  if (!PJ::readXmlInt(
+          element, u"source_dataset_id"_s, std::nullopt, 1, std::numeric_limits<PJ::DatasetId>::max(),
+          settings.dataset_id)) {
+    return std::nullopt;
   }
+  settings.dataset_source = PJ::readXmlText(element, u"source_dataset_source"_s);
+  settings.dataset_path = PJ::readXmlText(element, u"source_dataset_path"_s);
   const bool has_topic_name = element.hasAttribute(u"source_topic_name"_s);
   const bool has_dataset_id = element.hasAttribute(u"source_dataset_id"_s);
   const bool has_dataset_source = element.hasAttribute(u"source_dataset_source"_s);
   const bool has_dataset_path = element.hasAttribute(u"source_dataset_path"_s);
   const bool has_topic_identity = has_topic_name || has_dataset_id || has_dataset_source || has_dataset_path;
-  if ((settings.source_type != SourceType::kTopic && has_topic_identity) ||
-      (!has_topic_name && (has_dataset_id || has_dataset_source || has_dataset_path))) {
+  if (settings.source_type != SourceType::kTopic && has_topic_identity) {
+    PJ::XmlOptionsRecorder::noteRejection(
+        element, u"source_type"_s, u"only a topic source carries source_topic_name / source_dataset_*"_s);
     return std::nullopt;
   }
-  if (has_dataset_id) {
-    bool id_ok = false;
-    const qulonglong value = element.attribute(u"source_dataset_id"_s).toULongLong(&id_ok);
-    if (!id_ok || value == 0 || value > std::numeric_limits<uint32_t>::max()) {
-      return std::nullopt;
-    }
-    settings.dataset_id = static_cast<PJ::DatasetId>(value);
+  if (!has_topic_name && (has_dataset_id || has_dataset_source || has_dataset_path)) {
+    PJ::XmlOptionsRecorder::noteRejection(
+        element, u"source_topic_name"_s, u"required when a source_dataset_* attribute is present"_s);
+    return std::nullopt;
   }
-  settings.topic_name = element.attribute(u"source_topic_name"_s);
   if (has_topic_name && settings.topic_name.isEmpty()) {
+    PJ::XmlOptionsRecorder::noteRejection(element, u"source_topic_name"_s, u"must not be empty"_s);
     return std::nullopt;
   }
-  settings.dataset_source = element.attribute(u"source_dataset_source"_s);
-  settings.dataset_path = element.attribute(u"source_dataset_path"_s);
+  PJ::XmlOptionsRecorder::noteOption(element, {.attribute = u"package_url_roots"_s, .type = u"json"_s});
   std::optional<QMap<QString, QUrl>> roots = parsePackageUrlRoots(element.attribute(u"package_url_roots"_s));
   if (!roots.has_value()) {
+    PJ::XmlOptionsRecorder::noteRejection(
+        element, u"package_url_roots"_s, u"expected a JSON object mapping package names to root URLs"_s);
     return std::nullopt;
   }
   settings.package_url_roots = std::move(*roots);
@@ -415,7 +420,8 @@ bool RobotModelLayer::validateXml(const QDomElement& element) {
   return parseSettings(element).has_value();
 }
 
-RobotModelLayer::XmlLoadResult RobotModelLayer::xmlLoadStateResult(const QDomElement& element) {
+RobotModelLayer::XmlLoadResult RobotModelLayer::xmlLoadStateResult(
+    const QDomElement& element, PJ::DatasetId preferred_dataset) {
   const std::optional<ParsedSettings> settings = parseSettings(element);
   if (!settings.has_value()) {
     return XmlLoadResult::kInvalid;
@@ -425,23 +431,11 @@ RobotModelLayer::XmlLoadResult RobotModelLayer::xmlLoadStateResult(const QDomEle
   if (settings->source_type == SourceType::kTopic && ctx_.session != nullptr && !topic_name.isEmpty()) {
     const QString& source = settings->dataset_source;
     const QString& path = settings->dataset_path;
-    if (settings->dataset_id == 0 && source.isEmpty() && path.isEmpty()) {
-      const UniqueObjectTopicResolution generic = resolveUniqueObjectTopic(
-          ctx_.session->objectStore(), topic_name.toStdString(), PJ::sdk::BuiltinObjectType::kRobotDescription);
-      if (generic.ambiguous) {
-        return XmlLoadResult::kInvalid;
-      }
-      restored_topic = generic.topic_id;
-    } else {
-      const PJ::DatasetIdentityResolution dataset =
-          ctx_.session->resolveDatasetIdentity(settings->dataset_id, source, path);
-      if (dataset.ambiguous) {
-        return XmlLoadResult::kInvalid;
-      }
-      if (dataset.id.has_value()) {
-        restored_topic = ctx_.session->objectStore().findTopic(*dataset.id, topic_name.toStdString());
-      }
-    }
+    const bool qualified = settings->dataset_id != 0 || !source.isEmpty() || !path.isEmpty();
+    restored_topic = PJ::resolveSavedObjectTopic(
+        ctx_.session->objectStore(), topic_name.toStdString(), PJ::sdk::BuiltinObjectType::kRobotDescription, qualified,
+        qualified ? ctx_.session->resolveDatasetIdentity(settings->dataset_id, source, path).id : std::nullopt,
+        preferred_dataset);
     if (!restored_topic.has_value()) {
       return XmlLoadResult::kDeferred;
     }
@@ -501,7 +495,6 @@ bool RobotModelLayer::attach(const PJ::SceneLayerContext& ctx) {
   const auto& scene3d_ctx = static_cast<const Scene3DLayerContext&>(ctx);
   ctx_ = scene3d_ctx;
   tf_buffer_ = ctx_.tf_buffer;  // the dock re-pushes it via setTransformBuffer on rebind
-  // disconnect first: the reload path re-attaches without an intervening detach.
   disconnect(reload_connection_);
   reload_connection_ = {};
   if (ctx_.session != nullptr) {
@@ -514,8 +507,8 @@ bool RobotModelLayer::attach(const PJ::SceneLayerContext& ctx) {
       qCWarning(lcRobotModelLayer) << "attach: session is null";
       return false;
     }
-    // Existence check only — the binding is re-resolved per decode (see
-    // tryLoadTopicDescription) so a reload that swaps the parser slot rebinds us.
+    // Existence check only: the binding is re-resolved per decode (tryLoadTopicDescription) so a reload that swaps the
+    // parser slot rebinds us.
     if (!ctx_.session->parserBindingForObjectTopic(source_topic_id_)) {
       qCWarning(lcRobotModelLayer) << "attach: no parser for robot-description topic" << source_topic_id_.id;
       return false;
@@ -574,17 +567,15 @@ void RobotModelLayer::rebuildDrawCalls() {
       ModelDrawCall call;
       call.frame_id = prefix + link.name;
       call.group = collision ? ModelDrawGroup::kCollision : ModelDrawGroup::kVisual;
-      // Primitives and the placeholder carry the call's colour alone (their unit
-      // meshes' material and vertex colours would apply it a second time); only a
-      // mesh without an explicit URDF colour shows its own materials.
+      // Primitives and the placeholder carry the call's colour alone (their unit meshes' material and vertex colours
+      // would apply it a second time); only a mesh without an explicit URDF colour shows its own materials.
       call.use_material = false;
       call.mesh_key = std::string(kPlaceholderKey);
       bool explicit_color = true;
       if (geom.has_color) {
         call.override_color = geom.color;
       } else if (collision) {
-        // Collision geometry with no <material>: orange tint so hulls read as
-        // distinct from the visual meshes (RViz convention).
+        // Collision geometry with no <material>: orange tint, so hulls read as distinct from the visual meshes (RViz).
         call.override_color = look::kCollisionDefaultColor;
       } else {
         explicit_color = false;
@@ -644,8 +635,6 @@ QWidget* RobotModelLayer::createConfigWidget(QWidget* parent) {
   form->setContentsMargins(
       PJ::theme::space(PJ::theme::Space::None), PJ::theme::space(PJ::theme::Space::None),
       PJ::theme::space(PJ::theme::Space::None), PJ::theme::space(PJ::theme::Space::None));
-  // Match the Grid / Transforms section grids in Scene3DConfigPanel: comfortable
-  // label↔field gap, snug row pitch — so the panel keeps one consistent rhythm.
   form->setHorizontalSpacing(PJ::theme::space(PJ::theme::Space::Comfortable));
   form->setVerticalSpacing(PJ::theme::space(PJ::theme::Space::Snug));
   outer->addLayout(form);
@@ -689,13 +678,11 @@ QWidget* RobotModelLayer::createConfigWidget(QWidget* parent) {
   file_layout->setContentsMargins(
       PJ::theme::space(PJ::theme::Space::None), PJ::theme::space(PJ::theme::Space::None),
       PJ::theme::space(PJ::theme::Space::None), PJ::theme::space(PJ::theme::Space::None));
-  // Shows only the file name (full path lives in source_value_ / the tooltip); the
-  // field is read-only — Browse is the way to change it.
+  // Shows only the file name (the full path lives in source_value_ and the tooltip); read-only, Browse changes it.
   auto* file_edit =
       new QLineEdit(source_type_ == SourceType::kFile ? QFileInfo(source_value_).fileName() : QString(), file_row);
   file_edit->setReadOnly(true);
   file_edit->setToolTip(source_type_ == SourceType::kFile ? source_value_ : QString());
-  // Themed icon buttons, matching the app's chrome.
   const QString icon_theme = QGuiApplication::palette().color(QPalette::Window).valueF() < 0.5 ? u"dark"_s : u"light"_s;
   auto* browse_button = new QToolButton(file_row);
   browse_button->setAutoRaise(true);
@@ -872,26 +859,19 @@ QWidget* RobotModelLayer::createConfigWidget(QWidget* parent) {
       return;
     }
     const QString root = PJ::FileDialog::getExistingDirectory(
-        container, tr("Select the folder that contains your robot packages"), QString());
+        container, tr("Select your workspace or the folder that contains your robot packages"), QString());
     if (root.isEmpty()) {
       return;
     }
-    QStringList missing;
-    for (const QString& package : packages) {
-      const QString package_dir = QDir(root).filePath(package);
-      if (QFileInfo(package_dir).isDir()) {
-        resolver_->rememberPackageRoot(package.toStdString(), package_dir);
-      } else {
-        missing.push_back(package);
-      }
-    }
-    refresh_roots_list();
-    if (missing.size() == packages.size()) {
-      setStatus(
-          tr("Package '%1' not found under '%2' - expected a subdirectory named '%1'").arg(missing.first(), root));
+    resolver_->clearPackageIndexes();
+    if (std::ranges::none_of(
+            packages, [this, &root](const QString& p) { return resolver_->folderHasPackage(root, p); })) {
+      setStatus(tr("Package '%1' not found under '%2' - expected a folder named '%1'").arg(packages.first(), root));
       refresh_status();
       return;
     }
+    resolver_->addUserFolder(root);
+    refresh_roots_list();
     loadFromCurrentSource();
     refresh_status();
   });
@@ -936,7 +916,6 @@ void RobotModelLayer::setSourceTopic(PJ::ObjectTopicId topic_id, QString display
     source_value_ = display_name_;
   }
   if (ctx_.session != nullptr) {
-    // Existence check only; the actual decode re-resolves the binding per use.
     if (!ctx_.session->parserBindingForObjectTopic(source_topic_id_)) {
       fail(tr("No parser for %1").arg(source_value_));
       return;
@@ -1061,6 +1040,9 @@ void RobotModelLayer::setIgnoreColladaUpAxis(bool ignore) {
 }
 
 void RobotModelLayer::retry() {
+  if (resolver_ != nullptr) {
+    resolver_->clearPackageIndexes();
+  }
   loadFromCurrentSource();
 }
 
@@ -1286,7 +1268,6 @@ void RobotModelLayer::queueMeshLoads() {
   if (!model_.has_value()) {
     return;
   }
-  // Links sharing a mesh file queue one load.
   std::unordered_set<std::string> queued;
   const auto inspect = [this, &queued](const LinkGeom& geometry) {
     const auto* mesh = std::get_if<GeomMesh>(&geometry.shape);
@@ -1327,8 +1308,6 @@ void RobotModelLayer::admitMesh(const std::string& key, MeshData mesh) {
     if (!retainedMeshFits(retained, mesh_retained_bytes_)) {
       mesh_errors_[key] = tr("mesh would exceed the layer memory limit");
     } else {
-      // The settle requests its own repaint, so a landed mesh replaces its
-      // placeholder without waiting for an unrelated paint.
       model_meshes_[key] = std::make_shared<const MeshData>(std::move(mesh));
       mesh_bytes_[key] = retained;
       mesh_retained_bytes_ += retained;
@@ -1339,7 +1318,6 @@ void RobotModelLayer::admitMesh(const std::string& key, MeshData mesh) {
 }
 
 void RobotModelLayer::onMeshLoadSettled() {
-  // A placeholder cube must swap to the freshly-loaded mesh.
   rebuildDrawCalls();
   updateMeshCounters();
   updateStatus();
@@ -1437,8 +1415,7 @@ void RobotModelLayer::setStatus(QString status) {
 }
 
 QStringList RobotModelLayer::unresolvedPackagesList() const {
-  // Per-MODEL, not resolver-global: the resolver is dock-shared across robot
-  // layers. Distinct package names, in first-seen order.
+  // Per MODEL, not resolver-global (the resolver is dock-shared across robot layers); distinct names, first-seen order.
   QStringList packages;
   if (!model_.has_value()) {
     return packages;
@@ -1468,8 +1445,6 @@ QString RobotModelLayer::unresolvedIssueClause() const {
   if (!model_.has_value()) {
     return {};
   }
-  // kBlockedHttp and kMissingFile are the kinds Locate cannot fix, so name them
-  // explicitly.
   int blocked_http = 0;
   int missing_file = 0;
   const auto tally = [&](const LinkGeom& geom) {
