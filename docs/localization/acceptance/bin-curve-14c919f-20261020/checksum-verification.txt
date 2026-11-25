@@ -1,0 +1,10 @@
+Anonymous download: https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v4.0.0-zh.1.rc.1/SHA256SUMS-public-filenames.txt
+Asset ID: 658887297
+Bytes: 345
+SHA256: 6af13ad89cc2e3e2dd4287552d7ac5c8f4d2000f5db87b21f6e91a50c5a38222
+
+PlotJuggler-4.0.0-zh.1.rc.1-Windows-x64-zh-CN.exe: OK
+PlotJuggler-4.0.0-zh.1.rc.1-x86_64-zh-CN.AppImage: OK
+plotjuggler4_4.0.0.zh.1.rc.1-1_amd64-zh-CN.deb: OK
+
+Exit status: 0

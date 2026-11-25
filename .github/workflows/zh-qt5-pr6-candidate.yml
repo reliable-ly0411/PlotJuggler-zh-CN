@@ -1,0 +1,16 @@
+name: Manual Qt5 PR6 candidate verification
+
+'on':
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  verify-pr6-candidate:
+    # User-authorized, immutable PR6 dependency repair. No secrets are inherited.
+    # The called workflow only builds/tests candidate artifacts; it cannot publish.
+    uses: reliable-ly0411/PlotJuggler-zh-CN/.github/workflows/zh-linux.yml@369b56a4772668e14e6436cc0aa8e3aa47c3c04a
+    with:
+      ref: 369b56a4772668e14e6436cc0aa8e3aa47c3c04a
+      release_manifest: ''

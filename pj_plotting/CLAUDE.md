@@ -117,6 +117,23 @@ Derived series reach this module as ordinary datastore topics through the catalo
 ./test.sh -R '^pj_plotting_(core|widget)_tests\.'
 ```
 
+## Built-in filter localization
+
+`BuiltinFilterPresentation` is the Qt-only presentation boundary for the shipped
+Luau filters. Its extractable key registry covers the actual resource's names,
+descriptions and parameter/enum labels. Only recognized bundled classes are
+localized, using copies of their display metadata; `ParameterForm` remains
+generic. Filter ids, parameter values, source text and automatically generated
+output names remain canonical in every interface language.
+
+
+## Localized default titles
+
+A new unnamed plot tab receives a translated default title. Explicit names,
+renamed titles and restored layout names remain user data and are never matched
+for translation. DockWidget localizes only its ADS window title, leaving the
+constructor objectName and saved state IDs unchanged.
+
 ## Docs
 
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): core adapters, markers on a plot, `PlotRhiCanvas`, docks and

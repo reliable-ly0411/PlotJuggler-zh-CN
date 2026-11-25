@@ -48,6 +48,13 @@ derived-data design (on-demand, batch and series engines, scheduling, TF) is in
 
 One line each; the header holds the contract, [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) the wiring.
 
+**Native opt-in test profile:** `pj_app` initializes `PlatformUtils` before any
+service exists. `SourceCacheStore::loadSettings/fromSettings` and
+`RecordingService::loadSettings/setSettings` then fix output under that profile,
+even when saved or caller-supplied directories point elsewhere. The host's
+default `QSettingsBackend` inherits the isolated INI configuration. Without an
+explicit profile, all existing preferences and default paths are unchanged.
+
 Session, catalog and time:
 - `AppSession.h`: the central runtime object `pj_app` creates once; owns the services, the playback range, dataset
   merge, and the on-demand demand/playhead wiring.
@@ -191,6 +198,31 @@ like the code). Whole module:
   mock object parser). `tests/recording_pipeline_test.cpp` (desktop) runs real hosts → `RecordTap` → `Recorder` →
   `McapRecordingWriter` under `RecordingService` and reads the files back.
 
+## Localized same-version bundled seeds
+
+Localized plugin packages carry `.pj-localized-build.json`, binding the descriptor
+ID/version and DSO path to its SHA-256. The host defers ExtensionManager’s initial installed snapshot until after seeding.
+Before any installed-side DSO scan,
+`LocalizedPluginSeed.h` permits a same-version migration only from an audited
+legacy hash or the previously applied fork hash in this store's receipt. Unknown
+bytes, changed layouts, and user-selected replacements are preserved. The
+predecessor lock records official registry artifacts and the published rc.2 fork
+bytes; matching a hash binds the version without loading the installed Windows DLL.
+
+Staging copies the current directory before the package overlay, preserves extra
+user files, and rejects symlinks. The staged DSO is rehashed before promotion. A
+QSettings pending intent must sync before mutation; the applied receipt is written
+only after promotion. Explicit failures clear pending intent so rollback can be
+retried. An interrupted transaction is conservative: if the target bytes are
+already installed it completes the receipt, otherwise it preserves the directory.
+This prevents a failed receipt sync from repeatedly replacing a later marketplace
+update. It may require manual plugin reinstallation after an interrupted pending
+transaction. The ordinary seed policy for packages without this marker is unchanged.
+
+Qt-only policy, identity, receipt and file-preservation tests are available via
+`cmake -S pj_runtime/tests/localized_seed -B build-localized-seed`, and are included
+in the standalone application i18n suite. They do not substitute for a Windows
+installation/upgrade acceptance test.
 ## Read deeper
 
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): link surface and per-subsystem wiring and contracts.

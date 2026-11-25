@@ -1,5 +1,10 @@
 # Anonymous usage statistics
 
+In this localized distribution both switches default to **off**. A fresh profile
+does not send launch pings or collect feature-use counters. Only an explicitly
+saved enabled choice permits its corresponding report; Cancel preserves the
+previous choice. All build, browser and automation exclusions below still apply.
+
 PlotJuggler 4 reports two kinds of anonymous statistics, each with its own
 switch in Preferences → Appearance:
 

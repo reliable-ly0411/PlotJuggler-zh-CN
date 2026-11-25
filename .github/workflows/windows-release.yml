@@ -9,15 +9,15 @@ name: Release Windows Packages
 #
 # Cache/repository layers shared with windows-ci.yml:
 #   - Qt kit via actions/cache
-#   - compiler objects via sccache on the Actions cache
-#   - Conan packages via the shared Actions cache, then ConanCenter
+#   - compiler objects via sccache on Depot Cache
+#   - Conan packages via the shared Depot-backed Actions cache, then ConanCenter
 #
 # Triggers:
 #   - workflow_dispatch     -> build both packages from any branch (artifacts only);
 #     with `update_url`, also build + publish an update repository there, to
 #     rehearse the maintenance-tool update path against a staging prefix
 #   - push of a version tag -> build + attach both packages to that tag's Release
-#     (e.g. `4.2.0` — no leading 'v')
+#     (e.g. `3.9.1` — no leading 'v')
 
 on:
   workflow_dispatch:
@@ -41,9 +41,6 @@ on:
           updated from the repository this run publishes.
         type: string
         default: ""
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
 
 permissions:
   contents: write     # softprops/action-gh-release needs write to create/update the Release
@@ -54,8 +51,9 @@ concurrency:
 
 jobs:
   windows-installer:
+    if: github.repository == 'PlotJuggler/PlotJuggler'
     # Match windows-ci.yml and the toolchain used for the published plugin artifacts.
-    runs-on: windows-2022
+    runs-on: depot-windows-2022-4
     # Backstop against hangs — app build plus registry download/validation/packaging.
     # Plugins are not compiled here.
     timeout-minutes: 180
@@ -64,17 +62,14 @@ jobs:
       update_url: ${{ env.PJ_WINDOWS_UPDATE_URL }}
 
     env:
-      # sccache's GitHub Actions cache backend (the action exports the cache
-      # token). Every object is one cache entry in the repo's shared 10 GB.
-      SCCACHE_GHA_ENABLED: "true"
       # The one URL the installer is built against and the repository is
       # published to: the production variable on a tag push, the staging input
       # on a dispatch (even one started from a tag), empty otherwise. Both steps read it, so they cannot disagree.
       PJ_WINDOWS_UPDATE_URL: ${{ github.event_name == 'push' && vars.PJ4_WINDOWS_UPDATE_URL || (github.event_name == 'workflow_dispatch' && inputs.update_url || '') }}
 
-    # sccache (SCCACHE_GHA_ENABLED above) shares its Actions-cache object store
-    # with Windows CI and the Pixi win-64 leg, so the release reuses identical
-    # MSVC compilation results.
+    # sccache uses Depot Cache via the SCCACHE_WEBDAV_* env vars the Depot
+    # runner pre-sets — the same org-wide object store as Windows CI and the
+    # Pixi win-64 leg, so the release reuses identical MSVC compilation results.
     steps:
       - name: Use HTTPS for github.com submodules
         shell: bash
@@ -142,14 +137,14 @@ jobs:
 
       - name: Set up MSVC environment
         # Conan's package ID includes the detected compiler settings, so activate
-        # MSVC before detecting the profile or resolving prebuilt Conan binaries.
+        # MSVC before detecting the profile or resolving Artifactory binaries.
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
 
       # ─────────────────────────── Conan binaries ───────────────────────────
-      # The Actions cache closure maintained by windows-ci.yml is
-      # the Conan binary store (same windows-2022 MSVC/Release graph,
+      # The Depot-backed Actions cache closure maintained by windows-ci.yml is
+      # the Conan binary store (same windows-2022 MSVC/RelWithDebInfo graph,
       # same key). ConanCenter source builds cover any residual miss.
 
       - name: Compute Conan cache key
@@ -163,14 +158,14 @@ jobs:
           $fileHash = (Get-FileHash -InputStream $stream -Algorithm SHA256).Hash.Substring(0, 16).ToLower()
           $hash = "$cacheVersion-$fileHash"
           "hash=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          "restore_prefix=conan-windows-msvc-release-$cacheVersion-" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "restore_prefix=conan-windows-msvc-relwithdebinfo-$cacheVersion-" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Restore Conan cache
         id: conan-gha-cache
         uses: actions/cache/restore@v5
         with:
           path: ~/.conan2
-          key: conan-windows-msvc-release-${{ steps.public_conan_cache.outputs.hash }}
+          key: conan-windows-msvc-relwithdebinfo-${{ steps.public_conan_cache.outputs.hash }}
           restore-keys: |
             ${{ steps.public_conan_cache.outputs.restore_prefix }}
 
@@ -180,7 +175,7 @@ jobs:
         # under .github/conan/source-backup/, addressed by sha256, and copied
         # into Conan's source download cache here so source() fetches are
         # served locally. The source cache is separate from the binary packages
-        # (Actions-cached ~/.conan2, the plotjuggler-conan remote, ConanCenter).
+        # resolved through Artifactory.
         shell: pwsh
         run: |
           $cacheDir = (Join-Path $env:RUNNER_TEMP "conan-source-cache").Replace('\', '/')
@@ -288,8 +283,11 @@ jobs:
       # ─────────────────────────── Compiler cache ───────────────────────────
 
       - name: Install sccache
-        # v0.16 supports GitHub's current cache service; the action exports its
-        # short-lived runtime credentials.
+        # sccache is a compile-cache speedup, NOT load-bearing: the build is
+        # correct without it, just slower. v0.16 supports GitHub's current cache
+        # service; the action exports its short-lived runtime credentials.
+        id: setup_sccache
+        continue-on-error: true
         uses: mozilla-actions/sccache-action@v0.0.10
         with:
           version: "v0.16.0"
@@ -305,13 +303,14 @@ jobs:
           conan profile detect --force
           scripts/configure_conan_remote.sh
           # cpython shared: its Conan recipe disables the static MSVC build (>=3.10),
-          # so the embedded interpreter must link shared. Ninja Multi-Config so
-          # sccache's compiler launcher is honoured (VS/MSBuild ignores it).
+          # so the embedded interpreter must link shared (Release CRT, matching the
+          # RelWithDebInfo /MD graph). Ninja Multi-Config so sccache's compiler
+          # launcher is honoured (VS/MSBuild ignores it).
           conan_log="${RUNNER_TEMP}/pj4-conan-install.log"
           conan install . --output-folder=build --build=missing -r=plotjuggler-conan -r=conancenter \
             --lockfile=conan.lock --lockfile-partial \
-            -s build_type=Release -s compiler.cppstd=20 \
-            -o "cpython/*:shared=True" \
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 \
+            -o "cpython/*:shared=True" -s "cpython/*:build_type=Release" \
             -c tools.cmake.cmaketoolchain:generator="Ninja Multi-Config" \
             2>&1 | tee "$conan_log"
           if grep -q "Building from source" "$conan_log"; then
@@ -330,18 +329,23 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ~/.conan2
-          key: conan-windows-msvc-release-${{ steps.public_conan_cache.outputs.hash }}
+          key: conan-windows-msvc-relwithdebinfo-${{ steps.public_conan_cache.outputs.hash }}
 
       - name: Build PlotJuggler 4 (app)
         shell: bash
         env:
-          # Release-only: the key that decrypts the empty-dock easter egg GIFs (pj_widgets). Absent on forks: no easter egg.
-          PJ_EASTER_EGG_KEY: ${{ secrets.PJ_EASTER_EGG_KEY }}
+          SCCACHE_AVAILABLE: ${{ steps.setup_sccache.outcome == 'success' }}
         run: |
           # Same debug format as windows-ci.yml (see its Build step), so the
-          # two share sccache objects: no debug information in Release
+          # two share sccache objects: no debug information in RelWithDebInfo
           # objects. The installer ships no PDB. Requires CMP0141=NEW.
-          launcher_args=(-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache)
+          launcher_args=()
+          if [[ "$SCCACHE_AVAILABLE" == "true" ]]; then
+            launcher_args=(-DCMAKE_C_COMPILER_LAUNCHER=sccache \
+                           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache)
+          else
+            echo "::warning::sccache unavailable; building without a compiler cache"
+          fi
 
           cmake -S . -B build -G "Ninja Multi-Config" \
             -DCMAKE_TOOLCHAIN_FILE="build/conan_toolchain.cmake" \
@@ -355,9 +359,11 @@ jobs:
           # This release only packages the application. PJ_BUILD_TESTS=OFF also
           # keeps the widgets' test-only fault injection (the PJ_RHI_TEST_HOOKS
           # definition) out of the shipped binaries.
-          cmake --build build --config Release --target pj_app --parallel
+          cmake --build build --config RelWithDebInfo --target pj_app --parallel
 
-          sccache --show-stats
+          if [[ "$SCCACHE_AVAILABLE" == "true" ]]; then
+            sccache --show-stats
+          fi
 
       - name: Build the installer
         # The recipe stages the app, downloads the curated published plugins from
@@ -366,7 +372,7 @@ jobs:
         # fails the release; there are no best-effort skips.
         # -CleanReleaseName only on a tag build: -Version is already the unique,
         # meaningful name there (matches the AppImage's plain naming); dispatch
-        # builds keep the short-commit stamp to stay distinguishable.
+        # builds keep the date + main-commit stamp to stay distinguishable.
         shell: pwsh
         run: |
           # Remote updates only when this run also publishes a repository at
@@ -515,7 +521,7 @@ jobs:
     # in components.xml is the assertion; check-updates output is only logged,
     # since IFW's console output from a GUI-subsystem binary is best-effort.
     needs: windows-installer
-    if: inputs.update_check_from_run != '' && needs.windows-installer.outputs.update_url != ''
+    if: github.repository == 'PlotJuggler/PlotJuggler' && (inputs.update_check_from_run != '' && needs.windows-installer.outputs.update_url != '')
     runs-on: windows-2022
     timeout-minutes: 30
     permissions:

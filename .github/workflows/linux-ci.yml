@@ -1,20 +1,6 @@
 name: Linux CI
 
 on:
-  pull_request:
-    branches: [main, development, 'release-*']
-    types: [opened, synchronize, reopened, ready_for_review]
-    # Skip pull requests that only touch files nothing here builds or tests;
-    # pre-commit.yml still lints them. packaging/smoke/ is scene3d_rhi_app_smoke's
-    # script, run only by this lane. Later patterns override earlier ones.
-    paths:
-      - '**'
-      - '!docs/**'
-      - '!**/*.md'
-      - '!packaging/**'
-      - 'packaging/smoke/**'
-  push:
-    branches: [main, development, 'release-*']
   workflow_dispatch:
 
 concurrency:
@@ -26,7 +12,7 @@ concurrency:
 jobs:
   build:
     if: github.event.pull_request.draft == false
-    runs-on: ubuntu-22.04
+    runs-on: depot-ubuntu-22.04-4
     # Backstop against hangs (a deadlocked test otherwise holds the runner for
     # GitHub's 6-hour default). Worst observed legitimate run — cold Conan +
     # cold ccache — is ~28 min.
@@ -35,16 +21,6 @@ jobs:
       contents: read
 
     steps:
-      - name: Free up runner disk space
-        # GitHub-hosted Ubuntu runners leave ~14 GB free, which the Conan
-        # closure, Qt and the build tree can exceed ("No space left on
-        # device"). Reclaim the preinstalled toolchains no job here uses.
-        run: |
-          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
-            /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/lib/node_modules
-          sudo docker image prune --all --force >/dev/null 2>&1 || true
-          df -h /
-
       - name: Use HTTPS for github.com submodules
         run: git config --global url."https://github.com/".insteadOf "git@github.com:"
 
@@ -67,7 +43,7 @@ jobs:
 
       - uses: conan-io/setup-conan@v1
         with:
-          # Binaries come from the Actions cache below, with
+          # Binaries come from the Depot-backed Actions cache below, with
           # ConanCenter source builds as the fallback. Do not also archive
           # ~/.conan2 through setup-conan itself.
           cache_packages: false
@@ -77,36 +53,36 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Hash every conanfile.txt and conan.lock under the tree so the key
-          # invalidates when any of them changes.
-          # "luau-fpic": the conan install below builds luau with -fPIC under its own
-          # package_id; a new key lets the run save the closure that holds it (the
-          # prefix restore still brings back everything else).
-          hash=$( { find . \( -name conanfile.txt -o -name conan.lock \) -not -path './build/*' -not -path './.git/*' \
-                  -print0 | sort -z | xargs -0 sha256sum; echo luau-fpic; } | sha256sum | cut -c1-16)
+          # Hash every conanfile.txt under the tree (today the top-level
+          # one; future submodules under PJ4 may add their own) so the
+          # key invalidates when any of them changes.
+          hash=$(find . \( -name conanfile.txt -o -name conan.lock \) -not -path './build/*' -not -path './.git/*' \
+                  -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c1-16)
           echo "hash=${hash}" >> "${GITHUB_OUTPUT}"
 
       - name: Restore Conan cache
-        # The Actions cache is the authoritative Conan binary store;
-        # ConanCenter source builds are the fallback.
+        # On Depot runners actions/cache is backed by Depot Cache storage —
+        # the authoritative Conan binary store; ConanCenter source builds are
+        # the fallback.
         id: conan-gha-cache
         uses: actions/cache/restore@v5
         with:
           path: ~/.conan2
-          # The v2 prefix excludes caches carrying the assimp/5.4.3 recipe revision
-          # that pins draco/1.5.6 (it clashes with our draco/1.5.7 pin); drop the
-          # suffix once no such cache remains.
-          key: conan-linux-gcc-release-v2-${{ steps.conan_cache.outputs.hash }}
+          # v2 prefix (July 2026): bumped to invalidate caches carrying the
+          # pre-#30610 assimp/5.4.3 recipe revision (which still pins draco/1.5.6
+          # and clashes with our new draco/1.5.7 pin). Fold this suffix out once
+          # everyone has moved past the transition.
+          key: conan-linux-gcc-relwithdebinfo-v2-${{ steps.conan_cache.outputs.hash }}
           # Partial reuse when conanfile.txt changes: an older closure for the
           # same OS/compiler still seeds most packages, so only the changed dep
           # (and its dependents) rebuild rather than the whole graph.
           restore-keys: |
-            conan-linux-gcc-release-v2-
+            conan-linux-gcc-relwithdebinfo-v2-
 
       - name: Seed Conan source download cache
         # minizip/1.2.13 has a single zlib.net source URL that rejects GitHub
         # runners with HTTP 415. Use the same checksum-verified, repo-hosted
-        # Conan download-cache seed as the Windows workflows. This is
+        # Conan download-cache seed as the proven Windows workflows. This is
         # deliberately configured after restoring ~/.conan2 so a restored
         # global.conf cannot clobber it.
         shell: bash
@@ -167,10 +143,11 @@ jobs:
       - name: Configure ccache
         # Compiler-output cache for our own C++ — complementary to the Conan
         # cache (which holds prebuilt third-party packages, not our objects).
-        # Keep the regular-build namespace disjoint from TSan: a `ccache-linux-`
-        # catch-all selects the newer ccache-linux-tsan-* entry and hits 0/810,
-        # because sanitizer objects are incompatible.
-        # Only pushes save (see Save ccache); a pull
+        # Keep the regular-build namespace disjoint from TSan. The former
+        # `ccache-linux-` catch-all selected the newer ccache-linux-tsan-* entry
+        # and produced 0/810 hits because sanitizer objects are incompatible.
+        # On Depot runners actions/cache is backed by Depot Cache storage (not
+        # GitHub's shared 10 GB quota). Only pushes save (see Save ccache); a pull
         # request restores its head branch's newest cache (there is one when the
         # head is itself a pushed branch, e.g. a release-* merged into main: main's
         # cache hit 3.5% there), then its target branch's, then main's, since a
@@ -187,7 +164,8 @@ jobs:
             ccache-linux-g1-main-
 
       - name: Set ccache limits
-        # 2G, not 500M: the full compiled object set exceeds 500M, so a
+        # 2G, not 500M: the full compiled object set (esp. after the Qt
+        # bump, whose larger headers grew per-TU output) exceeds 500M, so a
         # 500M cap thrashed — ccache evicted this build's own early objects
         # mid-run (observed: 25 cleanups, 39% hit rate), leaving every later
         # build permanently partially-cold. 2G holds the whole warm set.
@@ -204,8 +182,8 @@ jobs:
           ccache -z
 
       - name: Conan install
-        # Same sequencing as the Windows workflows: resolve/build the dependency
-        # graph, save it to the cache immediately, then compile PlotJuggler. A later app
+        # Match the proven Windows sequencing: resolve/build the dependency
+        # graph, publish it immediately, then compile PlotJuggler. A later app
         # compile failure must not discard an otherwise reusable Conan closure.
         id: conan_install
         shell: bash
@@ -214,13 +192,9 @@ jobs:
           conan profile detect --force
           scripts/configure_conan_remote.sh
           conan_log="${RUNNER_TEMP}/pj4-conan-install.log"
-          # luau: ConanCenter's Release binary is not PIC (no fPIC option); -fPIC in
-          # its package_id makes Conan build it instead. Same flags as build.sh.
           conan install . --output-folder=build --build=missing -r=plotjuggler-conan -r=conancenter \
             --lockfile=conan.lock --lockfile-partial \
-            -s build_type=Release -s compiler.cppstd=20 \
-            -c "luau/*:tools.build:cxxflags=['-fPIC']" \
-            -c "luau/*:tools.info.package_id:confs=['tools.build:cxxflags']" \
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 \
             2>&1 | tee "$conan_log"
           if grep -q "Building from source" "$conan_log"; then
             echo "::notice::Conan built missing Linux binaries; the cache saves below persist them."
@@ -250,9 +224,9 @@ jobs:
         # so skip only on an exact-key hit.
         #
         # Not from pull requests, the same rule the ccache save below follows:
-        # every entry counts against the repo's shared, LRU-evicted 10 GB
-        # Actions cache, and a PR-scoped entry is readable only by that PR.
-        # PR runs still RESTORE via the prefix key.
+        # Depot Cache is repo-wide with no branch isolation, and this namespace
+        # is what the release restores from, so only trusted refs (push,
+        # dispatch) may write it. PR runs still RESTORE via the prefix key.
         #
         # conan_install must have succeeded: an install that died partway
         # leaves an incomplete closure, and the immutable exact key would then
@@ -264,16 +238,16 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ~/.conan2
-          key: conan-linux-gcc-release-v2-${{ steps.conan_cache.outputs.hash }}
+          key: conan-linux-gcc-relwithdebinfo-v2-${{ steps.conan_cache.outputs.hash }}
 
       - name: Save ccache
         # always(): a failed build's objects are still valid.
         #
         # push-to-main only. The key carries the SHA (cache keys are immutable),
-        # so every run that saves writes a *new* ~2 GB blob into the repo's
-        # shared 10 GB Actions cache, whose LRU eviction would otherwise push out
-        # the entries other jobs need warm (cache-cleanup.yml prunes the
-        # superseded ones). PR runs still
+        # so every run that saves writes a *new* ~2 GB blob that nothing ever
+        # deletes — and Depot Cache is billed per GB-month, unlike GitHub's
+        # free-but-LRU-evicted 10 GB quota. Saving from PR runs at this repo's
+        # velocity wrote ~40 GB/day of never-reclaimed storage. PR runs still
         # RESTORE (their target branch's, else main's: restore-keys above), and
         # hash_dir=false + base_dir make that restore hit across workspace paths, so
         # the cost is a few minutes on repeat pushes to the same PR.

@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: MPL-2.0
 #
 # Builds the PlotJuggler 4 macOS (arm64) .dmg with packaging/macos/build_macos_bundle.sh,
-# render-checks the app from the mounted image on Metal and, on a version tag,
-# attaches it to the GitHub Release.
+# render-checks the app from the mounted image on Metal.
+# This localization branch keeps the recipe manual, read-only and upstream-only;
+# it does not publish a Release or accept macOS localization packages.
 #
-# Signing: a tag or a manual run signs with the Developer ID certificate in
+# Signing: an explicitly opted-in upstream manual run uses the certificate in
 # MACOS_CERTIFICATE / MACOS_CERTIFICATE_PWD / MACOS_SIGNING_IDENTITY and notarizes
-# with APPLE_ID / APPLE_TEAM_ID / APPLE_APP_PASSWORD; a tag fails without them.
-# Pull requests build an ad-hoc signed image (it runs, but Gatekeeper asks the user
-# to confirm a downloaded copy).
+# with APPLE_ID / APPLE_TEAM_ID / APPLE_APP_PASSWORD.
+# Unsigned manual runs build an ad-hoc signed image; this job never runs in the fork.
 #
 # Toolchain, caches and runner match macos-ci.yml, so a release reuses its Conan
 # closure and sccache objects.
@@ -20,22 +20,15 @@ on:
       sign:
         description: Sign with the Developer ID certificate and notarize
         type: boolean
-        default: true
+        default: false
       runner:
-        description: GitHub-hosted macOS runner label
+        description: Runner label (macos-15 when Depot's macOS capacity is queued)
         type: choice
-        options: [macos-15, macos-14]
-        default: macos-15
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
-  pull_request:
-    paths:
-      - packaging/macos/**
-      - .github/workflows/macos-release.yml
+        options: [depot-macos-14, macos-15]
+        default: depot-macos-14
 
 permissions:
-  contents: write     # softprops/action-gh-release creates/updates the Release
+  contents: read
 
 concurrency:
   group: macos-release-${{ github.ref }}
@@ -43,13 +36,12 @@ concurrency:
 
 jobs:
   macos-dmg:
-    runs-on: ${{ inputs.runner || 'macos-15' }}
+    # Upstream-only recipe: macOS localization/package acceptance is separate.
+    if: github.repository == 'PlotJuggler/PlotJuggler'
+    runs-on: ${{ inputs.runner || 'depot-macos-14' }}
     timeout-minutes: 150
     env:
-      # sccache's GitHub Actions cache backend (the action exports the cache
-      # token). Every object is one cache entry in the repo's shared 10 GB.
-      SCCACHE_GHA_ENABLED: "true"
-      PJ_SIGN: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.sign) }}
+      PJ_SIGN: ${{ github.event_name == 'workflow_dispatch' && inputs.sign }}
 
     steps:
       - name: Use HTTPS for github.com submodules
@@ -96,6 +88,8 @@ jobs:
           clang --version
 
       - name: Install sccache
+        id: setup_sccache
+        continue-on-error: true
         uses: mozilla-actions/sccache-action@v0.0.10
         with:
           version: "v0.16.0"
@@ -116,8 +110,8 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ~/.conan2
-          key: conan-macos-arm64-release-${{ steps.conan_cache.outputs.hash }}
-          restore-keys: conan-macos-arm64-release-v1-
+          key: conan-macos-arm64-relwithdebinfo-${{ steps.conan_cache.outputs.hash }}
+          restore-keys: conan-macos-arm64-relwithdebinfo-v1-
 
       - name: Seed Conan source download cache
         shell: bash
@@ -173,7 +167,7 @@ jobs:
           scripts/configure_conan_remote.sh
           conan install . --output-folder=build --build=missing -r=plotjuggler-conan -r=conancenter \
             --lockfile=conan.lock --lockfile-partial \
-            -s build_type=Release -s compiler.cppstd=20 \
+            -s build_type=RelWithDebInfo -s compiler.cppstd=20 \
             -c tools.cmake.cmaketoolchain:generator=Ninja
 
       - name: Trim Conan cache before saving
@@ -186,19 +180,21 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ~/.conan2
-          key: conan-macos-arm64-release-${{ steps.conan_cache.outputs.hash }}
+          key: conan-macos-arm64-relwithdebinfo-${{ steps.conan_cache.outputs.hash }}
 
       - name: Build PlotJuggler 4 (app)
         shell: bash
         env:
-          # Release-only: the key that decrypts the empty-dock easter egg GIFs (pj_widgets). Absent on forks: no easter egg.
-          PJ_EASTER_EGG_KEY: ${{ secrets.PJ_EASTER_EGG_KEY }}
+          SCCACHE_AVAILABLE: ${{ steps.setup_sccache.outcome == 'success' }}
         run: |
-          launcher_args=(-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache)
+          launcher_args=()
+          if [[ "$SCCACHE_AVAILABLE" == "true" ]]; then
+            launcher_args=(-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache)
+          fi
           # PJ_BUILD_TESTS=OFF keeps the test-only fault injection out of the shipped binaries.
           cmake -S . -B build -G Ninja \
             "-DCMAKE_TOOLCHAIN_FILE=${PWD}/build/conan_toolchain.cmake" \
-            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             "-DCMAKE_PREFIX_PATH=${PWD}/.qt/${PJ_QT_VERSION}/macos" \
             -DPJ_INSTALLATION=macos \
             -DPJ_DEBUG_INFO=lines \
@@ -206,7 +202,7 @@ jobs:
             -DPJ_BUILD_DEMOS=OFF \
             "${launcher_args[@]}"
           cmake --build build --target pj_app --parallel
-          sccache --show-stats
+          if [[ "$SCCACHE_AVAILABLE" == "true" ]]; then sccache --show-stats; fi
 
       - name: Import the signing certificate
         if: env.PJ_SIGN == 'true'
@@ -257,11 +253,3 @@ jobs:
           name: PlotJuggler-${{ env.PJ_VERSION }}-macOS-arm64
           path: dist/*.dmg
           if-no-files-found: error
-
-      - name: Attach the disk image to the GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v3
-        with:
-          files: dist/*.dmg
-          generate_release_notes: true
-          fail_on_unmatched_files: true

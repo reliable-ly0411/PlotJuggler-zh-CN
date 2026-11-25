@@ -1,0 +1,267 @@
+name: Publish accepted Chinese 4.x packages
+
+on:
+  # The repository default is the independent 3.x line. A dedicated 4.x
+  # promotion ref avoids changing it solely to enable workflow_dispatch.
+  push:
+    branches: ['zh-CN-4.x-ci/release-candidate', 'zh-CN-4.x-ci/publish-accepted-*']
+  workflow_dispatch:
+    inputs:
+      candidate_run:
+        description: Successful Chinese 4.x candidate packages run ID
+        required: true
+        type: string
+      candidate_attempt:
+        description: Exact reviewed candidate run attempt
+        required: true
+        type: string
+      source_sha:
+        description: Exact accepted source SHA (already merged into zh-CN-4.x)
+        required: true
+        type: string
+      tag:
+        description: New immutable v4.x Chinese release tag
+        required: true
+        type: string
+      visual_reviewed:
+        description: Final package Chinese/English screenshots have been inspected
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-zh4
+  cancel-in-progress: false
+
+jobs:
+  preparation:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/zh-CN-4.x-ci/release-candidate'
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo 'Publication is manual and only promotes accepted artifacts.'
+
+  publish:
+    if: (github.event_name == 'workflow_dispatch' && inputs.visual_reviewed) || (github.event_name == 'push' && github.event.created && startsWith(github.ref, 'refs/heads/zh-CN-4.x-ci/publish-accepted-'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_SHA: ${{ inputs.source_sha || github.sha }}
+      RELEASE_TAG: ${{ inputs.tag }}
+      CANDIDATE_RUN: ${{ inputs.candidate_run }}
+      CANDIDATE_ATTEMPT: ${{ inputs.candidate_attempt }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve explicitly promoted candidate
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          # Creating this new version-specific ref is the maintainer's explicit
+          # confirmation that the final package screenshots were reviewed.
+          version=$(sed -n 's/^PJ_APP_VERSION=//p' versions.env)
+          python3 packaging/localization/resolve_promotion.py "$GITHUB_REF_NAME" "$version" >> "$GITHUB_ENV"
+      - name: Verify accepted source, run and stable promotion
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = reliable-ly0411/PlotJuggler-zh-CN
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$CANDIDATE_RUN" =~ ^[1-9][0-9]*$ ]]
+          [[ "$CANDIDATE_ATTEMPT" =~ ^[1-9][0-9]*$ ]]
+          python3 packaging/localization/version_map.py "${RELEASE_TAG#v}"
+          git fetch origin zh-CN-4.x
+          git merge-base --is-ancestor "$SOURCE_SHA" origin/zh-CN-4.x
+          test "$(git rev-parse "$SOURCE_SHA^{tree}")" = "$(git rev-parse origin/zh-CN-4.x^{tree})"
+          test "$(git rev-parse HEAD^{tree})" = "$(git rev-parse "$SOURCE_SHA^{tree}")"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CANDIDATE_RUN" > run.json
+          python3 - <<'PY'
+          import json, os
+          r = json.load(open('run.json', encoding='utf-8'))
+          assert r['status'] == 'completed' and r['conclusion'] == 'success'
+          assert r['head_sha'] == os.environ['SOURCE_SHA']
+          assert str(r['run_attempt']) == os.environ['CANDIDATE_ATTEMPT']
+          assert r['path'] == '.github/workflows/zh-4x-packages.yml'
+          assert r['event'] in ['push', 'workflow_dispatch']
+          assert r['repository']['full_name'] == os.environ['GITHUB_REPOSITORY']
+          PY
+          version=$(sed -n 's/^PJ_APP_VERSION=//p' versions.env)
+          test "$RELEASE_TAG" = "v$version"
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            python3 packaging/localization/resolve_promotion.py "$GITHUB_REF_NAME" "$version"
+          fi
+          # Existing releases and tags are immutable; no clobber path exists.
+          test -z "$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG")"
+          git ls-remote --tags --refs origin > tags-before.txt
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > releases-before.json
+          python3 packaging/localization/snapshot_latest.py "$GITHUB_REPOSITORY" latest-before.json
+      - name: Download and verify the original accepted packages
+        run: |
+          set -euo pipefail
+          gh run download "$CANDIDATE_RUN" --repo "$GITHUB_REPOSITORY" \
+            -n zh4-candidate-Linux -n zh4-candidate-Windows -D candidate
+          (cd candidate/zh4-candidate-Linux && sha256sum -c SHA256SUMS-Linux.txt)
+          (cd candidate/zh4-candidate-Windows && sha256sum -c SHA256SUMS-Windows.txt)
+          gh run download "$CANDIDATE_RUN" --repo "$GITHUB_REPOSITORY" -n zh4-release-manifest -D acceptance
+          mkdir dist
+          cp candidate/zh4-candidate-Linux/*.AppImage candidate/zh4-candidate-Linux/*.deb \
+             candidate/zh4-candidate-Windows/*.exe candidate/zh4-candidate-Windows/*.zip dist/
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, os, subprocess, sys
+          sys.path.insert(0, 'packaging/localization')
+          from release_assets import stage_public_assets
+          from verify_package import ACCEPTANCE_LANGUAGES
+          version = os.environ['RELEASE_TAG'][1:]
+          mapped = json.loads(subprocess.check_output(['python3', 'packaging/localization/version_map.py', version]))
+          expected = {f'PlotJuggler-{version}-Windows-x64-zh-CN.exe',
+                      f'PlotJuggler-{version}-Windows-x64-portable-zh-CN.zip',
+                      f'PlotJuggler-{version}-x86_64-zh-CN.AppImage',
+                      f'plotjuggler4_{mapped["deb"]}_amd64-zh-CN.deb'}
+          assert {x.name for x in Path('dist').iterdir()} == expected
+          manifest = json.loads(Path('acceptance/release-manifest.json').read_text(encoding='utf-8'))
+          assert manifest['schema_version'] == 1 and manifest['automated_acceptance'] == 'passed'
+          assert manifest['source_commit'] == manifest['workflow_sha'] == os.environ['SOURCE_SHA']
+          assert manifest['source_tree'] == subprocess.check_output(['git', 'rev-parse', os.environ['SOURCE_SHA'] + '^{tree}'], text=True).strip()
+          assert manifest['run_id'] == os.environ['CANDIDATE_RUN']
+          assert manifest['run_attempt'] == os.environ['CANDIDATE_ATTEMPT']
+          assert manifest['version'] == version and manifest['tag'] == os.environ['RELEASE_TAG']
+          assert len(manifest['acceptance_reports']) == 6 and len(manifest['screenshots']) == len(manifest['acceptance_reports']) * len(ACCEPTANCE_LANGUAGES)
+          expected_acceptance = {('windows-2022', 'ifw'), ('windows-2022', 'portable'),
+                                 ('ubuntu-22.04', 'appimage'), ('ubuntu-22.04', 'deb'),
+                                 ('ubuntu-24.04', 'appimage'), ('ubuntu-24.04', 'deb')}
+          assert {(r['platform'], r['format']) for r in manifest['acceptance_reports']} == expected_acceptance
+          expected_screenshots = {str(Path(r['path']).parent / f'gui-{language}.png')
+                                  for r in manifest['acceptance_reports'] for language in ACCEPTANCE_LANGUAGES}
+          assert {s['path'] for s in manifest['screenshots']} == expected_screenshots
+          assert {a['name'] for a in manifest['assets']} == expected
+          public_assets = stage_public_assets(Path('dist'), Path('release-assets'), manifest['assets'])
+          Path('public-asset-manifest.json').write_text(json.dumps({
+              'source_commit': manifest['source_commit'], 'run_id': manifest['run_id'],
+              'run_attempt': manifest['run_attempt'], 'assets': public_assets}, indent=2) + '\n', encoding='utf-8')
+          baseline = json.loads(Path('docs/localization/upstream-baseline.json').read_text(encoding='utf-8'))
+          body = Path('docs/localization/RELEASE-' + version + '.md').read_text(encoding='utf-8')
+          replacements = {'SOURCE_SHA': os.environ['SOURCE_SHA'],
+                          'SOURCE_TREE': subprocess.check_output(['git', 'rev-parse', os.environ['SOURCE_SHA'] + '^{tree}'], text=True).strip(),
+                          'BIN_SHA': baseline['ardupilot_plugin']['commit'],
+                          'BIN_VERSION': baseline['ardupilot_plugin']['version'],
+                          'RUN_ID': os.environ['CANDIDATE_RUN'],
+                          'RUN_URL': json.load(open('run.json', encoding='utf-8'))['html_url'],
+                          'ASSET_TABLE': '| 文件 | 字节数 | SHA-256 |\n| --- | ---: | --- |\n' +
+                              '\n'.join(f"| `{a['name']}` | {a['size']} | `{a['sha256']}` |" for a in public_assets)}
+          for key, value in replacements.items(): body = body.replace('@' + key + '@', value)
+          assert all('@' + key + '@' not in body for key in replacements)
+          # Render an absolute source link suitable for a GitHub Release body.
+          body = body.replace('../../blob/', 'https://github.com/' + os.environ['GITHUB_REPOSITORY'] + '/blob/')
+          # Change only literal download filenames, not Debian's ordered version.
+          for asset in public_assets:
+              body = body.replace('`' + asset['candidate_name'] + '`', '`' + asset['name'] + '`')
+          Path('release-notes.md').write_text(body, encoding='utf-8')
+          PY
+          python3 packaging/localization/hash_packages.py release-assets --output SHA256SUMS.txt
+      - name: Create immutable tag and upload the accepted bytes to a draft
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CANDIDATE_RUN" --jq .run_attempt)" = "$CANDIDATE_ATTEMPT"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/tags/$RELEASE_TAG" -f sha="$SOURCE_SHA"
+          prerelease=$(python3 packaging/localization/version_map.py "${RELEASE_TAG#v}" --format prerelease)
+          title="PlotJuggler ${RELEASE_TAG#v} · 中文 + ArduPilot BIN"
+          if [[ "$prerelease" == true ]]; then title="$title（预发布）"; fi
+          python3 packaging/localization/release_by_id.py create \
+            --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --source "$SOURCE_SHA" \
+            --title "$title" --notes release-notes.md
+          upload_url=$(python3 - <<'PY'
+          import json, os, sys
+          sys.path.insert(0, 'packaging/localization')
+          from version_map import versions
+          r = json.load(open('draft-created.json'))
+          assert r['draft'] and r['prerelease'] is versions(os.environ['RELEASE_TAG'][1:])['prerelease'] and r['tag_name'] == os.environ['RELEASE_TAG']
+          assert not r['assets']
+          url = r['upload_url'].split('{', 1)[0]
+          assert url == f"https://uploads.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/releases/{r['id']}/assets"
+          print(url)
+          PY
+          )
+          mkdir upload-responses
+          for asset in release-assets/*; do
+            name=$(basename "$asset")
+            # Encode literal plus signs in query values; retain the actual upload
+            # response: a successful HTTP upload alone does not prove the name.
+            encoded_name=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$name")
+            gh api --method POST "$upload_url?name=$encoded_name" \
+              -H "Content-Type: application/octet-stream" --input "$asset" > "upload-responses/$name.json"
+          done
+      - name: Verify actual draft names and bytes before publication
+        run: |
+          set -euo pipefail
+          python3 packaging/localization/release_by_id.py draft --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --output draft-release.json
+          python3 packaging/localization/release_assets.py release-assets draft-release.json \
+            --upload-responses upload-responses --tag "$RELEASE_TAG" --state draft --notes release-notes.md
+          python3 packaging/localization/release_by_id.py download --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --inventory draft-release.json --output draft-check
+          (cd draft-check && sha256sum -c SHA256SUMS.txt)
+          python3 packaging/localization/release_by_id.py draft --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --output draft-rechecked.json
+          python3 packaging/localization/release_assets.py release-assets draft-rechecked.json \
+            --upload-responses upload-responses --tag "$RELEASE_TAG" --state draft --notes release-notes.md \
+            --downloads draft-check
+      - name: Publish only the verified draft
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CANDIDATE_RUN" --jq .run_attempt)" = "$CANDIDATE_ATTEMPT"
+          python3 packaging/localization/release_by_id.py publish --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --output published-response.json
+      - name: Re-download and verify publication without touching older releases
+        run: |
+          set -euo pipefail
+          python3 packaging/localization/release_by_id.py published --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --output public-release.json
+          python3 packaging/localization/release_by_id.py download --repo "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" --inventory public-release.json --output public-check
+          (cd public-check && sha256sum -c SHA256SUMS.txt)
+          python3 packaging/localization/release_assets.py release-assets public-release.json \
+            --upload-responses upload-responses --tag "$RELEASE_TAG" --state published --notes release-notes.md \
+            --downloads public-check
+          git ls-remote --tags --refs origin > tags-after.txt
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > releases-after.json
+          python3 packaging/localization/snapshot_latest.py "$GITHUB_REPOSITORY" latest-after.json
+          python3 - <<'PY'
+          import json, os, sys
+          sys.path.insert(0, 'packaging/localization')
+          from version_map import versions
+          policy = versions(os.environ['RELEASE_TAG'][1:])
+          def tags(path):
+              return {line.split()[1]: line.split()[0] for line in open(path) if line.strip()}
+          old_tags, new_tags = tags('tags-before.txt'), tags('tags-after.txt')
+          for ref, sha in old_tags.items(): assert new_tags[ref] == sha
+          assert new_tags['refs/tags/' + os.environ['RELEASE_TAG']] == os.environ['SOURCE_SHA']
+          before = json.load(open('releases-before.json'))
+          after = json.load(open('releases-after.json'))
+          def inventory(r):
+              return (r['id'], r['tag_name'], [(a['id'], a['name'], a['size'], a.get('digest'), a['updated_at']) for a in r['assets']])
+          current = {r['id']: inventory(r) for r in after}
+          for old in before: assert current[old['id']] == inventory(old)
+          new = [r for r in after if r['tag_name'] == os.environ['RELEASE_TAG']]
+          assert len(new) == 1 and new[0]['prerelease'] is policy['prerelease'] and not new[0]['draft']
+          expected_latest = new[0]['id'] if policy['latest'] else json.load(open('latest-before.json'))['id']
+          assert json.load(open('latest-after.json'))['id'] == expected_latest
+          print(new[0]['html_url'])
+          PY
+      - name: Retain publication verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zh4-publication-verification
+          path: |
+            acceptance/release-manifest.json
+            public-asset-manifest.json
+            upload-responses/
+            draft-created.json
+            draft-release.json
+            draft-rechecked.json
+            published-response.json
+            public-release.json
+          if-no-files-found: ignore

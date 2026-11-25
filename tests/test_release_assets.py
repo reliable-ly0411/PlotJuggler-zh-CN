@@ -1,0 +1,419 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MPL-2.0
+"""Offline regressions for exact-byte promotion and fail-closed draft publication."""
+import copy
+import importlib.util
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import textwrap
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'packaging/localization'))
+spec = importlib.util.spec_from_file_location('release_assets', ROOT / 'packaging/localization/release_assets.py')
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+VERSION = '4.0.0-zh.1.rc.1'
+DEB = 'plotjuggler4_4.0.0~zh.1~rc.1-1_amd64-zh-CN.deb'
+PUBLIC_DEB = 'plotjuggler4_4.0.0.zh.1.rc.1-1_amd64-zh-CN.deb'
+TAG = 'v' + VERSION
+NOTES = '## Upstream notes (complete)\n\n**Full Changelog**: https://example.test/compare/base...release\n'
+
+
+class ReleaseAssetsTest(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.work = Path(self.temporary.name)
+        self.source = self.work / 'candidate'
+        self.source.mkdir()
+        self.target = self.work / 'release-assets'
+        names = [f'PlotJuggler-{VERSION}-Windows-x64-zh-CN.exe',
+                 f'PlotJuggler-{VERSION}-Windows-x64-portable-zh-CN.zip',
+                 f'PlotJuggler-{VERSION}-x86_64-zh-CN.AppImage', DEB]
+        self.assets = []
+        for index, name in enumerate(names):
+            path = self.source / name
+            path.write_bytes(f'accepted package {index}\n'.encode())
+            self.assets.append({'name': name, 'size': path.stat().st_size, 'sha256': module.sha256(path)})
+
+    def stage(self):
+        """Exercise the production staging and checksum generator together."""
+        result = module.stage_public_assets(self.source, self.target, self.assets)
+        subprocess.run([sys.executable, str(ROOT / 'packaging/localization/hash_packages.py'),
+                        str(self.target), '--output', 'SHA256SUMS.txt'],
+                       check=True, capture_output=True, text=True)
+        self.release = {'tag_name': TAG, 'draft': True, 'prerelease': True, 'body': NOTES, 'assets': [
+            {'name': path.name, 'id': index + 1, 'size': path.stat().st_size,
+             'state': 'uploaded', 'digest': 'sha256:' + module.sha256(path)}
+            for index, path in enumerate(sorted(self.target.iterdir()))]}
+        self.responses = copy.deepcopy(self.release['assets'])
+        return result
+
+    def verify(self, **kwargs):
+        module.verify_release(self.target, self.release, self.responses, TAG, True, NOTES, **kwargs)
+
+    def test_tilde_mapping_preserves_candidate_names_bytes_and_manifest(self):
+        original = copy.deepcopy(self.assets)
+        rows = self.stage()
+        self.assertEqual(self.assets, original)
+        self.assertEqual(module.public_name(DEB), PUBLIC_DEB)
+        self.assertEqual({p.name for p in self.source.iterdir()}, {a['name'] for a in original})
+        for row in rows:
+            self.assertEqual((self.source / row['candidate_name']).read_bytes(),
+                             (self.target / row['name']).read_bytes())
+            self.assertEqual(module.public_name(row['name']), row['name'])
+        sums = (self.target / 'SHA256SUMS.txt').read_text(encoding='utf-8')
+        self.assertIn(PUBLIC_DEB, sums)
+        self.assertNotIn('~', sums)
+        self.verify()
+
+    def test_unsupported_names_fail_closed(self):
+        for name in ['../file.deb', 'file name.deb', 'x\n.deb', '.file.deb', 'file.deb.',
+                     'file?.deb', 'file#.deb', 'dir/file.deb', 'dir\\file.deb', '中文.deb', '~file.deb']:
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                module.public_name(name)
+
+    def test_collision_duplicate_and_manifest_drift_fail_before_copy(self):
+        for mutation in ['collision', 'duplicate', 'wrong_digest', 'wrong_size', 'missing', 'extra']:
+            with self.subTest(mutation=mutation):
+                assets = copy.deepcopy(self.assets)
+                if mutation == 'collision':
+                    assets.append(dict(assets[-1], name=PUBLIC_DEB))
+                elif mutation == 'duplicate':
+                    assets.append(assets[0])
+                elif mutation == 'wrong_digest':
+                    assets[0]['sha256'] = '0' * 64
+                elif mutation == 'wrong_size':
+                    assets[0]['size'] += 1
+                elif mutation == 'missing':
+                    assets.pop()
+                else:
+                    assets.append(dict(assets[0], name='extra.exe'))
+                with self.assertRaises(ValueError):
+                    module.stage_public_assets(self.source, self.target, assets)
+                self.assertFalse(self.target.exists())
+
+    def test_existing_destination_is_never_overwritten(self):
+        self.target.mkdir()
+        sentinel = self.target / 'keep'
+        sentinel.write_bytes(b'existing')
+        with self.assertRaises(FileExistsError):
+            module.stage_public_assets(self.source, self.target, self.assets)
+        self.assertEqual(sentinel.read_bytes(), b'existing')
+
+    @unittest.skipUnless(shutil.which('dpkg-deb'), 'dpkg-deb is needed to inspect real Debian metadata')
+    def test_real_deb_ordered_version_is_unchanged(self):
+        package = self.work / 'package'
+        (package / 'DEBIAN').mkdir(parents=True)
+        (package / 'DEBIAN/control').write_text(
+            'Package: plotjuggler4\nVersion: 4.0.0~zh.1~rc.1-1\nArchitecture: amd64\n'
+            'Maintainer: Test <test@example.test>\nDescription: Filename regression fixture\n', encoding='utf-8')
+        subprocess.run(['dpkg-deb', '--build', str(package), str(self.source / DEB)],
+                       check=True, capture_output=True)
+        self.assets[-1].update(size=(self.source / DEB).stat().st_size, sha256=module.sha256(self.source / DEB))
+        self.stage()
+        self.assertEqual(subprocess.check_output(['dpkg-deb', '-f', str(self.target / PUBLIC_DEB), 'Version'],
+                                                text=True).strip(), '4.0.0~zh.1~rc.1-1')
+        self.assertEqual((self.source / DEB).read_bytes(), (self.target / PUBLIC_DEB).read_bytes())
+
+    def test_original_tilde_checksum_mismatch_is_rejected(self):
+        self.stage()
+        sums = self.target / 'SHA256SUMS.txt'
+        sums.write_text(sums.read_text(encoding='utf-8').replace(PUBLIC_DEB, DEB), encoding='utf-8')
+        with self.assertRaisesRegex(ValueError, 'SHA256SUMS'):
+            self.verify()
+
+    def test_upload_and_inventory_names_must_both_match(self):
+        self.stage()
+        for target in [self.responses, self.release['assets']]:
+            original = copy.deepcopy(target)
+            target[0]['name'] = 'GitHub-renamed.exe'
+            with self.assertRaisesRegex(ValueError, 'renamed assets'):
+                self.verify()
+            target[:] = original
+
+    def test_missing_extra_duplicate_and_replaced_uploads_are_rejected(self):
+        self.stage()
+        original = copy.deepcopy(self.release['assets'])
+        variants = [original[:-1], original + [dict(original[0], name='extra.exe', id=99)],
+                    [original[0]] + original[:-1],
+                    [dict(original[0], id=original[1]['id'])] + original[1:],
+                    [dict(original[0], id=99)] + original[1:]]
+        for assets in variants:
+            with self.subTest(assets=assets), self.assertRaises(ValueError):
+                self.release['assets'] = assets
+                self.verify()
+
+    def test_upload_state_size_and_server_digest_are_required(self):
+        self.stage()
+        for target in [self.release['assets'], self.responses]:
+            original = target[0].copy()
+            for changes in [{'state': 'starter'}, {'size': original['size'] + 1},
+                            {'digest': None}, {'digest': 'sha256:' + '0' * 64}, {'id': 0}]:
+                with self.subTest(changes=changes), self.assertRaises(ValueError):
+                    target[0] = dict(original, **changes)
+                    self.verify()
+            target[0] = original.copy()
+            del target[0]['digest']
+            with self.assertRaises(ValueError):
+                self.verify()
+            target[0] = original
+
+    def test_release_identity_state_and_complete_notes_are_required(self):
+        self.stage()
+        original = self.release.copy()
+        for changes in [{'tag_name': 'v4.0.0-wrong'}, {'draft': False},
+                        {'prerelease': False}, {'body': 'Only a link, not the full upstream notes'}]:
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                self.release = dict(original, **changes)
+                self.verify()
+        self.release = original
+        self.release['draft'] = False
+        module.verify_release(self.target, self.release, self.responses, TAG, False, NOTES)
+
+    def test_downloads_must_match_exact_names_and_all_bytes(self):
+        self.stage()
+        downloads = self.work / 'downloads'
+        shutil.copytree(self.target, downloads)
+        self.verify(downloads=downloads)
+        package = downloads / PUBLIC_DEB
+        original = package.read_bytes()
+        package.write_bytes(b'x' * len(original))
+        with self.assertRaisesRegex(ValueError, 'Downloaded bytes'):
+            self.verify(downloads=downloads)
+        package.write_bytes(original)
+        package.rename(downloads / DEB)
+        with self.assertRaisesRegex(ValueError, 'Downloaded asset names'):
+            self.verify(downloads=downloads)
+        (downloads / DEB).rename(package)
+        (downloads / 'SHA256SUMS.txt').write_bytes(b'wrong checksum file')
+        with self.assertRaisesRegex(ValueError, 'Downloaded bytes'):
+            self.verify(downloads=downloads)
+
+    def workflow_run(self, name):
+        """Use the actual workflow shell blocks, not a duplicate publish sequence."""
+        text = (ROOT / '.github/workflows/zh-4x-publish.yml').read_text(encoding='utf-8')
+        step = text.split('      - name: ' + name + '\n', 1)[1].split('\n      - ', 1)[0]
+        return textwrap.dedent(step.split('        run: |\n', 1)[1])
+
+    @unittest.skipUnless(sys.platform == 'linux' and shutil.which('bash') and shutil.which('sha256sum'), 'Workflow runs on Linux')
+    def test_workflow_only_publishes_after_successful_draft_verification(self):
+        self.exercise_workflow()
+
+    @unittest.skipUnless(sys.platform == 'linux' and shutil.which('bash') and shutil.which('sha256sum'), 'Workflow runs on Linux')
+    def test_stable_workflow_preserves_plus_names_and_formal_flags(self):
+        self.exercise_workflow(stable=True)
+
+    def exercise_workflow(self, stable=False):
+        """Reproduce GitHub's tilde rename with a mock API; no real network writes."""
+        tag = 'v4.1.0+zh.1' if stable else TAG
+        if stable:
+            for asset in self.assets:
+                name = asset['name'].replace(VERSION, '4.1.0+zh.1').replace('4.0.0~zh.1~rc.1-1', '4.1.0+zh.1-1')
+                (self.source / asset['name']).rename(self.source / name)
+                asset['name'] = name
+        self.stage()
+        (self.work / 'packaging').symlink_to(ROOT / 'packaging', target_is_directory=True)
+        (self.work / 'release-notes.md').write_text(NOTES, encoding='utf-8')
+        mock_bin = self.work / 'mock-bin'
+        mock_bin.mkdir()
+        mock = mock_bin / 'gh'
+        mock.write_text('#!' + sys.executable + '\n' + textwrap.dedent('''\
+            import hashlib, json, os
+            from pathlib import Path
+            import shutil, sys, urllib.parse
+            args = sys.argv[1:]
+            state = Path('mock-release.json')
+            repo = os.environ['GITHUB_REPOSITORY']
+            assert args[0] == 'api', 'Tag-based release commands are forbidden'
+            endpoint = next(a for a in args[1:] if a.startswith(('repos/', 'https://')))
+            method = args[args.index('--method') + 1] if '--method' in args else 'GET'
+            assert '/releases/tags/' not in endpoint, 'Draft tag lookup must not be used'
+            if endpoint == f'repos/{repo}/releases' and method == 'POST':
+                payload = json.load(sys.stdin)
+                stable = '+zh.' in os.environ['RELEASE_TAG']
+                assert payload['draft'] is True and payload['make_latest'] == 'false'
+                assert payload['tag_name'] == os.environ['RELEASE_TAG']
+                assert payload['target_commitish'] == os.environ['SOURCE_SHA']
+                assert payload['prerelease'] is (not stable)
+                release = dict(payload, id=123, assets=[],
+                               upload_url=f'https://uploads.github.com/repos/{repo}/releases/123/assets{{?name,label}}')
+                state.write_text(json.dumps(release), encoding='utf-8')
+                Path('server-bytes').mkdir()
+                print(json.dumps(release))
+            elif endpoint == f'repos/{repo}/releases/123' and method == 'PATCH':
+                payload = json.load(sys.stdin)
+                stable = '+zh.' in os.environ['RELEASE_TAG']
+                assert payload == {'draft': False, 'prerelease': not stable, 'make_latest': str(stable).lower()}
+                assert Path('draft-rechecked.json').is_file()
+                assert len(list(Path('draft-check').iterdir())) == 5
+                r = json.loads(state.read_text(encoding='utf-8'))
+                r.update(payload)
+                state.write_text(json.dumps(r), encoding='utf-8')
+                Path('published').write_text('yes', encoding='utf-8')
+                print(json.dumps(r))
+            elif endpoint.startswith(f'repos/{repo}/releases/assets/') and method == 'GET':
+                assert 'Accept: application/octet-stream' in args
+                r = json.loads(state.read_text(encoding='utf-8'))
+                asset = next(a for a in r['assets'] if a['id'] == int(endpoint.rsplit('/', 1)[1]))
+                sys.stdout.buffer.write((Path('server-bytes') / asset['name']).read_bytes())
+            elif args[0] == 'api':
+                if '/actions/runs/' in endpoint:
+                    print(os.environ['CANDIDATE_ATTEMPT'])
+                elif '--input' in args:
+                    path = Path(args[args.index('--input') + 1])
+                    url = next(a for a in args if a.startswith('https://uploads.github.com/'))
+                    name = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)['name'][0]
+                    assert name == path.name, (name, path.name)
+                    name = name.replace('~', '.')
+                    if os.environ.get('MOCK_RENAME'):
+                        name = 'unexpected-' + name
+                    body = path.read_bytes()
+                    r = json.loads(state.read_text(encoding='utf-8'))
+                    asset = {'id': len(r['assets']) + 1, 'name': name, 'state': 'uploaded',
+                             'size': len(body), 'digest': 'sha256:' + hashlib.sha256(body).hexdigest()}
+                    r['assets'].append(asset)
+                    state.write_text(json.dumps(r), encoding='utf-8')
+                    (Path('server-bytes') / name).write_bytes(body)
+                    print(json.dumps(asset))
+                elif endpoint == f'repos/{repo}/git/refs' and method == 'POST':
+                    print('{}')
+                elif endpoint == f'repos/{repo}/releases/123' and method == 'GET':
+                    print(state.read_text(encoding='utf-8'))
+                else:
+                    raise SystemExit('Unexpected API endpoint/method: ' + str(args))
+            else:
+                raise SystemExit('Unexpected mock gh call: ' + str(args))
+            '''), encoding='utf-8')
+        mock.chmod(0o755)
+        script = '\n'.join(self.workflow_run(name) for name in [
+            'Create immutable tag and upload the accepted bytes to a draft',
+            'Verify actual draft names and bytes before publication',
+            'Publish only the verified draft'])
+        # Exercise the actual public snapshot/download/hash blocks as well.
+        script += '\n' + self.workflow_run(
+            'Re-download and verify publication without touching older releases').split(
+                'git ls-remote --tags --refs origin', 1)[0]
+        env = dict(os.environ, PATH=str(mock_bin) + os.pathsep + os.environ['PATH'],
+                   GITHUB_REPOSITORY='reliable-ly0411/PlotJuggler-zh-CN', RELEASE_TAG=tag,
+                   SOURCE_SHA='a' * 40, CANDIDATE_RUN='12345', CANDIDATE_ATTEMPT='1')
+        # The fixed public names pass upload responses, actual inventory, and
+        # re-download verification before the workflow reaches draft=false.
+        result = subprocess.run(['bash', '-c', script], cwd=self.work, env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.work / 'published').exists())
+        self.assertFalse(json.loads((self.work / 'public-release.json').read_text(encoding='utf-8'))['draft'])
+        self.assertEqual({p.name: p.read_bytes() for p in (self.work / 'public-check').iterdir()},
+                         {p.name: p.read_bytes() for p in self.target.iterdir()})
+        # Each following case is an independent synthetic publication attempt.
+        # Production never overwrites these retained receipts.
+        def clear_mock_receipts():
+            for name in ['draft-created.json', 'draft-release.json', 'draft-rechecked.json',
+                         'published-response.json', 'public-release.json']:
+                (self.work / name).unlink(missing_ok=True)
+        clear_mock_receipts()
+        for directory in ['upload-responses', 'server-bytes', 'draft-check', 'public-check']:
+            shutil.rmtree(self.work / directory)
+        (self.work / 'published').unlink()
+        if stable:
+            result = subprocess.run(['bash', '-c', script], cwd=self.work, env=dict(env, MOCK_RENAME='1'),
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((self.work / 'published').exists())
+            self.assertIn('renamed assets', result.stderr)
+            return
+        # The original incident: candidate tilde names/checksums reach upload,
+        # GitHub returns dotted names, and publication must never be attempted.
+        (self.target / PUBLIC_DEB).rename(self.target / DEB)
+        sums = self.target / 'SHA256SUMS.txt'
+        sums.write_text(sums.read_text(encoding='utf-8').replace(PUBLIC_DEB, DEB), encoding='utf-8')
+        result = subprocess.run(['bash', '-c', script], cwd=self.work, env=env, capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((self.work / 'published').exists())
+        self.assertIn('public-safe asset', result.stderr)
+        clear_mock_receipts()
+        for directory in ['upload-responses', 'server-bytes']:
+            shutil.rmtree(self.work / directory)
+        (self.target / DEB).rename(self.target / PUBLIC_DEB)
+        sums.write_text(sums.read_text(encoding='utf-8').replace(DEB, PUBLIC_DEB), encoding='utf-8')
+        # Even a new, unanticipated server rename cannot silently pass.
+        result = subprocess.run(['bash', '-c', script], cwd=self.work, env=dict(env, MOCK_RENAME='1'),
+                                capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((self.work / 'published').exists())
+        self.assertIn('renamed assets', result.stderr)
+
+    def test_stable_release_rejects_prerelease_state(self):
+        self.stage()
+        self.release['tag_name'] = 'v4.1.0+zh.1'
+        self.release['prerelease'] = False
+        module.verify_release(self.target, self.release, self.responses, 'v4.1.0+zh.1', True, NOTES)
+        self.release['prerelease'] = True
+        with self.assertRaisesRegex(ValueError, 'publication state'):
+            module.verify_release(self.target, self.release, self.responses, 'v4.1.0+zh.1', True, NOTES)
+
+    def test_publish_requires_six_distinct_formats_and_all_language_screenshots(self):
+        preparation = self.workflow_run('Download and verify the original accepted packages')
+        self.assertIn("len(manifest['acceptance_reports']) == 6", preparation)
+        self.assertIn("len(manifest['screenshots']) == len(manifest['acceptance_reports']) * len(ACCEPTANCE_LANGUAGES)", preparation)
+        self.assertIn("(r['platform'], r['format'])", preparation)
+        self.assertIn("('windows-2022', 'portable')", preparation)
+        self.assertIn('Windows-x64-portable-zh-CN.zip', preparation)
+
+    def test_postpublication_keeps_old_assets_and_expected_latest(self):
+        script = self.workflow_run('Re-download and verify publication without touching older releases')
+        code = script.split("python3 - <<'PY'\n", 1)[1].rsplit('\nPY', 1)[0]
+        (self.work / 'packaging').symlink_to(ROOT / 'packaging', target_is_directory=True)
+        old = {'id': 7, 'tag_name': 'v4.0.0-zh.1.rc.4', 'assets': [
+            {'id': 70, 'name': 'old.exe', 'size': 10, 'digest': 'sha256:old', 'updated_at': 'old-time'}]}
+        old_tags = 'b' * 40 + ' refs/tags/v4.0.0-zh.1.rc.4\n'
+        (self.work / 'tags-before.txt').write_text(old_tags, encoding='utf-8')
+        (self.work / 'releases-before.json').write_text(json.dumps([old]), encoding='utf-8')
+        (self.work / 'latest-before.json').write_text(json.dumps({'id': None}), encoding='utf-8')
+        for version in ['4.1.0+zh.1', '4.1.0-zh.1.rc.1']:
+            stable = '+zh.' in version
+            tag = 'v' + version
+            new = {'id': 8, 'tag_name': tag, 'prerelease': not stable, 'draft': False, 'assets': [],
+                   'html_url': 'https://github.com/example/release/' + tag}
+            (self.work / 'tags-after.txt').write_text(old_tags + 'a' * 40 + ' refs/tags/' + tag + '\n', encoding='utf-8')
+            (self.work / 'releases-after.json').write_text(json.dumps([new, old]), encoding='utf-8')
+            expected_latest = 8 if stable else None
+            (self.work / 'latest-after.json').write_text(json.dumps({'id': expected_latest}), encoding='utf-8')
+            env = dict(os.environ, RELEASE_TAG=tag, SOURCE_SHA='a' * 40)
+            def run():
+                return subprocess.run([sys.executable, '-c', code], cwd=self.work, env=env,
+                                      capture_output=True, text=True)
+            result = run()
+            self.assertEqual(result.returncode, 0, result.stderr)
+            (self.work / 'latest-after.json').write_text(json.dumps({'id': 999}), encoding='utf-8')
+            self.assertNotEqual(run().returncode, 0)
+            (self.work / 'latest-after.json').write_text(json.dumps({'id': expected_latest}), encoding='utf-8')
+            changed = copy.deepcopy(old)
+            changed['assets'][0]['digest'] = 'sha256:changed'
+            (self.work / 'releases-after.json').write_text(json.dumps([new, changed]), encoding='utf-8')
+            self.assertNotEqual(run().returncode, 0)
+            (self.work / 'releases-after.json').write_text(json.dumps([new, old]), encoding='utf-8')
+            (self.work / 'tags-after.txt').write_text(old_tags.replace('b' * 40, 'c' * 40) +
+                                                       'a' * 40 + ' refs/tags/' + tag + '\n', encoding='utf-8')
+            self.assertNotEqual(run().returncode, 0)
+
+    def test_workflow_does_not_bypass_or_reorder_the_draft_gate(self):
+        workflow = (ROOT / '.github/workflows/zh-4x-publish.yml').read_text(encoding='utf-8')
+        self.assertEqual(workflow.count('release_by_id.py publish '), 1)
+        self.assertLess(workflow.index('--downloads draft-check'), workflow.index('release_by_id.py publish '))
+        self.assertNotIn('continue-on-error:', workflow)
+        self.assertNotIn('--clobber', workflow)
+        preparation = self.workflow_run('Download and verify the original accepted packages')
+        self.assertLess(preparation.index('stage_public_assets(Path'), preparation.index('hash_packages.py'))
+        self.assertIn("for a in public_assets", preparation)
+        self.assertIn("body.replace('`' + asset['candidate_name'] + '`', '`' + asset['name'] + '`')", preparation)
+
+
+if __name__ == '__main__':
+    unittest.main()

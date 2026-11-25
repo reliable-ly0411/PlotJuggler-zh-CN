@@ -87,6 +87,15 @@ Never mix hooked and plain sources in one runner: the hook macro changes public 
   '^(pj_scene3d_|pointcloud_golden_test\.|scene3d_rhi_|scene3d_frame_benchmark\.|scene3d_shader_constants_test)'
 ```
 
+The QRhi runners self-skip without a display: add `--display` (a private Xvfb, serial, never `-j`) to run them; `-R '^pj_scene3d_'` selects only the headless runners. Keep this module's docs in
+step with any behaviour change.
+
+## Diagnostic localization
+
+URDF parsing, mesh-loading and GPU-limit status templates use Qt translations.
+Model names, paths, XML tokens and third-party exception details remain verbatim;
+translations do not change model validation or the stored data.
+
 `--display` runs a private Xvfb, serially (never `-j`: overlapping windows stall presentation).
 
 ## Docs

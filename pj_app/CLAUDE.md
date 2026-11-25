@@ -82,17 +82,16 @@ to `pj_widgets`; business logic and data services go to `pj_runtime`. How the su
 
 ## Tests
 
-`./test.sh -R '^pj_app_gui_tests\.'` (links `pj_app_shell` + `pj_resources`), `'^pj_app_unit_tests\.'` (Qt-only
-helpers), `'^pj_app_media_codec_tests\.'` (the two codecs; run from the source root). Each case registers as
-`<runner>.<Suite>.<Case>` and runs in its own process. The runner's shared GUI main
-(`cmake/test_mains/pj_test_main_gui.cpp`) owns the only `QApplication` and gives each process its own application name,
-so settings and data folders are never shared between tests. Suites with their own executable (QRhi display passes,
-layout import, loader suites, MCP bridge) and why: ARCHITECTURE "Tests". Test binaries that touch shell icons link
-`pj_resources`, an OBJECT library, because the shell makes no `Q_INIT_RESOURCE` calls. `tests/wasm_*probe*` are
-acceptance-build-only browser probes. Tests answer modal dialogs through `tests/support/modal_answerer.h`; the
-exceptions are listed in ARCHITECTURE "Tests". `benchmarks/` holds the mixed-layout benchmark (`PJ_BUILD_DEMOS`).
+- Runners (`pj_add_test_runner`): `pj_app_gui_tests` (links `pj_app_shell` + `pj_resources`), `pj_app_unit_tests` (Qt-only helpers), `pj_app_media_codec_tests` (the two codecs over `pj_scene2d_core`; run from the source root). Each case registers as `<runner>.<Suite>.<Case>` and runs in its own process (120 s timeout): `./test.sh -R '^pj_app_gui_tests\.'`.
+- Suites with their own ctest entry (QRhi display passes, layout-import suites, `file_loader_test`, `source_promotion_host_test`, `headless_descriptor_provider_session_test`, `layout_import_batch_test`, `splash_meme_pool_test`, `ExportedSymbolsGuard`): the reasons and what each guards are in `docs/ARCHITECTURE.md` "Tests". Their per-suite plugin-path definitions must not propagate to other sources.
+- A runner's shared GUI main owns its only `QApplication`; its cases do not define a `main()` or create another application.
+- The shared GUI main (`cmake/test_mains/pj_test_main_gui.cpp`) gives every test process an application name of its own, so its settings file and data folder are its alone and are removed when it ends. A window opens and locks the default extension store in that folder whatever plugin folder it was given: a test must not assume it shares settings or data with another test process.
 
-## Docs
+Tests answer modal dialogs through `tests/support/modal_answerer.h`. Tests that touch shell icons link
+`pj_resources`; `tests/wasm_*probe*` run only in browser acceptance builds. The mixed-layout benchmark
+in `benchmarks/` is available with `PJ_BUILD_DEMOS`.
+
+## Native opt-in profile boundary
 
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): threads and teardown, startup, file loading and progress, streaming,
   recording, layouts, cloud import, owned views, toolbox presentation, Custom Topics, Custom Widgets, Log panels,
@@ -102,3 +101,88 @@ exceptions are listed in ARCHITECTURE "Tests". `benchmarks/` holds the mixed-lay
 - Cross-module: [derived objects](../docs/derived_objects/ARCHITECTURE.md),
   [recording](../docs/RECORDING_AND_CACHING.md), [MCP server](../docs/MCP_SERVER.md),
   [browser presets](../docs/WASM_PRESETS.md), [browser deployment](../docs/WASM_DEPLOYMENT.md).
+
+`AppProfile` pre-parses `--profile-dir` immediately after the app identity is set,
+before WidgetTuner, any app-owned QSettings, or marketplace startup. It delegates
+validation and one-time activation to `PlatformUtils`: both INI scopes and core
+data/temp paths stay under the explicit absolute root; failure exits, never
+falls back to production. The core-only Python selftest honors the same option.
+No-option native behavior is unchanged. This is not a plugin/OS/installer
+sandbox; explicit user output paths are not rewritten. The Qt-only regression
+harness is `tests/profile`; the full native build adds real runtime service tests.
+Usage and boundary details: `docs/localization/ISOLATED_PROFILE.zh-CN.md`.
+
+## Interface language lifecycle
+
+`AppLanguage` owns one startup translator for the full UI lifetime. Its choices
+are `zh_CN` (the fresh-profile default), `zh_TW` (Taiwan terminology), and `en_US`
+(English source text). Preferences save only on acceptance for the next launch;
+`--language` is session-only. Exact hyphen aliases are accepted at startup, while
+browser durable storage accepts only canonical supported codes. Never change the
+numeric/data locale when selecting a UI language. Both Chinese catalogs and Qt
+dialog translations are embedded; source checks validate both against lupdate.
+Traditional Chinese splash memes use only the eight text-free-artwork caption
+compositions, not the reviewed Simplified Chinese raster variants. See
+`docs/localization/MULTILINGUAL.zh-CN.md` for plugin and installer boundaries.
+
+## Native package font fallback
+
+Native packages may include `bin/fonts/NotoSansCJKsc-Regular.otf`. `main.cpp` registers
+this separately licensed fallback before constructing the shell, keeping the existing
+Noto Sans UI family while allowing Chinese text on hosts without system CJK fonts.
+The native release packaging copies the pinned font and its OFL text together;
+source builds and WebAssembly do not download it at application startup.
+
+WebAssembly embeds the separately licensed Noto Sans SC subset from
+`resources/fonts/NotoSansSC`, after the primary PlotJuggler Sans family.
+`scripts/check_cjk_font_coverage.py` checks both Chinese catalogs; acceptance
+probes also inspect actual action-font glyph shaping in the browser.
+
+## Localized startup artwork
+
+Chinese sessions respect the saved serious/meme artwork choice. The Chinese
+meme pool contains 33 available original-image entries plus eight composed
+extras; original entries 09/11/13/24 are omitted rather than falling back to
+English. This does not mean all 37 originals are translated or that all 41
+entries have received packaged-desktop visual acceptance.
+
+
+## External web links
+
+Help and About links use `pj_widgets/ExternalUrl.h`, also used by release toasts,
+the marketplace and plugin Markdown browsers. AppImage HTTP(S) launches restore
+the host environment only for the external child; other platforms/packages and
+non-HTTP schemes retain Qt handling. Preferences directory opening remains on
+Qt's file-URL path and is outside this fix. See
+[`packaging/appimage/README.md`](../packaging/appimage/README.md#external-web-links)
+for the contract and verification boundary.
+
+## Windows executable contract
+
+The application uses the GUI subsystem and one configured resource,
+`plotjuggler.rc.in`, embedding `resources/plotjuggler.ico` plus numeric and full
+version metadata from the central version settings. C++ warning flags must not
+reach the resource compiler. `WindowsConsole.h` preserves inherited pipes/files
+and binds GUI CRT streams before Qt starts; terminal interrupts queue window
+closure only for a QApplication, not a core-only self-test. `run.ps1` uses the
+explicit native-process wrapper to preserve waiting, arguments and exit status.
+`WindowsApplicationContract` checks the linked PE, full version strings and
+redirected CLI output; this is not an Explorer/shortcut visual acceptance.
+
+## Fixed-plugin runtime acceptance
+
+With `PJ_CSV_RUNTIME_PLUGIN` set to the verified rebuilt CSV DSO,
+`CsvRuntimeFileLoader_{zh_CN,zh_TW,en_US}` runs real FileLoader/DiagnosticDump
+empty-input diagnostics and short/scrolling warning Continue/Abort/Close paths.
+The packaging workflow enables and runs this strict gate after plugin staging.
+It is separate from the earlier native suite and final original-package checks.
+
+## Native test marker ownership
+
+Tests construct `pj_app_test::IsolatedMainWindow` from
+`tests/support/isolated_main_window.h`. It prepares the marker in a fresh owned
+directory before the shell and installs it through the controller's existing
+accessor immediately after construction. The directory outlives MainWindow
+teardown. This isolates marker cleanup only; settings, extension stores and
+real application CLI processes need their own isolation. Never recursively
+remove a default KnownFolder location in a test teardown.

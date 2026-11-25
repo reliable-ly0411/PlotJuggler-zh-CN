@@ -1,0 +1,7 @@
+<root format="PlotJuggler" pj4_version="4" binding="source">
+<tabbed_widget parent="main_window"><Tab id="t1" tab_name="BIN" containers="1">
+<Container><DockArea id="a1" name="BIN"><plot id="p1" mode="TimeSeries">
+<curve topic="/RCOU" field="C1&#9;[us]"/></plot></DockArea></Container></Tab></tabbed_widget>
+<previouslyLoaded_Datafiles><fileInfo filename="飞行日志.BIN"><plugin ID="ArduPilot BIN"
+manifest_id="ardupilot-dataflash" filepath_mode="source"><![CDATA[{}]]></plugin></fileInfo>
+</previouslyLoaded_Datafiles></root>

@@ -1,0 +1,52 @@
+name: SDK Unicode A-B experiment (not release acceptance)
+'on':
+  push:
+    branches: ['zh-CN-4.x-ci/sdk-unicode-ab-696c-r2']
+permissions:
+  contents: read
+concurrency:
+  group: sdk-unicode-ab-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  experiment:
+    if: github.event.created && github.ref_name == 'zh-CN-4.x-ci/sdk-unicode-ab-696c-r2'
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          repository: PlotJuggler/plotjuggler_sdk
+          ref: cc83815a1a8124d5947ed567790c3393a6cf0a5c
+          path: sdk
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          repository: fmtlib/fmt
+          ref: 1be298e1bd68957e4cd352e1f676f00e07dcfb57
+          path: fmt
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          repository: nlohmann/json
+          ref: 55f93686c01528224f448c19128836e7df245f72
+          path: json
+          persist-credentials: false
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Build and run isolated SDK A-B experiment
+        run: python scripts/windows/sdk_unicode_diagnostic/run.py
+      - name: Preserve bounded evidence and isolated VM test executables
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: sdk-unicode-ab-not-release
+          path: sdk-ab-evidence/
+          retention-days: 7
+          if-no-files-found: warn

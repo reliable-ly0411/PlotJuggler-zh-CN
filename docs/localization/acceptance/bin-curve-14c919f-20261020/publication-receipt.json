@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-10-20T09:42:44.278787+00:00",
+  "repository": "reliable-ly0411/PlotJuggler-zh-CN",
+  "release": {
+    "id": 418219078,
+    "html_url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.0.0-zh.1.rc.1",
+    "tag_name": "v4.0.0-zh.1.rc.1",
+    "name": "PlotJuggler 4.0.0-zh.1.rc.1 · 简体中文 + ArduPilot BIN（预发布）",
+    "draft": false,
+    "prerelease": true,
+    "published_at": "2026-10-20T09:23:33Z"
+  },
+  "latest": {
+    "before_http_status": 404,
+    "after_http_status": 404,
+    "changed": false
+  },
+  "source_commit": "14c919f903936130c151818dbf1a0144ea6a6050",
+  "source_tree": "b35df58b136a50c19026bd2cd866bcf8c082f866",
+  "candidate": {
+    "run_id": 39390859457,
+    "run_attempt": 1,
+    "conclusion": "success",
+    "rebuilt_for_publication": false
+  },
+  "ordinary_merges": [
+    {
+      "pull_request": 8,
+      "base": "zh-CN-4.x-dev",
+      "merge_commit": "4fb7c5b63775dbd528434319ecc78573a1c1c94c"
+    },
+    {
+      "pull_request": 9,
+      "base": "zh-CN-4.x",
+      "merge_commit": "316af98910377b202913520539e40bca3b3496a5"
+    }
+  ],
+  "publication_workflow": {
+    "run_id": 39400241199,
+    "conclusion": "failure",
+    "failure_stage": "Post-publication checksum verification: GitHub renamed Debian asset tildes to periods.",
+    "publication_succeeded_before_failure": true,
+    "rerun": false
+  },
+  "original_assets_unchanged": [
+    {
+      "id": 658850441,
+      "name": "PlotJuggler-4.0.0-zh.1.rc.1-Windows-x64-zh-CN.exe",
+      "size": 135239901,
+      "digest": "sha256:1a9433c13c3ecc845910a419fe237fffa0986b3a0bdbcb58b1011f5969085cc7",
+      "created_at": "2026-10-20T09:23:25Z",
+      "updated_at": "2026-10-20T09:23:31Z",
+      "browser_download_url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v4.0.0-zh.1.rc.1/PlotJuggler-4.0.0-zh.1.rc.1-Windows-x64-zh-CN.exe"
+    },
+    {
+      "id": 658850440,
+      "name": "PlotJuggler-4.0.0-zh.1.rc.1-x86_64-zh-CN.AppImage",
+      "size": 159988216,
+      "digest": "sha256:8718593df9ede797dfadfc0e6668771af354cae785b2752dbb50da4363e39cca",
+      "created_at": "2026-10-20T09:23:25Z",
+      "updated_at": "2026-10-20T09:23:31Z",
+      "browser_download_url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v4.0.0-zh.1.rc.1/PlotJuggler-4.0.0-zh.1.rc.1-x86_64-zh-CN.AppImage"
+    },
+    {
+      "id": 658850442,
+      "name": "plotjuggler4_4.0.0.zh.1.rc.1-1_amd64-zh-CN.deb",
+      "size": 121232444,
+      "digest": "sha256:db846729c41a629ba5991b7f7eeae115d168da6ddcc36afbd352a7412ff7417c",
+      "created_at": "2026-10-20T09:23:25Z",
+      "updated_at": "2026-10-20T09:23:31Z",
+      "browser_download_url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v4.0.0-zh.1.rc.1/plotjuggler4_4.0.0.zh.1.rc.1-1_amd64-zh-CN.deb"
+    },
+    {
+      "id": 658850439,
+      "name": "SHA256SUMS.txt",
+      "size": 345,
+      "digest": "sha256:813c1f5dc04111cfbbfe28aa12c3b7da1205a112f8530125222b64789edd053d",
+      "created_at": "2026-10-20T09:23:25Z",
+      "updated_at": "2026-10-20T09:23:25Z",
+      "browser_download_url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v4.0.0-zh.1.rc.1/SHA256SUMS.txt"
+    }
+  ],
+  "anonymous_full_downloads": [
+    {
+      "name": "PlotJuggler-4.0.0-zh.1.rc.1-Windows-x64-zh-CN.exe",
+      "size": 135239901,
+      "sha256": "1a9433c13c3ecc845910a419fe237fffa0986b3a0bdbcb58b1011f5969085cc7",
+      "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v4.0.0-zh.1.rc.1/PlotJuggler-4.0.0-zh.1.rc.1-Windows-x64-zh-CN.exe",
+      "anonymous_download": true,
+      "candidate_name": "PlotJuggler-4.0.0-zh.1.rc.1-Windows-x64-zh-CN.exe"
+    },
+    {
+      "name": "PlotJuggler-4.0.0-zh.1.rc.1-x86_64-zh-CN.AppImage",
+      "size": 159988216,
+      "sha256": "8718593df9ede797dfadfc0e6668771af354cae785b2752dbb50da4363e39cca",
+      "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v4.0.0-zh.1.rc.1/PlotJuggler-4.0.0-zh.1.rc.1-x86_64-zh-CN.AppImage",
+      "anonymous_download": true,
+      "candidate_name": "PlotJuggler-4.0.0-zh.1.rc.1-x86_64-zh-CN.AppImage"
+    },
+    {
+      "name": "plotjuggler4_4.0.0.zh.1.rc.1-1_amd64-zh-CN.deb",
+      "size": 121232444,
+      "sha256": "db846729c41a629ba5991b7f7eeae115d168da6ddcc36afbd352a7412ff7417c",
+      "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v4.0.0-zh.1.rc.1/plotjuggler4_4.0.0.zh.1.rc.1-1_amd64-zh-CN.deb",
+      "anonymous_download": true,
+      "candidate_name": "plotjuggler4_4.0.0~zh.1~rc.1-1_amd64-zh-CN.deb"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "size": 345,
+      "sha256": "813c1f5dc04111cfbbfe28aa12c3b7da1205a112f8530125222b64789edd053d",
+      "url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v4.0.0-zh.1.rc.1/SHA256SUMS.txt",
+      "anonymous_download": true,
+      "candidate_name": null
+    }
+  ],
+  "additive_correction": {
+    "id": 658887297,
+    "name": "SHA256SUMS-public-filenames.txt",
+    "size": 345,
+    "digest": "sha256:6af13ad89cc2e3e2dd4287552d7ac5c8f4d2000f5db87b21f6e91a50c5a38222",
+    "created_at": "2026-10-20T09:38:14Z",
+    "browser_download_url": "https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/download/v4.0.0-zh.1.rc.1/SHA256SUMS-public-filenames.txt"
+  },
+  "correction_verification": {
+    "anonymous_download": true,
+    "checksum_command": "sha256sum -c SHA256SUMS-public-filenames.txt",
+    "exit_status": 0,
+    "package_results": [
+      "OK",
+      "OK",
+      "OK"
+    ]
+  },
+  "notes": {
+    "original_content_preserved": true,
+    "browser_line_endings_normalized_to_CRLF": true,
+    "upstream_full_body_preserved": true,
+    "append_only_explanation": true
+  },
+  "historic_integrity": {
+    "older_releases_unchanged": 4,
+    "older_assets_unchanged": 28,
+    "older_tag_refs_unchanged": 197
+  },
+  "limitations": [
+    "Original publication CI remains failed; it was not rerun or relabeled.",
+    "Original SHA256SUMS.txt is retained as historical candidate-name evidence; use the additive public-filename list.",
+    "CI GUI screenshots retain their documented viewport/taskbar cropping limits.",
+    "Linux ROS 2 subscriber runtime was not tested because the clean environment lacks its external ROS 2 dependency."
+  ]
+}

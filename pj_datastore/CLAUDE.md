@@ -7,7 +7,13 @@ C ABI, and the `PJ::proc` data-processor substrate that `pj_scripting` builds fi
 it only through the C ABI. Timestamps are absolute int64 nanoseconds. How it works:
 [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
-## Invariants
+## Layout
+- `include/pj_datastore/` — public headers (engine/writer/reader/query/chunk, `object_store` (+ its internal `ordered_entries` value type, + `resident_payload_pool` — the byte-bounded FIFO window behind `pushLazyWithSeed`), `sequential_uid` (`SequentialUID`: a stable entry identity, allocated process-wide and never reused after eviction), `merge_result` / `replace_result` (the outcomes of `DataEngine::mergeDatasets` / `replaceDatasetFrom`, in anchor / primary topic ids), `saturating_time` (`saturatingAdd`/`saturatingSub`: Timestamp arithmetic that clamps at the int64 limits), `marker_topic_metadata` (the metadata a plot-markers topic is identified by, and the stamp `ObjectStore` gives a legacy `__markers__/<key>` write on registration), `incremental_engine` + `builtin_transforms`, `plugin_data_host`, `colormap_registry`, `arrow_import`, low-level buffer/column_buffer/encoding/topic_storage/type_registry, plus the data-processor substrate `data_processor`/`sample`/`processor_siso_adapter`/`processor_detail` — namespace `PJ::proc`).
+- `src/` — implementations, one `.cpp` per header.
+- `tests/` — GTest suites grouped by layer (see `CMakeLists.txt` for the live set). `plugin_host_write_test.cpp` and `plugin_host_read_test.cpp` cover the current scalar host wrappers, catalog snapshots, and Arrow stream/read ABI, including nulls and schema evolution.
+- `benchmarks/` — `read_benchmark`, `ingest_benchmark`, `concurrency_benchmark` (writer commit against a GUI reader walk under the engine lock; prints numbers, not a unit test).
+- `examples/` — `parquet_import` (gated by `PJ_BUILD_PARQUET_IMPORT_EXAMPLE`).
+- `docs/` — see table below.
 
 - Every `DataEngine` access holds `lockEngine()`. `getTopicStorage()` and `typeRegistry()` do not lock: hold the lock
   while using what they return, or a worker commit races the read.

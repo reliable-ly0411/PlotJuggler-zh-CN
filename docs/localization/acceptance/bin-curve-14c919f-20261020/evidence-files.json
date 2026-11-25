@@ -1,0 +1,177 @@
+[
+  {
+    "path": "PUBLICATION.md",
+    "size": 3446,
+    "sha256": "5be10fbc06fdb1fd36386fdfb13ed17eb67f5ae1293d9b7902229f685d727c41"
+  },
+  {
+    "path": "README.md",
+    "size": 8309,
+    "sha256": "f00bfc8d5a6f8f83def8503f285341d70f4a9e6035d31bf5538b4ab7ee079f7a"
+  },
+  {
+    "path": "checksum-verification.txt",
+    "size": 420,
+    "sha256": "cf11ad2b754481e03d778e7709eb0b81a0769051cbe88109340a56d6a77583e7"
+  },
+  {
+    "path": "cleanup-receipt.json",
+    "size": 1646,
+    "sha256": "b9d82947158aaa072095b77bc3d675a64fd2f6a423fb4105f7437d569f4b750c"
+  },
+  {
+    "path": "native-windows/main-window-en_US.png",
+    "size": 33339,
+    "sha256": "145af4b7ec97a948b95157faf31439617a1b00c45c15f6e4257a6cd2bfe81926"
+  },
+  {
+    "path": "native-windows/main-window-zh_CN.png",
+    "size": 37494,
+    "sha256": "afb33829bda5a7c5cd777962b674a63f7e8314c58253332697af8bce971a5cb7"
+  },
+  {
+    "path": "native-windows/preferences-en_US.png",
+    "size": 27629,
+    "sha256": "c91d88a6e98ca9c425d886e0baeb9a1f276d7939098ab54b21114b156ed6cbda"
+  },
+  {
+    "path": "native-windows/preferences-zh_CN.png",
+    "size": 33302,
+    "sha256": "91682c7a4d617bde49e7af6160a89cc400c1f65aa83a81517c0353cdceb3a7b0"
+  },
+  {
+    "path": "publication-receipt.json",
+    "size": 6366,
+    "sha256": "2c8f11dce6389e382cc5e7464f2987e0086e074d8d65bed2ee16f03546e9bdf2"
+  },
+  {
+    "path": "release-manifest.json",
+    "size": 6799,
+    "sha256": "ae263a3ea219b8709a363e6cfa2ed582571b186b824a2228a7fe6ed32eb35da2"
+  },
+  {
+    "path": "reports/zh4-final-Windows/runtime/acceptance.json",
+    "size": 1869,
+    "sha256": "04c977349b0cec8ac256b0b03c850f006e0db242c7de07a0a3ce7a5245cf3176"
+  },
+  {
+    "path": "reports/zh4-final-Windows/runtime/gui-en_US.png",
+    "size": 35454,
+    "sha256": "1e8dabfbef8f5efaa476aa3aafb9535d468952fa47d76da65479e42dd3ee35a8"
+  },
+  {
+    "path": "reports/zh4-final-Windows/runtime/gui-zh_CN.png",
+    "size": 34110,
+    "sha256": "153c79713bc560890fe022e8b7f9ae11032d84b64ecd9b5e6acaa06227ab2ea4"
+  },
+  {
+    "path": "reports/zh4-final-Windows/runtime/plot-state-en_US.json",
+    "size": 825,
+    "sha256": "2b6a79cbb4b9a6ba582dc6ff552bdd9558742ae67cf259862ea37b16e9ed43ab"
+  },
+  {
+    "path": "reports/zh4-final-Windows/runtime/plot-state-zh_CN.json",
+    "size": 825,
+    "sha256": "2b6a79cbb4b9a6ba582dc6ff552bdd9558742ae67cf259862ea37b16e9ed43ab"
+  },
+  {
+    "path": "reports/zh4-final-linux-0/appimage/acceptance.json",
+    "size": 2101,
+    "sha256": "1f9aa1584c76c0feb550f9579f5bf6382b4d65b904584a3c860dd2660643f7cf"
+  },
+  {
+    "path": "reports/zh4-final-linux-0/appimage/gui-en_US.png",
+    "size": 33503,
+    "sha256": "a7eb9611f7cc55277e8c3da31cfa1be23ba36cb903310607a80940a2e95fda38"
+  },
+  {
+    "path": "reports/zh4-final-linux-0/appimage/gui-zh_CN.png",
+    "size": 36582,
+    "sha256": "edbf7f9a30762f190822d4bee97da2636b73a375ab2b292dbd58003a6edebaf0"
+  },
+  {
+    "path": "reports/zh4-final-linux-0/appimage/plot-state-en_US.json",
+    "size": 825,
+    "sha256": "2b6a79cbb4b9a6ba582dc6ff552bdd9558742ae67cf259862ea37b16e9ed43ab"
+  },
+  {
+    "path": "reports/zh4-final-linux-0/appimage/plot-state-zh_CN.json",
+    "size": 825,
+    "sha256": "2b6a79cbb4b9a6ba582dc6ff552bdd9558742ae67cf259862ea37b16e9ed43ab"
+  },
+  {
+    "path": "reports/zh4-final-linux-0/deb/acceptance.json",
+    "size": 2101,
+    "sha256": "1f9aa1584c76c0feb550f9579f5bf6382b4d65b904584a3c860dd2660643f7cf"
+  },
+  {
+    "path": "reports/zh4-final-linux-0/deb/gui-en_US.png",
+    "size": 33503,
+    "sha256": "a7eb9611f7cc55277e8c3da31cfa1be23ba36cb903310607a80940a2e95fda38"
+  },
+  {
+    "path": "reports/zh4-final-linux-0/deb/gui-zh_CN.png",
+    "size": 36582,
+    "sha256": "edbf7f9a30762f190822d4bee97da2636b73a375ab2b292dbd58003a6edebaf0"
+  },
+  {
+    "path": "reports/zh4-final-linux-0/deb/plot-state-en_US.json",
+    "size": 825,
+    "sha256": "2b6a79cbb4b9a6ba582dc6ff552bdd9558742ae67cf259862ea37b16e9ed43ab"
+  },
+  {
+    "path": "reports/zh4-final-linux-0/deb/plot-state-zh_CN.json",
+    "size": 825,
+    "sha256": "2b6a79cbb4b9a6ba582dc6ff552bdd9558742ae67cf259862ea37b16e9ed43ab"
+  },
+  {
+    "path": "reports/zh4-final-linux-1/appimage/acceptance.json",
+    "size": 2101,
+    "sha256": "1f9aa1584c76c0feb550f9579f5bf6382b4d65b904584a3c860dd2660643f7cf"
+  },
+  {
+    "path": "reports/zh4-final-linux-1/appimage/gui-en_US.png",
+    "size": 33487,
+    "sha256": "55c922660aacaac6e7e4c46e1680b233fbaa1860857581da9e1c76fc51c8900a"
+  },
+  {
+    "path": "reports/zh4-final-linux-1/appimage/gui-zh_CN.png",
+    "size": 36566,
+    "sha256": "5bc520bf9eacae8cb5c70adb27fe6a98a9869fc2e8ddb7dced3ca0513e545d91"
+  },
+  {
+    "path": "reports/zh4-final-linux-1/appimage/plot-state-en_US.json",
+    "size": 825,
+    "sha256": "2b6a79cbb4b9a6ba582dc6ff552bdd9558742ae67cf259862ea37b16e9ed43ab"
+  },
+  {
+    "path": "reports/zh4-final-linux-1/appimage/plot-state-zh_CN.json",
+    "size": 825,
+    "sha256": "2b6a79cbb4b9a6ba582dc6ff552bdd9558742ae67cf259862ea37b16e9ed43ab"
+  },
+  {
+    "path": "reports/zh4-final-linux-1/deb/acceptance.json",
+    "size": 2101,
+    "sha256": "1f9aa1584c76c0feb550f9579f5bf6382b4d65b904584a3c860dd2660643f7cf"
+  },
+  {
+    "path": "reports/zh4-final-linux-1/deb/gui-en_US.png",
+    "size": 33487,
+    "sha256": "55c922660aacaac6e7e4c46e1680b233fbaa1860857581da9e1c76fc51c8900a"
+  },
+  {
+    "path": "reports/zh4-final-linux-1/deb/gui-zh_CN.png",
+    "size": 36566,
+    "sha256": "5bc520bf9eacae8cb5c70adb27fe6a98a9869fc2e8ddb7dced3ca0513e545d91"
+  },
+  {
+    "path": "reports/zh4-final-linux-1/deb/plot-state-en_US.json",
+    "size": 825,
+    "sha256": "2b6a79cbb4b9a6ba582dc6ff552bdd9558742ae67cf259862ea37b16e9ed43ab"
+  },
+  {
+    "path": "reports/zh4-final-linux-1/deb/plot-state-zh_CN.json",
+    "size": 825,
+    "sha256": "2b6a79cbb4b9a6ba582dc6ff552bdd9558742ae67cf259862ea37b16e9ed43ab"
+  }
+]

@@ -89,14 +89,29 @@ applied. Tests: `MainWindowStartupTest`.
 
 ## File loading
 
-A desktop drop sends `.urdf` files to `MainWindow::addDroppedRobotModels` (a robot model in the 3D view under the
-cursor, else the only 3D view, else a toast); every other dropped file is data for `FileLoader`.
+Desktop file-manager drops enter through `MainWindow` as `Qt::CopyAction` and
+queue a copied path list with the window as callback context. The load starts
+after the OS drag loop returns; destroying the window cancels that callback.
+Only existing local files are accepted, without expanding directories. On desktop, a dropped
+.urdf is routed to the 3D view under the cursor, or to the only open 3D view;
+otherwise the user is asked to drop it onto a 3D view. Other files go to FileLoader. Text
+inputs keep their URL-as-text behavior, and floating docks are separate windows.
+`MainWindowFileDropLoadingTest` drives real drop events through the loader with
+a synthetic static ABI source, checking deferred loads, Chinese paths, repeated
+and multiple imports, retained source bytes and destruction before the callback.
 
-`FileLoader` runs file loads: one sequential queue, each load progressive on a worker. `LoadInput` carries the
-display name, backing path, reload identity and, in the browser, the storage lease that keeps an upload alive for
-deferred object fetches. `FanoutConfig` extracts a plugin config's `__pj_fanout` entries (one plugin instance and
-one `DatasetId` per entry). `FileLoader` does not depend on `MainWindow` (`setFilePicker` is the seam), so the loader
-suites compile it standalone.
+The optional system file-dialog preference is Windows/macOS-only and defaults
+off. Saving a layout still uses the embedded dialog for its extra controls.
+Native dialog presentation follows the platform; application translations do not
+promise to replace the operating system's labels or theme.
+
+`FileLoader` runs file loads (one queue, sequential, progressive on a worker
+thread); `LoadInput` carries the display name, backing path, reload identity and
+(in the browser) the storage lease that keeps an upload alive for deferred
+object fetches. `FanoutConfig` extracts a plugin config's `__pj_fanout` entries
+(one plugin instance and one `DatasetId` per entry). `FileLoader` has no
+`MainWindow` dependency (`setFilePicker` is the seam), which is why the loader
+test suites compile it standalone.
 
 **Several files at once.** Files picked together, dropped together or listed on the command line (two or more, with
 someone at the display) ask one question before any loads (`BatchLoadDialog`) when a loader with a configuration
@@ -128,6 +143,13 @@ no scalar handler. The cost is one extra read per payload at load.
 fresh ones and erases the tombstoned one only after commit: erasing it first would lose the user's data on a discard or
 an all-failed fan-out. A whole-load stop (strip, shutdown, `cancelLoad`) ends every entry; a whole-load discard also
 drops entries that already completed.
+
+The single-load terminal flush publishes its committed topics once, after the
+catalog and time reference are final and the load context is retired. A
+`samplesIngested` observer may synchronously shut down and reuse the loader;
+the completed generation must not reset the successor's context or state.
+`FileLoaderTest` covers terminal-only producers, already-bound curves, and
+shutdown/reuse during terminal publication.
 
 **A load that yields nothing fails.** A plugin can finish its import successfully with no row and no object entry
 (a CAN log without a decoding database, a file with a header only). After the terminal flush `FileLoader` asks
@@ -219,9 +241,9 @@ so every start that does not launch (cancel, a plugin contract violation, a refu
 count in the catalog's duplicate-label ordinals and suffix the next start's name. `streamError` is emitted only after
 the dataset is gone (a cancel reports nothing), so its consumer cannot rely on that dataset existing.
 
-**Source and buffer selection.** The manager keeps no copy of the selected source: Start carries the combo's text
+**Source and buffer selection.** The manager keeps no copy of the selected source: Start carries the combo's canonical item data
 (`LeftPanel::streamingStartRequested`), so whatever set the combo (a user, a repopulation, a layout), Start starts
-what it shows. Only a user's pick (`QComboBox::textActivated`) becomes the remembered default. The retention window
+what it shows. Only a user's pick (`QComboBox::activated`) becomes the remembered default. The retention window
 is a copy: `StreamingSourceManager` reads it from QSettings once, at construction, then only from
 `LeftPanel::streamingBufferChanged`, which a restore emits by hand, because running sessions must hear the new
 window.
@@ -775,6 +797,18 @@ Suites with their own executable and ctest entry, and why:
 - `ExportedSymbolsGuard`: a script test, enabled where `nm` can inspect the executable's exported symbols.
 
 ## Known gaps
+
+The loader suites (`file_loader_test`, `source_promotion_host_test`,
+`headless_descriptor_provider_session_test`, `layout_import_batch_test`) share the
+`pj_app_loader_testlib` object library, so the loader sources compile once while each
+binary keeps its own plugin-path definitions. `ExportedSymbolsGuard` is a script test,
+enabled when the platform and `nm` support inspecting the executable's exported
+symbols. It rejects plain-C library exports and caps the total at 200, allowing
+only C++ ABI names, known libc copy-relocated data, and exact name/type pairs for
+glibc's read-only `_IO_stdin_used` and GNU ld's `__bss_start`, `_edata`, `_end`
+data/BSS markers. The CRT/linker markers still count toward the ceiling.
+`tests/test_exported_symbols_guard.py` exercises the script with synthetic `nm`
+output and a Linux ELF fixture linked both with and without `--exclude-libs,ALL`.
 
 - The title-bar ingest strip is wired but hidden (`kShowTitleBarIngestStrip`); its keep/discard prompt path is
   exercised only when the flag is turned on.
