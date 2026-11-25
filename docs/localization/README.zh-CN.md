@@ -6,50 +6,34 @@
 
 ## 已发布版本与开发源码
 
-最新正式版为 [v4.1.0+zh.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)。下文 rc.4 描述为历史范围，不能代替正式版 Release 的实包验收记录。当前开发快照另行验收，不能复用正式版通过结论。
+| 范围 | 如何判断 |
+| --- | --- |
+| 已发布的 4.x 中文包 | [本仓 Releases](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases)，查找标为 Latest 的正式版或单独的预发布 |
+| 稳定维护线 | `zh-CN-4.x`；默认分支，源码晋级不等于安装包发布 |
+| 开发集成线 | `zh-CN-4.x-dev`；工具链、源码基线和测试记录与已发布包分别核对 |
+| 独立维护的 3.x | `zh-CN` / `zh-CN-dev`，Qt5；`main-3.x` 为上游镜像 |
+| 4.x 上游镜像 | `main`，不混入汉化改动 |
 
-| 范围 | 版本与工具链 | 语言与交付状态 |
-|---|---|---|
-| [已发布 rc.4](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.0.0-zh.1.rc.4) | `4.0.0-zh.1.rc.4`，Qt `6.11.1`，宿主 SDK `0.34.1` | 简体中文 / English；Windows x64、Linux x86_64 原生预发布包 |
-| [已发布正式版](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1) | `4.1.0+zh.1`，Qt `6.12.0`，宿主 SDK `0.39.0` | 简体中文 / 繁體中文（台灣）/ English；2026-11-12 已发布；Windows 安装器/便携 ZIP、Linux AppImage/DEB |
-| 当前开发源码 | `4.1.0-zh.1.dev.3`，Qt `6.12.0`，宿主 SDK `1.1.0` | 简体中文 / 繁體中文（台灣）/ English；尚未发布或完成最终原包验收 |
-
-`zh-CN-4.x` 为默认稳定维护线，`zh-CN-4.x-dev` 为开发集成线；“稳定线”是分支用途，
-4.1.0+zh.1 已正式发布，繁中、插件元数据和 FFT 显示修复已纳入该版；
-开发源码同步到上游声明版本 4.2.0 的提交；本地继续使用开发标识 `4.1.0-zh.1.dev.3`。本轮仅做源码级检查，不代表新增功能、实包、浏览器或实体 GPU 已验收。
-[定向原生验证记录](VALIDATION-4X-20261113.md)列出已完成与未解决项，历史原包及 Latest 保持不变。
-下载、资产校验及最终验收范围以对应 Release 为准。
-
-2026-11-14 的 [#58](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/58) / [#59](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/59)
-将 18 处真实措辞差异统一，并增加回归断言。此前所称 44 处差异中，另 26 处只是复数 XML 缩进，实际显示文本相同。
-与上游 #1459 的 1,301 条共同简中译文现在一致；两边独有条目及繁体目录没有因此改变。
-该次晋级后开发/稳定源码树相同，合并提交不同；不应把 ahead/behind 数字视为功能差异。
-译文验证为 Qt 6.11.1 完整提取、上游 11 项校验及下游 28 项通过 / 1 项缺 PowerShell 跳过，
-不代替 Qt 6.12 或新成品 GUI 验收。
-
-主题变更通过保留提交的合并进入开发线，验证及发布准备完成后再晋级稳定线。
-`main` 仅镜像上游 PJ4 `main`，`main-3.x` 仅镜像上游 PJ3 `main-3.x`；3.x 两条汉化线独立维护。参见[分支规范](../BRANCHING.zh-CN.md)。
-草稿或尚未合并的 PR 不属于当前交付；请查看
-[本分支 PR 列表](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pulls)确认最新进度。
+新包的系统兼容性、插件和实际回归范围以该包的验收与 Release 说明为准。
+[4.1.0+zh.1 正式包记录](RELEASE-4.1.0+zh.1.md)与[历史定向验证](VALIDATION-4X-20261113.md)不用于替代后续包验收。
+[上游 #1459](https://github.com/PlotJuggler/PlotJuggler/pull/1459)跟踪独立的上游汉化 PR，不等同于本仓开发线或发布状态。
+参见[分支规范](../BRANCHING.zh-CN.md)和[发布规范](../../RELEASING.md)。
 
 ## 上游与移植边界
 
 | 项目 | 基准 |
 |---|---|
 | PlotJuggler 官方上游 | `PlotJuggler/PlotJuggler`，`main` |
-| 精确上游提交 | `a7814caa0c20c6115613e71638fe61ccadd6131c` |
+| 上游来源记录 | [upstream-baseline.json](upstream-baseline.json)及当前 Git 历史；文档中的旧同步记录仅供回溯 |
 | 3.x 翻译参考 | 本仓库 `zh-CN` 的 `766a88d8e689c7803f32acb315ac872a0a67a57b` |
 | Qt | `6.12.0`，以 `versions.env` 为准 |
 | C++ / 构建 | C++20、CMake、Conan 2 |
-| 插件 SDK | `plotjuggler_sdk/1.1.0`，以 `conanfile.txt` 及锁文件为准 |
+| 插件 SDK | 以所检出提交的 [conanfile.txt](../../conanfile.txt) 和 [conan.lock](../../conan.lock) 为准 |
 
 4.x 是重新设计的模块化应用：界面、数据存储、脚本、插件宿主和 2D/3D 视图已分离。
 3.x 的 Qt5 插件不能直接加载；旧工程配置、发布工作流及诊断补丁没有整体合并进来。
 基准与来源的机器可读记录位于 [upstream-baseline.json](upstream-baseline.json)。
-本快照包含既有开发线基线之后的 39 个上游提交，包括批量配置、可拖动页签、ROS 工作区包解析、URDF 拖入和暗色主题修复。
-保留 #33 插件反馈、FFT、简繁目录、Copy-only 拖入安全保护与原有构建配置；
-具体范围和未验证项见[本轮同步记录](UPSTREAM-SYNC-20261108.md)及[此前记录](UPSTREAM-SYNC-20261107.md)。
-宿主 SDK 已升级，固定插件自身的历史 SDK 来源锁不因此改写；新宿主兼容性须另行验证。
+历史同步和未验证范围见[同步记录](UPSTREAM-SYNC-20261108.md)。宿主 SDK 和插件各自固定的版本应分别核对；宿主升级不等于插件已经通过新 ABI 验证。
 
 ## 界面语言
 

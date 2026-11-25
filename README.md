@@ -1,24 +1,21 @@
 # PlotJuggler 中文版 · 非官方 4.x 分支
 
-基于 [PlotJuggler 官方项目](https://github.com/PlotJuggler/PlotJuggler)的非官方中文分支，
-用于时序信号、飞控日志及多模态数据的交互式分析。保留上游英文界面，新增中文界面和
-独立的 ArduPilot DataFlash BIN 加载插件。
+用于交互分析时序信号、飞控日志和多模态数据。基于 [PlotJuggler 官方项目](https://github.com/PlotJuggler/PlotJuggler)（[官方网站](https://plotjuggler.io/)），提供简体中文、繁體中文（台灣）和 English，并在原生包中提供独立的 ArduPilot DataFlash BIN 加载插件。
 
-- **正式版：** [v4.1.0+zh.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)，2026-11-12 发布，提供 Windows 安装器/便携包、Linux AppImage/DEB。
-  支持简体中文、繁體中文（台灣）与 English，Qt 6.12.0 / SDK 0.39.0；已验范围和限制以 Release 为准。
-- **开发源码：** `zh-CN-4.x-dev` 当前为 `4.1.0-zh.1.dev.3`，Qt 6.12.0 / SDK 0.40.0（PR #226 非官方 Unicode 修复快照），精确上游提交 `8b847cb74`。
-  这是上游 4.1.0 之后的源码，已通过 Linux 130 项 / Windows 127 项定向原生测试，未做新成品包验收；[定向原生验证记录](docs/localization/VALIDATION-4X-20261113.md)区分通过、失败与未覆盖。
-- **稳定维护线：** `zh-CN-4.x` 已合入上述开发快照和定向验证修订；2026-11-14 又通过 [#58](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/58) / [#59](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/59) 将上游候选与下游共同的 1,301 条简中译文统一。此次晋级后开发线与稳定线文件树相同，Git 合并记录不同。源码仍标识 `4.1.0-zh.1.dev.3`，不是新软件包发布；正式标签、原包与 Latest 不变。跨屏 DPI、实体 GPU 和新安装包未验。
-- **3.x 汉化计划：** 3.18.1 正在独立候选线上增加翻译修订、繁体中文和启动器，尚未发布；进度与未解决项见 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44) 和[草稿 PR #51](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/51)。它基于官方 Qt5 3.17.2，不是上游官方 3.18.1。
-- **上游镜像：** `main` / `main-3.x`，不混入汉化改动；3.x 的 `zh-CN` / `zh-CN-dev` 与 4.x 独立维护。
+| 你要做什么 | 去哪里 |
+| --- | --- |
+| 下载中文正式版或查看预发布 | [Releases](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases) · [安装说明](#下载与安装中文版) |
+| 查 4.x 稳定源码 | [`zh-CN-4.x`](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/tree/zh-CN-4.x)，默认分支；分支更新不等于安装包发布 |
+| 跟踪开发与上游 | [`zh-CN-4.x-dev`](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/tree/zh-CN-4.x-dev) · [`main` 上游镜像](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/tree/main) |
+| 使用 Qt5 的 3.x 版本 | [`zh-CN`](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/tree/zh-CN) · [`zh-CN-dev`](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/tree/zh-CN-dev)；与 4.x 分开维护 |
+| 报告问题 | [Issues](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues) |
 
-新配置默认简体中文，可在首选项切换语言，下次启动生效。界面语言不改变数值或数据解析规则。
-详细覆盖和限制见[中文与多语言说明](docs/localization/README.zh-CN.md)。
+新配置默认简体中文；在首选项切换后，下次启动生效。界面语言不改变数值或数据解析规则。覆盖范围、插件和构建限制见[中文与多语言说明](docs/localization/README.zh-CN.md)。
 
-This is an unofficial Chinese-language fork of PlotJuggler. The published
-4.1.0+zh.1 release supports Simplified Chinese, Traditional Chinese (Taiwan),
-and English. Development snapshots and the 3.18.1 candidate are not released
-packages. Use this fork's release page, not upstream downloads.
+Unofficial Chinese localization of PlotJuggler, with Simplified Chinese,
+Traditional Chinese (Taiwan), English, and a separate ArduPilot DataFlash BIN
+loader in native packages. Use the [fork releases](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases)
+for localized downloads; upstream builds and test artifacts are separate.
 
 ## 上游功能概览 / Upstream capabilities
 
@@ -97,16 +94,18 @@ Need a custom integration? Build a loader, streamer, parser or toolbox with the
 
 ## 下载与安装中文版
 
-请打开 [4.1.0+zh.1 中文版发布页](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)，
+下载已发布的安装包，请打开 [4.1.0+zh.1 中文版发布页](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)，
 阅读已知限制并核对同页的 `SHA256SUMS.txt`。完整历史见[本仓库 Releases](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases)。
-本正式版已设为 Latest；历史预发布包保持不变。
+正式版和预发布在同一个 Releases 页面列出。需要可靠版本时选择 Latest；预发布只面向试用，未发布的 Actions 工件不是 Release。
+
+如需试用，见 [4.1.1-zh.1.rc.1 中文预发布](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.1-zh.1.rc.1)：同样提供 Windows 安装器/便携包和 Linux AppImage/DEB，Linux 原包已在 Ubuntu 22.04 和 24.04 验收。它不替换 Latest。
 
 | 系统 | 4.1.0+zh.1 下载文件 | 安装方式 |
 | --- | --- | --- |
 | Windows x64 | `PlotJuggler-4.1.0+zh.1-Windows-x64-zh-CN.exe` | 运行离线安装器，建议使用独立目录；安装器未签名 |
 | Windows x64 便携包 | `PlotJuggler-4.1.0+zh.1-Windows-x64-portable-zh-CN.zip` | 完整解压后运行，不与旧目录混装 |
 | Linux x86_64 | `PlotJuggler-4.1.0+zh.1-x86_64-zh-CN.AppImage` | 赋予执行权限后运行 |
-| Ubuntu / Debian amd64 | `plotjuggler4_4.1.0+zh.1-1_amd64-zh-CN.deb` | 用 `sudo apt install ./下载的文件名.deb` 安装，运行 `plotjuggler4` |
+| Ubuntu 22.04 / 24.04 amd64 | `plotjuggler4_4.1.0+zh.1-1_amd64-zh-CN.deb` | 用 `sudo apt install ./下载的文件名.deb` 安装，运行 `plotjuggler4` |
 
 下列系统和插件边界描述上方 `4.1.0+zh.1` 正式包，不是当前维护源码的成品验收结论。
 
