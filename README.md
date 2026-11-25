@@ -98,6 +98,8 @@ Need a custom integration? Build a loader, streamer, parser or toolbox with the
 阅读已知限制并核对同页的 `SHA256SUMS.txt`。完整历史见[本仓库 Releases](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases)。
 正式版和预发布在同一个 Releases 页面列出。需要可靠版本时选择 Latest；预发布只面向试用，未发布的 Actions 工件不是 Release。
 
+如需试用，见 [4.1.1-zh.1.rc.1 中文预发布](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.1-zh.1.rc.1)：同样提供 Windows 安装器/便携包和 Linux AppImage/DEB，Linux 原包已在 Ubuntu 22.04 和 24.04 验收。它不替换 Latest。
+
 | 系统 | 4.1.0+zh.1 下载文件 | 安装方式 |
 | --- | --- | --- |
 | Windows x64 | `PlotJuggler-4.1.0+zh.1-Windows-x64-zh-CN.exe` | 运行离线安装器，建议使用独立目录；安装器未签名 |
