@@ -1,0 +1,74 @@
+[
+  {
+    "plugin": "ardupilot-dataflash",
+    "source": "ArduPilot BIN requires a string filepath",
+    "translation": "ArduPilot BIN 需要字符串类型的文件路径",
+    "kind": "exact_error"
+  },
+  {
+    "plugin": "ardupilot-dataflash",
+    "source": "ArduPilot BIN requires a nonempty filepath without NUL bytes",
+    "translation": "ArduPilot BIN 需要非空且不含 NUL 字节的文件路径",
+    "kind": "exact_error"
+  },
+  {
+    "plugin": "ardupilot-dataflash",
+    "source": "ArduPilot BIN: no filepath configured",
+    "translation": "ArduPilot BIN：未配置文件路径",
+    "kind": "exact_error"
+  },
+  {
+    "plugin": "ardupilot-dataflash",
+    "source": "ArduPilot BIN: cannot open file",
+    "translation": "ArduPilot BIN：无法打开文件",
+    "kind": "exact_error"
+  },
+  {
+    "plugin": "ardupilot-dataflash",
+    "source": "ArduPilot BIN: unsupported file size",
+    "translation": "ArduPilot BIN：不支持的文件大小",
+    "kind": "exact_error"
+  },
+  {
+    "plugin": "ardupilot-dataflash",
+    "source": "ArduPilot BIN: file read failed or file changed during import",
+    "translation": "ArduPilot BIN：文件读取失败，或文件在导入期间发生变化",
+    "kind": "exact_error"
+  },
+  {
+    "plugin": "ardupilot-dataflash",
+    "source": "ArduPilot BIN: timestamp exceeds the SDK nanosecond range",
+    "translation": "ArduPilot BIN：时间戳超出 SDK 支持的纳秒范围",
+    "kind": "exact_error"
+  },
+  {
+    "plugin": "csv-loader",
+    "source": "invalid config JSON",
+    "translation": "配置 JSON 无效",
+    "kind": "exact_error"
+  },
+  {
+    "plugin": "csv-loader",
+    "source": "invalid config",
+    "translation": "配置无效",
+    "kind": "exact_error"
+  },
+  {
+    "plugin": "csv-loader",
+    "source": "no filepath configured",
+    "translation": "未配置文件路径",
+    "kind": "exact_error"
+  },
+  {
+    "plugin": "csv-loader",
+    "source": "CSV parsing failed",
+    "translation": "CSV 解析失败",
+    "kind": "exact_error"
+  },
+  {
+    "plugin": "csv-loader",
+    "source": "Loading aborted by user",
+    "translation": "用户已中止加载",
+    "kind": "exact_error"
+  }
+]

@@ -26,7 +26,7 @@
 #   packaging/appimage/build_appimage.sh --plugins-dir <path>  # LOCAL: copy a folder you
 #                                                    #   curated, verbatim, into
 #                                                    #   usr/lib/plotjuggler/plugins
-#   packaging/appimage/build_appimage.sh --plugins-registry [url]
+#   packaging/appimage/build_appimage.sh --plugins-registry [url-or-path]
 #                                                    # REGISTRY: download the
 #                                                    #   curated set (BUNDLE_IDS)
 #                                                    #   from the plugin registry,
@@ -144,6 +144,8 @@ PLUGINS_MODE="none"        # none | local | registry
 PLUGINS_LOCAL_DIR=""
 COMMIT_HASH=""
 RETRO_WAD=""
+EXTRA_PREFIX=""
+NAME_SUFFIX=""
 
 # Prints the header comment block, stopping at the first line of real code, so
 # it cannot drift out of sync with a fixed line range.
@@ -160,9 +162,20 @@ while [[ $# -gt 0 ]]; do
       PLUGINS_LOCAL_DIR="$(realpath -m -- "${2:?--plugins-dir needs a path}")"; shift 2 ;;
     --plugins-registry)
       PLUGINS_MODE="registry"
-      # Optional URL argument (anything not starting with '-').
-      if [[ -n "${2:-}" && "${2}" != -* ]]; then REGISTRY_URL="$2"; shift; fi
+      # Resolve local snapshots before the packager changes its working directory.
+      if [[ -n "${2:-}" && "${2}" != -* ]]; then
+        REGISTRY_URL="$2"
+        case "${REGISTRY_URL}" in
+          http://*|https://*) ;;
+          *) REGISTRY_URL="$(realpath -m -- "${REGISTRY_URL}")" ;;
+        esac
+        shift
+      fi
       shift ;;
+    --extra-prefix)
+      EXTRA_PREFIX="$(realpath -m -- "${2:?--extra-prefix needs a path}")"; shift 2 ;;
+    --name-suffix)
+      NAME_SUFFIX="${2:?--name-suffix needs a value}"; shift 2 ;;
     --commit-hash)
       COMMIT_HASH="${2:?--commit-hash needs a value}"; shift 2 ;;
     --retro-wad)
@@ -185,6 +198,7 @@ if [[ "${PJ_SANITIZE}" == asan ]]; then
 else
   OUTPUT_NAME="PlotJuggler-${VERSION}-${ARCH}${COMMIT_HASH:+.${COMMIT_HASH}}.AppImage"
 fi
+OUTPUT_NAME="${OUTPUT_NAME%.AppImage}${NAME_SUFFIX}.AppImage"
 OUTPUT="${SCRIPT_DIR}/${OUTPUT_NAME}"
 if [[ "${PJ_PRINT_OUTPUT_NAME:-0}" == "1" ]]; then
   printf '%s\n' "${OUTPUT_NAME}"
@@ -293,14 +307,19 @@ collect_plugins_registry() {
   command -v sha256sum >/dev/null || { echo "sha256sum required for --plugins-registry"; exit 1; }
 
   local registry_json; registry_json="$(mktemp)"
-  echo "Plugins: fetching registry ${REGISTRY_URL}"
-  wget -qO "${registry_json}" "${REGISTRY_URL}" || { echo "ERROR: failed to download registry"; exit 1; }
+  echo "Plugins: reading registry ${REGISTRY_URL}"
+  case "${REGISTRY_URL}" in
+    http://*|https://*)
+      wget -qO "${registry_json}" "${REGISTRY_URL}" || { echo "ERROR: failed to download registry" >&2; exit 1; } ;;
+    *)
+      cp -- "${REGISTRY_URL}" "${registry_json}" || { echo "ERROR: failed to read registry ${REGISTRY_URL}" >&2; exit 1; } ;;
+  esac
 
   local id url checksum want got zip dest
   for id in "${BUNDLE_IDS[@]}"; do
     # Resolve this extension's url + checksum for our platform from the registry. The registry
     # keeps older releases of an id for older hosts, so take the newest one that ships our platform.
-    read -r url checksum < <(python3 - "${registry_json}" "${id}" "${PLATFORM}" <<'PY'
+    if ! read -r url checksum < <(python3 - "${registry_json}" "${id}" "${PLATFORM}" <<'PY'
 import json, sys
 reg, want_id, plat = sys.argv[1], sys.argv[2], sys.argv[3]
 data = json.load(open(reg))
@@ -309,14 +328,17 @@ if found:
     p = max(found, key=lambda e: tuple(int(x) for x in e["version"].split(".")))["platforms"][plat]
     print(p.get("url", ""), p.get("checksum", ""))
 PY
-)
-    [[ -n "${url}" ]] || { echo "ERROR: registry has no '${id}' for ${PLATFORM}"; exit 1; }
+    ) || [[ -z "${url}" ]]; then
+      echo "ERROR: registry has no usable '${id}' for ${PLATFORM}: ${REGISTRY_URL}" >&2
+      exit 1
+    fi
 
     zip="$(mktemp --suffix=.zip)"
     echo "  ${id}: ${url}"
     wget -qO "${zip}" "${url}" || { echo "ERROR: download failed for '${id}'"; exit 1; }
 
     want="${checksum#sha256:}"   # registry value is 'sha256:<hex>'
+    [[ "${want}" =~ ^[0-9a-fA-F]{64}$ ]] || { echo "ERROR: missing/invalid SHA256 for ${id}"; exit 1; }
     if [[ -n "${want}" ]]; then
       got="$(sha256sum "${zip}" | awk '{print $1}')"
       [[ "${got}" == "${want}" ]] || { echo "ERROR: checksum mismatch for '${id}' (want ${want}, got ${got})"; exit 1; }
@@ -588,6 +610,17 @@ if [[ -n "${RETRO_WAD}" ]]; then
     strip "${RETRO_DIR}/pj-raster-helper"
   fi
   echo "Retro: staged pj-raster-helper + $(basename "${RETRO_WAD}") -> usr/bin/3rdparty/retro"
+fi
+
+# Fork-local payload is staged before sealing the final image. Its provenance,
+# replaceable BIN plugin, CJK fallback and licenses remain in every package.
+if [[ -n "${EXTRA_PREFIX}" ]]; then
+  [[ -d "${EXTRA_PREFIX}" ]] || { echo "ERROR: extra prefix missing"; exit 1; }
+  # Replace rebuilt plugin directories, not just like-named files. This avoids
+  # silently retaining an upstream DSO or old sidecar beside the localized DSO.
+  python3 "${ROOT}/packaging/localization/replace_localized_plugins.py" \
+    --extra-prefix "${EXTRA_PREFIX}" --destination "${APPDIR}/usr"
+  cp -a "${EXTRA_PREFIX}/." "${APPDIR}/usr/"
 fi
 
 ARCH="${ARCH}" "./${AT}" "${APPDIR}" "${OUTPUT}"

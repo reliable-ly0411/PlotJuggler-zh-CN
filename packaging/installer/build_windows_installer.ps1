@@ -40,8 +40,9 @@
   If empty, windeployqt is taken from PATH.
 
 .PARAMETER IfwDir
-  Directory containing binarycreator.exe. If empty, it is taken from PATH or
-  auto-detected under C:\Qt\Tools\QtInstallerFramework\*\bin.
+  Directory containing binarycreator.exe and installerbase.exe (IFW >=4.10).
+  Explicit paths never fall back. If empty, reuse pinned tools or discover PATH /
+  Qt tools; if missing or too old, fetch the official hash-verified 4.10 tools.
 
 .PARAMETER SkipPlugins
   Skip downloading/bundling plugins for a fast core-only installer.
@@ -59,8 +60,8 @@
   Registry platform key. The x64 Windows installer uses windows-x86_64.
 
 .PARAMETER ConanHome
-  Conan 2 cache root (default: %USERPROFILE%\.conan2). Source of the FFmpeg /
-  CPython / other shared runtime DLLs that the build linked against.
+  Legacy cache-root diagnostic label. Runtime DLL selection is restricted to
+  the active host nodes in BuildDir/conan-graph.json.
 
 .PARAMETER Version
   Installer version string, also used in the output file name. Default reads
@@ -77,6 +78,10 @@
   where -Version is already the unique identifier; leave off for
   workflow_dispatch/dev builds, where the built commit's short hash
   disambiguates otherwise-identical-looking artifacts.
+
+.PARAMETER ExperimentalTraditionalChinese
+  Build an isolated, offline IFW QA installer with a third language choice.
+  Not accepted for tagged release naming or the update repository.
 
 .PARAMETER StageDir
   Scratch directory for the staged package tree (default: $env:TEMP\pj4-installer-stage).
@@ -111,6 +116,7 @@ param(
   [string]$QtDir      = "",
   [string]$IfwDir     = "",
   [switch]$SkipPlugins,
+  [switch]$ExperimentalTraditionalChinese,
   [string]$PluginRegistryUrl = "https://raw.githubusercontent.com/PlotJuggler/pj-plugin-registry/refs/heads/development/registry.json",
   [string[]]$PluginIds = @(
     "mcap-loader", "csv-loader", "parquet-loader", "ulog-loader",
@@ -130,10 +136,22 @@ param(
   [string]$StageDir   = "",
   [switch]$CleanReleaseName,
   [string]$UpdateUrl  = "",
-  [string]$RepoOutDir = ""
+  [string]$RepoOutDir = "",
+  [string]$ExtraPrefix = "",
+  [string]$NameSuffix = "-zh-CN",
+  [string]$PackageVersion = ""
 )
 
 $ErrorActionPreference = "Stop"
+if ($ExperimentalTraditionalChinese) {
+  if ($CleanReleaseName -or $RepoOutDir -or $UpdateUrl) {
+    throw "Traditional Chinese IFW is limited to offline QA; release naming and update publishing are disallowed."
+  }
+  if (-not $StageDir -or (Test-Path -LiteralPath $StageDir)) {
+    throw "Traditional Chinese IFW QA requires an explicit, nonexistent -StageDir."
+  }
+  $NameSuffix += "-ifw-zhtw-qa"
+}
 function Info($m)  { Write-Host "[installer] $m" -ForegroundColor Cyan }
 function Warn($m)  { Write-Host "[installer] WARNING: $m" -ForegroundColor Yellow }
 function Die($m)   { Write-Host "[installer] ERROR: $m" -ForegroundColor Red; exit 1 }
@@ -194,7 +212,15 @@ Info "windeployqt : $windeployqt"
 # binarycreator and repogen ship in the same IFW bin directory, so one search
 # serves both.
 function Resolve-IfwTool([string]$name) {
-  $found = Resolve-Exe $name $IfwDir
+  # An explicit tool directory is a boundary, not a discovery hint.
+  if ($IfwDir) {
+    $explicit = Join-Path $IfwDir $name
+    if (Test-Path $explicit) { return $explicit }
+    return $null
+  }
+  $pinned = Join-Path $repoRoot ".qt/Tools/QtInstallerFramework/4.10.0-pinned/bin/$name"
+  if (Test-Path $pinned) { return $pinned }
+  $found = Resolve-Exe $name ""
   if ($found) { return $found }
   # Search the usual IFW-tool locations. aqt lays them under <aqt-base>\Tools\
   # QtInstallerFramework, where <aqt-base> is two levels above the kit dir
@@ -214,9 +240,46 @@ function Resolve-IfwTool([string]$name) {
   return $null
 }
 
+# binarycreator has no --version option. installerbase handles this CLI option
+# before loading package metadata (IFW src/sdk/main.cpp).
+function Get-IfwVersion([string]$creator) {
+  if (-not $creator) { return $null }
+  $installerbase = Join-Path (Split-Path $creator -Parent) "installerbase.exe"
+  if (-not (Test-Path $installerbase)) { return $null }
+  try {
+    $output = (& $installerbase --version 2>&1 | Out-String)
+    if ($LASTEXITCODE -ne 0) { return $null }
+    if ($output -match 'IFW Version:\s+(\d+\.\d+\.\d+)(?:,|\s|$)') {
+      return [version]$Matches[1]
+    }
+  } catch {
+    Warn "Could not query IFW runtime: $_"
+  }
+  return $null
+}
+
 $binarycreator = Resolve-IfwTool "binarycreator.exe"
-if (-not $binarycreator) { Die "binarycreator.exe not found. Install the Qt Installer Framework tools (aqt install-tool --outputdir .qt windows desktop tools_ifw) and/or pass -IfwDir." }
-Info "binarycreator: $binarycreator"
+$ifwVersion = Get-IfwVersion $binarycreator
+if (-not $ifwVersion -or $ifwVersion -lt [version]'4.10.0') {
+  if ($IfwDir) {
+    Die "Explicit -IfwDir requires Qt Installer Framework 4.10.0 or newer with a working installerbase.exe. It will not be replaced or bypassed: $IfwDir"
+  }
+  Info "No compatible default IFW found; fetching verified official IFW 4.10.0 tools."
+  try {
+    $IfwDir = & (Join-Path $installerRoot "install_ifw.ps1")
+  } catch {
+    Die "Official IFW setup failed; no fallback will be used. Install IFW 4.10 or newer manually and pass -IfwDir <bin>: $_"
+  }
+  $binarycreator = Resolve-IfwTool "binarycreator.exe"
+  $ifwVersion = Get-IfwVersion $binarycreator
+  if (-not $ifwVersion -or $ifwVersion -lt [version]'4.10.0') { Die "Verified IFW setup did not yield a compatible runtime." }
+}
+if ($ExperimentalTraditionalChinese -and $ifwVersion -ne [version]'4.10.0') {
+  Die "Traditional Chinese IFW QA requires the catalog-matching pinned Qt Installer Framework 4.10.0."
+}
+# Keep repogen and binarycreator from the same validated tool installation.
+$IfwDir = Split-Path $binarycreator -Parent
+Info "binarycreator: $binarycreator (IFW $ifwVersion)"
 
 # Resolved up front, not after the long staging run: a missing repogen should
 # fail in the first seconds, not after windeployqt and the plugin downloads.
@@ -234,7 +297,7 @@ function Find-AppExe {
   foreach ($cfg in @("Release","RelWithDebInfo","*")) {
     foreach ($name in @("plotjuggler4.exe","pj_app.exe")) {
       $glob = if ($cfg -eq "*") { $name } else { "$cfg\$name" }
-      $hit = Get-ChildItem $BuildDir -Recurse -Filter $name -ErrorAction SilentlyContinue |
+      $hit = Get-ChildItem -LiteralPath $BuildDir -Recurse -Filter $name -ErrorAction SilentlyContinue |
              Where-Object { $_.FullName -like "*\$glob" -or $cfg -eq "*" } |
              Sort-Object LastWriteTime -Descending | Select-Object -First 1
       if ($hit) { return $hit }
@@ -400,14 +463,8 @@ function Download-RegistryPlugins {
     if ([string]$packageManifest.version -ne $extensionVersion) {
       Die "plugin '$id' archive version '$($packageManifest.version)' does not match registry version '$extensionVersion'"
     }
-    $minimumHostVersion = [string]$packageManifest.min_plotjuggler_version
-    if ($minimumHostVersion) {
-      $minimumParsed = Convert-Semver $minimumHostVersion "plugin '$id' minimum PlotJuggler version"
-      $hostParsed = Convert-Semver $Version "installer version"
-      if ($minimumParsed -gt $hostParsed) {
-        Die "plugin '$id' requires PlotJuggler $minimumHostVersion, but this installer is $Version"
-      }
-    }
+    # Admission follows the host's SDK/ABI contract, not the deprecated app
+    # display-version hint. The staged executable validates every plugin below.
     $resolvedPluginVersions[$id] = $extensionVersion
     Info "staged plugin: $id ($($downloadedDlls.Count) DLL(s))"
   }
@@ -425,13 +482,33 @@ if ($SkipPlugins) {
   Info "staged $($pluginDlls.Count) plugin DLL(s) from $($PluginIds.Count) registry extension(s)"
 }
 
+# Merge the pinned fork payload before validating the sealed runtime closure.
+if ($ExtraPrefix) {
+  if (-not (Test-Path -LiteralPath $ExtraPrefix -PathType Container)) { Die "extra prefix missing: $ExtraPrefix" }
+  python (Join-Path $PSScriptRoot "../localization/replace_localized_plugins.py") --extra-prefix $ExtraPrefix --destination $stageData
+  if ($LASTEXITCODE -ne 0) { Die "localized plugin replacement failed" }
+  Get-ChildItem -LiteralPath $ExtraPrefix -Force | Copy-Item -Destination $stageData -Recurse -Force
+  $extraManifest = Join-Path $stagePlugins "ardupilot-dataflash\manifest.json"
+  $m = Get-Content -LiteralPath $extraManifest -Raw | ConvertFrom-Json
+  if ($m.id -ne "ardupilot-dataflash") { Die "unexpected fork plugin id" }
+  $resolvedPluginVersions[$m.id] = [string]$m.version
+  $PluginIds += [string]$m.id
+  $pluginDlls = @(Get-ChildItem -LiteralPath $stagePlugins -Recurse -Filter "*_plugin.dll" | Sort-Object FullName)
+}
+if (-not $PackageVersion) { $PackageVersion = $Version }
+if ($PackageVersion -notmatch '^[0-9]+((\.|-)[0-9]+)*$') { Die "IFW requires a numeric PackageVersion" }
+
 # --- Qt deployment (Qt DLLs + Qt plugins + MSVC runtime) -------------------
 # windeployqt has to be run over the exe AND every plugin DLL: a plugin can
 # pull Qt modules (Qt Charts, Qt SVG, Qt QuickWidgets …) the main exe does
 # not, and without walking each plugin those transitive Qt DLLs never land in
 # the bundle — the classic "window doesn't render fully" symptom.
+# Localized Qt 6.12 products target Windows 10 1809+ and use the OS compiler.
+# Apply the official option to EVERY deployment pass; never delete DLLs afterward.
+$systemCompilerArgs = @()
+if ($ExtraPrefix) { $systemCompilerArgs = @('--no-system-d3d-compiler') }
 Info "running windeployqt on exe + plugins ..."
-& $windeployqt --release --no-translations --compiler-runtime $stagedExe
+& $windeployqt --release --no-translations --compiler-runtime @systemCompilerArgs $stagedExe
 if ($LASTEXITCODE -ne 0) { Die "windeployqt failed on the exe (exit $LASTEXITCODE)." }
 # Only the bundled plugin DLLs — NOT every DLL in data\, which by now also holds the
 # non-Qt files windeployqt itself dropped (D3Dcompiler_47.dll, opengl32sw.dll, …);
@@ -440,23 +517,40 @@ foreach ($d in $pluginDlls) {
   # --dir $stageBin: the plugin lives under lib\..., but its extra Qt module DLLs
   # must land in bin\ next to the exe (the dir Windows searches at load time), not
   # next to the plugin — otherwise a plugin-only Qt module never resolves.
-  & $windeployqt --dir $stageBin --release --no-translations $d.FullName
+  & $windeployqt --dir $stageBin --release --no-translations @systemCompilerArgs $d.FullName
   # Warn, don't Die: a recursively-collected DLL that is not a Qt-linked plugin
   # makes windeployqt exit 1, which must not abort the whole bundle.
   if ($LASTEXITCODE -ne 0) { Warn "windeployqt on $($d.Name) returned $LASTEXITCODE -- harmless if it is not a Qt-linked plugin." }
 }
 
+# App-local MSVC runtime avoids depending on a preinstalled redistributable.
+# VCToolsRedistDir is supplied by the selected official MSVC toolchain.
+$crt = Join-Path $env:VCToolsRedistDir "x64\Microsoft.VC143.CRT"
+if (-not (Test-Path $crt)) { Die "MSVC app-local runtime not found: $crt" }
+Get-ChildItem $crt -Filter "*.dll" | Copy-Item -Destination $stageBin -Force
+foreach ($name in @("msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll")) {
+  if (-not (Test-Path (Join-Path $stageBin $name))) { Die "missing app-local MSVC runtime: $name" }
+}
+
 # --- copy non-Qt runtime DLLs from the Conan cache -------------------------
 # windeployqt only knows about Qt; Conan-shared deps are copied by hand.
 #
-# Constrain the search to Conan 2 package "bin" folders: both the downloaded
+# Constrain the active graph to Conan 2 package "bin" folders: both the downloaded
 # layout (~/.conan2/p/<hash>/p/bin) and the built-from-source layout
 # (~/.conan2/p/b/<hash>/p/bin, note the extra "b" segment). WITHOUT that
 # constraint the recursive scan also picks up copies under a package's build
 # tree (~/.conan2/p/b/<hash>/build/...), the "newest by mtime" may be one of
 # those, and the sibling DLL copy pulls unrelated intermediates.
+# Only package directories in this build's resolved graph are eligible.
+$graphPath = Join-Path $BuildDir "conan-graph.json"
+$graph = Get-Content -LiteralPath $graphPath -Raw | ConvertFrom-Json
+$runtimeDirs = @($graph.graph.nodes.PSObject.Properties.Value |
+  Where-Object { $_.package_folder -and $_.context -eq "host" } |
+  ForEach-Object { Join-Path $_.package_folder "bin" } |
+  Where-Object { Test-Path -LiteralPath $_ } | Sort-Object -Unique)
+if ($runtimeDirs.Count -eq 0) { Die "No active package runtime directories in $graphPath" }
 function Copy-ConanRuntime([string]$probeDll, [string]$label, [switch]$Required) {
-  $hit = Get-ChildItem $ConanHome -Recurse -Filter $probeDll -ErrorAction SilentlyContinue |
+  $hit = Get-ChildItem -LiteralPath $runtimeDirs -Filter $probeDll -ErrorAction SilentlyContinue |
          Where-Object { $_.FullName -match '\\p\\(?:b\\)?[^\\]+\\p\\bin\\' } |
          Sort-Object LastWriteTime -Descending | Select-Object -First 1
   if (-not $hit) {
@@ -466,7 +560,7 @@ function Copy-ConanRuntime([string]$probeDll, [string]$label, [switch]$Required)
   }
   $srcDir = $hit.Directory.FullName
   $copied = 0
-  foreach ($d in (Get-ChildItem $srcDir -Filter "*.dll")) { Copy-Item $d.FullName $stageBin -Force; $copied++ }
+  foreach ($d in (Get-ChildItem -LiteralPath $srcDir -Filter "*.dll")) { Copy-Item -LiteralPath $d.FullName -Destination $stageBin -Force; $copied++ }
   Info "staged $copied $label DLL(s) from $srcDir"
 }
 
@@ -482,7 +576,7 @@ Copy-ConanRuntime "mcap*.dll"    "mcap"
 # initialise. Copy Lib/, DLLs/ and any python3XX._pth from the same Conan
 # package root as the python3XX.dll we just staged.
 function Copy-CPythonStdlib {
-  $pyDll = Get-ChildItem $ConanHome -Recurse -Filter "python3*.dll" -ErrorAction SilentlyContinue |
+  $pyDll = Get-ChildItem -LiteralPath $runtimeDirs -Filter "python312.dll" -ErrorAction SilentlyContinue |
            Where-Object { $_.FullName -match '\\p\\(?:b\\)?[^\\]+\\p\\bin\\' } |
            Sort-Object LastWriteTime -Descending | Select-Object -First 1
   if (-not $pyDll) { Warn "CPython DLL missing -- stdlib bundling skipped."; return }
@@ -492,8 +586,8 @@ function Copy-CPythonStdlib {
   $pyBin = $pyDll.Directory.FullName
   foreach ($sub in @("Lib", "DLLs")) {
     $src = Join-Path $pyBin $sub
-    if (Test-Path $src) {
-      Copy-Item $src $stageBin -Recurse -Force
+    if (Test-Path -LiteralPath $src) {
+      Copy-Item -LiteralPath $src -Destination $stageBin -Recurse -Force
       Info "staged CPython $sub/ from $src"
     } elseif ($sub -eq "Lib") {
       Warn "CPython Lib/ not found under $pyBin -- pj_scripting may fail to init the interpreter."
@@ -505,13 +599,13 @@ function Copy-CPythonStdlib {
   # which does not exist on the user's machine. Reuse the package's _pth if it ships
   # one; otherwise synthesize a minimal one named to match the DLL (python312.dll ->
   # python312._pth).
-  $pth = Get-ChildItem $pyBin -Filter "python3*._pth" -ErrorAction SilentlyContinue | Select-Object -First 1
+  $pth = Get-ChildItem -LiteralPath $pyBin -Filter "python3*._pth" -ErrorAction SilentlyContinue | Select-Object -First 1
   if ($pth) {
-    Copy-Item $pth.FullName $stageBin -Force
+    Copy-Item -LiteralPath $pth.FullName -Destination $stageBin -Force
     Info "staged $($pth.Name)"
   } else {
     $pthName = [System.IO.Path]::GetFileNameWithoutExtension($pyDll.Name) + "._pth"
-    Set-Content -Path (Join-Path $stageBin $pthName) -Value @(".", "Lib", "DLLs", "import site") -Encoding ASCII
+    Set-Content -LiteralPath (Join-Path $stageBin $pthName) -Value @(".", "Lib", "DLLs", "import site") -Encoding ASCII
     Info "generated $pthName (portable stdlib path, relative to the DLL)"
   }
 }
@@ -529,14 +623,12 @@ if ($pluginDlls.Count -gt 0) {
     $validationArgs += "$id=$($resolvedPluginVersions[$id])"
   }
   Info "validating $($PluginIds.Count) whitelisted plugin(s) with the staged app ..."
-  # PlotJuggler4.exe is a GUI-subsystem binary: run bare, its report reaches no log. Piping hands it
-  # real stdout/stderr handles; 'Continue' keeps its stderr lines from stopping the script.
-  $prevEAP = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
-  & $stagedExe @validationArgs 2>&1 | ForEach-Object { Write-Host "$_" }
-  $validationExit = $LASTEXITCODE
-  $ErrorActionPreference = $prevEAP
-  if ($validationExit -ne 0) {
-    Die "staged plugin validation failed (exit $validationExit)"
+  . (Join-Path $PSScriptRoot '../../scripts/windows/native_process.ps1')
+  $validation = Invoke-PjNativeProcess -FilePath $stagedExe -ArgumentValues $validationArgs
+  [Console]::Out.Write($validation.StandardOutput)
+  [Console]::Error.Write($validation.StandardError)
+  if ($validation.ExitCode -ne 0) {
+    Die "staged plugin validation failed (exit $($validation.ExitCode))"
   }
 }
 
@@ -546,7 +638,7 @@ if ($pluginDlls.Count -gt 0) {
 # look modified" trap).
 function Render-Template([string]$src, [string]$dst) {
   (Get-Content -Raw $src) `
-    -replace '__PJ_VERSION__', $Version `
+    -replace '__PJ_VERSION__', $PackageVersion `
     -replace '__PJ_RELEASE_DATE__', (Get-Date -Format 'yyyy-MM-dd') |
     Set-Content $dst
 }
@@ -584,12 +676,73 @@ foreach ($f in Get-ChildItem (Join-Path $pkgSrc "meta") -File | Where-Object { $
   Copy-Item $f.FullName $stageMeta -Force
 }
 
+# Embed the reviewed supervisor in the component script. Compression keeps the
+# eventual UTF-16LE EncodedCommand below Windows' command-line length limit.
+$guardBytes = [Text.Encoding]::UTF8.GetBytes((Get-Content -LiteralPath (Join-Path $installerRoot "replacement_guard.ps1") -Raw -Encoding UTF8))
+$guardBuffer = New-Object IO.MemoryStream
+$guardGzip = New-Object IO.Compression.GZipStream($guardBuffer, [IO.Compression.CompressionMode]::Compress, $true)
+$guardGzip.Write($guardBytes, 0, $guardBytes.Length)
+$guardGzip.Dispose()
+$guardEncoded = [Convert]::ToBase64String($guardBuffer.ToArray())
+$guardBuffer.Dispose()
+$installScriptPath = Join-Path $stageMeta "installscript.qs"
+$installScript = Get-Content -LiteralPath $installScriptPath -Raw -Encoding UTF8
+if (($installScript.Split(@('__PJ_REPLACEMENT_HELPER_GZIP__'), [StringSplitOptions]::None).Count - 1) -ne 1) { Die "Replacement supervisor placeholder missing or duplicated" }
+[IO.File]::WriteAllText($installScriptPath, $installScript.Replace('__PJ_REPLACEMENT_HELPER_GZIP__', $guardEncoded), (New-Object Text.UTF8Encoding($false)))
+
+# Compile the component catalog with the same pinned Qt kit as the application.
+$lrelease = Resolve-Exe "lrelease.exe" (Split-Path $windeployqt -Parent)
+if (-not $lrelease) { Die "lrelease.exe not found. Install Qt Linguist tools in the selected kit or add them to PATH." }
+
+# Explicit resources are required: IFW's SDK wildcard omits zh_CN catalogs.
+$translationStage = Join-Path $StageDir "translations"
+New-Item -ItemType Directory -Force -Path $translationStage | Out-Null
+# IFW 4.10 component catalogs follow the OS locale, not --lang. Merge the
+# custom context into the catalog selected by the SDK --lang path instead.
+& $lrelease (Join-Path $installerRoot "translations/ifw_zh_CN.ts") (Join-Path $stageMeta "zh_CN.ts") -qm (Join-Path $translationStage "ifw_zh_CN.qm")
+if ($LASTEXITCODE -ne 0) { Die "IFW standard-page translation compilation failed." }
+$qtChinese = Join-Path (Split-Path (Split-Path $windeployqt -Parent) -Parent) "translations/qtbase_zh_CN.qm"
+if (-not (Test-Path $qtChinese)) { Die "Missing Qt Base Chinese translation: $qtChinese" }
+Copy-Item $qtChinese (Join-Path $translationStage "qt_zh_CN.qm")
+$translationQrc = Join-Path $translationStage "translations.qrc"
+@'
+<RCC><qresource prefix="/translations_new">
+  <file>ifw_zh_CN.qm</file>
+  <file>qt_zh_CN.qm</file>
+</qresource></RCC>
+'@ | Set-Content -Encoding UTF8 $translationQrc
+if ($ExperimentalTraditionalChinese) {
+  & (Join-Path $installerRoot "prepare_traditional_stage.ps1") -QtBin (Split-Path $lrelease -Parent) -StageDir $StageDir
+}
+$ifwLicenseDir = Join-Path $stageData "share/licenses/QtInstallerFramework"
+New-Item -ItemType Directory -Force -Path $ifwLicenseDir | Out-Null
+Copy-Item (Join-Path $installerRoot "translations/LICENSE.GPL3-EXCEPT") $ifwLicenseDir
+Copy-Item (Join-Path $installerRoot "translations/README.md") $ifwLicenseDir
+
+# Preserve the upstream historical installer notice byte-for-byte in both
+# payload formats, separately from the canonical Qt license shown by IFW.
+$historyDir = Join-Path $stageData "share/licenses/PlotJuggler-installer-history"
+New-Item -ItemType Directory -Force -Path $historyDir | Out-Null
+Copy-Item (Join-Path $installerRoot "license_lgpl_historical.txt") (Join-Path $historyDir "license_lgpl.txt") -Force
+Copy-Item (Join-Path $installerRoot "LICENSE-PROVENANCE.txt") $historyDir -Force
+
+if ($ExtraPrefix) {
+  Copy-Item (Join-Path $stageData "share/licenses/Qt-LGPL.txt") (Join-Path $stageMeta "license_lgpl.txt") -Force
+}
+
+# Check the actual deployed helper DLL and its original notices before either
+# IFW or the portable ZIP can consume this stage. This is fork-payload specific.
+if ($ExtraPrefix) {
+  python (Join-Path $PSScriptRoot "../localization/windows_mesa_notices.py") --prefix $stageData
+  if ($LASTEXITCODE -ne 0) { Die "Windows Mesa notice verification failed." }
+}
+
 # --- build the installer ---------------------------------------------------
 if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Force -Path $OutDir | Out-Null }
 if ($CleanReleaseName) {
   # Tag releases: -Version is already the unique identifier, so name the
   # artifact to match the Linux AppImage's plain PlotJuggler-<version>-<arch>.
-  $outExe = Join-Path (Resolve-Path $OutDir) "PlotJuggler-$Version-Windows-x64.exe"
+  $outExe = Join-Path (Resolve-Path $OutDir) "PlotJuggler-$Version-Windows-x64$NameSuffix.exe"
 } else {
   # Dev/dispatch builds: stamp with the built commit's short hash so
   # otherwise-identical-looking artifacts stay distinguishable. Matches the
@@ -599,10 +752,10 @@ if ($CleanReleaseName) {
   $ErrorActionPreference = $prevEAP
   if (-not $shortHash) { Die "Could not resolve the built commit's hash in $repoRoot." }
   $shortHash = "$shortHash".Trim()
-  $outExe = Join-Path (Resolve-Path $OutDir) "PlotJuggler-$Version-Windows-x64.$shortHash.exe"
+  $outExe = Join-Path (Resolve-Path $OutDir) "PlotJuggler-$Version-Windows-x64.$shortHash$NameSuffix.exe"
 }
 Info "running binarycreator -> $outExe"
-& $binarycreator --offline-only -c (Join-Path $StageDir "config.xml") -p $stagePackages $outExe
+& $binarycreator --offline-only -r $translationQrc -c (Join-Path $StageDir "config.xml") -p $stagePackages $outExe
 if ($LASTEXITCODE -ne 0) { Die "binarycreator failed (exit $LASTEXITCODE)." }
 
 # --- update repository (optional) ------------------------------------------
@@ -622,7 +775,7 @@ if ($RepoOutDir) {
   if (-not (Test-Path $updatesXml)) { Die "repogen produced no Updates.xml in $repoAbs." }
   # The version in Updates.xml is what a maintenance tool compares against the
   # installed one; a mismatch here means nobody is ever offered the update.
-  if ((Get-Content -Raw $updatesXml) -notmatch [regex]::Escape("<Version>$Version</Version>")) {
+  if ((Get-Content -Raw $updatesXml) -notmatch [regex]::Escape("<Version>$PackageVersion</Version>")) {
     $found = (Select-String -Path $updatesXml -Pattern '<Version>.*?</Version>' -AllMatches).Matches.Value -join ", "
     Die "Updates.xml advertises [$found], not $Version."
   }

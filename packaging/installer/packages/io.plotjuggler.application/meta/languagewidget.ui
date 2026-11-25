@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LanguageWidget</class>
+ <widget class="QWidget" name="LanguageWidget">
+  <property name="windowTitle"><string notr="true">语言 / Language</string></property>
+  <layout class="QVBoxLayout" name="languageLayout">
+   <item><widget class="QLabel" name="label"><property name="text"><string notr="true">语言 / Language</string></property></widget></item>
+   <item><widget class="QComboBox" name="language">
+    <item><property name="text"><string notr="true">简体中文</string></property></item>
+    <item><property name="text"><string notr="true">English</string></property></item>
+   </widget></item>
+   <item><widget class="QPushButton" name="applyLanguage"><property name="text"><string notr="true">切换语言并重启 / Restart in selected language</string></property></widget></item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

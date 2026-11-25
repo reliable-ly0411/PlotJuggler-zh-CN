@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
-const { test, expect } = require('@playwright/test');
+const { uiTranslations } = require('./support/ui_language');
+const { test, expect } = require('./support/language_test');
 const crypto = require('crypto');
 const { waitForQtApp } = require('./support/app');
 const { devicePixelRatioOptions } = require('./support/browser');
@@ -877,7 +878,7 @@ test('right-drag creates XY curves through nonblocking dialogs and rolls back ca
   await page.mouse.click(screen.x + dialog.ok.x, screen.y + dialog.ok.y);
 
   const warning = await requestXyDuplicateWarning(page, consoleMessages, 0);
-  expect(warning.title).toBe('Duplicate name');
+  expect(warning.title).toBe((await uiTranslations(page))('PJ::PlotWidget', 'Duplicate name'));
   expect(warning.body).toContain(firstAlias);
   await page.mouse.click(screen.x + warning.ok.x, screen.y + warning.ok.y);
   await page.waitForTimeout(200);

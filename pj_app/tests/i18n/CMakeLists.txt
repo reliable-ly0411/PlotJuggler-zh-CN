@@ -63,6 +63,8 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../../pj_marketplace/tests/catalo
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../../pj_runtime/tests/localized_seed" localized-seed)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../rc2" rc2)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../profile" profile)
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../installer_script" installer-script)
+
 # Catch resource registration/linkage regressions before the full SDK build.
 # Use a Core-only executable to isolate the production resource object's
 # linkage from unrelated GUI test dependencies, with the unchanged app guard.
@@ -79,3 +81,13 @@ if(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
                 -P "${pj_root}/pj_app/tests/check_exported_symbols.cmake")
 endif()
 
+if(WIN32)
+    # Run the real synthetic wizard before SDK bootstrapping too. This uses
+    # pinned IFW tools and dedicated synthetic payloads, never user installations.
+    find_program(PJ_TEST_PYTHON NAMES python python3 REQUIRED)
+    include("${pj_root}/cmake/PjIfwTestOptions.cmake")
+    add_test(NAME WindowsInstallerResourceContract
+        COMMAND "${PJ_TEST_PYTHON}" "${pj_root}/scripts/verify_windows_installer_resources.py"
+                --lrelease $<TARGET_FILE:Qt6::lrelease> ${PJ_IFW_TEST_ARGS})
+    set_tests_properties(WindowsInstallerResourceContract PROPERTIES TIMEOUT 900)
+endif()

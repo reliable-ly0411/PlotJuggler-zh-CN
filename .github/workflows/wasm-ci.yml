@@ -13,8 +13,8 @@
 #      QRhi capability probe and functional browser suite (with python.spec.js
 #      and python_layout.spec.js) run against the same source graph used by the
 #      packaged application, in Chromium (wasm-chromium job, three Playwright
-#      workers) and Firefox (wasm-firefox, two shards of one worker; nightly
-#      and manual runs only), which run in parallel on this job's package.
+#      workers) and Firefox (wasm-firefox, two shards of one worker), which run
+#      in parallel on this job's package.
 #      It is packaged twice: without presets (deploy/, every spec) and with the
 #      samples (deploy-presets/, which presets.spec.js serves itself).
 #
@@ -25,19 +25,8 @@ name: WASM CI
 on:
   workflow_dispatch:
   # Wasm breakage is invisible to the standard PR checks (native CI stays green
-  # when shared code calls a native-only API, and behaviour changes only the
-  # browser specs pin go unnoticed). Every PR builds the browser app and runs the
-  # @smoke specs; PRs that touch the browser build itself (WASM_PATHS below) and
-  # the nightly run the whole Chromium suite. Not a required check; the build is
-  # ~20 min warm. Drafts wait: marking one ready runs it.
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - '.claude/**'
-  schedule:
-    - cron: "0 4 * * *"
+  # when shared code calls a native-only API), so run on PRs that can plausibly
+  # affect the browser build. Not a required check; ~20-30 min on warm caches.
 
 concurrency:
   group: wasm-ci-${{ github.ref }}
@@ -57,27 +46,12 @@ jobs:
     if: >-
       ${{ !cancelled() && !github.event.pull_request.draft &&
       (github.event_name != 'schedule' || needs.changed.outputs.changed == 'true') }}
-    # PR and manual runs on Depot, unlike the other workflows' GitHub-hosted runners:
-    # WASM is the slowest workflow, which Depot runs in 27 minutes against GitHub's
-    # 39 (warm medians), and its browser time bounds need a steady runner (GitHub's
-    # took 925-2268 ms for the same sample restore). The nightly run, which nobody
-    # waits on, stays on GitHub's free runners. Same choice for the browser jobs.
-    runs-on: ${{ github.event_name == 'schedule' && 'ubuntu-22.04' || 'depot-ubuntu-22.04-4' }}
-    # Generous ceiling for a cold run (Qt + emsdk + ccache); warm runs take 20-30 minutes.
+    runs-on: depot-ubuntu-22.04-4
+    # Generous first-run ceiling (cold Qt+emsdk+ccache); warm runs are expected
+    # in the 20-30 minute band. Tighten once real timings accumulate.
     timeout-minutes: 120
 
     steps:
-      - name: Free up runner disk space
-        # GitHub-hosted Ubuntu runners (the nightly run) leave ~14 GB free, which the
-        # Conan closure, Qt and the build tree can exceed ("No space left on
-        # device"). Reclaim the preinstalled toolchains no job here uses.
-        if: github.event_name == 'schedule'
-        run: |
-          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
-            /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/lib/node_modules
-          sudo docker image prune --all --force >/dev/null 2>&1 || true
-          df -h /
-
       - name: Use HTTPS for github.com submodules
         run: git config --global url."https://github.com/".insteadOf "git@github.com:"
 
@@ -159,8 +133,7 @@ jobs:
         # restore/save split rather than actions/cache: the implicit post-job
         # save fires on every run and the SHA-keyed entry is never an exact
         # hit, so each run persisted a new blob of up to max_size (4 G below)
-        # into the cache store (billed Depot Cache on Depot, the repo's shared 10 GB
-        # Actions cache on the nightly GitHub runner). See linux-ci.yml's "Save ccache".
+        # into billed Depot Cache storage. See linux-ci.yml's "Save ccache".
         id: ccache_restore
         uses: actions/cache/restore@v5
         with:
@@ -211,6 +184,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Language probe unit tests import the pinned Playwright assertions.
+          npm --prefix tests/wasm ci
           npm --prefix tests/wasm run test:package
           node scripts/package_wasm.mjs --presets resources/wasm-presets \
             --source build-wasm-prod/pj_app --output build-wasm-prod/deploy
@@ -219,11 +194,8 @@ jobs:
           diff -qr build-wasm-prod/deploy build-wasm-prod/deploy-b
 
       - name: Download budget of the production package
-        # Measured 16,125,617 B on 2026-10-21 (Python and the notices included), about
-        # 17 MB with the browser MCP server (16,992,912 B on 2026-11-11); the 20,000,000 B
-        # budget leaves room for more built-in plugins. Raise it
-        # deliberately. The Python stdlib zip (python_stdlib.zip, about 0.67 MB) is
-        # downloaded on first Python use and not counted.
+        # 5 % over the measured 16,125,617 B (2026-10-21, Python and the
+        # notices included). Raise it deliberately, with the new measurement.
         run: node scripts/wasm_size_budget.mjs build-wasm-prod/deploy/manifest.json 20000000
 
       - name: Cache Playwright browsers
@@ -234,9 +206,7 @@ jobs:
 
       - name: Install browser gate
         working-directory: tests/wasm
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Deployment contract and cold threaded boot (production package)
         working-directory: tests/wasm
@@ -271,8 +241,8 @@ jobs:
         # Re-seed only when the restore found nothing at all. This workflow has
         # no push trigger, so a push-only gate would let the cache decay to
         # permanently cold; conversely saving every run persisted a fresh blob
-        # of up to 4 G into the cache store. Cold-only bounds it to one blob per
-        # store until retention or eviction drops it, while staying
+        # of up to 4 G into billed Depot Cache storage. Cold-only bounds it to
+        # roughly one blob per Depot retention period while staying
         # self-healing: whichever run finds an empty cache repopulates it.
         # always(): the browser suites below are irrelevant to object validity.
         if: always() && steps.ccache_restore.outputs.cache-matched-key == ''
@@ -328,7 +298,7 @@ jobs:
   wasm-chromium:
     # The acceptance package of the wasm job, in Chromium (SwiftShader WebGL),
     # including the robot hosting spec, which runs docs/wasm/Caddyfile in Caddy.
-    # Skipped on PRs into release-* while the repo variable
+    # Skipped, like wasm-firefox, on PRs into release-* while the repo variable
     # PJ_CI_RELEASE_PR_LITE is 'true'; the wasm build itself still runs.
     needs: wasm
     # Explicit result check: the implicit success() also fails on the skipped
@@ -336,7 +306,7 @@ jobs:
     if: >-
       ${{ !cancelled() && needs.wasm.result == 'success' &&
       !(github.event_name == 'pull_request' && startsWith(github.base_ref, 'release-') && vars.PJ_CI_RELEASE_PR_LITE == 'true') }}
-    runs-on: ${{ github.event_name == 'schedule' && 'ubuntu-22.04' || 'depot-ubuntu-22.04-4' }}
+    runs-on: depot-ubuntu-22.04-4
     timeout-minutes: 60
     env:
       PJ_WASM_URL: http://127.0.0.1:6931/
@@ -471,19 +441,17 @@ jobs:
     # and headless Firefox gets no WebGL at all without a display (Xvfb).
     # One Playwright worker (playwright.config.js), so the suite is split
     # across two jobs instead.
-    # Nightly and manual runs only: its single llvmpipe worker makes it the
-    # costliest part of a PR run, and Chromium already gates the PR. A nightly failure
-    # opens a "Nightly failure" issue (nightly-failure.yml); dispatch the workflow on
-    # a branch to run Firefox before merging a Firefox-sensitive change.
     needs: wasm
     strategy:
       fail-fast: false
       matrix:
         shard: [1, 2]
     # Explicit result check: the implicit success() also fails on the skipped
-    # `changed` gate two levels up, which would skip this job on every manual run.
-    if: ${{ !cancelled() && needs.wasm.result == 'success' && github.event_name != 'pull_request' }}
-    runs-on: ${{ github.event_name == 'schedule' && 'ubuntu-22.04' || 'depot-ubuntu-22.04-4' }}
+    # `changed` gate two levels up, which would skip this job on every PR run.
+    if: >-
+      ${{ !cancelled() && needs.wasm.result == 'success' &&
+      !(github.event_name == 'pull_request' && startsWith(github.base_ref, 'release-') && vars.PJ_CI_RELEASE_PR_LITE == 'true') }}
+    runs-on: depot-ubuntu-22.04-4
     timeout-minutes: 60
     env:
       LIBGL_ALWAYS_SOFTWARE: '1'

@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
+  "sdk_repository": "https://github.com/PlotJuggler/plotjuggler_sdk.git",
+  "sdk_commits": {
+    "0.20.0": "3a63fe36acdfb3527c4de5a306fda01ad3165b7c",
+    "0.32.0": "e325fe38138690a79c8b4bbea28fa6b63066b75c",
+    "0.34.1": "4d59e7de81455afe73a77051075e8fb4b9f6b0fd"
+  },
+  "helper_sha256": "ecaa306b2cfe29940ed0d418e72739aef3d4d019dd1a01f212b6ac937f5badae",
+  "mosaico_sdk_archive_sha256": "110ffbe2ffbdaaef41cc7bbb507d8fed14a002ec21ebc281edc788b8ffea1dbb",
+  "plugins": [
+    {
+      "id": "protobuf-parser",
+      "module": "parser_protobuf",
+      "version": "1.2.0",
+      "tag": "parser_protobuf/v1.2.0",
+      "commit": "c843cb210af16cb5832cef85c125513c94f65d50",
+      "sdk": "0.32.0",
+      "target": "parser_protobuf_plugin",
+      "platforms": [
+        "Linux",
+        "Windows"
+      ],
+      "patch_sha256": "26049732d9c4d61e1a6a4b2a91496433796b7e1cf59985e356af86bfdf2ab15c",
+      "tag_object": "b2f8a6469d19ecd431d06ee3a7d717ebd374179e"
+    },
+    {
+      "id": "toolbox-assistant-agent",
+      "module": "toolbox_assistant_agent",
+      "version": "0.2.0",
+      "tag": "toolbox_assistant_agent/v0.2.0",
+      "commit": "ba245df89fb26e7905890654173fe289794410a1",
+      "sdk": "0.34.1",
+      "target": "toolbox_assistant_agent_plugin",
+      "platforms": [
+        "Linux"
+      ],
+      "patch_sha256": "fd002cd4775369212507c13b987f023d1986b25fdcbfea80685807669908bd59",
+      "tag_object": "44e9a37dd061624e1e8bb662e6905fd41cd4ac3f"
+    },
+    {
+      "id": "toolbox-transform-editor",
+      "module": "toolbox_transform_editor",
+      "version": "1.0.4",
+      "tag": "toolbox_transform_editor/v1.0.4",
+      "commit": "2bc991cae2dba7f9f1468dbf8dd72d89797699bc",
+      "sdk": "0.20.0",
+      "target": "toolbox_transform_editor_plugin",
+      "platforms": [
+        "Linux",
+        "Windows"
+      ],
+      "patch_sha256": "09f0334bb952016842c793e310ce0e562040753b97993b13a9e80ca00ae2a27c",
+      "tag_object": "89baa764a37828f648691d955a5e5d20cd80f557"
+    },
+    {
+      "id": "webrtc-client",
+      "module": "data_stream_webrtc",
+      "version": "1.0.1",
+      "tag": "data_stream_webrtc/v1.0.1",
+      "commit": "2bc991cae2dba7f9f1468dbf8dd72d89797699bc",
+      "sdk": "0.20.0",
+      "target": "webrtc_source_plugin",
+      "platforms": [
+        "Linux",
+        "Windows"
+      ],
+      "patch_sha256": "d058138356e5010bf3d42ee5fba5e3c805c31dcbae5b21fc08c82304cf41bf3b",
+      "tag_object": "be930b717926649fe4e4748d6af5b099a3b4ea80"
+    },
+    {
+      "id": "mcap-loader",
+      "module": "data_load_mcap",
+      "version": "1.3.0",
+      "tag": "data_load_mcap/v1.3.0",
+      "commit": "ffa967324aa03b7d076f91e2bf93aff92ebfbda0",
+      "sdk": "0.34.1",
+      "target": "mcap_source_plugin",
+      "platforms": [
+        "Linux",
+        "Windows"
+      ],
+      "tag_object": "a7772e412b9cb344a40d8a1791d19fede11ce684",
+      "patch_sha256": "61b20166c3de71e588103f331389ceb80c1de81b869e6a6ef20753c47fc2d0a1"
+    },
+    {
+      "id": "csv-loader",
+      "module": "data_load_csv",
+      "version": "1.0.7",
+      "tag": "data_load_csv/v1.0.7",
+      "commit": "ba6ee417d91a01aae778a0ec3a4443a024671123",
+      "sdk": "0.34.1",
+      "target": "csv_source_plugin",
+      "platforms": [
+        "Linux",
+        "Windows"
+      ],
+      "patch_sha256": "6b4d6bbb54c6ecec4c3a2b20d86a5228954db8fb1f0ffa06323f48c939324a01",
+      "tag_object": "f6e50746f80b6c34450e12a443914135f07ebf3f"
+    }
+  ],
+  "sdk_tag_objects": {
+    "0.20.0": "3a63fe36acdfb3527c4de5a306fda01ad3165b7c",
+    "0.32.0": "72c234d1ba0edac5d48e35c1c8311dca1f787efb",
+    "0.34.1": "4d59e7de81455afe73a77051075e8fb4b9f6b0fd"
+  },
+  "deferred_plugins": [
+    {
+      "id": "toolbox-mosaico",
+      "module": "toolbox_mosaico",
+      "version": "1.3.0",
+      "tag": "toolbox_mosaico/v1.3.0",
+      "commit": "c843cb210af16cb5832cef85c125513c94f65d50",
+      "sdk": "0.32.0",
+      "target": "toolbox_mosaico_plugin",
+      "platforms": [
+        "Linux",
+        "Windows"
+      ],
+      "patch_sha256": "188468e9030131d05ec21168c6fb002c6a4a03ee2440a24d6b5a3eada3652822",
+      "tag_object": "1769de48f8f4aa40420ccd51e1228f03f263d7ae",
+      "reason": "Keep original official binary; remaining English tracked by issue #20. SDK redistribution evidence unresolved."
+    }
+  ]
+}

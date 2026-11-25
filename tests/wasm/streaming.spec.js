@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+const { uiTranslations } = require('./support/ui_language');
 const { test, expect } = require('@playwright/test');
 const { bootApp, waitForQtApp } = require('./support/app');
 const { dragQtCanvas } = require('./support/canvas');
@@ -216,10 +217,12 @@ test('dummy stream runs, plots, pauses, resumes, stops, and shuts down cleanly',
 
   // The built-in streams are the Dummy Streamer, selected first, the PlotJuggler Bridge and the
   // Foxglove Bridge.
+  const tr = await uiTranslations(page);
+  const dummyName = tr('PJ::BundledPluginMetadata', 'Dummy Streamer');
   let state = await requestStreamingState(page, consoleMessages);
   expect(state).toMatchObject({
     sources: 3,
-    source: 'Dummy Streamer',
+    source: dummyName,
     active: false,
     datasets: 0,
     catalog: 0,
@@ -240,8 +243,8 @@ test('dummy stream runs, plots, pauses, resumes, stops, and shuts down cleanly',
     consoleMessages,
     value => value.active && value.datasets === 1 && value.catalog === 11 && value.range.max > value.range.min,
   );
-  expect(state).toMatchObject({ sources: 3, source: 'Dummy Streamer', active: true, datasets: 1, catalog: 11 });
-  expect(state.tree.datasetName).toBe('[stream] Dummy Streamer');
+  expect(state).toMatchObject({ sources: 3, source: dummyName, active: true, datasets: 1, catalog: 11 });
+  expect(state.tree.datasetName).toBe(tr('PJ::StreamingSourceManager', '[stream] %1', dummyName));
   expect(state.tree.topicName).toBe('dummy/sin_cos');
   expect(state.tree.fieldName).toBe('sin');
 

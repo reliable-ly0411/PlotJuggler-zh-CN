@@ -15,6 +15,21 @@ set -e
 HERE="$(dirname "$(readlink -f "${0}")")"
 APPDIR="${APPDIR:-${HERE}}"
 
+# Desktop URL handlers need the host's libraries, Qt plugins and Python. Keep
+# unset and explicitly empty values distinct; only the external child restores
+# them, while this process retains the bundle environment for plugin loading.
+for _name in LD_LIBRARY_PATH QT_PLUGIN_PATH XDG_DATA_DIRS PYTHONHOME \
+             GRPC_DEFAULT_SSL_ROOTS_FILE_PATH QT_IM_MODULE; do
+  if [[ -v "${_name}" ]]; then
+    export "PJ_APPIMAGE_HOST_${_name}_SET=1"
+    export "PJ_APPIMAGE_HOST_${_name}=${!_name}"
+  else
+    export "PJ_APPIMAGE_HOST_${_name}_SET=0"
+    unset "PJ_APPIMAGE_HOST_${_name}"
+  fi
+done
+export PJ_APPIMAGE_HOST_ENV=1
+
 # Key off the payload marker so renaming the AppImage keeps these defaults.
 # detect_leaks=0 is deliberate: this artifact hunts use-after-free at teardown;
 # Qt/plugin teardown leaks would bury that signal. Leak detection belongs to

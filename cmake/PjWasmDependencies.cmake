@@ -105,14 +105,17 @@ endif()
 
 # The official plugins' sources and their wasm.cmake files (PjWasmOfficialPlugins.cmake): a
 # source-only tarball, fetched whatever plugins are enabled.
-# Pin the reviewed upstream commit by immutable archive and hash so PJ4 consumes the official
-# sources without a local patch layer.
+# Pin the reviewed upstream commit by immutable archive and hash. It contains
+# CSV #397 / Log #391 upstream; verify the adopted bytes without reapplying patches.
+set(_pj_official_plugins_commit ec172a436b801e00d23d5e66de00741e659b4efa)
 FetchContent_Declare(pj_official_plugins
-    URL https://codeload.github.com/PlotJuggler/pj-official-plugins/tar.gz/ec172a436b801e00d23d5e66de00741e659b4efa
+    URL https://codeload.github.com/PlotJuggler/pj-official-plugins/tar.gz/${_pj_official_plugins_commit}
     URL_HASH SHA256=28f740c36f313c6fbb9e435a9984b29644964c879e2f54b5be3e73420296b557
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     SOURCE_SUBDIR _pj_source_only_no_cmakelists)
 FetchContent_MakeAvailable(pj_official_plugins)
+include("${CMAKE_CURRENT_LIST_DIR}/PjOfficialPluginCompatibility.cmake")
+pj_verify_official_plugin_compatibility("${pj_official_plugins_SOURCE_DIR}" "${_pj_official_plugins_commit}")
 set(PJ_OFFICIAL_PLUGINS_SOURCE_DIR "${pj_official_plugins_SOURCE_DIR}" CACHE INTERNAL "")
 
 if(PJ_WASM_WITH_PROTOBUF)

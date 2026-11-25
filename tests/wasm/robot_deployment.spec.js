@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+const { uiTranslations } = require('./support/ui_language');
 // A robot serves the browser app itself: Caddy, configured by docs/wasm/Caddyfile, serves the
 // deployment package over HTTPS and proxies /bridge to the PlotJuggler Bridge, so a preset whose
 // stream URL is ${deployment.ws_origin}/bridge works on any robot host. Each case runs the real
@@ -382,10 +383,12 @@ test('a ws:// bridge URL on the HTTPS page fails its stream with a visible reaso
     await run.page.evaluate(() => window.pjWasmReportLayoutDialogProbe());
     return report();
   }, { timeout: 30000 }).toContain('present=1');
-  expect(report()).toContain('title=Streaming');
+  const tr = await uiTranslations(run.page);
+  expect(report()).toContain(`title=${tr('PJ::MainWindow', 'Streaming')}`);
   // What the user reads, word for word.
-  expect(report()).toContain(`body=The stream failed:\n\nplugin: failed to connect to PJ bridge at ${plainUrl}: `
-    + `the browser refused to open a WebSocket to ${plainUrl}`);
+  expect(report()).toContain(`body=${tr('PJ::MainWindow', 'The stream failed:\n\n%1',
+    `plugin: failed to connect to PJ bridge at ${plainUrl}: `
+    + `the browser refused to open a WebSocket to ${plainUrl}`)}`);
   expect(run.messages.some(message => message.includes('the browser refused to open the WebSocket:')
     && message.includes('SecurityError'))).toBe(true);
   expect(run.sockets).toEqual([]);

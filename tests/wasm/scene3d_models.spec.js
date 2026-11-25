@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
-const { test, expect } = require('@playwright/test');
+const { uiTranslations } = require('./support/ui_language');
+const { test, expect } = require('./support/language_test');
 const fs = require('fs');
 const path = require('path');
 
@@ -57,7 +58,9 @@ test('SceneEntities submits procedural geometry and all five PBR maps', async ({
   console.log(`PJ_WASM_SCENE3D_SOFTWARE browser=${browserName} hdr_active=${hdr.active} reason=${hdr.error}`);
   if (browserName === 'chromium') {
     expect(hdr.active).toBe(false);
-    expect(hdr.error).toMatch(/^Software rendering \(SwiftShader\)/);
+    const tr = await uiTranslations(page);
+    expect(hdr.error).toBe(tr('pj::scene3d::SceneViewWidget',
+      'Software rendering (%1): reduced 3D quality', 'SwiftShader'));
   }
 
   expect(messages.some(message => message.includes('PJ_WASM_SCENE3D_FOUNDATION_FAILED'))).toBe(false);
@@ -94,8 +97,10 @@ test('a local URDF renders from browser-granted bytes and replays without claimi
     meshes: 4, visual: 3, collision: 0, placeholders: 1, bridges: 2,
     source: 'browser_robot.urdf',
   });
+  const tr = await uiTranslations(page);
   expect(local.docks[0].models.robots.status.join(' '))
-    .toContain('1 mesh reference(s) unavailable in the browser sandbox');
+    .toContain(tr('pj::scene3d::RobotModelLayer',
+      '  •  %n mesh reference(s) unavailable in the browser sandbox (shown as magenta placeholders)', 1));
   const downloaded = await downloadLayoutFromFileMenu(page, screen, messages);
   const xml = downloaded.bytes.toString('utf8');
   expect(xml).toMatch(
@@ -120,7 +125,8 @@ test('a local URDF renders from browser-granted bytes and replays without claimi
   expect(restored.docks[0].identity).not.toBe(local.docks[0].identity);
   expect(restored.docks[0].models.robots.source).toBe('browser_robot.urdf');
   expect(restored.docks[0].models.robots.status.join(' '))
-    .toContain('Select the local URDF again; browser layouts cannot retain host-file access');
+    .toContain(tr('pj::scene3d::RobotModelLayer',
+      'Select the local URDF again; browser layouts cannot retain host-file access'));
   expect(restored.docks[0].readback.rgbSum).toBeGreaterThan(0);
   expect(errors).toEqual([]);
 });
