@@ -41,13 +41,6 @@ test(`a native Log restores ${legacy ? 'legacy official widget' : 'native'} layo
       line.match(/PJ_WASM_LOG_DOCK bindings=0 pending=0 rows=0 x=(\d+) y=(\d+)/)).find(Boolean);
     return Boolean(dock);
   }, { message: "log dock must mount after the real picker click" }).toBe(true);
-  // The native dock hides future entries by default. Show all six using its actual button, not a test mutation.
-  const future = (await customState(page, messages)).map(line =>
-    line.match(/PJ_WASM_LOG_FUTURE x=(\d+) y=(\d+) checked=0/)).find(Boolean);
-  expect(future).toBeTruthy();
-  await page.mouse.click(screen.x + Number(future[1]), screen.y + Number(future[2]));
-  await expect.poll(async () => (await customState(page, messages)).some(line =>
-    /PJ_WASM_LOG_FUTURE x=\d+ y=\d+ checked=1/.test(line))).toBe(true);
   let row;
   await expect.poll(async () => {
     const before = messages.length;
@@ -60,6 +53,18 @@ test(`a native Log restores ${legacy ? 'legacy official widget' : 'native'} layo
   await dragQtCanvas(page,
     { x: screen.x + Number(row[2]), y: screen.y + Number(row[3]) },
     { x: screen.x + Number(dock[1]), y: screen.y + Number(dock[2]) });
+  // The empty dock has no filters. Bind the topic first, then use the actual
+  // button to show the future entries; never mutate the model from the test.
+  let future;
+  await expect.poll(async () => {
+    const state = await customState(page, messages);
+    future = state.map(line => line.match(/PJ_WASM_LOG_FUTURE x=(\d+) y=(\d+) checked=0/)).find(Boolean);
+    return Boolean(future) && state.some(line =>
+      /PJ_WASM_LOG_DOCK bindings=1 pending=0 rows=\d+ x=\d+ y=\d+ resolved=1/.test(line));
+  }, { message: "bound log must show the unchecked future button" }).toBe(true);
+  await page.mouse.click(screen.x + Number(future[1]), screen.y + Number(future[2]));
+  await expect.poll(async () => (await customState(page, messages)).some(line =>
+    /PJ_WASM_LOG_FUTURE x=\d+ y=\d+ checked=1/.test(line))).toBe(true);
   await expect.poll(async () => (await customState(page, messages)).some(line =>
     /PJ_WASM_LOG_DOCK bindings=1 pending=0 rows=6 x=\d+ y=\d+ resolved=1/.test(line)),
     { timeout: 30000 }).toBe(true);

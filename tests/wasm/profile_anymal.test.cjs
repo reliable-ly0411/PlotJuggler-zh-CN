@@ -38,7 +38,11 @@ test('diagnostic derivation retains every original assertion and parses as JavaS
   const expectations = text => text.split('\n').filter(line => /\bexpect\b/.test(line));
   assert.deepEqual(expectations(derived), expectations(original));
   assert.equal((derived.match(/test\('/g) || []).length, (original.match(/test\('/g) || []).length);
-  assert.match(derived, /startAnymalProfile/);
+  assert.match(derived, /if \(testInfo\) profile = await require.+\.startAnymalProfile/);
+  assert.match(derived, /expectSampleStaysResponsive\(page, browserName,\n    \{ id: 'anymal'.+expectViews: expectAnymalViews \}, testInfo\);/);
+  assert.match(derived, /expectSampleStaysResponsive\(page, browserName,\n    \{ id: 'pandaset'.+expectViews: expectPandasetViews \}\);/);
+  assert.match(derived, /if \(profile\) await profile\.mark/);
+  assert.match(derived, /expect\(task === null, pass\)\.toBe\(browserName === 'firefox'\)/);
   assert.match(derived, /originalFailure = error;\n    throw error;/);
   new vm.Script(derived);
 });
@@ -49,5 +53,18 @@ test('unknown original test shapes stop before substitution', () => {
     // The first matching line may belong to another test; remove every anchor to test drift.
     const drift = changed.replaceAll('const from = run.messages.length;', 'const unexpected = 0;');
     assert.throws(() => instrumentAnymalSpec(drift, '/synthetic/helper.js'));
+  }
+});
+
+test('duplicate shared helper, duplicate target, and changed target call fail closed', () => {
+  const original = fs.readFileSync(path.join(__dirname, 'presets.spec.js'), 'utf8');
+  const helper = 'async function expectSampleStaysResponsive(page, browserName, { id, docks, loaded, expectViews }) {';
+  const target = "test('anymal sample stays responsive through load and reopen'";
+  for (const drift of [
+    helper + '\n' + original,
+    target + '\n' + original,
+    original.replace('expectViews: expectAnymalViews });', 'expectViews: replacement });'),
+  ]) {
+    assert.throws(() => instrumentAnymalSpec(drift, '/synthetic/helper.js'), /Diagnostic anchor changed/);
   }
 });

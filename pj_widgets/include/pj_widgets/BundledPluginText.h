@@ -128,8 +128,13 @@ inline QString bundledPluginText(const QString& id, const QString& version, cons
            "ArduPilot DataFlash BIN logs: numeric fields, sensor instances, units, parameters and message timelines.")},
   };
   for (const auto& entry : entries) {
-    if (id == QLatin1String(entry.id) && version == QLatin1String(entry.version) &&
-        source == QString::fromUtf8(entry.source)) {
+    // Official bundled source 1.0.2 retains the two exact Dummy Streamer
+    // metadata fields; native packages can still carry official 1.0.1.
+    const bool known_version =
+        version == QLatin1String(entry.version) ||
+        (QLatin1String(entry.id) == QLatin1String("dummy-streamer") &&
+         QLatin1String(entry.version) == QLatin1String("1.0.1") && version == QLatin1String("1.0.2"));
+    if (id == QLatin1String(entry.id) && known_version && source == QString::fromUtf8(entry.source)) {
       return QCoreApplication::translate("PJ::BundledPluginMetadata", entry.source);
     }
   }

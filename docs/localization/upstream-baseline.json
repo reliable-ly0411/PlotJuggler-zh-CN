@@ -17,7 +17,7 @@
     "upstream_commit": "3e2f9253adc2d41e17b2f0fec74f4b2487c42fb0",
     "repository": "https://github.com/reliable-ly0411/plotjuggler-apbin-plugins",
     "branch": "plotjuggler-4.x-sdk",
-    "commit": "fc6065fd64305479946552a757d78e6afdd2c506",
+    "commit": "bda1161851395ba3c7499546fdabb4269ffc8ff2",
     "path": "3rdparty/plotjuggler-apbin-plugins",
     "sdk_version": "1.1.0",
     "sdk_source_commit": "d65923cd11ab7a822ef7b802523e2fc7b281f515",

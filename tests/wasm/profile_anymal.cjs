@@ -9,25 +9,41 @@ const TITLE = 'anymal sample stays responsive through load and reopen';
 // Derive only the target case. Unknown source shapes fail closed instead of
 // substituting a different branch's assertions or requiring its custom probes.
 function instrumentAnymalSpec(source, helper) {
-  const start = source.indexOf(`test('${TITLE}'`);
-  const end = source.indexOf("\ntest('a sample that fails", start);
-  if (start < 0 || end < 0) throw new Error('Original Anymal case boundaries changed');
-  let block = source.slice(start, end);
-  function replaceOnce(before, after) {
-    if (block.split(before).length !== 2) throw new Error(`Diagnostic anchor changed: ${before}`);
-    block = block.replace(before, after);
+  const caseStart = "test('" + TITLE + "'";
+  const caseEnd = "\n\ntest('pandaset sample stays responsive through load and reopen'";
+  const signature = 'async function expectSampleStaysResponsive(page, browserName, { id, docks, loaded, expectViews }) {';
+  function unique(text, token) {
+    if (text.split(token).length !== 2) throw new Error("Diagnostic anchor changed: " + token);
+    return text.indexOf(token);
   }
-  replaceOnce('async ({ page, browserName }) => {', 'async ({ page, browserName }, testInfo) => {');
-  replaceOnce('  const samples = await startSamples();\n  try {',
+  function replaceOnce(text, before, after) {
+    unique(text, before);
+    return text.replace(before, after);
+  }
+  const start = unique(source, signature);
+  const caseStartIndex = unique(source, caseStart);
+  const caseEndIndex = unique(source, caseEnd);
+  const helperEnd = source.indexOf('\n}\n\n// @serial:', start);
+  if (helperEnd < 0 || helperEnd >= caseStartIndex || caseStartIndex >= caseEndIndex)
+    throw new Error('Original Anymal helper or case boundaries changed');
+  let block = source.slice(start, helperEnd + 2);
+  let target = source.slice(caseStartIndex, caseEndIndex);
+  target = replaceOnce(target, "{ tag: '@serial' }, async ({ page, browserName }) => {",
+    "{ tag: '@serial' }, async ({ page, browserName }, testInfo) => {");
+  unique(target, 'await expectSampleStaysResponsive(page, browserName,');
+  target = replaceOnce(target, 'expectViews: expectAnymalViews });', 'expectViews: expectAnymalViews }, testInfo);');
+  block = replaceOnce(block, signature,
+    'async function expectSampleStaysResponsive(page, browserName, { id, docks, loaded, expectViews }, testInfo) {');
+  block = replaceOnce(block, '  const samples = await startSamples();\n  try {',
     '  const samples = await startSamples();\n  let profile;\n  let originalFailure;\n  try {');
   const boot = '    const run = await bootSamples(context, errors, samples);';
-  replaceOnce(boot, boot + `\n    profile = await require(${JSON.stringify(helper)}).startAnymalProfile(\n`
+  block = replaceOnce(block, boot, boot + `\n    if (testInfo) profile = await require(${JSON.stringify(helper)}).startAnymalProfile(\n`
     + '      run.page, testInfo, SAMPLES_PACKAGE, __dirname);');
-  replaceOnce('      const from = run.messages.length;',
-    '      await profile.mark(`anymal-${pass}-start`);\n      const from = run.messages.length;');
-  replaceOnce('      const restore = run.messages.slice(from)',
-    '      await profile.mark(`anymal-${pass}-models-ready`);\n      const restore = run.messages.slice(from)');
-  replaceOnce('  } finally {\n    await samples.close();\n  }', `  } catch (error) {
+  block = replaceOnce(block, '      const from = run.messages.length;',
+    '      if (profile) await profile.mark(`anymal-${pass}-start`);\n      const from = run.messages.length;');
+  block = replaceOnce(block, '      const restore = run.messages.slice(from)',
+    '      if (profile) await profile.mark(`anymal-${pass}-models-ready`);\n      const restore = run.messages.slice(from)');
+  block = replaceOnce(block, '  } finally {\n    await samples.close();\n  }', `  } catch (error) {
     originalFailure = error;
     throw error;
   } finally {
@@ -40,7 +56,8 @@ function instrumentAnymalSpec(source, helper) {
       await samples.close();
     }
   }`);
-  return source.slice(0, start) + block + source.slice(end);
+  return source.slice(0, start) + block + source.slice(helperEnd + 2, caseStartIndex)
+    + target + source.slice(caseEndIndex);
 }
 
 // Only an actual failed Chromium result admits a diagnostic replay. A passing

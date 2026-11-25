@@ -938,6 +938,18 @@
         <source>Version %1</source>
         <translation>版本 %1</translation>
     </message>
+    <message>
+        <source>Browser build: GNU GPL v3. PlotJuggler&apos;s source: MPL 2.0</source>
+        <translation>瀏覽器版：GNU GPL v3。PlotJuggler 原始碼：MPL 2.0</translation>
+    </message>
+    <message>
+        <source>Source code</source>
+        <translation>原始碼</translation>
+    </message>
+    <message>
+        <source>Third-party licences</source>
+        <translation>第三方授權條款</translation>
+    </message>
 </context>
 <context>
     <name>PJ::ArchiveDiagnostics</name>
@@ -4118,6 +4130,14 @@ Message: %3</source>
         <location line="+3"/>
         <source>Edit the selected custom topic</source>
         <translation>編輯選取的自訂主題</translation>
+    </message>
+    <message>
+        <source>View the formula (created by %1; read-only)</source>
+        <translation>檢視公式（由 %1 建立；唯讀）</translation>
+    </message>
+    <message>
+        <source>View the formula (read-only)</source>
+        <translation>檢視公式（唯讀）</translation>
     </message>
 </context>
 <context>
@@ -9713,6 +9733,14 @@ Details: %1</source>
         <source>Folders searched for robot packages (package://):</source>
         <translation>搜尋機器人套件的資料夾（package://）：</translation>
     </message>
+    <message>
+        <source>Between two transform samples, move frames smoothly instead of holding the earlier pose until the next one.</source>
+        <translation>在兩個轉換取樣點之間平滑移動座標系，而不是維持前一個位姿直到下一個取樣點。</translation>
+    </message>
+    <message>
+        <source>Interpolate transforms between samples:</source>
+        <translation>在取樣點之間對轉換進行內插：</translation>
+    </message>
 </context>
 <context>
     <name>PresetCatalog</name>
@@ -9755,6 +9783,10 @@ Details: %1</source>
         <location line="+3"/>
         <source>preset &quot;%1&quot; has no usable http(s) thumbnail</source>
         <translation>預設「%1」沒有可用的 http(s) 縮圖</translation>
+    </message>
+    <message>
+        <source>preset &quot;%1&quot; has a &quot;listed&quot; that is not true or false</source>
+        <translation>預設「%1」的 &quot;listed&quot; 欄位必須是 true 或 false</translation>
     </message>
 </context>
 <context>
@@ -10083,6 +10115,10 @@ Details: %1</source>
         <location line="+1"/>
         <source>Range max:</source>
         <translation>範圍上限：</translation>
+    </message>
+    <message>
+        <source>Third-party licences</source>
+        <translation>第三方授權條款</translation>
     </message>
 </context>
 <context>

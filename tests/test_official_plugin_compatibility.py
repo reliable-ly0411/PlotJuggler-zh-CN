@@ -93,5 +93,75 @@ class OfficialPluginCompatibilityTests(unittest.TestCase):
         self.assertEqual((self.source / 'data_load_csv/source.txt').read_bytes(), b'before\n')
 
 
+@unittest.skipUnless(shutil.which('cmake'), 'CMake integration')
+class OfficialPluginAdoptionTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        cmake = self.root / 'cmake'
+        cmake.mkdir()
+        self.module = cmake / 'PjOfficialPluginCompatibility.cmake'
+        shutil.copy2(ROOT / 'cmake' / self.module.name, self.module)
+        self.source = self.root / 'source'
+        self.commit = 'a' * 40
+        paths = ('data_load_csv/test.cpp', 'widget_log/test.cpp')
+        self.old = dict.fromkeys(paths, hashlib.sha256(b'historical patch result').hexdigest())
+        self.files = {}
+        for path in paths:
+            output = self.source / path
+            output.parent.mkdir(parents=True)
+            data = path.encode()
+            output.write_bytes(data)
+            self.files[path] = hashlib.sha256(data).hexdigest()
+        self.provenance = self.root / 'packaging/localization/plugin-patches/compatibility-candidates/provenance.json'
+        self.provenance.parent.mkdir(parents=True)
+        self.script = self.root / 'verify.cmake'
+
+    def verify(self, commit=None):
+        self.provenance.write_text(json.dumps({
+            'wasm_result_files_sha256': self.old,
+            'wasm_adopted_upstream': {'commit': self.commit, 'files_sha256': self.files},
+        }), encoding='utf-8')
+        self.script.write_text(
+            f'include("{self.module.as_posix()}")\n'
+            f'pj_verify_official_plugin_compatibility("{self.source.as_posix()}" "{commit or self.commit}")\n',
+            encoding='utf-8')
+        return subprocess.run(['cmake', '-P', str(self.script)], cwd=self.root, text=True, capture_output=True)
+
+    def test_adopted_source_never_needs_patch_bytes_and_is_read_only(self):
+        for _ in range(2):
+            result = self.verify()
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(sorted(p.relative_to(self.source).as_posix()
+                                    for p in self.source.rglob('*') if p.is_file()), sorted(self.files))
+            for key in self.files:
+                self.assertEqual((self.source / key).read_bytes(), key.encode())
+
+    def test_wrong_commit_rejected(self):
+        result = self.verify(commit='b' * 40)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('commit mismatch', result.stderr)
+
+    def test_corrupt_or_missing_adopted_file_fails_without_mutation(self):
+        path = self.source / 'widget_log/test.cpp'
+        path.write_bytes(b'tampered')
+        result = self.verify()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('adopted file hash mismatch', result.stderr)
+        self.assertEqual(path.read_bytes(), b'tampered')
+        path.unlink()
+        result = self.verify()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('adopted file missing', result.stderr)
+        self.assertFalse(path.exists())
+
+    def test_shortened_provenance_rejected(self):
+        del self.files['widget_log/test.cpp']
+        result = self.verify()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('adopted path set mismatch', result.stderr)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -59,5 +59,20 @@
     "widget_log/log_loader.hpp": "f1218be4b7ff01a25355318ee9a070a3a5c7d265d565d0b124d18d4c549e8a6f",
     "widget_log/manifest.json": "95ea87001b25e5ac69cc610c73610d3b8edbffbd42ee44db291fa8693dc1377a",
     "widget_log/tests/log_core_test.cpp": "3df48c6b343525b9523873e079cdaf4670afe86cb2316a79c14f2400767209b3"
+  },
+  "wasm_adopted_upstream": {
+    "commit": "ec172a436b801e00d23d5e66de00741e659b4efa",
+    "files_sha256": {
+      "data_load_csv/CHANGELOG.md": "50464079e8ea88885ad2497f0863b25329c592eae8d93b39b4b3347050d0ed2b",
+      "data_load_csv/CMakeLists.txt": "614602f7d285d9f642294f81673adafbea13df8eb34191834b80668db883c737",
+      "data_load_csv/csv_source.cpp": "5a39656bbea729fcc878d7aba89b014c03154afc1c089059471609cf010e6fa8",
+      "data_load_csv/manifest.json": "9b308dc07999d14c5bbc5b47e4534993b224c8f059ee29b642163e8566bd3104",
+      "data_load_csv/tests/csv_source_test.cpp": "7f1415658fa347323c8cc4a9f9ace6fddc07991ff963e6c475412dec1596d78d",
+      "widget_log/CHANGELOG.md": "df9e7b79a1e8ffec318f9b2bd85358d1e363a3db06783f7ebe889d15641e0431",
+      "widget_log/log_loader.cpp": "fa3bb1d9eaa64f38a50a3ba1a6386f4fb95f5644b2494190816743f9b93019d5",
+      "widget_log/log_loader.hpp": "f1218be4b7ff01a25355318ee9a070a3a5c7d265d565d0b124d18d4c549e8a6f",
+      "widget_log/manifest.json": "f123494e30e02e8aabe3dd63b54e8381d77b569b63a1a4d29575d2f17cf9a131",
+      "widget_log/tests/log_core_test.cpp": "3df48c6b343525b9523873e079cdaf4670afe86cb2316a79c14f2400767209b3"
+    }
   }
 }
