@@ -1,0 +1,25 @@
+{
+  "version": "1.1.0",
+  "repository": "https://github.com/PlotJuggler/plotjuggler_sdk",
+  "commit": "d65923cd11ab7a822ef7b802523e2fc7b281f515",
+  "upstream_repository": "https://github.com/PlotJuggler/plotjuggler_sdk",
+  "upstream_base": "d65923cd11ab7a822ef7b802523e2fc7b281f515",
+  "upstream_pull_request": "https://github.com/PlotJuggler/plotjuggler_sdk/pull/226",
+  "archive_url": "https://codeload.github.com/PlotJuggler/plotjuggler_sdk/tar.gz/d65923cd11ab7a822ef7b802523e2fc7b281f515",
+  "archive_sha256": "57f7c40f672bdfc0d6a6cef18a27361483963e646986ff092c24ff6d87ffb4f9",
+  "recipe_revision": "c760ab26aa93dbe53e4c086f170d3132",
+  "license": "Apache-2.0",
+  "distribution": "Official SDK 1.1.0; immutable source archive, VERSION and both license files verified.",
+  "host_contract_version": "1.1.0",
+  "upstream_release_commit": "d65923cd11ab7a822ef7b802523e2fc7b281f515",
+  "license_files_sha256": {
+    "LICENSE": "d982c2f8dce28e500f42757cdaf17640e3b0e2c1b8f16a1c5814b890c863e55f",
+    "LICENSE-APACHE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  "upstream_pull_requests": [
+    "https://github.com/PlotJuggler/plotjuggler_sdk/pull/226",
+    "https://github.com/PlotJuggler/plotjuggler_sdk/pull/241"
+  ],
+  "upstream_tag": "v1.1.0",
+  "upstream_tag_object": "6a8ce04bb14c4b1a750d71469ab09a5946add3ba"
+}

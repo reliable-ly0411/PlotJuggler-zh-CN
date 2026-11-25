@@ -209,7 +209,7 @@ find_package(fmt REQUIRED)
 # Foundation (Level 0): the plotjuggler_sdk SDK (pj_base + pj_plugins), consumed
 # as the `plotjuggler_sdk/<version>` Conan package pinned in conanfile.txt
 # (recipe + binaries on the PlotJuggler JFrog remote). Build paths that do not
-# run Conan (Qt for WebAssembly, pixi) fetch the same release tag from GitHub
+# run Conan (Qt for WebAssembly, pixi) fetch the matching upstream SDK from GitHub
 # and build it in-tree; both expose plotjuggler_sdk::base / ::plugin_sdk /
 # ::plugin_host. pj_datastore (the columnar store) lives in this repo: plugins
 # reach it only through the pj_base C ABI, never by linking it.
@@ -217,14 +217,14 @@ find_package(fmt REQUIRED)
 
 file(STRINGS conanfile.txt _pj_sdk_require REGEX "^plotjuggler_sdk/")
 string(REGEX REPLACE "^plotjuggler_sdk/([0-9][0-9A-Za-z.-]*).*" "\\1" PJ_SDK_VERSION "${_pj_sdk_require}")
-set(_pj_sdk_url https://github.com/PlotJuggler/plotjuggler_sdk/archive/refs/tags/v${PJ_SDK_VERSION}.tar.gz)
+set(_pj_sdk_url https://codeload.github.com/PlotJuggler/plotjuggler_sdk/tar.gz/d65923cd11ab7a822ef7b802523e2fc7b281f515)
 # Pin the source build to bytes, not to a tag name: a tag can be moved, and the
 # sanitizer lanes compile this tarball instead of the Conan package, so an
 # unpinned fetch would make an instrumented build unreproducible. Update this
 # hash in the same commit as any PJ_SDK_VERSION bump in conanfile.txt — a stale
 # hash aborts the download loudly, which is the intended failure mode.
 set(_pj_sdk_url_hash
-    SHA256=9f8a81a5cc4124e19bc8358baf94a8eb56385848a915fc37f165e2fd2bb8eecf)  # v1.1.0
+    SHA256=57f7c40f672bdfc0d6a6cef18a27361483963e646986ff092c24ff6d87ffb4f9)  # v1.1.0
 include(FetchContent)
 # Timestamps on extracted archives. DOWNLOAD_EXTRACT_TIMESTAMP is a CMake 3.24
 # keyword and the sanctioned builder image ships 3.22, where an unrecognised

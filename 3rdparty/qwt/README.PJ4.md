@@ -10,6 +10,10 @@ No Qwt sources live in this repo. The `plotjuggler_qwt` target in
   plots on `PlotRhiCanvas` or the raster `QwtPlotCanvas`, so `plotjuggler_qwt`
   links no `Qt6::OpenGL` / `Qt6::OpenGLWidgets`. (The packages still ship both:
   `Qt6UiTools`, which `pj_dialog_host` uses, depends on them.)
+  - Source: <https://downloads.sourceforge.net/project/qwt/qwt/6.3.0/qwt-6.3.0.tar.bz2>,
+    falling back to <https://master.dl.sourceforge.net/project/qwt/qwt/6.3.0/qwt-6.3.0.tar.bz2>
+    when the redirector fails
+  - Tarball SHA-256: `dcb085896c28aaec5518cbc08c0ee2b4e60ada7ac929d82639f6189851a6129a`
   - The download is cached per build tree; a fully offline first configure can
     point `FETCHCONTENT_SOURCE_DIR_QWT_UPSTREAM` at a pre-extracted tarball.
 - **`-DPJ_SYSTEM_QWT=ON` (pixi / conda path)**: links the environment's
@@ -36,6 +40,6 @@ application:
   `QwtPlotCurve::Lines` plus one batched, pixel-weeded `drawDots` pass
   (`PlotRhiCanvas` builds the same square dots as geometry).
 
-To upgrade Qwt: bump the URL + SHA-256 in `3rdparty/qwt/CMakeLists.txt`, re-check the
+To upgrade Qwt: bump both URLs + the SHA-256 in `CMakeLists.txt`, re-check the
 source list against upstream's `src/src.pri`, and align the conda-forge
 version pin in `pixi.toml`.
