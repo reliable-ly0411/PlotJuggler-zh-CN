@@ -85,10 +85,10 @@ class GridRhiPass {
 
   /// Grid lines (line style only) plus connection lines.
   [[nodiscard]] int lastLineVertexCount() const {
-    return static_cast<int>(grid_line_vertex_count_ + connection_vertices_.size());
+    return static_cast<int>(2U * (grid_lines_.size() + connection_lines_.size()));
   }
   [[nodiscard]] int lastTriangleVertexCount() const {
-    return static_cast<int>(grid_cell_vertex_count_);
+    return static_cast<int>(grid_cells_.size());
   }
 #ifdef PJ_RHI_TEST_HOOKS
   /// Grid and connection rebuilds since initialization; cumulative.
@@ -101,16 +101,6 @@ class GridRhiPass {
 #endif
 
  private:
-  struct Vertex {
-    float x = 0.0F;
-    float y = 0.0F;
-    float z = 0.0F;
-    float r = 0.0F;
-    float g = 0.0F;
-    float b = 0.0F;
-    float a = 1.0F;
-  };
-
   struct ConnectionKey {
     bool visible = true;
     const TransformBuffer* tf = nullptr;
@@ -123,8 +113,8 @@ class GridRhiPass {
     bool operator==(const ConnectionKey&) const = default;
   };
 
-  static QRhiVertexInputLayout vertexLayout();
-  static void appendVertex(std::vector<Vertex>& out, const glm::dvec3& point, const glm::vec4& color);
+  static void appendSegment(
+      std::vector<LineSegment>& out, const glm::vec3& a, const glm::vec3& b, const glm::vec4& color);
 
   RhiPassSetup setup_;  // view-owned uniforms; the shadow receiver is built later against it
   QRhiShaderResourceBindings* shader_resources_ = nullptr;
@@ -141,7 +131,7 @@ class GridRhiPass {
   QRhiBuffer* origin_offset_uniforms_ = nullptr;
   QRhiBuffer* zero_offset_uniforms_ = nullptr;
   std::array<float, 8> grid_uniforms_{};  // origin offset + cell-edge phase, then line colour + cell side
-  QRhiBuffer* grid_buffer_ = nullptr;     // Static: cells, then lines
+  QRhiBuffer* grid_buffer_ = nullptr;     // Static: grid_cells_ or grid_lines_, by style
   QRhiBuffer* connection_buffer_ = nullptr;
   quint32 grid_capacity_ = 0;
   quint32 connection_capacity_ = 0;
@@ -155,11 +145,10 @@ class GridRhiPass {
   std::uint64_t grid_build_count_ = 0;
   std::uint64_t connection_build_count_ = 0;
 
-  std::vector<Vertex> grid_vertices_;  // cells, then lines
-  std::vector<Vertex> connection_vertices_;
+  std::vector<ColorVertex> grid_cells_;
+  std::vector<LineSegment> grid_lines_;
+  std::vector<LineSegment> connection_lines_;
   std::vector<TfConnectionSegment> segments_;
-  quint32 grid_cell_vertex_count_ = 0;
-  quint32 grid_line_vertex_count_ = 0;
 };
 
 }  // namespace pj::scene3d

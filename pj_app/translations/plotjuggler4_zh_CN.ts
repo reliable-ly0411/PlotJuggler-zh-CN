@@ -4891,6 +4891,10 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <source>OK</source>
         <translation>确定</translation>
     </message>
+    <message>
+        <source>Plugin &apos;%1&apos;: %2</source>
+        <translation>插件“%1”：%2</translation>
+    </message>
 </context>
 <context>
     <name>PJ::FileSelectionService</name>
@@ -6758,6 +6762,14 @@ for example when the stream is already rectified.</source>
         <source>Drop the URDF file onto a 3D view.</source>
         <translation>将 URDF 文件拖到 3D 视图上。</translation>
     </message>
+    <message>
+        <source>Layout &apos;%1&apos; names &apos;%2&apos; relative to its folder, but it has no folder: that data is neither loaded nor bound.</source>
+        <translation>布局“%1”以相对路径引用了“%2”，但没有所在文件夹，因此这份数据未加载，也未绑定。</translation>
+    </message>
+    <message>
+        <source>A layout still waiting for its data was not loaded: another layout load replaced it.</source>
+        <translation>正在等待数据的布局未加载：已改为加载另一个布局。</translation>
+    </message>
 </context>
 <context>
     <name>PJ::MarkerTimeline</name>
@@ -8066,6 +8078,18 @@ Details: %1</source>
         <source>An AI agent asked you to choose: </source>
         <translation>AI 智能体请求选择： </translation>
     </message>
+    <message>
+        <source>Load Layout</source>
+        <translation>加载布局</translation>
+    </message>
+    <message>
+        <source>An AI agent wants to load a layout. It replaces your tabs, plots, scenes and derived series.</source>
+        <translation>AI 助手请求加载布局，这将替换当前的标签页、图表、场景和派生序列。</translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation>替换</translation>
+    </message>
 </context>
 <context>
     <name>PJ::MediaViewerWidget</name>
@@ -9174,6 +9198,10 @@ Details: %1</source>
         <source>[stream] %1</source>
         <translation>[流] %1</translation>
     </message>
+    <message>
+        <source>Plugin &apos;%1&apos;: %2</source>
+        <translation>插件“%1”：%2</translation>
+    </message>
 </context>
 <context>
     <name>PJ::TabbedPlotWidget</name>
@@ -10119,6 +10147,10 @@ Details: %1</source>
     <message>
         <source>Third-party licences</source>
         <translation>第三方许可条款</translation>
+    </message>
+    <message>
+        <source>remote fetch is disabled</source>
+        <translation>远程获取已禁用</translation>
     </message>
 </context>
 <context>
@@ -11359,9 +11391,9 @@ Details: %1</source>
     </message>
     <message numerus="yes">
         <location line="+61"/>
-        <source>  •  %n mesh load(s) failed (shown as magenta placeholders)</source>
+        <source>  •  %n mesh load(s) failed (not drawn): %1</source>
         <translation>
-            <numerusform>  •  %n 个网格加载失败（以品红色占位对象显示）</numerusform>
+            <numerusform>  •  %n 个网格加载失败（未绘制）：%1</numerusform>
         </translation>
     </message>
     <message>
@@ -11371,8 +11403,8 @@ Details: %1</source>
     </message>
     <message>
         <location line="+5"/>
-        <source>  •  %1/%1 meshes</source>
-        <translation>  •  %1/%1 个网格</translation>
+        <source>  •  %1/%2 meshes</source>
+        <translation>  •  %1/%2 个网格</translation>
     </message>
     <message numerus="yes">
         <location line="+8"/>
@@ -11383,9 +11415,9 @@ Details: %1</source>
     </message>
     <message numerus="yes">
         <location line="+2"/>
-        <source>  •  %n mesh reference(s) unavailable in the browser sandbox (shown as magenta placeholders)</source>
+        <source>  •  %n mesh reference(s) unavailable in the browser sandbox (not drawn)</source>
         <translation>
-            <numerusform>  •  %n 个网格引用在浏览器沙箱中不可用（以品红色占位对象显示）</numerusform>
+            <numerusform>  •  %n 个网格引用在浏览器沙箱中不可用（未绘制）</numerusform>
         </translation>
     </message>
     <message>
@@ -11470,6 +11502,18 @@ Details: %1</source>
     <message>
         <source>Select your workspace or the folder that contains your robot packages</source>
         <translation>选择工作空间或包含机器人软件包的文件夹</translation>
+    </message>
+    <message numerus="yes">
+        <source>  •  %n mesh file(s) on other origins blocked: enable pj_scene3d/allow_remote_model_fetch to allow</source>
+        <translation>
+            <numerusform>  •  已拦截 %n 个来自其他源的网格文件；启用 pj_scene3d/allow_remote_model_fetch 可放行</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>  •  %n network share ref(s) refused</source>
+        <translation>
+            <numerusform>  •  已拒绝 %n 个网络共享引用</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -12063,6 +12107,14 @@ Details: %1</source>
         <location filename="../../pj_scene3D/widgets/src/url_fetcher.cpp" line="+104"/>
         <source>unsupported URL scheme &apos;%1&apos;</source>
         <translation>不支持的 URL 协议“%1”</translation>
+    </message>
+    <message>
+        <source>network share refused: %1</source>
+        <translation>已拒绝网络共享：%1</translation>
+    </message>
+    <message>
+        <source>remote fetch is disabled</source>
+        <translation>远程获取已禁用</translation>
     </message>
 </context>
 <context>

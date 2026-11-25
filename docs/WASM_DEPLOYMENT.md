@@ -59,8 +59,17 @@ A public deployment also publishes the source offer
 ([licence and source offer](#licence-of-the-browser-bundle-and-the-source-offer)):
 `node scripts/wasm_source_offer.mjs --links --output build-wasm/deploy/sources`.
 
+A version tag builds this package in WASM CI too, stamped with the tag's version and with its source offer, and
+the `wasm-release` job attaches it to the tag's GitHub Release as `PlotJuggler4-web-bundle.zip` once the Chromium
+suite has passed. The name carries no version, so `releases/latest/download/PlotJuggler4-web-bundle.zip` reaches the
+copy of the release GitHub marks as latest, once that job has finished. A manual run of WASM CI on a branch builds
+the same archive as its `wasm-release` artifact, without the Release upload. Unzipped, it deploys to any host that
+meets the [Required HTTP contract](#required-http-contract); `app.plotjuggler.io` is published by hand
+([packaging/web/README.md](../packaging/web/README.md)).
+
 `--presets` is optional: it deploys a preset tree (the repository's samples
-here) under `presets/`; see [Presets](#presets).
+here) under `presets/`; see [Presets](#presets). The `app.plotjuggler.io`
+package is built without it ([`packaging/web/README.md`](../packaging/web/README.md)).
 
 ### Built-in plugins
 
@@ -112,6 +121,19 @@ plugin is described in the "WebAssembly build" section of the
 [pj-official-plugins README](https://github.com/PlotJuggler/pj-official-plugins#webassembly-build):
 a `wasm.cmake` in its directory there, one line in `PJ_WASM_OFFICIAL_PLUGIN_DIRS`
 here, and a pin that contains it.
+
+The pin is moved by `.github/workflows/wasm-plugins-pin.yml`, daily at 05:17 UTC, one pull
+request at a time. `scripts/bump_wasm_plugins.sh` resolves the head of `pj-official-plugins`
+`main` to a full commit sha, takes the sha-256 of its codeload archive and rewrites the two pin
+lines; the PR from `bot/wasm-plugins-pin` lists the plugin commits it brings. A head that is
+not ahead of the pin is never proposed, and while a PR from that branch is open the workflow
+does nothing. A PR made with `GITHUB_TOKEN` gets no checks, so the workflow dispatches WASM CI
+on the branch and links the run in a PR comment: that run must be green before the PR is
+merged by hand. Closing the PR without merging lets the next run open one for the plugins head
+of that day. `gh workflow run wasm-plugins-pin.yml -f ref=<branch, tag or full sha>` pins
+another ref (the PR body says when it is not ahead of the pin); `scripts/bump_wasm_plugins.sh
+[<ref>]` edits the pin in a local tree. To build against a plugins checkout without changing
+the pin, configure with `-DFETCHCONTENT_SOURCE_DIR_PJ_OFFICIAL_PLUGINS=<path>`.
 
 The packaging command refuses missing, invalid, or single-threaded build
 outputs. To prevent a mistyped `--output` from deleting unrelated data, it
@@ -409,12 +431,11 @@ the picker is read from disk on demand rather than copied, so its size is not
 bounded by the tab's memory; it must stay unchanged on disk while it is open
 (a changed file reports that its data may be incomplete, see
 [`pj_app/docs/ARCHITECTURE.md`](../pj_app/docs/ARCHITECTURE.md#browser-webassembly-boundary)). Ordinary
-`QSettings` callers are likewise redirected to page-lifetime storage. The only
-durable browser state is the typed preference allowlist and a bounded list of
-source-free generic layout recipes owned by `BrowserPersistence`. Source-bound
-layouts are downloaded with logical references and require explicit file
-reselection when replayed. Paths, upload identities, plugin configuration, and
-credentials are intentionally excluded from browser-local persistence.
+`QSettings` callers are likewise redirected to page-lifetime storage; what
+`BrowserPersistence` keeps durable, and what never enters durable storage:
+[`pj_app/docs/ARCHITECTURE.md`](../pj_app/docs/ARCHITECTURE.md#persistence).
+Source-bound layouts are downloaded with logical references and require
+explicit file reselection when replayed.
 
 A source's plugin may also read files picked in its own dialog (a CAN
 dictionary, say). "Save Layout with Sources" saves each such *side file* like
@@ -436,9 +457,8 @@ desktop the same rewrite points each `filename` at that name in the loaded
 data file's folder. `<sideFile>` is optional.
 
 A layout opened by URL (a preset) replays its `<fileInfo>` sources without a
-picker instead. Each `filename` resolves against the layout's URL — the browser
-reports the requested URL even after a redirect, so a preset must not rely on a
-redirect to another directory — and only http(s) references are fetched: a local
+picker instead. Each `filename` resolves against the URL the layout was served
+from, after any redirect, and only http(s) references are fetched: a local
 path or another scheme, like a local robot model reference, fails the load.
 Sources download one at a time, straight into their staged files (never through
 the WebAssembly heap), must match their recorded `content_sha256`, and may stage
@@ -482,15 +502,19 @@ together.
   a deep link on a page without a usable index reports an error and loads
   nothing. Other query keys are ignored.
 
-The repository ships five samples, listed by `resources/wasm-presets/index.json`
+The repository ships six samples, listed by `resources/wasm-presets/index.json`
 and deployed with `--presets` (a car's gyro through a built-in filter; an ANYmal
 walking a forest trail; a car from PandaSet with its six cameras, lidar and 3D
 boxes; an office robot from LILocBench with its camera, depth cloud and laser
 scans on the floor map; a racing quadrotor from UZH-FPV with its fisheye and event
-cameras and its racing line). The welcome dialog lists the first three; the office
-robot and the racing drone are unlisted and open from their links,
-`?preset=lilocbench` and `?preset=uzhfpv`, which the website's examples page uses. Their layouts, thumbnails, recordings and models load from
-`https://assets.plotjuggler.io`. Preset files are served `no-cache`. How to author a preset,
+cameras and its racing line; Pollen Robotics' Microduck biped walking and falling,
+with a formula that labels what it is doing as text). The welcome dialog lists the
+first three; the office robot, the racing drone and the biped are unlisted and open
+from their links, `?preset=lilocbench`, `?preset=uzhfpv` and `?preset=microduck`,
+which the website's examples page uses. Their layouts, thumbnails, recordings and models load from
+`https://assets.plotjuggler.io`. Preset files are served `no-cache`. `app.plotjuggler.io`
+does not package the index but serves an uploaded copy
+([`packaging/web/README.md`](../packaging/web/README.md#sample-index)). How to author a preset,
 what the packager refuses, and the hosting limits are in
 [`WASM_PRESETS.md`](./WASM_PRESETS.md).
 
@@ -518,8 +542,10 @@ npx playwright install chromium
 PJ_WASM_PACKAGE_DIR="$PWD/../../build-wasm/deploy" npm run test:deployment
 ```
 
-The deployment test expects a package built with `--presets`: it also checks
-every deployed preset file and that the page fetches `presets/index.json`.
+The deployment test checks that the page requests `presets/index.json`; on a
+package built with `--presets` it also checks every deployed preset file, and
+with `PJ_WASM_DEPLOYMENT_URL` (a published `app.plotjuggler.io` Worker) the
+Worker's index route.
 Its response checks (`tests/wasm/support/deployment_contract.js`) also run
 against Caddy with `docs/wasm/Caddyfile`, in `robot_deployment.spec.js`.
 

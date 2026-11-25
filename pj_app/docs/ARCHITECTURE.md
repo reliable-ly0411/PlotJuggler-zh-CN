@@ -83,7 +83,9 @@ startup (`--exit-after-layout`, `--screenshot`, `--dump-diagnostics`, the `offsc
 `isUnattendedRun` in `main.cpp`) loads with `DialogPolicy::kNever`. A failed or
 cancelled explicit file skips the layout and settles it false, so `--exit-after-layout` exits unsuccessfully. The final
 restore is deferred through a window-owned timer so it never runs during teardown. `--exit-after-layout` exit codes are
-a contract for harnesses (`LayoutExitWatch`): 0 applied, 1 load failed or cancelled, 2 timed out, 64 usage error. With
+a contract for harnesses (`LayoutExitWatch`, which hears only the settle of the first load started after it is built: the startup load,
+unless another load starts while the startup data files are still loading): 0 applied, 1 load
+failed, cancelled or superseded by another load, 2 timed out, 64 usage error. With
 `--screenshot` too, whichever quit fires first wins, and only `--exit-after-layout`'s code says whether the layout
 applied. Tests: `MainWindowStartupTest`.
 
@@ -269,10 +271,14 @@ written, then the marker recompute and the ingest announcement run. A stateful p
 before retention evicts it, or its output skips rows. See the derived-objects architecture, "Streaming".
 
 `TopicDemandController` is thin glue from displayed widgets to `TopicDemandTracker`; `PendingDisplayBinder` stages a
-curve or scene layer until its topic materializes. On the first real demand for a previewed topic,
-`TopicDemandController` invalidates the matching XY and time-series caches of registered plots before evicting the
-preview history, with no paint or event-loop turn in between: bounds calculation inside `curveListChanged` may have
-filled them already.
+curve or scene layer until its topic materializes. `PendingDisplayBinder::collect` records each plot's saved curve
+order, and `flush` puts a late curve back in its saved place (`PlotWidget::restoreCurveOrder`) before re-applying the
+saved viewport. That holds only while the plot still holds its saved window: once the drain or the synchronous restore
+applied it for good, a curve binding later appends. Two curve kinds do not take their saved place: an empty-field
+placeholder intent (one curve per field) and an XY curve whose `<curve>` has no `name` (only hand-written layouts). On
+the first real demand for a previewed topic, `TopicDemandController` invalidates the matching XY and time-series caches
+of registered plots before evicting the preview history, with no paint or event-loop turn in between: bounds
+calculation inside `curveListChanged` may have filled them already.
 
 The topic streaming context menu needs a single selected row of a source that can pause per topic; a field row
 resolves to its topic. Several selected rows suppress it, because Linux can request the menu on right-button press,
@@ -326,10 +332,14 @@ the global reference, and the loader subtracts it.
 **Relative paths.** A file save stores paths relative to the layout folder when the target is at or under it
 (`relocatableSubpath`): `<fileInfo>` filenames, every `*_dataset_path` qualifier of a source-bound layout (all widget
 families: `stampDatasetSourcePaths`, then `relativizeDatasetSourcePaths`) and, in both bindings, a `<robot_model>`'s
-URDF file and `file://` package roots (Scene3D's `relocateLayoutResources`). `loadLayoutFromPath` resolves them
-against the layout folder before any restore (`resolveDatasetSourcePaths`, Scene3D's `resolveLayoutResourceUrls`).
-Undo snapshots and in-memory captures stay absolute; browser layouts skip both steps; a generic layout has no dataset
-qualifier, except those startup keeps for its explicit files ("Command-line startup").
+URDF file and `file://` package roots (Scene3D's `relocateLayoutResources`). `loadLayoutDocument` resolves them
+against the folder of its `LayoutOrigin` before any restore (`resolveDatasetSourcePaths`, Scene3D's
+`resolveLayoutResourceUrls`). A document with no file (an MCP agent's text or URL) has no folder: a relative path in
+it is reported as `relative-path-unresolved` and binds nothing. A URL's layout anchors its robot models at the URL
+(`LayoutOrigin::url`); in text a relative one fails the load. A save
+with no file (`layoutFileBytes` with an empty path) writes them all absolute. Undo snapshots and in-memory captures
+stay absolute; browser layouts skip both steps; a generic layout has no dataset qualifier, except those startup keeps
+for its explicit files ("Command-line startup").
 
 **`__pj_saved_filepath`** exists only in the config handed to a plugin's `loadConfig` on a layout replay of a native
 file (`rewriteReplayFilepaths` with `SavedFilepath::kRecord`) and never reaches host state: the rewrite drops any
@@ -355,7 +365,7 @@ reports its refusal as `processor-restore-refused`.
 
 **A save never loses what the load skipped.** `DerivedRestoreReport::skipped` names the exact saved elements the
 restore skipped. Under `kRetainAndDiagnose` `applyDataProcessors` stages copies of exactly those, and the layout's commit
-point (`commitRestoredLayout`) makes them `kept_derived_`; `saveLayoutToPath` writes them back, as pending curves are
+point (`commitRestoredLayout`) makes them `kept_derived_`; `layoutFileBytes` writes them back, as pending curves are
 kept and saved. Identity is never guessed from the file: one filter or rule bound to two runs, one of them not loaded,
 keeps the other binding. Each copy loses its session dataset ids; a qualifier only an id named (a stream bound at load)
 gets back its `pj-stream://` identity. Under `kPrompt` the prompt asked instead: its Continue drops them, and its title
@@ -563,7 +573,8 @@ shared by the banner and the floating title bar are in `ToolboxChrome.h`.
 
 ## Custom Topics panel
 
-`CurveListPanel`'s bottom tree lists what the session derived: transform outputs and one row per object output of a
+`CurveListPanel`'s bottom tree lists what the session derived: transform outputs (found by output topic id, one row per column, so a grouped
+`"t:a,b"` output moves whole, its columns named `t/a`, `t/b`) and one row per object output of a
 persistent on-demand recipe, named by the recipe, badged by an owner other than the editor, with its node's state as
 glyph and tooltip.
 
@@ -695,10 +706,15 @@ the pick) and the `content_sha256` checks of `persistence_layout.spec.js` (the J
 ### Persistence
 
 Native builds keep plain `QSettings`. WASM redirects ordinary `QSettings` callers to page-lifetime MEMFS and lets
-`BrowserPersistence` alone write `WebLocalStorageFormat`: its typed preference allowlist and a few bounded, source-free
-generic layout recipes. File paths, upload identities, plugin configuration, credentials, source-bound layouts and
-stream records never enter durable storage. An unreadable stored envelope is left intact (a newer build may read it) and
-none of its values are imported. Allowlisted values written to the page-lifetime settings reach durable storage on
+`BrowserPersistence` alone write `WebLocalStorageFormat`: three versioned JSON envelopes (one encode/decode pair,
+each size-capped) holding the typed preference allowlist, a few bounded, source-free
+generic layout recipes, and the plugin settings a plugin marked durable (`pj_runtime` ARCHITECTURE "Plugin
+settings"), each re-checked on restore. File paths, upload identities, the host's `PluginConfig/` JSON of each
+plugin, source-bound layouts, stream records and every plugin setting outside `durable/` never enter durable storage.
+In a `durable/` setting the backstop refuses a URL password and a secret-like key name (`isSecretKey`); keeping other
+secrets out of its `durable/` keys is the plugin's job.
+A rejected stored envelope (malformed, oversized or another version) is left intact with a warning and none of its
+values are imported. Allowlisted values written to the page-lifetime settings reach durable storage on
 `BrowserPersistence`'s periodic flush ([why a poll](./TECHNICAL_NOTES.md#browser-preferences-flush-on-a-timer)).
 `main()` constructs `BrowserPersistence` after the application identity and before the splash, `Theme`, `WidgetTuner`,
 `MainWindow` or any plugin host, so every settings consumer sees the redirect; native builds never construct it.
@@ -713,8 +729,7 @@ through `BrowserFetch.h` ([why](../../pj_runtime/docs/TECHNICAL_NOTES.md)). `Wel
 `MainWindow::loadLayoutFromUrl` runs the upload replay's byte-level path (`loadLayoutFromBytes`: imports, remapping,
 rollback). Each `<fileInfo>` downloads from `layout_xml::resolveFileSourceUrl` into a `BrowserFileStore::reserve()`d
 file and is checked against `content_sha256` and the preset's cumulative cap; Scene3D's `resolveLayoutResourceUrls`
-anchors robot resources at the layout URL. In WASM a redirect leaves the final URL the requested one, so a preset that
-relies on a redirect to another directory resolves its files against the wrong base. Every call ends in exactly one
+anchors robot resources at the URL the layout was served from, after any redirect. Every call ends in exactly one
 `layoutUrlLoadFinished(url, ok, reason)`; each source download reports throttled `layoutUrlLoadProgress(url,
 received, total)` ending at received == total. A success replaces only what the previous successful preset load
 brought (`BrowserLayoutRuntime::preset_data`), after its layout applies. Unless a stream is followed, the playhead

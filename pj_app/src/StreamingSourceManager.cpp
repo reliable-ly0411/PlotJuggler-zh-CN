@@ -29,11 +29,11 @@
 #include "pj_plugins/host/data_source_handle.hpp"
 #include "pj_plugins/host/data_source_library.hpp"
 #include "pj_plugins/host/message_parser_handle.hpp"
-#include "pj_plugins/host/service_registry_builder.hpp"
 #include "pj_runtime/CatalogModel.h"
 #include "pj_runtime/DataProcessorService.h"
 #include "pj_runtime/DataSourceRuntimeHost.h"
 #include "pj_runtime/ExtensionCatalogService.h"
+#include "pj_runtime/QSettingsBackend.h"
 #include "pj_runtime/SessionManager.h"
 #include "pj_runtime/TopicDemandTracker.h"
 #include "pj_runtime/TsanAnnotations.h"
@@ -74,11 +74,12 @@ struct StreamingSourceManager::StreamingSession {
   /// before the worker starts and never after, so the GUI thread reads it without calling into the plugin.
   QString config_template;
   DatasetId dataset_id = 0;
+  /// Before `handle`: see DataSourceRuntimeHost::bind.
+  std::unique_ptr<DataSourceRuntimeHost> runtime_host;
   DataSourceHandle handle;
   /// handle.capabilities(), read once after start(): it is a plugin call, and the ABI gives the mask no way to change
   /// once the source runs, so every later gate (per-topic pause, recordability) reads this copy.
   uint64_t capabilities = 0;
-  std::unique_ptr<DataSourceRuntimeHost> runtime_host;
   std::unique_ptr<QThread> worker;
 
   explicit StreamingSession(DataSourceHandle&& h) : handle(std::move(h)) {}
@@ -424,16 +425,8 @@ std::unique_ptr<StreamingSourceManager::StreamingSession> StreamingSourceManager
         });
       };
 
-  ServiceRegistryBuilder registry;
-  if (auto status = session->runtime_host->registerServices(registry); !status) {
-    error = tr("Plugin '%1': service registration failed: %2")
-                .arg(source_display_name, QString::fromStdString(status.error()));
-    session.reset();
-    discardDataset(dataset_id);
-    return nullptr;
-  }
-  if (auto status = session->handle.bind(registry.view()); !status) {
-    error = tr("Plugin '%1': bind failed: %2").arg(source_display_name, QString::fromStdString(status.error()));
+  if (auto status = session->runtime_host->bind(session->handle, QSettingsBackend::forPlugin(source.id)); !status) {
+    error = tr("Plugin '%1': %2").arg(source_display_name, QString::fromStdString(status.error()));
     session.reset();
     discardDataset(dataset_id);
     return nullptr;

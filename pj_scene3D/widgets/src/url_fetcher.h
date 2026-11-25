@@ -21,46 +21,41 @@ struct FetchResult {
   bool ok{false};
   QByteArray bytes;
   QString error;
-  // Where a network fetch was served from after redirects (in the browser, the
-  // requested URL: it follows redirects out of sight); empty for a local source.
+  // Where a network fetch was served from after redirects; empty for a local source.
   QUrl final_url;
+};
+
+// Whether UrlFetcher::fetch() requests an http(s) URL, and which redirects it follows.
+enum class RemoteFetch : quint8 {
+  kRefused,    // fails without a request
+  kOwnOrigin,  // follows only redirects within the URL's own scheme, host and port (in the browser, none)
+  kAnyOrigin,  // follows PJ::RedirectScope::kAnyOrigin redirects
 };
 
 // Asynchronous byte fetcher with a hard size cap and bounded redirects.
 //
 // Contract (all of it load-bearing):
-//  - GUI-thread only: construct, fetch(), and destroy on the thread whose event
-//    loop delivers the callbacks.
-//  - The callback is ALWAYS delivered asynchronously through the event loop —
-//    even for local files and immediate errors (deferred via a queued
-//    single-shot) — so a caller never re-enters its own stack from fetch().
-//  - Local sources (file:// URLs and scheme-less bare paths) are read with
-//    QFile inside the fetcher; only http(s) URLs (PJ::isHttpUrl) ever reach the
-//    network; any other scheme fails with "unsupported URL scheme". WASM checks
-//    the MEMFS file size against kMaxFetchBytes before allocating its QByteArray;
-//    native local-file behavior remains unchanged.
-//  - Network requests go through pj_runtime's PJ::fetchBytesWithLimit (HttpGet.h):
-//    a 15 s inactivity timeout and at most 4 redirects with no https->http
-//    downgrade (in the browser, the browser's own hop limit). There is no host allowlist; the egress bound is the
-//    scheme/redirect/size/timeout envelope itself, which a redirect cannot
-//    escalate beyond. (WHETHER a data-supplied URL is fetched at all is the
-//    caller's policy decision — see SceneEntitiesLayer's remote-fetch gate.)
-//  - Native http(s) GETs are disk-cached (QNetworkDiskCache, set up in the constructor):
-//    a fresh entry is served without the network, and a previously-fetched entry
-//    is served from cache when the origin is unreachable, so a model fetched in a
-//    prior session still renders offline. Local-file reads bypass the cache. The
-//    cache directory is <AppData>/models, overridable via the PJ_MODEL_CACHE_DIR
-//    environment variable unless --profile-dir fixes it inside the profile.
-//    In WASM, the browser owns HTTP caching and enforces
-//    CORS; the Qt disk-cache backend is deliberately absent.
-//  - The response is aborted once it exceeds kMaxFetchBytes — checked against
-//    the declared Content-Length as soon as the headers arrive, and against
-//    the buffered byte count as the body streams in. An aborted (capped) response
-//    is not committed to the cache (a later fetch re-hits the network).
-//  - Destroying the fetcher aborts every in-flight request and drops its
-//    callback: a callback can never fire after the fetcher is gone. Layers
-//    rely on this — each owns its fetcher, so layer destruction cancels the
-//    fetch; any extra QPointer guard in a callback is insurance only.
+//  - GUI-thread only: construct, fetch() and destroy on the thread whose event loop delivers the callbacks.
+//  - The callback is ALWAYS delivered asynchronously through the event loop, even for local files and immediate errors
+//    (deferred via a queued single-shot), so a caller never re-enters its own stack from fetch().
+//  - Local sources (file:// URLs on this host and scheme-less bare paths) are read with QFile inside the fetcher; only
+//    http(s) URLs (PJ::isHttpUrl) reach the network. A network share (local_path.h) fails with "network share
+//    refused", any other scheme with "unsupported URL scheme". WASM checks the MEMFS file size against
+//    kMaxFetchBytes before allocating its QByteArray.
+//  - Network requests go through pj_runtime's PJ::fetchBytesWithLimit (HttpGet.h: an inactivity timeout, a bounded
+//    size). Whether an http(s) URL is requested, and whether a redirect may leave its origin, is the caller's
+//    RemoteFetch, passed with each fetch(); the fetcher keeps no host list of its own.
+//  - Native http(s) GETs are disk-cached (QNetworkDiskCache, set up in the constructor): a fresh entry is served
+//    without the network, and a previously fetched entry is served from cache when the origin is unreachable, so a
+//    model fetched in a prior session renders offline. Local-file reads bypass the cache. The directory is
+//    <AppData>/models, overridable via PJ_MODEL_CACHE_DIR unless --profile-dir fixes it inside the profile.
+//    In WASM the browser owns HTTP caching and enforces CORS; the Qt disk-cache backend is absent.
+//  - The response is aborted once it exceeds kMaxFetchBytes, checked against the declared Content-Length when the
+//    headers arrive and against the buffered byte count as the body streams in. An aborted response is not committed
+//    to the cache (a later fetch re-hits the network).
+//  - Destroying the fetcher aborts every in-flight request and drops its callback: a callback never fires after the
+//    fetcher is gone. Layers rely on this (each owns its fetcher, so layer destruction cancels the fetch); an extra
+//    QPointer guard in a callback is insurance only.
 class UrlFetcher : public QObject {
   Q_OBJECT
  public:
@@ -69,7 +64,7 @@ class UrlFetcher : public QObject {
   explicit UrlFetcher(QObject* parent = nullptr);
 
   // `on_done` is invoked exactly once, via the event loop, unless the fetcher is destroyed first (then never).
-  void fetch(const QUrl& url, std::function<void(FetchResult)> on_done);
+  void fetch(const QUrl& url, std::function<void(FetchResult)> on_done, RemoteFetch remote);
 
  private:
   // Queues `result` to `on_done` through the event loop (the never-synchronous delivery guarantee for the local-file /
