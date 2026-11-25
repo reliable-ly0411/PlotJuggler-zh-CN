@@ -10,7 +10,7 @@
   "port_strategy": "Module-level port, preserving English source strings and independent plugin licensing; no merge of PJ3 history.",
   "stable_branch": "zh-CN-4.x",
   "development_branch": "zh-CN-4.x-dev",
-  "status": "development",
+  "status": "prerelease",
   "ardupilot_plugin": {
     "upstream_repository": "https://github.com/ArduPilot/plotjuggler-apbin-plugins",
     "upstream_branch": "main",
@@ -34,7 +34,7 @@
     "tag_object": "da079f6670d3a1873ed1011dedc15556e6f838de",
     "commit": "1b8fb491f56cc185ae395e2c7a0561443ad18d07",
     "url": "https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.1.0",
-    "relationship": "Development snapshot after official 4.1.0; upstream target declares 4.2.0, not a localized accepted release."
+    "relationship": "Downstream 4.1.1 RC1 candidate based on a post-4.1.0 snapshot. Upstream source declares 4.2.0; this is not an upstream 4.1.1 release."
   },
   "csv_path_fix": {
     "repository": "https://github.com/PlotJuggler/pj-official-plugins.git",
