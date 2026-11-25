@@ -1,26 +1,30 @@
 # PlotJuggler 三语言 / ArduPilot Qt5 分支
 
 本 fork 基于官方 Qt5 / C++17 3.x 维护线，提供 English、简体中文、繁體中文、
-独立启动器和随包的 ArduPilot DataFlash BIN 加载器。本轮下游候选为
-`3.18.1-rc.14+upstream.3.17.2.apbin.1.g<commit>`；
-当前为集中修复提案，尚未通过该候选验收。此前候选的证据保留，
-修复范围及定向验收见 [rc.14 说明](docs/localization/3.18.1-rc14-catalog-cleanup.md)。
-计划登记于 [Issue #44](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues/44)；
-实际下载包须与其最终发布说明、源码提交和 SHA256 清单一并核对。
+独立启动器和随包的 ArduPilot DataFlash BIN 加载器。当前已公开的 3.x 版本为
+[v3.18.1-rc.17](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v3.18.1-rc.17)（预发布，2026-11-14），不是上游 3.18.1 正式版。
+产品源码为 `baf7d62133db26bb14911d446a1ce623fe704274`；
+完整版本为 `3.18.1-rc.17+upstream.3.17.2.apbin.1.gbaf7d62133db`。
+此前候选的证据作为历史保留；当前下载、SHA-256、验收及限制以该 Release 为准。
 上游 `main-3.x` 固定为 `df5cbaad9bb087413470e818fa5cdb88d6357ce5`，其声明版本为 3.17.2；
 3.18.1 是下游发行目标。Qt6 / 4.x 的功能、插件 ABI 和验收记录不适用于这里。
 简体模式保留既有离线图库；繁体模式使用英文原图。
 普通启动直接进入主程序，不再弹出语言选择；首次跟随系统界面语言，
 之后优先使用已保存的选择。语言可在主窗口的语言菜单中切换，重启生效。
 
-已发布的 3.x 包见 [v3.18.0-zh.4](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v3.18.0-zh.4)
-及其发布说明、校验清单；3.18.1 候选尚未发布，开发工作见 [PR #51](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/pull/51)。
+3.x 下载请直接进入 [v3.18.1-rc.17](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v3.18.1-rc.17)：
+Windows x64 安装器/便携 ZIP、x86_64/aarch64 AppImage，以及 Ubuntu 24.04、
+Debian bookworm/trixie amd64 DEB，共七个软件包；不同发行版的 DEB 不可混装。
+该版本是预发布，仓库通用 Latest 指向独立的 4.x，不能作为 3.x 下载入口。
 `zh-CN` 为 3.x 稳定维护线，`zh-CN-dev` 为开发集成线，候选在独立主题分支。
 仓库默认分支为独立的 `zh-CN-4.x`；4.x 的 [v4.1.0+zh.1](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.0%2Bzh.1)
-使用 Qt6/PJ4 SDK，两代插件不能混用。下方官方徽章、功能和下载源不代表本候选已完成交付验收。
+使用 Qt6/PJ4 SDK，两代插件不能混用。下方官方徽章和下载源供参考，不是本仓中文版的验收或下载入口。
 
-本轮按用户要求仅测试新增功能及可能回归的部分，先完成选定测试再集中修补和构建。
-七个同源软件包及必要的身份、隐私、许可和源码材料仍须通过发布核对；旧候选的成绩不转记。
+对应[原生、GUI 与成品验收](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/actions/runs/43577802686)已完成并通过，
+该记录只适用于 rc.17 固定产品及原包，不代表后续源码自动通过。
+繁体启动图仍回退英文，150%/200% 缩放、小窗口及 IFW 全面汉化为有限支持。
+截至 2026-11-25，官方最新正式版为 [4.2.0](https://github.com/PlotJuggler/PlotJuggler/releases/tag/4.2.0)；
+本分支仍为 Qt5 3.x，不与 Qt6/PJ4 SDK 插件混用。
 
 - [汉化分支命名、开发流程与发布规则](docs/BRANCHING.zh-CN.md)
 - [使用、解析范围、许可和同步说明](docs/zh-CN.md)
@@ -196,3 +200,4 @@ Please note that some third-party dependencies (including Qt) use the
 <a href="https://github.com/PlotJuggler/PlotJuggler/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=PlotJuggler/PlotJuggler" />
 </a>
+
