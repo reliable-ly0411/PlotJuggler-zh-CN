@@ -1,0 +1,31 @@
+{
+  "source_commit": "5c66b514fb75f507d721e6717c0cef4d415ae43e",
+  "run_id": "45587534414",
+  "run_attempt": "1",
+  "assets": [
+    {
+      "name": "PlotJuggler-4.1.1-zh.1.rc.1-x86_64-zh-CN.AppImage",
+      "size": 179927544,
+      "sha256": "33b904b49e505ba31ef25fd353c05feda4318ac40aee9b2effe35085bd1e633a",
+      "candidate_name": "PlotJuggler-4.1.1-zh.1.rc.1-x86_64-zh-CN.AppImage"
+    },
+    {
+      "name": "plotjuggler4_4.1.1.zh.1.rc.1-1_amd64-zh-CN.deb",
+      "size": 137967620,
+      "sha256": "de2b013912ce2eaa4d5bd5b3d9a0a9265ce3d6ba5779811aa3cf48b486607c41",
+      "candidate_name": "plotjuggler4_4.1.1~zh.1~rc.1-1_amd64-zh-CN.deb"
+    },
+    {
+      "name": "PlotJuggler-4.1.1-zh.1.rc.1-Windows-x64-portable-zh-CN.zip",
+      "size": 162451973,
+      "sha256": "ab2425e664d75911c6465c09cd644635cff1769841a602b47518090915651c5f",
+      "candidate_name": "PlotJuggler-4.1.1-zh.1.rc.1-Windows-x64-portable-zh-CN.zip"
+    },
+    {
+      "name": "PlotJuggler-4.1.1-zh.1.rc.1-Windows-x64-zh-CN.exe",
+      "size": 147692675,
+      "sha256": "cd58090c0ce4601c9c5bc5a385f58e39324968005c14c8246edbe36a2f942238",
+      "candidate_name": "PlotJuggler-4.1.1-zh.1.rc.1-Windows-x64-zh-CN.exe"
+    }
+  ]
+}
