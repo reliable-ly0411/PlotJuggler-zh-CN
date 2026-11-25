@@ -7,7 +7,7 @@
 | 下载中文正式版或查看预发布 | [Releases](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases) · [安装说明](#下载与安装中文版) |
 | 查 4.x 稳定源码 | [`zh-CN-4.x`](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/tree/zh-CN-4.x)，默认分支；分支更新不等于安装包发布 |
 | 跟踪开发与上游 | [`zh-CN-4.x-dev`](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/tree/zh-CN-4.x-dev) · [`main` 上游镜像](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/tree/main) |
-| 使用 Qt5 的 3.x 版本 | [`zh-CN`](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/tree/zh-CN) · [`zh-CN-dev`](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/tree/zh-CN-dev)；与 4.x 分开维护 |
+| 下载或维护 Qt5 的 3.x 版本 | [3.18.1-rc.17 预发布](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v3.18.1-rc.17) · [`zh-CN`](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/tree/zh-CN) 稳定维护 · [`zh-CN-dev`](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/tree/zh-CN-dev) 开发；与 4.x 分开 |
 | 报告问题 | [Issues](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues) |
 
 新配置默认简体中文；在首选项切换后，下次启动生效。界面语言不改变数值或数据解析规则。覆盖范围、插件和构建限制见[中文与多语言说明](docs/localization/README.zh-CN.md)。
@@ -98,7 +98,7 @@ Need a custom integration? Build a loader, streamer, parser or toolbox with the
 阅读已知限制并核对同页的 `SHA256SUMS.txt`。完整历史见[本仓库 Releases](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases)。
 正式版和预发布在同一个 Releases 页面列出。需要可靠版本时选择 Latest；预发布只面向试用，未发布的 Actions 工件不是 Release。
 
-如需试用，见 [4.1.1-zh.1.rc.1 中文预发布](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.1-zh.1.rc.1)：同样提供 Windows 安装器/便携包和 Linux AppImage/DEB，Linux 原包已在 Ubuntu 22.04 和 24.04 验收。它不替换 Latest。
+如需试用，见 [4.1.1-zh.1.rc.1 中文预发布](https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.1-zh.1.rc.1)：提供 Windows x64 安装器/便携包和 Linux x86_64 AppImage/amd64 DEB。Linux 原包在 Ubuntu 22.04 和 24.04 验收；Windows 安装器未签名。它不替换 Latest，也不代表上游有官方 4.1.1 发行。各文件及验收边界见该发布页。
 
 | 系统 | 4.1.0+zh.1 下载文件 | 安装方式 |
 | --- | --- | --- |
