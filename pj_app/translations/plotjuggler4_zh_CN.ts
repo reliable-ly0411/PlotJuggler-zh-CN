@@ -1,0 +1,12186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.1" language="zh_CN" sourcelanguage="en_US">
+<context>
+    <name>AboutDialog</name>
+    <message>
+        <location filename="../src/ui/AboutDialog.ui" line="+48"/>
+        <source>PlotJuggler 4</source>
+        <translation>PlotJuggler 4</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Licensed under the Mozilla Public License 2.0</source>
+        <translation>采用 Mozilla 公共许可证 2.0 授权</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>&lt;a href=&quot;https://github.com/PlotJuggler/PlotJuggler&quot;&gt;github.com/PlotJuggler/PlotJuggler&lt;/a&gt;</source>
+        <translation>&lt;a href=&quot;https://github.com/PlotJuggler/PlotJuggler&quot;&gt;github.com/PlotJuggler/PlotJuggler&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>&lt;a href=&quot;THIRD_PARTY_NOTICES.txt&quot;&gt;Third-party licences&lt;/a&gt;</source>
+        <translation>&lt;a href=&quot;THIRD_PARTY_NOTICES.txt&quot;&gt;第三方许可证&lt;/a&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>AppLanguage</name>
+    <message>
+        <location filename="../src/main.cpp" line="+438"/>
+        <source>Interface language for this session (zh_CN, zh_TW or en_US).</source>
+        <translation>本次会话的界面语言（zh_CN、zh_TW 或 en_US）。</translation>
+    </message>
+</context>
+<context>
+    <name>AppProfile</name>
+    <message>
+        <location line="+13"/>
+        <source>Keep settings and core app data in an isolated absolute directory (not a plugin sandbox).</source>
+        <translation>将设置及核心应用数据保存在独立的绝对路径目录中（不是插件沙箱）。</translation>
+    </message>
+</context>
+<context>
+    <name>BatchLoadDialog</name>
+    <message>
+        <location filename="../src/ui/BatchLoadDialog.ui" line="+26"/>
+        <source>Configuration dialogs:</source>
+        <translation>配置对话框：</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Each checked file gets its own copy of the layout&apos;s tabs.</source>
+        <translation>布局会为每个选中的文件复制一组标签页。</translation>
+    </message>
+</context>
+<context>
+    <name>CurveEditor</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/CurveEditor.ui" line="+37"/>
+        <source>Curves</source>
+        <translation>曲线</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Filter...</source>
+        <translation>筛选…</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Curves options</source>
+        <translation>曲线选项</translation>
+    </message>
+</context>
+<context>
+    <name>CurveListPanel</name>
+    <message>
+        <location filename="../src/ui/CurveListPanel.ui" line="+24"/>
+        <source>Datasets</source>
+        <translation>数据集</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Datasets options</source>
+        <translation>数据集选项</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <location line="+92"/>
+        <source>Filter...</source>
+        <translation>筛选…</translation>
+    </message>
+    <message>
+        <location line="-80"/>
+        <source>Show/hide plot series</source>
+        <translation>显示或隐藏绘图序列</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Show/hide 2D image topics</source>
+        <translation>显示或隐藏二维图像话题</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Show/hide 3D scene topics</source>
+        <translation>显示或隐藏三维场景话题</translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>Custom Topics</source>
+        <translation>自定义话题</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Add custom topic</source>
+        <translation>添加自定义话题</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Edit the selected custom topic</source>
+        <translation>编辑选中的自定义话题</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Custom topics options</source>
+        <translation>自定义话题选项</translation>
+    </message>
+</context>
+<context>
+    <name>CustomWidgetConfigPanel</name>
+    <message>
+        <location filename="../src/ui/CustomWidgetConfigPanel.ui" line="+24"/>
+        <source>Custom Widget</source>
+        <translation>自定义控件</translation>
+    </message>
+    <message>
+        <location line="+83"/>
+        <source>Inputs</source>
+        <translation>输入</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Settings</source>
+        <translation>设置</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>This widget has no settings.</source>
+        <translation>此控件没有设置。</translation>
+    </message>
+    <message>
+        <location line="+62"/>
+        <source>Choose a series</source>
+        <translation>选择序列</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Filter...</source>
+        <translation>筛选…</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Double-click a series to wire it.</source>
+        <translation>双击序列即可将其接入此输入。</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+</context>
+<context>
+    <name>DatasetInfoDialog</name>
+    <message>
+        <location filename="../src/ui/DatasetInfoDialog.ui" line="+27"/>
+        <source>Property</source>
+        <translation>属性</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Value</source>
+        <translation>值</translation>
+    </message>
+</context>
+<context>
+    <name>DatasetMergeActions</name>
+    <message>
+        <location filename="../src/DatasetMergeActions.cpp" line="+105"/>
+        <source>Merging datasets is a destructive operation. Do you wish to proceed?</source>
+        <translation>合并数据集是一项破坏性操作。是否继续？</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>The following datasets overlap in time:</source>
+        <translation>以下数据集的时间范围重叠：</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>The following datasets have colliding data:</source>
+        <translation>以下数据集存在数据冲突：</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>The following datasets contain object topics that will be merged into the result:</source>
+        <translation>以下数据集包含对象话题，这些话题将一并合并到结果中：</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <location line="+41"/>
+        <source>Cannot merge datasets</source>
+        <translation>无法合并数据集</translation>
+    </message>
+    <message>
+        <location line="-40"/>
+        <source>Stop streaming the live source before merging it with other datasets.</source>
+        <translation>请先停止接收此实时数据源，再将其与其他数据集合并。</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>&quot;%1&quot;: marker sets with a different scope, target or owner</source>
+        <translation>“%1”：标记集的作用域、目标或所有者不同</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>canonical %1</source>
+        <translation>%1（规范格式）</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&quot;%1&quot;: %2 vs %3</source>
+        <translation>“%1”：%2 与 %3</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>...and %1 more</source>
+        <translation>…以及另外 %1 项</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>These object topics share a name but have incompatible types, formats or marker descriptions, so the datasets cannot be merged:</source>
+        <translation>这些对象话题名称相同，但类型、格式或标记描述不兼容，因此无法合并数据集：</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Remove or rename the conflicting topic and try again.</source>
+        <translation>请移除冲突话题或重命名后重试。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Merge datasets</source>
+        <translation>合并数据集</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Merge</source>
+        <translation>合并</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+</context>
+<context>
+    <name>DerivedObjects</name>
+    <message>
+        <location filename="../../pj_runtime/src/DerivedObjects.cpp" line="+175"/>
+        <source>cyclic on-demand dependency (or depends on a cycle)</source>
+        <translation>按需依赖存在循环（或依赖于循环）</translation>
+    </message>
+    <message>
+        <location line="+255"/>
+        <location line="+294"/>
+        <source>invalid input dataset id</source>
+        <translation>输入数据集 ID 无效</translation>
+    </message>
+    <message>
+        <location line="-277"/>
+        <source>ambiguous input dataset path</source>
+        <translation>输入数据集路径不明确</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>input dataset path is not loaded</source>
+        <translation>输入数据集路径未加载</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>invalid input column</source>
+        <translation>输入列无效</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <location line="+111"/>
+        <source>Could not restore transform &apos;%1&apos;: %2</source>
+        <translation>无法恢复变换“%1”：%2</translation>
+    </message>
+    <message>
+        <location line="-39"/>
+        <source>Layout filter on &apos;%1/%2&apos; has no matching data; skipping.</source>
+        <translation>布局中“%1/%2”上的滤波器没有匹配的数据；已跳过。</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Layout filter &apos;%1&apos; is unknown to this PlotJuggler; skipping.</source>
+        <translation>此 PlotJuggler 无法识别布局中的滤波器“%1”；已跳过。</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Could not restore filter &apos;%1&apos;: %2</source>
+        <translation>无法恢复滤波器“%1”：%2</translation>
+    </message>
+    <message>
+        <location line="+63"/>
+        <source>ambiguous dataset identity</source>
+        <translation>数据集身份不明确</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>dataset is not loaded</source>
+        <translation>数据集未加载</translation>
+    </message>
+    <message>
+        <location line="+49"/>
+        <source>invalid query_time &apos;%1&apos;</source>
+        <translation>query_time“%1”无效</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>invalid pinned time &apos;%1&apos;</source>
+        <translation>固定时间“%1”无效</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>invalid upstream of input &apos;%1&apos;</source>
+        <translation>输入“%1”的上游无效</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>ambiguous input dataset</source>
+        <translation>输入数据集不明确</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>input dataset is not loaded</source>
+        <translation>输入数据集未加载</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>inputs resolve to different datasets</source>
+        <translation>输入解析到不同的数据集</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>invalid output &apos;%1&apos;: %2</source>
+        <translation>输出“%1”无效：%2</translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <source>Cannot restore: the on-demand recipe &apos;%1&apos; is held by a preview of an open panel; close the panel first</source>
+        <translation>无法恢复：按需配方“%1”正被某个已打开面板的预览占用；请先关闭该面板</translation>
+    </message>
+    <message>
+        <location line="+63"/>
+        <source>Cannot undo: protected outputs would lose an input this step removes: %1</source>
+        <translation>无法撤销：受保护的输出将失去此步骤要删除的输入：%1</translation>
+    </message>
+    <message>
+        <location line="+123"/>
+        <source>no loaded dataset carries its input series</source>
+        <translation>已加载的数据集中没有其输入序列</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>its input series are carried by several loaded recordings; load only the one it was made for, or re-apply the rule</source>
+        <translation>其输入序列存在于多个已加载的录制文件中；请仅加载创建该规则时使用的文件，或重新应用规则</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <location line="+22"/>
+        <source>Could not restore marker generator &apos;%1&apos;: %2</source>
+        <translation>无法恢复标记生成器“%1”：%2</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <source>Could not restore marker generator &apos;%1&apos;: another binding of this rule, saved with different settings, resolves to the same dataset; only the first is kept</source>
+        <translation>无法恢复标记生成器“%1”：此规则以不同设置保存的另一绑定解析到同一数据集；仅保留第一个</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <location line="+13"/>
+        <source>Could not restore on-demand recipe &apos;%1&apos;: %2</source>
+        <translation>无法恢复按需配方“%1”：%2</translation>
+    </message>
+</context>
+<context>
+    <name>DiagnosticsDialog</name>
+    <message>
+        <location filename="../src/ui/DiagnosticsDialog.ui" line="+16"/>
+        <source>Info</source>
+        <translation>信息</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Warning</source>
+        <translation>警告</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Error</source>
+        <translation>错误</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Show only diagnostics from one source</source>
+        <translation>仅显示指定来源的诊断信息</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Filter messages...</source>
+        <translation>筛选消息…</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Clear</source>
+        <translation>清空</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Discard all recorded diagnostics</source>
+        <translation>清除全部诊断记录</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Time</source>
+        <translation>时间</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Severity</source>
+        <translation>级别</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Source</source>
+        <translation>来源</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Message</source>
+        <translation>消息</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Select a row to read the full message</source>
+        <translation>选择一行以查看完整消息</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Copy</source>
+        <translation>复制</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy the selected message to the clipboard</source>
+        <translation>将选中的消息复制到剪贴板</translation>
+    </message>
+</context>
+<context>
+    <name>Dialog</name>
+    <message>
+        <location filename="../../pj_widgets/src/Dialog.ui" line="+49"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+</context>
+<context>
+    <name>DockToolbar</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/DockToolbar.ui" line="+91"/>
+        <source>...</source>
+        <translation>...</translation>
+    </message>
+    <message>
+        <location line="+94"/>
+        <source>Split horizontally</source>
+        <translation>水平拆分</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Split vertically</source>
+        <translation>垂直拆分</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Fullscreen</source>
+        <translation>全屏</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Close Plot Area</source>
+        <translation>关闭绘图区</translation>
+    </message>
+</context>
+<context>
+    <name>FilterEditorPanel</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/FilterEditorPanel.ui" line="+6"/>
+        <source>Filter Editor</source>
+        <translation>滤波器编辑器</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>AutoZoom</source>
+        <translation>自动缩放</translation>
+    </message>
+    <message>
+        <location line="+90"/>
+        <source>Alias:</source>
+        <translation>别名：</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Name of the filtered output series (editable)</source>
+        <translation>滤波后的输出序列名称（可编辑）</translation>
+    </message>
+    <message>
+        <location line="-103"/>
+        <source>&lt;span style=&quot;font-weight:600;&quot;&gt;Preview&lt;/span&gt;</source>
+        <translation>&lt;span style=&quot;font-weight:600;&quot;&gt;预览&lt;/span&gt;</translation>
+    </message>
+    <message>
+        <location line="+51"/>
+        <source>&lt;span style=&quot;font-weight:600;&quot;&gt;Source curve:&lt;/span&gt;</source>
+        <translation>&lt;span style=&quot;font-weight:600;&quot;&gt;源曲线：&lt;/span&gt;</translation>
+    </message>
+    <message>
+        <location line="+60"/>
+        <source>&lt;span style=&quot;font-weight:600;&quot;&gt;Transform:&lt;/span&gt;</source>
+        <translation>&lt;span style=&quot;font-weight:600;&quot;&gt;变换：&lt;/span&gt;</translation>
+    </message>
+    <message>
+        <location line="+93"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Save</source>
+        <translation>保存</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Generate time series</source>
+        <translation>生成时间序列</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Apply the filter and add the result as a new persistent series in the datastore and curve tree</source>
+        <translation>应用滤波器，并将结果作为新的持久化序列添加到数据存储和曲线树中</translation>
+    </message>
+</context>
+<context>
+    <name>LayoutResources</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/layout_resources.cpp" line="+78"/>
+        <source>robot model reference &apos;%1&apos; is relative, but the layout has no location to resolve it against</source>
+        <translation>机器人模型引用“%1”是相对路径，但布局没有可供解析的基准位置</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>robot model reference &apos;%1&apos; is a local file, which a web-hosted layout cannot use</source>
+        <translation>机器人模型引用“%1”是本地文件，网络托管的布局无法使用</translation>
+    </message>
+    <message>
+        <location line="+55"/>
+        <source>a robot model&apos;s package_url_roots must be a JSON object mapping package names to http(s) or file URLs</source>
+        <translation>机器人模型的 package_url_roots 必须是将包名映射到 http(s) 或 file URL 的 JSON 对象</translation>
+    </message>
+</context>
+<context>
+    <name>LayoutXml</name>
+    <message>
+        <location filename="../src/LayoutXml.cpp" line="+99"/>
+        <source>Data source &apos;%1&apos; has no web location to load from.</source>
+        <translation>数据源“%1”没有可供加载的网络位置。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The layout names a data source without a filename.</source>
+        <translation>布局中有数据源未指定文件名。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Data source &apos;%1&apos; is a file on a local machine, which a web layout cannot open.</source>
+        <translation>数据源“%1”是本机文件，网络托管的布局无法打开。</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Data source &apos;%1&apos; is not an http(s) URL.</source>
+        <translation>数据源“%1”不是 http(s) URL。</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Data source &apos;%1&apos; does not name a file.</source>
+        <translation>数据源“%1”未指定文件。</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>The layout names a streaming source without an id.</source>
+        <translation>布局中有流式数据源未指定 ID。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The layout names streaming source &apos;%1&apos; more than once.</source>
+        <translation>布局多次指定了流式数据源“%1”。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Streaming source &apos;%1&apos; does not name its plugin.</source>
+        <translation>流式数据源“%1”未指定插件。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Streaming source &apos;%1&apos; has no plugin configuration.</source>
+        <translation>流式数据源“%1”没有插件配置。</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <location line="+45"/>
+        <source>The layout records its streaming sources more than once.</source>
+        <translation>布局中的流式数据源列表出现了多次。</translation>
+    </message>
+    <message>
+        <location line="-27"/>
+        <source>Streaming source &apos;%1&apos; names more than one plugin.</source>
+        <translation>流式数据源“%1”指定了多个插件。</translation>
+    </message>
+    <message>
+        <location line="+122"/>
+        <source>&apos;%1&apos;, which the source&apos;s plugin reads, has no content fingerprint: the file changed since it was picked. Open the source again.</source>
+        <translation>数据源插件读取的 &apos;%1&apos; 没有内容指纹：该文件在选取后已发生变化。请重新打开数据源。</translation>
+    </message>
+</context>
+<context>
+    <name>LeftPanel</name>
+    <message>
+        <location filename="../src/ui/LeftPanel.ui" line="+31"/>
+        <source>Sources</source>
+        <translation>数据源</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>File</source>
+        <translation>文件</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Stream</source>
+        <translation>数据流</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Cloud</source>
+        <translation>云端</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Recent layouts &amp; files</source>
+        <translation>最近的布局和文件</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>Load a data file</source>
+        <translation>加载数据文件</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Reload previous data</source>
+        <translation>重新加载先前的数据</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Start streaming</source>
+        <translation>开始接收数据流</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Pause streaming</source>
+        <translation>暂停接收数据流</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Record the subscribed topics of every active stream to an MCAP file</source>
+        <translation>将每个活动数据流中已订阅的话题录制为 MCAP 文件</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Recording: elapsed time, bytes written, and how many messages were dropped because the disk could not keep up</source>
+        <translation>录制状态：已用时间、已写入字节数，以及磁盘写入速度不足导致的消息丢弃数</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Streaming buffer length (seconds)</source>
+        <translation>数据流缓冲时长（秒）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source> sec</source>
+        <translation> 秒</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Streaming buffer (seconds)</source>
+        <translation>数据流缓冲（秒）</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Open cloud browser</source>
+        <translation>浏览云端文件</translation>
+    </message>
+</context>
+<context>
+    <name>LogView</name>
+    <message>
+        <location filename="../../pj_log/widget/src/LogView.ui" line="+63"/>
+        <source>Debug</source>
+        <translation>调试</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Info</source>
+        <translation>信息</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Warn</source>
+        <translation>警告</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Error</source>
+        <translation>错误</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Fatal</source>
+        <translation>致命</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Filter sources...</source>
+        <translation>筛选来源…</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Filter categories...</source>
+        <translation>筛选类别…</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Filter messages...</source>
+        <translation>筛选消息…</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Topics</source>
+        <translation>话题</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Choose which topics to show</source>
+        <translation>选择要显示的话题</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Hide the entries after the playhead</source>
+        <translation>隐藏播放位置之后的记录</translation>
+    </message>
+    <message>
+        <location line="+81"/>
+        <source>Select a row to read the full entry</source>
+        <translation>选择一行以查看完整记录</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Copy the selected entry to the clipboard</source>
+        <translation>将所选记录复制到剪贴板</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Drop a log topic here</source>
+        <translation>将日志话题拖到此处</translation>
+    </message>
+</context>
+<context>
+    <name>MainWindow</name>
+    <message>
+        <location filename="../src/MainWindow.ui" line="+14"/>
+        <source>PlotJuggler 4</source>
+        <translation>PlotJuggler 4</translation>
+    </message>
+    <message>
+        <location line="+293"/>
+        <source>Extensions Marketplace…</source>
+        <translation>扩展市场…</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Ctrl+Shift+M</source>
+        <translation>Ctrl+Shift+M</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Presets…</source>
+        <translation>预设…</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Quit</source>
+        <translation>退出</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Ctrl+Q</source>
+        <translation>Ctrl+Q</translation>
+    </message>
+</context>
+<context>
+    <name>MarketplaceWindow</name>
+    <message>
+        <location filename="../../pj_marketplace/src/ui/marketplace_window.ui" line="+27"/>
+        <source>Data Sources</source>
+        <translation>数据源</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Extensions that load data from files</source>
+        <translation>用于从文件加载数据的扩展</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Data Streamers</source>
+        <translation>流数据插件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Extensions that stream data continuously</source>
+        <translation>用于持续接收数据流的扩展</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Parsers</source>
+        <translation>解析器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Extensions that decode byte blobs into fields</source>
+        <translation>用于将二进制数据解码为字段的扩展</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Toolboxes</source>
+        <translation>工具箱</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Extensions that add a tool with its own GUI</source>
+        <translation>提供独立图形界面工具的扩展</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Installed only</source>
+        <translation>仅已安装</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show only extensions that are already installed</source>
+        <translation>仅显示已安装的扩展</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Search extensions...</source>
+        <translation>搜索扩展…</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Install local...</source>
+        <translation>从本地安装…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Install a plugin from a local ZIP. The archive is not from the registry, so its origin cannot be verified — only that it holds a loadable plugin. Replacing an already-installed extension takes effect on the next restart, unless the archive holds exactly what is already installed, which changes nothing.</source>
+        <translation>从本地 ZIP 压缩包安装插件。压缩包并非来自扩展注册表，因此无法验证其来源，只能检查其中的插件是否能够加载。替换已安装的扩展将在下次重启时生效；如果压缩包内容与已安装版本完全相同，则不会发生变化。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Update All</source>
+        <translation>全部更新</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Update every installed extension that has a newer version available</source>
+        <translation>更新所有有新版本可用的已安装扩展</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Plugin settings — open Preferences ▸ Plugins</source>
+        <translation>插件设置：打开“首选项 ▸ 插件”</translation>
+    </message>
+    <message>
+        <location line="+96"/>
+        <source>Details</source>
+        <translation>详情</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show marketplace diagnostics</source>
+        <translation>显示扩展市场诊断信息</translation>
+    </message>
+</context>
+<context>
+    <name>McpJobsDialog</name>
+    <message>
+        <location filename="../src/ui/McpJobsDialog.ui" line="+32"/>
+        <source>No AI agent is running anything.</source>
+        <translation>当前没有 AI 智能体在执行任务。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::AboutDialog</name>
+    <message>
+        <location filename="../src/ui/AboutDialog.cpp" line="+17"/>
+        <source>About PlotJuggler</source>
+        <translation>关于 PlotJuggler</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Version %1</source>
+        <translation>版本 %1</translation>
+    </message>
+    <message>
+        <source>Browser build: GNU GPL v3. PlotJuggler&apos;s source: MPL 2.0</source>
+        <translation>浏览器版：GNU GPL v3。PlotJuggler 源代码：MPL 2.0</translation>
+    </message>
+    <message>
+        <source>Source code</source>
+        <translation>源代码</translation>
+    </message>
+    <message>
+        <source>Third-party licences</source>
+        <translation>第三方许可条款</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::ArchiveDiagnostics</name>
+    <message>
+        <location filename="../../pj_marketplace/src/core/DownloadManager.cpp" line="+31"/>
+        <source>archive entry is neither a regular file nor a directory</source>
+        <translation>压缩包条目既不是普通文件，也不是目录</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>archive entry has an empty path</source>
+        <translation>压缩包条目的路径为空</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path uses a backslash separator</source>
+        <translation>压缩包条目路径使用了反斜杠分隔符</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path is absolute</source>
+        <translation>压缩包条目使用了绝对路径</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path carries a drive letter</source>
+        <translation>压缩包条目路径包含驱动器盘符</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path has an empty segment</source>
+        <translation>压缩包条目路径包含空路径段</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path has a dot segment</source>
+        <translation>压缩包条目路径包含 . 或 .. 路径段</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path segment ends in a dot or space</source>
+        <translation>压缩包条目路径段以点号或空格结尾</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path uses a reserved device name</source>
+        <translation>压缩包条目路径使用了保留的设备名</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>archive entry path holds a control byte</source>
+        <translation>压缩包条目路径包含控制字符</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>archive holds more than %1 entries</source>
+        <translation>压缩包包含的条目数超过 %1</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>archive entry expands to more than %1 bytes</source>
+        <translation>压缩包条目解压后超过 %1 字节</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>archive expands to more than %1 bytes in total</source>
+        <translation>压缩包解压后的总大小超过 %1 字节</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>archive entry path is deeper than %1 segments</source>
+        <translation>压缩包条目路径的层级超过 %1</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::BatchLoadDialog</name>
+    <message>
+        <location filename="../src/ui/BatchLoadDialog.cpp" line="+27"/>
+        <source>Load Data</source>
+        <translation>加载数据</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Loading %1 files.</source>
+        <translation>正在加载 %1 个文件。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Show all</source>
+        <translation>全部显示</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show first</source>
+        <translation>每种格式只显示一次</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Skip</source>
+        <translation>跳过</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Every file shows its loader&apos;s dialog.</source>
+        <translation>每个文件都会显示其加载器的配置对话框。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The first file of each format shows its dialog; the others reuse its settings.</source>
+        <translation>每种格式只为第一个文件显示对话框，其余文件沿用该设置。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Every file uses its format&apos;s last settings; a format never configured still asks.</source>
+        <translation>每个文件使用其格式上次的设置。尚未配置过的格式仍会询问。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::BuiltinFilters</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/BuiltinFilterPresentation.cpp" line="+15"/>
+        <source>None</source>
+        <translation>无</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pass-through (no change).</source>
+        <translation>直接输出（不作更改）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Absolute</source>
+        <translation>绝对值</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Absolute value |y|.</source>
+        <translation>绝对值 |y|。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Scale</source>
+        <translation>缩放</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Affine scale + offset, with a time shift.</source>
+        <translation>线性缩放与偏移，并可平移时间。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offset</source>
+        <translation>偏移</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Time offset</source>
+        <translation>时间偏移</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Derivative</source>
+        <translation>求导</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Rate of change dv/dt.</source>
+        <translation>变化率 dv/dt。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Use fixed Δt</source>
+        <translation>使用固定 Δt</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Fixed Δt</source>
+        <translation>固定 Δt</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Integral</source>
+        <translation>积分</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Running trapezoidal integral of y over time.</source>
+        <translation>使用梯形法累计计算 y 对时间的积分。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Moving Average</source>
+        <translation>滑动平均</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Boxcar moving average.</source>
+        <translation>矩形窗口滑动平均。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Window</source>
+        <translation>窗口</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Center timestamp</source>
+        <translation>时间戳居中</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Moving Root Mean Squared</source>
+        <translation>滑动均方根</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Moving RMS over a window.</source>
+        <translation>计算窗口内的滑动均方根。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Moving Variance / Stdev</source>
+        <translation>滑动方差 / 标准差</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Moving variance or standard deviation.</source>
+        <translation>计算滑动方差或标准差。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Standard deviation</source>
+        <translation>标准差</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Outlier Removal</source>
+        <translation>异常值剔除</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Drop single-sample spikes.</source>
+        <translation>剔除单采样点尖峰。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Factor</source>
+        <translation>系数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Samples Counter</source>
+        <translation>采样点计数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Count of samples in a trailing time window.</source>
+        <translation>统计此前时间窗口内的采样点数。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Binary Filter</source>
+        <translation>二值滤波</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Boolean 0/1 predicate over the value.</source>
+        <translation>按条件将数值转换为 0 或 1。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comparison</source>
+        <translation>比较条件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>== a</source>
+        <translation>== a</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt; a</source>
+        <translation>&lt; a</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;= a</source>
+        <translation>&lt;= a</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&gt; a</source>
+        <translation>&gt; a</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&gt;= a</source>
+        <translation>&gt;= a</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>in [a, b]</source>
+        <translation>位于 [a, b] 内</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Threshold a</source>
+        <translation>阈值 a</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Threshold b</source>
+        <translation>阈值 b</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tolerance (==)</source>
+        <translation>容差（==）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Time Since Previous</source>
+        <translation>距上一个采样点的时间</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Δt between consecutive samples (seconds).</source>
+        <translation>相邻采样点之间的 Δt（秒）。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::BundledPluginDiagnostics</name>
+    <message>
+        <location filename="../../pj_widgets/include/pj_widgets/BundledPluginText.h" line="+147"/>
+        <source>ArduPilot BIN requires a string filepath</source>
+        <translation>ArduPilot BIN 需要字符串类型的文件路径</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ArduPilot BIN requires a nonempty filepath without NUL bytes</source>
+        <translation>ArduPilot BIN 需要非空且不含 NUL 字节的文件路径</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>ArduPilot BIN: no filepath configured</source>
+        <translation>ArduPilot BIN：未配置文件路径</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ArduPilot BIN: cannot open file</source>
+        <translation>ArduPilot BIN：无法打开文件</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ArduPilot BIN: unsupported file size</source>
+        <translation>ArduPilot BIN：不支持的文件大小</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ArduPilot BIN: file read failed or file changed during import</source>
+        <translation>ArduPilot BIN：文件读取失败，或文件在导入期间发生变化</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>ArduPilot BIN: timestamp exceeds the SDK nanosecond range</source>
+        <translation>ArduPilot BIN：时间戳超出 SDK 支持的纳秒范围</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>invalid config JSON</source>
+        <translation>配置 JSON 无效</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>invalid config</source>
+        <translation>配置无效</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>no filepath configured</source>
+        <translation>未配置文件路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>CSV parsing failed</source>
+        <translation>CSV 解析失败</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Loading aborted by user</source>
+        <translation>用户已中止加载</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::BundledPluginMetadata</name>
+    <message>
+        <location line="-148"/>
+        <source>Arrow IPC Parser</source>
+        <translation>Arrow IPC 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for self-describing Arrow IPC streams.</source>
+        <translation>用于自描述 Arrow IPC 数据流的消息解析器。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>CSV Loader</source>
+        <translation>CSV 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for CSV files.</source>
+        <translation>用于 CSV 文件的数据加载器。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DataTamer Parser</source>
+        <translation>DataTamer 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for DataTamer encoded data. Efficient serialization for robotics.</source>
+        <translation>用于 DataTamer 编码数据的消息解析器，支持面向机器人的高效序列化。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Dummy Streamer</source>
+        <translation>模拟数据流</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Generates synthetic sine, cosine, sawtooth, and noise signals for testing and demonstration.</source>
+        <translation>生成正弦、余弦、锯齿波和噪声信号，用于测试与演示。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Foxglove Bridge</source>
+        <translation>Foxglove 桥接</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connect to Foxglove WebSocket server for ROS data streaming. Compatible with Foxglove Studio.</source>
+        <translation>连接 Foxglove WebSocket 服务器以接收 ROS 数据流，兼容 Foxglove Studio。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>JSON Parser</source>
+        <translation>JSON 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for JSON, CBOR, MessagePack, and BSON encoded data.</source>
+        <translation>用于 JSON、CBOR、MessagePack 和 BSON 编码数据的消息解析器。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>MCAP Loader</source>
+        <translation>MCAP 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for MCAP files and split ROS 2 bags (metadata.yaml). Supports ROS1, ROS2, Protobuf, and JSON message encodings.</source>
+        <translation>加载 MCAP 文件及分卷 ROS 2 数据包（metadata.yaml），支持 ROS1、ROS2、Protobuf 和 JSON 消息编码。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>MP4 Loader</source>
+        <translation>MP4 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for .mp4 video files. Reads the container&apos;s creation_time tag (when present) so the host can anchor the video on a wall-clock timeline; supports multi-file selection via the standard File dialog.</source>
+        <translation>加载 .mp4 视频文件。读取容器的 creation_time 标签（若存在），使宿主可将视频定位在绝对时间轴上；支持通过标准文件对话框选择多个文件。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Parquet Loader</source>
+        <translation>Parquet 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for Apache Parquet files. Efficient columnar storage format.</source>
+        <translation>加载 Apache Parquet 文件，这是一种高效的列式存储格式。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>PlotJuggler Bridge</source>
+        <translation>PlotJuggler 桥接</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connect to PlotJuggler Bridge server for generic data streaming over WebSocket.</source>
+        <translation>连接 PlotJuggler Bridge 服务器，通过 WebSocket 接收通用数据流。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>3D Loader (PLY/PCD)</source>
+        <translation>3D 加载器（PLY/PCD）</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for static 3D files: .pcd and vertex-only .ply load as a point cloud; .ply with faces loads as a 3D mesh. One snapshot at timestamp 0.</source>
+        <translation>加载静态 3D 文件：.pcd 和仅包含顶点的 .ply 作为点云加载；包含面的 .ply 作为三维网格加载。在时间戳 0 处生成一个快照。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Protobuf Parser</source>
+        <translation>Protobuf 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for Protocol Buffers encoded data. Promotes the well-known Foxglove schemas (PointCloud, CompressedVideo, CompressedImage, RawImage, ImageAnnotations, SceneUpdate, FrameTransform, PosesInFrame, CameraCalibration, VoxelGrid, Grid) to builtin scene objects.</source>
+        <translation>解析 Protocol Buffers 编码消息，将常用 Foxglove 消息类型（PointCloud、CompressedVideo、CompressedImage、RawImage、ImageAnnotations、SceneUpdate、FrameTransform、PosesInFrame、CameraCalibration、VoxelGrid、Grid）转换为内置场景对象。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>ROS CDR Parser</source>
+        <translation>ROS CDR 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for ROS1 and ROS2 messages (ros1msg, ros2msg, omgidl). Promotes common sensor and visualization messages (Image, PointCloud2, OccupancyGrid, GridMap, TF, Markers, and yolo_msgs/DetectionArray to ImageAnnotations) to builtin scene objects.</source>
+        <translation>解析 ROS1 和 ROS2 消息（ros1msg、ros2msg、omgidl），将常用传感器及可视化消息（Image、PointCloud2、OccupancyGrid、GridMap、TF、Markers，以及转换为 ImageAnnotations 的 yolo_msgs/DetectionArray）转换为内置场景对象。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>ROS 2 Topic Subscriber</source>
+        <translation>ROS 2 主题订阅器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Subscribe to ROS 2 topics in real time and stream the decoded fields into PlotJuggler.</source>
+        <translation>实时订阅 ROS 2 主题，并将解码字段以数据流形式传入 PlotJuggler。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Assistant Agent</source>
+        <translation>智能助手</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>A chat assistant that drives PlotJuggler through the plugin SDK: lists and describes topics, reads series statistics, and creates derived timeseries, markers and plot tabs it owns. Uses the Claude Code or Codex CLI already installed and signed in on your machine; the plugin stores no API keys. Linux, macOS and Windows.</source>
+        <translation>通过插件 SDK 操作 PlotJuggler 的聊天助手，可列出及描述主题、读取序列统计信息，并创建其拥有的派生时间序列、标记和绘图标签页。使用您电脑上已安装并登录的 Claude Code 或 Codex 命令行工具；插件不保存 API 密钥。支持 Linux、macOS 和 Windows。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Mosaico Cloud Server</source>
+        <translation>Mosaico 云服务器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Browse and import data from Mosaico cloud servers via Apache Arrow Flight. Scalar topics are handed to the host as arrow-ipc messages and decoded by the parser_arrow plugin (install it alongside). Includes Lua metadata predicate filter, multi-topic streaming, and time-range selection.</source>
+        <translation>通过 Apache Arrow Flight 浏览并导入 Mosaico 云服务器数据。标量主题以 arrow-ipc 消息交给宿主，由 parser_arrow 插件解码（需同时安装）。支持 Lua 元数据条件筛选、多主题流式传输和时间范围选择。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Quaternion to RPY</source>
+        <translation>四元数转 RPY</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Converts quaternion (x, y, z, w) time series into Roll, Pitch, Yaw angles with optional unwrapping and degree/radian output.</source>
+        <translation>将四元数（x、y、z、w）时间序列转换为横滚、俯仰、偏航角，支持角度解缠绕及角度/弧度输出。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Transform Editor</source>
+        <translation>变换编辑器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Create named derived time series using Lua functions. Equivalent to the Custom Series editor in PJ3.</source>
+        <translation>使用 Lua 函数创建命名的派生时间序列，相当于 PJ3 的自定义序列编辑器。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>ULog Loader</source>
+        <translation>ULog 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for PX4 ULog files. Flight log format for PX4 autopilot.</source>
+        <translation>加载 PX4 ULog 文件，这是 PX4 自动驾驶仪的飞行日志格式。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>WebRTC Video Client</source>
+        <translation>WebRTC 视频客户端</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Receives live H.264 video via standard WHEP (mediamtx, go2rtc, LiveKit, Cloudflare Stream...) and feeds each stream to PlotJuggler as canonical PJ.VideoFrame messages. One HTTP request per stream, per-camera reconnect, mediamtx Control API discovery. H.264 pass-through; no transcode.</source>
+        <translation>通过标准 WHEP 接收实时 H.264 视频（mediamtx、go2rtc、LiveKit、Cloudflare Stream 等），并以标准 PJ.VideoFrame 消息送入 PlotJuggler。每路流使用一次 HTTP 请求，支持逐摄像头重连及 mediamtx Control API 发现。H.264 直接传输，不转码。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>ArduPilot DataFlash BIN logs: numeric fields, sensor instances, units, parameters and message timelines.</source>
+        <translation>ArduPilot DataFlash BIN 日志：数值字段、传感器实例、单位、参数及消息时间线。</translation>
+    </message>
+    <message>
+        <location line="-112"/>
+        <source>Fast Fourier Transform</source>
+        <translation>快速傅里叶变换（FFT）</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Compute the frequency-domain amplitude of numeric time series using FFT.</source>
+        <translation>使用 FFT 计算数值时间序列的频域幅值。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::BundledPlugins</name>
+    <message>
+        <location filename="../../pj_dialog_host/src/bundled_translation_entries.hpp" line="+30"/>
+        <source>Select ROS messages</source>
+        <translation>选择 ROS 消息</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Scanning ROS 2 topics...</source>
+        <translation>正在扫描 ROS 2 主题…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Topic Selector</source>
+        <translation>主题选择器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+46"/>
+        <source>If present, use the timestamp in the field [header.stamp]</source>
+        <translation>如果存在，则使用 [header.stamp] 字段中的时间戳</translation>
+    </message>
+    <message>
+        <location line="-45"/>
+        <location line="+46"/>
+        <location line="+83"/>
+        <location line="+12"/>
+        <source>Maximum size of arrays:</source>
+        <translation>数组最大大小：</translation>
+    </message>
+    <message>
+        <location line="-140"/>
+        <location line="+46"/>
+        <location line="+83"/>
+        <location line="+12"/>
+        <source>clamp</source>
+        <translation>截断</translation>
+    </message>
+    <message>
+        <location line="-140"/>
+        <location line="+46"/>
+        <location line="+83"/>
+        <location line="+12"/>
+        <source>discard</source>
+        <translation>丢弃</translation>
+    </message>
+    <message>
+        <location line="-140"/>
+        <source>Filter: </source>
+        <translation>筛选： </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tip: [CTRL+A] select all, [CTRL+SHIFT+A] deselect all</source>
+        <translation>提示：[CTRL+A] 全选，[CTRL+SHIFT+A] 取消全选</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Advanced Options</source>
+        <translation>高级选项</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+43"/>
+        <source>String parsing (used for instance in diagnostic_msgs/DiagnosticArray)</source>
+        <translation>字符串解析（例如用于 diagnostic_msgs/DiagnosticArray）</translation>
+    </message>
+    <message>
+        <location line="-42"/>
+        <location line="+43"/>
+        <source>remove suffixes from numbers (example: &quot;100ms&quot; -&gt; 100)</source>
+        <translation>移除数字的后缀（例如：&quot;100ms&quot; -&gt; 100）</translation>
+    </message>
+    <message>
+        <location line="-42"/>
+        <location line="+43"/>
+        <source>convert boolean strings (&quot;false&quot;/&quot;true&quot;) to numbers (0/1)</source>
+        <translation>将布尔字符串（&quot;false&quot;/&quot;true&quot;）转换为数字（0/1）</translation>
+    </message>
+    <message>
+        <location line="-42"/>
+        <source>WebRTC Video Client (WHEP)</source>
+        <translation>WebRTC 视频客户端（WHEP）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+137"/>
+        <location line="+28"/>
+        <source>Connection</source>
+        <translation>连接</translation>
+    </message>
+    <message>
+        <location line="-164"/>
+        <location line="+137"/>
+        <location line="+31"/>
+        <source>Transport</source>
+        <translation>传输方式</translation>
+    </message>
+    <message>
+        <location line="-167"/>
+        <location line="+137"/>
+        <location line="+28"/>
+        <source>Address</source>
+        <translation>地址</translation>
+    </message>
+    <message>
+        <location line="-164"/>
+        <location line="+137"/>
+        <location line="+28"/>
+        <source>Port</source>
+        <translation>端口</translation>
+    </message>
+    <message>
+        <location line="-164"/>
+        <source>Server</source>
+        <translation>服务器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>WHEP signaling is HTTP. (HTTPS is not wired in this build.)</source>
+        <translation>WHEP 信令使用 HTTP。（此构建版本尚未接入 HTTPS。）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>WHEP server host (mediamtx). Each selected path is read from http://&lt;address&gt;:&lt;port&gt;/&lt;path&gt;/whep.</source>
+        <translation>WHEP 服务器主机（mediamtx）。每个选定路径均从 http://&lt;address&gt;:&lt;port&gt;/&lt;path&gt;/whep 读取。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>WHEP server port (mediamtx default 8889).</source>
+        <translation>WHEP 服务器端口（mediamtx 默认为 8889）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Control API</source>
+        <translation>控制 API</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Control API is HTTP. (HTTPS is not wired in this build.)</source>
+        <translation>控制 API 使用 HTTP。（此构建版本尚未接入 HTTPS。）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>mediamtx Control API host, used only to list paths (GET /v3/paths/list). Auto-derived from the server; edit to override, or clear to disable API discovery (manual paths still work).</source>
+        <translation>mediamtx 控制 API 主机，仅用于列出路径（GET /v3/paths/list）。默认根据服务器自动推导；可编辑以覆盖，或清空以禁用 API 发现（手动路径仍可使用）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>mediamtx Control API port (default 9997).</source>
+        <translation>mediamtx 控制 API 端口（默认为 9997）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Refresh list</source>
+        <translation>刷新列表</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Base path</source>
+        <translation>基础路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Optional base path prefix on the server (most mediamtx setups leave this empty).</source>
+        <translation>服务器上的可选基础路径前缀（大多数 mediamtx 配置可留空）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+3"/>
+        <source>(optional)</source>
+        <translation>（可选）</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>Bearer token</source>
+        <translation>Bearer 令牌</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Optional. Sent as &quot;Authorization: Bearer ...&quot; on every WHEP and Control API request.</source>
+        <translation>可选。每个 WHEP 和控制 API 请求都会以 &quot;Authorization: Bearer ...&quot; 的形式发送此令牌。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Topic prefix</source>
+        <translation>主题前缀</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Each selected path becomes the topic &lt;prefix&gt;/&lt;path&gt;.</source>
+        <translation>每个选定路径都会成为主题 &lt;prefix&gt;/&lt;path&gt;。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Streams</source>
+        <translation>流</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+125"/>
+        <location line="+24"/>
+        <source>Filter</source>
+        <translation>筛选</translation>
+    </message>
+    <message>
+        <location line="-148"/>
+        <source>Paths on the server (from the Control API) plus manually added ones. Select the streams you want; each becomes its own PJ.VideoFrame topic. Only H.264 streams are selectable.</source>
+        <translation>服务器上的路径（由控制 API 获取）以及手动添加的路径。选择所需的流；每个流都会成为独立的 PJ.VideoFrame 主题。仅可选择 H.264 流。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+440"/>
+        <source>Path</source>
+        <translation>路径</translation>
+    </message>
+    <message>
+        <location line="-439"/>
+        <location line="+440"/>
+        <source>Tracks</source>
+        <translation>轨道</translation>
+    </message>
+    <message>
+        <location line="-439"/>
+        <location line="+440"/>
+        <source>Ready</source>
+        <translation>就绪</translation>
+    </message>
+    <message>
+        <location line="-439"/>
+        <source>Manual path:</source>
+        <translation>手动路径：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Add a path the Control API did not list (API disabled, or a non-mediamtx WHEP server).</source>
+        <translation>添加控制 API 未列出的路径（适用于 API 已禁用或非 mediamtx 的 WHEP 服务器）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Add</source>
+        <translation>添加</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>ICE Servers (STUN / TURN)</source>
+        <translation>ICE 服务器（STUN / TURN）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>STUN: fill URL only (e.g. stun:stun.l.google.com:19302). TURN: also fill Username and Credential (e.g. turn:turn.example.org:3478).</source>
+        <translation>STUN：仅填写 URL（例如 stun:stun.l.google.com:19302）。TURN：还需填写用户名和凭据（例如 turn:turn.example.org:3478）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+435"/>
+        <source>Username</source>
+        <translation>用户名</translation>
+    </message>
+    <message>
+        <location line="-434"/>
+        <location line="+435"/>
+        <source>Credential</source>
+        <translation>凭据</translation>
+    </message>
+    <message>
+        <location line="-434"/>
+        <source>ROS Parser Options</source>
+        <translation>ROS 解析器选项</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Server Certificate / API Key</source>
+        <translation>服务器证书／API 密钥</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Server:</source>
+        <translation>服务器：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+97"/>
+        <location line="+25"/>
+        <source>Connect</source>
+        <translation>连接</translation>
+    </message>
+    <message>
+        <location line="-121"/>
+        <source>Cert / API Key…</source>
+        <translation>证书／API 密钥…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+262"/>
+        <location line="+1"/>
+        <source>Sequences</source>
+        <translation>序列</translation>
+    </message>
+    <message>
+        <location line="-262"/>
+        <location line="+8"/>
+        <source>Filter…</source>
+        <translation>筛选…</translation>
+    </message>
+    <message>
+        <location line="-7"/>
+        <location line="+8"/>
+        <source>Use regular expression</source>
+        <translation>使用正则表达式</translation>
+    </message>
+    <message>
+        <location line="-7"/>
+        <source>Reload sequences</source>
+        <translation>重新加载序列</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Metadata Filter</source>
+        <translation>元数据筛选</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Key</source>
+        <translation>键</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Op</source>
+        <translation>运算符</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+98"/>
+        <location line="+3"/>
+        <location line="+302"/>
+        <location line="+2"/>
+        <source>Value</source>
+        <translation>值</translation>
+    </message>
+    <message>
+        <location line="-404"/>
+        <location line="+116"/>
+        <location line="+142"/>
+        <location line="+1"/>
+        <source>Topics</source>
+        <translation>主题</translation>
+    </message>
+    <message>
+        <location line="-256"/>
+        <source>Reload topics</source>
+        <translation>重新加载主题</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+91"/>
+        <location line="+165"/>
+        <location line="+1"/>
+        <source>Info</source>
+        <translation>信息</translation>
+    </message>
+    <message>
+        <location line="-256"/>
+        <location line="+37"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location line="-36"/>
+        <source>Download</source>
+        <translation>下载</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Quaternion to RPY</source>
+        <translation>四元数转 RPY</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Radians</source>
+        <translation>弧度</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Degrees</source>
+        <translation>度</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unwrap Angles</source>
+        <translation>角度解缠绕</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Save</source>
+        <translation>保存</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>MCAP Parser</source>
+        <translation>MCAP 解析器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+21"/>
+        <source>Settings</source>
+        <translation>设置</translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <source>If an array size exceeds:</source>
+        <translation>如果数组大小超过：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>then:</source>
+        <translation>则：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+73"/>
+        <source>Clamp</source>
+        <translation>截断</translation>
+    </message>
+    <message>
+        <location line="-72"/>
+        <location line="+73"/>
+        <source>Skip</source>
+        <translation>跳过</translation>
+    </message>
+    <message>
+        <location line="-72"/>
+        <source>Timestamp:</source>
+        <translation>时间戳：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>publish</source>
+        <translation>发布时间</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>log</source>
+        <translation>记录时间</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Override with the message header timestamp (if present)</source>
+        <translation>使用消息头中的时间戳覆盖（如果存在）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+70"/>
+        <source>Channels</source>
+        <translation>通道</translation>
+    </message>
+    <message>
+        <location line="-69"/>
+        <source>Filter Channel Names</source>
+        <translation>筛选通道名称</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Select All</source>
+        <translation>全选</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Deselect All</source>
+        <translation>取消全选</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+207"/>
+        <source>Channel name</source>
+        <translation>通道名称</translation>
+    </message>
+    <message>
+        <location line="-206"/>
+        <location line="+207"/>
+        <source>Schema</source>
+        <translation>模式</translation>
+    </message>
+    <message>
+        <location line="-206"/>
+        <location line="+200"/>
+        <location line="+7"/>
+        <source>Encoding</source>
+        <translation>编码</translation>
+    </message>
+    <message>
+        <location line="-206"/>
+        <location line="+207"/>
+        <source>Msg Count</source>
+        <translation>消息数</translation>
+    </message>
+    <message>
+        <location line="-206"/>
+        <source>Rename conversation</source>
+        <translation>重命名对话</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Name (leave blank to use the default title)</source>
+        <translation>名称（留空则使用默认标题）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Assistant Agent</source>
+        <translation>智能助手</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Settings...</source>
+        <translation>设置…</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Conversations</source>
+        <translation>对话</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New chat: start a fresh conversation (the current one stays in this list)</source>
+        <translation>新建对话：开始一段新对话（当前对话将保留在此列表中）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>rename=Rename</source>
+        <translation>rename=重命名</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ask the assistant to list your topics, describe a topic, or plot the derivative of a series...</source>
+        <translation>让助手列出主题、描述某个主题，或绘制某个序列的导数…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ready.</source>
+        <translation>就绪。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Type a message and press Send...</source>
+        <translation>输入消息并按“发送”…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Send</source>
+        <translation>发送</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Assistant Agent - Settings</source>
+        <translation>智能助手 - 设置</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Choose which model backend the assistant uses.</source>
+        <translation>选择助手使用的模型后端。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Backend</source>
+        <translation>后端</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Claude Code (subscription)</source>
+        <translation>Claude Code（订阅）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Codex (ChatGPT subscription)</source>
+        <translation>Codex（ChatGPT 订阅）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Claude model</source>
+        <translation>Claude 模型</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+5"/>
+        <source>Custom model</source>
+        <translation>自定义模型</translation>
+    </message>
+    <message>
+        <location line="-4"/>
+        <location line="+5"/>
+        <source>full model name</source>
+        <translation>完整模型名称</translation>
+    </message>
+    <message>
+        <location line="-4"/>
+        <source>claude CLI path</source>
+        <translation>claude 命令行工具路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>claude (on PATH) or full path</source>
+        <translation>claude（位于 PATH 中）或完整路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Codex model</source>
+        <translation>Codex 模型</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>codex CLI path</source>
+        <translation>codex 命令行工具路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>codex (on PATH) or full path</source>
+        <translation>codex（位于 PATH 中）或完整路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>JSON Parser Options</source>
+        <translation>JSON 解析器选项</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+14"/>
+        <source>Use embedded timestamp field</source>
+        <translation>使用内嵌时间戳字段</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>If enabled, the parser will look for a timestamp field in the JSON message and use its value as the message timestamp.</source>
+        <translation>启用后，解析器将在 JSON 消息中查找时间戳字段，并将其值用作消息时间戳。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+14"/>
+        <source>Timestamp field name:</source>
+        <translation>时间戳字段名称：</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Name of the top-level JSON field containing the timestamp, in seconds.</source>
+        <translation>包含时间戳的顶层 JSON 字段名称，时间戳单位为秒。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Key arrays of labeled objects by label</source>
+        <translation>使用标签作为带标签对象数组的键</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>If enabled, arrays of objects carrying a string &quot;label&quot; (or &quot;name&quot;) member are keyed by that label instead of the array index, and a lone &quot;value&quot; member collapses onto it (e.g. scalars/shoulder_pan.pos instead of scalars[0]/value).</source>
+        <translation>启用后，对于含有字符串 &quot;label&quot;（或 &quot;name&quot;）成员的对象数组，将使用该标签而非数组索引作为键；如果仅有一个 &quot;value&quot; 成员，则将其合并到该键下（例如，使用 scalars/shoulder_pan.pos，而不是 scalars[0]/value）。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Protobuf Parser Options</source>
+        <translation>Protobuf 解析器选项</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Proto file:</source>
+        <translation>Proto 文件：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Path to a .proto file</source>
+        <translation>.proto 文件的路径</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Browse for a .proto file</source>
+        <translation>浏览并选择 .proto 文件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Select your message type:</source>
+        <translation>选择消息类型：</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>If enabled, the parser will look for a top-level double field and use its value (in seconds) as the message timestamp.</source>
+        <translation>启用后，解析器将查找顶层 double 类型字段，并将其值（单位为秒）用作消息时间戳。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Name of the top-level double field containing the timestamp in seconds. Leave empty to try &quot;timestamp&quot; then &quot;ts&quot; automatically.</source>
+        <translation>包含时间戳（单位为秒）的顶层 double 类型字段名称。留空时将自动依次尝试 &quot;timestamp&quot; 和 &quot;ts&quot;。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>File text:</source>
+        <translation>文件文本：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Proto file content will appear here after loading...</source>
+        <translation>加载后将在此处显示 Proto 文件内容…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Include Folders</source>
+        <translation>包含目录</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>When an array size exceeds:</source>
+        <translation>当数组大小超过：</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Use the timestamp in the message (if present)</source>
+        <translation>使用消息中的时间戳（如果存在）</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>ULog File</source>
+        <translation>ULog 文件</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location line="+3"/>
+        <location line="+302"/>
+        <location line="+2"/>
+        <source>Property</source>
+        <translation>属性</translation>
+    </message>
+    <message>
+        <location line="-305"/>
+        <source>Properties</source>
+        <translation>属性</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Message Logs</source>
+        <translation>消息日志</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+303"/>
+        <source>Timestamp</source>
+        <translation>时间戳</translation>
+    </message>
+    <message>
+        <location line="-302"/>
+        <location line="+303"/>
+        <source>Level</source>
+        <translation>级别</translation>
+    </message>
+    <message>
+        <location line="-302"/>
+        <location line="+303"/>
+        <source>Message</source>
+        <translation>消息</translation>
+    </message>
+    <message>
+        <location line="-302"/>
+        <source>Parquet Loader</source>
+        <translation>Parquet 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Parse Date Format</source>
+        <translation>解析日期格式</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Visit &lt;a href=&quot;https://doc.qt.io/qt-5/qtime.html#toString&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;these&lt;/span&gt;&lt;/a&gt; &lt;a href=&quot;https://doc.qt.io/qt-5/qdate.html#fromString-2&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;links&lt;/span&gt;&lt;/a&gt; to learn more about the Date-Time format&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;访问&lt;a href=&quot;https://doc.qt.io/qt-5/qtime.html#toString&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;时间格式说明&lt;/span&gt;&lt;/a&gt;和&lt;a href=&quot;https://doc.qt.io/qt-5/qdate.html#fromString-2&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;日期格式说明&lt;/span&gt;&lt;/a&gt;，了解日期时间格式的更多信息。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Select a column to be used as timestamp</source>
+        <translation>选择用作时间戳的列</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Use row number as X axis</source>
+        <translation>使用行号作为 X 轴</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Columns:</source>
+        <translation>列：</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <location line="+108"/>
+        <location line="+4"/>
+        <source>Topic Name</source>
+        <translation>主题名称</translation>
+    </message>
+    <message>
+        <location line="-111"/>
+        <location line="+108"/>
+        <location line="+4"/>
+        <source>DataType</source>
+        <translation>数据类型</translation>
+    </message>
+    <message>
+        <location line="-111"/>
+        <source>Name of the Function</source>
+        <translation>函数名称</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Name:</source>
+        <translation>名称：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Warning</source>
+        <translation>警告</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A function with the same name exists already in the list of saved functions.
+
+Overwrite it?</source>
+        <translation>已保存的函数列表中已存在同名函数。
+
+是否覆盖？</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transform Editor</source>
+        <translation>变换编辑器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Single Function</source>
+        <translation>单函数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+18"/>
+        <source>Input Timeseries</source>
+        <translation>输入时间序列</translation>
+    </message>
+    <message>
+        <location line="-17"/>
+        <location line="+1"/>
+        <location line="+27"/>
+        <source>Help</source>
+        <translation>帮助</translation>
+    </message>
+    <message>
+        <location line="-26"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Drag &amp;amp; drop timeseries here. Pick the radio to set which one is &lt;span style=&quot; font-weight:600;&quot;&gt;value&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;将时间序列拖放到此处。通过单选按钮选择用作 &lt;span style=&quot; font-weight:600;&quot;&gt;value&lt;/span&gt; 的序列。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+16"/>
+        <source>Global Variables</source>
+        <translation>全局变量</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <location line="+16"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Portion of code outside the function.&lt;/p&gt;&lt;p&gt;Useful to add global variables.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;函数之外的代码部分。&lt;/p&gt;&lt;p&gt;可用于添加全局变量。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <location line="+16"/>
+        <source>Add your global variables here</source>
+        <translation>在此添加全局变量</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Import functions from a XML library.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;从 XML 库导入函数。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Export functions from a XML library.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;从 XML 库导出函数。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save the current function in the library.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;将当前函数保存到库中。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Browse and manage available functions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;浏览和管理可用函数。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+12"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Write your function implementation here. &lt;/p&gt;&lt;p&gt;It &lt;span style=&quot; font-weight:600;&quot;&gt;must&lt;/span&gt; return a new value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在此编写函数实现。&lt;/p&gt;&lt;p&gt;函数&lt;span style=&quot; font-weight:600;&quot;&gt;必须&lt;/span&gt;返回一个新值。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <location line="+12"/>
+        <source>Write your function here</source>
+        <translation>在此编写函数</translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <source>Output Timeseries</source>
+        <translation>输出时间序列</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>name the new timeseries</source>
+        <translation>为新时间序列命名</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;html&gt;&lt;body&gt;&lt;p&gt;Name of the new time series.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;body&gt;&lt;p&gt;新时间序列的名称。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+12"/>
+        <location line="+190"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+6"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Create New Time Series</source>
+        <translation>创建新时间序列</translation>
+    </message>
+    <message>
+        <location line="-213"/>
+        <source>Batch Functions</source>
+        <translation>批量函数</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Drag &amp;amp; drop timeseries here. The function is applied to each one separately.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;将时间序列拖放到此处。函数将分别应用于每个序列。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Prefix</source>
+        <translation>前缀</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Suffix</source>
+        <translation>后缀</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>prefix / suffix to add to the names</source>
+        <translation>要添加到名称中的前缀／后缀</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;Transform editor Help&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:14pt; font-weight:600;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The transform editor uses the scripting language Lua. You may want to read &lt;a href=&quot;http://tylerneylon.com/a/learn-lua/&quot;&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;Learn Lua in 15 minutes&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;In practice, you don&apos;t need to know that much to use it in PlotJuggler.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;You should implement the body of a &lt;span style=&quot; font-style:italic;&quot;&gt;function(time, value),&lt;/span&gt; that is invoked for each point. The returned value is the point [time, your_value]&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Single input, stateless functions:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Example:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return (value *  2) + 1&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;or you can use the &lt;a href=&quot;https://www.tutorialspoint.com/lua/lua_math_library.htm&quot;&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;math library from Lua&lt;/span&gt;&lt;/a&gt;:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return math.log(value)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The new point will have the same time of the original point. If you want to modify the timestamp, just return two values like this:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return time +1, (value *  2) &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Return multiple points at once:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Since version 3.1, you may also return multiple values at once, using a Lua table:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   -- Calculate t1,v1, t2, v2, etc...&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return { {t1, v1}, {t2, v2} }&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Stateful functions:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Some transformations require some form of &amp;quot;memory&amp;quot;, i.e. they need the previous value. To do this you may use the &amp;quot;global variable&amp;quot; textbox.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;For instance, to compute the finite difference between two consecutive value, you would add this to the &lt;span style=&quot; font-weight:600;&quot;&gt;Global Variables&lt;/span&gt; textbox:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   prev = nil&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;And this to the &lt;span style=&quot; font-weight:600;&quot;&gt;Function() &lt;/span&gt;textbox&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   if ( prev == nil ) then&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;        prev = value&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   end&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   diff = value - prev&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   prev = value&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return diff  &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Multi input, single output:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Select an additional time series and drop it in the table on the left side. Now your function definition will look like &lt;span style=&quot; font-style:italic;&quot;&gt;function(time,value,v1)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Average of two time series:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return (value + v1) / 2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;变换编辑器帮助&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:14pt; font-weight:600;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;变换编辑器使用 Lua 脚本语言。您可以先阅读&lt;a href=&quot;http://tylerneylon.com/a/learn-lua/&quot;&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;15 分钟学会 Lua&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;实际上，在 PlotJuggler 中使用它并不需要掌握太多知识。&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;您需要实现以下函数的函数体：&lt;span style=&quot; font-style:italic;&quot;&gt;function(time, value),&lt;/span&gt;它会对每个数据点调用一次。返回值将构成数据点 [time, your_value]。&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;单输入、无状态函数：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;示例：&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return (value *  2) + 1&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;也可以使用 &lt;a href=&quot;https://www.tutorialspoint.com/lua/lua_math_library.htm&quot;&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;Lua 数学库&lt;/span&gt;&lt;/a&gt;:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return math.log(value)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;新数据点的时间与原数据点相同。如果需要修改时间戳，只需像下面这样返回两个值：&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return time +1, (value *  2) &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;一次返回多个数据点：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;从 3.1 版本起，还可以使用 Lua 表一次返回多个值：&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   -- Calculate t1,v1, t2, v2, etc...&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return { {t1, v1}, {t2, v2} }&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;有状态函数：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;某些变换需要某种形式的“记忆”，即需要前一个值。为此，可以使用“全局变量”文本框。&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;例如，要计算两个相邻值的有限差分，可以在&lt;span style=&quot; font-weight:600;&quot;&gt;全局变量&lt;/span&gt;文本框中添加以下代码：&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   prev = nil&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;并在 &lt;span style=&quot; font-weight:600;&quot;&gt;Function() &lt;/span&gt;文本框中添加以下代码：&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   if ( prev == nil ) then&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;        prev = value&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   end&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   diff = value - prev&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   prev = value&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return diff  &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;多输入、单输出：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;选择另一个时间序列并将其拖放到左侧表格中。此时，函数定义将变为 &lt;span style=&quot; font-style:italic;&quot;&gt;function(time,value,v1)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;计算两个时间序列的平均值：&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;   return (value + v1) / 2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Function Library</source>
+        <translation>函数库</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Functions</source>
+        <translation>函数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Search</source>
+        <translation>搜索</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+15"/>
+        <source>Preview</source>
+        <translation>预览</translation>
+    </message>
+    <message>
+        <location line="-14"/>
+        <source>Ctrl+Click to select multiple</source>
+        <translation>按住 Ctrl 并单击可多选</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Use</source>
+        <translation>使用</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>CSV Loader</source>
+        <translation>CSV 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Delimiter</source>
+        <translation>分隔符</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+7"/>
+        <source>Detect Automatically</source>
+        <translation>自动检测</translation>
+    </message>
+    <message>
+        <location line="-6"/>
+        <source>Delimiter:</source>
+        <translation>分隔符：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+44"/>
+        <source>&quot;,&quot; (comma)</source>
+        <translation>&quot;,&quot;（逗号）</translation>
+    </message>
+    <message>
+        <location line="-43"/>
+        <location line="+44"/>
+        <source>&quot;;&quot; (semicolon)</source>
+        <translation>&quot;;&quot;（分号）</translation>
+    </message>
+    <message>
+        <location line="-43"/>
+        <location line="+44"/>
+        <source>&quot; &quot; (space)</source>
+        <translation>&quot; &quot;（空格）</translation>
+    </message>
+    <message>
+        <location line="-43"/>
+        <location line="+44"/>
+        <source>&quot;\t&quot; (tab)</source>
+        <translation>&quot;\t&quot;（制表符）</translation>
+    </message>
+    <message>
+        <location line="-43"/>
+        <source>Timestamp Format</source>
+        <translation>时间戳格式</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Custom</source>
+        <translation>自定义</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Time Axis</source>
+        <translation>时间轴</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Table</source>
+        <translation>表格</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Raw</source>
+        <translation>原始内容</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Date-Time Format</source>
+        <translation>日期时间格式</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Common Format Examples (input date: 1/15/2024 2:30:45.123 PM)</source>
+        <translation>常见格式示例（输入日期：1/15/2024 2:30:45.123 PM）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Format String</source>
+        <translation>格式字符串</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Result</source>
+        <translation>结果</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>All other input characters will be treated as text. Any non-empty sequence of characters enclosed in single quotes will also be treated (stripped of the quotes) as text and not be interpreted as expressions.</source>
+        <translation>所有其他输入字符均视为文本。任何用单引号括起来的非空字符序列也将视为文本（去掉引号），不会被解释为表达式。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Date Format</source>
+        <translation>日期格式</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+13"/>
+        <source>Expression</source>
+        <translation>表达式</translation>
+    </message>
+    <message>
+        <location line="-12"/>
+        <location line="+13"/>
+        <source>Output</source>
+        <translation>输出</translation>
+    </message>
+    <message>
+        <location line="-12"/>
+        <source>The day as a number without a leading zero (1 to 31)</source>
+        <translation>日期中的日，不带前导零（1 至 31）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The day as a number with a leading zero (01 to 31)</source>
+        <translation>日期中的日，带前导零（01 至 31）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The abbreviated localized day name (e.g. &apos;Mon&apos; to &apos;Sun&apos;)</source>
+        <translation>本地化的星期简称（例如 &apos;Mon&apos; 至 &apos;Sun&apos;）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The long localized day name (e.g. &apos;Monday&apos; to &apos;Sunday&apos;)</source>
+        <translation>本地化的星期全称（例如 &apos;Monday&apos; 至 &apos;Sunday&apos;）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The month as a number without a leading zero (1 to 12)</source>
+        <translation>月份，不带前导零（1 至 12）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The month as a number with a leading zero (01 to 12)</source>
+        <translation>月份，带前导零（01 至 12）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The abbreviated localized month name (e.g. &apos;Jan&apos; to &apos;Dec&apos;)</source>
+        <translation>本地化的月份简称（例如 &apos;Jan&apos; 至 &apos;Dec&apos;）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The long localized month name (e.g. &apos;January&apos; to &apos;December&apos;)</source>
+        <translation>本地化的月份全称（例如 &apos;January&apos; 至 &apos;December&apos;）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The year as a two digit number (00 to 99)</source>
+        <translation>两位数字的年份（00 至 99）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The year as a four digit number, possibly plus a leading minus sign for negative years</source>
+        <translation>四位数字的年份；负年份前可能带有负号</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Time Format</source>
+        <translation>时间格式</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The hour without a leading zero (0 to 23 or 1 to 12 if AM/PM display)</source>
+        <translation>小时，不带前导零（0 至 23；采用 AM/PM 显示时为 1 至 12）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The hour with a leading zero (00 to 23 or 01 to 12 if AM/PM display)</source>
+        <translation>小时，带前导零（00 至 23；采用 AM/PM 显示时为 01 至 12）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The hour without a leading zero (0 to 23, even with AM/PM display)</source>
+        <translation>小时，不带前导零（0 至 23，即使采用 AM/PM 显示也不变）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The hour with a leading zero (00 to 23, even with AM/PM display)</source>
+        <translation>小时，带前导零（00 至 23，即使采用 AM/PM 显示也不变）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The minute without a leading zero (0 to 59)</source>
+        <translation>分钟，不带前导零（0 至 59）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The minute with a leading zero (00 to 59)</source>
+        <translation>分钟，带前导零（00 至 59）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The whole second, without any leading zero (0 to 59)</source>
+        <translation>整数秒，不带前导零（0 至 59）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The whole second, with a leading zero where applicable (00 to 59)</source>
+        <translation>整数秒，必要时带前导零（00 至 59）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The fractional part of the second, to go after a decimal point, without trailing zeroes (0 to 999). Thus &quot;s.z&quot; reports the seconds to full available (millisecond) precision without trailing zeroes.</source>
+        <translation>秒的小数部分，位于小数点之后，不带末尾零（0 至 999）。因此，&quot;s.z&quot; 以完整的可用精度（毫秒）显示秒数，不带末尾零。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The fractional part of the second, to millisecond precision, including trailing zeroes where applicable (000 to 999).</source>
+        <translation>秒的小数部分，精确到毫秒，必要时包含末尾零（000 至 999）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Interpret as an AM/PM time. A/AP will match an upper-case version of either QLocale::amText() or QLocale::pmText().</source>
+        <translation>按 AM/PM 时间解释。A/AP 将匹配 QLocale::amText() 或 QLocale::pmText() 的大写形式。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Interpret as an am/pm time. a/ap will match a lower-case version of either QLocale::amText() or QLocale::pmText().</source>
+        <translation>按 am/pm 时间解释。a/ap 将匹配 QLocale::amText() 或 QLocale::pmText() 的小写形式。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+1"/>
+        <source>Number of Rows</source>
+        <translation>行号</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Selected Column</source>
+        <translation>所选列</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Multiple Columns</source>
+        <translation>多列组合</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Duplicate column names detected. Adding suffixes</source>
+        <translation>检测到重复列名，将添加后缀</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Some rows have column number mismatch. Will skip those</source>
+        <translation>部分行的列数不匹配，将跳过这些行</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+4"/>
+        <source>Connected</source>
+        <translation>已连接</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Click to select, Click+Drag to multi-select</source>
+        <translation>单击选择，单击并拖动可多选</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>No channels were found in this MCAP file.</source>
+        <translation>此 MCAP 文件中未找到任何通道。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Select Proto File</source>
+        <translation>选择 Proto 文件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>(load a .proto file first)</source>
+        <translation>（请先加载 .proto 文件）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Select Include Folder</source>
+        <translation>选择包含文件夹</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Add folders where imported .proto files can be found:</source>
+        <translation>添加用于查找导入的 .proto 文件的文件夹：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>invalid syntax</source>
+        <translation>语法无效</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+5"/>
+        <location line="+1"/>
+        <source>Name</source>
+        <translation>名称</translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <location line="+1"/>
+        <source>Date</source>
+        <translation>日期</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+3"/>
+        <location line="+1"/>
+        <source>Size</source>
+        <translation>大小</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <location line="+1"/>
+        <source>Topics — loading…</source>
+        <translation>主题：加载中…</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+1"/>
+        <source>Download progress</source>
+        <translation>下载进度</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Server URI contains invalid characters (control or non-ASCII bytes).</source>
+        <translation>服务器 URI 包含无效字符（控制字符或非 ASCII 字节）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>TLS certificate path contains invalid characters.</source>
+        <translation>TLS 证书路径包含无效字符。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>API key contains invalid characters (control or non-ASCII bytes).</source>
+        <translation>API 密钥包含无效字符（控制字符或非 ASCII 字节）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Reloading sequences…</source>
+        <translation>正在重新加载序列…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Reloading topics…</source>
+        <translation>正在重新加载主题…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Credentials saved</source>
+        <translation>凭据已保存</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Select a sequence + topic(s) first</source>
+        <translation>请先选择一个序列和主题</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cancelling…</source>
+        <translation>正在取消…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Download cancelled — kept the topics that finished first</source>
+        <translation>下载已取消，已保留此前完成的主题</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Download cancelled</source>
+        <translation>下载已取消</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>host offers no parser ingest (arrow-ipc topics need a newer PlotJuggler)</source>
+        <translation>宿主不支持解析器导入（arrow-ipc 主题需要较新版本的 PlotJuggler）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unknown error</source>
+        <translation>未知错误</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>not connected</source>
+        <translation>未连接</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>topic row count overflow</source>
+        <translation>主题行数溢出</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>host not bound</source>
+        <translation>宿主未绑定</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>no data in the requested range</source>
+        <translation>请求范围内没有数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>pull failed: unknown error</source>
+        <translation>拉取失败：未知错误</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Drag and Drop Quaternion values in the frames above.</source>
+        <translation>请将四元数值拖放到上方的输入框中。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Created roll/pitch/yaw transform.</source>
+        <translation>已创建 roll/pitch/yaw 变换。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>host did not expose pj.data_processors.v1</source>
+        <translation>宿主未提供 pj.data_processors.v1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Input timeseries</source>
+        <translation>输入时间序列</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Var</source>
+        <translation>变量</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+36"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Drag &amp; drop timeseries here</source>
+        <translation>将时间序列拖放到此处</translation>
+    </message>
+    <message>
+        <location line="-39"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Function</source>
+        <translation>函数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Language</source>
+        <translation>语言</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+6"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Snippet library (*.json)</source>
+        <translation>代码片段库 (*.json)</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Import snippet library</source>
+        <translation>导入代码片段库</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Export snippet library</source>
+        <translation>导出代码片段库</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Name is required</source>
+        <translation>名称不能为空</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+5"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Modify Time Series</source>
+        <translation>修改时间序列</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Create a name for the new series
+</source>
+        <translation>请为新序列命名
+</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Give the new series a name that isn&apos;t one of its inputs
+</source>
+        <translation>新序列的名称不能与任何输入序列相同
+</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Add an input time series (drag &amp; drop)
+</source>
+        <translation>请拖放以添加输入时间序列
+</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Write your function body
+</source>
+        <translation>请编写函数体
+</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>The selected file contains no functions.</source>
+        <translation>所选文件中没有函数。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Could not read a function library from the selected file.</source>
+        <translation>无法从所选文件中读取函数库。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Could not write the selected file.</source>
+        <translation>无法写入所选文件。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transform Editor: a source series, an output name, and a function body are required.</source>
+        <translation>变换编辑器：必须提供源序列、输出名称和函数体。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transform Editor: the host did not expose pj.data_processors.v1 (cannot create the series).</source>
+        <translation>变换编辑器：宿主未提供 pj.data_processors.v1（无法创建序列）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transform Editor: no valid output name.</source>
+        <translation>变换编辑器：没有有效的输出名称。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transform Editor: drop in some input series, set a prefix/suffix, and write a function body.</source>
+        <translation>变换编辑器：请拖入输入序列，设置前缀或后缀，并编写函数体。</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Topic</source>
+        <translation>主题</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Datatype</source>
+        <translation>数据类型</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>path not added: whitespace/control characters are not allowed</source>
+        <translation>未添加路径：不允许包含空白或控制字符</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>No conversations yet</source>
+        <translation>暂无对话</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>CLI default</source>
+        <translation>CLI 默认值</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Custom...</source>
+        <translation>自定义…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>sonnet — fast; the measured default</source>
+        <translation>sonnet：快速；经实测的默认选项</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>quaternion apply failed: host did not expose pj.data_processors.v1</source>
+        <translation>四元数应用失败：宿主未提供 pj.data_processors.v1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>quaternion save failed: host did not expose pj.data_processors.v1</source>
+        <translation>四元数保存失败：宿主未提供 pj.data_processors.v1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Output:</source>
+        <translation>输出：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. /imu/rpy/</source>
+        <translation>例如 /imu/rpy/</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. cam0</source>
+        <translation>例如 cam0</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>e.g. timestamp, ts, time</source>
+        <translation>例如 timestamp, ts, time</translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <location line="+1"/>
+        <source>Values in &quot;%1&quot; are not monotonically increasing. Will sort these automatically</source>
+        <translation>“%1”列中的值不是单调递增的，将自动排序</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>No readable channels: all %1 channel(s) in this file reference a missing schema.</source>
+        <translation>没有可读取的通道：此文件中的全部 %1 个通道都引用了缺失的模式。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Cannot open this MCAP file.%1
+Code: %2
+Message: %3</source>
+        <translation>无法打开此 MCAP 文件。%1
+代码：%2
+消息：%3</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>Cannot read the contents of this MCAP file.%1
+Code: %2
+Message: %3</source>
+        <translation>无法读取此 MCAP 文件的内容。%1
+代码：%2
+消息：%3</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Cannot open %1</source>
+        <translation>无法打开 %1</translation>
+    </message>
+    <message>
+        <location line="-27"/>
+        <source>Not a ROS 2 bag metadata.yaml: %1</source>
+        <translation>不是 ROS 2 bag 的 metadata.yaml：%1</translation>
+    </message>
+    <message>
+        <location line="-22"/>
+        <source>Only MCAP-storage ROS 2 bags are supported; this bag uses &apos;%1&apos;. Convert it with &apos;ros2 bag convert&apos; (storage_id: mcap).</source>
+        <translation>仅支持使用 MCAP 存储的 ROS 2 bag；此 bag 使用“%1”。请使用 &apos;ros2 bag convert&apos; 转换（storage_id: mcap）。</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>The ROS 2 bag metadata lists no data files: %1</source>
+        <translation>ROS 2 bag 元数据未列出任何数据文件：%1</translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <source>Only MCAP-storage ROS 2 bags are supported; unsupported bag file: %1</source>
+        <translation>仅支持使用 MCAP 存储的 ROS 2 bag；不支持的 bag 文件：%1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>ROS 2 bag file listed in metadata.yaml is missing: %1</source>
+        <translation>metadata.yaml 中列出的 ROS 2 bag 文件缺失：%1</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <location line="+1"/>
+        <source>Info — %1</source>
+        <translation>信息：%1</translation>
+    </message>
+    <message>
+        <location line="-8"/>
+        <source>Connecting to %1…</source>
+        <translation>正在连接到 %1…</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Fetching %1 topic(s)…</source>
+        <translation>正在获取 %1 个主题…</translation>
+    </message>
+    <message>
+        <location line="-17"/>
+        <source>Mosaico connection failed: %1</source>
+        <translation>Mosaico 连接失败：%1</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>%1 sequences</source>
+        <translation>%1 个序列</translation>
+    </message>
+    <message>
+        <location line="-21"/>
+        <source>Mosaico fetch errors:
+%1</source>
+        <translation>Mosaico 获取错误：
+%1</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>Imported %1/%2 topics from %3</source>
+        <translation>已从 %3 导入 %1/%2 个主题</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Connected — server %1</source>
+        <translation>已连接，服务器版本 %1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>listTopics %1: %2</source>
+        <translation>列出主题 %1：%2</translation>
+    </message>
+    <message>
+        <location line="-32"/>
+        <source>synthetic timestamp overflows int64 at row %1 (anchor %2, interval %3)</source>
+        <translation>生成的时间戳在第 %1 行超出 int64 范围（起点 %2，间隔 %3）</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>create dataset failed: %1</source>
+        <translation>创建数据集失败：%1</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>pull failed: %1</source>
+        <translation>拉取失败：%1</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Create failed: %1</source>
+        <translation>创建失败：%1</translation>
+    </message>
+    <message>
+        <location line="-19"/>
+        <source>quaternion save failed: %1</source>
+        <translation>四元数保存失败：%1</translation>
+    </message>
+    <message>
+        <location line="-1"/>
+        <source>quaternion apply failed: %1</source>
+        <translation>四元数应用失败：%1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Imported %1 function(s).</source>
+        <translation>已导入 %1 个函数。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Exported %1 function(s).</source>
+        <translation>已导出 %1 个函数。</translation>
+    </message>
+    <message>
+        <location line="-33"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>function produced no output — declared %1 output, so it must return exactly %1 value per point</source>
+        <translation>函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>function produced no output — declared %1 outputs, so it must return exactly %1 values per point</source>
+        <translation>函数未产生输出：已声明 %1 个输出，因此每个点必须恰好返回 %1 个值</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>Transform Editor: %1</source>
+        <translation>变换编辑器：%1</translation>
+    </message>
+    <message>
+        <location line="-22"/>
+        <source>Transform Editor: created %1 series.</source>
+        <translation>变换编辑器：已创建 %1 个序列。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Transform Editor: error on &apos;%1&apos;: %2</source>
+        <translation>变换编辑器：处理“%1”时出错：%2</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>%1 topic(s) found</source>
+        <translation>找到 %1 个主题</translation>
+    </message>
+    <message>
+        <location line="-6"/>
+        <source>%1 path(s) on the server</source>
+        <translation>服务器上有 %1 个路径</translation>
+    </message>
+    <message>
+        <location line="-20"/>
+        <source>Control API: %1 (manual paths still work)</source>
+        <translation>控制 API：%1（仍可使用手动路径）</translation>
+    </message>
+    <message>
+        <location line="-65"/>
+        <source>FFT Toolbox</source>
+        <translation>FFT 工具箱</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Input signal - Time (s)</source>
+        <translation>输入信号 - 时间 (s)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Input:</source>
+        <translation>输入：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Clear</source>
+        <translation>清除</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Range of data to be processed:</source>
+        <translation>待处理的数据范围：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>All Data</source>
+        <translation>全部数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Only data in zoomed area</source>
+        <translation>仅缩放区域内的数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Remove Average (DC, 0 Hz)</source>
+        <translation>去除均值（直流分量，0 Hz）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Window:</source>
+        <translation>窗函数：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hann (recommended)</source>
+        <translation>汉宁窗（推荐）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Rectangular</source>
+        <translation>矩形窗</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Requires evenly sampled data (maximum 1% interval deviation). Resample irregular signals first.</source>
+        <translation>需要等间隔采样数据（间隔偏差不超过 1%）。请先对不规则信号重采样。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Output topic suffix:</source>
+        <translation>输出主题后缀：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Calculate Spectrum</source>
+        <translation>计算频谱</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Export Spectrum Data</source>
+        <translation>导出频谱数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Spectrum - Frequency (Hz) vs amplitude</source>
+        <translation>频谱 - 频率 (Hz) 与幅值</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Drag and drop one numeric time series here
+(from the left panel)</source>
+        <translation>将一条数值时间序列拖放到这里
+（从左侧面板拖入）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Calculate the spectrum to preview it here</source>
+        <translation>计算频谱后在此预览</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>No input selected</source>
+        <translation>未选择输入</translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <source>The dropped field is unavailable or is not numeric</source>
+        <translation>拖入的字段不可用或不是数值字段</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Zoom range changed — calculate again</source>
+        <translation>缩放范围已改变，请重新计算</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DC removal changed — calculate again</source>
+        <translation>去直流设置已改变，请重新计算</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Input range changed — calculate again</source>
+        <translation>输入范围已改变，请重新计算</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Zoom the input chart to choose a time range</source>
+        <translation>请缩放输入图表以选择时间范围</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Window function changed — calculate again</source>
+        <translation>窗函数已改变，请重新计算</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Selection cleared</source>
+        <translation>已清除选择</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The selected input is not available yet</source>
+        <translation>所选输入尚不可用</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Input selection restored</source>
+        <translation>已恢复输入选择</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Input data changed — calculate again</source>
+        <translation>输入数据已改变，请重新计算</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: toolbox host not bound</source>
+        <translation>错误：工具箱宿主未绑定</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No field selected</source>
+        <translation>未选择字段</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Zoom the input chart before calculating the selected range</source>
+        <translation>请先缩放输入图表，再计算所选范围</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: no data in selected range</source>
+        <translation>错误：所选范围内没有数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing to save — run Calculate first</source>
+        <translation>没有可导出的数据，请先计算</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Need at least 8 samples</source>
+        <translation>错误：至少需要 8 个样本</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Input is too large for the FFT backend</source>
+        <translation>错误：输入数据超过 FFT 后端的大小限制</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Input contains NaN or infinity</source>
+        <translation>错误：输入包含 NaN 或无穷大</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Timestamps must be strictly increasing</source>
+        <translation>错误：时间戳必须严格递增</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Timestamps must span a positive duration</source>
+        <translation>错误：时间戳的跨度必须大于零</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: FFT window has zero coherent gain</source>
+        <translation>错误：FFT 窗函数的相干增益为零</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: FFT backend allocation failed</source>
+        <translation>错误：FFT 后端内存分配失败</translation>
+    </message>
+    <message>
+        <location line="+59"/>
+        <source>Selected &apos;%1&apos; (FFT accepts one input at a time)</source>
+        <translation>已选择“%1”（FFT 每次仅接受一个输入）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Selected &apos;%1&apos;</source>
+        <translation>已选择“%1”</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Need at least 8 samples (got %1)</source>
+        <translation>至少需要 8 个样本（当前 %1 个）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Error: Sampling is irregular (maximum interval deviation %1%; resample the signal first)</source>
+        <translation>错误：采样不规则（最大间隔偏差 %1%；请先对信号重采样）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Computed %1 bins from %2 samples · %3 Hz sample rate · %4 Hz resolution</source>
+        <translation>已用 %2 个样本计算 %1 个频点 · 采样率 %3 Hz · 分辨率 %4 Hz</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>createDataSource failed: %1</source>
+        <translation>创建数据源失败：%1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>ensureTopic failed: %1</source>
+        <translation>创建主题失败：%1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Export failed after %1 points: %2</source>
+        <translation>导出 %1 个点后失败：%2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Exported &apos;%1&apos; with frequency_hz and amplitude columns (%2 rows)</source>
+        <translation>已导出“%1”，包含 frequency_hz 和 amplitude 列（%2 行）</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::CalendarWidget</name>
+    <message>
+        <location filename="../../pj_widgets/src/DateRangePicker.cpp" line="+284"/>
+        <source>Mon</source>
+        <translation>周一</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Tue</source>
+        <translation>周二</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Wed</source>
+        <translation>周三</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Thu</source>
+        <translation>周四</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Fri</source>
+        <translation>周五</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Sat</source>
+        <translation>周六</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Sun</source>
+        <translation>周日</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::Colormap</name>
+    <message>
+        <location filename="../../pj_widgets/src/Colormap.cpp" line="+166"/>
+        <location line="+8"/>
+        <source>Turbo</source>
+        <translation>Turbo</translation>
+    </message>
+    <message>
+        <location line="-6"/>
+        <source>Viridis</source>
+        <translation>Viridis</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Plasma</source>
+        <translation>Plasma</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Grayscale</source>
+        <translation>灰度</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::CredentialsEditor</name>
+    <message>
+        <location filename="../../pj_widgets/src/CredentialsEditor.cpp" line="+64"/>
+        <source>Browse...</source>
+        <translation>浏览…</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Certificate:</source>
+        <translation>证书：</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <location line="+17"/>
+        <source>Show</source>
+        <translation>显示</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <source>API Key:</source>
+        <translation>API 密钥：</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Allow insecure / plaintext connection</source>
+        <translation>允许不安全或明文连接</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Hide</source>
+        <translation>隐藏</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Select certificate</source>
+        <translation>选择证书</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::CurveEditor</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/CurveEditor.cpp" line="+235"/>
+        <source>Clear all curves</source>
+        <translation>清除所有曲线</translation>
+    </message>
+    <message>
+        <location line="+204"/>
+        <source>Dataset markers</source>
+        <translation>数据集标记</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Global markers</source>
+        <translation>全局标记</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>%1 — %2</source>
+        <translation>%1 — %2</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Toggle curve visibility</source>
+        <translation>显示或隐藏曲线</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Toggle marker visibility</source>
+        <translation>显示或隐藏标记</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Remove this curve from its plot</source>
+        <translation>从图表中移除此曲线</translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <source>Show or hide this dataset&apos;s markers on this plot</source>
+        <translation>在此图表中显示或隐藏此数据集的标记</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show or hide this dataset&apos;s global markers on this plot</source>
+        <translation>在此图表中显示或隐藏此数据集的全局标记</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::CurveListPanel</name>
+    <message>
+        <location filename="../src/ui/CurveListPanel.cpp" line="+276"/>
+        <source>Show Values</source>
+        <translation>显示数值</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Preserve Topic Name</source>
+        <translation>保留话题名称</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Remove all Datasets</source>
+        <translation>移除全部数据集</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>No series match the current search or type filters.</source>
+        <translation>没有符合当前搜索条件或类型筛选的序列。</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Delete</source>
+        <translation>删除</translation>
+    </message>
+    <message>
+        <location line="+90"/>
+        <source>Not subscribed. Drop it into a view to start streaming.</source>
+        <translation>尚未订阅。拖入视图即可开始接收数据流。</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <location line="+18"/>
+        <source>&lt;span style=&quot;font-weight:600&quot;&gt;Type:&lt;/span&gt; %1</source>
+        <translation>&lt;span style=&quot;font-weight:600&quot;&gt;类型：&lt;/span&gt; %1</translation>
+    </message>
+    <message>
+        <location line="-16"/>
+        <source>&lt;span style=&quot;font-weight:600&quot;&gt;Messages:&lt;/span&gt; %1</source>
+        <translation>&lt;span style=&quot;font-weight:600&quot;&gt;消息数：&lt;/span&gt; %1</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>&lt;span style=&quot;font-weight:600&quot;&gt;Samples:&lt;/span&gt; %1</source>
+        <translation>&lt;span style=&quot;font-weight:600&quot;&gt;采样数：&lt;/span&gt; %1</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>&lt;span style=&quot;font-weight:600&quot;&gt;Topics:&lt;/span&gt; %1</source>
+        <translation>&lt;span style=&quot;font-weight:600&quot;&gt;话题数：&lt;/span&gt; %1</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>&lt;span style=&quot;font-weight:600&quot;&gt;Loader metadata:&lt;/span&gt; %1</source>
+        <translation>&lt;span style=&quot;font-weight:600&quot;&gt;加载器元数据：&lt;/span&gt; %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Right-click for Info…</source>
+        <translation>右键查看信息…</translation>
+    </message>
+    <message>
+        <location line="+104"/>
+        <source>%1 topics were left out of the drag: no view can display them.</source>
+        <translation>拖动时已跳过 %1 个话题：没有视图能够显示它们。</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>&quot;%1&quot; was left out of the drag: no view can display it.</source>
+        <translation>拖动时已跳过“%1”：没有视图能够显示它。</translation>
+    </message>
+    <message>
+        <location line="+221"/>
+        <source>Info</source>
+        <translation>信息</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Merge</source>
+        <translation>合并</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Reload</source>
+        <translation>重新加载</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Replace</source>
+        <translation>替换</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Refresh derived</source>
+        <translation>刷新派生标记</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Remove</source>
+        <translation>移除</translation>
+    </message>
+    <message>
+        <location line="+54"/>
+        <source>Stop forced streaming</source>
+        <translation>停止强制接收数据流</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Force topic streaming</source>
+        <translation>强制接收话题数据流</translation>
+    </message>
+    <message>
+        <location line="+104"/>
+        <source>Dataset %1</source>
+        <translation>数据集 %1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Created by %1 · dataset %2</source>
+        <translation>由 %1 创建 · 数据集 %2</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Created by %1</source>
+        <translation>由 %1 创建</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Computing; the result shown is %1 s behind</source>
+        <translation>正在计算；显示的结果滞后 %1 s</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Computing</source>
+        <translation>正在计算</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Missing input</source>
+        <translation>缺少输入</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Missing input: %1</source>
+        <translation>缺少输入：%1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Error</source>
+        <translation>错误</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Error: %1</source>
+        <translation>错误：%1</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Pinned at %1 s</source>
+        <translation>固定于 %1 s</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>Read-only</source>
+        <translation>只读</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Created by %1; read-only</source>
+        <translation>由 %1 创建；只读</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Edit the selected custom topic</source>
+        <translation>编辑选中的自定义话题</translation>
+    </message>
+    <message>
+        <source>View the formula (created by %1; read-only)</source>
+        <translation>查看公式（由 %1 创建；只读）</translation>
+    </message>
+    <message>
+        <source>View the formula (read-only)</source>
+        <translation>查看公式（只读）</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::CurveTreeView</name>
+    <message>
+        <location filename="../../pj_widgets/src/CurveTreeView.cpp" line="+401"/>
+        <source>Name</source>
+        <translation>名称</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Value</source>
+        <translation>值</translation>
+    </message>
+    <message>
+        <location line="+948"/>
+        <source>Stop loading and keep the data received so far</source>
+        <translation>停止加载并保留已接收的数据</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Stop loading and discard the partial data</source>
+        <translation>停止加载并丢弃已接收的数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This source can stop but cannot discard partial data</source>
+        <translation>此数据源可以停止，但无法丢弃已接收的数据</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::CustomWidgetConfigPanel</name>
+    <message>
+        <location filename="../src/ui/CustomWidgetConfigPanel.cpp" line="+190"/>
+        <source>Custom Widget</source>
+        <translation>自定义控件</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>from %1</source>
+        <translation>来自 %1</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>This widget has no inputs.</source>
+        <translation>此控件没有输入。</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Add series</source>
+        <translation>添加序列</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Choose series</source>
+        <translation>选择序列</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>No series</source>
+        <translation>无序列</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>pending</source>
+        <translation>等待中</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Waiting for %1 to be loaded</source>
+        <translation>正在等待加载 %1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Remove this series</source>
+        <translation>移除此序列</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>No stored series.</source>
+        <translation>没有已存储的序列。</translation>
+    </message>
+    <message>
+        <location line="+160"/>
+        <source>Series for %1</source>
+        <translation>用于 %1 的序列</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>No loaded series fits this input.</source>
+        <translation>已加载的序列均不适用于此输入。</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Double-click a series to wire it.</source>
+        <translation>双击序列即可将其接入此输入。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::CustomWidgetController</name>
+    <message>
+        <location filename="../src/CustomWidgetController.cpp" line="+116"/>
+        <source>The record of the custom widgets active in a previous run could not be read: %1</source>
+        <translation>无法读取上次运行时处于活动状态的自定义控件记录：%1</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>PlotJuggler did not shut down cleanly last time while these custom widgets were active: %1.</source>
+        <translation>PlotJuggler 上次未正常关闭，当时以下自定义控件处于活动状态：%1。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Custom widgets</source>
+        <translation>自定义控件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>PlotJuggler did not shut down cleanly last time while these custom widgets were active:
+
+%1
+
+Disable them? Their panels will show a placeholder, and they can be enabled again in the Marketplace.</source>
+        <translation>PlotJuggler 上次未正常关闭，当时以下自定义控件处于活动状态：
+
+%1
+
+是否禁用这些控件？其面板将显示占位内容，您可以在扩展市场中重新启用它们。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Disable</source>
+        <translation>禁用</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Keep</source>
+        <translation>保留</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Disabled custom widget plugins: %1</source>
+        <translation>已禁用的自定义控件插件：%1</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::CustomWidgetDockWidget</name>
+    <message>
+        <location filename="../../pj_custom_widgets/widget/src/CustomWidgetDockWidget.cpp" line="+92"/>
+        <source>unknown exception</source>
+        <translation>未知异常</translation>
+    </message>
+    <message>
+        <location line="+123"/>
+        <source>This widget was disabled after an error: %1</source>
+        <translation>此控件因发生错误而被禁用：%1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The widget %1/%2 was disabled after an error: %3</source>
+        <translation>控件 %1/%2 因发生错误而被禁用：%3</translation>
+    </message>
+    <message>
+        <location line="+82"/>
+        <source>The widget %1 is missing: its plugin is not installed.</source>
+        <translation>缺少控件 %1：未安装其插件。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>The widget %1 cannot run here: %2</source>
+        <translation>控件 %1 无法在此运行：%2</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>The widget %1 is missing: the installed plugin has no such widget.</source>
+        <translation>缺少控件 %1：已安装的插件中没有此控件。</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <location line="+7"/>
+        <source>The widget %1 could not be created: %2</source>
+        <translation>无法创建控件 %1：%2</translation>
+    </message>
+    <message>
+        <location line="+50"/>
+        <source>The widget %1 rejected its saved settings.</source>
+        <translation>控件 %1 拒绝了已保存的设置。</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Settings rejected: %1</source>
+        <translation>设置被拒绝：%1</translation>
+    </message>
+    <message>
+        <location line="+85"/>
+        <source>its inputs could not be read: %1</source>
+        <translation>无法读取其输入：%1</translation>
+    </message>
+    <message>
+        <location line="+157"/>
+        <source>number</source>
+        <translation>数值</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>text</source>
+        <translation>文本</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>object</source>
+        <translation>对象</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>No input of this widget takes a %1 series.</source>
+        <translation>此控件没有可接受 %1 序列的输入。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Its inputs take: %1.</source>
+        <translation>其输入接受：%1。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Series not accepted</source>
+        <translation>不接受此序列</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::CustomWidgetPickerMenu</name>
+    <message>
+        <location filename="../src/ui/CustomWidgetPickerMenu.cpp" line="+79"/>
+        <source>No custom widgets installed.</source>
+        <translation>未安装自定义控件。</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>%1 (from %2)</source>
+        <translation>%1（来自 %2）</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1/%2</source>
+        <translation>%1/%2</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::DatasetInfoDialog</name>
+    <message>
+        <location filename="../src/ui/DatasetInfoDialog.cpp" line="+97"/>
+        <source>Dataset Info</source>
+        <translation>数据集信息</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Name</source>
+        <translation>名称</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>File</source>
+        <translation>文件</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Provenance</source>
+        <translation>来源信息</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Provider</source>
+        <translation>提供方</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Identity</source>
+        <translation>标识</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+4"/>
+        <source>Descriptor</source>
+        <translation>描述符</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Loader metadata</source>
+        <translation>加载器元数据</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Loader metadata (%1)</source>
+        <translation>加载器元数据（%1）</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::DateRangePicker</name>
+    <message>
+        <location filename="../../pj_widgets/src/DateRangePicker.cpp" line="+533"/>
+        <source>All</source>
+        <translation>全部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Past 24h</source>
+        <translation>过去 24 小时</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last 7 Days</source>
+        <translation>最近 7 天</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last Month</source>
+        <translation>最近一个月</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Custom</source>
+        <translation>自定义</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pick a custom date range</source>
+        <translation>选择自定义日期范围</translation>
+    </message>
+    <message>
+        <location line="+83"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::DepthImageLayer</name>
+    <message>
+        <location filename="../../pj_scene2D/widgets/src/layers/depth_image_layer.cpp" line="+76"/>
+        <source>Turbo</source>
+        <translation>Turbo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Viridis</source>
+        <translation>Viridis</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Plasma</source>
+        <translation>Plasma</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Grayscale</source>
+        <translation>灰度</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Invert colormap</source>
+        <translation>反转色图</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Colormap</source>
+        <translation>色图</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Near</source>
+        <translation>近端</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Far</source>
+        <translation>远端</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Auto-fit range</source>
+        <translation>自动适配范围</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set Near/Far from the current frame&apos;s depth distribution (2–98%)</source>
+        <translation>根据当前帧的深度分布（第 2–98 百分位）设置近端和远端</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::DiagnosticsDialog</name>
+    <message>
+        <location filename="../src/ui/DiagnosticsDialog.cpp" line="+56"/>
+        <source>Error</source>
+        <translation>错误</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Warning</source>
+        <translation>警告</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Info</source>
+        <translation>信息</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Diagnostics</source>
+        <translation>诊断信息</translation>
+    </message>
+    <message>
+        <location line="+130"/>
+        <source>All sources</source>
+        <translation>全部来源</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::DockWidget</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/DockWidget.cpp" line="+102"/>
+        <source>Plot</source>
+        <translation>绘图</translation>
+    </message>
+    <message>
+        <location line="+388"/>
+        <source>&quot;%1&quot; cannot be displayed on its own, but a plugin panel can read it.</source>
+        <translation>“%1”无法单独显示，但插件面板可以读取它。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>%1 topics cannot be displayed on their own, but a plugin panel can read them.</source>
+        <translation>%1 个话题无法单独显示，但插件面板可以读取它们。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>This topic is shown by a Custom Widget. Create one in this panel first.</source>
+        <translation>此主题由自定义控件显示。请先在此面板中创建一个自定义控件。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 topics are shown by a Custom Widget. Create one in this panel first.</source>
+        <translation>%1 个主题由自定义控件显示。请先在此面板中创建一个自定义控件。</translation>
+    </message>
+    <message>
+        <location line="+479"/>
+        <source>Close Settings</source>
+        <translation>关闭设置</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open Settings</source>
+        <translation>打开设置</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Copy</source>
+        <translation>复制</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Paste</source>
+        <translation>粘贴</translation>
+    </message>
+    <message>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="+1502"/>
+        <location filename="../../pj_plotting/widget/src/DockWidget.cpp" line="+5"/>
+        <source>Split Horizontally</source>
+        <translation>水平拆分</translation>
+    </message>
+    <message>
+        <location filename="../../pj_plotting/widget/src/DockWidget.cpp" line="+3"/>
+        <source>Split Vertically</source>
+        <translation>垂直拆分</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Clear</source>
+        <translation>清空</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::ExtensionCatalogService</name>
+    <message>
+        <location filename="../../pj_runtime/src/ExtensionCatalogService.cpp" line="+871"/>
+        <source>All supported files</source>
+        <translation>所有支持的文件</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>All files</source>
+        <translation>所有文件</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::ExtensionManager</name>
+    <message>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="+858"/>
+        <source>Not available for this platform (%1)</source>
+        <translation>不适用于此平台（%1）</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::FileDialog</name>
+    <message>
+        <location filename="../../pj_widgets/src/FileDialog.cpp" line="+75"/>
+        <source>Binary file</source>
+        <translation>二进制文件</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>XML document</source>
+        <translation>XML 文档</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Plain text document</source>
+        <translation>纯文本文档</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>CSV document</source>
+        <translation>CSV 文档</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>ZIP archive</source>
+        <translation>ZIP 压缩包</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 file</source>
+        <translation>%1 文件</translation>
+    </message>
+    <message>
+        <location line="+124"/>
+        <source>Open File</source>
+        <translation>打开文件</translation>
+    </message>
+    <message>
+        <location line="+147"/>
+        <source>The folder %1 is not responding, showing your home folder instead.</source>
+        <translation>文件夹 %1 无响应，改为显示您的主文件夹。</translation>
+    </message>
+    <message>
+        <source>%1 already exists. Do you want to replace it?</source>
+        <translation>%1 已存在。要替换它吗？</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation>替换</translation>
+    </message>
+    <message>
+        <source>Replace file?</source>
+        <translation>替换文件？</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::FileLoader</name>
+    <message>
+        <location filename="../src/FileLoader.cpp" line="+999"/>
+        <location line="+1"/>
+        <source>Load Data</source>
+        <translation>加载数据</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <location line="+3"/>
+        <source>Replace Data</source>
+        <translation>替换数据</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Could not stage the selected file.</source>
+        <translation>无法暂存选中的文件。</translation>
+    </message>
+    <message>
+        <location line="+126"/>
+        <source>File has no extension; cannot pick a plugin.</source>
+        <translation>文件没有扩展名，无法选择插件。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>No DataSource plugin handles %1 files. Install one from the Marketplace.</source>
+        <translation>没有可处理 %1 文件的数据源插件。请从扩展市场安装。</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>(unspecified)</source>
+        <translation>（未指定）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The layout requires DataSource plugin &apos;%1&apos;, but it is not installed for %2 files.</source>
+        <translation>此布局需要数据源插件“%1”，但尚未安装用于处理 %2 文件的该插件。</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <location line="+500"/>
+        <source>Plugin &apos;%1&apos;: createHandle failed.</source>
+        <translation>插件“%1”：createHandle 失败。</translation>
+    </message>
+    <message>
+        <location line="-483"/>
+        <source>Could not create the time domain for %1.</source>
+        <translation>无法为 %1 创建时间域。</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Replacement target dataset %1 no longer exists.</source>
+        <translation>要替换的目标数据集 %1 已不存在。</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <location line="+393"/>
+        <source>createDataset failed: %1</source>
+        <translation>createDataset 失败：%1</translation>
+    </message>
+    <message>
+        <location line="-360"/>
+        <location line="+390"/>
+        <source>Plugin &apos;%1&apos;: service registration failed: %2</source>
+        <translation>插件“%1”：服务注册失败：%2</translation>
+    </message>
+    <message>
+        <location line="-384"/>
+        <location line="+392"/>
+        <source>Plugin &apos;%1&apos;: bind failed: %2</source>
+        <translation>插件“%1”：绑定失败：%2</translation>
+    </message>
+    <message>
+        <location line="-370"/>
+        <source>Plugin &apos;%1&apos;: the saved configuration is not a JSON object and cannot be replayed.</source>
+        <translation>插件“%1”：已保存的配置不是 JSON 对象，无法重新应用。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Plugin &apos;%1&apos; rejected the layout&apos;s saved configuration: %2</source>
+        <translation>插件“%1”拒绝了布局中保存的配置：%2</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Layout preset rejected by &apos;%1&apos;: %2 — falling back to dialog</source>
+        <translation>“%1”拒绝了布局预设：%2；将改为显示配置对话框</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <location line="+334"/>
+        <source>Plugin &apos;%1&apos;: loadConfig failed: %2</source>
+        <translation>插件“%1”：loadConfig 失败：%2</translation>
+    </message>
+    <message>
+        <location line="-293"/>
+        <source>Plugin contract violation: %1. Reinstall the plugin from the Marketplace.</source>
+        <translation>插件接口契约违规：%1。请从扩展市场重新安装此插件。</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Plugin &apos;%1&apos;: loadConfig (post-dialog) failed: %2</source>
+        <translation>插件“%1”：对话框关闭后 loadConfig 失败：%2</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Load cancelled</source>
+        <translation>加载已取消</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Cannot replace dataset %1: the selected configuration expands into %2 datasets.</source>
+        <translation>无法替换数据集 %1：选中的配置会生成 %2 个数据集。</translation>
+    </message>
+    <message>
+        <location line="-770"/>
+        <source>Plugin &apos;%1&apos;: saveConfig failed: %2 — layout save will skip plugin config</source>
+        <translation>插件“%1”：saveConfig 失败：%2；保存布局时将跳过插件配置</translation>
+    </message>
+    <message>
+        <location line="+941"/>
+        <source>Could not create the time domain for %1: %2</source>
+        <translation>无法为 %1 创建时间域：%2</translation>
+    </message>
+    <message>
+        <location line="+270"/>
+        <location line="+367"/>
+        <source>Loader metadata rejected: %1</source>
+        <translation>加载器元数据被拒绝：%1</translation>
+    </message>
+    <message>
+        <location line="-332"/>
+        <location line="+177"/>
+        <location line="+3"/>
+        <source>Import discarded</source>
+        <translation>已放弃导入</translation>
+    </message>
+    <message>
+        <location line="-176"/>
+        <source>All %1 entries of &apos;%2&apos; failed to load:
+%3</source>
+        <translation>“%2”的全部 %1 个条目均加载失败：
+%3</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Cannot load &apos;%1&apos;: not a readable file.</source>
+        <translation>无法加载“%1”：文件不可读。</translation>
+    </message>
+    <message>
+        <location line="-191"/>
+        <location line="+333"/>
+        <source>Plugin &apos;%1&apos;: start failed: %2</source>
+        <translation>插件“%1”：启动失败：%2</translation>
+    </message>
+    <message>
+        <location line="-1420"/>
+        <source>Plugin &apos;%1&apos; loaded no data</source>
+        <translation>插件“%1”未加载任何数据</translation>
+    </message>
+    <message>
+        <location line="+138"/>
+        <source>The browser can no longer read &apos;%1&apos;: it changed or was removed on disk since it was opened. Data loaded from it may be incomplete; open it again to reload it.</source>
+        <translation>浏览器无法再读取“%1”：该文件自打开后已在磁盘上更改或移除。从中加载的数据可能不完整，请重新打开以重新加载。</translation>
+    </message>
+    <message>
+        <location line="+1141"/>
+        <source>not a readable file.</source>
+        <translation>不是可读取的文件。</translation>
+    </message>
+    <message>
+        <location line="+163"/>
+        <source>Plugin &apos;%1&apos;: derived-series replay failed: %2</source>
+        <translation>插件“%1”：派生序列重放失败：%2</translation>
+    </message>
+    <message>
+        <location line="+182"/>
+        <source>Could not load &apos;%1&apos;: %2</source>
+        <translation>无法加载“%1”：%2</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>%1 loads failed</source>
+        <translation>%1 项加载失败</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Load failed</source>
+        <translation>加载失败</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>OK</source>
+        <translation>确定</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::FileSelectionService</name>
+    <message>
+        <location filename="../src/FileSelectionService.cpp" line="+81"/>
+        <location line="+47"/>
+        <source>Browser file staging is unavailable.</source>
+        <translation>浏览器文件暂存不可用。</translation>
+    </message>
+    <message>
+        <location line="-22"/>
+        <source>The browser could not read %1 (moved or changed since it was picked?).</source>
+        <translation>浏览器无法读取 %1（选择后文件是否已被移动或更改？）。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::FilterEditorPanel</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/FilterEditorPanel.cpp" line="+114"/>
+        <location line="+336"/>
+        <source>Apply</source>
+        <translation>应用</translation>
+    </message>
+    <message>
+        <location line="-332"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Warning: built-in filter definitions failed to load</source>
+        <translation>警告：未能加载内置滤波器定义</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Copy parameters</source>
+        <translation>复制参数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Paste parameters</source>
+        <translation>粘贴参数</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Copy these parameters into all series</source>
+        <translation>将这些参数复制到所有序列</translation>
+    </message>
+    <message>
+        <location line="+92"/>
+        <source>-- No Transform --</source>
+        <translation>-- 无变换 --</translation>
+    </message>
+    <message>
+        <location line="+191"/>
+        <source>Filter &apos;%1&apos; is not available</source>
+        <translation>滤波器“%1”不可用</translation>
+    </message>
+    <message>
+        <location line="+65"/>
+        <source>Could not read filter parameters; using defaults</source>
+        <translation>无法读取滤波器参数；将使用默认值</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Pick a filter to copy</source>
+        <translation>请选择要复制的滤波器</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Filter copied</source>
+        <translation>已复制滤波器</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Nothing to paste</source>
+        <translation>没有可粘贴的内容</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Cannot paste filter &apos;%1&apos;</source>
+        <translation>无法粘贴滤波器“%1”</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Filter pasted</source>
+        <translation>已粘贴滤波器</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Pick a filter to copy to all series</source>
+        <translation>请选择要复制到所有序列的滤波器</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Copied to all %1 series</source>
+        <translation>已复制到全部 %1 个序列</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <location line="+40"/>
+        <source>filtered</source>
+        <translation>滤波结果</translation>
+    </message>
+    <message>
+        <location line="+60"/>
+        <source>Select at least one source curve</source>
+        <translation>请至少选择一条源曲线</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>remove %1: %2</source>
+        <translation>移除 %1：%2</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Pick a filter to apply</source>
+        <translation>请选择要应用的滤波器</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>%1: filter &apos;%2&apos; is unavailable</source>
+        <translation>%1：滤波器“%2”不可用</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>update %1: %2</source>
+        <translation>更新 %1：%2</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>%1: %2</source>
+        <translation>%1：%2</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>%1 filter(s) failed: %2</source>
+        <translation>%1 个滤波器处理失败：%2</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Nothing applied</source>
+        <translation>未应用任何更改</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::HttpGet</name>
+    <message>
+        <location filename="../../pj_runtime/src/HttpGet.cpp" line="+124"/>
+        <source>only http(s) URLs can be fetched: %1</source>
+        <translation>只能获取 http(s) URL：%1</translation>
+    </message>
+    <message>
+        <location line="+57"/>
+        <source>download exceeds the %1 MiB limit</source>
+        <translation>下载超过 %1 MiB 的限制</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::ImageLayer</name>
+    <message>
+        <location filename="../../pj_scene2D/widgets/src/layers/image_layer.cpp" line="+159"/>
+        <source>Rectify</source>
+        <translation>畸变校正</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Rectification is unavailable until an image with matching CameraInfo is decoded.</source>
+        <translation>解码具有匹配 CameraInfo 的图像后才能进行畸变校正。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Rectification is unavailable: the image has no camera frame_id.</source>
+        <translation>无法进行畸变校正：图像没有相机 frame_id。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Rectification is unavailable: no CameraInfo matches this image&apos;s frame_id.</source>
+        <translation>无法进行畸变校正：没有与此图像的 frame_id 匹配的 CameraInfo。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Rectification is unavailable: the matching CameraInfo has invalid intrinsics or image size.</source>
+        <translation>无法进行畸变校正：匹配的 CameraInfo 中的内参或图像尺寸无效。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Undistort the image using its matching CameraInfo. Turn off to show the raw image,
+for example when the stream is already rectified.</source>
+        <translation>使用匹配的 CameraInfo 对图像进行畸变校正。关闭此选项可显示原始图像，
+例如当数据流已经过校正时。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::LayerRowWidget</name>
+    <message>
+        <location filename="../../pj_widgets/src/LayerListView.cpp" line="+70"/>
+        <source>Toggle layer visibility</source>
+        <translation>显示或隐藏图层</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Remove this layer</source>
+        <translation>移除此图层</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::LayoutDatasetDialog</name>
+    <message>
+        <location filename="../src/ui/LayoutDatasetDialog.cpp" line="+19"/>
+        <source>Load Layout</source>
+        <translation>加载布局</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Several loaded datasets fit the layout &quot;%1&quot;. Which ones should it show? Each checked dataset gets its own copy of the layout&apos;s tabs.</source>
+        <translation>有多个已加载的数据集与布局“%1”匹配。请选择要显示的数据集。布局会为每个选中的数据集复制一组标签页。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::LayoutImportBatch</name>
+    <message>
+        <location filename="../src/LayoutImportBatch.cpp" line="+131"/>
+        <source>%1; the data source does not exist on disk</source>
+        <translation>%1；磁盘上不存在此数据源</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Layout&apos;s data source &apos;%1&apos; does not exist on disk and no provider could re-obtain it (%2).</source>
+        <translation>布局的数据源“%1”在磁盘上不存在，也没有提供方能够重新获取它（%2）。</translation>
+    </message>
+    <message>
+        <location line="+47"/>
+        <source>Layout source &apos;%1&apos; carries an invalid &lt;materialize&gt; record; falling back to the saved path.</source>
+        <translation>布局数据源“%1”包含无效的 &lt;materialize&gt; 记录；将尝试使用已保存的路径。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>invalid &lt;materialize&gt; record</source>
+        <translation>无效的 &lt;materialize&gt; 记录</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>another PlotJuggler instance is currently downloading this request; wait for it to finish and load the layout again</source>
+        <translation>另一个 PlotJuggler 实例正在下载此请求的数据；请等待下载完成后重新加载布局</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Layout source &apos;%1&apos;: another PlotJuggler instance is currently downloading this request; wait for it to finish and load the layout again.</source>
+        <translation>布局数据源“%1”：另一个 PlotJuggler 实例正在下载此请求的数据；请等待下载完成后重新加载布局。</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>provider &apos;%1&apos; is unavailable: %2</source>
+        <translation>提供方“%1”不可用：%2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <location line="+35"/>
+        <source>Layout source &apos;%1&apos;: %2; falling back to the saved path.</source>
+        <translation>布局数据源“%1”：%2；将尝试使用已保存的路径。</translation>
+    </message>
+    <message>
+        <location line="-27"/>
+        <source>provider returned no source identity</source>
+        <translation>提供方未返回数据源标识</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Provider &apos;%1&apos; answered the query for layout source &apos;%2&apos; without a source identity.</source>
+        <translation>提供方“%1”响应了布局数据源“%2”的查询，但未返回数据源标识。</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>provider &apos;%1&apos; could not resolve it: %2</source>
+        <translation>提供方“%1”无法解析此数据源：%2</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>no local path</source>
+        <translation>没有本地路径</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>descriptor refused by provider</source>
+        <translation>提供方拒绝了描述符</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Provider &apos;%1&apos; refused the import descriptor for &apos;%2&apos;%3</source>
+        <translation>提供方“%1”拒绝了“%2”的导入描述符%3</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>provider cache verdict is inconsistent</source>
+        <translation>提供方返回的缓存状态不一致</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Provider &apos;%1&apos; reports layout source &apos;%2&apos; as materialized, but no file exists there.</source>
+        <translation>提供方“%1”报告布局数据源“%2”已下载到本地，但对应文件不存在。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+222"/>
+        <source>untrusted import origin</source>
+        <translation>不受信任的导入来源</translation>
+    </message>
+    <message>
+        <location line="-221"/>
+        <source>Layout source &apos;%1&apos; requires confirmation of an untrusted origin; refused in non-interactive mode. Connect to this server once in the provider toolbox to trust it.</source>
+        <translation>布局数据源“%1”需要确认是否信任其来源；非交互模式下已拒绝导入。请先在提供方工具箱中连接此服务器并确认信任。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>estimated size exceeds the transfer limit</source>
+        <translation>预计大小超出传输限制</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Layout source &apos;%1&apos; estimates %2 bytes, above the configured limit of %3 bytes; refused in non-interactive mode.</source>
+        <translation>布局数据源“%1”的预计大小为 %2 字节，超出了配置的 %3 字节限制；非交互模式下已拒绝导入。</translation>
+    </message>
+    <message>
+        <location line="+73"/>
+        <source>%1  (about %2)</source>
+        <translation>%1  （约 %2）</translation>
+    </message>
+    <message>
+        <location line="+90"/>
+        <source>the loader rejected the file</source>
+        <translation>加载器拒绝了此文件</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>The loader rejected layout source &apos;%1&apos;.</source>
+        <translation>加载器拒绝了布局数据源“%1”。</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Cached copy of layout source &apos;%1&apos; failed to load%2; falling back to the provider.</source>
+        <translation>布局数据源“%1”的缓存副本加载失败%2；将尝试从提供方重新获取。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source> and was removed</source>
+        <translation>并已移除</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Layout source &apos;%1&apos; requires confirmation of an untrusted origin, which cannot be asked after the batch started. Connect to this server once in the provider toolbox to trust it.</source>
+        <translation>布局数据源“%1”需要确认是否信任其来源，但批次开始后无法再请求确认。请先在提供方工具箱中连接此服务器并确认信任。</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>provider session unavailable</source>
+        <translation>提供方会话不可用</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Import of layout source &apos;%1&apos; could not start: %2</source>
+        <translation>无法开始导入布局数据源“%1”：%2</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Layout source &apos;%1&apos; imported as data only (no re-importable source record was attached).</source>
+        <translation>布局数据源“%1”仅导入了数据，未附带可用于再次导入的数据源记录。</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Import of layout source &apos;%1&apos; was cancelled.</source>
+        <translation>已取消导入布局数据源“%1”。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Import of layout source &apos;%1&apos; failed: %2</source>
+        <translation>导入布局数据源“%1”失败：%2</translation>
+    </message>
+    <message>
+        <location line="+66"/>
+        <source>the stock load failed</source>
+        <translation>常规加载失败</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Loading layout source &apos;%1&apos; failed.</source>
+        <translation>加载布局数据源“%1”失败。</translation>
+    </message>
+    <message>
+        <location line="+67"/>
+        <source>The cancelled layout import was removed, but the previous workspace could not be restored exactly.</source>
+        <translation>已移除取消的布局导入，但无法精确恢复之前的工作区。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::LeftPanel</name>
+    <message>
+        <location filename="../src/ui/LeftPanel.cpp" line="+77"/>
+        <source>(no recent layouts)</source>
+        <translation>（没有最近使用的布局）</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <location line="+40"/>
+        <source>Layouts</source>
+        <translation>布局</translation>
+    </message>
+    <message>
+        <location line="-33"/>
+        <source>Stored in this browser; no source file bytes are retained.</source>
+        <translation>保存在当前浏览器中；不会保留源文件内容。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Clear recent layouts</source>
+        <translation>清空最近使用的布局</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>(no recent files or layouts)</source>
+        <translation>（没有最近使用的文件或布局）</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Files</source>
+        <translation>文件</translation>
+    </message>
+    <message>
+        <location line="+151"/>
+        <source>Resume streaming</source>
+        <translation>恢复接收数据流</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Pause streaming</source>
+        <translation>暂停接收数据流</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Stop recording</source>
+        <translation>停止录制</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Record the subscribed topics of every active stream, one MCAP file per stream</source>
+        <translation>录制每个活动数据流中已订阅的话题，每个数据流保存为一个 MCAP 文件</translation>
+    </message>
+    <message>
+        <location line="+218"/>
+        <source>(no cloud plugins)</source>
+        <translation>（没有云端插件）</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::LogView</name>
+    <message>
+        <location filename="../../pj_log/widget/src/LogView.cpp" line="+288"/>
+        <source>Show the entries after the playhead, greyed</source>
+        <translation>以灰色显示播放位置之后的记录</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Hide the entries after the playhead</source>
+        <translation>隐藏播放位置之后的记录</translation>
+    </message>
+    <message>
+        <location line="+110"/>
+        <source>Time: %1</source>
+        <translation>时间：%1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Stamp: %1</source>
+        <translation>时间戳：%1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Level: %1</source>
+        <translation>级别：%1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Source: %1</source>
+        <translation>来源：%1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Topic: %1</source>
+        <translation>话题：%1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Category: %1</source>
+        <translation>类别：%1</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::MainWindow</name>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="+452"/>
+        <source>PlotJuggler 4 Layout (*.pj4.xml)</source>
+        <translation>PlotJuggler 4 布局 (*.pj4.xml)</translation>
+    </message>
+    <message>
+        <location line="+415"/>
+        <source>Open Data File...</source>
+        <translation>打开数据文件…</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <location line="+7"/>
+        <source>Load Layout...</source>
+        <translation>加载布局…</translation>
+    </message>
+    <message>
+        <location line="-6"/>
+        <location line="+8"/>
+        <source>Save Layout...</source>
+        <translation>保存布局…</translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <location line="+13"/>
+        <source>Preferences...</source>
+        <translation>首选项…</translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <source>Save Layout with Sources...</source>
+        <translation>保存布局及数据源引用…</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>About PlotJuggler...</source>
+        <translation>关于 PlotJuggler…</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Check for Updates...</source>
+        <translation>检查更新…</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Documentation</source>
+        <translation>文档</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Report a Localization Issue</source>
+        <translation>报告汉化问题</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Report an Upstream Issue</source>
+        <translation>报告上游问题</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Installed Extensions</source>
+        <translation>已安装的扩展</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>A plugin failed to load.</source>
+        <translation>有一个插件加载失败。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Plugin &apos;%1&apos; failed to load.</source>
+        <translation>插件“%1”加载失败。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+6865"/>
+        <source>Details are in the notifications.</source>
+        <translation>详情请查看通知。</translation>
+    </message>
+    <message>
+        <location line="-6831"/>
+        <location line="+38"/>
+        <source>This object topic cannot be displayed (type %1).</source>
+        <translation>无法显示此对象话题（类型为 %1）。</translation>
+    </message>
+    <message>
+        <location line="-29"/>
+        <source>This object topic cannot be displayed in a 3D view (type %1). The 3D view requires a registered parser that emits one of its supported canonical objects (PointCloud, CompressedPointCloud, OccupancyGrid, SceneEntities, or FrameTransforms).</source>
+        <translation>无法在三维视图中显示此对象话题（类型为 %1）。三维视图需要已注册的解析器将其转换为支持的标准对象类型：PointCloud、CompressedPointCloud、OccupancyGrid、SceneEntities 或 FrameTransforms。</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>This object topic cannot be displayed in a 2D view (type %1). Typically this means the source did not register a parser for the topic, or the type is not yet supported by the built-in viewer.</source>
+        <translation>无法在二维视图中显示此对象话题（类型为 %1）。通常是因为数据源未为该话题注册解析器，或者内置查看器尚不支持此类型。</translation>
+    </message>
+    <message>
+        <location line="+154"/>
+        <location line="+2075"/>
+        <location line="+79"/>
+        <source>dataset removed</source>
+        <translation>数据集已移除</translation>
+    </message>
+    <message>
+        <location line="-1864"/>
+        <source>Start Streaming</source>
+        <translation>开始接收数据流</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>The stream could not be started:
+
+%1</source>
+        <translation>无法启动数据流：
+
+%1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Streaming</source>
+        <translation>数据流</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>The stream failed:
+
+%1</source>
+        <translation>数据流发生错误：
+
+%1</translation>
+    </message>
+    <message>
+        <location line="+236"/>
+        <source>Stop loading…</source>
+        <translation>停止加载…</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Stop loading?</source>
+        <translation>停止加载？</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This data is still loading. Keep what has loaded so far, remove all of it, or keep loading?</source>
+        <translation>数据仍在加载中。要保留已加载的数据、全部移除，还是继续加载？</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Remove All</source>
+        <translation>全部移除</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Stop and Keep</source>
+        <translation>停止并保留</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+1439"/>
+        <location line="+173"/>
+        <location line="+1999"/>
+        <location line="+477"/>
+        <location line="+2194"/>
+        <location line="+1107"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location line="-7313"/>
+        <source>Undo</source>
+        <translation>撤销</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Redo</source>
+        <translation>重做</translation>
+    </message>
+    <message>
+        <location line="+77"/>
+        <source>No widget selected</source>
+        <translation>未选择视图组件</translation>
+    </message>
+    <message>
+        <location line="+409"/>
+        <source>Loaded test sin/cos data</source>
+        <translation>已加载正弦/余弦测试数据</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>Browser source state is unavailable.</source>
+        <translation>浏览器数据源状态不可用。</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Open a browser data source before saving a source-bound layout.</source>
+        <translation>保存绑定数据源的布局之前，请先在浏览器中打开一个数据源。</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Every loaded dataset must be backed by a browser-selected file.</source>
+        <translation>每个已加载的数据集都必须来自浏览器中选择的文件。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>A loaded browser source can no longer be identified.</source>
+        <translation>无法再识别某个已加载的浏览器数据源。</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>A browser source no longer has its complete original dataset set.</source>
+        <translation>某个浏览器数据源的原始数据集已不完整。</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>A browser source has no usable filename.</source>
+        <translation>某个浏览器数据源没有可用的文件名。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&apos;%1&apos; has no content fingerprint yet: it is still being computed, or the file changed since it was picked. Save the layout again in a moment, or open the file again.</source>
+        <translation>“%1”尚无内容指纹：仍在计算中，或文件自选取后发生了更改。请稍后再次保存布局，或重新打开文件。</translation>
+    </message>
+    <message>
+        <location line="+105"/>
+        <location line="+2344"/>
+        <source>The layout still contains an ephemeral browser path and was not downloaded.</source>
+        <translation>布局仍包含临时浏览器路径，因此未下载。</translation>
+    </message>
+    <message>
+        <location line="-2208"/>
+        <source>Remove all Datasets</source>
+        <translation>移除全部数据集</translation>
+    </message>
+    <message>
+        <location line="+179"/>
+        <location line="+18"/>
+        <source>Marketplace</source>
+        <translation>扩展市场</translation>
+    </message>
+    <message>
+        <location line="+243"/>
+        <source>The source was reloaded, but some workspace bindings could not be mapped to its new datasets.</source>
+        <translation>已重新加载数据源，但部分工作区绑定无法映射到新的数据集。</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+42"/>
+        <source>%n derived series</source>
+        <translation>
+            <numerusform>%n 个派生序列</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Delete derived series?</source>
+        <translation>删除派生序列？</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>These derived series depend on what you are deleting and will also be removed:
+
+• %1</source>
+        <translation>以下派生序列依赖于将要删除的内容，也会一并移除：
+
+• %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location line="+4843"/>
+        <source>Delete</source>
+        <translation>删除</translation>
+    </message>
+    <message>
+        <location line="-4676"/>
+        <source>Are you sure you want to remove &apos;%1&apos; and its data?</source>
+        <translation>确定要移除“%1”及其数据吗？</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Are you sure you want to remove these %1 datasets and their data?</source>
+        <translation>确定要移除这 %1 个数据集及其数据吗？</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Remove dataset</source>
+        <translation>移除数据集</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Remove datasets</source>
+        <translation>移除数据集</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Remove</source>
+        <translation>移除</translation>
+    </message>
+    <message>
+        <location line="+242"/>
+        <source>Update with &lt;code&gt;sudo apt update &amp;amp;&amp;amp; sudo apt upgrade&lt;/code&gt;</source>
+        <translation>使用以下命令更新：&lt;code&gt;sudo apt update &amp;amp;&amp;amp; sudo apt upgrade&lt;/code&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Get it, and future releases, through apt:&lt;br&gt;&lt;code&gt;curl -fsSL https://apt.plotjuggler.io/pj4_install.sh | sudo sh&lt;/code&gt;</source>
+        <translation>通过 apt 获取当前及后续版本：&lt;br&gt;&lt;code&gt;curl -fsSL https://apt.plotjuggler.io/pj4_install.sh | sudo sh&lt;/code&gt;</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>&lt;a href=&quot;pj-update:maintenance-tool&quot;&gt;Update now&lt;/a&gt; (PlotJuggler will close)</source>
+        <translation>&lt;a href=&quot;pj-update:maintenance-tool&quot;&gt;立即更新&lt;/a&gt;（PlotJuggler 将关闭）</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&lt;a href=&quot;%1&quot;&gt;View on GitHub&lt;/a&gt;</source>
+        <translation>&lt;a href=&quot;%1&quot;&gt;在 GitHub 上查看&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&lt;a href=&quot;%1&quot;&gt;Release notes&lt;/a&gt;</source>
+        <translation>&lt;a href=&quot;%1&quot;&gt;版本说明&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>PlotJuggler is up to date.</source>
+        <translation>PlotJuggler 已是最新版本。</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Could not check for updates. Please try again later.</source>
+        <translation>无法检查更新，请稍后重试。</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Could not start the PlotJuggler maintenance tool.</source>
+        <translation>无法启动 PlotJuggler 维护工具。</translation>
+    </message>
+    <message>
+        <location line="+835"/>
+        <source>Nothing to record: start a streaming source first.</source>
+        <translation>没有可录制的内容：请先启动一个流式数据源。</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>Nothing to record: %n active source(s) write decoded samples directly, which cannot be recorded.</source>
+        <translation>
+            <numerusform>没有可录制的内容：%n 个活动数据源直接写入解码后的样本，无法录制。</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Recording could not start: %1</source>
+        <translation>无法开始录制：%1</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n source(s) write decoded samples directly and are not recorded: %1</source>
+        <translation>
+            <numerusform>%n 个数据源直接写入解码后的样本，未参与录制：%1</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>0:00 | %1</source>
+        <translation>0:00 | %1</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Recording saved to %1</source>
+        <translation>录制已保存到 %1</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n recording(s) saved to %1</source>
+        <translation>
+            <numerusform>%n 个录制文件已保存到 %1</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>%1 (%2)</source>
+        <translation>%1（%2）</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n of %1 recording(s) had problems: %2</source>
+        <translation>
+            <numerusform>%1 个录制文件中有 %n 个出现问题：%2</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source> An unfinalized file still opens; run &apos;mcap recover&apos; to rebuild its index.</source>
+        <translation> 未正常结束的文件仍可打开；运行“mcap recover”可重建索引。</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+5"/>
+        <source> (%n message(s) dropped: the disk could not keep up)</source>
+        <translation>
+            <numerusform>（已丢弃 %n 条消息：磁盘写入速度不足）</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source> (%n message(s) could not be recorded)</source>
+        <translation>
+            <numerusform>（%n 条消息无法录制）</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1:%2 | %3</source>
+        <translation>%1:%2 | %3</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source> | %1 dropped</source>
+        <translation> | 已丢弃 %1 条</translation>
+    </message>
+    <message>
+        <location line="+229"/>
+        <source>application shutdown</source>
+        <translation>应用程序关闭</translation>
+    </message>
+    <message>
+        <location line="+89"/>
+        <location line="+461"/>
+        <location line="+244"/>
+        <location line="+13"/>
+        <location line="+41"/>
+        <location line="+123"/>
+        <location line="+416"/>
+        <location line="+8"/>
+        <location line="+15"/>
+        <location line="+6"/>
+        <location line="+430"/>
+        <location line="+215"/>
+        <location line="+19"/>
+        <location line="+371"/>
+        <location line="+309"/>
+        <source>Load Layout</source>
+        <translation>加载布局</translation>
+    </message>
+    <message>
+        <location line="-2656"/>
+        <location line="+25"/>
+        <location line="+2763"/>
+        <location line="+26"/>
+        <location line="+7"/>
+        <location line="+5"/>
+        <source>Save Layout</source>
+        <translation>保存布局</translation>
+    </message>
+    <message>
+        <location line="-2819"/>
+        <source>Requested layout download: %1</source>
+        <translation>已请求下载布局：%1</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Bind to this data source</source>
+        <translation>绑定到此数据源</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Save Layout with Sources</source>
+        <translation>保存布局及数据源引用</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Requested source-bound layout download: %1</source>
+        <translation>已请求下载绑定数据源的布局：%1</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>This browser no longer has that recent layout recipe.</source>
+        <translation>此浏览器中已没有该最近使用的布局配置。</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Layout file no longer exists: %1</source>
+        <translation>布局文件已不存在：%1</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>(no extensions installed)</source>
+        <translation>（未安装扩展）</translation>
+    </message>
+    <message>
+        <location line="+121"/>
+        <source>(no toolboxes available)</source>
+        <translation>（没有可用的工具箱）</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Cannot open &apos;%1&apos; for reading.</source>
+        <translation>无法打开“%1”进行读取。</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location line="+422"/>
+        <source>&apos;%1&apos; is not a valid PJ4 layout: %2 (line %3, col %4)</source>
+        <translation>“%1”不是有效的 PJ4 布局：%2（第 %3 行，第 %4 列）</translation>
+    </message>
+    <message>
+        <location line="-404"/>
+        <location line="+416"/>
+        <source>&apos;%1&apos; cannot be loaded: %2</source>
+        <translation>无法加载“%1”：%2</translation>
+    </message>
+    <message>
+        <location line="-403"/>
+        <location line="+425"/>
+        <source>Layout &apos;%1&apos; was saved by a newer PJ4 (pj4_version=%2 &gt; %3); loading best-effort.</source>
+        <translation>布局“%1”由更高版本的 PJ4 保存（pj4_version=%2 &gt; %3）；将尽可能加载。</translation>
+    </message>
+    <message>
+        <location line="-400"/>
+        <source>same file</source>
+        <translation>同一文件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>by name</source>
+        <translation>按名称</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>positional</source>
+        <translation>按位置</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Layout dataset &quot;%1&quot; %2 %3 (%4)</source>
+        <translation>布局数据集“%1”：%2 %3（%4）</translation>
+    </message>
+    <message>
+        <location line="+80"/>
+        <source>Layout&apos;s data source &apos;%1&apos; does not exist on disk; applying to current data.</source>
+        <translation>布局的数据源“%1”在磁盘上不存在；将应用到当前数据。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>does not exist on disk</source>
+        <translation>在磁盘上不存在</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+35"/>
+        <source>This layout was saved with %n data source(s):
+
+%1</source>
+        <translation>
+            <numerusform>此布局保存了 %n 个数据源的引用：
+
+%1</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="-8"/>
+        <source>Reload source file</source>
+        <translation>重新加载源文件</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Load Layout only</source>
+        <translation>仅加载布局</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>No data is loaded, and the layout&apos;s data sources could not be restored:
+
+%1</source>
+        <translation>当前没有加载数据，且无法恢复布局的数据源：
+
+%1</translation>
+    </message>
+    <message>
+        <location line="+77"/>
+        <source>Layout &apos;%1&apos; fits %2 loaded datasets; it shows the first loaded one, &quot;%3&quot;.</source>
+        <translation>布局“%1”与 %2 个已加载的数据集匹配，将显示最先加载的“%3”。</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>This layout shows one dataset at a time: %1 cannot be copied for a second dataset.</source>
+        <translation>此布局一次只显示一个数据集：无法为第二个数据集复制 %1。</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>The chosen datasets were removed while the question was open; nothing was loaded.</source>
+        <translation>在询问期间，选中的数据集已被移除，未加载任何内容。</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Some of the chosen datasets were removed while the question was open; the layout shows the others.</source>
+        <translation>在询问期间，部分选中的数据集已被移除，布局将显示其余数据集。</translation>
+    </message>
+    <message>
+        <location line="+120"/>
+        <location line="+11"/>
+        <location line="+10"/>
+        <location line="+64"/>
+        <location line="+31"/>
+        <location line="+12"/>
+        <location line="+134"/>
+        <location line="+99"/>
+        <location line="+10"/>
+        <location line="+7"/>
+        <location line="+356"/>
+        <location line="+53"/>
+        <source>Load source-bound layout</source>
+        <translation>加载绑定数据源的布局</translation>
+    </message>
+    <message>
+        <location line="-786"/>
+        <source>This layout references cloud-materialized data sources, which are unsupported in the browser. Open it in the desktop PlotJuggler instead.</source>
+        <translation>此布局引用了从云端下载的数据源，浏览器暂不支持。请使用桌面版 PlotJuggler 打开。</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Stream &apos;%1&apos; cannot start: %2</source>
+        <translation>数据流“%1”无法启动：%2</translation>
+    </message>
+    <message>
+        <location line="+64"/>
+        <source>The layout does not uniquely identify every saved data source.</source>
+        <translation>此布局无法唯一标识每个已保存的数据源。</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <location line="+300"/>
+        <source>%1 (plugin: %2)</source>
+        <translation>%1（插件：%2）</translation>
+    </message>
+    <message>
+        <location line="-294"/>
+        <source>This layout was saved with data source &apos;%1&apos;. Reselect that file to reload it, or apply the layout to compatible data already open in this page.</source>
+        <translation>此布局保存了数据源“%1”的引用。请重新选择该文件以加载数据，或将布局应用到当前页面中已打开的兼容数据。</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>This layout was saved with %1 data sources. Select source 1 of %1: &apos;%2&apos; for saved slot &apos;%3&apos;. Every file will be staged before any import begins.</source>
+        <translation>此布局保存了 %1 个数据源的引用。请选择第 1 个数据源（共 %1 个）：“%2”，对应保存的槽位“%3”。所有文件暂存完成后才会开始导入。</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Reselect source</source>
+        <translation>重新选择数据源</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Select source 1 of %1</source>
+        <translation>选择数据源 1 / %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Apply to current data</source>
+        <translation>应用到当前数据</translation>
+    </message>
+    <message>
+        <location line="+102"/>
+        <source>The currently open browser data does not uniquely match every saved source.</source>
+        <translation>浏览器中当前打开的数据无法与每个已保存的数据源一一对应。</translation>
+    </message>
+    <message>
+        <location line="+109"/>
+        <source>Select &apos;%1&apos; to replay this layout (selected &apos;%2&apos;).</source>
+        <translation>请选择“%1”以重新载入此布局（当前选择的是“%2”）。</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>The selected &apos;%1&apos; is not the file saved for source %2 of %3 (&apos;%4&apos;). Select the original file for that saved slot.</source>
+        <translation>选中的“%1”不是第 %2 个数据源（共 %3 个，“%4”）所保存的文件。请选择该槽位对应的原始文件。</translation>
+    </message>
+    <message>
+        <location line="+54"/>
+        <source>Staged %1 of %2 data sources. Select source %3 of %2: &apos;%4&apos; for saved slot &apos;%5&apos;. No import has started yet.</source>
+        <translation>已暂存 %1 个数据源，共 %2 个。请选择第 %3 个数据源（共 %2 个）：“%4”，对应保存的槽位“%5”。尚未开始导入。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Select source %1 of %2</source>
+        <translation>选择数据源 %1 / %2</translation>
+    </message>
+    <message>
+        <location line="+86"/>
+        <source>The layout&apos;s data sources exceed the %1 MiB a downloaded layout may load.</source>
+        <translation>布局的数据源总大小超过了下载布局允许加载的上限（%1 MiB）。</translation>
+    </message>
+    <message>
+        <location line="+100"/>
+        <source>A staged source could not be queued for import.</source>
+        <translation>某个已暂存的数据源无法加入导入队列。</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>One or more selected sources closed without completing their import.</source>
+        <translation>一个或多个选中的数据源在导入完成前已关闭。</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Source &apos;%1&apos; produced %2 dataset(s); the layout requires exactly %3.</source>
+        <translation>数据源“%1”生成了 %2 个数据集；此布局要求恰好 %3 个。</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Source &apos;%1&apos; did not reproduce the saved fan-out dataset order and names.</source>
+        <translation>数据源“%1”未能生成与已保存的拆分数据集相同的顺序和名称。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+30"/>
+        <source>The saved Source Timeline contains duplicate track positions.</source>
+        <translation>保存的数据源时间轴包含重复的轨道位置。</translation>
+    </message>
+    <message>
+        <location line="-16"/>
+        <source>A saved Source Timeline offset is outside the supported range.</source>
+        <translation>保存的数据源时间轴偏移量超出支持范围。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>A saved Source Timeline offset is outside the selected dataset&apos;s supported range.</source>
+        <translation>保存的数据源时间轴偏移量超出所选数据集的支持范围。</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>The saved Source Timeline contains invalid track positions.</source>
+        <translation>保存的数据源时间轴包含无效的轨道位置。</translation>
+    </message>
+    <message>
+        <location line="+59"/>
+        <source>Stream &apos;%1&apos; could not start: %2</source>
+        <translation>数据流“%1”未能启动：%2</translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>The failed source replay was removed, but the previous workspace could not be restored exactly.</source>
+        <translation>已移除失败的数据源重放结果，但无法精确恢复之前的工作区。</translation>
+    </message>
+    <message>
+        <location line="-348"/>
+        <location line="+458"/>
+        <source>&apos;%1&apos; could not be downloaded: %2</source>
+        <translation>无法下载“%1”：%2</translation>
+    </message>
+    <message>
+        <location line="-3051"/>
+        <source>New release available: &lt;span style=&apos;font-weight:600;&apos;&gt;%1&lt;/span&gt;</source>
+        <translation>有新版本可用：&lt;span style=&apos;font-weight:600;&apos;&gt;%1&lt;/span&gt;</translation>
+    </message>
+    <message>
+        <location line="+1330"/>
+        <source>Bind to this data source (stores the stream settings, credentials included)</source>
+        <translation>绑定到此数据源（保存流设置，包括凭据）</translation>
+    </message>
+    <message>
+        <location line="+344"/>
+        <source>Streaming sources: %1</source>
+        <translation>流数据源：%1</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>  %1 (streaming)</source>
+        <translation>  %1（流数据）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>  %1 (streaming, %2)</source>
+        <translation>  %1（流数据，%2）</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Reload and start streaming</source>
+        <translation>重新加载并开始接收流数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Start streaming</source>
+        <translation>开始接收流数据</translation>
+    </message>
+    <message>
+        <location line="+69"/>
+        <source>Some of the layout&apos;s streaming sources could not be started:
+
+%1</source>
+        <translation>布局中的部分流数据源无法启动：
+
+%1</translation>
+    </message>
+    <message>
+        <location line="+163"/>
+        <source>Stream &apos;%1&apos;: %2</source>
+        <translation>流“%1”：%2</translation>
+    </message>
+    <message>
+        <location line="+195"/>
+        <source>&apos;%1&apos; records a malformed content fingerprint.</source>
+        <translation>&apos;%1&apos; 记录的内容指纹格式无效。</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>This layout contains more than one file named &apos;%1&apos;, but no valid content fingerprints to tell them apart safely. Open the sources separately and use a newer source-bound layout.</source>
+        <translation>此布局包含多个名为 &apos;%1&apos; 的文件，但没有有效的内容指纹来安全区分它们。请分别打开各数据源，并使用较新的、与数据源绑定的布局。</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>This layout was saved with data source &apos;%1&apos;, whose plugin also reads %2 more file(s) you select next. Reselect that file to reload it, or apply the layout to compatible data already open in this page.</source>
+        <translation>此布局保存时使用数据源 &apos;%1&apos;，其插件还会读取接下来选取的 %2 个文件。请重新选择该数据源文件以重新加载，或将布局应用于此页面中已打开的兼容数据。</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>This layout was saved with %1 data sources, whose plugins also read %4 more file(s) you select after them. Select source 1 of %1: &apos;%2&apos; for saved slot &apos;%3&apos;. Every file will be staged before any import begins.</source>
+        <translation>此布局保存时使用了 %1 个数据源，其插件还会读取随后选取的 %4 个文件。请选择第 1 个数据源（共 %1 个）：已保存槽位 &apos;%3&apos; 对应的 &apos;%2&apos;。所有文件暂存完成后才会开始导入。</translation>
+    </message>
+    <message>
+        <location line="+168"/>
+        <source>All files (*)</source>
+        <translation>所有文件 (*)</translation>
+    </message>
+    <message>
+        <location line="+59"/>
+        <source>The selected &apos;%1&apos; is not the file saved as &apos;%2&apos;. Select the original file.</source>
+        <translation>所选 &apos;%1&apos; 不是保存时名为 &apos;%2&apos; 的文件。请选择原始文件。</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Every data source is staged. Select &apos;%1&apos;, which data source &apos;%2&apos; reads (file %3 of %4). No import has started yet.</source>
+        <translation>所有数据源均已暂存。请选择数据源 &apos;%2&apos; 读取的 &apos;%1&apos;（第 %3 个文件，共 %4 个）。尚未开始导入。</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Select &apos;%1&apos;</source>
+        <translation>选择 &apos;%1&apos;</translation>
+    </message>
+    <message>
+        <location line="+119"/>
+        <source>&apos;%1&apos; is not the file its layout was saved with (its content fingerprint differs).</source>
+        <translation>&apos;%1&apos; 不是保存此布局时使用的文件（内容指纹不同）。</translation>
+    </message>
+    <message>
+        <location line="+476"/>
+        <source>Open Preset</source>
+        <translation>打开预设</translation>
+    </message>
+    <message>
+        <location line="+168"/>
+        <location line="+54"/>
+        <source>No data is loaded. Open a data source before applying this layout.</source>
+        <translation>当前没有加载数据。请先打开数据源，再应用此布局。</translation>
+    </message>
+    <message>
+        <location line="-34"/>
+        <source>Layout was parsed but could not be applied to the currently loaded data. Open matching data sources and try again.</source>
+        <translation>布局已解析，但无法应用到当前加载的数据。请打开匹配的数据源后重试。</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <location line="+85"/>
+        <source>Loaded layout: %1</source>
+        <translation>已加载布局：%1</translation>
+    </message>
+    <message>
+        <location line="-39"/>
+        <source>Layout was parsed but could not be applied. If a data source was reloaded, it is still loaded.</source>
+        <translation>布局已解析，但无法应用。若已重新加载数据源，该数据仍然保留。</translation>
+    </message>
+    <message>
+        <location line="+79"/>
+        <source>Layout was parsed but could not be applied.</source>
+        <translation>布局已解析，但无法应用。</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+252"/>
+        <source>%n layout reference(s) could not be bound after the import: %1</source>
+        <translation>
+            <numerusform>导入后无法绑定 %n 个布局引用：%1</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+22"/>
+        <source>%n scene layer(s) could not be rebound after progressive load.</source>
+        <translation>
+            <numerusform>渐进式加载后无法重新绑定 %n 个场景图层。</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>A saved scene element was invalid; the previous workspace was restored.</source>
+        <translation>某个已保存的场景元素无效；已恢复之前的工作区。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A saved scene element was invalid, and the previous workspace could not be fully restored against the reloaded data. The partial layout was kept as the new undo baseline.</source>
+        <translation>某个已保存的场景元素无效，且无法基于重新加载的数据完整恢复之前的工作区。已保留部分恢复的布局，作为新的撤销基线。</translation>
+    </message>
+    <message>
+        <location line="+169"/>
+        <source>Layout import was cancelled; the previous workspace was restored.</source>
+        <translation>布局导入已取消；已恢复之前的工作区。</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+45"/>
+        <source>This layout asks to download %n data source(s) from a cloud provider:
+
+%1</source>
+        <translation>
+            <numerusform>此布局请求从云端提供方下载 %n 个数据源：
+
+%1</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Trust and import</source>
+        <translation>信任并导入</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Skip these sources</source>
+        <translation>跳过这些数据源</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cancel layout load</source>
+        <translation>取消加载布局</translation>
+    </message>
+    <message>
+        <location line="+126"/>
+        <source>The layout&apos;s streaming sources cannot be saved: %1</source>
+        <translation>无法保存布局中的流数据源：%1</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Cannot open &apos;%1&apos; for writing.</source>
+        <translation>无法打开“%1”进行写入。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Failed to write layout to &apos;%1&apos;: %2</source>
+        <translation>无法将布局写入“%1”：%2</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Failed to finalize layout &apos;%1&apos;: %2</source>
+        <translation>无法完成布局“%1”的保存：%2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Saved layout: %1</source>
+        <translation>已保存布局：%1</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>A derived series saved in the layout could not be restored and was skipped.</source>
+        <translation>布局中保存的一条派生序列无法恢复，已跳过。</translation>
+    </message>
+    <message>
+        <location line="+132"/>
+        <source>&apos;%1&apos; has no owner and cannot be deleted from here</source>
+        <translation>“%1”没有所有者，无法在此删除</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&apos;%1&apos; was created by %2 and cannot be deleted from here</source>
+        <translation>“%1”由 %2 创建，无法在此删除</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>&apos;%1&apos; cannot be deleted: &apos;%2&apos; of %3 reads its output</source>
+        <translation>无法删除“%1”：%3 的“%2”正在读取其输出</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&apos;%1&apos; cannot be deleted: the protected &apos;%2&apos; reads its output</source>
+        <translation>无法删除“%1”：受保护的“%2”正在读取其输出</translation>
+    </message>
+    <message>
+        <location line="+74"/>
+        <source>Delete derived topic?</source>
+        <translation>删除派生话题？</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>These derived topics read what you are deleting. They stay, but report a missing input:
+
+• %1</source>
+        <translation>以下派生话题读取了将要删除的内容。它们会保留，但会报告缺少输入：
+
+• %1</translation>
+    </message>
+    <message>
+        <location line="+375"/>
+        <location line="+55"/>
+        <source>The saved per-source time offsets could not be applied.</source>
+        <translation>无法应用已保存的各数据源时间偏移。</translation>
+    </message>
+    <message numerus="yes">
+        <location line="-38"/>
+        <source>%n curve(s) have no matching data: %1</source>
+        <translation>
+            <numerusform>%n 条曲线没有匹配的数据：%1</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+27"/>
+        <source>%n layout curve(s) could not be bound: %1</source>
+        <translation>
+            <numerusform>%n 条布局曲线无法绑定：%1</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>A 2D/3D scene could not restore its layers (the element is named in the log).</source>
+        <translation>某个二维/三维场景无法恢复图层（日志中已标明对应元素）。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Scene layers have no matching data: %1</source>
+        <translation>场景图层没有匹配的数据：%1</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+6"/>
+        <source>%n scene layer(s) could not be rebound and were omitted.</source>
+        <translation>
+            <numerusform>%n 个场景图层无法重新绑定，已跳过。</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+8"/>
+        <source>%n scene layer(s) are not yet bound.</source>
+        <translation>
+            <numerusform>%n 个场景图层尚未绑定。</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+115"/>
+        <source>Unable to restore undo state</source>
+        <translation>无法恢复撤销状态</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Unable to restore redo state</source>
+        <translation>无法恢复重做状态</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+501"/>
+        <source>The layout references %n curve(s) not present in the current data:</source>
+        <translation>
+            <numerusform>此布局引用了当前数据中不存在的 %n 条曲线：</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+7"/>
+        <source>  … and %n more
+</source>
+        <translation>
+            <numerusform>  …以及另外 %n 条
+</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>These derived objects of the layout cannot be restored over the current data and are skipped:</source>
+        <translation>无法根据当前数据恢复布局中的以下派生对象，已跳过：</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>The layout&apos;s data sources could not be restored:</source>
+        <translation>无法恢复此布局的数据源：</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Choose how to handle them:</source>
+        <translation>请选择处理方式：</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Missing curves</source>
+        <translation>缺失的曲线</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Missing layout data</source>
+        <translation>布局缺少数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Remove from plots</source>
+        <translation>从图表中移除</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Continue without them</source>
+        <translation>跳过并继续</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>No &lt;root&gt; element at the top of the layout.</source>
+        <translation>布局顶层缺少 &lt;root&gt; 元素。</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>No &lt;tabbed_widget&gt; element in the layout.</source>
+        <translation>布局中缺少 &lt;tabbed_widget&gt; 元素。</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>The plot tabs could not be reconstructed from the layout.</source>
+        <translation>无法从布局重建图表标签页。</translation>
+    </message>
+    <message>
+        <location line="+219"/>
+        <source>Link X axis</source>
+        <translation>联动 X 轴</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Zoom Out All</source>
+        <translation>缩放至全部数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show/Hide the grid</source>
+        <translation>显示或隐藏网格</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Cycle TimeTracker display: line only / line + value / line + value + name</source>
+        <translation>切换时间游标显示：仅游标线 / 游标线和数值 / 游标线、数值和名称</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Legend position — left-click walks TR → TL → BL → BR, then unchecks at TR before the next cycle. Right-click toggles show/hide at the current corner.</source>
+        <translation>图例位置：左键依次切换右上 → 左上 → 左下 → 右下，然后在右上角关闭显示，再开始下一轮。右键切换当前角落图例的显示或隐藏。</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Show point in plot</source>
+        <translation>显示光标处数据点的数值</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Keep aspect ratio of XY plots (1:1)</source>
+        <translation>保持 XY 图表的纵横比为 1:1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Show data point markers on curves</source>
+        <translation>显示曲线上的数据点标记</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Drop a blue reference line at the playback position; values render as delta from there</source>
+        <translation>在回放位置添加蓝色参考线；数值显示为相对于该位置的差值</translation>
+    </message>
+    <message>
+        <location line="+113"/>
+        <source>Align sources: line every source&apos;s start up at the earliest start</source>
+        <translation>对齐数据源：将各数据源的起点对齐到最早的起点</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Align sources: line every source&apos;s end up at the latest end</source>
+        <translation>对齐数据源：将各数据源的终点对齐到最晚的终点</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Zoom out to fit all sources</source>
+        <translation>缩放以显示全部数据源</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Snap to neighbouring dataset edges while dragging</source>
+        <translation>拖动时吸附到相邻数据集的边界</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Reset all timeline changes</source>
+        <translation>重置时间轴的全部更改</translation>
+    </message>
+    <message>
+        <location line="+81"/>
+        <source>Curve Width</source>
+        <translation>曲线宽度</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Line width 1.0</source>
+        <translation>线宽 1.0</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Line width 1.5</source>
+        <translation>线宽 1.5</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Line width 2.0</source>
+        <translation>线宽 2.0</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Line width 3.0</source>
+        <translation>线宽 3.0</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Curve Style</source>
+        <translation>曲线样式</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Lines</source>
+        <translation>线条</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Dots</source>
+        <translation>散点</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Lines and Dots</source>
+        <translation>线条和散点</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Sticks</source>
+        <translation>针状线</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Steps (pre)</source>
+        <translation>阶梯（前置）</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Steps (post)</source>
+        <translation>阶梯（后置）</translation>
+    </message>
+    <message>
+        <location line="+335"/>
+        <source>Cancel download?</source>
+        <translation>取消下载？</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A download is in progress. Cancel it and close?</source>
+        <translation>下载正在进行中。是否取消下载并关闭？</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cancel download &amp;&amp; close</source>
+        <translation>取消下载并关闭</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Keep downloading</source>
+        <translation>继续下载</translation>
+    </message>
+    <message>
+        <location line="+232"/>
+        <source>Failed to publish toolbox services for &apos;%1&apos;: %2</source>
+        <translation>无法为“%1”发布工具箱服务：%2</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Failed to publish data-processor services for &apos;%1&apos;: %2</source>
+        <translation>无法为“%1”发布数据处理器服务：%2</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Failed to publish the source-promotion service for &apos;%1&apos;: %2</source>
+        <translation>无法为“%1”发布数据源转换服务：%2</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Failed to publish the playback service for &apos;%1&apos;: %2</source>
+        <translation>无法为“%1”发布回放服务：%2</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Failed to publish the viewport service for &apos;%1&apos;: %2</source>
+        <translation>无法为“%1”发布视口服务：%2</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Failed to publish the plot-tab service for &apos;%1&apos;: %2</source>
+        <translation>无法为“%1”发布图表标签页服务：%2</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>An AI agent is controlling PlotJuggler through MCP. Click to see what it is running and stop it; closing this page stops it too.</source>
+        <translation>AI 智能体正在通过 MCP 控制 PlotJuggler。点击可查看并停止其任务；关闭此页面也会停止任务。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>An AI agent is controlling PlotJuggler through MCP. Click to see what it is running and stop it. Turn this off in Preferences → Appearance.</source>
+        <translation>AI 智能体正在通过 MCP 控制 PlotJuggler。点击可查看并停止其任务。可在“偏好设置 → 外观”中关闭此功能。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>AI agents</source>
+        <translation>AI 智能体</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%1 · %n running</source>
+        <translation>
+            <numerusform>%1 · %n 个任务正在运行</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <source>The MCP server could not listen on 127.0.0.1, so AI agents cannot reach PlotJuggler.</source>
+        <translation>MCP 服务器无法监听 127.0.0.1，因此 AI 智能体无法连接 PlotJuggler。</translation>
+    </message>
+    <message>
+        <location line="-44"/>
+        <source>AI agent: %1</source>
+        <translation>AI 智能体：%1</translation>
+    </message>
+    <message>
+        <location line="-3057"/>
+        <source>The layout&apos;s derived objects could not be restored: %1 The previous workspace was restored.</source>
+        <translation>无法恢复布局中的派生对象：%1。已恢复之前的工作区。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The layout&apos;s derived objects could not be restored: %1 The previous workspace could not be fully restored against the reloaded data. The partial layout was kept as the new undo baseline.</source>
+        <translation>无法恢复布局中的派生对象：%1。重新加载的数据无法完整恢复之前的工作区，已将部分恢复的布局保留为新的撤销基准。</translation>
+    </message>
+    <message>
+        <location line="+3155"/>
+        <source>Toolbox</source>
+        <translation>工具箱</translation>
+    </message>
+    <message>
+        <location line="+54"/>
+        <source>Toolbox &apos;%1&apos; not found in catalog</source>
+        <translation>目录中未找到工具箱“%1”</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Failed to bind toolbox &apos;%1&apos;: %2</source>
+        <translation>无法绑定工具箱“%1”：%2</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Toolbox &apos;%1&apos; returned no dialog</source>
+        <translation>工具箱“%1”未返回对话框</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Failed to build the panel UI for &apos;%1&apos;</source>
+        <translation>无法创建“%1”的面板界面</translation>
+    </message>
+    <message>
+        <location line="+176"/>
+        <source>Layout restore kept the current pinned panels: &apos;%1&apos; has a job still running.</source>
+        <translation>恢复布局时保留了当前固定的面板：“%1”仍有任务在运行。</translation>
+    </message>
+    <message>
+        <location line="-301"/>
+        <source>Not connecting to the AI agent relay %1: it must be an http address on this computer (127.0.0.1).</source>
+        <translation>未连接到 AI 智能体中继 %1：它必须是本机（127.0.0.1）上的 http 地址。</translation>
+    </message>
+    <message>
+        <source>Drop the URDF file onto a 3D view.</source>
+        <translation>将 URDF 文件拖到 3D 视图上。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::MarkerTimeline</name>
+    <message>
+        <location filename="../../pj_widgets/src/MarkerTimeline.cpp" line="+357"/>
+        <source>Delete marker</source>
+        <translation>删除标记</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::MarketplaceCatalog</name>
+    <message>
+        <location filename="../../pj_marketplace/include/pj_marketplace/marketplace_text.hpp" line="+17"/>
+        <source>Arrow IPC Parser</source>
+        <translation>Arrow IPC 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for self-describing Arrow IPC streams.</source>
+        <translation>解析自描述 Arrow IPC 数据流的消息解析器。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>BLF Loader</source>
+        <translation>BLF 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for Vector BLF (Binary Logging Format) CAN logs, decoded to signals via DBC.</source>
+        <translation>加载 Vector BLF（二进制日志格式）CAN 日志，并通过 DBC 解码为信号。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>CSV Loader</source>
+        <translation>CSV 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for CSV files.</source>
+        <translation>加载 CSV 文件的数据加载器。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DataTamer Parser</source>
+        <translation>DataTamer 解析器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Message parser for DataTamer encoded data. Efficient serialization for robotics.</source>
+        <translation>解析 DataTamer 编码数据的消息解析器，为机器人应用提供高效序列化。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Dummy Streamer</source>
+        <translation>模拟数据流</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Generates synthetic sine, cosine, sawtooth, and noise signals for testing and demonstration.</source>
+        <translation>生成正弦、余弦、锯齿和噪声信号，用于测试和演示。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Foxglove Bridge</source>
+        <translation>Foxglove 桥接</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connect to Foxglove WebSocket server for ROS data streaming. Compatible with Foxglove Studio.</source>
+        <translation>连接 Foxglove WebSocket 服务器以接收 ROS 数据流，兼容 Foxglove Studio。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>JSON Parser</source>
+        <translation>JSON 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for JSON, CBOR, MessagePack, and BSON encoded data.</source>
+        <translation>解析 JSON、CBOR、MessagePack 和 BSON 编码数据的消息解析器。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>LeRobot Loader</source>
+        <translation>LeRobot 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for LeRobot v2.x and v3.0 datasets: flattened numeric series + per-camera video on a shared timeline. v3.0 datasets use a consolidated per-shard Parquet/MP4 layout with relational metadata; the plugin reads meta/episodes/*.parquet to resolve each episode&apos;s row range and clip window.</source>
+        <translation>加载 LeRobot v2.x 和 v3.0 数据集：在共用时间轴上呈现展开的数值序列和各相机视频。v3.0 数据集采用按分片整合的 Parquet/MP4 布局和关系元数据；插件读取 meta/episodes/*.parquet，确定每个片段的行范围和视频裁剪时间段。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Lab Streaming Layer</source>
+        <translation>实验室数据流层（LSL）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Real-time streaming from Lab Streaming Layer (LSL) sources, including numeric and marker (string) streams.</source>
+        <translation>实时接收实验室数据流层（LSL）的数值数据流和标记（字符串）数据流。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>MCAP Loader</source>
+        <translation>MCAP 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for MCAP files and split ROS 2 bags (metadata.yaml). Supports ROS1, ROS2, Protobuf, and JSON message encodings.</source>
+        <translation>加载 MCAP 文件和分卷 ROS 2 数据包（metadata.yaml），支持 ROS1、ROS2、Protobuf 和 JSON 消息编码。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>MF4/MDF Loader</source>
+        <translation>MF4/MDF 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for ASAM MDF / MF4 measurement files (automotive, CAN/LIN bus logging).</source>
+        <translation>加载 ASAM MDF / MF4 测量文件（汽车及 CAN/LIN 总线日志）。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>MP4 Loader</source>
+        <translation>MP4 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for .mp4 video files. Reads the container&apos;s creation_time tag (when present) so the host can anchor the video on a wall-clock timeline; supports multi-file selection via the standard File dialog.</source>
+        <translation>加载 .mp4 视频文件。读取容器中的 creation_time 标签（如存在），供宿主将视频定位到实际时间轴；支持通过标准文件对话框选择多个文件。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>MQTT Subscriber</source>
+        <translation>MQTT 订阅器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Real-time data streaming via MQTT protocol. Subscribe to topics and visualize live data.</source>
+        <translation>通过 MQTT 协议实时传输数据，订阅主题并可视化实时数据。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Parquet Loader</source>
+        <translation>Parquet 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for Apache Parquet files. Efficient columnar storage format.</source>
+        <translation>加载采用高效列式存储格式的 Apache Parquet 文件。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>PlotJuggler Bridge</source>
+        <translation>PlotJuggler 桥接</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Connect to PlotJuggler Bridge server for generic data streaming over WebSocket.</source>
+        <translation>连接 PlotJuggler Bridge 服务器，通过 WebSocket 接收通用数据流。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>3D Loader (PLY/PCD)</source>
+        <translation>3D 加载器（PLY/PCD）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for static 3D files: .pcd and vertex-only .ply load as a point cloud; .ply with faces loads as a 3D mesh. One snapshot at timestamp 0.</source>
+        <translation>加载静态 3D 文件：.pcd 和仅含顶点的 .ply 加载为点云，包含面的 .ply 加载为 3D 网格。在时间戳 0 处生成一个快照。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Protobuf Parser</source>
+        <translation>Protobuf 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for Protocol Buffers encoded data. Promotes the well-known Foxglove schemas (PointCloud, CompressedVideo, CompressedImage, RawImage, ImageAnnotations, SceneUpdate, FrameTransform, PosesInFrame, CameraCalibration, VoxelGrid, Grid) to builtin scene objects.</source>
+        <translation>解析 Protocol Buffers 编码数据的消息解析器。将常见 Foxglove 模式（PointCloud、CompressedVideo、CompressedImage、RawImage、ImageAnnotations、SceneUpdate、FrameTransform、PosesInFrame、CameraCalibration、VoxelGrid、Grid）转换为内置场景对象。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>ROS CDR Parser</source>
+        <translation>ROS CDR 解析器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Message parser for ROS1 and ROS2 messages (ros1msg, ros2msg, omgidl). Promotes common sensor and visualization messages (Image, PointCloud2, OccupancyGrid, GridMap, TF, Markers, and yolo_msgs/DetectionArray to ImageAnnotations) to builtin scene objects.</source>
+        <translation>解析 ROS1 和 ROS2 消息（ros1msg、ros2msg、omgidl）。将常见传感器和可视化消息（Image、PointCloud2、OccupancyGrid、GridMap、TF、Markers，以及转换为 ImageAnnotations 的 yolo_msgs/DetectionArray）转换为内置场景对象。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>ROS 2 Topic Subscriber</source>
+        <translation>ROS 2 主题订阅器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Subscribe to ROS 2 topics in real time and stream the decoded fields into PlotJuggler.</source>
+        <translation>实时订阅 ROS 2 主题，将解码后的字段传入 PlotJuggler。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Anomaly Detector</source>
+        <translation>异常检测器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Write Lua anomaly rules over time series and emit plot markers (regions / events) when a rule fires.</source>
+        <translation>为时间序列编写 Lua 异常规则，规则触发时生成绘图标记（区域或事件）。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Assistant Agent</source>
+        <translation>智能助手</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>A chat assistant that drives PlotJuggler through the plugin SDK: lists and describes topics, reads series statistics, and creates derived timeseries, markers and plot tabs it owns. Uses the Claude Code or Codex CLI already installed and signed in on your machine; the plugin stores no API keys. Linux, macOS and Windows.</source>
+        <translation>通过插件 SDK 操作 PlotJuggler 的聊天助手：列出和描述主题，读取序列统计信息，并创建由其管理的派生时间序列、标记和绘图标签页。使用计算机上已安装并登录的 Claude Code 或 Codex CLI；插件不保存 API 密钥。支持 Linux、macOS 和 Windows。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>CSV/Parquet Exporter</source>
+        <translation>CSV/Parquet 导出器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Export selected time series to CSV or Parquet files.</source>
+        <translation>将选定的时间序列导出为 CSV 或 Parquet 文件。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Fast Fourier Transform</source>
+        <translation>快速傅里叶变换（FFT）</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Compute the frequency-domain amplitude of numeric time series using FFT.</source>
+        <translation>使用 FFT 计算数值时间序列的频域幅值。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Mosaico Cloud Server</source>
+        <translation>Mosaico 云服务器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Browse and import data from Mosaico cloud servers via Apache Arrow Flight. Scalar topics are handed to the host as arrow-ipc messages and decoded by the parser_arrow plugin (install it alongside). Includes Lua metadata predicate filter, multi-topic streaming, and time-range selection.</source>
+        <translation>通过 Apache Arrow Flight 浏览和导入 Mosaico 云服务器数据。标量主题以 arrow-ipc 消息交给宿主，由 parser_arrow 插件解码（需同时安装）。支持 Lua 元数据谓词筛选、多主题数据流和时间范围选择。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Quaternion to RPY</source>
+        <translation>四元数转欧拉角（RPY）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Converts quaternion (x, y, z, w) time series into Roll, Pitch, Yaw angles with optional unwrapping and degree/radian output.</source>
+        <translation>将四元数（x、y、z、w）时间序列转换为横滚、俯仰和偏航角，可选择角度展开以及角度或弧度输出。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Transform Editor</source>
+        <translation>变换编辑器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Create named derived time series using Lua functions. Equivalent to the Custom Series editor in PJ3.</source>
+        <translation>使用 Lua 函数创建命名的派生时间序列，相当于 PJ3 的自定义序列编辑器。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>UDP Server</source>
+        <translation>UDP 服务器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Real-time data streaming via UDP. Supports unicast and multicast IPv4/IPv6.</source>
+        <translation>通过 UDP 实时传输数据，支持 IPv4/IPv6 单播和组播。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ULog Loader</source>
+        <translation>ULog 加载器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data loader for PX4 ULog files. Flight log format for PX4 autopilot.</source>
+        <translation>加载 PX4 自动驾驶仪使用的 ULog 飞行日志文件。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>WebRTC Video Client</source>
+        <translation>WebRTC 视频客户端</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Receives live H.264 video via standard WHEP (mediamtx, go2rtc, LiveKit, Cloudflare Stream...) and feeds each stream to PlotJuggler as canonical PJ.VideoFrame messages. One HTTP request per stream, per-camera reconnect, mediamtx Control API discovery. H.264 pass-through; no transcode.</source>
+        <translation>通过标准 WHEP（mediamtx、go2rtc、LiveKit、Cloudflare Stream 等）接收实时 H.264 视频，并将各路视频流以标准 PJ.VideoFrame 消息传给 PlotJuggler。每路视频流使用一个 HTTP 请求，支持逐相机重连及 mediamtx Control API 发现。H.264 直接传输，不转码。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>ZMQ Subscriber</source>
+        <translation>ZMQ 订阅器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Real-time data streaming via ZeroMQ. High-performance messaging for distributed systems.</source>
+        <translation>通过 ZeroMQ 实时传输数据，为分布式系统提供高性能消息传递。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>candump Loader</source>
+        <translation>candump 加载器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data loader for Linux SocketCAN candump captures (log and screen format), decoded to signals via DBC or an ARUS-style CSV dictionary.</source>
+        <translation>加载 Linux SocketCAN candump 捕获文件（日志和屏幕格式），通过 DBC 或 ARUS 风格的 CSV 字典将数据解码为信号。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>InfluxDB Line Protocol Parser</source>
+        <translation>InfluxDB 行协议解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message parser for InfluxDB line protocol, the text format Telegraf and InfluxDB clients send.</source>
+        <translation>解析 InfluxDB 行协议消息，即 Telegraf 和 InfluxDB 客户端发送的文本格式。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Log Widget</source>
+        <translation>日志控件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Dock widget that lists log messages (such as ROS /rosout) next to the playback tracker.</source>
+        <translation>在播放时间指示器旁列出日志消息（例如 ROS /rosout）的停靠控件。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>NavMap Parser</source>
+        <translation>NavMap 解析器</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Shows EasyNavigation NavMap maps (navmap_ros_interfaces/msg/NavMap), the triangle-mesh navigation maps, in the 3D scene with their per-cell layers, and applies the NavMapLayer updates published beside them.</source>
+        <translation>在三维场景中显示 EasyNavigation NavMap 三角网格导航地图（navmap_ros_interfaces/msg/NavMap）及其各单元图层，并应用随附发布的 NavMapLayer 更新。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::MarketplaceDiagnostics</name>
+    <message>
+        <location filename="../../pj_marketplace/src/core/DownloadManager.cpp" line="+19"/>
+        <source>Archive is larger than the %1-byte limit</source>
+        <translation>压缩包超过 %1 字节的限制</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Could not create destination directory: %1</source>
+        <translation>无法创建目标目录：%1</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Could not open ZIP: %1</source>
+        <translation>无法打开 ZIP：%1</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location line="+77"/>
+        <location line="+183"/>
+        <source>Cancelled</source>
+        <translation>已取消</translation>
+    </message>
+    <message>
+        <location line="-244"/>
+        <source>Unsafe path detected in ZIP entry: %1</source>
+        <translation>ZIP 条目包含不安全路径：%1</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>%1 (at &quot;%2&quot;)</source>
+        <translation>%1（位于“%2”）</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>No write permission for: %1</source>
+        <translation>没有写入权限：%1</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Error reading ZIP entry &apos;%1&apos;: %2</source>
+        <translation>读取 ZIP 条目“%1”时出错：%2</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>ZIP entry &apos;%1&apos; holds more bytes than it declares</source>
+        <translation>ZIP 条目“%1”的实际字节数超过其声明值</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>ZIP entry &apos;%1&apos; does not declare its size and expands past the remaining budget</source>
+        <translation>ZIP 条目“%1”未声明大小，且解压后超过剩余额度</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Error during extraction: %1</source>
+        <translation>解压时出错：%1</translation>
+    </message>
+    <message>
+        <location line="+134"/>
+        <source>Malformed checksum in registry (&quot;%1&quot; has no digest)</source>
+        <translation>注册表中的校验和格式无效（“%1”没有摘要）</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Checksum mismatch</source>
+        <translation>校验和不匹配</translation>
+    </message>
+    <message>
+        <location filename="../../pj_marketplace/src/core/ExtensionManager.cpp" line="-758"/>
+        <source>Extension id is empty</source>
+        <translation>扩展 ID 为空</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Extension id &quot;%1&quot; is not safe for filesystem paths</source>
+        <translation>扩展 ID“%1”不能安全地用于文件系统路径</translation>
+    </message>
+    <message>
+        <location line="+63"/>
+        <source>record names no path</source>
+        <translation>记录未指定路径</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>record path is not absolute</source>
+        <translation>记录中的路径不是绝对路径</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>record targets the extensions store itself</source>
+        <translation>记录指向扩展存储目录本身</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>record targets a path outside the extensions store</source>
+        <translation>记录指向扩展存储目录之外</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>record path resolves outside the extensions store</source>
+        <translation>记录中的路径解析后位于扩展存储目录之外</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>record path is not a directory</source>
+        <translation>记录中的路径不是目录</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>a cleanup record must carry no extension id</source>
+        <translation>清理记录不能包含扩展 ID</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>a cleanup record must be filed under a cleanup name</source>
+        <translation>清理记录必须以清理记录名称保存</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>record for &quot;%1&quot; is filed under the name &quot;%2&quot;</source>
+        <translation>扩展“%1”的记录以名称“%2”保存</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>record could not be opened</source>
+        <translation>无法打开记录</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>record is not a JSON object</source>
+        <translation>记录不是 JSON 对象</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>record does not declare schema %1</source>
+        <translation>记录未声明格式版本 %1</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>record declares no known operation</source>
+        <translation>记录未声明已知操作</translation>
+    </message>
+    <message>
+        <location line="+90"/>
+        <source>Ignored a removal record: %1 (&quot;%2&quot;)%3</source>
+        <translation>已忽略删除记录：%1（“%2”）%3</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source> and it could not be quarantined</source>
+        <translation>，且无法将其隔离</translation>
+    </message>
+    <message>
+        <location line="+60"/>
+        <source>Downloaded artifact must contain exactly one top-level directory named &quot;%1&quot;</source>
+        <translation>下载的安装包必须且只能包含一个名为“%1”的顶层目录</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <location line="+94"/>
+        <source>no valid plugin DSO found</source>
+        <translation>未找到有效的插件动态库</translation>
+    </message>
+    <message>
+        <location line="-64"/>
+        <location line="+93"/>
+        <source>multiple embedded plugin ids in one extension directory: &quot;%1&quot; and &quot;%2&quot;</source>
+        <translation>同一扩展目录中包含多个插件 ID：“%1”和“%2”</translation>
+    </message>
+    <message>
+        <location line="-85"/>
+        <location line="+93"/>
+        <source>multiple embedded plugin versions in one extension directory for &quot;%1&quot;</source>
+        <translation>同一扩展目录中包含插件“%1”的多个版本</translation>
+    </message>
+    <message>
+        <location line="-44"/>
+        <source>plugin admission helper failed</source>
+        <translation>插件准入检查辅助程序失败</translation>
+    </message>
+    <message>
+        <location line="+78"/>
+        <source>Installed artifact is not a valid plugin: %1</source>
+        <translation>安装内容不是有效插件：%1</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Embedded plugin id &quot;%1&quot; does not match registry id &quot;%2&quot;</source>
+        <translation>内嵌插件 ID“%1”与注册表 ID“%2”不一致</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Embedded plugin version &quot;%1&quot; does not match registry version &quot;%2&quot;</source>
+        <translation>内嵌插件版本“%1”与注册表版本“%2”不一致</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <location line="+11"/>
+        <source>Could not write staged install intent: %1</source>
+        <translation>无法写入暂存安装意图记录：%1</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Staged install is missing registry intent</source>
+        <translation>暂存安装缺少注册表意图记录</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Could not read staged install intent: %1</source>
+        <translation>无法读取暂存安装意图记录：%1</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Staged install registry intent is invalid</source>
+        <translation>暂存安装的注册表意图记录无效</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Staged install registry intent has unsafe id: %1</source>
+        <translation>暂存安装的注册表意图记录包含不安全的 ID：%1</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Staged install registry intent has unsafe version &quot;%1&quot;</source>
+        <translation>暂存安装的注册表意图记录包含不安全的版本“%1”</translation>
+    </message>
+    <message>
+        <location line="+76"/>
+        <source>Another PlotJuggler instance is managing extensions. Close it and restart PlotJuggler to manage extensions here.</source>
+        <translation>另一个 PlotJuggler 实例正在管理扩展。请关闭该实例并重新启动 PlotJuggler，以在此处管理扩展。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Cannot create the extensions lock file. Extensions cannot be installed, updated or removed this session.</source>
+        <translation>无法创建扩展锁文件。本次会话无法安装、更新或移除扩展。</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <location line="+12"/>
+        <source>%1 This session can browse installed extensions but cannot install, update or remove them.</source>
+        <translation>%1 本次会话可以浏览已安装的扩展，但无法安装、更新或移除扩展。</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Could not create extensions directory &quot;%1&quot;</source>
+        <translation>无法创建扩展目录“%1”</translation>
+    </message>
+    <message>
+        <location line="+156"/>
+        <location line="+275"/>
+        <source>Install of &quot;%1&quot; is already in progress</source>
+        <translation>正在安装“%1”</translation>
+    </message>
+    <message>
+        <location line="-268"/>
+        <source>Cannot read &quot;%1&quot;</source>
+        <translation>无法读取“%1”</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <location line="+297"/>
+        <source>Extraction area &quot;%1&quot; is on a different filesystem than &quot;%2&quot;, so the install could not be completed atomically</source>
+        <translation>解压目录“%1”与“%2”不在同一文件系统，无法以原子方式完成安装</translation>
+    </message>
+    <message>
+        <location line="-269"/>
+        <source>ZIP must contain exactly one top-level directory holding the plugin</source>
+        <translation>ZIP 必须且只能包含一个存放插件的顶层目录</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Not a valid plugin package: %1</source>
+        <translation>不是有效的插件安装包：%1</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <location line="+217"/>
+        <source>Uninstall of &quot;%1&quot; is staged; restart to apply it before installing again</source>
+        <translation>“%1”的卸载已暂存；请重启应用使其生效后再安装</translation>
+    </message>
+    <message>
+        <location line="-167"/>
+        <location line="+157"/>
+        <source>Extension &quot;%1&quot; is already installed</source>
+        <translation>扩展“%1”已安装</translation>
+    </message>
+    <message>
+        <location line="-150"/>
+        <source>Replacing &quot;%1&quot; was cancelled: no window is left to confirm it</source>
+        <translation>已取消替换“%1”：已无可用于确认的窗口</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Replacing &quot;%1&quot; was cancelled: the window that asked was replaced while the question was open</source>
+        <translation>已取消替换“%1”：提出确认问题的窗口在对话框打开期间已被替换</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Replacing &quot;%1&quot; was cancelled</source>
+        <translation>已取消替换“%1”</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <location line="+237"/>
+        <source>Could not replace existing staged install directory &quot;%1&quot;</source>
+        <translation>无法替换已有的暂存安装目录“%1”</translation>
+    </message>
+    <message>
+        <location line="-229"/>
+        <location line="+236"/>
+        <source>Could not stage install to &quot;%1&quot;</source>
+        <translation>无法将安装暂存至“%1”</translation>
+    </message>
+    <message>
+        <location line="-217"/>
+        <location line="+235"/>
+        <source>Could not replace existing extension directory &quot;%1&quot;</source>
+        <translation>无法替换已有的扩展目录“%1”</translation>
+    </message>
+    <message>
+        <location line="-227"/>
+        <source>Could not install to &quot;%1&quot;</source>
+        <translation>无法安装至“%1”</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <location line="+13"/>
+        <source>Post-install validation failed: %1</source>
+        <translation>安装后验证失败：%1</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <source>embedded id changed to &quot;%1&quot;</source>
+        <translation>内嵌 ID 已变为“%1”</translation>
+    </message>
+    <message>
+        <location line="+122"/>
+        <source>Not enough disk space to install the extension</source>
+        <translation>磁盘空间不足，无法安装扩展</translation>
+    </message>
+    <message>
+        <location line="+97"/>
+        <source>Could not promote install to &quot;%1&quot;</source>
+        <translation>无法将安装内容正式移入“%1”</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <location line="+7"/>
+        <source>Post-promotion validation failed: %1</source>
+        <translation>正式安装后验证失败：%1</translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>Installation was cancelled</source>
+        <translation>安装已取消</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <location line="+71"/>
+        <source>Extension &quot;%1&quot; is not installed</source>
+        <translation>扩展“%1”尚未安装</translation>
+    </message>
+    <message>
+        <location line="-59"/>
+        <source>Extension &quot;%1&quot; ships with the application and cannot be uninstalled</source>
+        <translation>扩展“%1”随应用附带，无法卸载</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Could not persist the disabled state for &quot;%1&quot;; uninstall not scheduled</source>
+        <translation>无法保存“%1”的禁用状态；未安排卸载</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Could not record the removal of &quot;%1&quot;; uninstall not scheduled</source>
+        <translation>无法记录对“%1”的删除；未安排卸载</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>Extension &quot;%1&quot; does not ship with the application</source>
+        <translation>扩展“%1”并非应用附带扩展</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Extension &quot;%1&quot; is already at its bundled version</source>
+        <translation>扩展“%1”已是应用附带版本</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Could not stage the downgrade of &quot;%1&quot;</source>
+        <translation>无法暂存“%1”的降级操作</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Installed version &quot;%1&quot; is newer than registry version &quot;%2&quot;; downgrade is not allowed</source>
+        <translation>已安装版本“%1”比注册表版本“%2”更新；不允许降级</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Update for &quot;%1&quot; is already staged; restart to apply it</source>
+        <translation>“%1”的更新已暂存；请重启应用使其生效</translation>
+    </message>
+    <message>
+        <location line="+93"/>
+        <source> Moved to quarantine: &quot;%1&quot;.</source>
+        <translation>已移至隔离目录：“%1”。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source> Could not remove or quarantine &quot;%1&quot; — manual cleanup required.</source>
+        <translation>无法删除或隔离“%1”，需要手动清理。</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Staged install directory has no id</source>
+        <translation>暂存安装目录没有 ID</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Staged install directory &quot;%1&quot; does not match registry id &quot;%2&quot;</source>
+        <translation>暂存安装目录“%1”与注册表 ID“%2”不一致</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Could not back up &quot;%1&quot; before update — staged install left in &quot;%2&quot;</source>
+        <translation>更新前无法备份“%1”；暂存安装保留在“%2”</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Could not promote staged install to &quot;%1&quot;</source>
+        <translation>无法将暂存安装正式移入“%1”</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source> Previous version restored.</source>
+        <translation>已恢复旧版本。</translation>
+    </message>
+    <message>
+        <location line="+70"/>
+        <source>record path became a symlink before deletion</source>
+        <translation>删除前记录中的路径变成了符号链接</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Refused a removal record at deletion time: %1 (&quot;%2&quot;)</source>
+        <translation>删除时拒绝执行记录：%1（“%2”）</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Could not remove extension directory &quot;%1&quot;; restart the application or close any process using it</source>
+        <translation>无法删除扩展目录“%1”；请重启应用或关闭正在使用它的进程</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Ignored a legacy uninstall marker: %1</source>
+        <translation>已忽略旧版卸载标记：%1</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Could not record the cleanup of &quot;%1&quot;; it stays scheduled by its in-payload marker</source>
+        <translation>无法记录对“%1”的清理；其安装内容中的标记仍保留该清理任务</translation>
+    </message>
+    <message>
+        <location line="+143"/>
+        <source> Previous version remains in backup: &quot;%1&quot;.</source>
+        <translation>旧版本仍保留在备份中：“%1”。</translation>
+    </message>
+    <message>
+        <location line="+47"/>
+        <source>Content-addressed shadow skipped for &quot;%1&quot;: %2</source>
+        <translation>已跳过“%1”的内容寻址副本：%2</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Could not persist the content-addressed load profile</source>
+        <translation>无法保存内容寻址加载配置</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Content-addressed object for &quot;%1&quot; failed its integrity check; loading the local copy instead. Reinstall to regenerate it.</source>
+        <translation>“%1”的内容寻址对象未通过完整性检查；将改为加载本地副本。请重新安装以重新生成该对象。</translation>
+    </message>
+    <message>
+        <location line="+175"/>
+        <source>Could not restore the enabled state of &quot;%1&quot;; it may load differently next launch</source>
+        <translation>无法恢复“%1”的启用状态；下次启动时其加载行为可能不同</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Could not persist the enabled state of &quot;%1&quot;</source>
+        <translation>无法保存“%1”的启用状态</translation>
+    </message>
+    <message>
+        <location filename="../../pj_marketplace/src/core/RegistryManager.cpp" line="+99"/>
+        <source>Registry parse error: missing or empty required string field &quot;%1&quot;</source>
+        <translation>注册表解析错误：缺少必需的字符串字段“%1”，或该字段为空</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Registry parse error: field &quot;%1&quot; must be a string</source>
+        <translation>注册表解析错误：字段“%1”必须是字符串</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>JSON parse error: %1</source>
+        <translation>JSON 解析错误：%1</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Registry JSON root must be an object</source>
+        <translation>注册表 JSON 根节点必须是对象</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Registry JSON missing &quot;extensions&quot; array</source>
+        <translation>注册表 JSON 缺少“extensions”数组</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Each entry in &quot;extensions&quot; must be a JSON object</source>
+        <translation>“extensions”中的每个条目都必须是 JSON 对象</translation>
+    </message>
+    <message>
+        <location line="+69"/>
+        <source>Registry resolution error: %1</source>
+        <translation>注册表解析错误：%1</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::MarketplaceWindow</name>
+    <message>
+        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="+274"/>
+        <source>PlotJuggler Marketplace</source>
+        <translation>PlotJuggler 扩展市场</translation>
+    </message>
+    <message>
+        <location line="+59"/>
+        <source>Name</source>
+        <translation>名称</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Category</source>
+        <translation>分类</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <location line="+560"/>
+        <source>Installed</source>
+        <translation>已安装</translation>
+    </message>
+    <message>
+        <location line="-560"/>
+        <source>Marketplace</source>
+        <translation>扩展市场</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Description</source>
+        <translation>说明</translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <source>Extension %1 will be enabled after restart</source>
+        <translation>扩展 %1 将在重启后启用</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Extension %1 will be disabled after restart</source>
+        <translation>扩展 %1 将在重启后禁用</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>&quot;%1&quot; is already installed at version %2, the same version the archive carries.
+
+Replace it? The replacement is applied the next time PlotJuggler starts.</source>
+        <translation>“%1”已安装版本 %2，与压缩包中的版本相同。
+
+是否替换？替换将在下次启动 PlotJuggler 时生效。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>&quot;%1&quot; is already installed at version %2. The archive carries version %3.
+
+Replace it? The replacement is applied the next time PlotJuggler starts.</source>
+        <translation>“%1”已安装版本 %2，压缩包中的版本为 %3。
+
+是否替换？替换将在下次启动 PlotJuggler 时生效。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Replace installed extension?</source>
+        <translation>替换已安装的扩展？</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Replace</source>
+        <translation>替换</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Loading registry...</source>
+        <translation>正在加载注册表…</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Failed to load registry</source>
+        <translation>加载注册表失败</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Ready — %1 extensions loaded</source>
+        <translation>就绪：已加载 %1 个扩展</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Extension %1 staged — will be active after restart</source>
+        <translation>扩展 %1 已暂存，将在重启后生效</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>%1 is already installed — the archive is identical, nothing changed</source>
+        <translation>%1 已安装；压缩包内容完全相同，未作更改</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 v%2 is already installed — the archive is identical, nothing changed</source>
+        <translation>%1 v%2 已安装；压缩包内容完全相同，未作更改</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Extension %1 staged — will be uninstalled after restart</source>
+        <translation>扩展 %1 的卸载已暂存，将在重启后完成</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Extension %1 will revert to its bundled version after restart</source>
+        <translation>扩展 %1 将在重启后恢复为内置版本</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Registry error: %1</source>
+        <translation>注册表错误：%1</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Verifying</source>
+        <translation>正在验证</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Extracting</source>
+        <translation>正在解压</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Installation failed: %1</source>
+        <translation>安装失败：%1</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Uninstalled %1</source>
+        <translation>已卸载 %1</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Uninstall failed: %1</source>
+        <translation>卸载失败：%1</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location line="+547"/>
+        <source>Marketplace diagnostic: %1</source>
+        <translation>扩展市场诊断：%1</translation>
+    </message>
+    <message>
+        <location line="-481"/>
+        <source>Update available: v%1</source>
+        <translation>有可用更新：v%1</translation>
+    </message>
+    <message>
+        <location line="+125"/>
+        <source>⚠ Update to v%1 available, but blocked — %2</source>
+        <translation>⚠ 可更新至 v%1，但更新被阻止：%2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>⚠ Incompatible — %1</source>
+        <translation>⚠ 不兼容：%1</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>requires PJ %1+</source>
+        <translation>需要 PJ %1 或更高版本</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>installed: v%1</source>
+        <translation>已安装：v%1</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Changelog</source>
+        <translation>更新日志</translation>
+    </message>
+    <message>
+        <location filename="../../pj_marketplace/include/pj_marketplace/marketplace_window.hpp" line="+160"/>
+        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="+32"/>
+        <source>Installing</source>
+        <translation>正在安装</translation>
+    </message>
+    <message>
+        <location filename="../../pj_marketplace/src/ui/marketplace_window.cpp" line="-801"/>
+        <source>Data loaders</source>
+        <translation>数据加载器</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Data streams</source>
+        <translation>数据流</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Message parsers</source>
+        <translation>消息解析器</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Toolboxes</source>
+        <translation>工具箱</translation>
+    </message>
+    <message>
+        <location line="+796"/>
+        <source>Needs Restart</source>
+        <translation>需要重启</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Update</source>
+        <translation>更新</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Local newer</source>
+        <translation>本地版本较新</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Install</source>
+        <translation>安装</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <location line="+16"/>
+        <source>Uninstall</source>
+        <translation>卸载</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>This extension ships with the application and cannot be uninstalled</source>
+        <translation>此扩展随应用程序提供，无法卸载</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Downgrade to bundled v%1</source>
+        <translation>降级到内置版本 v%1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Reverts to the bundled version v%1 on the next launch</source>
+        <translation>下次启动时恢复为内置版本 v%1</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Visit Website</source>
+        <translation>访问网站</translation>
+    </message>
+    <message>
+        <location line="+138"/>
+        <source>%1 of %2 extensions shown</source>
+        <translation>已显示 %1 个扩展，共 %2 个</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>  ·  %1 queued</source>
+        <translation>  ·  %1 项排队中</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>  ·  %1 failed</source>
+        <translation>  ·  %1 项失败</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>Details (%1)</source>
+        <translation>详情（%1）</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Details</source>
+        <translation>详情</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Install plugin from local ZIP</source>
+        <translation>从本地 ZIP 安装插件</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Plugin package (*.zip)</source>
+        <translation>插件包 (*.zip)</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>Installed %1 from file</source>
+        <translation>已从文件安装 %1</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Installed %1 v%2 from file</source>
+        <translation>已从文件安装 %1 v%2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Installed %1 v%2</source>
+        <translation>已安装 %1 v%2</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Installed %1</source>
+        <translation>已安装 %1</translation>
+    </message>
+    <message>
+        <location line="+74"/>
+        <source>Installed version is newer than registry version</source>
+        <translation>已安装的版本高于注册表中的版本</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Updating %1 extensions...</source>
+        <translation>正在更新 %1 个扩展…</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Marketplace Diagnostics</source>
+        <translation>扩展市场诊断信息</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>ERROR</source>
+        <translation>错误</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>INFO</source>
+        <translation>信息</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>No diagnostics.</source>
+        <translation>没有诊断信息。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <source>An extension change is staged. Restart PlotJuggler to apply it.</source>
+        <translation>有一项扩展更改等待应用。请重启 PlotJuggler 使其生效。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 extension changes are staged. Restart PlotJuggler to apply them.</source>
+        <translation>有 %1 项扩展更改等待应用。请重启 PlotJuggler 使其生效。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Restart required</source>
+        <translation>需要重启</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>
+
+Details: %1</source>
+        <translation>
+
+详情：%1</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Could not load marketplace registry</source>
+        <translation>无法加载扩展市场注册表</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The marketplace registry could not be loaded. Only the extensions already installed on this machine are shown; new extensions and updates are unavailable until it loads correctly.</source>
+        <translation>无法加载扩展市场注册表。当前仅显示本机已安装的扩展；注册表成功加载之前，无法获取新扩展或更新。</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Finished with 1 failure — see Diagnostics for details.</source>
+        <translation>已完成，其中 1 项失败。详情请查看诊断信息。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Finished with %1 failures — see Diagnostics for details.</source>
+        <translation>已完成，其中 %1 项失败。详情请查看诊断信息。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::McpJobsDialog</name>
+    <message>
+        <location filename="../src/ui/McpJobsDialog.cpp" line="+23"/>
+        <source>AI agent activity</source>
+        <translation>AI 智能体活动</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Stop</source>
+        <translation>停止</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1 · %2 · %3 s
+%4</source>
+        <translation>%1 · %2 · %3 秒
+%4</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::McpServer</name>
+    <message>
+        <location filename="../src/mcp/McpServer.cpp" line="+473"/>
+        <source>an MCP client</source>
+        <translation>某个 MCP 客户端</translation>
+    </message>
+    <message>
+        <location line="+107"/>
+        <source>AI agent (%1)</source>
+        <translation>AI 智能体（%1）</translation>
+    </message>
+    <message>
+        <location filename="../src/mcp/McpServerTools.cpp" line="+110"/>
+        <source>An AI agent asked you to choose: </source>
+        <translation>AI 智能体请求选择： </translation>
+    </message>
+</context>
+<context>
+    <name>PJ::MediaViewerWidget</name>
+    <message>
+        <location filename="../../pj_scene2D/widgets/src/media_viewer_widget.cpp" line="+51"/>
+        <source>GPU rendering is unavailable: Qt could not create a QRhi for this window.</source>
+        <translation>GPU 渲染不可用：Qt 无法为此窗口创建 QRhi。</translation>
+    </message>
+    <message>
+        <location line="+895"/>
+        <source>GPU rendering is unavailable (%1): the render target could not be created.</source>
+        <translation>GPU 渲染不可用（%1）：无法创建渲染目标。</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>GPU rendering is unavailable (%1): the image pipeline could not be created.</source>
+        <translation>GPU 渲染不可用（%1）：无法创建图像管线。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::MessageBox</name>
+    <message>
+        <location filename="../../pj_custom_widgets/widget/src/CustomWidgetDockWidget.cpp" line="+2"/>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+480"/>
+        <location filename="../../pj_widgets/src/MessageBox.cpp" line="+306"/>
+        <location line="+6"/>
+        <source>OK</source>
+        <translation>确定</translation>
+    </message>
+    <message>
+        <location filename="../../pj_widgets/src/MessageBox.cpp" line="-176"/>
+        <source>Don&apos;t show again.</source>
+        <translation>不再显示。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::PixelInspector</name>
+    <message>
+        <location filename="../../pj_scene2D/widgets/src/pixel_inspector.cpp" line="+299"/>
+        <location line="+86"/>
+        <location line="+30"/>
+        <source>Position: %1, %2</source>
+        <translation>位置：%1，%2</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Depth: %1 m</source>
+        <translation>深度：%1 m</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Depth: — (no data)</source>
+        <translation>深度：—（无数据）</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::PlotDocker</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/PlotDocker.cpp" line="+636"/>
+        <source>Plugin unavailable</source>
+        <translation>插件不可用</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Plugin unavailable: %1</source>
+        <translation>插件不可用：%1</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::PlotRhiCanvas</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/PlotRhiCanvas.cpp" line="+572"/>
+        <source>text atlas %1x%2 exceeds backend texture limit %3</source>
+        <translation>文字图集大小 %1x%2 超出渲染后端的纹理上限 %3</translation>
+    </message>
+    <message>
+        <location line="+397"/>
+        <source>GPU plot renderer unavailable</source>
+        <translation>GPU 图表渲染器不可用</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::PlotWidget</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="-89"/>
+        <source>%1 vs %2</source>
+        <translation>%1 vs %2</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <location line="+50"/>
+        <source>Duplicate name</source>
+        <translation>名称重复</translation>
+    </message>
+    <message>
+        <location line="-50"/>
+        <location line="+51"/>
+        <source>A curve named &quot;%1&quot; already exists in this plot.</source>
+        <translation>此图表中已存在名为“%1”的曲线。</translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <source>computing %1%</source>
+        <translation>正在计算 %1%</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>not computed</source>
+        <translation>尚未计算</translation>
+    </message>
+    <message>
+        <location line="+813"/>
+        <source>dataset %1</source>
+        <translation>数据集 %1</translation>
+    </message>
+    <message>
+        <location line="+110"/>
+        <source>Computing markers…</source>
+        <translation>正在计算标记…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Marker rule failed</source>
+        <translation>标记规则执行失败</translation>
+    </message>
+    <message>
+        <location line="+257"/>
+        <source>Timeseries curves can not be dropped on an XY plot.</source>
+        <translation>不能将时间序列曲线拖放到 XY 图中。</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Create XY plots by dropping two curves on an empty plot.</source>
+        <translation>将两条曲线拖放到空白图表中，即可创建 XY 图。</translation>
+    </message>
+    <message>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="-1"/>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+55"/>
+        <source>Split &amp;Horizontally</source>
+        <translation>水平拆分(&amp;H)</translation>
+    </message>
+    <message>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+3"/>
+        <source>Split &amp;Vertically</source>
+        <translation>垂直拆分(&amp;V)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Zoom Out Horizontally</source>
+        <translation>水平缩小至全范围</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Zoom Out Vertically</source>
+        <translation>垂直缩小至全范围</translation>
+    </message>
+    <message>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="-10"/>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="-16"/>
+        <source>&amp;Remove ALL curves</source>
+        <translation>移除全部曲线(&amp;R)</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+4"/>
+        <source>&amp;Zoom Out</source>
+        <translation>缩小至全范围(&amp;Z)</translation>
+    </message>
+    <message>
+        <location line="+49"/>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+185"/>
+        <source>Apply Filter...</source>
+        <translation>应用滤波器…</translation>
+    </message>
+    <message>
+        <location filename="../../pj_plotting/widget/src/PlotWidget.cpp" line="+7"/>
+        <source>Copy</source>
+        <translation>复制</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Paste</source>
+        <translation>粘贴</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::PluginRuntimeCatalog</name>
+    <message>
+        <location filename="../../pj_runtime/src/PluginRuntimeCatalog.cpp" line="+679"/>
+        <source>Loaded DataSource %1 from %2</source>
+        <translation>已从 %2 加载数据源 %1</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Loaded MessageParser %1 from %2</source>
+        <translation>已从 %2 加载消息解析器 %1</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Loaded Toolbox %1 from %2</source>
+        <translation>已从 %2 加载工具箱 %1</translation>
+    </message>
+    <message>
+        <location line="+49"/>
+        <source>Loaded Widget %1 from %2</source>
+        <translation>已从 %2 加载控件 %1</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::PreferencesDialog</name>
+    <message>
+        <location filename="../src/PreferencesDialog.cpp" line="+105"/>
+        <source>Preferences</source>
+        <translation>首选项</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>Appearance</source>
+        <translation>外观</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Plotting</source>
+        <translation>绘图</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Scene 2D</source>
+        <translation>二维场景</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Scene 3D</source>
+        <translation>三维场景</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Plugins</source>
+        <translation>插件</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Recording</source>
+        <translation>录制</translation>
+    </message>
+    <message>
+        <location line="+67"/>
+        <source>global</source>
+        <translation>全局</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>per plot</source>
+        <translation>按图表</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>serious</source>
+        <translation>简洁标识</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>memes</source>
+        <translation>趣味图片</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Automatic</source>
+        <translation>自动</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Manual</source>
+        <translation>手动</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>local</source>
+        <translation>本地</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>UTC</source>
+        <translation>UTC</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Choose funny images or the serious banner. Both modes support the selected language.</source>
+        <translation>选择趣图或简洁横幅，两种模式均支持所选界面语言。</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>This folder does not exist.</source>
+        <translation>此文件夹不存在。</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>default</source>
+        <translation>默认</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>custom</source>
+        <translation>自定义</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Add a plugin folder…</source>
+        <translation>添加插件文件夹…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Remove the selected folder</source>
+        <translation>移除选中的文件夹</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Add plugin folder</source>
+        <translation>添加插件文件夹</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <location line="+49"/>
+        <source>Leave empty to use the default folder: %1</source>
+        <translation>留空以使用默认文件夹：%1</translation>
+    </message>
+    <message>
+        <location line="-43"/>
+        <source>Choose the recordings folder…</source>
+        <translation>选择录制文件夹…</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Choose the recordings folder</source>
+        <translation>选择录制文件夹</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Open the recordings folder</source>
+        <translation>打开录制文件夹</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Choose the source cache folder…</source>
+        <translation>选择数据源缓存文件夹…</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Choose the source cache folder</source>
+        <translation>选择数据源缓存文件夹</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Open the source cache folder</source>
+        <translation>打开数据源缓存文件夹</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <location line="+3"/>
+        <source>Fixed by --profile-dir: %1</source>
+        <translation>由 --profile-dir 固定为：%1</translation>
+    </message>
+    <message>
+        <source>Add a folder with robot packages</source>
+        <translation>添加包含机器人软件包的文件夹</translation>
+    </message>
+    <message>
+        <source>Add a folder…</source>
+        <translation>添加文件夹…</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::PresetController</name>
+    <message>
+        <location filename="../src/PresetController.cpp" line="+64"/>
+        <source>could not write %1: %2</source>
+        <translation>无法写入 %1：%2</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>This page link names more than one preset (%1).</source>
+        <translation>此页面链接指定了多个预设（%1）。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Preset &apos;%1&apos; cannot be opened: this page&apos;s preset list is invalid.</source>
+        <translation>无法打开预设“%1”：此页面的预设列表无效。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>This page has no preset named &apos;%1&apos;.</source>
+        <translation>此页面没有名为“%1”的预设。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::RangeCalendarWidget</name>
+    <message>
+        <location filename="../../pj_widgets/src/DateRangePicker.cpp" line="-328"/>
+        <source>January</source>
+        <translation>一月</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>February</source>
+        <translation>二月</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>March</source>
+        <translation>三月</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>April</source>
+        <translation>四月</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>May</source>
+        <translation>五月</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>June</source>
+        <translation>六月</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>July</source>
+        <translation>七月</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>August</source>
+        <translation>八月</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>September</source>
+        <translation>九月</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>October</source>
+        <translation>十月</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>November</source>
+        <translation>十一月</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>December</source>
+        <translation>十二月</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::RecentFilesMenu</name>
+    <message>
+        <location filename="../../pj_widgets/src/RecentFilesMenu.cpp" line="+19"/>
+        <source>Clear Recent</source>
+        <translation>清空最近记录</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::Scene2DConfigPanel</name>
+    <message>
+        <location filename="../src/ui/Scene2DConfigPanel.cpp" line="+52"/>
+        <source>Layers</source>
+        <translation>图层</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Rotation</source>
+        <translation>旋转</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Rotate every layer clockwise</source>
+        <translation>顺时针旋转所有图层</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Settings</source>
+        <translation>设置</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::Scene2DDockWidget</name>
+    <message>
+        <location filename="../../pj_scene2D/widgets/src/Scene2DDockWidget.cpp" line="+252"/>
+        <location line="+171"/>
+        <source>2D View</source>
+        <translation>二维视图</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>2D View - %1</source>
+        <translation>二维视图 - %1</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::Scene2DLayer</name>
+    <message>
+        <location filename="../../pj_scene2D/widgets/src/layers/scene2d_layer.cpp" line="+46"/>
+        <source>No active session</source>
+        <translation>没有活动会话</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Layer source could not be created</source>
+        <translation>无法创建图层数据源</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::Scene3DConfigPanel</name>
+    <message>
+        <location filename="../src/ui/Scene3DConfigPanel.cpp" line="+255"/>
+        <source>Topics</source>
+        <translation>话题</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Settings</source>
+        <translation>设置</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Copy parameters</source>
+        <translation>复制参数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Paste parameters</source>
+        <translation>粘贴参数</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Apply these parameters to all topics of the same type</source>
+        <translation>将这些参数应用到所有同类型的话题</translation>
+    </message>
+    <message>
+        <location line="+106"/>
+        <source>Camera</source>
+        <translation>相机</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Make the camera follow a TF frame&apos;s position</source>
+        <translation>使相机跟随 TF 坐标系的位置</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+633"/>
+        <source>None</source>
+        <translation>无</translation>
+    </message>
+    <message>
+        <location line="-624"/>
+        <source>Recenter the camera on the followed frame</source>
+        <translation>将相机重新对准所跟随的坐标系</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Follow frame</source>
+        <translation>跟随坐标系</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Grid</source>
+        <translation>网格</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Line grid</source>
+        <translation>线条网格</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Checkerboard</source>
+        <translation>棋盘格</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Show/hide the grid</source>
+        <translation>显示或隐藏网格</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Style</source>
+        <translation>样式</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Size (m)</source>
+        <translation>大小（米）</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Divisions</source>
+        <translation>分格数</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Transforms and RobotModel</source>
+        <translation>坐标变换与机器人模型</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Show/hide lines connecting each TF frame to its parent</source>
+        <translation>显示或隐藏各 TF 坐标系与其父坐标系之间的连线</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Frames size (m)</source>
+        <translation>坐标系大小（米）</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Show/hide the TF frames</source>
+        <translation>显示或隐藏 TF 坐标系</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Frames opacity</source>
+        <translation>坐标系不透明度</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>File</source>
+        <translation>文件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Topic</source>
+        <translation>话题</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Add a robot model from the selected source</source>
+        <translation>从所选来源添加机器人模型</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Model/URDF</source>
+        <translation>模型/URDF</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Show/hide visual meshes</source>
+        <translation>显示或隐藏外观模型网格</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Meshes opacity</source>
+        <translation>模型网格不透明度</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Show/hide collision meshes</source>
+        <translation>显示或隐藏碰撞网格</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Collision opacity</source>
+        <translation>碰撞网格不透明度</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>TF frame whose motion trail to draw</source>
+        <translation>要绘制运动轨迹的 TF 坐标系</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Add a motion trail for the selected frame</source>
+        <translation>添加所选坐标系的运动轨迹</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Create Trail</source>
+        <translation>创建轨迹</translation>
+    </message>
+    <message>
+        <location line="+170"/>
+        <location line="+18"/>
+        <source>URDF files (*.urdf *.xml);;All files (*)</source>
+        <translation>URDF 文件 (*.urdf *.xml);;所有文件 (*)</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Load URDF</source>
+        <translation>加载 URDF</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <location line="+2"/>
+        <source>Load robot model</source>
+        <translation>加载机器人模型</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <location line="+2"/>
+        <source>No robot description topic in this dataset.</source>
+        <translation>此数据集中没有机器人描述话题。</translation>
+    </message>
+    <message>
+        <location line="+99"/>
+        <source>Remove this robot model</source>
+        <translation>移除此机器人模型</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::Scene3DDockWidget</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/Scene3DDockWidget.cpp" line="+243"/>
+        <location line="+341"/>
+        <location line="+263"/>
+        <location line="+1102"/>
+        <location line="+106"/>
+        <location line="+3"/>
+        <source>3D View</source>
+        <translation>三维视图</translation>
+    </message>
+    <message>
+        <location line="-1703"/>
+        <source>Orbit</source>
+        <translation>环绕</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>XYOrbit</source>
+        <translation>XY 平面环绕</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Fly</source>
+        <translation>飞行</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Top-down ortho</source>
+        <translation>俯视正交</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Reset view to default</source>
+        <translation>将视图重置为默认状态</translation>
+    </message>
+    <message>
+        <location line="+217"/>
+        <location line="+263"/>
+        <location line="+1211"/>
+        <source>3D View - %1</source>
+        <translation>三维视图 - %1</translation>
+    </message>
+    <message>
+        <location line="-1462"/>
+        <location line="+19"/>
+        <source>Robot model</source>
+        <translation>机器人模型</translation>
+    </message>
+    <message>
+        <location line="+174"/>
+        <source>Create trail for &apos;%1&apos;</source>
+        <translation>创建“%1”的轨迹</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Set as fixed frame</source>
+        <translation>设为固定坐标系</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Follow this frame</source>
+        <translation>跟随此坐标系</translation>
+    </message>
+    <message>
+        <location line="+669"/>
+        <source>Frame &apos;%1&apos; can&apos;t be resolved</source>
+        <translation>无法解析坐标系“%1”</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Frame &apos;%1&apos; is not connected to fixed frame &apos;%2&apos;</source>
+        <translation>坐标系“%1”未连接到固定坐标系“%2”</translation>
+    </message>
+    <message>
+        <location line="+103"/>
+        <source>Only depth-encoded images can be displayed in a 3D view. Use a 2D view for colour images.</source>
+        <translation>三维视图只能显示深度编码图像。彩色图像请使用二维视图。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::SceneDockWidget</name>
+    <message>
+        <location filename="../../pj_scene_common/src/scene_dock_widget.cpp" line="+152"/>
+        <source>computing (%1)</source>
+        <translation>正在计算（%1）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>computing…</source>
+        <translation>正在计算…</translation>
+    </message>
+    <message>
+        <location line="+822"/>
+        <source>This view shows dataset %1; a topic from dataset %2 cannot be added to it.</source>
+        <translation>此视图显示数据集 %1；无法向其中添加数据集 %2 的话题。</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <location line="+9"/>
+        <source>#%1</source>
+        <translation>#%1</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::Search</name>
+    <message>
+        <location filename="../../pj_widgets/src/Search.cpp" line="+49"/>
+        <source>Filter...</source>
+        <translation>筛选…</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::SourcePromotionHost</name>
+    <message>
+        <location filename="../src/SourcePromotionHost.cpp" line="+62"/>
+        <source>the committed load did not preserve dataset %1</source>
+        <translation>已提交的加载未保留数据集 %1</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>promoted</source>
+        <translation>已转为文件数据源</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>the replacement load was cancelled</source>
+        <translation>替换加载已取消</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>the load committed without attaching the source record</source>
+        <translation>加载已提交，但未附带数据源记录</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>the replacement load failed</source>
+        <translation>替换加载失败</translation>
+    </message>
+    <message>
+        <location line="+121"/>
+        <source>dataset %1 was not produced by this plugin&apos;s ingest</source>
+        <translation>数据集 %1 并非由此插件导入生成</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>the file loader was destroyed</source>
+        <translation>文件加载器已销毁</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>the file loader rejected the request</source>
+        <translation>文件加载器拒绝了请求</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::Splashscreen</name>
+    <message>
+        <location filename="../src/Splashscreen.cpp" line="+194"/>
+        <source>Now you&apos;re plotting</source>
+        <translation>现在，开始绘图吧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The plot thickens</source>
+        <translation>数据的故事，愈发精彩</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Hold my rosbag</source>
+        <translation>看好我的 rosbag</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Make your data confess</source>
+        <translation>让数据说出真相</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>More than just curves now</source>
+        <translation>如今，不止于曲线</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Better than it has any right to be</source>
+        <translation>好用得超乎想象</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Objectively the best. Probably.</source>
+        <translation>客观来说，或许是最好的</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Still better than printf</source>
+        <translation>还是比 printf 更直观</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Friends don&apos;t let friends use printf</source>
+        <translation>好朋友，不让你只用 printf</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lovingly over-engineered</source>
+        <translation>用心打磨，精益求精</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Suspiciously good for a free tool</source>
+        <translation>免费工具，也能如此出色</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Opening PlotJuggler. Again.</source>
+        <translation>又一次，打开 PlotJuggler</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Curves were just the beginning</source>
+        <translation>曲线，只是开始</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mostly written by an AI</source>
+        <translation>主要由 AI 编写</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>An AI helped. Allegedly.</source>
+        <translation>据说，AI 也帮了忙</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>The bug only happens in production</source>
+        <translation>这个问题只在现场出现</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Good thing I recorded the data</source>
+        <translation>还好，我录了数据</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Staring at ten thousand log lines</source>
+        <translation>盯着一万行日志找问题</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>One plot later: found it</source>
+        <translation>画条曲线：找到了</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>It must be the sensor</source>
+        <translation>一定是传感器坏了</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>It was milliseconds versus seconds</source>
+        <translation>原来是毫秒当成了秒</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Just one more printf</source>
+        <translation>再加一行打印就能找到</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Drag, drop, mystery solved</source>
+        <translation>拖进来一画，真相大白</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The demo worked yesterday</source>
+        <translation>昨天演示明明还好好的</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Replay the good recording</source>
+        <translation>还好有录好的数据能回放</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>My signal is all noise</source>
+        <translation>我的信号怎么全是噪声</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>FFT: allow me to introduce myself</source>
+        <translation>FFT：该我出场了</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Two curves, two different clocks</source>
+        <translation>两条曲线，各过各的时间</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Time offset to the rescue</source>
+        <translation>时间偏移，一下对齐</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>I forgot to save the layout</source>
+        <translation>关了窗口才想起没存布局</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This time I saved the layout</source>
+        <translation>这次我先保存了布局</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::StreamingSourceManager</name>
+    <message>
+        <location filename="../src/StreamingSourceManager.cpp" line="+261"/>
+        <source>No stream source selected.</source>
+        <translation>未选择流式数据源。</translation>
+    </message>
+    <message>
+        <location line="+211"/>
+        <source>Stream plugin &apos;%1&apos; not found.</source>
+        <translation>未找到流数据插件“%1”。</translation>
+    </message>
+    <message>
+        <location line="-127"/>
+        <source>Plugin &apos;%1&apos;: createHandle failed.</source>
+        <translation>插件“%1”：createHandle 失败。</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Could not create the time domain.</source>
+        <translation>无法创建时间域。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>secondary time domain lockstep failed.</source>
+        <translation>次级时间域同步失败。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>createDataset failed: %1</source>
+        <translation>createDataset 失败：%1</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>secondary createDataset failed: %1</source>
+        <translation>次级 createDataset 失败：%1</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Plugin &apos;%1&apos;: service registration failed: %2</source>
+        <translation>插件“%1”：服务注册失败：%2</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Plugin &apos;%1&apos;: bind failed: %2</source>
+        <translation>插件“%1”：绑定失败：%2</translation>
+    </message>
+    <message>
+        <location line="+103"/>
+        <source>Plugin contract violation: %1. Reinstall the plugin from the Marketplace.</source>
+        <translation>插件接口契约违规：%1。请从扩展市场重新安装此插件。</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Plugin &apos;%1&apos;: loadConfig (post-dialog) failed: %2</source>
+        <translation>插件“%1”：对话框关闭后 loadConfig 失败：%2</translation>
+    </message>
+    <message>
+        <location line="+55"/>
+        <source>Stream plugin &apos;%1&apos; is not installed.</source>
+        <translation>未安装流数据插件“%1”。</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Plugin &apos;%1&apos; refused the saved configuration: %2</source>
+        <translation>插件“%1”拒绝了已保存的配置：%2</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Plugin &apos;%1&apos;: start failed: %2</source>
+        <translation>插件“%1”：启动失败：%2</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>[stream] %1</source>
+        <translation>[流] %1</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::TabbedPlotWidget</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/TabbedPlotWidget.cpp" line="+298"/>
+        <source>Toggle left panel</source>
+        <translation>显示或隐藏左侧面板</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Toggle bottom panel</source>
+        <translation>显示或隐藏底部面板</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Toggle right panel</source>
+        <translation>显示或隐藏右侧面板</translation>
+    </message>
+    <message>
+        <location line="+84"/>
+        <source>tab%1</source>
+        <translation>标签页%1</translation>
+    </message>
+    <message>
+        <location line="+131"/>
+        <source>%1 (copy)</source>
+        <translation>%1（副本）</translation>
+    </message>
+    <message>
+        <location line="+116"/>
+        <source>Duplicate tab</source>
+        <translation>复制标签页</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::TailFollowOverlay</name>
+    <message>
+        <location filename="../../pj_widgets/src/TailFollowOverlay.cpp" line="+20"/>
+        <source>Jump to the latest</source>
+        <translation>跳到最新位置</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::TimePickerWidget</name>
+    <message>
+        <location filename="../../pj_widgets/src/DateRangePicker.cpp" line="-90"/>
+        <source>From time:</source>
+        <translation>开始时间：</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>To time:</source>
+        <translation>结束时间：</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::Timeline</name>
+    <message>
+        <location filename="../../pj_widgets/src/Timeline.cpp" line="+574"/>
+        <source>Align</source>
+        <translation>对齐</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Shift every source so their starts line up at the earliest start</source>
+        <translation>平移各数据源，将它们的起点对齐到最早的起点</translation>
+    </message>
+    <message>
+        <location line="+92"/>
+        <source>Streaming: pause playback to interact with the timeline</source>
+        <translation>正在接收数据流：暂停回放后可操作时间轴</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::TitleBar</name>
+    <message>
+        <location filename="../src/TitleBar.cpp" line="+38"/>
+        <source>&amp;File</source>
+        <translation>文件(&amp;F)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Toolbox</source>
+        <translation>工具箱(&amp;T)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Help</source>
+        <translation>帮助(&amp;H)</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+85"/>
+        <source>%n extension update(s) available</source>
+        <translation>
+            <numerusform>%n 个扩展有可用更新</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>Restore</source>
+        <translation>还原</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Maximize</source>
+        <translation>最大化</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>New errors</source>
+        <translation>新的错误</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Diagnostics</source>
+        <translation>诊断信息</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::VisualizationPlaceholderWidget</name>
+    <message>
+        <location filename="../../pj_widgets/src/VisualizationPlaceholderWidget.cpp" line="+210"/>
+        <source>Split &amp;Horizontally</source>
+        <translation>水平拆分(&amp;H)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Split &amp;Vertically</source>
+        <translation>垂直拆分(&amp;V)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Paste</source>
+        <translation>粘贴(&amp;P)</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Plot</source>
+        <translation>图表</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Log</source>
+        <translation>日志</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>State Transitions</source>
+        <translation>状态转换</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>2D</source>
+        <translation>二维</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>3D</source>
+        <translation>三维</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <location line="+42"/>
+        <source>Custom Widget</source>
+        <translation>自定义控件</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>No custom widgets installed.</source>
+        <translation>未安装自定义控件。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>No custom widgets installed. Get them from the Marketplace.</source>
+        <translation>未安装自定义控件。请从扩展市场获取。</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::WelcomePresetsDialog</name>
+    <message>
+        <location filename="../src/WelcomePresetsDialog.cpp" line="+41"/>
+        <source>Welcome to PlotJuggler</source>
+        <translation>欢迎使用 PlotJuggler</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Loading %1…</source>
+        <translation>正在加载 %1…</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>%1 could not be loaded: another layout is still loading.</source>
+        <translation>无法加载 %1：另一个布局仍在加载中。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 could not be loaded.</source>
+        <translation>无法加载 %1。</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Opening %1…</source>
+        <translation>正在打开 %1…</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Downloading %1: %2 of %3 MB</source>
+        <translation>正在下载 %1：%2 / %3 MB</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Downloading %1: %2 MB</source>
+        <translation>正在下载 %1：%2 MB</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>No preview</source>
+        <translation>无预览</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Open</source>
+        <translation>打开</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::XYCurveDialog</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/XYCurveDialog.cpp" line="+19"/>
+        <source>New XY Curve</source>
+        <translation>新建 XY 曲线</translation>
+    </message>
+</context>
+<context>
+    <name>PJ::log_view::LogTableModel</name>
+    <message>
+        <location filename="../../pj_log/widget/src/LogTableModel.cpp" line="+132"/>
+        <source>Time</source>
+        <translation>时间</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Level</source>
+        <translation>级别</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Source</source>
+        <translation>来源</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Category</source>
+        <translation>类别</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Topic</source>
+        <translation>话题</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Message</source>
+        <translation>消息</translation>
+    </message>
+</context>
+<context>
+    <name>PreferencesContent</name>
+    <message>
+        <location filename="../src/PreferencesDialog.ui" line="+521"/>
+        <source>System file dialog:</source>
+        <translation>系统文件对话框：</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Open and save files with the system&apos;s own file dialog instead of PlotJuggler&apos;s (Save Layout keeps PlotJuggler&apos;s). It does not stall on disconnected network drives, but does not follow the app&apos;s theme.</source>
+        <translation>使用系统自带的文件对话框打开和保存文件，而不使用 PlotJuggler 的对话框（保存布局仍使用 PlotJuggler 的对话框）。它不会因断开的网络驱动器而卡住，但也不会跟随应用的主题。</translation>
+    </message>
+    <message>
+        <location line="-351"/>
+        <source>Language:</source>
+        <translation>界面语言：</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Language changes take effect after restarting PlotJuggler.</source>
+        <translation>界面语言更改将在重启 PlotJuggler 后生效。</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Theme:</source>
+        <translation>主题：</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Icon size:</source>
+        <translation>图标大小：</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Icon padding:</source>
+        <translation>图标边距：</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Layout padding:</source>
+        <translation>布局边距：</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Layout spacing:</source>
+        <translation>布局间距：</translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>Float precision:</source>
+        <translation>浮点数精度：</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Remove the system window frame and draw PlotJuggler&apos;s own title bar instead. Takes effect the next time PlotJuggler starts.</source>
+        <translation>移除系统窗口边框，改用 PlotJuggler 自绘标题栏。下次启动 PlotJuggler 时生效。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Frameless window (needs restart):</source>
+        <translation>无边框窗口（需重启）：</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Render plots on a GPU-accelerated canvas (faster); off uses the software raster canvas. Applies to newly created plots; existing plots keep their current canvas.</source>
+        <translation>使用 GPU 加速画布渲染图表（速度更快）；关闭后使用软件光栅画布。仅适用于新建图表，现有图表保留当前画布。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>GPU canvas:</source>
+        <translation>GPU 画布：</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>What to show on startup: a random meme, or a clean branded banner.</source>
+        <translation>启动时显示的内容：随机趣味图片，或简洁的品牌横幅。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Splashscreen:</source>
+        <translation>启动画面：</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>On startup, quietly check GitHub for a newer PlotJuggler release and show a notification if one is available.</source>
+        <translation>启动时在后台检查 GitHub 上是否有 PlotJuggler 新版本，并在有更新时显示通知。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Check for updates on startup:</source>
+        <translation>启动时检查更新：</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>On startup, send one anonymous ping to count daily users: a hashed machine id, OS name and version, CPU architecture, app version, and package type. Never any personal data, file names, paths, or usage behavior.</source>
+        <translation>启动时发送一次匿名请求以统计每日用户数，内容包括经过哈希处理的机器标识、操作系统名称和版本、CPU 架构、应用版本及软件包类型。不包含个人数据、文件名、路径或使用行为。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Anonymous usage statistics (&lt;a href=&quot;https://github.com/PlotJuggler/PlotJuggler/blob/main/docs/TELEMETRY.md#what-is-sent&quot;&gt;what is sent&lt;/a&gt;):</source>
+        <translation>匿名使用统计（&lt;a href=&quot;https://github.com/PlotJuggler/PlotJuggler/blob/main/docs/TELEMETRY.md#what-is-sent&quot;&gt;发送内容&lt;/a&gt;）：</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Once a day, send anonymous counters of which features and plugins were used: how often a plugin opened a file, streamed, decoded or created a panel, and which plugins are installed. Plugins that are not public are never named. Never any personal data, file names, paths, or topic names.</source>
+        <translation>每天发送一次匿名功能和插件使用计数：插件打开文件、接收流数据、解码或创建面板的次数，以及已安装的插件。非公开插件不会上传名称。不会发送个人信息、文件名、路径或主题名。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Anonymous feature usage (&lt;a href=&quot;https://github.com/PlotJuggler/PlotJuggler/blob/main/docs/TELEMETRY.md#daily-usage-report&quot;&gt;what is sent&lt;/a&gt;):</source>
+        <translation>匿名功能使用情况（&lt;a href=&quot;https://github.com/PlotJuggler/PlotJuggler/blob/main/docs/TELEMETRY.md#daily-usage-report&quot;&gt;发送内容&lt;/a&gt;）：</translation>
+    </message>
+    <message>
+        <location line="+54"/>
+        <source>Serve the Model Context Protocol on this computer only (127.0.0.1, behind a secret token), so AI agents such as Claude Code or Codex can open files, read series, and draw in their own tabs. The status bar names an agent while it is active. Shows whether outside agents may connect now (also when allowed with --mcp); on by default; applies on OK. An agent a toolbox plugin starts itself gets its own private access and does not need this.</source>
+        <translation>仅在本机提供模型上下文协议服务（127.0.0.1，使用秘密令牌保护），让 Claude Code 或 Codex 等 AI 智能体能够打开文件、读取序列，并在各自的标签页中绘图。智能体活动时，状态栏会显示其名称。此开关显示当前是否允许外部智能体连接（包括通过 --mcp 允许的连接）；默认开启，点击“确定”后生效。工具箱插件自行启动的智能体拥有独立的私有访问权限，无需开启此项。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Let AI agents control PlotJuggler (MCP server):</source>
+        <translation>允许 AI 智能体控制 PlotJuggler（MCP 服务器）：</translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <source>Rescale a plot&apos;s vertical axis to fit its curves whenever a curve is added or removed (the shared time axis is left unchanged).</source>
+        <translation>添加或移除曲线时，自动调整图表纵轴以适应曲线范围（共享时间轴保持不变）。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Auto-zoom plots:</source>
+        <translation>自动缩放图表：</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Curves color sequence:</source>
+        <translation>曲线配色顺序：</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Automatic re-runs a changed marker rule on its own, at the reload rate below. Manual only flags it as needing a refresh, reachable from the dataset&apos;s &quot;Refresh derived&quot; action.</source>
+        <translation>自动模式按下方的重新加载频率自动重新运行已更改的标记规则。手动模式仅将其标记为需要刷新，可通过数据集的“刷新派生标记”操作进行刷新。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Derived markers:</source>
+        <translation>派生标记：</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <location line="+16"/>
+        <source>How often Automatic mode is allowed to re-run a changed marker rule.</source>
+        <translation>自动模式重新运行已更改标记规则的最高频率。</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Reload rate:</source>
+        <translation>重新加载频率：</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source> Hz</source>
+        <translation> Hz</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Time zone of the clock times shown while the date-time toggle (bottom left) is on.</source>
+        <translation>启用左下角的日期时间开关时，时钟时间所使用的时区。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Clock time zone:</source>
+        <translation>时钟时区：</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Coming soon</source>
+        <translation>即将推出</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Folders containing 3D assets</source>
+        <translation type="vanished">包含三维资源的文件夹</translation>
+    </message>
+    <message>
+        <location line="+91"/>
+        <source>Local folders with custom plugins:</source>
+        <translation>自定义插件的本地文件夹：</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>List of default folders (in order of precedence):</source>
+        <translation>默认文件夹列表（按优先级排列）：</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Marketplace registry URL:</source>
+        <translation>扩展市场注册表 URL：</translation>
+    </message>
+    <message>
+        <location line="+74"/>
+        <source>Every Record press creates one folder here holding one standard MCAP file per recorded source. Recordings capture the raw messages of the topics each stream is subscribed to; sources that write decoded samples directly (no message format) are not recorded.</source>
+        <translation>每次点击录制都会在此创建一个文件夹，为每个参与录制的数据源保存一个标准 MCAP 文件。录制内容为各数据流已订阅话题的原始消息；直接写入解码后样本的数据源（无消息格式）不会参与录制。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Recordings folder:</source>
+        <translation>录制文件夹：</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>default: app data folder / recordings</source>
+        <translation>默认：应用数据文件夹 / recordings</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <location line="+16"/>
+        <source>Memory EACH recorded source may hold in flight. Once a source fills it, that source drops its largest queued messages rather than holding on to them. Recording several sources can hold this much for each of them.</source>
+        <translation>每个录制数据源允许占用的待写入内存。某个数据源用满配额后，会丢弃其队列中最大的消息。录制多个数据源时，每个数据源均可分别占用此额度。</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Write queue per source (MiB):</source>
+        <translation>每个数据源的写入队列（MiB）：</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>One MCAP file per recorded source, per Record press. Recording never slows a stream down. Hover a setting for details.</source>
+        <translation>每次录制为每个数据源保存一个 MCAP 文件。录制不会降低数据流速度。将鼠标悬停在设置上可查看详情。</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Local copies of cloud downloads, so a saved layout can restore them instantly and offline. Disposable: a missing entry is simply re-downloaded. A new folder takes effect the next time PlotJuggler starts.</source>
+        <translation>保存云端下载的本地副本，让已保存的布局能够快速离线恢复。缓存可随时清理，缺失的条目会重新下载。新的文件夹设置将在下次启动 PlotJuggler 时生效。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Source cache folder:</source>
+        <translation>数据源缓存文件夹：</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>default: app data folder / source_cache</source>
+        <translation>默认：应用数据文件夹 / source_cache</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Disk space the source cache may occupy. Oldest artifacts are removed first when the budget is exceeded; artifacts a loaded dataset still reads are never removed. A new budget takes effect the next time PlotJuggler starts.</source>
+        <translation>数据源缓存可占用的磁盘空间。超出配额时优先移除最旧的文件；已加载数据集仍在读取的文件不会被移除。新的配额将在下次启动 PlotJuggler 时生效。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Source cache budget (GB):</source>
+        <translation>数据源缓存配额（GB）：</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Disk space the source cache may occupy. Oldest artifacts are removed first when the budget is exceeded; artifacts a loaded dataset still reads are never removed.</source>
+        <translation>数据源缓存可占用的磁盘空间。超出配额时优先移除最旧的文件；已加载数据集仍在读取的文件不会被移除。</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <location line="+16"/>
+        <source>When on, each cloud download is also saved into the source cache so a saved layout can restore it offline. Applies immediately; turning it off never removes existing cached copies, and they keep restoring.</source>
+        <translation>启用后，每次云端下载都会同时写入数据源缓存，以便已保存的布局离线恢复。立即生效；关闭此选项不会移除已有缓存，已有缓存仍可用于恢复。</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <source>Capture downloads for offline restore:</source>
+        <translation>缓存下载以供离线恢复：</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Cloud downloads are cached locally so saved layouts restore offline. Folder and budget apply at the next start.</source>
+        <translation>云端下载会缓存在本地，供已保存的布局离线恢复。文件夹和配额更改将在下次启动时生效。</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <source>Reset to defaults</source>
+        <translation>恢复默认设置</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>OK</source>
+        <translation>确定</translation>
+    </message>
+    <message>
+        <source>Add your ROS workspace or any folder that holds robot packages: packages are found in its subfolders. The folders in $ROS_PACKAGE_PATH and $AMENT_PREFIX_PATH, and /opt/ros/&lt;distro&gt;/share, are searched too.</source>
+        <translation>添加 ROS 工作空间或任一包含机器人软件包的文件夹：程序会在其子文件夹中查找软件包，也会搜索 $ROS_PACKAGE_PATH、$AMENT_PREFIX_PATH 指定的文件夹及 /opt/ros/&lt;distro&gt;/share。</translation>
+    </message>
+    <message>
+        <source>Folders searched for robot packages (package://):</source>
+        <translation>搜索机器人软件包的文件夹（package://）：</translation>
+    </message>
+    <message>
+        <source>Between two transform samples, move frames smoothly instead of holding the earlier pose until the next one.</source>
+        <translation>在两个变换采样点之间平滑移动坐标系，而不是保持前一个位姿直到下一个采样点。</translation>
+    </message>
+    <message>
+        <source>Interpolate transforms between samples:</source>
+        <translation>在采样点之间对变换进行插值：</translation>
+    </message>
+</context>
+<context>
+    <name>PresetCatalog</name>
+    <message>
+        <location filename="../../pj_runtime/src/PresetCatalog.cpp" line="+61"/>
+        <source>preset index is not valid JSON: %1</source>
+        <translation>预设索引不是有效的 JSON：%1</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>preset index has no &quot;presets&quot; array</source>
+        <translation>预设索引没有“presets”数组</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>preset #%1 is not an object</source>
+        <translation>第 %1 个预设不是对象</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>preset #%1 has a field that is not a string</source>
+        <translation>第 %1 个预设包含非字符串字段</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>preset #%1 has no id</source>
+        <translation>第 %1 个预设没有 ID</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>duplicate preset id &quot;%1&quot;</source>
+        <translation>预设 ID“%1”重复</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>preset &quot;%1&quot; has no usable http(s) layout</source>
+        <translation>预设“%1”没有可用的 http(s) 布局</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>preset &quot;%1&quot; has no usable http(s) thumbnail</source>
+        <translation>预设“%1”没有可用的 http(s) 缩略图</translation>
+    </message>
+    <message>
+        <source>preset &quot;%1&quot; has a &quot;listed&quot; that is not true or false</source>
+        <translation>预设“%1”的 &quot;listed&quot; 字段必须是 true 或 false</translation>
+    </message>
+</context>
+<context>
+    <name>QAbstractFileIconProvider</name>
+    <message>
+        <location filename="../src/AppLanguage.cpp" line="+95"/>
+        <source>Drive</source>
+        <translation>驱动器</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>File</source>
+        <translation>文件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unknown</source>
+        <translation>未知</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>File Folder</source>
+        <comment>Match Windows Explorer</comment>
+        <translation>文件夹</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Folder</source>
+        <comment>All other platforms</comment>
+        <translation>文件夹</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Alias</source>
+        <comment>macOS Finder</comment>
+        <translation>替身</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shortcut</source>
+        <comment>All other platforms</comment>
+        <translation>快捷方式</translation>
+    </message>
+</context>
+<context>
+    <name>QFileDialog</name>
+    <message>
+        <location line="-13"/>
+        <source>&amp;Look in:</source>
+        <translation>查找范围(&amp;L)：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Files of &amp;type:</source>
+        <translation>文件类型(&amp;T)：</translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message>
+        <location filename="../src/DialogPresenter.cpp" line="+66"/>
+        <source>File selection failed</source>
+        <translation>文件选择失败</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>selected file</source>
+        <translation>所选文件</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location filename="../src/FileLoader.cpp" line="-1889"/>
+        <location line="+87"/>
+        <location line="+7"/>
+        <location filename="../src/MainWindow.cpp" line="-10010"/>
+        <source>OK</source>
+        <translation>确定</translation>
+    </message>
+    <message>
+        <location filename="../src/FileLoader.cpp" line="-89"/>
+        <location line="+83"/>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="-990"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location line="-87"/>
+        <location line="+88"/>
+        <source>Yes</source>
+        <translation>是</translation>
+    </message>
+    <message>
+        <location line="-87"/>
+        <location line="+88"/>
+        <source>No</source>
+        <translation>否</translation>
+    </message>
+    <message>
+        <location line="-87"/>
+        <location line="+88"/>
+        <source>Continue</source>
+        <translation>继续</translation>
+    </message>
+    <message>
+        <location line="-87"/>
+        <location line="+88"/>
+        <source>Abort</source>
+        <translation>中止</translation>
+    </message>
+    <message>
+        <location filename="../tests/wasm_acceptance_probes.inc" line="-6"/>
+        <source>Stop loading?</source>
+        <translation>停止加载？</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Remove All</source>
+        <translation>全部移除</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Stop and Keep</source>
+        <translation>停止并保留</translation>
+    </message>
+    <message>
+        <location line="+378"/>
+        <source>Toggle right panel</source>
+        <translation>显示或隐藏右侧面板</translation>
+    </message>
+    <message>
+        <location filename="../src/ToolboxPresenter.cpp" line="+246"/>
+        <source>Move to a tab</source>
+        <translation>移至标签页</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Move to docked panel</source>
+        <translation>移至停靠面板</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/CurveListPanel.cpp" line="-1050"/>
+        <source>Camera calibration topic, used automatically by 2D and 3D views. It cannot be displayed on its own, but a plugin panel can read it.</source>
+        <translation>相机标定话题，由二维和三维视图自动使用。无法单独显示，但插件面板可以读取。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Incremental map update, applied automatically to its occupancy grid. It cannot be displayed on its own, but a Custom Widget panel can read it.</source>
+        <translation>增量地图更新会自动应用于其占据栅格。它不能单独显示，但自定义控件面板可以读取它。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Incremental mesh map update, applied automatically to its mesh map. It cannot be displayed on its own, but a Custom Widget panel can read it.</source>
+        <translation>增量网格地图更新会自动应用于其网格地图。它不能单独显示，但自定义控件面板可以读取它。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Drop it on a Custom Widget panel.</source>
+        <translation>将其拖放到自定义控件面板。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No view can display this topic type.</source>
+        <translation>没有视图能够显示此话题类型。</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/Scene3DConfigPanel.cpp" line="-761"/>
+        <location line="+62"/>
+        <source>Robot description topic</source>
+        <translation>机器人描述话题</translation>
+    </message>
+    <message>
+        <location line="-48"/>
+        <location line="+65"/>
+        <source>Load URDF from URL</source>
+        <translation>从 URL 加载 URDF</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/layers/scene_entities_layer.cpp" line="+952"/>
+        <source>SceneEntities decode received no snapshot</source>
+        <translation>SceneEntities 解码未收到快照</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/marker_geometry.cpp" line="+110"/>
+        <source>SceneEntities exceeds the limit of %1 distinct frames</source>
+        <translation>SceneEntities 超出 %1 个不同坐标系的限制</translation>
+    </message>
+    <message>
+        <location line="+54"/>
+        <source>SceneEntities exceeds the layer limits (%1 instances, %2 expanded vertices, %3 frames)</source>
+        <translation>SceneEntities 超出图层限制（%1 个实例、%2 个展开顶点、%3 个坐标系）</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>SceneEntities would retain more than %1 MiB</source>
+        <translation>SceneEntities 将占用超过 %1 MiB 的内存</translation>
+    </message>
+    <message>
+        <location line="+263"/>
+        <source>Not enough memory to build these SceneEntities markers</source>
+        <translation>内存不足，无法构建这些 SceneEntities 标记</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>SceneEntities conversion failed: %1</source>
+        <translation>SceneEntities 转换失败：%1</translation>
+    </message>
+    <message>
+        <location filename="../../pj_widgets/src/StateTransitionsView.cpp" line="+290"/>
+        <source>start</source>
+        <translation>起始</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>duration</source>
+        <translation>时长</translation>
+    </message>
+    <message>
+        <location filename="../src/BrowserPersistence.cpp" line="+587"/>
+        <source>The layout is not a bounded, source-free browser recipe.</source>
+        <translation>此布局不符合浏览器布局配置的要求：大小受限且不包含数据源。</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Browser storage rejected the recent layout recipe; it remains available for this page only.</source>
+        <translation>浏览器存储未能保存此最近使用的布局配置；它仅在当前页面中可用。</translation>
+    </message>
+    <message>
+        <location filename="../../pj_widgets/src/Timeline.cpp" line="-318"/>
+        <source>Datasets</source>
+        <translation>数据集</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Merge the selected datasets</source>
+        <translation>合并选中的数据集</translation>
+    </message>
+    <message>
+        <location filename="../../pj_dialog_host/src/dialog_engine.cpp" line="+456"/>
+        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="+472"/>
+        <source>Select File</source>
+        <translation>选择文件</translation>
+    </message>
+    <message>
+        <location line="+59"/>
+        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="+38"/>
+        <source>Select Folder</source>
+        <translation>选择文件夹</translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <location filename="../../pj_dialog_host/src/panel_engine.cpp" line="-18"/>
+        <source>Save File</source>
+        <translation>保存文件</translation>
+    </message>
+    <message>
+        <location filename="../src/BundledAdsTranslationKeys.h" line="+8"/>
+        <source>List All Tabs</source>
+        <translation>列出所有标签页</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Detach Group</source>
+        <translation>分离分组</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Minimize</source>
+        <translation>最小化</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close Tab</source>
+        <translation>关闭标签页</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/mesh_load_queue.cpp" line="+220"/>
+        <source>could not start import: %1</source>
+        <translation>无法开始导入：%1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>could not start import</source>
+        <translation>无法开始导入</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>mesh contains no renderable geometry</source>
+        <translation>网格不含可渲染的几何体</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene_common/src/scene_layer.cpp" line="+113"/>
+        <source>error: %1</source>
+        <translation>错误：%1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>behind %1 s</source>
+        <translation>落后 %1 秒</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>computing…</source>
+        <translation>正在计算…</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>computed at %1 s</source>
+        <translation>在 %1 秒处计算</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/channel_coloring.cpp" line="+91"/>
+        <source>Colors:</source>
+        <translation>配色：</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Auto range:</source>
+        <translation>自动范围：</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Range min:</source>
+        <translation>范围下限：</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Range max:</source>
+        <translation>范围上限：</translation>
+    </message>
+    <message>
+        <source>Third-party licences</source>
+        <translation>第三方许可条款</translation>
+    </message>
+</context>
+<context>
+    <name>QPlatformTheme</name>
+    <message>
+        <location filename="../src/AppLanguage.cpp" line="-16"/>
+        <source>OK</source>
+        <translation>确定</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Save</source>
+        <translation>保存</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Save All</source>
+        <translation>全部保存</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open</source>
+        <translation>打开</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Yes</source>
+        <translation>是(&amp;Y)</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Yes to &amp;All</source>
+        <translation>全部选是(&amp;A)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;No</source>
+        <translation>否(&amp;N)</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>N&amp;o to All</source>
+        <translation>全部选否(&amp;O)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Abort</source>
+        <translation>中止</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Retry</source>
+        <translation>重试</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ignore</source>
+        <translation>忽略</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Discard</source>
+        <translation>放弃</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Help</source>
+        <translation>帮助</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Apply</source>
+        <translation>应用</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Reset</source>
+        <translation>重置</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Restore Defaults</source>
+        <translation>恢复默认值</translation>
+    </message>
+</context>
+<context>
+    <name>SourceConfigVariables</name>
+    <message>
+        <location filename="../../pj_runtime/src/SourceConfigVariables.cpp" line="+28"/>
+        <source>The source configuration has a deployment variable without its &apos;}&apos;: %1</source>
+        <translation>数据源配置中的部署变量缺少“}”：%1</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>The source configuration uses %1, which is not a deployment variable this PlotJuggler knows.</source>
+        <translation>数据源配置使用了 %1，但当前版本的 PlotJuggler 无法识别该部署变量。</translation>
+    </message>
+    <message>
+        <location line="+95"/>
+        <source>The source configuration uses %1 but is not valid JSON: %2.</source>
+        <translation>数据源配置使用了 %1，但不是有效的 JSON：%2。</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>The source configuration uses %1, which only an app opened from an http(s) page can fill in (missing deployment context).</source>
+        <translation>数据源配置使用了 %1，只有从 http(s) 页面打开的应用才能填充此值（缺少部署上下文）。</translation>
+    </message>
+</context>
+<context>
+    <name>TimelineWidget</name>
+    <message>
+        <location filename="../src/ui/TimelineWidget.ui" line="+42"/>
+        <source>Use time offset: show time relative to each dataset&apos;s start (axis begins at 0) instead of absolute time</source>
+        <translation>使用时间偏移：显示相对于各数据集起点的时间（横轴从 0 开始），而非绝对时间</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Show time as clock time (HH:mm:ss) instead of seconds</source>
+        <translation>将时间显示为时钟时间（HH:mm:ss），而非秒数</translation>
+    </message>
+    <message>
+        <location line="+85"/>
+        <source>Loop</source>
+        <translation>循环</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <source>Start/Stop player (Space)</source>
+        <translation>开始或停止回放（空格键）</translation>
+    </message>
+    <message>
+        <location line="+76"/>
+        <source>Speed</source>
+        <translation>速度</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Rate (speed multiplier)</source>
+        <translation>速率（播放倍速）</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Step size</source>
+        <translation>步长</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Step size to move the time tracker (use the LEFT/RIGHT arrows)</source>
+        <translation>移动时间游标的步长（使用左、右方向键）</translation>
+    </message>
+</context>
+<context>
+    <name>TitleBar</name>
+    <message>
+        <location filename="../src/TitleBar.ui" line="+136"/>
+        <source>UPDATE</source>
+        <translation>更新</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Notifications</source>
+        <translation>通知</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Minimize</source>
+        <translation>最小化</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Maximize</source>
+        <translation>最大化</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+</context>
+<context>
+    <name>ToolboxBanner</name>
+    <message>
+        <location filename="../src/ToolboxBanner.ui" line="+46"/>
+        <source>Move to docked panel</source>
+        <translation>移至停靠面板</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Move to a tab</source>
+        <translation>移至标签页</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Move to a floating window</source>
+        <translation>移至浮动窗口</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+</context>
+<context>
+    <name>WelcomePresetsDialog</name>
+    <message>
+        <location filename="../src/WelcomePresetsDialog.ui" line="+32"/>
+        <source>Explore PlotJuggler with a sample dataset and its ready-made layout, or open your own files.</source>
+        <translation>通过示例数据集及其现成布局探索 PlotJuggler，或打开您自己的文件。</translation>
+    </message>
+    <message>
+        <location line="+82"/>
+        <source>Retry</source>
+        <translation>重试</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Upload your own…</source>
+        <translation>上传自己的文件…</translation>
+    </message>
+</context>
+<context>
+    <name>XYCurveDialog</name>
+    <message>
+        <location filename="../../pj_plotting/widget/src/XYCurveDialog.ui" line="+19"/>
+        <source>X axis</source>
+        <translation>X 轴</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Swap the X and Y series</source>
+        <translation>交换 X 和 Y 序列</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Swap</source>
+        <translation>交换</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Y axis</source>
+        <translation>Y 轴</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Name</source>
+        <translation>名称</translation>
+    </message>
+</context>
+<context>
+    <name>ads::CAutoHideTab</name>
+    <message>
+        <location filename="../src/BundledAdsTranslationKeys.h" line="+1"/>
+        <source>Detach</source>
+        <translation>分离</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pin To...</source>
+        <translation>固定到…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Top</source>
+        <translation>顶部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Left</source>
+        <translation>左侧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Right</source>
+        <translation>右侧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Bottom</source>
+        <translation>底部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unpin (Dock)</source>
+        <translation>取消固定（停靠）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+</context>
+<context>
+    <name>ads::CDockAreaTitleBar</name>
+    <message>
+        <location line="+1"/>
+        <source>Detach</source>
+        <translation>分离</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Detach Group</source>
+        <translation>分离分组</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unpin (Dock)</source>
+        <translation>取消固定（停靠）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pin Group</source>
+        <translation>固定分组</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pin Group To...</source>
+        <translation>将分组固定到…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Top</source>
+        <translation>顶部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Left</source>
+        <translation>左侧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Right</source>
+        <translation>右侧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Bottom</source>
+        <translation>底部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Minimize</source>
+        <translation>最小化</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close Group</source>
+        <translation>关闭分组</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close Other Groups</source>
+        <translation>关闭其他分组</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pin Active Tab (Press Ctrl to Pin Group)</source>
+        <translation>固定当前标签页（按 Ctrl 固定分组）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close Active Tab</source>
+        <translation>关闭当前标签页</translation>
+    </message>
+</context>
+<context>
+    <name>ads::CDockManager</name>
+    <message>
+        <location line="+1"/>
+        <source>Show View</source>
+        <translation>显示视图</translation>
+    </message>
+</context>
+<context>
+    <name>ads::CDockWidgetTab</name>
+    <message>
+        <location line="+1"/>
+        <source>Detach</source>
+        <translation>分离</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pin</source>
+        <translation>固定</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Pin To...</source>
+        <translation>固定到…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Top</source>
+        <translation>顶部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Left</source>
+        <translation>左侧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Right</source>
+        <translation>右侧</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Bottom</source>
+        <translation>底部</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Close Others</source>
+        <translation>关闭其他标签页</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::DepthCloudLayer</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/layers/depth_cloud_layer.cpp" line="+72"/>
+        <source>Decoded depth image exceeds the %1-pixel limit</source>
+        <translation>解码后的深度图像超出 %1 像素限制</translation>
+    </message>
+    <message>
+        <location line="+221"/>
+        <source>Colormap:</source>
+        <translation>色图：</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Point size:</source>
+        <translation>点大小：</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Min depth:</source>
+        <translation>最小深度：</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Max depth:</source>
+        <translation>最大深度：</translation>
+    </message>
+    <message>
+        <location line="+84"/>
+        <source>compressedDepth PNG decode failed</source>
+        <translation>compressedDepth PNG 解码失败</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>compressedDepth image is empty</source>
+        <translation>compressedDepth 图像为空</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <location line="+241"/>
+        <source>Not a depth image (encoding &apos;%1&apos;)</source>
+        <translation>不是深度图像（编码为“%1”）</translation>
+    </message>
+    <message>
+        <location line="-80"/>
+        <source>No CameraInfo intrinsics for frame &apos;%1&apos;</source>
+        <translation>没有坐标系“%1”对应的 CameraInfo 相机内参</translation>
+    </message>
+    <message>
+        <location line="+70"/>
+        <source>DepthCloud has %1 points; only %2 remain in this view&apos;s budget</source>
+        <translation>深度点云包含 %1 个点；此视图的剩余配额仅为 %2 个点</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Depth image payload is %1 MiB; the limit is %2 MiB</source>
+        <translation>深度图像的数据大小为 %1 MiB；上限为 %2 MiB</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Depth image dimensions exceed the %1-pixel limit</source>
+        <translation>深度图像尺寸超出 %1 像素限制</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Depth image contains no valid pixels in the selected range</source>
+        <translation>深度图像在所选范围内没有有效像素</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Not enough memory to build this DepthCloud</source>
+        <translation>内存不足，无法构建此深度点云</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>DepthCloud conversion failed: %1</source>
+        <translation>深度点云转换失败：%1</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::GridMapLayer</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/layers/grid_map_layer.cpp" line="+234"/>
+        <source>Elevation field &apos;%1&apos; not found; using %2</source>
+        <translation>未找到高程字段“%1”；将使用%2</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>a flat plane</source>
+        <translation>平面</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Color field &apos;%1&apos; not found</source>
+        <translation>未找到颜色字段“%1”</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Grid map has no scalar field to display</source>
+        <translation>栅格地图没有可显示的标量字段</translation>
+    </message>
+    <message>
+        <location line="+47"/>
+        <source>Grid map decode failed: %1</source>
+        <translation>栅格地图解码失败：%1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Grid map decode returned an object of another type</source>
+        <translation>栅格地图解码返回了其他类型的对象</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Invalid grid map: %1</source>
+        <translation>栅格地图无效：%1</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Grid map too large to display: %1 cells</source>
+        <translation>栅格地图过大，无法显示：%1 个单元格</translation>
+    </message>
+    <message>
+        <location line="+191"/>
+        <source>None</source>
+        <translation>无</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Elevation:</source>
+        <translation>高程：</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Color by:</source>
+        <translation>着色依据：</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Lighting:</source>
+        <translation>光照：</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Opacity:</source>
+        <translation>不透明度：</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::MeshDiagnostics</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/mesh_loader.cpp" line="+304"/>
+        <source>assimp returned no scene for %1</source>
+        <translation>Assimp 未返回 %1 的场景</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>model has an invalid or over-limit node graph in %1</source>
+        <translation>%1 中的模型节点图无效或超过限制</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>model has an invalid mesh reference in %1</source>
+        <translation>%1 中的模型包含无效的网格引用</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>model vertex count overflow in %1</source>
+        <translation>%1 中的模型顶点数量溢出</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>model index count overflow in %1</source>
+        <translation>%1 中的模型索引数量溢出</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>no renderable geometry in %1</source>
+        <translation>%1 中没有可渲染的几何体</translation>
+    </message>
+    <message>
+        <location line="-76"/>
+        <source>model exceeds structure limits in %1 (%2 materials, %3 nodes, depth %4)</source>
+        <translation>%1 中的模型超过结构限制（%2 个材质、%3 个节点、深度 %4）</translation>
+    </message>
+    <message>
+        <location line="+49"/>
+        <source>model exceeds geometry limits in %1 (%2 vertices, %3 indices, %4 submeshes)</source>
+        <translation>%1 中的模型超过几何体限制（%2 个顶点、%3 个索引、%4 个子网格）</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>model exceeds the embedded-texture limit in %1</source>
+        <translation>%1 中的模型超过内嵌纹理限制</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>model would retain more than %1 MiB</source>
+        <translation>模型保留的数据将超过 %1 MiB</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <location line="+35"/>
+        <source>model source exceeds the %1 MiB limit</source>
+        <translation>模型源数据超出 %1 MiB 上限</translation>
+    </message>
+    <message>
+        <location line="-25"/>
+        <source>assimp failed to import %1</source>
+        <translation>Assimp 无法导入 %1</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>mesh import of %1 threw: %2</source>
+        <translation>导入网格 %1 时发生异常：%2</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>mesh import of %1 threw an unknown exception</source>
+        <translation>导入网格 %1 时发生未知异常</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>assimp failed to import %1 buffer</source>
+        <translation>Assimp 无法导入 %1 缓冲区</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>mesh import of %1 buffer threw: %2</source>
+        <translation>导入 %1 缓冲区中的网格时发生异常：%2</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>mesh import of %1 buffer threw an unknown exception</source>
+        <translation>导入 %1 缓冲区中的网格时发生未知异常</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/rhi/passes/gridmap_rhi_pass.cpp" line="+188"/>
+        <source>Grid map %1 x %2 exceeds this GPU&apos;s texture or draw limits</source>
+        <translation>栅格地图 %1 × %2 超过此 GPU 的纹理或绘制限制</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/mesh_import.h" line="+91"/>
+        <source>mesh import threw: %1</source>
+        <translation>网格导入时发生异常：%1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>mesh import threw an unknown exception</source>
+        <translation>网格导入时发生未知异常</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::MeshMapLayer</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/layers/mesh_map_layer.cpp" line="+215"/>
+        <source>Mesh map decode failed: %1</source>
+        <translation>模型网格地图解码失败：%1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Mesh map decode returned an object of another type</source>
+        <translation>模型网格地图解码返回了其他类型的对象</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Invalid mesh map: %1</source>
+        <translation>无效的模型网格地图：%1</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Mesh map has a non-finite origin pose</source>
+        <translation>模型网格地图的原点位姿包含非有限值</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Mesh map too large to display: %1 faces (limit %2)</source>
+        <translation>模型网格地图过大，无法显示：%1 个面（上限 %2）</translation>
+    </message>
+    <message>
+        <location line="+148"/>
+        <source>not a valid MeshMapUpdate</source>
+        <translation>不是有效的 MeshMapUpdate</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+10"/>
+        <source>%n mesh map update(s) lost: source re-read failed</source>
+        <translation>
+            <numerusform>丢失了 %n 次模型网格地图更新：重新读取数据源失败</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+5"/>
+        <source>%n mesh map update(s) for another geometry were skipped</source>
+        <translation>
+            <numerusform>已跳过针对其他几何结构的 %n 次模型网格地图更新</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n mesh map update(s) were skipped: %1</source>
+        <translation>
+            <numerusform>已跳过 %n 次模型网格地图更新：%1</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+4"/>
+        <source>%n update patch(es) did not fit the map and were skipped</source>
+        <translation>
+            <numerusform>%n 个更新补丁与地图不匹配，已跳过</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+5"/>
+        <source>%n sparse update index(es) named elements the map does not have</source>
+        <translation>
+            <numerusform>%n 个稀疏更新索引指向地图中不存在的元素</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Color source &apos;%1&apos; not found</source>
+        <translation>找不到颜色来源“%1”</translation>
+    </message>
+    <message>
+        <location line="+269"/>
+        <source>Vertex color</source>
+        <translation>顶点颜色</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Solid</source>
+        <translation>纯色</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>%1 (vertex)</source>
+        <translation>%1（顶点）</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Color by:</source>
+        <translation>着色依据：</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Lighting:</source>
+        <translation>光照：</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Links:</source>
+        <translation>连线：</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Opacity:</source>
+        <translation>不透明度：</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::OccupancyGridLayer</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/layers/occupancy_grid_layer.cpp" line="+301"/>
+        <source>Occupancy-grid payload is %1 MiB; the limit is %2 MiB</source>
+        <translation>占据栅格的数据大小为 %1 MiB；上限为 %2 MiB</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Occupancy grid could not be decoded: %1</source>
+        <translation>无法解码占据栅格：%1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>This layer accepts OccupancyGrid base samples only</source>
+        <translation>此图层仅接受 OccupancyGrid 基础数据样本</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Occupancy grid is %1 x %2; the limit is %3 cells and %4 per dimension</source>
+        <translation>占据栅格大小为 %1 x %2；上限为 %3 个单元格，且每个维度不超过 %4</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Occupancy grid has an invalid resolution or origin pose</source>
+        <translation>占据栅格的分辨率或原点位姿无效</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Occupancy update lost: source re-read failed</source>
+        <translation>占据栅格更新丢失：重新读取数据源失败</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Occupancy update payload exceeds the %1 MiB sample limit</source>
+        <translation>占据栅格更新的数据大小超出单个样本的 %1 MiB 上限</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Occupancy update could not be decoded and was skipped: %1</source>
+        <translation>无法解码占据栅格更新，已跳过：%1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>A paired update sample was not OccupancyGridUpdate and was skipped</source>
+        <translation>配对的更新样本不是 OccupancyGridUpdate，已跳过</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Occupancy update data was shorter than its declared rectangle and was skipped</source>
+        <translation>占据栅格更新的数据不足以填充其声明的矩形区域，已跳过</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Occupancy updates in this seek window exceed the %1 MiB limit</source>
+        <translation>此跳转时间窗口内的占据栅格更新超出 %1 MiB 上限</translation>
+    </message>
+    <message>
+        <location line="+158"/>
+        <source>Layer needs %1 occupancy cells; only %2 remain in this view&apos;s budget</source>
+        <translation>图层需要 %1 个占据栅格单元格；此视图的剩余配额仅为 %2 个</translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <source>Map (grayscale)</source>
+        <translation>地图（灰度）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Costmap</source>
+        <translation>代价地图</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Colors:</source>
+        <translation>配色：</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Opacity:</source>
+        <translation>不透明度：</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::PointCloudLayer</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/layers/pointcloud_layer.cpp" line="+107"/>
+        <source>Cloud has %1 points; the limit is %2</source>
+        <translation>点云包含 %1 个点；上限为 %2 个点</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Cloud payload is %1 MiB; the limit is %2 MiB</source>
+        <translation>点云的数据大小为 %1 MiB；上限为 %2 MiB</translation>
+    </message>
+    <message>
+        <location line="+367"/>
+        <source>sphere</source>
+        <translation>球体</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>point</source>
+        <translation>点</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>cube</source>
+        <translation>立方体</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Shape:</source>
+        <translation>形状：</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Point size:</source>
+        <translation>点大小：</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Solid</source>
+        <translation>纯色</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>RGB</source>
+        <translation>RGB</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Field: %1</source>
+        <translation>字段：%1</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Color type:</source>
+        <translation>着色方式：</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Color config:</source>
+        <translation>颜色设置：</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Invert colormap</source>
+        <translation>反转色图</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Per-point color</source>
+        <translation>逐点颜色</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>auto</source>
+        <translation>自动</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Range:</source>
+        <translation>范围：</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Range Min:</source>
+        <translation>范围下限：</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Range Max:</source>
+        <translation>范围上限：</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Show/hide points outside the range</source>
+        <translation>显示或隐藏范围外的点</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Outside range:</source>
+        <translation>范围外：</translation>
+    </message>
+    <message>
+        <location line="+409"/>
+        <source>Malformed point cloud was rejected</source>
+        <translation>已拒绝格式错误的点云</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Not enough memory to convert this point cloud</source>
+        <translation>内存不足，无法转换此点云</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Point cloud contains no finite positions</source>
+        <translation>点云中没有坐标为有限值的点</translation>
+    </message>
+    <message>
+        <location line="+95"/>
+        <location line="+236"/>
+        <source>Point cloud could not be decoded: %1</source>
+        <translation>无法解码点云：%1</translation>
+    </message>
+    <message>
+        <location line="-222"/>
+        <location line="+238"/>
+        <source>Point-cloud sample has an unexpected canonical type</source>
+        <translation>点云样本的规范类型与预期不符</translation>
+    </message>
+    <message>
+        <location line="-226"/>
+        <source>Compressed cloud payload is %1 MiB; the limit is %2 MiB</source>
+        <translation>压缩点云的数据大小为 %1 MiB；上限为 %2 MiB</translation>
+    </message>
+    <message>
+        <location line="+74"/>
+        <source>Compressed point cloud could not be decoded: %1</source>
+        <translation>无法解码压缩点云：%1</translation>
+    </message>
+    <message>
+        <location line="+75"/>
+        <source>Layer has %1 finite points; only %2 remain in this view&apos;s budget</source>
+        <translation>图层包含 %1 个坐标为有限值的点；此视图的剩余配额仅为 %2 个点</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::PosesInFrameLayer</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/layers/poses_in_frame_layer.cpp" line="+309"/>
+        <source>Pose payload is %1 MiB; the limit is %2 MiB</source>
+        <translation>位姿数据大小为 %1 MiB；上限为 %2 MiB</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Pose array could not be decoded: %1</source>
+        <translation>无法解码位姿数组：%1</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>This layer accepts PosesInFrame samples only</source>
+        <translation>此图层仅接受 PosesInFrame 样本</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Pose array has %1 poses; the limit is %2</source>
+        <translation>位姿数组包含 %1 个位姿；上限为 %2 个</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Not enough memory to expand this pose array</source>
+        <translation>内存不足，无法展开此位姿数组</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Pose-array expansion failed: %1</source>
+        <translation>位姿数组展开失败：%1</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Pose array contains no finite poses</source>
+        <translation>位姿数组中没有各分量均为有限值的位姿</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Non-finite poses were skipped</source>
+        <translation>已跳过包含非有限值的位姿</translation>
+    </message>
+    <message>
+        <location line="+82"/>
+        <source>Layer needs %1 pose arrows; only %2 remain in this view&apos;s budget</source>
+        <translation>图层需要 %1 个位姿箭头；此视图的剩余配额仅为 %2 个</translation>
+    </message>
+    <message>
+        <location line="+120"/>
+        <source>Arrow length (m):</source>
+        <translation>箭头长度（米）：</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Opacity:</source>
+        <translation>不透明度：</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>X Arrow only:</source>
+        <translation>仅显示 X 轴箭头：</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Override color:</source>
+        <translation>自定义颜色：</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Trace this topic&apos;s pose across the whole time range</source>
+        <translation>跟踪此话题在整个时间范围内的位姿轨迹</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Trail:</source>
+        <translation>轨迹：</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::RobotModelLayer</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/layers/robot_model_layer.cpp" line="+297"/>
+        <source>Robot model</source>
+        <translation>机器人模型</translation>
+    </message>
+    <message>
+        <location line="+340"/>
+        <source>Topic</source>
+        <translation>话题</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>File</source>
+        <translation>文件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Source</source>
+        <translation>来源</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+148"/>
+        <source>No robot description topic in this dataset</source>
+        <translation>此数据集中没有机器人描述话题</translation>
+    </message>
+    <message>
+        <location line="-120"/>
+        <source>Browse for a URDF file</source>
+        <translation>浏览并选择 URDF 文件</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>A browser layout cannot reopen a host file automatically. Remove this row and select the URDF again.</source>
+        <translation>浏览器布局无法自动重新打开本机文件。请移除此行并重新选择 URDF。</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Fetch the URDF from this URL</source>
+        <translation>从此 URL 获取 URDF</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Locate...</source>
+        <translation>定位…</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Retry</source>
+        <translation>重试</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Status</source>
+        <translation>状态</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>e.g. robot1/</source>
+        <translation>例如 robot1/</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Frame prefix</source>
+        <translation>坐标系前缀</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Auto</source>
+        <translation>自动</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Visual</source>
+        <translation>视觉模型</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Collision</source>
+        <translation>碰撞模型</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Display mode</source>
+        <translation>显示模式</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Color</source>
+        <translation>颜色</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Ignore COLLADA up_axis</source>
+        <translation>忽略 COLLADA 的 up_axis</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Mesh resolution</source>
+        <translation>网格资源解析</translation>
+    </message>
+    <message>
+        <location line="+365"/>
+        <source>Select the local URDF again; browser layouts cannot retain host-file access</source>
+        <translation>请重新选择本地 URDF；浏览器布局无法保留对本机文件的访问权限</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Only http(s) URDF URLs are supported in the browser</source>
+        <translation>浏览器仅支持使用 http(s) 的 URDF URL</translation>
+    </message>
+    <message>
+        <location line="+72"/>
+        <source>robot_description exceeds the %1 MiB limit</source>
+        <translation>robot_description 超出 %1 MiB 上限</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>URDF: %1</source>
+        <translation>URDF：%1</translation>
+    </message>
+    <message>
+        <location line="+56"/>
+        <source>mesh would exceed the layer memory limit</source>
+        <translation>网格将超出单图层的内存上限</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+61"/>
+        <source>  •  %n mesh load(s) failed (shown as magenta placeholders)</source>
+        <translation>
+            <numerusform>  •  %n 个网格加载失败（以品红色占位对象显示）</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>  •  %1/%2 meshes  •  %3 packages unresolved</source>
+        <translation>  •  %1/%2 个网格  •  %3 个包未解析</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>  •  %1/%1 meshes</source>
+        <translation>  •  %1/%1 个网格</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+8"/>
+        <source>  •  %n mesh reference(s) unresolved; URL/package paths must be CORS-accessible</source>
+        <translation>
+            <numerusform>  •  %n 个网格引用未解析；URL/包路径必须允许 CORS 跨源访问</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>  •  %n mesh reference(s) unavailable in the browser sandbox (shown as magenta placeholders)</source>
+        <translation>
+            <numerusform>  •  %n 个网格引用在浏览器沙箱中不可用（以品红色占位对象显示）</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="-563"/>
+        <source>Open URDF</source>
+        <translation>打开 URDF</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>URDF files (*.urdf *.xml);;All files (*)</source>
+        <translation>URDF 文件 (*.urdf *.xml);;所有文件 (*)</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Select the folder that contains your robot packages</source>
+        <translation type="vanished">选择包含机器人包的文件夹</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Package &apos;%1&apos; not found under &apos;%2&apos; - expected a subdirectory named &apos;%1&apos;</source>
+        <translation type="vanished">在“%2”中未找到包“%1”；应包含名为“%1”的子目录</translation>
+    </message>
+    <message>
+        <location line="+49"/>
+        <location line="+258"/>
+        <source>No parser for %1</source>
+        <translation>没有适用于 %1 的解析器</translation>
+    </message>
+    <message>
+        <location line="-36"/>
+        <source>Fetching %1</source>
+        <translation>正在获取 %1</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Fetch failed (%1)</source>
+        <translation>获取失败（%1）</translation>
+    </message>
+    <message>
+        <location line="-28"/>
+        <source>Failed to read URDF: %1</source>
+        <translation>读取 URDF 失败：%1</translation>
+    </message>
+    <message>
+        <location line="+59"/>
+        <source>Waiting for %1...</source>
+        <translation>正在等待 %1…</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Parse error: %1</source>
+        <translation>解析错误：%1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Parse error: parser did not return RobotDescription</source>
+        <translation>解析错误：解析器未返回 RobotDescription</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Format &apos;%1&apos; is not supported — only URDF</source>
+        <translation>不支持“%1”格式；仅支持 URDF</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+253"/>
+        <source>  •  %n http ref(s) blocked (file-source URDF)</source>
+        <translation>
+            <numerusform>  •  已阻止 %n 个 HTTP 引用（URDF 来源为文件）</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+3"/>
+        <source>  •  %n absolute path(s) missing</source>
+        <translation>
+            <numerusform>  •  %n 个绝对路径不存在</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Package &apos;%1&apos; not found under &apos;%2&apos; - expected a folder named &apos;%1&apos;</source>
+        <translation>在“%2”下找不到软件包“%1”：应有名为“%1”的文件夹</translation>
+    </message>
+    <message>
+        <source>Select your workspace or the folder that contains your robot packages</source>
+        <translation>选择工作空间或包含机器人软件包的文件夹</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::SceneEntitiesLayer</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/layers/scene_entities_layer.cpp" line="-573"/>
+        <source>SceneEntities could not be decoded: %1</source>
+        <translation>无法解码 SceneEntities：%1</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Object parser returned the wrong type for SceneEntities</source>
+        <translation>对象解析器为 SceneEntities 返回了错误的类型</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>SceneEntities payload is %1 MiB; the limit is %2 MiB</source>
+        <translation>SceneEntities 数据大小为 %1 MiB；上限为 %2 MiB</translation>
+    </message>
+    <message>
+        <location line="+61"/>
+        <source>SceneEntities model state would retain more than %1 MiB</source>
+        <translation>SceneEntities 模型状态保留的数据将超过 %1 MiB</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>A SceneEntities model snapshot exceeds the %1 MiB payload limit</source>
+        <translation>SceneEntities 模型快照超出 %1 MiB 数据大小上限</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <location line="+51"/>
+        <source>A SceneEntities model snapshot was lost: source re-read failed</source>
+        <translation>SceneEntities 模型快照丢失：重新读取数据源失败</translation>
+    </message>
+    <message>
+        <location line="+146"/>
+        <source>(embedded model)</source>
+        <translation>（嵌入式模型）</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>model has neither embedded data nor a URL</source>
+        <translation>模型既没有嵌入数据，也没有 URL</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>model source exceeds the %1 MiB limit</source>
+        <translation>模型源数据超出 %1 MiB 上限</translation>
+    </message>
+    <message>
+        <location line="+53"/>
+        <source>model would exceed the %1 MiB layer memory limit</source>
+        <translation>模型将超出单图层的 %1 MiB 内存上限</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>could not retain model: %1</source>
+        <translation>无法保留模型：%1</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Failed to fetch %1: %2</source>
+        <translation>获取 %1 失败：%2</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Failed to load model %1: %2</source>
+        <translation>加载模型 %1 失败：%2</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+8"/>
+        <source>Remote model fetch is disabled — %n model URL(s) blocked. Enable pj_scene3d/allow_remote_model_fetch to allow.</source>
+        <translation>
+            <numerusform>已禁用远程模型获取，已阻止 %n 个模型 URL。启用 pj_scene3d/allow_remote_model_fetch 可允许获取。</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+153"/>
+        <source>SceneEntities has more than %1 live model draws</source>
+        <translation>SceneEntities 当前所需的模型绘制调用超过 %1 次</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>Skipped %n model(s) with an invalid pose or scale</source>
+        <translation>
+            <numerusform>已跳过 %n 个位姿或缩放无效的模型</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Opacity:</source>
+        <translation>不透明度：</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Override color:</source>
+        <translation>自定义颜色：</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Wireframe:</source>
+        <translation>线框：</translation>
+    </message>
+    <message>
+        <source>cannot resolve the package:// reference</source>
+        <translation>无法解析 package:// 引用</translation>
+    </message>
+    <message>
+        <source>package &apos;%1&apos; not found in the mesh search folders</source>
+        <translation>在网格搜索文件夹中找不到软件包“%1”</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::SceneViewWidget</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/rhi/passes/occupancy_rhi_pass.cpp" line="+205"/>
+        <source>Occupancy grid is %1 x %2; this GPU supports textures up to %3 x %3</source>
+        <translation>占据栅格大小为 %1 x %2；此 GPU 最大支持 %3 x %3 的纹理</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Could not create the occupancy-grid uniform buffer</source>
+        <translation>无法创建占据栅格的 uniform 缓冲区</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Could not allocate the occupancy-grid texture</source>
+        <translation>无法分配占据栅格纹理</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Could not create occupancy-grid shader bindings</source>
+        <translation>无法创建占据栅格的着色器绑定</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/rhi/passes/voxel_rhi_pass.cpp" line="+232"/>
+        <source>Could not create the voxel-grid uniform buffer</source>
+        <translation>无法创建体素栅格的 uniform 缓冲区</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Could not allocate the voxel-grid 3D texture</source>
+        <translation>无法分配体素栅格的三维纹理</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Could not create voxel-grid shader bindings</source>
+        <translation>无法创建体素栅格的着色器绑定</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>The voxel-grid renderer is not available</source>
+        <translation>体素栅格渲染器不可用</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>This GPU does not support 3D textures</source>
+        <translation>此 GPU 不支持三维纹理</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Voxel grid is %1 x %2 x %3; this GPU supports 3D textures up to %4 per dimension</source>
+        <translation>体素栅格大小为 %1 x %2 x %3；此 GPU 支持的三维纹理每个维度最大为 %4</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/rhi/passes/model_rhi_pass.cpp" line="+296"/>
+        <source>Models need %1 draws and %2 triangles; the layer limits are %3 and %4</source>
+        <translation>模型需要 %1 次绘制调用和 %2 个三角形；单图层的上限分别为 %3 和 %4</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Models need %1 draws and %2 triangles; the remaining view budget is %3 and %4</source>
+        <translation>模型需要 %1 次绘制调用和 %2 个三角形；视图的剩余配额分别为 %3 和 %4</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Model shadows exceed this view&apos;s draw/triangle budget</source>
+        <translation>模型阴影超出此视图的绘制调用/三角形配额</translation>
+    </message>
+    <message>
+        <location line="+124"/>
+        <source>Could not allocate a model wireframe buffer</source>
+        <translation>无法分配模型线框缓冲区</translation>
+    </message>
+    <message>
+        <location line="+449"/>
+        <source>A model GPU buffer exceeds the 4 GiB buffer limit</source>
+        <translation>模型 GPU 缓冲区超出 4 GiB 缓冲区上限</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Could not allocate model GPU buffers</source>
+        <translation>无法分配模型的 GPU 缓冲区</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <location line="+23"/>
+        <location line="+5"/>
+        <source>A model exceeds the decoded-texture limit</source>
+        <translation>模型超出解码后纹理的限制</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Could not decode a model material texture</source>
+        <translation>无法解码模型材质纹理</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Could not allocate a model material texture</source>
+        <translation>无法分配模型材质纹理</translation>
+    </message>
+    <message>
+        <location line="-122"/>
+        <location line="+147"/>
+        <source>Could not create model material bindings</source>
+        <translation>无法创建模型材质绑定</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/rhi/passes/gridmap_rhi_pass.cpp" line="+7"/>
+        <source>Could not create the grid-map uniform buffer</source>
+        <translation>无法创建栅格地图的 uniform 缓冲区</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Could not allocate the grid-map textures</source>
+        <translation>无法分配栅格地图纹理</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Could not create grid-map shader bindings</source>
+        <translation>无法创建栅格地图的着色器绑定</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/rhi/passes/marker_rhi_pass.cpp" line="+456"/>
+        <source>Marker instance accounting overflowed the view limit</source>
+        <translation>标记实例计数超出视图上限</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Markers need %1 submitted instances and %2 streamed vertices; the layer limits are %3 and %4</source>
+        <translation>标记需要提交 %1 个实例并流式传输 %2 个顶点；单图层的上限分别为 %3 和 %4</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Markers need %1 instances and %2 streamed vertices; only %3 and %4 remain in this view&apos;s budget</source>
+        <translation>标记需要 %1 个实例和 %2 个流式传输顶点；此视图的剩余配额分别仅为 %3 和 %4</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/rhi/scene_view_widget_rhi.cpp" line="+322"/>
+        <source>Scene3D has no graphics device: Qt could not create a QRhi for this window</source>
+        <translation>Scene3D 没有图形设备：Qt 无法为此窗口创建 QRhi</translation>
+    </message>
+    <message>
+        <location line="+478"/>
+        <source>The view overlays (corner axes, HUD, frame labels) are unavailable</source>
+        <translation>视图叠加内容（角落坐标轴、HUD、坐标系标签）不可用</translation>
+    </message>
+    <message>
+        <location line="+154"/>
+        <source>Scene3D cannot render with %1: its %2 could not be created</source>
+        <translation>Scene3D 无法使用 %1 渲染：无法创建其 %2</translation>
+    </message>
+    <message>
+        <location line="+132"/>
+        <source>A scene pipeline has no HDR variant on this GPU</source>
+        <translation>此 GPU 上某个场景管线没有 HDR 变体</translation>
+    </message>
+    <message>
+        <location line="+274"/>
+        <source>Could not allocate the shadow instance buffer</source>
+        <translation>无法分配阴影实例缓冲区</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/rhi/scene_view_widget_rhi_quality.cpp" line="+173"/>
+        <location line="+65"/>
+        <source>Could not create the shadow receiver pipeline</source>
+        <translation>无法创建阴影接收管线</translation>
+    </message>
+    <message>
+        <location line="-46"/>
+        <source>A %1 x %1 shadow map exceeds this GPU&apos;s %2-pixel texture limit</source>
+        <translation>%1 x %1 的阴影贴图超出此 GPU 的纹理上限（%2 像素）</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>This GPU does not support sampled D32F render targets</source>
+        <translation>此 GPU 不支持可采样的 D32F 渲染目标</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Could not allocate the shadow depth texture</source>
+        <translation>无法分配阴影深度纹理</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Could not create the shadow render target</source>
+        <translation>无法创建阴影渲染目标</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Could not allocate the shadow bindings</source>
+        <translation>无法分配阴影绑定</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Could not create the shadow resource bindings</source>
+        <translation>无法创建阴影资源绑定</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Could not create the shadow depth pipeline</source>
+        <translation>无法创建阴影深度管线</translation>
+    </message>
+    <message>
+        <location line="+89"/>
+        <source>The HDR depth replay is not ready for SSAO</source>
+        <translation>HDR 深度重放尚未就绪，无法用于 SSAO</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Could not preserve the replay coverage for SSAO</source>
+        <translation>无法为 SSAO 保留重放覆盖信息</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Could not create the SSAO bindings</source>
+        <translation>无法创建 SSAO 绑定</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Could not create the SSAO pipeline</source>
+        <translation>无法创建 SSAO 管线</translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>The HDR depth replay is not ready for EDL</source>
+        <translation>HDR 深度重放尚未就绪，无法用于 EDL</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <location line="+18"/>
+        <source>Could not create the EDL mesh-mask pipelines</source>
+        <translation>无法创建 EDL 网格遮罩管线</translation>
+    </message>
+    <message>
+        <location line="-4"/>
+        <source>Could not preserve the depth replay for the EDL mesh mask</source>
+        <translation>无法为 EDL 网格遮罩保留深度重放</translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>This GPU does not support 4x multisample renderbuffers</source>
+        <translation>此 GPU 不支持 4 倍多重采样渲染缓冲区</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>This GPU does not support the RGBA16F/D32F/RGBA8 HDR attachments</source>
+        <translation>此 GPU 不支持 RGBA16F/D32F/RGBA8 格式的 HDR 附件</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>The %1 x %2 Scene3D view exceeds this GPU&apos;s %3-pixel texture limit</source>
+        <translation>%1 x %2 的三维场景视图超出此 GPU 的纹理上限（%3 像素）</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>The %1 x %2 Scene3D HDR chain needs %3 MiB; this view&apos;s limit is %4 MiB</source>
+        <translation>%1 x %2 的 Scene3D HDR 处理链需要 %3 MiB；此视图的上限为 %4 MiB</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Live Scene3D HDR views would exceed their shared %1 MiB GPU limit</source>
+        <translation>当前 Scene3D HDR 视图将超出共享的 %1 MiB GPU 内存上限</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Could not allocate the HDR presentation bindings</source>
+        <translation>无法分配 HDR 呈现绑定</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <location line="+10"/>
+        <source>Could not allocate the HDR color and depth-replay chain</source>
+        <translation>无法分配 HDR 颜色与深度重放处理链</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Could not create the multisample HDR color target and resolve</source>
+        <translation>无法创建多重采样 HDR 颜色目标及其解析目标</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Could not create the single-sample coverage/depth replay target</source>
+        <translation>无法创建单采样覆盖信息/深度重放目标</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Could not create the HDR presentation bindings</source>
+        <translation>无法创建 HDR 呈现绑定</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Could not create the HDR presentation pipeline</source>
+        <translation>无法创建 HDR 呈现管线</translation>
+    </message>
+    <message>
+        <location filename="../../pj_scene3D/widgets/rhi/passes/meshmap_rhi_pass.cpp" line="+175"/>
+        <source>Could not allocate the mesh-map vertex buffers</source>
+        <translation>无法分配模型网格地图顶点缓冲区</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Could not allocate the mesh-map colour buffer</source>
+        <translation>无法分配模型网格地图颜色缓冲区</translation>
+    </message>
+    <message>
+        <location line="+123"/>
+        <source>Could not create the mesh-map uniform buffers</source>
+        <translation>无法创建模型网格地图 uniform 缓冲区</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Could not create mesh-map shader bindings</source>
+        <translation>无法创建模型网格地图着色器绑定</translation>
+    </message>
+    <message>
+        <source>Software rendering (%1): reduced 3D quality</source>
+        <translation>软件渲染（%1）：3D 画质已降低</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::TrailLayer</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/layers/trail_layer.cpp" line="+45"/>
+        <location line="+136"/>
+        <source>Trail: %1</source>
+        <translation>轨迹：%1</translation>
+    </message>
+    <message>
+        <location line="-135"/>
+        <location line="+136"/>
+        <source>Trail: topic %1</source>
+        <translation>轨迹：话题 %1</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <location line="+34"/>
+        <source>waiting for TF</source>
+        <translation>正在等待 TF</translation>
+    </message>
+    <message>
+        <location line="+139"/>
+        <source>no motion samples for &apos;%1&apos;</source>
+        <translation>没有“%1”的运动样本</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&apos;%1&apos; is not connected to fixed frame &apos;%2&apos;</source>
+        <translation>“%1”未连接到固定坐标系“%2”</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>pose data could not be decoded (%1 message(s) failed)</source>
+        <translation>无法解码位姿数据（%1 条消息解码失败）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>waiting for pose samples</source>
+        <translation>正在等待位姿样本</translation>
+    </message>
+    <message>
+        <location line="+154"/>
+        <source>topic %1</source>
+        <translation>话题 %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Tracks:</source>
+        <translation>跟踪对象：</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Thickness (px):</source>
+        <translation>线宽（像素）：</translation>
+    </message>
+    <message>
+        <location line="+53"/>
+        <source>Past color:</source>
+        <translation>过去轨迹颜色：</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show/hide the path before the current time</source>
+        <translation>显示或隐藏当前时间之前的轨迹</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Future color:</source>
+        <translation>未来轨迹颜色：</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show/hide the path after the current time</source>
+        <translation>显示或隐藏当前时间之后的轨迹</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::UrdfParser</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/urdf_parser.cpp" line="+105"/>
+        <source>URDF mesh reference exceeds the browser string limit</source>
+        <translation>URDF 网格引用超过浏览器字符串长度限制</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>URDF material reference exceeds the browser string limit</source>
+        <translation>URDF 材质引用超过浏览器字符串长度限制</translation>
+    </message>
+    <message>
+        <location line="+70"/>
+        <source>Unsupported format: xacro. Expand it with the arguments your launch file passes (`xacro robot.urdf.xacro name:=value &gt; robot.urdf`) and load the result, or record /robot_description: it holds the expanded robot.</source>
+        <translation>不支持 xacro 格式。请使用启动文件传给 xacro 的参数展开文件（`xacro robot.urdf.xacro name:=value &gt; robot.urdf`），然后加载生成的 URDF；也可录制 /robot_description，它包含已展开的机器人模型。</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>robot_description too large (%1 MiB, limit 32 MiB)</source>
+        <translation>robot_description 过大（%1 MiB，上限为 32 MiB）</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <location line="+11"/>
+        <source>Parse error: %1</source>
+        <translation>解析错误：%1</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Parse error: empty document</source>
+        <translation>解析错误：文档为空</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Format &apos;%1&apos; is not supported — only URDF</source>
+        <translation>不支持格式“%1”，仅支持 URDF</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>URDF exceeds the browser material limit</source>
+        <translation>URDF 超过浏览器材质数量限制</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>URDF material name exceeds the browser string limit</source>
+        <translation>URDF 材质名称超过浏览器字符串长度限制</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>URDF exceeds the browser link limit</source>
+        <translation>URDF 超过浏览器连杆数量限制</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>URDF link name exceeds the browser string limit</source>
+        <translation>URDF 连杆名称超过浏览器字符串长度限制</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+18"/>
+        <source>URDF exceeds the browser geometry limit</source>
+        <translation>URDF 超过浏览器几何体数量限制</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>URDF exceeds the browser joint limit</source>
+        <translation>URDF 超过浏览器关节数量限制</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>URDF joint field exceeds the browser string limit</source>
+        <translation>URDF 关节字段超过浏览器字符串长度限制</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Parse error: &lt;robot&gt; has no &lt;link&gt; elements</source>
+        <translation>解析错误：&lt;robot&gt; 中没有 &lt;link&gt; 元素</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::UrlFetcher</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/url_fetcher.cpp" line="+104"/>
+        <source>unsupported URL scheme &apos;%1&apos;</source>
+        <translation>不支持的 URL 协议“%1”</translation>
+    </message>
+</context>
+<context>
+    <name>pj::scene3d::VoxelGridLayer</name>
+    <message>
+        <location filename="../../pj_scene3D/widgets/src/layers/voxel_grid_layer.cpp" line="+311"/>
+        <source>Voxel-grid payload is %1 MiB; the limit is %2 MiB</source>
+        <translation>体素栅格的数据大小为 %1 MiB；上限为 %2 MiB</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Voxel grid could not be decoded: %1</source>
+        <translation>无法解码体素栅格：%1</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>This layer accepts VoxelGrid samples only</source>
+        <translation>此图层仅接受 VoxelGrid 样本</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Voxel grid too large to display: %1 voxels (corrupt or unsupported dimensions)</source>
+        <translation>体素栅格过大，无法显示：%1 个体素（维度数据已损坏或不受支持）</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Voxel grid is %1 x %2 x %3 (%4 voxels); the layer limit is %5</source>
+        <translation>体素栅格大小为 %1 x %2 x %3（%4 个体素）；单图层的上限为 %5 个体素</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Voxel grid has an invalid cell size or origin pose</source>
+        <translation>体素栅格的单元格尺寸或原点位姿无效</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Voxel grid has no displayable fields</source>
+        <translation>体素栅格没有可显示的字段</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Not enough memory to pack this voxel grid</source>
+        <translation>内存不足，无法打包此体素栅格</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Voxel-grid packing failed: %1</source>
+        <translation>体素栅格打包失败：%1</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Voxel grid field layout could not be packed</source>
+        <translation>无法打包体素栅格的字段布局</translation>
+    </message>
+    <message>
+        <location line="+87"/>
+        <source>Layer needs %1 voxels; only %2 remain in this view&apos;s budget</source>
+        <translation>图层需要 %1 个体素；此视图的剩余配额仅为 %2 个</translation>
+    </message>
+    <message>
+        <location line="+105"/>
+        <source>Field:</source>
+        <translation>字段：</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Colors:</source>
+        <translation>配色：</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>All cells</source>
+        <translation>所有单元格</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Non-zero</source>
+        <translation>非零值</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Threshold</source>
+        <translation>阈值</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>In range</source>
+        <translation>范围内</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Draw:</source>
+        <translation>绘制：</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Threshold:</source>
+        <translation>阈值：</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Auto colormap range</source>
+        <translation>自动色图范围</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Range min:</source>
+        <translation>范围下限：</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Range max:</source>
+        <translation>范围上限：</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Opacity:</source>
+        <translation>不透明度：</translation>
+    </message>
+</context>
+</TS>

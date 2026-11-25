@@ -6,6 +6,7 @@
 #include <QAbstractItemModel>
 #include <QBrush>
 #include <QColor>
+#include <QComboBox>
 #include <QDesktopServices>
 #include <QDir>
 #include <QFile>
@@ -14,6 +15,7 @@
 #include <QImage>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QLocale>
 #include <QNetworkAccessManager>
 #include <QNetworkInformation>
 #include <QNetworkReply>
@@ -22,6 +24,7 @@
 #include <QPixmap>
 #include <QPushButton>
 #include <QRegularExpression>
+#include <QScrollArea>
 #include <QSettings>
 #include <QStackedWidget>
 #include <QStyle>
@@ -31,6 +34,7 @@
 #include <QVBoxLayout>
 #include <algorithm>
 
+#include "AppLanguage.h"
 #include "DebugMode.h"
 #include "MainWindow.h"
 #include "PreferencesNavRow.h"
@@ -40,6 +44,7 @@
 #include "pj_runtime/HttpGet.h"
 #include "pj_runtime/RecordingService.h"
 #ifndef __EMSCRIPTEN__
+#include "pj_marketplace/platform_utils.hpp"
 #include "pj_runtime/SourceCacheStore.h"
 #endif
 #include "pj_runtime/UsageCounters.h"
@@ -104,6 +109,19 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
   // The Dialog content area has its own layout, hence a body widget rather than setupUi(this).
   auto* body = new QWidget;
   ui_->setupUi(body);
+  // Translated labels and the restart notice must remain reachable at the
+  // supported minimum size. Wrap wide form rows instead of squeezing fields,
+  // and scroll the Appearance page when its natural height exceeds the window.
+  ui_->appearanceLayout->setRowWrapPolicy(QFormLayout::WrapLongRows);
+  ui_->appearanceLayout->setSizeConstraint(QLayout::SetMinimumSize);
+  ui_->languageCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+  auto* appearance_scroll = new QScrollArea(ui_->pagesStack);
+  appearance_scroll->setObjectName(u"appearanceScrollArea"_s);
+  appearance_scroll->setFrameShape(QFrame::NoFrame);
+  appearance_scroll->setWidgetResizable(true);
+  ui_->pagesStack->removeWidget(ui_->pageAppearance);
+  appearance_scroll->setWidget(ui_->pageAppearance);
+  ui_->pagesStack->insertWidget(kAppearancePage, appearance_scroll);
   contentLayout()->addWidget(body);
   // SetDefaultConstraint would raise the minimum to the layout's on every activation, which the Appearance
   // page's fixed-height scrubber rows make too tall to shrink (or to restore a smaller size). The explicit
@@ -210,11 +228,24 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
   ui_->scrubberFloatPrecision->setSingleStep(1);
   ui_->curveColorMode->setOptions(tr("global"), tr("per plot"));
   ui_->splashMode->setOptions(tr("memes"), tr("serious"));
+  // Endonyms stay recognizable in either interface language. The selection is
+  // the next launch's preference, even when --language overrides this session.
+  for (const auto& language : AppLanguage::supportedLanguages()) {
+    ui_->languageCombo->addItem(language.native_name, language.code);
+  }
+  connect(ui_->languageCombo, &QComboBox::activated, this, [this](int) { language_choice_activated_ = true; });
+  // Qt may cache the empty-model minimum hint while the page is assembled.
+  // Respect both hints so the form cannot squeeze below either size contract.
+  ui_->languageCombo->setMinimumWidth(
+      ui_->languageCombo->sizeHint().expandedTo(ui_->languageCombo->minimumSizeHint()).width());
+  // Derived markers (Plotting): the batch engine's mode and its automatic reload
+  // rate; MainWindow applies both at startup and on OK (derivedBatchSettingsChanged).
   ui_->derivedBatchMode->setOptions(tr("Automatic"), tr("Manual"));
   ui_->clockTimeZone->setOptions(tr("local"), tr("UTC"));
   ui_->scrubberDerivedReloadHz->setRange(BatchEngine::kMinReloadHz, BatchEngine::kMaxReloadHz);
   {
     QSettings settings;
+    ui_->languageCombo->setCurrentIndex(ui_->languageCombo->findData(AppLanguage::preferredLanguage(settings)));
     ui_->scrubberFloatPrecision->setValue(valuePrecision());
     ui_->curveColorMode->setSelectedIndex(settings.value(u"Preferences::curve_color_global"_s, true).toBool() ? 0 : 1);
     ui_->clockTimeZone->setSelectedIndex(settings.value(MainWindow::kClockUtcKey, false).toBool() ? 1 : 0);
@@ -231,11 +262,13 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
         settings.value(u"Preferences::check_updates_on_startup"_s, true).toBool(),
         /*animate=*/false);
     ui_->telemetryToggle->setChecked(
-        settings.value(u"Preferences::send_anonymous_stats"_s, true).toBool(),
+        settings.value(u"Preferences::send_anonymous_stats"_s, false).toBool(),
         /*animate=*/false);
-    ui_->usageStatsToggle->setChecked(settings.value(MainWindow::kUsageStatsKey, true).toBool(), /*animate=*/false);
+    ui_->usageStatsToggle->setChecked(settings.value(MainWindow::kUsageStatsKey, false).toBool(), /*animate=*/false);
     ui_->splashMode->setSelectedIndex(
-        settings.value(kSplashModeKey, kSplashModeMemes).toString() == kSplashModeSerious ? 1 : 0);
+        settings.value(kSplashModeKey, startupSplashMode(settings)).toString() == kSplashModeSerious ? 1 : 0);
+    ui_->splashMode->setToolTip(
+        tr("Choose funny images or the serious banner. Both modes support the selected language."));
     if (!MainWindow::customFrameSelectable()) {
       ui_->labelCustomTitleBar->hide();
       ui_->customTitleBarToggle->hide();
@@ -267,8 +300,7 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
     ui_->labelSplashscreen->hide();
     ui_->splashMode->hide();
     // A page cannot listen on a socket.
-    ui_->labelMcpServer->hide();
-    ui_->mcpServerToggle->hide();
+    ui_->mcpServerRow->hide();
 #endif
   }
 
@@ -439,6 +471,16 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
       const QString field = ui_->lineEditSourceCacheDir->text().trimmed();
       openFolder(field.isEmpty() ? cache_default : field);
     });
+    // Core capture/cache output is fixed inside an explicit profile. Do not
+    // offer a picker whose value the runtime must ignore to preserve isolation.
+    if (!PlatformUtils::profileDir().isEmpty()) {
+      ui_->lineEditRecordingDir->setReadOnly(true);
+      ui_->lineEditRecordingDir->setToolTip(tr("Fixed by --profile-dir: %1").arg(stored.directory));
+      ui_->buttonRecordingDirBrowse->setEnabled(false);
+      ui_->lineEditSourceCacheDir->setReadOnly(true);
+      ui_->lineEditSourceCacheDir->setToolTip(tr("Fixed by --profile-dir: %1").arg(cache_stored.directory));
+      ui_->buttonSourceCacheDirBrowse->setEnabled(false);
+    }
 #endif
   }
 
@@ -529,6 +571,12 @@ PreferencesDialog::PreferencesDialog(Theme& theme, QWidget* parent)
       }
     }
     QSettings settings;
+    // Preserve a newer version's unrecognized locale when an unrelated OK leaves the English fallback selected.
+    // An explicit activation can still choose English itself, even when the fallback is already displayed.
+    const QString language = ui_->languageCombo->currentData().toString();
+    if (language_choice_activated_ || language != AppLanguage::preferredLanguage(settings)) {
+      settings.setValue(AppLanguage::kPreferenceKey, language);
+    }
     const bool precision_changed = ui_->scrubberFloatPrecision->value() != valuePrecision();
     settings.setValue(QString::fromLatin1(kPrecisionSettingsKey), ui_->scrubberFloatPrecision->value());
     settings.setValue(u"Preferences::use_opengl"_s, ui_->openglToggle->isChecked());

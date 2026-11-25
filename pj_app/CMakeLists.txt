@@ -1,4 +1,6 @@
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Svg Test)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PjAppLanguage.cmake)
+pj_add_app_language()
 find_package(nlohmann_json REQUIRED)
 
 # backward-cpp: symbolized crash backtraces (main.cpp installs the handler). Backward::Backward carries the
@@ -218,6 +220,7 @@ target_include_directories(pj_app_shell PUBLIC
 )
 
 target_link_libraries(pj_app_shell PUBLIC
+    pj_app_language
     pj_runtime
     pj_widgets
     pj_plotting

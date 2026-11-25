@@ -1,0 +1,415 @@
+// SPDX-License-Identifier: MPL-2.0
+#include <gtest/gtest.h>
+
+#include <QApplication>
+#include <QComboBox>
+#include <QDir>
+#include <QFontInfo>
+#include <QFontMetrics>
+#include <QImage>
+#include <QLabel>
+#include <QMenu>
+#include <QPixmap>
+#include <QScrollArea>
+#include <QSettings>
+#include <QStackedWidget>
+#include <QTemporaryDir>
+#include <QTest>
+#include <iomanip>
+
+#include "AppLanguage.h"
+#include "MainWindow.h"
+#include "PreferencesDialog.h"
+#include "Theme.h"
+#include "TitleBar.h"
+#include "pj_widgets/ToggleSwitch.h"
+#include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
+
+using namespace Qt::StringLiterals;
+
+namespace {
+
+// Optional CI artifacts contain only this process's synthetic data and private
+// profile. The pixel grab is exercised locally too, without writing screenshots.
+void captureAcceptance(QWidget& widget, const QString& name) {
+  widget.show();
+  QTest::qWait(100);
+  ASSERT_TRUE(widget.isVisible());
+  const QImage image = widget.grab().toImage();
+  ASSERT_FALSE(image.isNull());
+  const QString directory = qEnvironmentVariable("PJ_GUI_ACCEPTANCE_DIR");
+  if (!directory.isEmpty()) {
+    ASSERT_TRUE(QDir().mkpath(directory));
+    EXPECT_TRUE(image.save(QDir(directory).filePath(name + u".png"_s), "PNG"));
+  }
+  // A nonempty screenshot and correct translated strings can still contain
+  // only missing-glyph boxes when a headless platform has no font database.
+  const QFontMetrics metrics(widget.font());
+  for (const auto codepoint : u"PlotJuggler中文文件语言首选项繁體檔案儲存語言偏好設定台灣"_s.toUcs4()) {
+    EXPECT_TRUE(metrics.inFontUcs4(codepoint)) << "Missing UI glyph U+" << std::hex << codepoint;
+  }
+}
+
+// Use the actual shell and its menu widget, not translation lookups alone. Each
+// discovered test owns a fresh process, as required by MainWindow teardown.
+void renderMainWindow(const QString& language) {
+  const PJ::AppLanguage running(*qApp, language);
+  EXPECT_EQ(running.catalogLoaded(), language != u"en_US"_s);
+  const QTemporaryDir extensions;
+  ASSERT_TRUE(extensions.isValid());
+  pj_app_test::IsolatedMainWindow window(extensions.path());
+  ASSERT_TRUE(window.populateTestData());
+  window.resize(1280, 800);
+  const QString file_title = window.titleBar()->fileMenu()->title();
+  if (language != u"en_US"_s) {
+    EXPECT_NE(file_title, u"&File"_s);
+    EXPECT_EQ(file_title, QCoreApplication::translate("PJ::TitleBar", "&File"));
+  } else {
+    EXPECT_EQ(file_title, u"&File"_s);
+  }
+  captureAcceptance(window, u"main-window-"_s + language);
+}
+
+void renderPreferences(const QString& language) {
+  const PJ::AppLanguage running(*qApp, language);
+  PJ::Theme theme;
+  PJ::PreferencesDialog dialog(theme);
+  dialog.showPage(PJ::PreferencesDialog::kAppearancePage);
+  const auto* label = dialog.findChild<QLabel*>(u"labelLanguage"_s);
+  ASSERT_NE(label, nullptr);
+  if (language != u"en_US"_s) {
+    EXPECT_NE(label->text(), u"Language:"_s);
+    EXPECT_EQ(label->text(), QCoreApplication::translate("PreferencesContent", "Language:"));
+  } else {
+    EXPECT_EQ(label->text(), u"Language:"_s);
+  }
+  captureAcceptance(dialog, u"preferences-"_s + language);
+  EXPECT_TRUE(label->isVisible());
+  const auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+  ASSERT_NE(combo, nullptr);
+  EXPECT_TRUE(combo->isVisible());
+}
+
+TEST(PreferencesLanguageTest, ChineseMainWindowRendersWithTranslatedMenus) {
+  renderMainWindow(u"zh_CN"_s);
+}
+
+TEST(PreferencesLanguageTest, EnglishMainWindowRendersWithSourceMenus) {
+  renderMainWindow(u"en_US"_s);
+}
+
+TEST(PreferencesLanguageTest, TraditionalMainWindowRendersWithTranslatedMenus) {
+  renderMainWindow(u"zh_TW"_s);
+}
+
+TEST(PreferencesLanguageTest, ChinesePreferencesRendersLanguageControls) {
+  renderPreferences(u"zh_CN"_s);
+}
+
+TEST(PreferencesLanguageTest, EnglishPreferencesRendersLanguageControls) {
+  renderPreferences(u"en_US"_s);
+}
+
+TEST(PreferencesLanguageTest, TraditionalPreferencesRendersLanguageControls) {
+  renderPreferences(u"zh_TW"_s);
+}
+
+TEST(PreferencesLanguageTest, FreshProfileOffersThreeLanguagesWithARestartNotice) {
+  PJ::Theme theme;
+  PJ::PreferencesDialog dialog(theme);
+  const auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+  ASSERT_NE(combo, nullptr);
+  ASSERT_EQ(combo->count(), 3);
+  EXPECT_EQ(combo->currentData().toString(), u"zh_CN"_s);
+  EXPECT_EQ(combo->itemData(1).toString(), u"zh_TW"_s);
+  EXPECT_EQ(combo->itemText(1), u"繁體中文（台灣）"_s);
+  EXPECT_EQ(combo->itemData(2).toString(), u"en_US"_s);
+  const auto* notice = dialog.findChild<QLabel*>(u"labelLanguageRestart"_s);
+  ASSERT_NE(notice, nullptr);
+  EXPECT_FALSE(notice->text().isEmpty());
+  dialog.accept();
+  EXPECT_FALSE(QSettings().contains(PJ::AppLanguage::kPreferenceKey));
+  EXPECT_EQ(PJ::AppLanguage::preferredLanguage(QSettings()), u"zh_CN"_s);
+}
+
+TEST(PreferencesLanguageTest, AcceptSavesNextLaunchLanguageWithoutRetranslatingTheSession) {
+  const PJ::AppLanguage running(*qApp, u"zh_CN"_s);
+  ASSERT_TRUE(running.catalogLoaded());
+  PJ::Theme theme;
+  {
+    PJ::PreferencesDialog dialog(theme);
+    auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+    ASSERT_NE(combo, nullptr);
+    combo->setCurrentIndex(combo->findData(u"en_US"_s));
+    EXPECT_FALSE(QSettings().contains(PJ::AppLanguage::kPreferenceKey));
+    dialog.accept();
+  }
+  EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"en_US"_s);
+  EXPECT_EQ(qApp->property("interfaceLanguage").toString(), u"zh_CN"_s);
+  EXPECT_NE(QCoreApplication::translate("PreferencesContent", "Language:"), u"Language:"_s);
+  PJ::PreferencesDialog reopened(theme);
+  const auto* combo = reopened.findChild<QComboBox*>(u"languageCombo"_s);
+  ASSERT_NE(combo, nullptr);
+  EXPECT_EQ(combo->currentData().toString(), u"en_US"_s);
+}
+
+TEST(PreferencesLanguageTest, CancelLeavesTheSavedLanguageAlone) {
+  QSettings().setValue(PJ::AppLanguage::kPreferenceKey, u"en_US"_s);
+  PJ::Theme theme;
+  {
+    PJ::PreferencesDialog dialog(theme);
+    auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+    ASSERT_NE(combo, nullptr);
+    EXPECT_EQ(combo->currentData().toString(), u"en_US"_s);
+    combo->setCurrentIndex(combo->findData(u"zh_CN"_s));
+    dialog.reject();
+  }
+  EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"en_US"_s);
+}
+
+TEST(PreferencesLanguageTest, UnrelatedAcceptPreservesFutureLanguage) {
+  QSettings().setValue(PJ::AppLanguage::kPreferenceKey, u"ja_JP"_s);
+  PJ::Theme theme;
+  PJ::PreferencesDialog dialog(theme);
+  const auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+  ASSERT_NE(combo, nullptr);
+  EXPECT_EQ(combo->currentData().toString(), u"en_US"_s);
+  dialog.accept();
+  EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"ja_JP"_s);
+}
+
+TEST(PreferencesLanguageTest, ExplicitSelectionReplacesFutureLanguageOnlyOnAccept) {
+  QSettings().setValue(PJ::AppLanguage::kPreferenceKey, u"ja_JP"_s);
+  PJ::Theme theme;
+  {
+    PJ::PreferencesDialog dialog(theme);
+    auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+    ASSERT_NE(combo, nullptr);
+    const int traditional = combo->findData(u"zh_TW"_s);
+    ASSERT_GE(traditional, 0);
+    combo->setCurrentIndex(traditional);
+    ASSERT_TRUE(QMetaObject::invokeMethod(combo, "activated", Qt::DirectConnection, Q_ARG(int, traditional)));
+    dialog.reject();
+  }
+  EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"ja_JP"_s);
+  {
+    PJ::PreferencesDialog dialog(theme);
+    auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+    ASSERT_NE(combo, nullptr);
+    const int traditional = combo->findData(u"zh_TW"_s);
+    ASSERT_GE(traditional, 0);
+    combo->setCurrentIndex(traditional);
+    ASSERT_TRUE(QMetaObject::invokeMethod(combo, "activated", Qt::DirectConnection, Q_ARG(int, traditional)));
+    dialog.accept();
+  }
+  EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"zh_TW"_s);
+}
+
+TEST(PreferencesLanguageTest, ExplicitSelectionCanSaveAlreadyDisplayedEnglishFallback) {
+  QSettings().setValue(PJ::AppLanguage::kPreferenceKey, u"ja_JP"_s);
+  PJ::Theme theme;
+  PJ::PreferencesDialog dialog(theme);
+  auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+  ASSERT_NE(combo, nullptr);
+  ASSERT_EQ(combo->currentData().toString(), u"en_US"_s);
+  // QComboBox::activated is emitted for user selections even when the index is unchanged.
+  ASSERT_TRUE(QMetaObject::invokeMethod(combo, "activated", Qt::DirectConnection, Q_ARG(int, combo->currentIndex())));
+  dialog.accept();
+  EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"en_US"_s);
+}
+
+TEST(PreferencesLanguageTest, TraditionalChoicePersistsOnAcceptButNotOnCancel) {
+  PJ::Theme theme;
+  {
+    const PJ::AppLanguage running(*qApp, u"en_US"_s);
+    PJ::PreferencesDialog dialog(theme);
+    auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+    ASSERT_NE(combo, nullptr);
+    combo->setCurrentIndex(combo->findData(u"zh_TW"_s));
+    dialog.accept();
+    EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"zh_TW"_s);
+    EXPECT_EQ(qApp->property("interfaceLanguage").toString(), u"en_US"_s);
+    EXPECT_EQ(QCoreApplication::translate("PreferencesContent", "Language:"), u"Language:"_s);
+  }
+  const PJ::AppLanguage restarted(*qApp, PJ::AppLanguage::preferredLanguage(QSettings()));
+  ASSERT_TRUE(restarted.catalogLoaded());
+  EXPECT_EQ(restarted.language(), u"zh_TW"_s);
+  PJ::PreferencesDialog reopened(theme);
+  auto* combo = reopened.findChild<QComboBox*>(u"languageCombo"_s);
+  ASSERT_NE(combo, nullptr);
+  EXPECT_EQ(combo->currentData().toString(), u"zh_TW"_s);
+  combo->setCurrentIndex(combo->findData(u"zh_CN"_s));
+  reopened.reject();
+  EXPECT_EQ(QSettings().value(PJ::AppLanguage::kPreferenceKey).toString(), u"zh_TW"_s);
+}
+
+TEST(PreferencesLanguageTest, SessionOverrideDoesNotChangeTheNextLaunchSelection) {
+  const PJ::AppLanguage running(*qApp, u"en_US"_s);
+  PJ::Theme theme;
+  PJ::PreferencesDialog dialog(theme);
+  const auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+  ASSERT_NE(combo, nullptr);
+  EXPECT_EQ(combo->currentData().toString(), u"zh_CN"_s);
+  EXPECT_EQ(qApp->property("interfaceLanguage").toString(), u"en_US"_s);
+}
+
+TEST(PreferencesLanguageTest, LanguageSelectorHonorsBothSizeHintsAcrossFonts) {
+  struct RestoreApplicationFont {
+    QFont original = qApp->font();
+    ~RestoreApplicationFont() {
+      QApplication::setFont(original);
+    }
+  } restore_font;
+  for (const QFont& font :
+       {restore_font.original, QFont(u"DejaVu Sans"_s, 9), QFont(u"DejaVu Sans"_s, 12),
+        QFont(u"Liberation Sans"_s, 9)}) {
+    SCOPED_TRACE(font.toString().toStdString());
+    QApplication::setFont(font);
+    SCOPED_TRACE(QFontInfo(qApp->font()).family().toStdString());
+    for (const QString& requested : {u"en_US"_s, u"zh_CN"_s, u"zh_TW"_s}) {
+      SCOPED_TRACE(requested.toStdString());
+      const PJ::AppLanguage running(*qApp, requested);
+      PJ::Theme theme;
+      PJ::PreferencesDialog dialog(theme);
+      auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+      ASSERT_NE(combo, nullptr);
+      dialog.resize(420, 300);
+      dialog.show();
+      QTest::qWait(20);
+
+      // Compare against a freshly populated control as well as Qt's cached
+      // minimum: a cached empty-model hint can be wider OR narrower than text.
+      QComboBox populated(combo->parentWidget());
+      populated.setObjectName(combo->objectName());
+      populated.setFont(combo->font());
+      populated.setSizeAdjustPolicy(combo->sizeAdjustPolicy());
+      for (int index = 0; index < combo->count(); ++index) {
+        populated.addItem(combo->itemText(index), combo->itemData(index));
+      }
+      populated.ensurePolished();
+      EXPECT_GE(combo->width(), combo->minimumSizeHint().width());
+      EXPECT_GE(combo->width(), populated.sizeHint().expandedTo(populated.minimumSizeHint()).width());
+      dialog.reject();
+    }
+  }
+}
+
+TEST(PreferencesLanguageTest, MinimumSizeKeepsTranslatedAppearanceControlsReachable) {
+  for (const QString& requested : {u"en_US"_s, u"zh_CN"_s, u"zh_TW"_s}) {
+    SCOPED_TRACE(requested.toStdString());
+    const PJ::AppLanguage running(*qApp, requested);
+    EXPECT_EQ(running.catalogLoaded(), requested != u"en_US"_s);
+    PJ::Theme theme;
+    PJ::PreferencesDialog dialog(theme);
+    // The upstream width floor follows the widest page's controls. Exercise
+    // the actual minimum while retaining the 300 px scrolling-height contract.
+    const QSize minimum = dialog.minimumSize();
+    ASSERT_GE(minimum.width(), 420);
+    ASSERT_EQ(minimum.height(), 300);
+    dialog.resize(420, 300);
+    dialog.show();
+    QTest::qWait(20);
+    ASSERT_EQ(dialog.size(), minimum);
+    auto* pages = dialog.findChild<QStackedWidget*>(u"pagesStack"_s);
+    auto* scroll = dialog.findChild<QScrollArea*>(u"appearanceScrollArea"_s);
+    auto* label = dialog.findChild<QLabel*>(u"labelLanguage"_s);
+    auto* combo = dialog.findChild<QComboBox*>(u"languageCombo"_s);
+    auto* notice = dialog.findChild<QLabel*>(u"labelLanguageRestart"_s);
+    auto* last_control = dialog.findChild<QWidget*>(u"mcpServerToggle"_s);
+    auto* mcp_label = dialog.findChild<QLabel*>(u"labelMcpServer"_s);
+    ASSERT_NE(pages, nullptr);
+    ASSERT_NE(scroll, nullptr);
+    ASSERT_NE(label, nullptr);
+    ASSERT_NE(combo, nullptr);
+    ASSERT_NE(notice, nullptr);
+    ASSERT_NE(last_control, nullptr);
+    ASSERT_NE(mcp_label, nullptr);
+    EXPECT_TRUE(mcp_label->wordWrap());
+    EXPECT_EQ(pages->widget(PJ::PreferencesDialog::kAppearancePage), scroll);
+    dialog.showPage(PJ::PreferencesDialog::kPluginsPage);
+    ASSERT_NE(pages->currentWidget(), nullptr);
+    EXPECT_EQ(pages->currentWidget()->objectName(), u"pagePlugins"_s);
+    dialog.showPage(PJ::PreferencesDialog::kAppearancePage);
+    EXPECT_EQ(pages->currentWidget(), scroll);
+    EXPECT_GE(combo->width(), combo->minimumSizeHint().width());
+    EXPECT_GE(notice->height(), notice->heightForWidth(notice->width()));
+    EXPECT_GE(mcp_label->height(), mcp_label->heightForWidth(mcp_label->width()));
+    for (QWidget* control :
+         {static_cast<QWidget*>(label), static_cast<QWidget*>(combo), static_cast<QWidget*>(notice),
+          static_cast<QWidget*>(mcp_label), last_control}) {
+      scroll->ensureWidgetVisible(control, 0, 0);
+      QCoreApplication::processEvents();
+      EXPECT_TRUE(control->isVisible());
+      const QRect visible_rect(control->mapTo(scroll->viewport(), QPoint(0, 0)), control->size());
+      EXPECT_TRUE(scroll->viewport()->rect().contains(visible_rect))
+          << control->objectName().toStdString() << " rect=" << visible_rect.x() << "," << visible_rect.y() << ","
+          << visible_rect.width() << "x" << visible_rect.height() << " viewport=" << scroll->viewport()->width() << "x"
+          << scroll->viewport()->height();
+    }
+    dialog.reject();
+  }
+}
+
+// Each discovered case gets a private settings file, like the other shell
+// preference tests, without touching the user's actual application profile.
+class LanguageSettingsEnvironment : public ::testing::Environment {
+ public:
+  void SetUp() override {
+    if (!pj_app_test::isTestSuiteSelected("PreferencesLanguageTest")) {
+      return;
+    }
+    if (!settings_dir_.isValid() || settings_dir_.path().isEmpty()) {
+      qFatal("Cannot create private GUI test settings directory");
+    }
+    QCoreApplication::setOrganizationName(u"PlotJugglerTest"_s);
+    QCoreApplication::setApplicationName(u"preferences_language_test"_s);
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings_dir_.path());
+  }
+
+ private:
+  QTemporaryDir settings_dir_;
+};
+
+static auto* const kLanguageEnv = ::testing::AddGlobalTestEnvironment(new LanguageSettingsEnvironment);
+
+}  // namespace
+
+TEST(PreferencesLanguageTest, TelemetryDefaultsOffAndCancelDoesNotConsent) {
+  QSettings settings;
+  settings.remove(u"Preferences::send_anonymous_stats"_s);
+  settings.remove(PJ::MainWindow::kUsageStatsKey);
+  PJ::Theme theme;
+  PJ::PreferencesDialog dialog(theme);
+  auto* ping = dialog.findChild<PJ::ToggleSwitch*>(u"telemetryToggle"_s);
+  auto* usage = dialog.findChild<PJ::ToggleSwitch*>(u"usageStatsToggle"_s);
+  ASSERT_NE(ping, nullptr);
+  ASSERT_NE(usage, nullptr);
+  EXPECT_FALSE(ping->isChecked());
+  EXPECT_FALSE(usage->isChecked());
+  ping->setChecked(true, false);
+  usage->setChecked(true, false);
+  dialog.reject();
+  EXPECT_FALSE(settings.value(u"Preferences::send_anonymous_stats"_s, false).toBool());
+  EXPECT_FALSE(settings.value(PJ::MainWindow::kUsageStatsKey, false).toBool());
+}
+
+TEST(PreferencesLanguageTest, TelemetryConsentPersistsOnlyAfterAcceptAndCanBeRevoked) {
+  PJ::Theme theme;
+  for (const bool consent : {true, false}) {
+    PJ::PreferencesDialog dialog(theme);
+    auto* ping = dialog.findChild<PJ::ToggleSwitch*>(u"telemetryToggle"_s);
+    auto* usage = dialog.findChild<PJ::ToggleSwitch*>(u"usageStatsToggle"_s);
+    ASSERT_NE(ping, nullptr);
+    ASSERT_NE(usage, nullptr);
+    ping->setChecked(consent, false);
+    usage->setChecked(consent, false);
+    dialog.accept();
+    EXPECT_EQ(QSettings().value(u"Preferences::send_anonymous_stats"_s).toBool(), consent);
+    EXPECT_EQ(QSettings().value(PJ::MainWindow::kUsageStatsKey).toBool(), consent);
+    PJ::PreferencesDialog reopened(theme);
+    EXPECT_EQ(reopened.findChild<PJ::ToggleSwitch*>(u"telemetryToggle"_s)->isChecked(), consent);
+    EXPECT_EQ(reopened.findChild<PJ::ToggleSwitch*>(u"usageStatsToggle"_s)->isChecked(), consent);
+  }
+}

@@ -1,0 +1,10 @@
+<RCC>
+  <qresource prefix="/resources/fonts/NotoSansSC">
+    <file>NotoSansSC-Subset.otf</file>
+    <file>OFL.txt</file>
+  </qresource>
+  <qresource prefix="/resources/fonts/NotoSansSymbols2">
+    <file alias="NotoSansSymbols2-Subset.ttf">../NotoSansSymbols2/NotoSansSymbols2-Subset.ttf</file>
+    <file alias="OFL.txt">../NotoSansSymbols2/OFL.txt</file>
+  </qresource>
+</RCC>

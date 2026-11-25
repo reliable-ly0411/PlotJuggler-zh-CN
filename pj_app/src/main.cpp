@@ -47,6 +47,7 @@
 #include <memory>
 #include <string>
 
+#include "AppLanguage.h"
 #include "BrowserPersistence.h"
 #include "BundledFont.h"
 #include "DebugMode.h"
@@ -389,6 +390,36 @@ int main(int argc, char* argv[]) {
     app_font.setFamily(family);
     QApplication::setFont(app_font);
   }
+  // Native release bundles carry a separately licensed CJK fallback, so Chinese
+  // remains legible on systems without an installed Chinese font collection.
+#ifdef PJ_TARGET_WASM
+  const int cjk_font_id = QFontDatabase::addApplicationFont(u":/resources/fonts/NotoSansSC/NotoSansSC-Subset.otf"_s);
+  if (cjk_font_id < 0) {
+    qWarning("Failed to load bundled browser CJK font");
+  }
+  const int symbol_font_id =
+      QFontDatabase::addApplicationFont(u":/resources/fonts/NotoSansSymbols2/NotoSansSymbols2-Subset.ttf"_s);
+  if (symbol_font_id < 0) {
+    qWarning("Failed to load bundled browser symbol font");
+  }
+  if (cjk_font_id >= 0 || symbol_font_id >= 0) {
+    QFont app_font = QApplication::font();
+    QStringList families = app_font.families();
+    for (const int id : {cjk_font_id, symbol_font_id}) {
+      if (id >= 0) {
+        families.append(QFontDatabase::applicationFontFamilies(id));
+      }
+    }
+    families.removeDuplicates();
+    app_font.setFamilies(families);
+    QApplication::setFont(app_font);
+  }
+#else
+  const QString cjk_font = QCoreApplication::applicationDirPath() + u"/fonts/NotoSansCJKsc-Regular.otf"_s;
+  if (QFile::exists(cjk_font) && QFontDatabase::addApplicationFont(cjk_font) < 0) {
+    qWarning("Failed to load bundled CJK fallback font");
+  }
+#endif
 
   // Tags menus and palette-paints combo popups on Polish, where QSS specificity cannot reach.
   auto* tuner = new PJ::WidgetTuner(&app);
@@ -398,6 +429,11 @@ int main(int argc, char* argv[]) {
   parser.setApplicationDescription(u"PlotJuggler 4"_s);
   parser.addHelpOption();
   parser.addVersionOption();
+  const QCommandLineOption language_option(
+      u"language"_s,
+      QCoreApplication::translate("AppLanguage", "Interface language for this session (zh_CN, zh_TW or en_US)."),
+      u"language"_s);
+  parser.addOption(language_option);
   const QCommandLineOption test_data_option(
       u"test-data"_s, u"Populate the datastore with generated sin/cos samples and one image."_s);
   parser.addOption(test_data_option);
@@ -494,6 +530,14 @@ int main(int argc, char* argv[]) {
       u"mcp-bridge"_s, u"Speak MCP over stdio, forwarding to a running PlotJuggler with MCP on (for agents)."_s));
 #endif
   parser.process(app);
+
+  // The browser's settings boundary is already installed. Keep translators
+  // alive until every window is destroyed; a CLI override never changes the
+  // saved preference or the locale used to parse and format numeric data.
+  const QSettings language_settings;
+  const PJ::AppLanguage app_language(
+      app, parser.isSet(language_option) ? parser.value(language_option)
+                                         : PJ::AppLanguage::preferredLanguage(language_settings));
 
 #ifndef PJ_TARGET_WASM
   if (parser.isSet(validate_plugins_option)) {
