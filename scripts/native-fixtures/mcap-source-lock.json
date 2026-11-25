@@ -1,0 +1,22 @@
+{
+  "version": "2.1.1",
+  "archive_url": "https://github.com/foxglove/mcap/archive/refs/tags/releases/cpp/v2.1.1.tar.gz",
+  "archive_sha256": "f5ec006beccfb6d56a26fee8e460e79bed02f125eb2604159ddfbb9906d57da4",
+  "license": "MIT",
+  "headers": {
+    "mcap/crc32.hpp": "a3b7b6d28559adf8e18ca71012563faf58375137f51fd6937bf5197cdd8fb813",
+    "mcap/errors.hpp": "698c82eb71c7db4a8a31a40e6e4b66785d08372bcbc97ba4b2b5a9a02f378e14",
+    "mcap/internal.hpp": "334e8a4c8d5a4d02f256d460bbef1f2c71fe944a9f934989dc51ad77eb0d93b4",
+    "mcap/intervaltree.hpp": "62c17bb11e811b8ef7ca72b3eca5f4014f4e27049125ac065bc60fcc2f605016",
+    "mcap/mcap.hpp": "996cd1457e8ca5fbfcb0a178f765e1ec1f1a8c389a56aa7f0f2d4bc9fc806cc7",
+    "mcap/read_job_queue.hpp": "d4faab3749c538f7a57f9e84ddaf1036a2ee6d9500fcf553715ed0ca51ce4b1a",
+    "mcap/reader.hpp": "d5b279a2d1f3a87d19938d278118c1656181e93cd8f441b84192dd1044d0adb2",
+    "mcap/reader.inl": "310355a2364bff481ce6fe43e6c4bd0dc70a66cb8443d4be7f5f997a55123798",
+    "mcap/types.hpp": "fc133ebc38b3833d91d24a052baac6c5fc1d33754ff4c0a16af47403192221da",
+    "mcap/types.inl": "614e014ebe5cbfc254e631839e51637d74b503991a061eeda84b3e51220fa82a",
+    "mcap/visibility.hpp": "dc702161364b8aa7e96061e9b785a85fa673b9ce68f7e7ba58a34325d4e145a9",
+    "mcap/writer.hpp": "3c609a079e029342683efdfbc977c685444e75c5ca5fad16b7be595c63930e69",
+    "mcap/writer.inl": "e5c46d39c0a10cc177669203e20bc096771892523df2a6a3eb74921e9c7d3e4a"
+  },
+  "license_sha256": "da11235665c17d4c1634072dae92b8ba1b38d6fdde2ccf19a6bbede33253f58d"
+}

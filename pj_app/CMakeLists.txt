@@ -749,6 +749,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(main_window_layout_import_alive_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME MainWindowLayoutImportAliveTest COMMAND main_window_layout_import_alive_test)
+    if(WIN32)
+        target_link_libraries(main_window_layout_import_alive_test PRIVATE advapi32)
+    endif()
     list(APPEND PJ_APP_GUI_TEST_SOURCES
         tests/main_window_layout_import_policy_test.cpp)
     list(APPEND PJ_APP_GUI_TEST_SOURCES
@@ -772,6 +775,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(main_window_layout_import_lifecycle_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME MainWindowLayoutImportLifecycleTest COMMAND main_window_layout_import_lifecycle_test)
+    if(WIN32)
+        target_link_libraries(main_window_layout_import_lifecycle_test PRIVATE advapi32)
+    endif()
     target_compile_definitions(main_window_layout_import_lifecycle_test PRIVATE
         PJ_MOCK_FILE_SOURCE_PLUGIN_PATH="$<TARGET_FILE:mock_file_source_plugin>"
     )
@@ -787,6 +793,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(main_window_layout_import_binder_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME MainWindowLayoutImportBinderTest COMMAND main_window_layout_import_binder_test)
+    if(WIN32)
+        target_link_libraries(main_window_layout_import_binder_test PRIVATE advapi32)
+    endif()
     target_compile_definitions(main_window_layout_import_binder_test PRIVATE
         PJ_MOCK_FILE_SOURCE_PLUGIN_PATH="$<TARGET_FILE:mock_file_source_plugin>"
     )
@@ -804,6 +813,9 @@ if(PJ_BUILD_TESTS)
     add_executable(main_window_layout_import_e2e_test tests/main_window_layout_import_e2e_test.cpp)
     target_include_directories(main_window_layout_import_e2e_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(main_window_layout_import_e2e_test PRIVATE pj_app_shell pj_resources GTest::gtest)
+    if(WIN32)
+        target_link_libraries(main_window_layout_import_e2e_test PRIVATE advapi32)
+    endif()
     if(DEFINED PJ_WARNING_FLAGS)
         target_compile_options(main_window_layout_import_e2e_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
@@ -818,6 +830,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(main_window_layout_exit_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME MainWindowLayoutExitTest COMMAND main_window_layout_exit_test)
+    if(WIN32)
+        target_link_libraries(main_window_layout_exit_test PRIVATE advapi32)
+    endif()
 
     # --dump-diagnostics collector: full-run accumulation from the queued bridge (pre-attach records included),
     # the five-field JSON shape, no truncation at the DiagnosticHistory ring cap. No MainWindow.
@@ -1008,6 +1023,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(source_promotion_host_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME SourcePromotionHostTest COMMAND source_promotion_host_test)
+    if(WIN32)
+        target_link_libraries(source_promotion_host_test PRIVATE advapi32)
+    endif()
 
     # Headless per-batch owner of one descriptor-import provider toolbox instance: manifest-id resolution, bind,
     # extension view, promotion service, queued-only callback marshal, quiescence teardown. Fake provider
@@ -1021,6 +1039,9 @@ if(PJ_BUILD_TESTS)
         target_compile_options(headless_descriptor_provider_session_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME HeadlessDescriptorProviderSessionTest COMMAND headless_descriptor_provider_session_test)
+    if(WIN32)
+        target_link_libraries(headless_descriptor_provider_session_test PRIVATE advapi32)
+    endif()
 
     # The rewrite-then-classify restore coordinator: classify matrix, trust gate, guard-3 ceiling,
     # provider-absent fallback, job chaining, cancel/rollback; a descriptor-scripted fake provider plus the real
@@ -1047,6 +1068,9 @@ if(PJ_BUILD_TESTS)
             target_compile_options(layout_import_batch_test PRIVATE ${PJ_WARNING_FLAGS})
         endif()
         add_test(NAME LayoutImportBatchTest COMMAND layout_import_batch_test)
+    if(WIN32)
+        target_link_libraries(layout_import_batch_test PRIVATE advapi32)
+    endif()
     endif()
 
     # The Source Timeline binding: the bars track data growth (samplesIngested), not just new catalog topics.

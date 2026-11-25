@@ -1,0 +1,105 @@
+# Synthetic native media fixtures
+
+These sources generate four **synthetic offline test inputs**, not production
+recordings, live-MCAP descriptor vectors, golden screenshots, or performance
+results. No generated binary is committed. Generation is a small independent
+Linux CI step, not another native test cycle. Windows consumes the same artifact.
+
+## Dependencies and provenance
+
+- Python 3.11+, a C++20 compiler, `dpkg-deb`, FFmpeg + ffprobe with libx264.
+- MCAP 2.1.1 headers (MIT). `mcap-source-lock.json` pins the official source
+  archive URL/SHA and each header's SHA, plus the upstream LICENSE SHA. Acquire
+  that archive, verify SHA **before** extraction, retain LICENSE, and pass its
+  `cpp/mcap/include` directory. Existing Conan `mcap/2.1.1` includes also work
+  only if every header matches. `--mcap-license` is hash-checked and retained in output evidence. Never substitute another SDK or MCAP version.
+- The application Conan FFmpeg is decoder-only and cannot generate these inputs.
+  On a dedicated Ubuntu CI job use the official signed APT repository, install
+  its exact ffmpeg version, and retain `apt-cache policy`, the matching
+  `apt-cache show ffmpeg=<version>` stanza, acquisition logs, repository
+  InRelease/signature evidence and the downloaded `.deb`. Do not disable APT
+  signature checks. Use `apt-get download ffmpeg=<version>` and record/verify
+  the stanza's SHA256 against the resulting archive. This is CI provisioning,
+  not permission to install anything on a user's computer.
+- Supply `--tool-provenance` JSON with `package`, `version`, official `url`,
+  `sha256`, and `apt_signature_evidence` (an artifact-relative evidence location,
+  not a claim created without the signed acquisition). The generator verifies
+  the whole package SHA and **both executing binaries** against its streamed
+  `usr/bin/ffmpeg` / `usr/bin/ffprobe` bytes. It records actual compiler/tool
+  executable SHA and full version output. The dynamic encoder/libav libraries
+  are identified in version logs; the two-binary check does not claim a full
+  transitive library-package hash closure. Preserve CI installed-package lists
+  and dynamic library provenance with the tool evidence.
+- FFmpeg builds with libx264 are GPL-enabled tools (x264 GPL); MCAP headers are
+  MIT. Do not ship these tools with the application. Generated testsrc image
+  and scalar patterns contain no third-party recordings or personal data.
+
+## Invocation
+
+Run the offline contract tests first:
+
+```sh
+python3 scripts/native-fixtures/test_generate_media_fixtures.py
+python3 scripts/native-fixtures/generate_media_fixtures.py \
+  --output "$RUNNER_TEMP/synthetic-media-new" \
+  --mcap-include "$MCAP_SOURCE/cpp/mcap/include" \
+  --mcap-license "$MCAP_SOURCE/LICENSE" \
+  --ffmpeg /usr/bin/ffmpeg --ffprobe /usr/bin/ffprobe --cxx /usr/bin/g++ \
+  --tool-package "$FFMPEG_DEB" --tool-provenance "$TOOL_PROVENANCE_JSON"
+```
+
+Output must not exist. All compilation, PNG/JSON templates, stdout/stderr and
+media are inside this **one new directory**. Failure preserves evidence and may
+leave a manifest that has not passed the final check. Only a successful generation
+job may publish its verified manifest digest for use as an input. Do not use
+Python `-O`; it is explicitly rejected.
+Do not retry into the same output directory or delete old evidence automatically.
+Each external command has a 180-second timeout; x264 uses two threads. Hashes
+are actual output hashes, **not** an assertion of cross-platform encoder byte
+reproducibility. There is no random input: time starts at 1,000,000,000 ns and
+increments by 33,333,333 ns for MCAP; video testsrc is 4 seconds at 30 fps.
+
+## Artifact and assertions
+
+Artifact root has exactly the four input names below, `manifest.json`, and
+`evidence/`. Manifest schema1 contains `synthetic: true`, files keyed by basename
+with bytes/SHA256, symbolic generation commands (no cloud absolute paths),
+tool/package/source identities and semantic readback. Preserve the whole
+artifact including evidence; only copy its **four inputs** into the test tree.
+
+| Input | Real semantic readback / intended assertions |
+|---|---|
+| test_480p.mp4 | H.264/yuv420p, 640x480, 30/1 fps, 120 decoded frames, 4 seconds; matches exact decoder dimensions, seeks/flush/cancel and streaming/retention fixtures. Do not use the old README's 854x480 input. |
+| test_1080p_bframes.mp4 | H.264/yuv420p, 1920x1080, 120 decoded frames, 4 seconds, B frames present; encoder requests 3 B frames, key interval30; supports reorder tests. |
+| test_images.mcap | One foxglove.CompressedImage JSON channel,90 messages, PNG32x24; reopen and validate every schema/topic/payload, timestamp and sequence. Used by McapImageIntegration's4cases. |
+| potato.mcap | Two image and two synthetic scalar channels,8400messages each, matching timestamps; reopen and validate every message. Used by DualStoreTest's2cases requiring2image topics with8400entries each and2scalar topics. |
+
+PNG template is generated by FFmpeg testsrc and probed; Python creates and
+base64-validates the JSON payload. The C++ generator writes uncompressed MCAP
+with fixed content and then independently reopens it via MCAP reader; output
+counts alone are not its validator. `ffprobe -count_frames` reads/decode-counts
+video rather than trusting container frame-count metadata.
+
+Native-kit integration preserves repository CWD and exact paths
+`pj_scene2D/testdata/{test_480p.mp4,test_1080p_bframes.mp4,test_images.mcap,potato.mcap}`.
+Before copying, stop if any path is Git-tracked, already exists, or resolves via
+an unexpected link. Only these four reviewed generated-path exceptions may be
+admitted to the kit's otherwise clean-source check. The kit must bind copied
+bytes to this manifest, generation source/tool evidence and new source identity.
+Do not modify CTest assertions or apply a blanket untracked-source exemption.
+Workflow/planner integration is deliberately a separate reviewed change.
+
+Before copying on Windows, run the platform-neutral hash/semantic-record verifier:
+
+```sh
+python3 scripts/native-fixtures/verify_fixture_manifest.py \
+  --directory "$DOWNLOADED_ARTIFACT" --expected-manifest-sha256 "$TRUSTED_MANIFEST_SHA256"
+```
+
+The expected SHA must come from the trusted generation job/artifact record,
+not be recomputed from an untrusted manifest and accepted blindly. This checks
+transfer integrity and exact semantic records; the actual decoder and MCAP
+readback occur in generation, and the native tests must still execute on Windows.
+Negative unit tests reject corrupt media bytes, wrong dimensions/frame counts,
+wrong MCAP message counts, unexpected file sets, package hashes, optimized
+Python and a pre-existing output. They do not substitute for native tests.

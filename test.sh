@@ -17,7 +17,7 @@ CTEST_ARGS=()
 
 bad_value() { echo "$1" >&2; exit 2; }
 set_sanitize() {
-  [[ "$1" =~ ^(none|asan|tsan)$ ]] || bad_value "--sanitize/PJ_SANITIZE must be none, asan or tsan (got '$1')"
+  [[ "$1" =~ ^(none|asan|tsan|msan)$ ]] || bad_value "--sanitize/PJ_SANITIZE must be none, asan, tsan or msan (got '$1')"
   PJ_SANITIZE="$1"
 }
 
