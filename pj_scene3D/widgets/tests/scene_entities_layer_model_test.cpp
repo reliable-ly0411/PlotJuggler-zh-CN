@@ -30,6 +30,7 @@
 
 #include "mesh_import.h"  // maxConcurrentMeshLoads
 #include "mock_parser_support.h"
+#include "owned_model_cache.h"
 #include "pj_base/builtin/scene_entities_codec.hpp"
 #include "pj_base/time.hpp"
 #include "pj_datastore/engine.hpp"
@@ -1290,10 +1291,9 @@ namespace {
 class SceneEntitiesModelEnvironment : public ::testing::Environment {
  public:
   void SetUp() override {
-    // The layer's UrlFetcher builds a QNetworkDiskCache: point it at a throwaway dir (auto-removed at exit) so tests
-    // never write into the real ~/.local/share.
-    static QTemporaryDir model_cache_dir;
-    qputenv("PJ_MODEL_CACHE_DIR", (model_cache_dir.path() + u"/models"_s).toUtf8());
+    // The layer's UrlFetcher builds a QNetworkDiskCache; point it at a throwaway dir
+    // (auto-removed at exit) so these tests never write into the real ~/.local/share.
+    pj_scene3d_test::installModelCache();
   }
 };
 

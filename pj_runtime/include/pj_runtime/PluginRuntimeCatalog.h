@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
@@ -43,6 +44,7 @@ inline constexpr std::string_view kAgentIdPrefix = "agent-";
 
 struct RuntimeDataSourcePlugin {
   DataSourceLibrary library;
+  // UTF-8 canonical filename, or a static:// identity (not a native narrow path).
   std::string path;
   std::string name;
   std::string id;
@@ -54,6 +56,7 @@ struct RuntimeDataSourcePlugin {
 
 struct RuntimeMessageParserPlugin {
   MessageParserLibrary library;
+  // UTF-8 canonical filename, or a static:// identity (not a native narrow path).
   std::string path;
   std::string name;
   std::string id;
@@ -71,6 +74,7 @@ inline constexpr std::string_view kCustomTopicsViewerCapability = "custom_topics
 
 struct RuntimeToolboxPlugin {
   ToolboxLibrary library;
+  // UTF-8 canonical filename, or a static:// identity (not a native narrow path).
   std::string path;
   std::string name;
   std::string id;
@@ -224,7 +228,9 @@ class PluginRuntimeCatalog {
   [[nodiscard]] const RuntimeMessageParserPlugin* findParserById(std::string_view id) const;
 
   // Builds a QFileDialog-compatible filter string.
-  [[nodiscard]] std::string buildFileFilter() const;
+  [[nodiscard]] std::string buildFileFilter(
+      std::string_view supported_label = "All supported files", std::string_view all_label = "All files",
+      const std::function<std::string(const RuntimeDataSourcePlugin&)>& display_name = {}) const;
 
   // Lists parser encodings as a JSON string array.
   [[nodiscard]] std::string listAvailableEncodings() const;

@@ -33,6 +33,7 @@
 #include "pj_runtime/SessionManager.h"
 #include "pj_runtime/Time.h"
 #include "pj_widgets/CurveTreeView.h"
+#include "support/isolated_main_window.h"
 #include "support/modal_answerer.h"
 #include "ui/CurveListPanel.h"
 
@@ -153,7 +154,7 @@ class MessageBoxAnswerer {
 // One window with a dataset holding an (empty) cloud topic and a scalar topic, and the editor named.
 struct CustomTopicsFixture {
   QTemporaryDir extensions_dir;
-  PJ::MainWindow window{extensions_dir.path()};
+  pj_app_test::IsolatedMainWindow window{extensions_dir.path()};
   PJ::CurveListPanel* panel = window.findChild<PJ::CurveListPanel*>(u"curveListPanel"_s);
   CurveTreeView* tree = panel != nullptr ? panel->findChild<CurveTreeView*>(u"treeView"_s) : nullptr;
   CurveTreeView* custom = panel != nullptr ? panel->findChild<CurveTreeView*>(u"customView"_s) : nullptr;
@@ -187,8 +188,11 @@ struct CustomTopicsFixture {
     MainWindowCustomTopicsTestPeer::setCustomTopicsEditorId(window, QString::fromLatin1(kEditor));
     QObject::connect(
         window.diagnosticBridge(), &PJ::QtDiagnosticBridge::diagnosticReported, &window,
-        [this](int /*level*/, const QString& /*source*/, const QString& id, const QString& message) {
-          reported.push_back(id + u": "_s + message);
+        [this](int /*level*/, const QString& source, const QString& id, const QString& message) {
+          // Extension discovery can deliver queued diagnostics after this fixture connects.
+          if (source == u"CustomTopics"_s) {
+            reported.push_back(id + u": "_s + message);
+          }
         });
     return true;
   }

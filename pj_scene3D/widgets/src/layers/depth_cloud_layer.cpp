@@ -287,7 +287,7 @@ QWidget* DepthCloudLayer::createConfigWidget(QWidget* parent) {
 
   auto* colormap_combo = new PJ::ComboBox(container);
   for (int index = 0; index < PJ::kColormapCount; ++index) {
-    colormap_combo->addItem(PJ::colormapToken(static_cast<PJ::Colormap>(index)), index);
+    colormap_combo->addItem(PJ::colormapDisplayName(static_cast<PJ::Colormap>(index)), index);
   }
   colormap_combo->setCurrentIndex(static_cast<int>(colormap_));
   form->addRow(tr("Colormap:"), colormap_combo);

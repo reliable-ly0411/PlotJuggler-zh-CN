@@ -68,4 +68,25 @@ TEST(UpdateVersionTest, IsNewerVersionRejectsUnparseable) {
   EXPECT_FALSE(isNewerVersion("", ""));
 }
 
+TEST(UpdateVersionTest, LocalizedStableIdentityAndPrecedence) {
+  EXPECT_TRUE(PJ::isLocalizedBuildVersion("4.1.0+zh.1"));
+  EXPECT_TRUE(PJ::isLocalizedBuildVersion("4.1.0-zh.1.dev.1"));
+  EXPECT_FALSE(PJ::isLocalizedBuildVersion("4.1.0"));
+  EXPECT_FALSE(PJ::isLocalizedBuildVersion("4.1.0+other.zh.1"));
+  EXPECT_FALSE(PJ::isLocalizedBuildVersion("4.01.0+zh.1"));
+  EXPECT_TRUE(PJ::isStableLocalizedVersion("4.1.0+zh.1"));
+  EXPECT_FALSE(PJ::isStableLocalizedVersion("4.1.0-zh.1"));
+  EXPECT_TRUE(PJ::isNewerLocalizedVersion("v4.1.0+zh.1", "4.1.0-zh.99.rc.100"));
+  EXPECT_TRUE(PJ::isNewerLocalizedVersion("4.1.0+zh.1", "4.1.0-zh.1"));
+  EXPECT_FALSE(PJ::isNewerLocalizedVersion("4.1.0-zh.2.rc.1", "4.1.0+zh.1"));
+  EXPECT_FALSE(PJ::isNewerLocalizedVersion("4.1.0+zh.2", "4.1.0+zh.1"));
+  EXPECT_FALSE(PJ::isNewerLocalizedVersion("4.1.0+zh.1", "4.1.0+zh.2"));
+  EXPECT_TRUE(PJ::isNewerLocalizedVersion("4.1.1+zh.1", "4.1.0+zh.1"));
+  EXPECT_FALSE(PJ::isNewerLocalizedVersion("5.0.0+zh.1", "4.1.0+zh.1"));
+  EXPECT_FALSE(PJ::isNewerLocalizedVersion("4.1.0-zh.1.dev.2", "4.0.0-zh.1.rc.4"));
+  EXPECT_FALSE(PJ::isNewerLocalizedVersion("4.2.0+zh.999999999999999999999", "4.1.0+zh.1"));
+  EXPECT_TRUE(PJ::isNewerLocalizedVersion("4.0.0-zh.1.rc.10", "4.0.0-zh.1.rc.9"));
+  EXPECT_TRUE(PJ::isNewerLocalizedVersion("4.0.0-zh.2.rc.1", "4.0.0-zh.1"));
+}
+
 }  // namespace

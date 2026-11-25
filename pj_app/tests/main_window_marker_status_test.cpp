@@ -25,6 +25,7 @@
 #include "pj_runtime/BatchEngine.h"
 #include "pj_runtime/CatalogModel.h"
 #include "pj_runtime/SessionManager.h"
+#include "support/isolated_main_window.h"
 
 using namespace Qt::StringLiterals;
 
@@ -74,7 +75,7 @@ class MainWindowMarkerStatusTest : public ::testing::Test {
  protected:
   void SetUp() override {
     ASSERT_TRUE(extensions_dir_.isValid());
-    window_ = std::make_unique<PJ::MainWindow>(extensions_dir_.path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_.path());
     app_ = &PJ::MainWindowMarkerStatusTestPeer::session(*window_);
     engine_ = &app_->sessionManager().batchEngine();
     dataset_a_ = pj_test::createDataset(*app_, "a");

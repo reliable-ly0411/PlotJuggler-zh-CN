@@ -48,6 +48,7 @@
 #include "pj_runtime/SessionManager.h"
 #include "pj_runtime/Time.h"
 #include "pj_widgets/IntScrubber.h"
+#include "support/isolated_main_window.h"
 #include "support/loader_test_support.h"
 #include "support/modal_answerer.h"
 #include "support/preset_test_support.h"
@@ -148,7 +149,7 @@ class StreamingPresetTest : public ::testing::Test {
       ASSERT_TRUE(QFile::copy(path, extensions_dir_.filePath(QFileInfo(path).fileName())));
     }
     qputenv("PJ_LAYOUT_STREAM_PROBE_FILE", probeFile().toLocal8Bit());
-    window_ = std::make_unique<PJ::MainWindow>(extensions_dir_.path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_.path());
     QObject::connect(
         window_.get(), &PJ::MainWindow::layoutUrlLoadFinished, [this](const QUrl&, bool ok, const QString& reason) {
           EXPECT_EQ(ok, reason.isEmpty()) << reason.toStdString();

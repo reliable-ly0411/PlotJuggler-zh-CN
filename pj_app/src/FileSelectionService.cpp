@@ -3,6 +3,7 @@
 
 #include "FileSelectionService.h"
 
+#include <QCoreApplication>
 #include <QFileDialog>
 #include <QRegularExpression>
 #include <memory>
@@ -76,7 +77,9 @@ void FileSelectionService::selectAndStageFile(
         }
         BrowserFileStore::StageResult staged =
             store ? store->reserve(browser_name)
-                  : BrowserFileStore::StageResult{.error = QStringLiteral("Browser file staging is unavailable.")};
+                  : BrowserFileStore::StageResult{
+                        .error = QCoreApplication::translate(
+                            "PJ::FileSelectionService", "Browser file staging is unavailable.")};
         if (!staged.input.has_value()) {
           browser_picked_file::forget(pick_id);
           callback({.browser_name = browser_name, .error = std::move(staged.error)});
@@ -100,8 +103,10 @@ void FileSelectionService::selectAndStageFile(
                 // Dropping `input` releases its lease, which removes the mounted file.
                 callback({
                     .browser_name = browser_name,
-                    .error =
-                        u"The browser could not read %1 (moved or changed since it was picked?)."_s.arg(browser_name),
+                    .error = QCoreApplication::translate(
+                                 "PJ::FileSelectionService",
+                                 "The browser could not read %1 (moved or changed since it was picked?).")
+                                 .arg(browser_name),
                 });
                 return;
               }
@@ -120,7 +125,7 @@ void FileSelectionService::selectAndStageFile(
         if (!store) {
           callback({
               .browser_name = selection.browser_name,
-              .error = QStringLiteral("Browser file staging is unavailable."),
+              .error = QCoreApplication::translate("PJ::FileSelectionService", "Browser file staging is unavailable."),
           });
           return;
         }

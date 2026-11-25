@@ -1,7 +1,6 @@
+#include <pj_widgets/BundledPluginText.h>
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
-
-#include "FileLoader.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -48,6 +47,7 @@
 #include "BrowserFileStore.h"
 #include "DialogPresenter.h"
 #include "FanoutConfig.h"
+#include "FileLoader.h"
 #include "FileSelectionService.h"
 #ifdef PJ_TARGET_WASM
 #include "BrowserPickedFile.h"
@@ -580,9 +580,12 @@ void openScrollableMessageDialog(
     const char* role;
   };
   const BtnSpec specs[] = {
-      {PJ_MSG_BTN_OK, QT_TR_NOOP("OK"), "primary"},      {PJ_MSG_BTN_YES, QT_TR_NOOP("Yes"), "primary"},
-      {PJ_MSG_BTN_NO, QT_TR_NOOP("No"), "neutral"},      {PJ_MSG_BTN_CONTINUE, QT_TR_NOOP("Continue"), "primary"},
-      {PJ_MSG_BTN_ABORT, QT_TR_NOOP("Abort"), "cancel"}, {PJ_MSG_BTN_CANCEL, QT_TR_NOOP("Cancel"), "cancel"},
+      {PJ_MSG_BTN_OK, QT_TRANSLATE_NOOP("QObject", "OK"), "primary"},
+      {PJ_MSG_BTN_YES, QT_TRANSLATE_NOOP("QObject", "Yes"), "primary"},
+      {PJ_MSG_BTN_NO, QT_TRANSLATE_NOOP("QObject", "No"), "neutral"},
+      {PJ_MSG_BTN_CONTINUE, QT_TRANSLATE_NOOP("QObject", "Continue"), "primary"},
+      {PJ_MSG_BTN_ABORT, QT_TRANSLATE_NOOP("QObject", "Abort"), "cancel"},
+      {PJ_MSG_BTN_CANCEL, QT_TRANSLATE_NOOP("QObject", "Cancel"), "cancel"},
   };
   // No button we render: a lone OK, as openPluginMessageBox does.
   int wanted = buttons;
@@ -875,6 +878,7 @@ struct FileLoader::LoadContext {
   QPointer<QWidget> dialog_parent;
   QString source_name;  // the plugin's display name
   QString source_manifest_id;
+  QString source_version;
   std::string config;
   DatasetId dataset_id = 0;
   quint64 ticket = 0;
@@ -982,7 +986,12 @@ void FileLoader::openFromDialog(QWidget* dialog_parent) {
   loadFromBrowserPicker(dialog_parent, {});
   return;
 #else
-  const QString filter = extensions_.buildFileFilter();
+  const QString filter = extensions_.buildFileFilter([](const RuntimeDataSourcePlugin& source) {
+    return bundledPluginText(
+               QString::fromStdString(source.id), QString::fromStdString(source.version),
+               QString::fromStdString(source.name))
+        .toStdString();
+  });
   QSettings settings;
   const QString last_dir = settings.value(kLastDirKey, QString()).toString();
 
@@ -1046,7 +1055,12 @@ void FileLoader::replaceFromDialog(DatasetId dataset_id, QWidget* dialog_parent)
 #ifdef PJ_TARGET_WASM
   loadFromBrowserPicker(dialog_parent, hints);
 #else
-  const QString filter = extensions_.buildFileFilter();
+  const QString filter = extensions_.buildFileFilter([](const RuntimeDataSourcePlugin& source) {
+    return bundledPluginText(
+               QString::fromStdString(source.id), QString::fromStdString(source.version),
+               QString::fromStdString(source.name))
+        .toStdString();
+  });
   QSettings settings;
   const QString last_dir = settings.value(kLastDirKey, QString()).toString();
   QString path;
@@ -1078,7 +1092,8 @@ void FileLoader::loadFromBrowserPicker(QWidget* dialog_parent, LoadHints hints) 
           return;  // loader destroyed, or picker cancelled.
         }
         if (!staged.input.has_value()) {
-          const QString reason = staged.error.isEmpty() ? self->tr("Could not stage the selected file.") : staged.error;
+          const QString reason =
+              staged.error.isEmpty() ? FileLoader::tr("Could not stage the selected file.") : staged.error;
           self->logLoadFailure(staged.browser_name, reason);
           self->reportLoadWarning(guarded_parent.data(), reason);
           emit self->fileLoadFailed(staged.browser_name, reason);
@@ -1092,7 +1107,13 @@ void FileLoader::loadFromBrowserPicker(QWidget* dialog_parent, LoadHints hints) 
 void FileLoader::selectBrowserInput(
     QWidget* dialog_parent, BrowserSelectionCallback callback, FileSelectionService::Fingerprint fingerprint,
     const QString& name_filter) {
-  const QString filter = name_filter.isEmpty() ? extensions_.buildFileFilter() : name_filter;
+  const QString filter = name_filter.isEmpty() ? extensions_.buildFileFilter([](const RuntimeDataSourcePlugin& source) {
+    return bundledPluginText(
+               QString::fromStdString(source.id), QString::fromStdString(source.version),
+               QString::fromStdString(source.name))
+        .toStdString();
+  })
+                                               : name_filter;
   qCInfo(lcFileLoader).noquote() << "Opening browser file picker with filter:" << filter;
   FileSelectionService::selectAndStageFile(
       dialog_parent, filter, browser_file_store_,
@@ -1235,9 +1256,15 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
     co_return;
   }
 
+  const QString source_version = QString::fromStdString(source->version);
+  const QString source_display_name = bundledPluginText(source_manifest_id, source_version, source_name);
+  const auto display_plugin_error = [&source_manifest_id, &source_version](const std::string& error) {
+    return bundledPluginError(source_manifest_id, source_version, QString::fromStdString(error));
+  };
+
   DataSourceHandle handle = source->library.createHandle();
   if (!handle.valid()) {
-    (void)fail(tr("Plugin '%1': createHandle failed.").arg(source_name));
+    (void)fail(tr("Plugin '%1': createHandle failed.").arg(source_display_name));
     co_return;
   }
   const PJ_data_source_vtable_t* const source_vtable = source->library.vtable();
@@ -1367,13 +1394,13 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
 
   ServiceRegistryBuilder registry;
   if (auto status = ingest_session.registerServices(registry); !status) {
-    (void)fail(
-        tr("Plugin '%1': service registration failed: %2").arg(source_name, QString::fromStdString(status.error())));
+    (void)fail(tr("Plugin '%1': service registration failed: %2")
+                   .arg(source_display_name, display_plugin_error(status.error())));
     co_return;
   }
 
   if (auto status = handle.bind(registry.view()); !status) {
-    (void)fail(tr("Plugin '%1': bind failed: %2").arg(source_name, QString::fromStdString(status.error())));
+    (void)fail(tr("Plugin '%1': bind failed: %2").arg(source_display_name, display_plugin_error(status.error())));
     co_return;
   }
 
@@ -1401,7 +1428,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
     std::string preset = std::move(*rewritten);
     if (auto status = handle.loadConfig(preset); !status) {
       (void)fail(tr("Plugin '%1' rejected the layout's saved configuration: %2")
-                     .arg(source_name, QString::fromStdString(status.error())));
+                     .arg(source_display_name, display_plugin_error(status.error())));
       co_return;
     }
     config = preset;
@@ -1417,7 +1444,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
         skip_dialog = true;
       } else {
         qCInfo(lcFileLoader).noquote() << tr("Layout preset rejected by '%1': %2 — falling back to dialog")
-                                              .arg(source_name, QString::fromStdString(status.error()));
+                                              .arg(source_display_name, display_plugin_error(status.error()));
       }
     }
     // A batch reuses the last-used settings, which an earlier dialog of this batch saved before its import started. A
@@ -1436,7 +1463,8 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
     if (!skip_dialog) {
       config = buildLoadConfig(saved_config, input.backing_path);
       if (auto status = handle.loadConfig(config); !status) {
-        (void)fail(tr("Plugin '%1': loadConfig failed: %2").arg(source_name, QString::fromStdString(status.error())));
+        (void)fail(
+            tr("Plugin '%1': loadConfig failed: %2").arg(source_display_name, display_plugin_error(status.error())));
         co_return;
       }
       skip_dialog = batch_reuse;
@@ -1510,7 +1538,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
       // The dialog vtable already applied the choices; this reaches plugins that keep dialog and source state apart.
       if (auto status = handle.loadConfig(config); !status) {
         (void)fail(tr("Plugin '%1': loadConfig (post-dialog) failed: %2")
-                       .arg(source_name, QString::fromStdString(status.error())));
+                       .arg(source_display_name, display_plugin_error(status.error())));
         co_return;
       }
     }
@@ -1590,6 +1618,7 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
     ctx_->dialog_parent = request.dialog_parent;
     ctx_->source_name = source_name;
     ctx_->source_manifest_id = source_manifest_id;
+    ctx_->source_version = QString::fromStdString(source->version);
     ctx_->config = config;
     ctx_->dataset_id = dataset_id;
     ctx_->ticket = ticket;
@@ -1889,6 +1918,22 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
         }
       }
 
+      if (outcome == EntryOutcome::kCompleted || outcome == EntryOutcome::kKept) {
+        // Publish the final flush even when the producer never sent a progress
+        // tick. Queue before the entry's terminal: a synchronous observer may
+        // shut down the loader, which must only destroy a suspended/done frame.
+        QMetaObject::invokeMethod(
+            this,
+            [this, fanout_generation, iter_dataset_id]() {
+              if (fanout_generation != load_generation_) {
+                return;
+              }
+              const auto ids = session_.dataEngine().listTopics(iter_dataset_id);
+              session_.notifyIngest(QVector<TopicId>(ids.begin(), ids.end()), /*live=*/false);
+            },
+            Qt::QueuedConnection);
+      }
+
       const IngestOutcome ingest_outcome =
           outcome == EntryOutcome::kCompleted
               ? IngestOutcome::kCompleted
@@ -1961,8 +2006,10 @@ FileLoader::BeginLoadTask FileLoader::beginLoad(LoadRequest request) {
   }
 #endif
 
-  // After start(), so the layout persists what the import discovered.
-  std::string captured_config = captureSavedConfig(handle, source_name);
+  // Capture the plugin's canonical post-load state AFTER start() + ingest so a
+  // layout persists discovered fields / applied defaults / ingest-time policy
+  // overrides. saveConfig failures here are non-fatal.
+  std::string captured_config = captureSavedConfig(handle, source_display_name);
 
   // A rejected metadata document is logged and never affects the load.
   const auto publish_loader_metadata =
@@ -2154,6 +2201,7 @@ void FileLoader::onWorkerFinished(std::uint64_t generation) {
   const bool replacing = ctx_->replacing;
   const QString path = ctx_->path;
   const QString source_name = ctx_->source_name;
+  const QString source_display_name = bundledPluginText(ctx_->source_manifest_id, ctx_->source_version, source_name);
   const quint64 ticket = ctx_->ticket;
   const IngestToken ingest_token = ctx_->ingest_token;
   // Taken out of the context before any signal can re-enter joinForShutdown, which ends only a token still stored.
@@ -2187,8 +2235,13 @@ void FileLoader::onWorkerFinished(std::uint64_t generation) {
     }
   } else if (yielded_nothing || (!ctx_->start_ok && cancel == 0)) {
     ingest_outcome = IngestOutcome::kFailed;
-    const QString reason = yielded_nothing ? noDataReason(source_name, *ctx_->ingest)
-                                           : tr("Plugin '%1': start failed: %2").arg(source_name, ctx_->start_error);
+    const QString reason =
+        yielded_nothing
+            ? noDataReason(source_display_name, *ctx_->ingest)
+            : tr("Plugin '%1': start failed: %2")
+                  .arg(
+                      source_display_name,
+                      bundledPluginError(ctx_->source_manifest_id, ctx_->source_version, ctx_->start_error));
     emitLoadFinished(ticket, LoadOutcome::kFailed, path, 0, {}, reason);
     logLoadFailure(path, reason);
     if (!replacing) {
@@ -2208,7 +2261,7 @@ void FileLoader::onWorkerFinished(std::uint64_t generation) {
       if (const Status replayed = ctx_->refill_guard->recomputeProcessors(); !replayed.has_value()) {
         ingest_outcome = cancel == 0 ? IngestOutcome::kFailed : IngestOutcome::kCancelled;
         const QString reason = tr("Plugin '%1': derived-series replay failed: %2")
-                                   .arg(source_name, QString::fromStdString(replayed.error()));
+                                   .arg(source_display_name, QString::fromStdString(replayed.error()));
         emitLoadFinished(
             ticket, cancel == 0 ? LoadOutcome::kFailed : LoadOutcome::kCancelled, path, 0, {},
             cancel == 0 ? reason : QString());
@@ -2242,6 +2295,11 @@ void FileLoader::onWorkerFinished(std::uint64_t generation) {
 
   if (ingest_token.id != 0) {
     session_.endIngest(ingest_token, ingest_outcome);
+  }
+  // Publication/terminal observers may shut down and immediately reuse this
+  // loader. The completed generation must not reset its successor's state.
+  if (generation != load_generation_) {
+    return;
   }
   cancel_mode_.store(0);
   active_load_ = false;
@@ -2314,7 +2372,9 @@ void FileLoader::finishLoadOnGui(bool fully_loaded) {
     catalog_.setDatasetDisplayName(dataset_id, ctx_->commit_display_name);
   }
 
-  std::string captured_config = captureSavedConfig(ctx_->handle, ctx_->source_name);
+  // Capture the plugin's canonical post-load state for layout persistence.
+  std::string captured_config = captureSavedConfig(
+      ctx_->handle, bundledPluginText(ctx_->source_manifest_id, ctx_->source_version, ctx_->source_name));
   session_.setDatasetSourcePath(dataset_id, ctx_->path);
   // RefillGuard::commit cleared a replaced dataset's document: no staged document leaves it with none.
   if (ctx_->ingest != nullptr) {
@@ -2352,8 +2412,6 @@ void FileLoader::finishLoadOnGui(bool fully_loaded) {
   // The plugin write host bypasses SessionManager::commitChunks: re-evaluate the time origin, and publish the rows,
   // or a curve bound to a refilled dataset keeps the empty window it re-indexed when the refill began.
   session_.refreshDatasetTimeReference(dataset_id);
-  const auto topic_ids = session_.dataEngine().listTopics(dataset_id);
-  session_.notifyIngest(QVector<TopicId>(topic_ids.begin(), topic_ids.end()), /*live=*/false);
 #ifdef PJ_WASM_ENABLE_INGRESS_PROBE
   logSuccessfulLoad(session_.dataEngine(), catalog_, path, source_name, {dataset_id});
 #endif
@@ -2366,6 +2424,13 @@ void FileLoader::finishLoadOnGui(bool fully_loaded) {
   // After the source and runtime host are gone: proves the ObjectStore owns the file lease and the cold reader.
   probeColdObjectFetch(session_.objectStore(), dataset_id);
 #endif
+  // The plugin's terminal flush writes straight to DataEngine. Publish every
+  // surviving topic after commit/catalog finalization so already-bound adapters
+  // invalidate their sample and bounds caches. No lifecycle token is required.
+  // ctx_ is already gone: a publication observer may re-enter joinForShutdown
+  // without discarding the completed dataset or destroying a live load context.
+  const auto ids = session_.dataEngine().listTopics(dataset_id);
+  session_.notifyIngest(QVector<TopicId>(ids.begin(), ids.end()), /*live=*/false);
   emit fileLoaded(path, QString(), source_name, QString::fromStdString(captured_config), source_manifest_id);
 }
 

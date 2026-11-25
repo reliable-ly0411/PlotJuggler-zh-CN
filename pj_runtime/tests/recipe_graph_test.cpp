@@ -125,7 +125,8 @@ TEST(RecipeGraphTest, PythonScriptIsCompiledOncePerRevision) {
   const RecipeGraph::Node* node = fx.graph.find(python.key());
   ASSERT_NE(node, nullptr);
   const uint64_t revision = node->revision;
-  // Held, not a raw address: once the edits below free it, a new compile can reuse the address (seen on Windows).
+  // Keep the original revision alive while replacing it: an allocator may reuse
+  // a freed wrapper's address, which does not mean the compiled script was reused.
   const auto compiled = node->compiled;
   ASSERT_NE(compiled, nullptr);
 

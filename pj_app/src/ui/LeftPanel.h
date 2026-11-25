@@ -5,6 +5,8 @@
 #include <QDomDocument>
 #include <QDomElement>
 #include <QWidget>
+#include <QList>
+#include <QPair>
 #include <optional>
 #include <vector>
 
@@ -50,8 +52,9 @@ class LeftPanel : public QWidget {
  public slots:
   void onStylesheetChanged(QString theme);
   void onChromeMetricsChanged(const ChromeMetrics& metrics);
-  // Keeps the current selection when still present; on the first population, restores the persisted one.
-  void setStreamingSources(const QStringList& names);
+  // Repopulates the streaming combo. Preserves the current selection if the
+  // previously-selected name is still present.
+  void setStreamingSources(const QList<QPair<QString, QString>>& sources);
   void setReloadEnabled(bool enabled);
   void setRecentEnabled(bool enabled);
 

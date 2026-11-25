@@ -18,8 +18,8 @@ namespace PJ {
 // message, and auto-dismisses after `timeout_ms` (or when the user clicks the close button). Positioning and stacking
 // are ToastManager's: a ToastNotification never places itself.
 //
-// The message label is rich text with external links enabled, so an `<a href>` in the message opens in the system
-// browser with no extra wiring.
+// The rich-text message routes activated links through openExternalUrl(),
+// including AppImage-safe HTTP(S) launching, with no extra caller wiring.
 class ToastNotification : public QFrame {
   Q_OBJECT
 

@@ -4,8 +4,6 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
-#include "MainWindow.h"
-
 #include <qwt_plot_curve.h>
 #include <qwt_text.h>
 
@@ -17,10 +15,13 @@
 #include <QCloseEvent>
 #include <QColor>
 #include <QCoreApplication>
-#include <QDesktopServices>
 #include <QDragEnterEvent>
+#include <QDragMoveEvent>
 #include <QDropEvent>
 #include <QMimeData>
+
+#include "MainWindow.h"
+#include "pj_widgets/ExternalUrl.h"
 #if QT_CONFIG(process)
 #include <QProcess>
 #endif
@@ -922,10 +923,12 @@ MainWindow::MainWindow(QString extensions_dir, QWidget* parent)
   help_menu->addAction(tr("Check for Updates..."), this, &MainWindow::onCheckForUpdates)
       ->setObjectName(u"actionCheckForUpdates"_s);
 #endif
-  help_menu->addAction(
-      tr("Documentation"), this, []() { QDesktopServices::openUrl(QUrl(u"https://plotjuggler.io"_s)); });
-  help_menu->addAction(tr("Report an Issue"), this, []() {
-    QDesktopServices::openUrl(QUrl(u"https://github.com/PlotJuggler/PlotJuggler/issues"_s));
+  help_menu->addAction(tr("Documentation"), this, []() { openExternalUrl(QUrl(u"https://plotjuggler.io"_s)); });
+  help_menu->addAction(tr("Report a Localization Issue"), this, []() {
+    openExternalUrl(QUrl(u"https://github.com/reliable-ly0411/PlotJuggler-zh-CN/issues"_s));
+  });
+  help_menu->addAction(tr("Report an Upstream Issue"), this, []() {
+    openExternalUrl(QUrl(u"https://github.com/PlotJuggler/PlotJuggler/issues"_s));
   });
   help_menu->addSeparator();
   installed_extensions_menu_ = help_menu->addMenu(tr("Installed Extensions"));
@@ -3787,7 +3790,7 @@ void MainWindow::startUsageReporting(const QString& installation, bool may_repor
   counters.configure(
       QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + u"/usage_counters.json"_s,
       QCoreApplication::applicationVersion());
-  if (!QSettings().value(kUsageStatsKey, true).toBool()) {
+  if (!QSettings().value(kUsageStatsKey, false).toBool()) {
     counters.setEnabled(false);  // deletes a file a concurrent instance wrote back after the opt-out
     return;
   }
@@ -3841,24 +3844,35 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
   }
 }
 
-// Copy, never the proposed Move: a source may delete a file whose move was accepted.
+// Copy must be offered: Qt falls back to Move if asked to select an unavailable Copy.
 void MainWindow::dragEnterEvent(QDragEnterEvent* event) {
-  if (event->mimeData() != nullptr && !FileLoader::droppedFilePaths(*event->mimeData()).isEmpty()) {
-    event->setDropAction(Qt::CopyAction);
-    event->accept();
+  if (!event->possibleActions().testFlag(Qt::CopyAction) || event->mimeData() == nullptr ||
+      FileLoader::droppedFilePaths(*event->mimeData()).isEmpty()) {
+    event->ignore();
+    return;
   }
+  event->setDropAction(Qt::CopyAction);
+  event->accept();
 }
 
 void MainWindow::dragMoveEvent(QDragMoveEvent* event) {
-  if (event->mimeData() != nullptr && event->mimeData()->hasUrls()) {
-    event->setDropAction(Qt::CopyAction);
-    event->accept();
+  if (!event->possibleActions().testFlag(Qt::CopyAction) || event->mimeData() == nullptr ||
+      FileLoader::droppedFilePaths(*event->mimeData()).isEmpty()) {
+    event->ignore();
+    return;
   }
+  event->setDropAction(Qt::CopyAction);
+  event->accept();
 }
 
 void MainWindow::dropEvent(QDropEvent* event) {
+  if (!event->possibleActions().testFlag(Qt::CopyAction) || event->mimeData() == nullptr) {
+    event->ignore();
+    return;
+  }
   const QStringList paths = FileLoader::droppedFilePaths(*event->mimeData());
   if (paths.isEmpty()) {
+    event->ignore();
     return;
   }
   event->setDropAction(Qt::CopyAction);
@@ -5302,6 +5316,7 @@ void MainWindow::loadLayoutFromPath(
   if (interactive) {
     usageCounters().count(UsageFeature::kLayoutLoad);  // the user's own load: an automated --layout run is not a use
   }
+  layout_xml::migrateLegacyLogWidgets(doc);
 #ifdef PJ_WITH_SCENE3D
   // Robot resources may be named relative to the layout file: anchor them
   // before anything restores from the document.
@@ -5719,6 +5734,7 @@ void MainWindow::loadLayoutFromBytes(const QByteArray& bytes, const QString& bro
     finishBrowserLayoutLoad(browser_name, false, u"parse"_s);
     return;
   }
+  layout_xml::migrateLegacyLogWidgets(doc);
 #ifdef PJ_WITH_SCENE3D
   // An upload has no location, so only its absolute robot-resource references resolve.
   if (QString resource_error; !pj::scene3d::resolveLayoutResourceUrls(doc, layout_url, &resource_error)) {
@@ -6971,7 +6987,18 @@ void MainWindow::enableAutoplay() {
 bool MainWindow::applyBrowserRestoredLayout(
     QDomDocument doc, const QString& browser_name, const LayoutTimelinePlan& stream_tracks,
     const std::vector<DatasetId>& compared) {
-  if (session_->catalogModel().datasets().empty() && stream_tracks.empty()) {
+  // Logs and Custom Widgets can defer a topic binding until a source arrives.
+  bool may_defer = false;
+  const auto areas = doc.elementsByTagName(u"DockArea"_s);
+  for (int i = 0; i < areas.size(); ++i) {
+    const auto payload = areas.at(i).firstChildElement();
+    if (payload.nextSiblingElement().isNull() &&
+        (payload.tagName() == u"CustomWidget"_s || payload.tagName() == u"log"_s)) {
+      may_defer = true;
+      break;
+    }
+  }
+  if (session_->catalogModel().datasets().empty() && stream_tracks.empty() && !may_defer) {
     showBrowserLayoutWarning(
         this, tr("Load Layout"), tr("No data is loaded. Open a data source before applying this layout."));
     return false;
@@ -10287,11 +10314,14 @@ std::shared_ptr<ToolboxPanelSession> MainWindow::buildToolboxPanelSession(
     Q_UNUSED(plugin_id_std);
 #endif
   };
-  callbacks.on_message = [this, source](PJ_toolbox_message_level_t level, std::string message) {
+  callbacks.on_message = [this, source, plugin_id, version = QString::fromStdString(toolbox.version)](
+                             PJ_toolbox_message_level_t level, std::string message) {
     if (diagnostic_history_ == nullptr) {
       return;
     }
-    diagnostic_history_->record(toolboxDiagnosticLevel(level), source, u"toolbox"_s, QString::fromStdString(message));
+    diagnostic_history_->record(
+        toolboxDiagnosticLevel(level), source, u"toolbox"_s,
+        bundledPluginMessage(plugin_id, version, QString::fromStdString(message)));
   };
 
   // GUI thread (the host marshals). Lifecycle bookkeeping is SessionManager's; these keep the presentation. Weak:

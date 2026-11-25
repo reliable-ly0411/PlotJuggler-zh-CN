@@ -33,7 +33,7 @@ namespace {
 using pj_widgets_demos::applyTheme;
 
 // Mirrors MainWindow::checkForUpdates: rich text + escaped release name +
-// a clickable link the toast label opens in the browser (openExternalLinks).
+// a clickable link the toast label opens through the shared URL helper.
 QString releaseMessage() {
   return QStringLiteral(
       "New release available: <span style='font-weight:600;'>PlotJuggler 3.999.1</span><br>"

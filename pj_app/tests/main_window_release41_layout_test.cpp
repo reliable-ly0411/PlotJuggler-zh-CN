@@ -47,6 +47,7 @@
 #include "pj_runtime/ResultHistory.h"
 #include "pj_runtime/SessionManager.h"
 #include "pj_scene3d_widgets/Scene3DDockWidget.h"
+#include "support/isolated_main_window.h"
 
 using namespace Qt::StringLiterals;
 
@@ -185,7 +186,7 @@ class MainWindowRelease41LayoutTest : public ::testing::Test {
     const QString path_b = touch(root_ + u"/data/fixture-b.mcap"_s);
     root_ = QFileInfo(root_).canonicalFilePath();
 
-    window_ = std::make_unique<PJ::MainWindow>(extensions_dir_.path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_.path());
     PJ::AppSession& app = Peer::session(*window_);
     PJ::SessionManager& session = app.sessionManager();
     dataset_b_ = pj_test::createDataset(app, "fixture-b.mcap", /*own_time_domain=*/true);
@@ -474,7 +475,7 @@ class MainWindowPrototypeLayoutTest : public ::testing::Test {
     root_ = QDir(work_dir_.path()).absoluteFilePath(u"root"_s);
     const QString path = touch(root_ + u"/data/fixture-a.mcap"_s);
     root_ = QFileInfo(root_).canonicalFilePath();
-    window_ = std::make_unique<PJ::MainWindow>(extensions_dir_.path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_.path());
     PJ::AppSession& app = Peer::session(*window_);
     PJ::SessionManager& session = app.sessionManager();
     ASSERT_EQ(pj_test::createDataset(app, "decoy.mcap", /*own_time_domain=*/true), 1U);

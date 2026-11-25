@@ -3,6 +3,8 @@
 
 #include "pj_scene3d_widgets/layers/pointcloud_layer.h"
 
+#include "pj_widgets/Colormap.h"
+
 #include <QComboBox>
 #include <QFormLayout>
 #include <QHBoxLayout>
@@ -520,7 +522,7 @@ QWidget* PointCloudLayer::createConfigWidget(QWidget* parent) {
   colormap_row_layout->setSpacing(PJ::theme::space(PJ::theme::Space::Comfortable));
   auto* colormap_combo = new PJ::ComboBox(colormap_row);
   for (int index = 0; index < PJ::kColormapCount; ++index) {
-    colormap_combo->addItem(PJ::colormapToken(static_cast<PJ::Colormap>(index)), index);
+    colormap_combo->addItem(PJ::colormapDisplayName(static_cast<PJ::Colormap>(index)), index);
   }
   colormap_combo->setCurrentIndex(static_cast<int>(colormap_));
   colormap_row_layout->addWidget(colormap_combo, 1);

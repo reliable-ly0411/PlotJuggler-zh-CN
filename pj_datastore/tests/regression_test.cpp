@@ -1,6 +1,12 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
+// Regression coverage for completed-row flushes, bulk-column row counts,
+// and out-of-order chunks and queries. Build from the repo root (./build.sh), then:
+//   ctest --test-dir build -R 'pj_datastore_tests\.RegressionTest\.'
+// The excess-column assertion requires Debug or PJ_ASSERT_THROWS; that case
+// explicitly skips when NDEBUG disables assertions.
+
 #include <gtest/gtest.h>
 
 #include <utility>
@@ -28,8 +34,13 @@ TopicChunk makeChunkWithRange(TopicId tid, Timestamp t_start, Timestamp t_end, u
   return b.seal();
 }
 
-// flush() seals only committed rows: a row begun but not finished must not leak its timestamp into the sealed
-// chunk's stats (t_min / t_max).
+// ===========================================================================
+// Bug #1 — flush() with an in-progress row corrupts chunk stats
+//
+// Only finished rows belong in a flushed chunk; the active row must remain
+// writable without leaking its values or statistics into the completed rows.
+// ===========================================================================
+
 TEST(RegressionTest, Bug1_FlushWithRowInProgress_CorruptsChunkStats) {
   DataEngine engine;
   auto ds = *engine.createDataset(DatasetDescriptor{.source_name = "test", .time_domain_id = 0});
@@ -52,42 +63,60 @@ TEST(RegressionTest, Bug1_FlushWithRowInProgress_CorruptsChunkStats) {
 
   ASSERT_EQ(chunks.size(), 1u);
   EXPECT_EQ(chunks[0].stats.row_count, 1u);
-  // The in-progress row's timestamp (200) must not leak into the stats.
   EXPECT_EQ(chunks[0].stats.t_max, 100);
   EXPECT_EQ(chunks[0].timestamps.size(), 1u);
+  EXPECT_DOUBLE_EQ(chunks[0].readNumericAsDouble(0, 0), 1.0);
+  ASSERT_TRUE(chunks[0].stats.column_stats[0].max_value.has_value());
+  EXPECT_DOUBLE_EQ(*chunks[0].stats.column_stats[0].max_value, 1.0);
+  EXPECT_TRUE(chunks[0].stats.column_stats[0].is_constant);
+  EXPECT_TRUE(writer.flush(tid).empty());
+
+  ASSERT_TRUE(writer.finishRow(tid).has_value());
+  auto remaining = writer.flush(tid);
+  ASSERT_EQ(remaining.size(), 1u);
+  EXPECT_EQ(remaining[0].timestamps, (std::vector<Timestamp>{200}));
+  EXPECT_DOUBLE_EQ(remaining[0].readNumericAsDouble(0, 0), 2.0);
+  EXPECT_EQ(remaining[0].stats.row_count, 1u);
+  EXPECT_GT(remaining[0].id, chunks[0].id);
 }
 
-// finishBulkAppend() must fail loudly when a column holds fewer rows than the pending timestamps (N timestamps,
-// N-1 values): otherwise the unsigned row-count subtraction wraps and the statistics loop reads out of bounds.
-TEST(RegressionTest, Bug2_FinishBulkAppend_ColumnRowCountMismatch_TriggersUB) {
-  // Declare test data outside the EXPECT_THROW block: the C preprocessor does
-  // not track {} when splitting macro arguments, so vector-initializer commas
-  // inside the block would be misinterpreted as extra macro arguments.
+// Bulk batches pad missing values with nulls, but reject excess column rows.
+TEST(RegressionTest, ShortBulkColumnIsPaddedWithoutLosingValues) {
   std::vector<ColumnDescriptor> cols = {{1, PrimitiveType::kFloat32, "x"}};
-  std::vector<Timestamp> ts;
-  ts.push_back(100);
-  ts.push_back(200);
-  ts.push_back(300);
-  std::vector<float> vals;
-  vals.push_back(1.0f);
-  vals.push_back(2.0f);  // one short: 2 values for 3 timestamps
+  const std::vector<Timestamp> ts = {100, 200, 300};
+  const std::vector<float> vals = {1.0F, 2.0F};
+  TopicChunkBuilder builder(/*topic_id=*/1, /*schema_id=*/1, cols, /*max_rows=*/100);
+  builder.appendTimestamps(ts);
+  builder.appendColumn<float>(0, vals);
+  builder.finishBulkAppend();
+  const TopicChunk chunk = builder.seal();
+  ASSERT_EQ(chunk.stats.row_count, 3U);
+  for (std::size_t i = 0; i < ts.size(); ++i) {
+    EXPECT_EQ(chunk.readTimestamp(i), ts[i]);
+  }
+  EXPECT_FALSE(chunk.isNull(0, 0));
+  EXPECT_FALSE(chunk.isNull(0, 1));
+  EXPECT_DOUBLE_EQ(chunk.readNumericAsDouble(0, 0), 1.0);
+  EXPECT_DOUBLE_EQ(chunk.readNumericAsDouble(0, 1), 2.0);
+  EXPECT_TRUE(chunk.isNull(0, 2));
+}
 
-  // PJ_ASSERT behaviour differs by build configuration:
-  //   Debug/ASAN  (PJ_ASSERT_THROWS=ON, no NDEBUG): throws std::runtime_error
-  //   Release (no PJ_ASSERT_THROWS, NDEBUG):         assert() compiled away → silent UB
-  // The assertion is only verifiable in debug builds.
+TEST(RegressionTest, ExcessBulkColumnRowsTriggerAssertion) {
+  std::vector<ColumnDescriptor> cols = {{1, PrimitiveType::kFloat32, "x"}};
+  const std::vector<Timestamp> ts = {100, 200};
+  const std::vector<float> vals = {1.0F, 2.0F, 3.0F};
+  const auto append_excess = [&] {
+    TopicChunkBuilder builder(/*topic_id=*/1, /*schema_id=*/1, cols, /*max_rows=*/100);
+    builder.appendTimestamps(ts);
+    builder.appendColumn<float>(0, vals);
+    builder.finishBulkAppend();
+  };
 #ifdef PJ_ASSERT_THROWS
-  EXPECT_THROW(
-      {
-        TopicChunkBuilder builder(/*topic_id=*/1, /*schema_id=*/1, cols, /*max_rows=*/100);
-        builder.appendTimestamps(ts);
-        builder.appendColumn<float>(0, vals);  // 2 rows appended, pending=3
-        builder.finishBulkAppend();            // PJ_ASSERT fires → throws
-      },
-      std::exception);
+  EXPECT_THROW(append_excess(), std::runtime_error);
+#elif !defined(NDEBUG)
+  EXPECT_DEATH(append_excess(), "finishBulkAppend: column has more rows than the batch");
 #else
-  // Release: NDEBUG disables assert(), so the check cannot be observed.
-  GTEST_SKIP() << "Bug #2 assertion not verifiable in Release (NDEBUG disables assert())";
+  GTEST_SKIP() << "Excess-row assertion requires Debug or PJ_ASSERT_THROWS";
 #endif
 }
 

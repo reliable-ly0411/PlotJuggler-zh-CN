@@ -1,3 +1,4 @@
+#include "support/isolated_main_window.h"
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
@@ -131,7 +132,7 @@ TEST(MainWindowLayoutImportLifecycleTest, RestoreLifecycleHonorsPolicyAndSuperse
   const QString plugin_src = QString::fromUtf8(PJ_MOCK_FILE_SOURCE_PLUGIN_PATH);
   ASSERT_TRUE(QFile::copy(plugin_src, extensions_dir.filePath(QFileInfo(plugin_src).fileName())));
 
-  PJ::MainWindow window(extensions_dir.path());
+  pj_app_test::IsolatedMainWindow window(extensions_dir.path());
   PJ::AppSession& app = MainWindowLayoutImportTestPeer::session(window);
   ASSERT_TRUE(app.extensionCatalog().pluginCatalog().registerStaticToolbox(&fake::kFakeVtable));
 

@@ -8,6 +8,7 @@
 #include <QFontDatabase>
 #include <QLayout>
 
+#include "pj_widgets/ExternalUrl.h"
 #include "pj_widgets/SvgUtil.h"
 #include "ui_AboutDialog.h"
 #include "ui_NoticesDialog.h"
@@ -68,7 +69,11 @@ AboutDialog::AboutDialog(QWidget* parent) : Dialog(parent), ui_(new Ui::AboutDia
   }
 #endif
 
-  // The frameless Dialog chrome otherwise opens at its base minimum and clips the content.
+  connect(ui_->linkLabel, &QLabel::linkActivated, this, [](const QString& link) { openExternalUrl(QUrl(link)); });
+
+  // The frameless Dialog chrome otherwise opens at its 320x120 base minimum and
+  // clips the content. Lock the box to the content's hint so it opens showing
+  // everything and cannot be resized — a fixed About box, as in PJ3.
   layout()->activate();
   setFixedSize(sizeHint());
 }

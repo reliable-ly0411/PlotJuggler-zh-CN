@@ -50,6 +50,7 @@ pj_add_test_runner(pj_plotting_widget_tests
         # Links pj_resources so :/filters/builtin_filters.luau is embedded and auto-registered: SessionManager reads it
         # to install the Luau filter catalogue, without which the panel has no filters to list or apply.
         filter_editor_panel_test.cpp
+        builtin_filter_presentation_test.cpp
         parameter_form_test.cpp
     LIBS
         pj_plotting

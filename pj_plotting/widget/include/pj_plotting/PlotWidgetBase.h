@@ -55,6 +55,12 @@ class PlotWidgetBase : public QWidget {
   explicit PlotWidgetBase(QWidget* parent = nullptr);
   ~PlotWidgetBase() override;
 
+#ifdef PJ_TARGET_WASM
+  // Keep the logical plot but do not carry a QRhiWidget through a transient ADS top-level.
+  void suspendCanvasForDockRestore();
+  void resumeCanvasAfterDockRestore();
+#endif
+
   virtual CurveInfo* addCurve(
       const QString& name, QwtSeriesData<QPointF>* series, QColor color = Qt::transparent,
       const QString& display_name = {});
@@ -222,6 +228,10 @@ class PlotWidgetBase : public QWidget {
   // canvas event filter over, in their original order. No-op once the canvas is the raster one. Retries later while a
   // popup or modal widget is open, since the swap deletes the canvas.
   void fallBackToRasterCanvas();
+  void replacePlotCanvas(QWidget* canvas);
+#ifdef PJ_TARGET_WASM
+  bool restore_rhi_canvas_after_dock_restore_ = false;
+#endif
   // Swaps the X axis engine and draw to match time_label_format_ and the XY mode; no-op when the installed pair
   // matches.
   void applyTimeAxisFormat();

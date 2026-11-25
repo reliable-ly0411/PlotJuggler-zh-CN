@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "../../cmake/test_mains/pj_test_owned_directory.h"
 #include "on_demand_test_utils.h"
 #include "pj_base/builtin/builtin_object_codec.hpp"
 #include "pj_runtime/AppSession.h"
@@ -119,11 +120,20 @@ struct OnDemandSessionFixture {
     return decodeAt<sdk::PointCloud>(manager.objectStore(), topic(name), t);
   }
 
+  // Evaluated after dir is constructed, before AppSession can use a default
+  // scan path. The scan child stays empty; the ownership marker is in its parent.
+  QString privatePluginDirectory() const {
+    if (!dir.ownsTree() || !QDir(dir.path()).mkdir(QStringLiteral("plugins")) || !dir.ownsTree()) {
+      qFatal("Cannot create owned on-demand plugin scan directory");
+    }
+    return dir.path() + "/plugins";
+  }
+
   FakeRun fake;  ///< outlives the session, whose pool joins the runs
   ScopedRun scoped_run{fake};
   FrozenBudgetClock frozen_clock;
-  QTemporaryDir dir;
-  AppSession session{dir.path()};
+  PjTestOwnedDirectory dir;
+  AppSession session{privatePluginDirectory()};
   SessionManager& manager = session.sessionManager();
   DatasetId ds = 0;
   ObjectTopicId cloud;

@@ -2842,3 +2842,38 @@ TEST(LayoutDatasetChoice, DuplicationBlockersNameWhatCannotBeCopied) {
 }
 
 }  // namespace
+
+TEST(LayoutXmlTest, MigratesOnlyKnownLegacyLogWidgetsAndKeepsIdentity) {
+  QDomDocument doc;
+  ASSERT_TRUE(doc.setContent(QByteArray(R"(<root>
+    <CustomWidget plugin="log-widget" type="log_viewer">
+      <input name="logs" kind="object" topic="/rosout" dataset_id="42" dataset_source="capture"/>
+      <config><![CDATA[{"levels":["info","warn"],"text_filter":"hello","hidden_topics":["/extra"]}]]></config>
+    </CustomWidget>
+    <CustomWidget plugin="log-widget" type="log_viewer"><config><![CDATA[{"levels":12}]]></config></CustomWidget>
+    <CustomWidget plugin="foreign" type="log_viewer"/>
+  </root>)")));
+  PJ::layout_xml::migrateLegacyLogWidgets(doc);
+  ASSERT_EQ(doc.elementsByTagName(u"log"_s).size(), 1);
+  ASSERT_EQ(doc.elementsByTagName(u"CustomWidget"_s).size(), 2);
+  const auto log = doc.documentElement().firstChildElement(u"log"_s);
+  EXPECT_EQ(log.attribute(u"levels"_s), u"info,warn"_s);
+  EXPECT_EQ(log.attribute(u"future_rows"_s), u"grey"_s);
+  EXPECT_EQ(log.attribute(u"text_filter"_s), u"hello"_s);
+  EXPECT_EQ(log.firstChildElement(u"hidden_topic"_s).attribute(u"topic"_s), u"/extra"_s);
+  auto topic = log.firstChildElement(u"topic"_s);
+  EXPECT_EQ(topic.attribute(u"topic"_s), u"/rosout"_s);
+  EXPECT_EQ(topic.attribute(u"dataset_source"_s), u"capture"_s);
+  EXPECT_EQ(topic.attribute(u"dataset_id"_s), u"42"_s);
+  PJ::layout_xml::stampDatasetSourcePaths(
+      doc, [](std::uint32_t id) { return id == 42 ? u"/test/capture.mcap"_s : QString{}; });
+  EXPECT_EQ(topic.attribute(u"dataset_path"_s), u"/test/capture.mcap"_s);
+  PJ::layout_xml::removeUnvalidatedDatasetIds(doc);
+  EXPECT_EQ(topic.attribute(u"dataset_id"_s), u"42"_s);
+  topic.removeAttribute(u"dataset_path"_s);
+  PJ::layout_xml::removeUnvalidatedDatasetIds(doc);
+  EXPECT_FALSE(topic.hasAttribute(u"dataset_id"_s));
+  const auto once = doc.toByteArray();
+  PJ::layout_xml::migrateLegacyLogWidgets(doc);
+  EXPECT_EQ(doc.toByteArray(), once);
+}

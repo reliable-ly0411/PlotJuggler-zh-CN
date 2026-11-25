@@ -14,6 +14,9 @@
 #include <QVariantMap>
 #include <utility>
 
+#ifndef PJ_TARGET_WASM
+#include "pj_marketplace/platform_utils.hpp"
+#endif
 #include "pj_runtime/HttpUrl.h"
 
 using namespace Qt::StringLiterals;
@@ -369,7 +372,15 @@ std::string UrdfPackageResolver::stepEmbeddedAsset(const std::string& uri) {
     return {};
   }
   if (!extracted_assets_dir_) {
-    extracted_assets_dir_ = std::make_unique<QTemporaryDir>();
+#ifndef PJ_TARGET_WASM
+    if (!PJ::PlatformUtils::profileDir().isEmpty()) {
+      extracted_assets_dir_ = std::make_unique<QTemporaryDir>(
+          QDir(PJ::PlatformUtils::temporaryDir()).filePath(QStringLiteral("urdf-assets-XXXXXX")));
+    } else
+#endif
+    {
+      extracted_assets_dir_ = std::make_unique<QTemporaryDir>();
+    }
   }
   if (!extracted_assets_dir_->isValid()) {
     return {};

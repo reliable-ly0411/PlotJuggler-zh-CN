@@ -18,6 +18,7 @@
 #include "pj_plotting/PlotWidgetBase.h"
 #include "pj_plotting/TabbedPlotWidget.h"
 #include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
 
 using namespace Qt::StringLiterals;
 
@@ -118,7 +119,7 @@ void openAtUserChosenWidth(PJ::MainWindow& window) {
 // Growing the window must feed the chart area, not the sidebar: a splitter that shares new width proportionally walks
 // the left panel out to its 600px cap.
 TEST(MainWindowPanelGeometryTest, WideningTheWindowLeavesTheLeftPanelWidthAlone) {
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   openAtUserChosenWidth(window);
 
   window.resize(kWiderWindowWidth, kWindowHeight);
@@ -129,7 +130,7 @@ TEST(MainWindowPanelGeometryTest, WideningTheWindowLeavesTheLeftPanelWidthAlone)
 
 // Collapsing the right side panel hands all of its width to the chart area.
 TEST(MainWindowPanelGeometryTest, HidingTheRightPanelLeavesTheLeftPanelWidthAlone) {
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   openAtUserChosenWidth(window);
 
   rightPanel(window).hide();
@@ -141,7 +142,7 @@ TEST(MainWindowPanelGeometryTest, HidingTheRightPanelLeavesTheLeftPanelWidthAlon
 // A toolbox takes over the chart area through the chart's splitter slot. Whatever width the incoming panel prefers,
 // the sidebar keeps its width, on the way in and on the way out.
 TEST(MainWindowPanelGeometryTest, PresentingAndDismissingAPanelLeavesTheLeftPanelWidthAlone) {
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   openAtUserChosenWidth(window);
 
   auto* panel = new QLabel(u"toolbox"_s);
@@ -155,7 +156,7 @@ TEST(MainWindowPanelGeometryTest, PresentingAndDismissingAPanelLeavesTheLeftPane
 }
 
 TEST(MainWindowPanelGeometryTest, SettingsActionOpensAndClosesTheSidebar) {
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   openAtUserChosenWidth(window);
   auto* tabs = window.findChild<PJ::TabbedPlotWidget*>();
   ASSERT_NE(tabs, nullptr);
@@ -175,7 +176,7 @@ TEST(MainWindowPanelGeometryTest, SettingsActionOpensAndClosesTheSidebar) {
 // Launching a toolbox while another one is open dismisses the first and presents the second; the sidebar must not
 // pick up a slice of width on the way.
 TEST(MainWindowPanelGeometryTest, ReplacingAnOpenPanelLeavesTheLeftPanelWidthAlone) {
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   openAtUserChosenWidth(window);
 
   ASSERT_TRUE(PJ::MainWindowPanelGeometryTestPeer::presentPanel(window, new QLabel(u"first toolbox"_s)));
@@ -195,7 +196,7 @@ TEST(MainWindowPanelGeometryTest, ReplacingAnOpenPanelLeavesTheLeftPanelWidthAlo
 // window: every reparent re-polishes a whole widget tree against the app stylesheet (hundreds of ms in the browser
 // build on each toolbox close). The dismissed panel is not reparented either, only deleted.
 TEST(MainWindowPanelGeometryTest, PresentingAndDismissingAPanelNeverReparentsTheChartOrThePanel) {
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   openAtUserChosenWidth(window);
   auto* tabbed = window.findChild<PJ::TabbedPlotWidget*>(u"tabbedPlotWidget"_s);
   ASSERT_NE(tabbed, nullptr);
@@ -225,7 +226,7 @@ TEST(MainWindowPanelGeometryTest, PresentingAndDismissingAPanelNeverReparentsThe
 // A toolbox moving between presentations is reparented once per move, at its destination (a release leaves its
 // parent alone), and closing its tab deletes it where it is.
 TEST(MainWindowPanelGeometryTest, ToolboxMovesReparentOnceAndItsTabCloseDeletesInPlace) {
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   openAtUserChosenWidth(window);
   auto* tabbed = window.findChild<PJ::TabbedPlotWidget*>(u"tabbedPlotWidget"_s);
   ASSERT_NE(tabbed, nullptr);
@@ -263,7 +264,7 @@ TEST(MainWindowPanelGeometryTest, ToolboxMovesReparentOnceAndItsTabCloseDeletesI
 // Putting the chart back restores its width-absorbing role too, implicitly: the stretch factor lives on the pane
 // widget's own size policy, so the chart still carries the one it was given at construction.
 TEST(MainWindowPanelGeometryTest, WideningAfterDismissingAPanelLeavesTheLeftPanelWidthAlone) {
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   openAtUserChosenWidth(window);
 
   ASSERT_TRUE(PJ::MainWindowPanelGeometryTestPeer::presentPanel(window, new QLabel(u"toolbox"_s)));
@@ -284,7 +285,7 @@ TEST(MainWindowPanelGeometryTest, WideningAfterDismissingAPanelLeavesTheLeftPane
 // Scope: splitters this app declares (plain QSplitter) with something to share. The docking framework's own
 // CDockSplitter subclass sizes itself; a lone pane has no one to share with.
 TEST(MainWindowPanelGeometryTest, EverySplitterDeclaresAStretchPreference) {
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   window.resize(kWindowWidth, kWindowHeight);
   window.show();
   settle();
@@ -311,7 +312,7 @@ TEST(MainWindowPanelGeometryTest, EverySplitterDeclaresAStretchPreference) {
 // The presented panel takes over the chart's slot, and with it the chart's job of absorbing width changes. A splitter
 // pane is not born with a stretch factor, so an open toolbox is when the sidebar is most likely to creep.
 TEST(MainWindowPanelGeometryTest, WideningTheWindowWithAPanelOpenLeavesTheLeftPanelWidthAlone) {
-  PJ::MainWindow window;
+  pj_app_test::IsolatedMainWindow window;
   openAtUserChosenWidth(window);
 
   auto* panel = new QLabel(u"toolbox"_s);

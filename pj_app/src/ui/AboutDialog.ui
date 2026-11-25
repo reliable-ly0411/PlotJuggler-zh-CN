@@ -81,7 +81,7 @@
       <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
      <property name="openExternalLinks">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
     </widget>
    </item>

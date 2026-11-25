@@ -61,4 +61,21 @@ set_tests_properties(pj_bundled_translations_test PROPERTIES ENVIRONMENT "QT_QPA
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../../pj_marketplace/tests/catalog" marketplace-catalog)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../../../pj_runtime/tests/localized_seed" localized-seed)
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../rc2" rc2)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../profile" profile)
+# Catch resource registration/linkage regressions before the full SDK build.
+# Use a Core-only executable to isolate the production resource object's
+# linkage from unrelated GUI test dependencies, with the unchanged app guard.
+get_filename_component(pj_root "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
+add_executable(resource_link_smoke ../resource_link_smoke.cpp)
+target_link_libraries(resource_link_smoke PRIVATE pj_resources Qt6::Core)
+target_compile_options(resource_link_smoke PRIVATE ${PJ_WARNING_FLAGS})
+add_test(NAME ResourceObjectRegistration COMMAND resource_link_smoke)
+if(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
+    find_program(PJ_RESOURCE_NM NAMES nm REQUIRED)
+    add_test(NAME ResourceObjectSymbolContract
+        COMMAND "${CMAKE_COMMAND}" -DTARGET=$<TARGET_FILE:resource_link_smoke>
+                -DNM=${PJ_RESOURCE_NM}
+                -P "${pj_root}/pj_app/tests/check_exported_symbols.cmake")
+endif()
+

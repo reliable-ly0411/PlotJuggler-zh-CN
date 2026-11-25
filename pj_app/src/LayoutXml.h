@@ -357,12 +357,16 @@ void pinLayoutToDatasets(
     QDomDocument& doc, const QList<DatasetPin>& pins, const QSet<QString>& loaded_topics,
     const RememberedCurveColor& remembered = {});
 
+// Converts known legacy official Log Viewer widgets to native Log panels. Unknown/malformed
+// configurations are left intact; old splitter/column widths have no native equivalent.
+void migrateLegacyLogWidgets(QDomDocument& doc);
+
 // DatasetId -> its FileLoader full source path; empty for a non-file or unknown dataset.
 using DatasetPathLookup = std::function<QString(std::uint32_t)>;
 
 // Writes `*_dataset_path` next to every `*_dataset_id` of curves, processor and transform inputs, marker
-// <generator>s, <marker_scope> rows and Custom Widget inputs, overwriting an existing one. Scene docks, State
-// Transitions rows and Log panel topics are not visited: they write the absolute path themselves. An id the lookup
+// <generator>s, <marker_scope> rows and Custom Widget inputs and Log panel topics. Scene docks and State
+// Transitions rows are not visited: they write the absolute path themselves. An id the lookup
 // cannot place is left as is.
 void stampDatasetSourcePaths(QDomDocument& doc, const DatasetPathLookup& lookup);
 

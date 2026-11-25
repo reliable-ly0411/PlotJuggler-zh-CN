@@ -142,6 +142,7 @@ enum class LegendStatus {
 class MainWindow : public QMainWindow {
   Q_OBJECT
   friend class MainWindowSourceLayoutTestPeer;
+  friend class MainWindowFileDropTestPeer;
   friend class MainWindowFanoutAmbiguousTestPeer;
   friend class MainWindowViewportReframeTestPeer;
   friend class MainWindowPluginViewsTestPeer;

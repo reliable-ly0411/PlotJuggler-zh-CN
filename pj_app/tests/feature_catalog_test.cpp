@@ -38,6 +38,7 @@
 #include "pj_widgets/Timeline.h"
 #include "pj_widgets/VisualizationPlaceholderWidget.h"
 #include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
 #include "ui/CurveListPanel.h"
 
 using namespace Qt::StringLiterals;
@@ -79,6 +80,9 @@ class SettingsEnvironment : public ::testing::Environment {
   void SetUp() override {
     if (!pj_app_test::isTestSuiteSelected("FeatureCatalogResourceTest")) {
       return;
+    }
+    if (!settings_dir_.isValid() || settings_dir_.path().isEmpty()) {
+      qFatal("Cannot create private GUI test settings directory");
     }
     QCoreApplication::setOrganizationName(u"PlotJugglerTest"_s);
     QCoreApplication::setApplicationName(u"feature_catalog_test"_s);
@@ -267,7 +271,7 @@ class FeatureCatalogResourceTest : public ::testing::Test {
   static const LiveLabels& live() {
     if (!live_) {
       extensions_dir_ = std::make_unique<QTemporaryDir>();
-      window_ = std::make_unique<PJ::MainWindow>(extensions_dir_->path());
+      window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_->path());
       live_ = std::make_unique<LiveLabels>(readLiveLabels(*window_));
     }
     return *live_;

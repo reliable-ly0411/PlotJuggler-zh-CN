@@ -52,6 +52,7 @@
 #include "pj_widgets/VisualizationPlaceholderWidget.h"
 #include "scene_object_classification.h"
 #include "support/gui_test_env.h"
+#include "support/isolated_main_window.h"
 #include "support/layout_import_gui_support.h"
 #include "support/loader_test_support.h"
 #include "ui/CustomWidgetConfigPanel.h"
@@ -515,7 +516,7 @@ class CustomWidgetShellFlowTest : public ::testing::Test {
   void SetUp() override {
     g = pj_cw_test::PluginStats{};
     ASSERT_TRUE(extensions_dir_.isValid());
-    window_ = std::make_unique<PJ::MainWindow>(extensions_dir_.path());
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions_dir_.path());
     ASSERT_TRUE(Peer::session(*window_).extensionCatalog().pluginCatalog().registerStaticWidget(goodVtable()));
     // A raw registration does not notify; announce it the way a reload does.
     emit Peer::session(*window_).extensionCatalog().catalogChanged();

@@ -8,6 +8,7 @@
 #include <QPainter>
 #include <QPainterPath>
 
+#include "pj_widgets/ExternalUrl.h"
 #include "pj_widgets/FrameworkTokens.h"
 
 namespace PJ {
@@ -57,7 +58,8 @@ void ToastNotification::setupUI() {
   message_label_->setObjectName("toastMessage");
   message_label_->setWordWrap(true);
   message_label_->setTextFormat(Qt::RichText);
-  message_label_->setOpenExternalLinks(true);
+  message_label_->setOpenExternalLinks(false);
+  connect(message_label_, &QLabel::linkActivated, this, [](const QString& link) { openExternalUrl(QUrl(link)); });
   message_label_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   layout_->addWidget(message_label_, 1);
 

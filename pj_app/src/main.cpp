@@ -48,15 +48,21 @@
 #include <string>
 
 #include "AppLanguage.h"
+#ifndef PJ_TARGET_WASM
+#include "AppProfile.h"
+#endif
 #include "BrowserPersistence.h"
 #include "BundledFont.h"
 #include "DebugMode.h"
+#include "WindowsConsole.h"
 #ifndef PJ_TARGET_WASM
 #include "DiagnosticDump.h"
 #endif
 #include "KeySequence.h"
 #ifndef PJ_TARGET_WASM
 #include "LayoutExitWatch.h"
+#include "PlotStateDump.h"
+#include "pj_plotting/PlotWidget.h"
 #endif
 #include "MainWindow.h"
 #include "Splashscreen.h"
@@ -86,39 +92,31 @@ using namespace Qt::StringLiterals;
 
 namespace {
 
+#if defined(Q_OS_MACOS)
+// Both the core-only Python self-test and the GUI resolve the bundled stdlib
+// after constructing their application. An explicit user PYTHONHOME wins.
+void configureBundledPythonHome() {
+  if (qEnvironmentVariableIsEmpty("PYTHONHOME")) {
+    const QString bundled_python = QDir::cleanPath(QCoreApplication::applicationDirPath() + u"/../Resources/python"_s);
+    if (QFileInfo(bundled_python).isDir()) {
+      qputenv("PYTHONHOME", QFile::encodeName(bundled_python));
+    }
+  }
+}
+#endif
+
 #if defined(_WIN32)
 // Ctrl+C / Ctrl+Break in the attached terminal would otherwise end the process at once, skipping MainWindow's
 // close handling. Runs on a thread the console creates, hence the queued call.
 BOOL WINAPI onConsoleInterrupt(DWORD event) {
-  if ((event != CTRL_C_EVENT && event != CTRL_BREAK_EVENT) || qApp == nullptr) {
+  auto* application = qobject_cast<QApplication*>(QCoreApplication::instance());
+  if ((event != CTRL_C_EVENT && event != CTRL_BREAK_EVENT) || application == nullptr) {
     return FALSE;
   }
-  QMetaObject::invokeMethod(qApp, [] { QApplication::closeAllWindows(); }, Qt::QueuedConnection);
+  QMetaObject::invokeMethod(application, [] { QApplication::closeAllWindows(); }, Qt::QueuedConnection);
   return TRUE;
 }
 
-// A GUI-subsystem exe has no console: attach to the launching terminal's, so CLI output and Qt's log (stderr
-// only while a console is attached) appear there. A stream the launcher redirected is kept. Must run before the
-// first Qt log message: Qt caches the console check.
-void attachParentConsole() {
-  const auto is_unset = [](DWORD which) {
-    const HANDLE handle = GetStdHandle(which);
-    return handle == nullptr || handle == INVALID_HANDLE_VALUE;
-  };
-  const bool reopen_stdout = is_unset(STD_OUTPUT_HANDLE);
-  const bool reopen_stderr = is_unset(STD_ERROR_HANDLE);
-  if (!AttachConsole(ATTACH_PARENT_PROCESS)) {
-    return;
-  }
-  SetConsoleCtrlHandler(onConsoleInterrupt, TRUE);
-  FILE* reopened = nullptr;
-  if (reopen_stdout) {
-    freopen_s(&reopened, "CONOUT$", "w", stdout);
-  }
-  if (reopen_stderr) {
-    freopen_s(&reopened, "CONOUT$", "w", stderr);
-  }
-}
 #endif
 
 // The crash handler: at static init it installs signal handlers that print a symbolized stack trace. Defined here
@@ -293,13 +291,29 @@ bool isUnattendedRun(
 }  // namespace
 
 int main(int argc, char* argv[]) {
+  PJ::attachParentConsoleStreams();
 #if defined(_WIN32)
-  attachParentConsole();
+  SetConsoleCtrlHandler(onConsoleInterrupt, TRUE);
 #endif
 #ifndef PJ_TARGET_WASM
-  // Before any QApplication, which would demand a platform plugin and a display the CI containers lack.
+  // A core-only application preserves Unicode CLI arguments and profile
+  // validation without demanding a platform plugin or display in headless CI.
   for (int i = 1; i < argc; ++i) {
+    if (std::strcmp(argv[i], "--") == 0) {
+      break;
+    }
     if (std::strcmp(argv[i], "--selftest-python") == 0) {
+      QCoreApplication app(argc, argv);
+      QCoreApplication::setOrganizationName(u"PlotJuggler"_s);
+      QCoreApplication::setApplicationName(u"PlotJuggler4"_s);
+      QString profile_error;
+      if (!PJ::initializeAppProfile(app.arguments(), &profile_error)) {
+        std::fprintf(stderr, "[profile-dir] %s\n", qPrintable(profile_error));
+        return 64;
+      }
+#if defined(Q_OS_MACOS)
+      configureBundledPythonHome();
+#endif
       return selftestPython();
     }
     if (std::strcmp(argv[i], "--selftest-docking") == 0) {
@@ -347,14 +361,7 @@ int main(int argc, char* argv[]) {
   // clang-format on
 #endif
 #if defined(Q_OS_MACOS)
-  // The bundle carries the embedded CPython's stdlib at Contents/Resources/python (packaging/macos); the build-time
-  // prefix is absent on the user's Mac. Python starts lazily, after this; a user PYTHONHOME wins.
-  if (qEnvironmentVariableIsEmpty("PYTHONHOME")) {
-    const QString bundled_python = QDir::cleanPath(QCoreApplication::applicationDirPath() + u"/../Resources/python"_s);
-    if (QFileInfo(bundled_python).isDir()) {
-      qputenv("PYTHONHOME", QFile::encodeName(bundled_python));
-    }
-  }
+  configureBundledPythonHome();
 #endif
   // Before any QRhiWidget exists: each top-level can pick its graphics API only once.
   (void)PJ::preferredGraphicsApi();
@@ -365,8 +372,18 @@ int main(int argc, char* argv[]) {
 #endif
   QCoreApplication::setOrganizationName(u"PlotJuggler"_s);
   QCoreApplication::setApplicationName(u"PlotJuggler4"_s);
-  // PJ_VERSION_STRING comes from the generated pj_version.h (PJ_VERSION); the About box shows it and the update
-  // check compares it against the latest release.
+#ifndef PJ_TARGET_WASM
+  // Before fonts, WidgetTuner, CLI processing, or any app-owned settings/store
+  // access. Failure must exit, never continue with the production profile.
+  QString profile_error;
+  if (!PJ::initializeAppProfile(app.arguments(), &profile_error)) {
+    std::fprintf(stderr, "[profile-dir] %s\n", qPrintable(profile_error));
+    return 64;
+  }
+#endif
+  // PJ_VERSION_STRING comes from the root project(VERSION) via pj_app's
+  // target_compile_definitions — the single source of truth read by the About
+  // box and compared against the latest GitHub release.
   QCoreApplication::setApplicationVersion(QStringLiteral(PJ_VERSION_STRING));
   QApplication::setApplicationDisplayName(u"PlotJuggler 4"_s);
   // Wayland compositors ignore the window icon and look up <app_id>.desktop, so the desktop file name must equal
@@ -442,6 +459,12 @@ int main(int argc, char* argv[]) {
       u"path"_s);
   parser.addOption(plugin_dir_option);
 #ifndef PJ_TARGET_WASM
+  const QCommandLineOption profile_dir_option(
+      u"profile-dir"_s,
+      QCoreApplication::translate(
+          "AppProfile", "Keep settings and core app data in an isolated absolute directory (not a plugin sandbox)."),
+      u"absolute-directory"_s);
+  parser.addOption(profile_dir_option);
   const QCommandLineOption validate_plugins_option(
       u"validate-plugins"_s, u"Load and validate every whitelisted plugin in this directory, then exit."_s, u"path"_s);
   parser.addOption(validate_plugins_option);
@@ -499,6 +522,11 @@ int main(int argc, char* argv[]) {
       u"Write every diagnostic reported during this run to a JSON file on exit (full run, never truncated)."_s,
       u"json-path"_s);
   parser.addOption(dump_diagnostics_option);
+  const QCommandLineOption dump_plot_state_option(
+      u"dump-plot-state"_s,
+      u"With --exit-after-layout: write plotted sample counts, bounds and viewports at successful settlement."_s,
+      u"json-path"_s);
+  parser.addOption(dump_plot_state_option);
   const QCommandLineOption exit_after_layout_option(
       u"exit-after-layout"_s,
       QStringLiteral(
@@ -548,6 +576,10 @@ int main(int argc, char* argv[]) {
   // Without a layout a headless harness would sit in an unobserved GUI session. Usage errors exit 64 (EX_USAGE),
   // distinct from the run's own codes (1 = load failed, 2 = timeout).
   constexpr int kExitUsage = 64;
+  if (parser.isSet(dump_plot_state_option) && !parser.isSet(exit_after_layout_option)) {
+    std::fprintf(stderr, "[dump-plot-state] --dump-plot-state requires --exit-after-layout\n");
+    return kExitUsage;
+  }
   int exit_after_layout_timeout_s = 0;
   if (parser.isSet(exit_after_layout_option)) {
     if (!parser.isSet(layout_option)) {
@@ -696,11 +728,17 @@ int main(int argc, char* argv[]) {
   // restore committed.
   if (parser.isSet(exit_after_layout_option)) {
     const int timeout_s = exit_after_layout_timeout_s;
+    const QString plot_state_path = parser.value(dump_plot_state_option);
     new PJ::LayoutExitWatch(
         window, std::chrono::seconds(timeout_s),
-        [timeout_s](int code) {
+        [timeout_s, plot_state_path, &window](int code) {
           if (code == PJ::LayoutExitWatch::kExitCodeSuccess) {
             std::printf("[exit-after-layout] layout restore settled: success\n");
+            if (!plot_state_path.isEmpty() &&
+                !PJ::writePlotStateDump(window.findChildren<PJ::PlotWidget*>(), plot_state_path)) {
+              std::fprintf(stderr, "[dump-plot-state] write FAILED: %s\n", qPrintable(plot_state_path));
+              code = EXIT_FAILURE;
+            }
           } else if (code == PJ::LayoutExitWatch::kExitCodeLoadFailed) {
             std::fprintf(stderr, "[exit-after-layout] layout load FAILED\n");
           } else {
@@ -732,7 +770,7 @@ int main(int argc, char* argv[]) {
   // build; TelemetryPing itself refuses an unpackaged one.
   const bool automated = parser.isSet(screenshot_option) || qEnvironmentVariableIsSet("CI") ||
                          qEnvironmentVariableIsSet("PJ_DISABLE_TELEMETRY");
-  if (!automated && QSettings().value(u"Preferences::send_anonymous_stats"_s, true).toBool()) {
+  if (!automated && QSettings().value(u"Preferences::send_anonymous_stats"_s, false).toBool()) {
     QTimer::singleShot(0, &window, [&window]() { window.sendTelemetryPing(QStringLiteral(PJ_INSTALLATION_STRING)); });
   }
   // The daily usage report has its own opt-out (read by startUsageReporting) and the same automation gates.

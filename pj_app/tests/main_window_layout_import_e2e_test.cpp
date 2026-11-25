@@ -1,3 +1,4 @@
+#include "support/isolated_main_window.h"
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
@@ -44,6 +45,12 @@
 #include <QDomElement>
 #include <QFile>
 #include <QFileDialog>
+
+#include "../../cmake/test_mains/pj_test_managed_profile.h"
+
+#ifdef Q_OS_WIN
+#include "../../cmake/test_mains/pj_test_windows_registry.h"
+#endif
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -143,9 +150,9 @@ class MainWindowLayoutImportE2ETest : public ::testing::Test {
     project_dir_ = std::make_unique<QTemporaryDir>();
     ASSERT_TRUE(project_dir_->isValid());
 
-    window_ = std::make_unique<PJ::MainWindow>(extensions);
-    // The staged mcap-loader must be discoverable, or the promotion/warm legs would silently degrade into
-    // provider-only observations.
+    window_ = std::make_unique<pj_app_test::IsolatedMainWindow>(extensions);
+    // The staged mcap-loader must be discoverable, or the promotion/warm legs
+    // would silently degrade into provider-only observations.
     ASSERT_FALSE(appSession().extensionCatalog().findSourcesForExtension(QStringLiteral(".mcap")).empty())
         << "mcap-loader did not load from " << extensions.toStdString();
     pj_layout_import_gui::recordDiagnosticIds(*window_, diagnostic_ids_);
@@ -922,6 +929,17 @@ TEST_F(MainWindowLayoutImportE2ETest, CatalogSignatureIsEqualAcrossEagerPromoted
 // (see the file header; QSettings and the plugin cache land inside the sandbox via the same env).
 // PJ_MAIN_WINDOW_TEST_MAIN is not used: it cannot install env this early.
 int main(int argc, char** argv) {
+#ifdef Q_OS_WIN
+  if (!pjTestSystemFileDialogMemoryAbsent()) {
+    return EXIT_FAILURE;
+  }
+  // Declared before QApplication: retain the mapping through its destruction
+  // and late static cleanup. HOME/XDG do not redirect the Windows registry.
+  PjTestWindowsRegistry registry;
+  if (!registry.initialize()) {
+    return EXIT_FAILURE;
+  }
+#endif
   if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM")) {
     qputenv("QT_QPA_PLATFORM", "offscreen");
   }
@@ -941,6 +959,7 @@ int main(int argc, char** argv) {
   QCoreApplication::setOrganizationName(QStringLiteral("pj4-e2e-test"));
   QCoreApplication::setApplicationName(QStringLiteral("layout-import-e2e"));
   QStandardPaths::setTestModeEnabled(true);
+  PJ_TEST_INITIALIZE_MANAGED_PROFILE
   QApplication app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

@@ -306,7 +306,7 @@ TabbedPlotWidget::TabbedPlotWidget(QString name, QWidget* parent) : QWidget(pare
     button->setFixedSize(QSize(kTabBarButtonSize, kTabBarButtonSize));
     button->setIconSize(QSize(kTabBarIconSize, kTabBarIconSize));
     button->setFocusPolicy(Qt::NoFocus);
-    button->setToolTip(QObject::tr(tip));
+    button->setToolTip(tr(tip));
     return button;
   };
   button_left_panel_ = make_panel_button(QT_TR_NOOP("Toggle left panel"));
@@ -395,15 +395,28 @@ PlotDocker* TabbedPlotWidget::findDocker(const std::function<bool(PlotDocker*)>&
 
 PlotDocker* TabbedPlotWidget::addTab(QString tab_name) {
   if (tab_name.isEmpty()) {
-    // Past every open tab's suffix too: a restore (undo, layout load) or a rename brings names the count never gave.
-    static const QRegularExpression default_name(u"^tab(\\d+)$"_s);
+    const QString translated_name = tr("tab%1");
+    const qsizetype placeholder = translated_name.indexOf(u"%1"_s);
+    const QRegularExpression localized_name(
+        placeholder < 0 ? u"(?!)"_s
+                        : u"^"_s + QRegularExpression::escape(translated_name.left(placeholder)) + u"([0-9]+)"_s +
+                              QRegularExpression::escape(translated_name.mid(placeholder + 2)) + u"$"_s);
+    // A restore or rename can introduce names ahead of the counter. Recognize
+    // both the selected translation and English names saved by another locale.
+    static const QRegularExpression default_name(u"^tab([0-9]+)$"_s);
     for (const TabEntry& entry : tabs_) {
-      if (const auto match = default_name.match(entry.docker != nullptr ? entry.docker->name() : QString{});
-          match.hasMatch()) {
+      if (entry.docker == nullptr) {
+        continue;
+      }
+      auto match = localized_name.match(entry.docker->name());
+      if (!match.hasMatch()) {
+        match = default_name.match(entry.docker->name());
+      }
+      if (match.hasMatch()) {
         tab_suffix_count_ = std::max(tab_suffix_count_, match.captured(1).toInt());
       }
     }
-    tab_name = QString("tab%1").arg(++tab_suffix_count_);
+    tab_name = translated_name.arg(++tab_suffix_count_);
   }
   PlotDocker* docker = createDocker(tab_name);
   PlotTabFrame* frame = createTabFrame(tab_name);

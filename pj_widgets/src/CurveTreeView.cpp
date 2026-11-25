@@ -162,16 +162,15 @@ bool derivedGlyphPaints(int state) {
 
 // Status color for a derived-topic glyph dot (see kDerivedGlyphStateRole); only for a state that paints.
 QColor derivedGlyphColor(int state) {
-  using PJ::CurveTreeView;
-  switch (static_cast<CurveTreeView::DerivedGlyphState>(state)) {
-    case CurveTreeView::DerivedGlyphState::kPending:
+  switch (static_cast<PJ::CurveTreeView::DerivedGlyphState>(state)) {
+    case PJ::CurveTreeView::DerivedGlyphState::kPending:
       return theme::status(theme::Status::Info, theme::Theme::Dark);
-    case CurveTreeView::DerivedGlyphState::kMissingInput:
+    case PJ::CurveTreeView::DerivedGlyphState::kMissingInput:
       return theme::status(theme::Status::Warning, theme::Theme::Dark);
-    case CurveTreeView::DerivedGlyphState::kError:
+    case PJ::CurveTreeView::DerivedGlyphState::kError:
       return theme::status(theme::Status::Error, theme::Theme::Dark);
-    case CurveTreeView::DerivedGlyphState::kIdle:
-    case CurveTreeView::DerivedGlyphState::kReady:
+    case PJ::CurveTreeView::DerivedGlyphState::kIdle:
+    case PJ::CurveTreeView::DerivedGlyphState::kReady:
       break;
   }
   return QColor();
@@ -2336,8 +2335,8 @@ void CurveTreeView::updateWasmDrag(
   }
   if (wasm_drag_target_ != nullptr && target_is_ancestor) {
     QDragMoveEvent move_event(
-        wasm_drag_target_->mapFromGlobal(global_pos), Qt::CopyAction | Qt::MoveAction, wasm_drag_mime_.get(), buttons,
-        modifiers);
+        QPointF(wasm_drag_target_->mapFromGlobal(global_pos)), Qt::CopyAction | Qt::MoveAction, wasm_drag_mime_.get(),
+        buttons, modifiers);
     QApplication::sendEvent(wasm_drag_target_, &move_event);
     if (move_event.isAccepted()) {
       return;
@@ -2363,7 +2362,8 @@ void CurveTreeView::updateWasmDrag(
       continue;
     }
     QDragEnterEvent enter_event(
-        current->mapFromGlobal(global_pos), Qt::CopyAction | Qt::MoveAction, wasm_drag_mime_.get(), buttons, modifiers);
+        QPointF(current->mapFromGlobal(global_pos)), Qt::CopyAction | Qt::MoveAction, wasm_drag_mime_.get(), buttons,
+        modifiers);
     QApplication::sendEvent(current, &enter_event);
     if (enter_event.isAccepted() && current != nullptr) {
       wasm_drag_target_ = current;

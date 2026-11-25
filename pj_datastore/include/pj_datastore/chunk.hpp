@@ -157,6 +157,12 @@ class TopicChunkBuilder {
   }
 
  private:
+  friend class DataWriter;
+
+  /// Seal only finished rows, retaining the active row and its unset columns.
+  /// Used by DataWriter when flushing between beginRow() and finishRow().
+  [[nodiscard]] TopicChunk sealCompletedRows();
+
   TopicId topic_id_;
   SchemaId schema_id_;
   uint32_t max_rows_;

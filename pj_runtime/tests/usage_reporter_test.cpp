@@ -237,6 +237,32 @@ TEST(UsageReporterTest, UnpackagedBuildsNeverReachTheEndpoint) {
   }
 }
 
+TEST(UsageReporterTest, DisabledCountersNeverUploadAndExplicitEnableAllowsLocalUpload) {
+  Fixture fixture;
+  fixture.counters.setEnabled(false);
+  EXPECT_FALSE(fixture.counters.enabled());
+  fixture.counters.count(UsageFeature::kLayoutLoad);
+  fixture.date = fixture.date.addDays(1);
+  LocalHttpServer server;
+  server.setResponse("200 OK", "{}");
+  UsageReporter reporter(fixture.counters);
+  reporter.setEndpointUrl(server.url());
+  QSignalSpy finished(&reporter, &UsageReporter::finished);
+  reporter.send(u"test-channel"_s, kPublic);
+  ASSERT_TRUE(waitForSignal(finished));
+  EXPECT_TRUE(server.requestHeaders().isEmpty());
+  EXPECT_TRUE(fixture.counters.completedDays().empty());
+
+  fixture.counters.setEnabled(true);
+  fixture.counters.count(UsageFeature::kLayoutLoad);
+  fixture.date = fixture.date.addDays(1);
+  bool ok = false;
+  const QJsonObject body = postAndCapture(fixture, "200 OK", &ok);
+  EXPECT_TRUE(ok);
+  EXPECT_EQ(body.value(u"reports"_s).toArray().size(), 1);
+  EXPECT_TRUE(fixture.counters.completedDays().empty());
+}
+
 TEST(UsageReporterTest, DefaultEndpointIsProductionUrl) {
   UsageCounters counters({}, {});
   UsageReporter reporter(counters);

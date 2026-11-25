@@ -6,8 +6,9 @@
 #ifndef PJ_TARGET_WASM
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
+
+#include "pj_marketplace/platform_utils.hpp"
 #endif
-#include <QStandardPaths>
 #include <QString>
 #include <QTimer>
 #include <chrono>
@@ -67,16 +68,18 @@ std::optional<QString> localFilePath(const QUrl& url) {
 }  // namespace
 
 UrlFetcher::UrlFetcher(QObject* parent) : QObject(parent) {
-  // Persist fetched remote models so re-opening the dataset (or the next session) serves them from disk.
-  // QNetworkDiskCache honors HTTP Cache-Control/ETag: a fresh entry is served without the network; a stale one is
-  // revalidated when online (304 -> reuse) and served from cache when the origin is unreachable. Local file reads
-  // bypass the cache. The directory defaults to <AppData>/models, overridable via PJ_MODEL_CACHE_DIR (to relocate the
-  // cache, and to let tests redirect it to a throwaway dir).
+  // Persist fetched remote models so re-opening the dataset (or the next session)
+  // serves them from disk instead of re-downloading. QNetworkDiskCache honors HTTP
+  // Cache-Control/ETag: a fresh entry is served without touching the network; a
+  // stale one is revalidated when online (304 → reuse) and served from cache when
+  // the origin is unreachable (so the model still renders offline, possibly from
+  // an older copy). Local file reads bypass the cache.
+  //
+  // The directory defaults to <AppData>/models, overridable via the
+  // PJ_MODEL_CACHE_DIR environment variable unless an explicit isolated profile
+  // owns the cache. PlatformUtils gives that profile precedence over the env.
 #ifndef PJ_TARGET_WASM
-  QString cache_dir = qEnvironmentVariable("PJ_MODEL_CACHE_DIR");
-  if (cache_dir.isEmpty()) {
-    cache_dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + u"/models"_s;
-  }
+  const QString cache_dir = PJ::PlatformUtils::modelCacheDir();
   network_ = new QNetworkAccessManager(this);
   auto* cache = new QNetworkDiskCache(network_);
   cache->setCacheDirectory(cache_dir);

@@ -165,7 +165,9 @@ TEST(ScrubberBase, ReturnCommitsAndClosesEditorWithoutReopening) {
     scrubber.show();
     ASSERT_TRUE(QTest::qWaitForWindowExposed(&scrubber));
     scrubber.activateWindow();
+    ASSERT_TRUE(QTest::qWaitForWindowActive(&scrubber));
     scrubber.setFocus();
+    ASSERT_TRUE(scrubber.hasFocus());
 
     QTest::keyClick(&scrubber, Qt::Key_Return);  // keyboard route into the editor
     auto* editor = scrubber.findChild<QLineEdit*>();

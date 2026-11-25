@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "../../cmake/test_mains/pj_test_owned_directory.h"
 #include "pj_runtime/McapRecordingWriter.h"
 #include "pj_runtime/RecordingFormat.h"
 #include "pj_runtime/RecordingSink.h"
@@ -119,16 +120,15 @@ class SourceCaptureServiceTest : public RuntimeHostFixture {
 
   void SetUp() override {
     RuntimeHostFixture::SetUp();
-    std::random_device entropy;
-    cache_root_ = fs::temp_directory_path() / ("source_capture_test-" + std::to_string(entropy()));
+    ASSERT_TRUE(cache_owner_.ownsTree());
+    cache_root_ = fs::path((cache_owner_.path() + "/cache").toStdU16String());
     store_.emplace(cache_root_);
     service_.emplace(*store_);
   }
 
   void TearDown() override {
     RuntimeHostFixture::TearDown();
-    std::error_code ec;
-    fs::remove_all(cache_root_, ec);
+    // cache_owner_ cleans only its fresh tree after service_ and store_ die.
   }
 
   [[nodiscard]] Status attach(std::string_view descriptor = kDescriptor) {
@@ -158,6 +158,7 @@ class SourceCaptureServiceTest : public RuntimeHostFixture {
     service_.emplace(*store_, std::move(factory));
   }
 
+  PjTestOwnedDirectory cache_owner_;
   fs::path cache_root_;
   std::optional<SourceCacheStore> store_;
   std::optional<SourceCaptureService> service_;

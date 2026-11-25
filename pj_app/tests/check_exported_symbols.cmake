@@ -42,6 +42,7 @@ endif()
 # `nm -D --defined-only` prints "<addr> <type> <name>"; the address column is blank
 # for some weak/unique symbols, so match on the type letter rather than on columns.
 set(_exported "")
+set(_elf_runtime_artifacts "")
 string(REPLACE "\n" ";" _nm_lines "${_nm_output}")
 foreach(_line IN LISTS _nm_lines)
   if(_line MATCHES "^[0-9a-fA-F]* +[A-Za-z] +([^ ]+)$")
@@ -50,16 +51,31 @@ foreach(_line IN LISTS _nm_lines)
       continue()
     endif()
     list(APPEND _exported "${_name}")
+    # glibc csu/init.c supplies the read-only _IO_stdin_used through crt1.o /
+    # Scrt1.o. GNU ld's elf.sc supplies these three data/BSS boundary markers.
+    # They are not archive-library APIs. Match exact unversioned names AND nm
+    # types, not an underscore prefix; keep them in the total export count.
+    if(_line MATCHES "^[0-9a-fA-F]+ +(R _IO_stdin_used|B __bss_start|D _edata|B _end)$")
+      list(APPEND _elf_runtime_artifacts "${_name}")
+    endif()
   endif()
 endforeach()
 list(LENGTH _exported _exported_count)
 
 # The rule is STRUCTURAL, not a list of banned libraries.
 #
-# A correctly-linked pj_app exports only compiler/ABI artifacts: Itanium-mangled C++ names (_Z...) plus a handful
-# of libc data objects that copy-relocate into the executable. Third-party C libraries (libpng, zstd, bzip2, lzma,
-# lz4, CPython, ...) export PLAIN C identifiers. A blocklist would miss any library nobody enumerated; pinning
-# the symbol set would fail on every refactor, since C++ artifacts come and go.
+# A correctly-linked pj_app exports only compiler/ABI artifacts: Itanium-mangled
+# C++ names (_Z…) — RTTI, vtables, weak template instantiations, COMDAT statics —
+# plus a handful of libc data objects that copy-relocate into the executable
+# and the exact CRT/linker data artifacts identified above.
+# Every third-party C library we care about (libpng, zstd, bzip2, lzma, lz4,
+# CPython, …) exports PLAIN C identifiers, which are none of those.
+#
+# Preferred over a blocklist of prefixes because a blocklist only ever catches the
+# libraries someone remembered to enumerate — and forgetting to extend it is the
+# exact failure this test exists to prevent. Preferred over pinning the symbol set
+# because C++ artifacts legitimately come and go with every refactor, and a test
+# that cries wolf gets deleted.
 set(_libc_data_allowlist
     stdin stdout stderr environ __environ __libc_single_threaded)
 
@@ -67,6 +83,9 @@ set(_leaked "")
 foreach(_sym IN LISTS _exported)
   if(_sym MATCHES "^_Z")
     continue()  # Itanium C++ ABI artifact
+  endif()
+  if(_sym IN_LIST _elf_runtime_artifacts)
+    continue()
   endif()
   # Symbols may carry a version suffix, e.g. "stderr@GLIBC_2.2.5".
   string(REGEX REPLACE "@.*$" "" _bare "${_sym}")
@@ -99,4 +118,4 @@ if(_exported_count GREATER _ceiling)
       "--exclude-libs,ALL still reaches this target.")
 endif()
 
-message(STATUS "check_exported_symbols: OK — ${_exported_count} exported symbol(s), all C++ ABI artifacts or allowed libc data")
+message(STATUS "check_exported_symbols: OK — ${_exported_count} exported symbol(s), all C++ ABI artifacts or allowed libc/CRT/linker data")

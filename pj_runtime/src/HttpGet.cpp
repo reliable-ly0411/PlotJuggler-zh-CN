@@ -3,6 +3,7 @@
 
 #include "pj_runtime/HttpGet.h"
 
+#include <QCoreApplication>
 #include <QMetaObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -118,7 +119,10 @@ CancelFetch fetchBytesWithLimit(
   const CancelFetch cancel = [cancelled]() { *cancelled = true; };
   if (!isHttpUrl(url)) {
     QTimer::singleShot(0, context, [url, deliver = std::move(deliver)]() {
-      deliver({.final_url = url, .error = u"only http(s) URLs can be fetched: %1"_s.arg(url.toString())});
+      deliver({.bytes = {},
+               .final_url = url,
+               .error = QCoreApplication::translate("PJ::HttpGet", "only http(s) URLs can be fetched: %1")
+                            .arg(url.toString())});
     });
     return cancel;
   }
@@ -144,7 +148,7 @@ CancelFetch fetchBytesWithLimit(
   const QPointer<QNetworkReply> reply = httpGetWithLimit(
       *network, request, max_bytes, timeout, context,
       [max_bytes, deliver = std::move(deliver)](QNetworkReply& finished, bool limit_exceeded) {
-        FetchedBytes fetched{.final_url = finished.url(), .limit_exceeded = limit_exceeded};
+        FetchedBytes fetched{.bytes = {}, .final_url = finished.url(), .error = {}, .limit_exceeded = limit_exceeded};
         if (limit_exceeded) {
           fetched.error = downloadLimitMessage(max_bytes);
         } else if (finished.error() != QNetworkReply::NoError) {
@@ -174,7 +178,7 @@ CancelFetch fetchBytesWithLimit(
 }
 
 QString downloadLimitMessage(qint64 max_bytes) {
-  return u"download exceeds the %1 MiB limit"_s.arg(max_bytes / (1024 * 1024));
+  return QCoreApplication::translate("PJ::HttpGet", "download exceeds the %1 MiB limit").arg(max_bytes / (1024 * 1024));
 }
 
 }  // namespace PJ

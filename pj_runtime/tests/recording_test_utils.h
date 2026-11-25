@@ -55,6 +55,10 @@ inline mcap::KeyValueMap lastRecordingRecord(mcap::McapReader& reader) {
 /// instance per test fixture is the intended use.
 struct IsolatedQtSettings {
   IsolatedQtSettings(const QString& organization, const QString& application) {
+    // A constructor failure must not install an empty/default settings path.
+    if (!dir.isValid() || dir.path().isEmpty()) {
+      qFatal("Cannot create isolated runtime settings directory");
+    }
     if (QCoreApplication::instance() == nullptr) {
       static int argc = 1;
       static char arg0[] = "pj_runtime_test";
@@ -67,6 +71,7 @@ struct IsolatedQtSettings {
     QStandardPaths::setTestModeEnabled(true);
     QSettings::setDefaultFormat(QSettings::IniFormat);
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, dir.path());
+    QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, dir.path());
   }
 
   [[nodiscard]] bool isValid() const {

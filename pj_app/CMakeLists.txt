@@ -59,6 +59,8 @@ add_library(pj_app_shell OBJECT
     src/DatasetMergeActions.h
     src/DiagnosticDump.cpp
     src/DiagnosticDump.h
+    src/PlotStateDump.cpp
+    src/PlotStateDump.h
     src/LayoutExitWatch.cpp
     src/LayoutExitWatch.h
     src/LayoutXml.cpp
@@ -252,7 +254,7 @@ if(EMSCRIPTEN)
         ${CMAKE_SOURCE_DIR}/resources/memes.qrc
         ${CMAKE_SOURCE_DIR}/resources/fonts/NotoSansSC/wasm-cjk.qrc)
 else()
-    add_executable(pj_app src/main.cpp src/BundledFont.cpp)
+    add_executable(pj_app src/main.cpp src/AppProfile.cpp src/AppProfile.h src/BundledFont.cpp)
     # Shown by the About box and copied beside the executable by every desktop package (packaging/).
     include(${CMAKE_SOURCE_DIR}/cmake/PjNotices.cmake)
     pj_desktop_write_notices("${CMAKE_CURRENT_BINARY_DIR}/THIRD_PARTY_NOTICES.txt")
@@ -267,7 +269,7 @@ if(WIN32)
     # GUI subsystem: no console window next to the app when it starts from the
     # Start menu or Explorer. main() stays the entry point, and main.cpp attaches
     # to the parent console when the app is started from a terminal. PowerShell's
-    # `&` does not wait for a GUI-subsystem exe (scripts/windows/run.ps1 pipes it).
+    # `&` does not wait for a GUI-subsystem exe; run.ps1 uses native_process.ps1.
     set_target_properties(pj_app PROPERTIES WIN32_EXECUTABLE TRUE)
     if(MSVC)
         target_link_options(pj_app PRIVATE /ENTRY:mainCRTStartup)
@@ -329,8 +331,7 @@ endif()
 # -Werror: a merge that drops wiring leaves an unused variable behind; this makes it a build failure.
 if(DEFINED PJ_WARNING_FLAGS)
     target_compile_options(pj_app_shell PRIVATE ${PJ_WARNING_FLAGS})
-    # CXX only: pj_app also compiles plotjuggler.rc on Windows, and rc.exe rejects
-    # MSVC warning options such as /W4.
+    # Resource compilation must not receive C++ compiler warning options.
     target_compile_options(pj_app PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${PJ_WARNING_FLAGS}>")
 endif()
 # MainWindow.cpp outgrows COFF's default section limit (C1128 in the pixi win-64 build).
@@ -388,7 +389,61 @@ if(EMSCRIPTEN)
 endif()
 
 if(PJ_BUILD_TESTS)
+    if(WIN32)
+        # Use an interpreter executable, not Conan's Python3 package config.
+        # Existing native CI provides Qt/FFmpeg/CPython runtime directories to CTest.
+        find_program(PJ_TEST_PYTHON NAMES python python3 REQUIRED)
+        add_test(NAME WindowsApplicationContract
+            COMMAND "${PJ_TEST_PYTHON}" "${CMAKE_SOURCE_DIR}/scripts/verify_windows_application.py"
+                    "$<TARGET_FILE:pj_app>" --runtime --expected-version "${PJ_VERSION}")
+        set_tests_properties(WindowsApplicationContract PROPERTIES TIMEOUT 120)
+        # Compile a synthetic offline installer with the real pinned IFW tools.
+        # Dedicated synthetic payloads only; this does not install the application.
+        include("${CMAKE_SOURCE_DIR}/cmake/PjIfwTestOptions.cmake")
+        add_test(NAME WindowsInstallerResourceContract
+            COMMAND "${PJ_TEST_PYTHON}" "${CMAKE_SOURCE_DIR}/scripts/verify_windows_installer_resources.py"
+                    --lrelease $<TARGET_FILE:Qt6::lrelease> ${PJ_IFW_TEST_ARGS})
+        set_tests_properties(WindowsInstallerResourceContract PROPERTIES TIMEOUT 900)
+    endif()
     find_package(GTest REQUIRED)
+    pj_add_app_language_test()
+    if(NOT EMSCRIPTEN)
+        # Real runtime loading, with the same embedded translators as app startup.
+        add_library(catalog_language_widget_plugin SHARED ../pj_runtime/tests/runtime_widget_plugin.cpp)
+        target_link_libraries(catalog_language_widget_plugin PRIVATE plotjuggler_sdk::plugin_sdk)
+        string(TOLOWER "${CMAKE_CXX_COMPILER_ID}" catalog_compiler_family)
+        if(catalog_compiler_family STREQUAL "gnu")
+            set(catalog_compiler_family gcc)
+        elseif(catalog_compiler_family STREQUAL "appleclang")
+            set(catalog_compiler_family clang)
+        endif()
+        target_compile_definitions(catalog_language_widget_plugin PRIVATE
+            PJ_TEST_WIDGET_ID="test-language-widgets"
+            PJ_TEST_WIDGET_LANGUAGE_FIXTURE
+            PJ_TEST_WIDGET_QT_MAJOR=${Qt6_VERSION_MAJOR}
+            PJ_TEST_WIDGET_QT_MINOR=${Qt6_VERSION_MINOR}
+            PJ_TEST_WIDGET_COMPILER="${catalog_compiler_family}")
+        add_executable(runtime_catalog_language_test tests/runtime_catalog_language_test.cpp)
+        set_target_properties(runtime_catalog_language_test PROPERTIES AUTOMOC ON)
+        target_link_libraries(runtime_catalog_language_test PRIVATE pj_runtime pj_app_language Qt6::Test)
+        target_compile_options(runtime_catalog_language_test PRIVATE ${PJ_WARNING_FLAGS})
+        if(MSVC)
+            target_compile_options(catalog_language_widget_plugin PRIVATE /utf-8)
+            target_compile_options(runtime_catalog_language_test PRIVATE /utf-8)
+        endif()
+        target_compile_definitions(runtime_catalog_language_test PRIVATE
+            PJ_LANGUAGE_SOURCE_PATH="$<TARGET_FILE:mock_data_source_plugin>"
+            PJ_LANGUAGE_PARSER_PATH="$<TARGET_FILE:runtime_host_object_parser_plugin>"
+            PJ_LANGUAGE_TOOLBOX_PATH="$<TARGET_FILE:mock_toolbox_plugin>"
+            PJ_LANGUAGE_WIDGET_PATH="$<TARGET_FILE:catalog_language_widget_plugin>")
+        add_dependencies(runtime_catalog_language_test mock_data_source_plugin
+            runtime_host_object_parser_plugin mock_toolbox_plugin catalog_language_widget_plugin)
+        add_test(NAME RuntimeCatalogLanguageTest COMMAND runtime_catalog_language_test)
+    endif()
+    if(NOT EMSCRIPTEN)
+        add_subdirectory(tests/profile)
+        add_subdirectory(tests/installer_script)
+    endif()
 
     # Qt-only helpers, compiled without the shell's dependency closure. No WARNINGS: not every test here builds
     # under -Werror.
@@ -496,6 +551,8 @@ if(PJ_BUILD_TESTS)
     # resolve. MainWindow teardown leaks process-global state, so discovery
     # runs each case in its own process while sharing one linked executable.
     set(PJ_APP_GUI_TEST_SOURCES
+        tests/plot_state_dump_test.cpp
+        tests/preferences_language_test.cpp
         tests/slider_states_test.cpp
         tests/test_process_isolation_test.cpp)
 
@@ -766,8 +823,15 @@ if(PJ_BUILD_TESTS)
         target_compile_options(main_window_layout_import_cancel_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
     add_test(NAME MainWindowLayoutImportCancelTest COMMAND main_window_layout_import_cancel_test)
-    #   lifecycle — explicit progressive policy on a mixed automated restore, apply-failure diagnostics, full
-    #              supersession by a sync-path load, and automated plain-source failure dialog suppression.
+    if(WIN32)
+        target_link_libraries(main_window_layout_import_cancel_test PRIVATE advapi32)
+    endif()
+    #   lifecycle — Codex r1 F2/F3/F4/F6: explicit progressive policy on a
+    #              mixed automated restore, apply-failure diagnostics, full
+    #              supersession by a sync-path load, and automated plain-source
+    #              failure dialog suppression (with the interactive pin).
+    #              Stages the mock source plugin so plain replays load/fail
+    #              for real.
     add_executable(main_window_layout_import_lifecycle_test tests/main_window_layout_import_lifecycle_test.cpp)
     target_include_directories(main_window_layout_import_lifecycle_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(main_window_layout_import_lifecycle_test PRIVATE pj_app_shell pj_resources GTest::gtest)
@@ -959,7 +1023,7 @@ if(PJ_BUILD_TESTS)
         dialog_probe_source_plugin
         progress_shutdown_source_plugin
     )
-    target_link_libraries(file_loader_test PRIVATE pj_app_loader_testlib)
+    target_link_libraries(file_loader_test PRIVATE pj_app_loader_testlib pj_plotting pj_resources)
     if(DEFINED PJ_WARNING_FLAGS)
         target_compile_options(file_loader_test PRIVATE ${PJ_WARNING_FLAGS})
     endif()
@@ -1103,7 +1167,7 @@ if(PJ_BUILD_TESTS)
             COMPILE_DEFINITIONS PJ_FEATURE_CATALOG_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
     endif()
 
-    pj_add_test_runner(pj_app_gui_tests
+    pj_add_test_runner(pj_app_gui_tests MANAGED_PROFILE
         MAIN gui WARNINGS
         SOURCES ${PJ_APP_GUI_TEST_SOURCES} tests/support/gui_test_env.cpp
         # Qt6::Test: QTest::qWaitForWindowExposed, for the drawer-splitter cases in
@@ -1111,6 +1175,33 @@ if(PJ_BUILD_TESTS)
         LIBS pj_app_shell pj_resources plotjuggler_sdk::plugin_sdk Qt6::Test
     )
     set_target_properties(pj_app_gui_tests PROPERTIES AUTOMOC ON)
+    if(NOT EMSCRIPTEN)
+        target_sources(pj_app_gui_tests PRIVATE tests/managed_profile_test.cpp)
+    endif()
+
+    # Real installed-plugin acceptance is opt-in and never downloads plugins.
+    option(PJ_PLUGIN_FEEDBACK_ACCEPTANCE "Build full-shell APBIN/FFT acceptance" OFF)
+    if(PJ_PLUGIN_FEEDBACK_ACCEPTANCE)
+        add_executable(plugin_feedback_test tests/plugin_feedback_test.cpp)
+        # Keep bundled seeding out of the installed-only marketplace scenario.
+        set_target_properties(plugin_feedback_test PROPERTIES AUTOMOC ON WIN32_EXECUTABLE FALSE
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/feedback-acceptance")
+        target_include_directories(plugin_feedback_test PRIVATE src)
+        target_link_libraries(plugin_feedback_test PRIVATE pj_app_shell pj_resources Qt6::Test)
+        target_link_options(plugin_feedback_test PRIVATE $<TARGET_PROPERTY:pj_app,LINK_OPTIONS>)
+        target_compile_options(plugin_feedback_test PRIVATE ${PJ_WARNING_FLAGS})
+        add_dependencies(plugin_feedback_test pj-plugin-check)
+        add_custom_command(TARGET plugin_feedback_test POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                $<TARGET_FILE:pj-plugin-check> $<TARGET_FILE_DIR:plugin_feedback_test>)
+        include("${CMAKE_CURRENT_LIST_DIR}/../cmake/PjQtTestLog.cmake")
+        foreach(language zh_CN zh_TW en_US)
+            pj_add_logged_qt_test(PluginFeedbackMainWindow-${language} plugin_feedback_test TIMEOUT 90)
+            set_tests_properties(PluginFeedbackMainWindow-${language} PROPERTIES
+                ENVIRONMENT "QT_QPA_PLATFORM=offscreen;PJ_FEEDBACK_LANGUAGE=${language}")
+        endforeach()
+    endif()
+
     # $<TARGET_FILE:...> in a compile definition creates no build-order dependency.
     add_dependencies(pj_app_gui_tests custom_topics_editor_fixture_plugin
                      mock_file_source_plugin mock_layout_stream_plugin dialog_probe_source_plugin)

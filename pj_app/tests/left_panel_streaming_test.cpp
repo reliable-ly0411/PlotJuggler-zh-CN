@@ -48,7 +48,7 @@ int spinBoxValue(const PJ::LeftPanel& panel) {
 TEST(LeftPanelStreamingTest, StartStartsTheRestoredSource) {
   QSettings().clear();
   PJ::LeftPanel panel;
-  panel.setStreamingSources({u"Dummy Streamer"_s, u"UDP Server"_s});
+  panel.setStreamingSources({{u"Dummy Streamer"_s, u"Dummy Streamer"_s}, {u"UDP Server"_s, u"UDP Server"_s}});
   ASSERT_EQ(startedSource(panel), u"Dummy Streamer"_s);
 
   QDomDocument doc;
@@ -63,13 +63,14 @@ TEST(LeftPanelStreamingTest, StartStartsTheRestoredSource) {
 TEST(LeftPanelStreamingTest, OnlyAUserPickBecomesTheDefault) {
   QSettings().clear();
   PJ::LeftPanel panel;
-  panel.setStreamingSources({u"Dummy Streamer"_s, u"UDP Server"_s});
+  panel.setStreamingSources({{u"Dummy Streamer"_s, u"Dummy Streamer"_s}, {u"UDP Server"_s, u"UDP Server"_s}});
   EXPECT_FALSE(QSettings().contains(u"MainWindow.streamingSource"_s));
 
   auto* combo = panel.findChild<QComboBox*>(u"comboStreaming"_s);
   ASSERT_NE(combo, nullptr);
   combo->setCurrentIndex(1);
-  emit combo->textActivated(combo->currentText());  // what QComboBox emits for a user's pick
+  ASSERT_FALSE(QSettings().contains(u"MainWindow.streamingSource"_s));
+  emit combo->activated(combo->currentIndex());  // what QComboBox emits for a user's pick
   EXPECT_EQ(QSettings().value(u"MainWindow.streamingSource"_s).toString(), u"UDP Server"_s);
 }
 

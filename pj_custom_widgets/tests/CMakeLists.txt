@@ -12,7 +12,7 @@ set_target_properties(custom_widget_test_plugin PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${PJ_CUSTOM_WIDGET_FIXTURE_DIR}"
     RUNTIME_OUTPUT_DIRECTORY "${PJ_CUSTOM_WIDGET_FIXTURE_DIR}")
 
-pj_add_test_runner(pj_custom_widgets_tests
+pj_add_test_runner(pj_custom_widgets_tests MANAGED_PROFILE
     MAIN gui
     WARNINGS
     SOURCES

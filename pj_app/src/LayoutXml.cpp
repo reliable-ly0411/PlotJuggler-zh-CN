@@ -7,6 +7,9 @@
 #include <QDomNodeList>
 #include <QFileInfo>
 #include <QHash>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QRegularExpression>
 #include <QSet>
 #include <algorithm>
@@ -715,6 +718,16 @@ void forEachCustomWidgetInput(const QDomDocument& doc, Fn&& fn) {
   });
 }
 
+template <typename Fn>
+void forEachLogTopic(const QDomDocument& doc, Fn&& fn) {
+  forEachTagged(doc, u"log"_s, [&fn](QDomElement& log) {
+    for (QDomElement topic = log.firstChildElement(u"topic"_s); !topic.isNull();
+         topic = topic.nextSiblingElement(u"topic"_s)) {
+      fn(topic);
+    }
+  });
+}
+
 // Document order (matchDatasetsToFiles pairs by first appearance); iterative, so a deep layout cannot overflow the
 // stack. Visitors see every widget family's elements: select by exact tagName or touch only attributes you own.
 template <typename Fn>
@@ -1320,6 +1333,105 @@ void stripUnvalidatedIdentityPair(QDomElement& element, const DatasetIdentityAtt
 
 }  // namespace
 
+void migrateLegacyLogWidgets(QDomDocument& doc) {
+  // The QDomNodeList is live: snapshot it before replacing any nodes.
+  const auto nodes = doc.elementsByTagName(u"CustomWidget"_s);
+  QList<QDomElement> legacy;
+  for (int i = 0; i < nodes.size(); ++i) {
+    const QDomElement node = nodes.at(i).toElement();
+    if (node.attribute(u"plugin"_s) == u"log-widget"_s && node.attribute(u"type"_s) == u"log_viewer"_s) {
+      legacy.push_back(node);
+    }
+  }
+
+  for (const QDomElement& widget : legacy) {
+    QJsonObject config;
+    if (const auto saved = widget.firstChildElement(u"config"_s); !saved.isNull()) {
+      const QByteArray json = saved.text().trimmed().toUtf8();
+      if (!json.isEmpty()) {
+        const QJsonDocument parsed = QJsonDocument::fromJson(json);
+        if (!parsed.isObject()) {
+          continue;
+        }
+        config = parsed.object();
+      }
+    }
+    const auto value = [&config](const QString& key) { return config.value(key); };
+    const auto present = [](const QJsonValue& item) { return !item.isUndefined() && !item.isNull(); };
+    const auto validArray = [&present](const QJsonValue& item, bool integers) {
+      if (!present(item)) {
+        return true;
+      }
+      if (!item.isArray()) {
+        return false;
+      }
+      const QJsonArray array = item.toArray();
+      return std::all_of(array.begin(), array.end(), [integers](const QJsonValue& entry) {
+        return integers ? entry.isDouble() && entry.toDouble() == static_cast<double>(entry.toInteger())
+                        : entry.isString();
+      });
+    };
+
+    QDomElement log = doc.createElement(u"log"_s);
+    const auto future = value(u"future_rows"_s);
+    if (present(future) && (!future.isString() || (future.toString() != u"grey"_s && future.toString() != u"hide"_s))) {
+      continue;
+    }
+    log.setAttribute(u"future_rows"_s, future.toString(u"grey"_s));
+    const auto levels = value(u"levels"_s);
+    const auto hidden = value(u"hidden_topics"_s);
+    if (!validArray(levels, false) || !validArray(hidden, false) || !validArray(value(u"splitter_sizes"_s), true) ||
+        !validArray(value(u"column_widths"_s), true)) {
+      continue;
+    }
+    if (present(levels)) {
+      QStringList names;
+      for (const auto& level : levels.toArray()) {
+        names.append(level.toString());
+      }
+      log.setAttribute(u"levels"_s, names.join(u','));
+    }
+    for (const auto& name : hidden.toArray()) {
+      auto item = doc.createElement(u"hidden_topic"_s);
+      item.setAttribute(u"topic"_s, name.toString());
+      log.appendChild(item);
+    }
+    bool valid = true;
+    for (const auto& key : {u"source_filter"_s, u"category_filter"_s, u"text_filter"_s}) {
+      const auto field = value(key);
+      if (present(field) && !field.isString()) {
+        valid = false;
+        break;
+      }
+      if (present(field)) {
+        log.setAttribute(key, field.toString());
+      }
+    }
+    for (auto child = widget.firstChildElement(); valid && !child.isNull(); child = child.nextSiblingElement()) {
+      if (child.tagName() == u"config"_s) {
+        continue;
+      }
+      const QString name = child.attribute(u"topic"_s);
+      if (child.tagName() != u"input"_s || child.attribute(u"name"_s) != u"logs"_s ||
+          child.attribute(u"kind"_s) != u"object"_s || name.isEmpty() || !child.attribute(u"field"_s).isEmpty()) {
+        valid = false;
+        break;
+      }
+      auto topic = doc.createElement(u"topic"_s);
+      topic.setAttribute(u"topic"_s, name);
+      for (const auto& key : {u"dataset_id"_s, u"dataset_source"_s, u"dataset_path"_s}) {
+        if (child.hasAttribute(key)) {
+          topic.setAttribute(key, child.attribute(key));
+        }
+      }
+      log.appendChild(topic);
+    }
+    if (valid && widget != doc.documentElement()) {
+      widget.parentNode().replaceChild(log, widget);
+    }
+  }
+}
+
 void stampDatasetSourcePaths(QDomDocument& doc, const DatasetPathLookup& lookup) {
   if (!lookup) {
     return;
@@ -1338,6 +1450,8 @@ void stampDatasetSourcePaths(QDomDocument& doc, const DatasetPathLookup& lookup)
       doc, [&lookup](QDomElement scope) { stampIdentityPair(scope, qualifier(Qualifier::kPlain), lookup); });
   forEachCustomWidgetInput(
       doc, [&lookup](QDomElement& input) { stampIdentityPair(input, qualifier(Qualifier::kPlain), lookup); });
+  forEachLogTopic(
+      doc, [&lookup](QDomElement& topic) { stampIdentityPair(topic, qualifier(Qualifier::kPlain), lookup); });
 }
 
 void removeUnvalidatedDatasetIds(QDomDocument& doc) {
@@ -1354,6 +1468,7 @@ void removeUnvalidatedDatasetIds(QDomDocument& doc) {
   forEachMarkerScope(doc, [](QDomElement scope) { stripUnvalidatedIdentityPair(scope, qualifier(Qualifier::kPlain)); });
   forEachCustomWidgetInput(
       doc, [](QDomElement& input) { stripUnvalidatedIdentityPair(input, qualifier(Qualifier::kPlain)); });
+  forEachLogTopic(doc, [](QDomElement& topic) { stripUnvalidatedIdentityPair(topic, qualifier(Qualifier::kPlain)); });
 }
 
 void resolveDatasetSourcePaths(QDomDocument& doc, const QDir& layout_dir) {

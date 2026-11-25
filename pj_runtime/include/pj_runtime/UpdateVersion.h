@@ -2,6 +2,7 @@
 // Copyright 2026 Davide Faconti
 // SPDX-License-Identifier: MPL-2.0
 
+#include <QRegularExpression>
 #include <QString>
 #include <QStringList>
 
@@ -59,6 +60,67 @@ inline int versionToComparable(const QString& version) {
     components[i] = n;
   }
   return components[0] * 1'000'000 + components[1] * 1'000 + components[2];
+}
+
+// Recognize this fork's explicit release/development identity, never a bare
+// upstream version. Development builds stay on the fork's download-only route.
+inline bool isLocalizedBuildVersion(const QString& version) {
+  static const QRegularExpression pattern(QStringLiteral(
+      R"(^v?(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)(?:\+zh\.[1-9][0-9]*|-zh\.[1-9][0-9]*(?:\.(?:rc|dev)\.[1-9][0-9]*)?(?:\+[0-9A-Za-z.-]+)?)$)"));
+  return pattern.match(version).hasMatch();
+}
+
+// A +zh.N identity is build metadata, not a prerelease or ordering component.
+inline bool isStableLocalizedVersion(const QString& version) {
+  return isLocalizedBuildVersion(version) && !version.contains(QLatin1Char('-'));
+}
+
+// Compare same-major fork releases. Stable outranks every prerelease of its
+// core version; metadata changes alone never constitute an upgrade. Historical
+// -zh.N[.rc.N] ordering is preserved. Development snapshots are not releases.
+inline bool isNewerLocalizedVersion(const QString& candidate, const QString& current) {
+  static const QRegularExpression pattern(QStringLiteral(
+      R"(^v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:\+zh\.([1-9][0-9]*)|-zh\.([1-9][0-9]*)(?:\.rc\.([1-9][0-9]*))?(?:\+[0-9A-Za-z.-]+)?)$)"));
+  const auto a = pattern.match(candidate);
+  const auto b = pattern.match(current);
+  if (!a.hasMatch() || !b.hasMatch() || a.captured(1) != b.captured(1)) {
+    return false;
+  }
+  // Validate every numeric component before comparing, including lower fields.
+  qulonglong av[6] = {}, bv[6] = {};
+  for (int field = 1; field <= 6; ++field) {
+    for (int side = 0; side < 2; ++side) {
+      const QString value = (side == 0 ? a : b).captured(field);
+      if (value.isEmpty()) {
+        continue;
+      }
+      bool ok = false;
+      (side == 0 ? av : bv)[field - 1] = value.toULongLong(&ok);
+      if (!ok) {
+        return false;
+      }
+    }
+  }
+  for (int field = 0; field < 3; ++field) {
+    if (av[field] != bv[field]) {
+      return av[field] > bv[field];
+    }
+  }
+  const bool a_stable = !a.captured(4).isEmpty();
+  const bool b_stable = !b.captured(4).isEmpty();
+  if (a_stable != b_stable) {
+    return a_stable;
+  }
+  if (a_stable) {
+    return false;
+  }
+  if (av[4] != bv[4]) {
+    return av[4] > bv[4];
+  }
+  if (a.captured(6).isEmpty() != b.captured(6).isEmpty()) {
+    return a.captured(6).isEmpty();
+  }
+  return av[5] > bv[5];
 }
 
 // True only when `candidate` is a strictly newer, parseable version than

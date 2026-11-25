@@ -180,13 +180,13 @@ TEST(UpdateCheckerTest, SupersededCheckEmitsNothing) {
   EXPECT_TRUE(failed_spy.isEmpty());
 }
 
-TEST(UpdateCheckerTest, DefaultUrlTargetsPublicRepo) {
-  // The check must hit the public PlotJuggler/PlotJuggler repo: a private repo is invisible to anonymous clients, so
-  // every check would fail (403 rate-limit / 404 not-found).
+TEST(UpdateCheckerTest, DefaultUrlTargetsLocalizedReleaseChannel) {
+  // Localized versions must query their own public release channel, not upstream.
   PJ::UpdateChecker checker;
+  checker.setCurrentVersion(u"4.0.0-zh.1.rc.2"_s);
   const std::string url = checker.releaseApiUrl().toString().toStdString();
   EXPECT_NE(url.find("api.github.com"), std::string::npos) << url;
-  EXPECT_NE(url.find("/repos/PlotJuggler/PlotJuggler/releases/latest"), std::string::npos) << url;
+  EXPECT_NE(url.find("/repos/reliable-ly0411/PlotJuggler-zh-CN/releases?per_page=100"), std::string::npos) << url;
   EXPECT_EQ(url.find("/PlotJuggler/PJ4/"), std::string::npos) << url;
 }
 
@@ -378,13 +378,18 @@ TEST(UpdateCheckerChannelTest, WindowsNoUpdateIsUpToDate) {
   EXPECT_TRUE(runCheck(checker).up_to_date);
 }
 
-TEST(UpdateCheckerChannelTest, WindowsMaintenanceToolErrorFails) {
+TEST(UpdateCheckerChannelTest, WindowsMaintenanceToolErrorFallsBackToGitHub) {
+  LocalHttpServer server;
+  server.setResponse("200 OK", R"({"tag_name":"4.1.0","html_url":"https://x/rel"})");
   FakeProgram tool("Cannot retrieve remote tree.\n", /*exit_code=*/1);
   PJ::UpdateChecker checker;
   checker.setInstallation(u"windows"_s);
   checker.setMaintenanceToolPath(tool.path());
   checker.setCurrentVersion(u"4.0.3"_s);
-  EXPECT_TRUE(runCheck(checker).failed);
+  checker.setReleaseApiUrl(server.url());
+  const Outcome outcome = runCheck(checker);
+  ASSERT_TRUE(outcome.update.has_value());
+  EXPECT_EQ(outcome.update->route, PJ::UpdateRoute::Download);
 }
 
 TEST(UpdateCheckerChannelTest, WindowsWithoutMaintenanceToolAsksGitHub) {
@@ -415,3 +420,45 @@ class UpdateCheckerEnvironment final : public ::testing::Environment {
 static auto* const kEnv = ::testing::AddGlobalTestEnvironment(new UpdateCheckerEnvironment);
 
 }  // namespace
+
+TEST(UpdateCheckerTest, StableLocalizedBuildUsesForkDownloadForEveryInstallation) {
+  for (const QString& installation : {u"deb"_s, u"windows"_s, u"appimage"_s}) {
+    LocalHttpServer server;
+    server.setResponse("200 OK", R"([
+      {"tag_name":"v4.1.1+zh.1","draft":false,"prerelease":false},
+      {"tag_name":"v4.2.0-zh.1.rc.1","draft":false,"prerelease":true},
+      {"tag_name":"v4.3.0+zh.1","draft":true,"prerelease":false},
+      {"tag_name":"v4.4.0+zh.1","draft":false,"prerelease":true},
+      {"tag_name":"v4.5.0+zh.1","draft":false},
+      {"tag_name":"v5.0.0+zh.1","draft":false,"prerelease":false},
+      {"tag_name":"4.6.0","draft":false,"prerelease":false}])");
+    PJ::UpdateChecker checker;
+    checker.setCurrentVersion(u"4.1.0+zh.1"_s);
+    EXPECT_TRUE(checker.releaseApiUrl().toString().contains(u"reliable-ly0411/PlotJuggler-zh-CN"_s));
+    checker.setInstallation(installation);
+    checker.setAptCacheProgram(u"does-not-exist-must-not-run"_s);
+    checker.setMaintenanceToolPath(u"does-not-exist-must-not-run"_s);
+    checker.setReleaseApiUrl(server.url());
+    QSignalSpy update_spy(&checker, &PJ::UpdateChecker::updateAvailable);
+    QSignalSpy failed_spy(&checker, &PJ::UpdateChecker::checkFailed);
+    checker.checkLatestRelease();
+    ASSERT_TRUE(waitForSignal(update_spy));
+    EXPECT_TRUE(failed_spy.isEmpty());
+    const auto release = update_spy.first().at(0).value<PJ::ReleaseInfo>();
+    EXPECT_EQ(release.name, u"v4.1.1+zh.1"_s);
+    EXPECT_EQ(release.html_url, u"https://github.com/reliable-ly0411/PlotJuggler-zh-CN/releases/tag/v4.1.1+zh.1"_s);
+    EXPECT_EQ(release.route, PJ::UpdateRoute::Download);
+  }
+}
+
+TEST(UpdateCheckerTest, CandidateCanDiscoverStableLocalizedRelease) {
+  LocalHttpServer server;
+  server.setResponse("200 OK", R"([{"tag_name":"v4.1.0+zh.1","draft":false,"prerelease":false}])");
+  PJ::UpdateChecker checker;
+  checker.setCurrentVersion(u"4.1.0-zh.1.rc.1"_s);
+  checker.setReleaseApiUrl(server.url());
+  QSignalSpy update_spy(&checker, &PJ::UpdateChecker::updateAvailable);
+  checker.checkLatestRelease();
+  ASSERT_TRUE(waitForSignal(update_spy));
+  EXPECT_EQ(update_spy.first().at(0).value<PJ::ReleaseInfo>().name, u"v4.1.0+zh.1"_s);
+}
