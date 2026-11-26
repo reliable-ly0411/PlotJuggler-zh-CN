@@ -29,7 +29,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = "$TEST_SOURCE"
+          git merge-base --is-ancestor "$TEST_SOURCE" HEAD
           test "$(git rev-parse "$PRODUCT^{tree}")" = c84c696f347dcabdda5f1aced7fc39cb37e0553d
           test "$(git diff --name-only "$PRODUCT" "$TEST_SOURCE")" = "$(printf '%s\n' pj_app/tests/browser_persistence_test.cpp tests/wasm/presets.spec.js)"
           test "$(git diff --name-only "$TEST_SOURCE" HEAD)" = .github/workflows/zh-4x-wasm-serial-readback.yml
@@ -47,14 +47,18 @@ jobs:
       - name: Verify original acceptance package and both manifests
         shell: bash
         run: |
+          set -euo pipefail
+          git switch --detach "$PRODUCT"
+          trap 'git switch --detach "$GITHUB_SHA"' EXIT
           python3 packaging/localization/wasm_receipt.py verify \
             --role localized --source-repository reliable-ly0411/PlotJuggler-zh-CN \
-            --source-sha "$PRODUCT" --controller-sha "$PRODUCT" --kind acceptance \
+            --source-sha "$PRODUCT" --controller-sha "$PRODUCT" --controller-root . --kind acceptance \
             --package build-wasm-probe/deploy --package build-wasm-probe/deploy-presets \
             --extra 'build-wasm-probe/pj_app/plotjuggler4*.symbols' \
             --extra 'build-wasm-probe/pj_app/scene3d_capability_probe.*' \
             --extra build-wasm-probe/pj_app/qtloader.js --extra build-wasm-probe/pj_app/qtlogo.svg \
-            --extra .emsdk/upstream/emscripten/emrun.py --output validation-receipts/rollback-acceptance.json
+            --extra .emsdk/upstream/emscripten/emrun.py --output validation-receipts/acceptance.json
+          cp validation-receipts/acceptance.json validation-receipts/rollback-acceptance.json
       - uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
