@@ -1,0 +1,96 @@
+# SPDX-License-Identifier: MPL-2.0
+name: Isolated WASM rollback readback
+on:
+  push:
+    branches: [zh-CN-4.x-test/rollback-readback-20261126]
+permissions:
+  actions: read
+  contents: read
+concurrency:
+  group: wasm-rollback-readback-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  rollback:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    env:
+      PJ_WASM_URL: http://127.0.0.1:6931/
+      PJ_WASM_BUILD_DIR: build-wasm-probe
+      PJ_WASM_PYTHON: '1'
+      PRODUCT: 5a6fbc939345fc913571cccc15d6ef1dc3f0eedc
+      TEST_SOURCE: 20430d451ded75396c6d5ddf34de7205f114cd51
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify test-only changes against the retained product
+        id: versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$TEST_SOURCE"
+          test "$(git rev-parse "$PRODUCT^{tree}")" = c84c696f347dcabdda5f1aced7fc39cb37e0553d
+          test "$(git diff --name-only "$PRODUCT" "$TEST_SOURCE")" = "$(printf '%s\n' pj_app/tests/browser_persistence_test.cpp tests/wasm/presets.spec.js)"
+          test "$(git diff --name-only "$TEST_SOURCE" HEAD)" = .github/workflows/zh-4x-wasm-serial-readback.yml
+          source ./versions.env
+          echo "node=$PJ_WASM_NODE_VERSION" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ steps.versions.outputs.node }}
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '15084873539'
+          run-id: '45743030567'
+          github-token: ${{ github.token }}
+          merge-multiple: true
+      - name: Verify original acceptance package and both manifests
+        shell: bash
+        run: |
+          python3 packaging/localization/wasm_receipt.py verify \
+            --role localized --source-repository reliable-ly0411/PlotJuggler-zh-CN \
+            --source-sha "$PRODUCT" --controller-sha "$PRODUCT" --kind acceptance \
+            --package build-wasm-probe/deploy --package build-wasm-probe/deploy-presets \
+            --extra 'build-wasm-probe/pj_app/plotjuggler4*.symbols' \
+            --extra 'build-wasm-probe/pj_app/scene3d_capability_probe.*' \
+            --extra build-wasm-probe/pj_app/qtloader.js --extra build-wasm-probe/pj_app/qtlogo.svg \
+            --extra .emsdk/upstream/emscripten/emrun.py --output validation-receipts/rollback-acceptance.json
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ hashFiles('tests/wasm/package-lock.json') }}
+      - uses: actions/cache@v5
+        with:
+          path: build-wasm-assets
+          key: wasm-hosted-assets-${{ hashFiles('tests/wasm/fixtures/hosted_assets.json') }}
+      - name: Prepare Chromium and verify the sample mirror
+        shell: bash
+        run: |
+          npm --prefix tests/wasm ci
+          (cd tests/wasm && npx playwright install --with-deps chromium)
+          npm --prefix tests/wasm run fetch:assets
+      - name: Replay the exact timed-out serial case
+        shell: bash
+        working-directory: tests/wasm
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: rollback-report.json
+        run: |
+          set -euo pipefail
+          node ../../scripts/serve_wasm.mjs --root ../../build-wasm-probe/deploy --port 6931 > /dev/null 2>&1 &
+          for _ in $(seq 1 50); do
+            curl -fsS -o /dev/null "$PJ_WASM_URL" && break
+            sleep 0.2
+          done
+          curl -fsS -o /dev/null "$PJ_WASM_URL"
+          npx playwright test presets.spec.js --project=chromium --workers=1 --grep 'a sample that fails releases what it staged and leaves the open sample as it was' --reporter=line,json --output rollback-results
+          node -e 'const s=require("./rollback-report.json").stats; if(s.expected!==1 || s.unexpected || s.flaky || s.skipped) process.exit(1)'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wasm-rollback-readback
+          path: |
+            validation-receipts/rollback-acceptance.json
+            tests/wasm/rollback-report.json
+            tests/wasm/rollback-results/
+          if-no-files-found: warn
+          retention-days: 14
