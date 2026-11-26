@@ -1170,10 +1170,11 @@ test('a sample that fails releases what it staged and leaves the open sample as 
   test.setTimeout(300000);
   const errors = [];
   const samples = await startSamples();
+  let run;
   try {
     const context = page.context();
     await page.close();
-    const run = await bootSamples(context, errors, samples);
+    run = await bootSamples(context, errors, samples);
     const complete = completedMeshes(await uiTranslations(run.page));
     // The open sample is the one holding a staged file (its lazy MCAP reader).
     expect(await pickSample(run, samples, 'anymal')).toContain('PJ_WASM_LAYOUT_LOAD_OK');
@@ -1215,7 +1216,13 @@ test('a sample that fails releases what it staged and leaves the open sample as 
     expect(await datasetCount(run.page, run.messages)).toBe(1);
     expect(errors).toEqual([]);
   } finally {
-    await samples.close();
+    // A lazy recording can still hold mirror connections after the assertions.
+    // Close the consuming page before waiting for the fixture servers to drain.
+    try {
+      await run?.page.close();
+    } finally {
+      await samples.close();
+    }
   }
 });
 
