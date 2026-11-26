@@ -154,7 +154,8 @@ test('official ULog loader imports a browser-selected log', async ({ page }) => 
   const consoleMessages = [];
   const errors = [];
   const screen = await boot(page, consoleMessages, errors);
-  const outcome = await importFileWithoutDialog(page, screen, consoleMessages, {
+  // This fork's pinned ULog loader still opens its file-information dialog.
+  const outcome = await importFile(page, screen, consoleMessages, {
     name: 'flight.ulg',
     mimeType: 'application/octet-stream',
     buffer: makeULog([[1_000_000, 1.5], [2_000_000, 2.5], [3_000_000, 4.5]]),

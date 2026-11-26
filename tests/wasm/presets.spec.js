@@ -988,8 +988,8 @@ async function expectUzhfpvViews(run) {
 }
 
 // The Microduck robot from its recorded URDF, with every mesh fetched from the package root the layout maps.
-const microduckReady = models => models.robots.live === 1 && models.robots.missing === 0
-  && models.robots.draws > 0 && /\b(\d+)\/\1 meshes/.test(models.robots.status[0]);
+const microduckReady = (models, complete) => models.robots.live === 1 && models.robots.missing === 0
+  && models.robots.draws > 0 && models.robots.status.length === 1 && complete.test(models.robots.status[0]);
 
 // The Microduck sample's two derived series restored from the layout's <data_processors> (the numeric tilt and the
 // text state the State Transitions strip shows), its tilt plot (which also shows the fall markers of the layout's
@@ -1003,7 +1003,8 @@ async function expectMicroduckViews(run) {
   await expect.poll(outputs).toEqual(['robot_state', 'tilt_deg']);
   const cameras = await requestScene2DState(run.page, run.messages, count(run.messages, 'PJ_WASM_SCENE2D_SUMMARY'));
   expect(cameras.docks.map(dock => [dock.layers, dock.visible])).toEqual([[1, true], [1, true]]);
-  await expectSceneMoves(run, 1, microduckReady);
+  const complete = completedMeshes(await uiTranslations(run.page));
+  await expectSceneMoves(run, 1, models => microduckReady(models, complete));
 }
 
 // The Built-in filters sample: the raw gyro yaw rate, the same signal through the built-in

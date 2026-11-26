@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
-const { uiTranslations } = require('./support/ui_language');
+const { uiTranslations, completedMeshes } = require('./support/ui_language');
 
 // Replay the console framing emitted by Qt/Emscripten. Browser tests separately
 // verify the requested language against the actual application's property.
@@ -34,4 +34,18 @@ test('rejects an unsupported language instead of accepting another translation',
   const page = pageWithProbe('PJ_WASM_INTERFACE_LANGUAGE value=de_DE\n');
   await assert.rejects(uiTranslations(page));
   assert.equal(page.listenerCount('console'), 0);
+});
+
+
+test('completed meshes requires equal counts in the active interface language', async () => {
+  const labels = { en_US: 'meshes', zh_CN: '个网格', zh_TW: '個網格' };
+  for (const [language, label] of Object.entries(labels)) {
+    const page = pageWithProbe(`PJ_WASM_INTERFACE_LANGUAGE value=${language}`);
+    const ready = completedMeshes(await uiTranslations(page));
+    assert.equal(ready.test(`Microduck  •  27/27 ${label}`), true);
+    assert.equal(ready.test(`Microduck  •  26/27 ${label}`), false);
+    for (const other of Object.values(labels).filter(value => value !== label)) {
+      assert.equal(ready.test(`Microduck  •  27/27 ${other}`), false);
+    }
+  }
 });
