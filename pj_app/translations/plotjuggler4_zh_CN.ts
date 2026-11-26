@@ -640,6 +640,10 @@
         <source>&apos;%1&apos;, which the source&apos;s plugin reads, has no content fingerprint: the file changed since it was picked. Open the source again.</source>
         <translation>数据源插件读取的 &apos;%1&apos; 没有内容指纹：该文件在选取后已发生变化。请重新打开数据源。</translation>
     </message>
+    <message>
+        <source>&apos;%1&apos; is not a valid PJ4 layout: %2 (line %3, col %4)</source>
+        <translation>“%1”不是有效的 PJ4 布局：%2（第 %3 行，第 %4 列）</translation>
+    </message>
 </context>
 <context>
     <name>LeftPanel</name>
@@ -4761,13 +4765,13 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <location line="-360"/>
         <location line="+390"/>
         <source>Plugin &apos;%1&apos;: service registration failed: %2</source>
-        <translation>插件“%1”：服务注册失败：%2</translation>
+        <translation type="vanished">插件“%1”：服务注册失败：%2</translation>
     </message>
     <message>
         <location line="-384"/>
         <location line="+392"/>
         <source>Plugin &apos;%1&apos;: bind failed: %2</source>
-        <translation>插件“%1”：绑定失败：%2</translation>
+        <translation type="vanished">插件“%1”：绑定失败：%2</translation>
     </message>
     <message>
         <location line="-370"/>
@@ -5893,7 +5897,7 @@ for example when the stream is already rectified.</source>
         <location line="+10"/>
         <location line="+422"/>
         <source>&apos;%1&apos; is not a valid PJ4 layout: %2 (line %3, col %4)</source>
-        <translation>“%1”不是有效的 PJ4 布局：%2（第 %3 行，第 %4 列）</translation>
+        <translation type="vanished">“%1”不是有效的 PJ4 布局：%2（第 %3 行，第 %4 列）</translation>
     </message>
     <message>
         <location line="-404"/>
@@ -8090,6 +8094,10 @@ Details: %1</source>
         <source>Replace</source>
         <translation>替换</translation>
     </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
 </context>
 <context>
     <name>PJ::MediaViewerWidget</name>
@@ -9161,12 +9169,12 @@ Details: %1</source>
     <message>
         <location line="+48"/>
         <source>Plugin &apos;%1&apos;: service registration failed: %2</source>
-        <translation>插件“%1”：服务注册失败：%2</translation>
+        <translation type="vanished">插件“%1”：服务注册失败：%2</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Plugin &apos;%1&apos;: bind failed: %2</source>
-        <translation>插件“%1”：绑定失败：%2</translation>
+        <translation type="vanished">插件“%1”：绑定失败：%2</translation>
     </message>
     <message>
         <location line="+103"/>
