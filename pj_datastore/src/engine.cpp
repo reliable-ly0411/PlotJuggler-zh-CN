@@ -389,6 +389,16 @@ std::vector<TopicId> DataEngine::commitChunksLocked(
   return changed;
 }
 
+bool DataEngine::commitRows(TopicId topic_id, TopicChunkBuilder& rows) {
+  auto* storage = getTopicStorage(topic_id);
+  if (storage == nullptr) {
+    return false;
+  }
+  storage->appendRows(rows);
+  impl_->retired_topic_ids.erase(topic_id);
+  return true;
+}
+
 void DataEngine::enforceRetention(Timestamp retention_window_ns) {
   std::unique_lock<std::recursive_mutex> lock(impl_->mutex_);
   for (auto it = impl_->topics.begin(); it != impl_->topics.end(); ++it) {
@@ -929,7 +939,7 @@ Expected<DatasetMergeReport> DataEngine::mergeDatasets(
       const std::vector<int>& colmap = *rr.colmap;
       for (std::size_t lc = 0; lc < colmap.size(); ++lc) {
         if (colmap[lc] < 0 || chunk.isNull(lc, rr.row)) {
-          continue;  // finishRow() nulls the columns not set
+          continue;  // a column a row does not set reads null
         }
         const auto uc = static_cast<std::size_t>(colmap[lc]);
         switch (storageKindOf(union_cols[uc].logical_type)) {
