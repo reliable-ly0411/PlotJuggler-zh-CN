@@ -1,19 +1,18 @@
 # SPDX-License-Identifier: MPL-2.0
-# Recovery only: exact earlier production evidence, new acceptance build, no product writes.
-name: '#1746 localized acceptance replay with retained production proof (validation only)'
+# CI-only controller. Always build the requested exact product and never publish.
+name: "#1743\u201345 exact import, datastore and localization follow-up (validation only)"
 'on':
   push:
     branches:
     - zh-CN-4.x-test/1746-exact-follow-20261126
 permissions:
   contents: read
-  actions: read
 concurrency:
-  group: pj1746-localized-acceptance-readback-${{ github.ref }}
+  group: pj1745-exact-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  wasm-acceptance-readback:
-    name: ${{ matrix.lane }} (WASM acceptance readback)
+  wasm-build-and-browser:
+    name: ${{ matrix.lane }} (WASM)
     runs-on: ubuntu-22.04
     timeout-minutes: 170
     strategy:
@@ -21,9 +20,13 @@ jobs:
       matrix:
         include:
         - lane: localized
-          sha: bccd67fa5f3ffd7cae8172a058636721bb237908
-          tree: 9aeda9f545b363bc25dcd2ec06a9f9c506e39946
-          parents: bf5aea190027bed2037d878a1835c3fd4163f85f 92a4d31c8a3b66386c17b69ac7515552be028f86
+          sha: 534e537289b6935b1530f7b99d3a8c967b733143
+          tree: 8063887b0c77abbb8fab3cbe0bc10892744adf60
+          parents: bf5aea190027bed2037d878a1835c3fd4163f85f f300b96b2e7541dc8daaea572dfdfc645cf33bdc
+        - lane: upstream-pr
+          sha: 0093fd4ca466268ee266c7729e2f2c48da0c71b3
+          tree: 3b6e63143dd3251fe62b0faeee57137e6ca160f8
+          parents: f300b96b2e7541dc8daaea572dfdfc645cf33bdc
     env:
       PJ_LANE: ${{ matrix.lane }}
       PJ_PRODUCT_SHA: ${{ matrix.sha }}
@@ -75,52 +78,6 @@ jobs:
         ref: ${{ github.sha }}
         path: .ci-controller
         persist-credentials: false
-    - name: Read the same lane's production evidence from the immutable full run
-      uses: actions/download-artifact@v4
-      with:
-        github-token: ${{ github.token }}
-        run-id: '45785663790'
-        name: pj1746-${{ matrix.lane }}-wasm-${{ matrix.sha }}-1
-        path: retained-evidence
-    - name: Require retained production provenance and recheck the original budget
-      shell: bash
-      run: |
-        set -euo pipefail
-        mkdir -p build-wasm-prod/deploy
-        python3 - <<'PY_RECEIPT'
-        import hashlib, json, os, shutil
-        from pathlib import Path
-        root=Path('retained-evidence/candidate-evidence')
-        ident=json.loads((root/'identity.json').read_text())
-        prod=json.loads((root/'production.json').read_text())
-        for key, expected in {
-            'lane': os.environ['PJ_LANE'],
-            'source_sha': os.environ['PJ_PRODUCT_SHA'],
-            'source_tree': os.environ['PJ_PRODUCT_TREE'],
-            'parents': os.environ['PJ_PRODUCT_PARENTS'],
-            'controller_sha': 'ee52f123dc6a0adf5d97a1e94b3284355e65c42c',
-            'repository': 'reliable-ly0411/PlotJuggler-zh-CN',
-            'run_id': '45785663790', 'run_attempt': '1',
-        }.items():
-            assert ident[key] == prod[key] == expected, (key, ident[key], prod[key])
-        assert prod['kind']=='production'
-        manifest=root/'production-manifest.json'
-        contents=manifest.read_bytes()
-        assert prod['package']['files']['manifest.json'] == {
-            'bytes': len(contents), 'sha256': hashlib.sha256(contents).hexdigest(),
-        }
-        assert json.loads(contents)['bundleId'] == prod['package']['bundle_id']
-        assert hashlib.sha256(contents).hexdigest() == '5c1c4e9d5fd7fff64f020532e5db1575895367cd44c0151779fde11faef437da'
-        assert prod['package']['startup_bytes'] == 24895060
-        assert prod['package']['total_bytes'] == 25570829
-        assert prod['package']['bundle_id'] == 'sha256-5fc0f1465215ccfdc43dafa442689fa6'
-
-        assert 'PJ_WASM_ENABLE_INGRESS_PROBE:BOOL=OFF' in (root/'production-CMakeCache.txt').read_text().splitlines()
-        shutil.copyfile(manifest,'build-wasm-prod/deploy/manifest.json')
-        for path in [manifest,root/'production.json']:
-            shutil.copyfile(path, Path('candidate-evidence')/('retained-'+path.name))
-        print('Re-used verified production package manifest from run 45785663790:', prod['package']['bundle_id'])
-        PY_RECEIPT
     - name: Read toolchain versions
       id: versions
       shell: bash
@@ -137,16 +94,6 @@ jobs:
       uses: actions/setup-node@v6
       with:
         node-version: ${{ steps.versions.outputs.node }}
-    - name: Apply unmodified upstream 20,000,000 byte startup and localized 26,000,000 byte total gates
-      shell: bash
-      run: |
-        set -euo pipefail
-        manifest=build-wasm-prod/deploy/manifest.json
-        case "$PJ_LANE" in
-          localized) node scripts/wasm_localized_size_budget.mjs "$manifest" ;;
-          upstream-pr) node scripts/wasm_size_budget.mjs "$manifest" 20000000 ;;
-          *) exit 9 ;;
-        esac
     - name: Install build tools
       run: |
         sudo apt-get update
@@ -217,18 +164,78 @@ jobs:
         path: ~/.cache/pj-wasm-cpython
         key: wasm-cpython-${{ hashFiles('cmake/PjWasmPython.cmake', 'cmake/wasm_python/**') }}-emsdk-${{ steps.versions.outputs.emscripten
           }}
+    - name: Build production package (shipped defaults, probes off)
+      shell: bash
+      run: |
+        set -euo pipefail
+        source .emsdk/emsdk_env.sh >/dev/null
+        # Scene2D's find_package(ZLIB 1.3.1 EXACT) resolves against Emscripten's
+        # lazily materialized sysroot zlib port; build it before configuring.
+        embuilder build zlib
+        cmake -S . -B build-wasm-prod -G Ninja \
+          -DCMAKE_TOOLCHAIN_FILE="${PWD}/.qt-wasm/${PJ_QT_VERSION}/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
+          -DQT_HOST_PATH="${PWD}/.qt-wasm/${PJ_QT_VERSION}/gcc_64" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DPJ_BUILD_TESTS=OFF \
+          -DPJ_BUILD_DEMOS=OFF \
+          -DPJ_WASM_ENABLE_INGRESS_PROBE=OFF \
+          -DPJ_WASM_PYTHON_CACHE_DIR="${HOME}/.cache/pj-wasm-cpython"
+        cmake --build build-wasm-prod --target pj_app --parallel 2
+    - name: Package production twice with original shipped options and record the difference-free manifest
+      shell: bash
+      run: |
+        set -euo pipefail
+        npm --prefix tests/wasm ci
+        npm --prefix tests/wasm run test:package
+        opts=()
+        if [[ "$PJ_LANE" == localized ]]; then opts+=(--presets resources/wasm-presets); fi
+        node scripts/package_wasm.mjs "${opts[@]}" --source build-wasm-prod/pj_app --output build-wasm-prod/deploy
+        node scripts/package_wasm.mjs "${opts[@]}" --source build-wasm-prod/pj_app --output build-wasm-prod/deploy-b
+        diff -qr build-wasm-prod/deploy build-wasm-prod/deploy-b
+        cp build-wasm-prod/deploy/manifest.json candidate-evidence/production-manifest.json
+        cp build-wasm-prod/CMakeCache.txt candidate-evidence/production-CMakeCache.txt
+        python3 - <<'PY_MANIFEST'
+        import importlib.util, json
+        from pathlib import Path
+        path = Path('.ci-controller/packaging/localization/wasm_receipt.py')
+        spec = importlib.util.spec_from_file_location('receipt', path)
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        root = Path('candidate-evidence')
+        receipt = json.loads((root/'identity.json').read_text())
+        receipt['package'] = m.package_record(Path('build-wasm-prod/deploy'))
+        receipt['kind'] = 'production'
+        (root/'production.json').write_text(json.dumps(receipt, indent=2) + '\n')
+        print({k: receipt['package'][k] for k in ['bundle_id', 'startup_bytes', 'total_bytes']})
+        PY_MANIFEST
+    - name: Apply unmodified upstream 20,000,000 byte startup and localized 26,000,000 byte total gates
+      shell: bash
+      run: |
+        set -euo pipefail
+        manifest=build-wasm-prod/deploy/manifest.json
+        case "$PJ_LANE" in
+          localized) node scripts/wasm_localized_size_budget.mjs "$manifest" ;;
+          upstream-pr) node scripts/wasm_size_budget.mjs "$manifest" 20000000 ;;
+          *) exit 9 ;;
+        esac
     - name: Cache Playwright browsers
       uses: actions/cache@v5
       with:
         path: ~/.cache/ms-playwright
         key: playwright-chromium-${{ hashFiles('tests/wasm/package-lock.json') }}
-    - name: Install browser package and Chromium
+    - name: Install the pinned browser
       shell: bash
       run: |
         set -euo pipefail
-        cd tests/wasm
-        npm ci
         npx playwright install --with-deps chromium
+      working-directory: tests/wasm
+    - name: Deployment contract and cold threaded boot (production package)
+      working-directory: tests/wasm
+      env:
+        PJ_WASM_PACKAGE_DIR: ${{ github.workspace }}/build-wasm-prod/deploy
+      run: npm run test:deployment
     - name: Build the exact product acceptance application with the existing ingress probes
       shell: bash
       run: |
@@ -259,6 +266,7 @@ jobs:
         node scripts/package_wasm.mjs --source build-wasm-probe/pj_app --output build-wasm-probe/deploy
         cp build-wasm-probe/deploy/manifest.json candidate-evidence/acceptance-manifest.json
         cp build-wasm-probe/CMakeCache.txt candidate-evidence/acceptance-CMakeCache.txt
+      id: probe-build
     - name: Record acceptance package identity and verify all representations
       shell: bash
       run: |
@@ -279,7 +287,7 @@ jobs:
     - name: Retain verified acceptance bytes even when a browser assertion fails
       uses: actions/upload-artifact@v4
       with:
-        name: pj1746-${{ matrix.lane }}-acceptance-package-${{ matrix.sha }}-${{ github.run_attempt }}
+        name: pj1745-${{ matrix.lane }}-acceptance-package-${{ matrix.sha }}-${{ github.run_attempt }}
         path: |
           build-wasm-probe/deploy
           candidate-evidence/acceptance.json
@@ -323,13 +331,268 @@ jobs:
         stats = data['stats']
         assert stats['expected'] == 2 and stats['unexpected'] == stats['skipped'] == stats['flaky'] == 0, stats
         PY_CASES
+    - name: Browser file import, partial import and layout reselection regressions
+      shell: bash
+      run: |
+        set -euo pipefail
+        node scripts/serve_wasm.mjs --root build-wasm-probe/deploy --port 6931 > candidate-evidence/storage-browser-server.log 2>&1 &
+        server=$!
+        trap 'kill "$server" 2>/dev/null || true' EXIT
+        entrypoint=$(jq -er '.entrypoint | select(. == "index.html")' build-wasm-probe/deploy/manifest.json)
+        test -f "build-wasm-probe/deploy/$entrypoint"
+        export PJ_WASM_URL="http://127.0.0.1:6931/$entrypoint"
+        export PJ_WASM_BUILD_DIR="$PWD/build-wasm-probe"
+        for _ in $(seq 1 50); do
+          curl -fsS -o /dev/null "$PJ_WASM_URL" && break
+          sleep 0.2
+        done
+        curl -fsS -o /dev/null "$PJ_WASM_URL"
+        export PJ_WASM_TEST_LANGUAGE=en_US
+        export PLAYWRIGHT_JSON_OUTPUT_FILE="$PWD/candidate-evidence/storage-browser.json"
+        export PJ_BROWSER_OUTPUT="$PWD/candidate-evidence/storage-browser-artifacts"
+        cd tests/wasm
+        npx playwright test ingress_file_selection.spec.js persistence_layout.spec.js --project=chromium --workers=1 \
+          --grep 'official CSV plugin previews and imports browser-selected data|official CSV plugin can stop and keep a browser import|source-bound browser layouts download logical references and replay after explicit reselection|multi-source browser layouts stage duplicate basenames transactionally and restore exact timeline state' \
+          --reporter=line,json --output "$PJ_BROWSER_OUTPUT"
+        cd ../..
+        python3 - <<'PY_CASES'
+        import json
+        from pathlib import Path
+        stats = json.loads(Path('candidate-evidence/storage-browser.json').read_text())['stats']
+        assert stats['expected'] == 4 and stats['unexpected'] == stats['skipped'] == stats['flaky'] == 0, stats
+        PY_CASES
+      if: ${{ !cancelled() && steps.probe-build.outcome == 'success' }}
     - name: Retain immutable identity, production and acceptance manifests, browser receipts/screenshots
       if: ${{ always() }}
       uses: actions/upload-artifact@v4
       with:
-        name: pj1746-${{ matrix.lane }}-acceptance-evidence-${{ matrix.sha }}-${{ github.run_attempt }}
+        name: pj1745-${{ matrix.lane }}-wasm-evidence-${{ matrix.sha }}-${{ github.run_attempt }}
         path: |
           candidate-evidence
           tests/wasm/test-results
         if-no-files-found: error
         retention-days: 14
+  native-import-datastore:
+    name: ${{ matrix.lane }} (native import and storage)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 170
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - lane: localized
+          sha: 534e537289b6935b1530f7b99d3a8c967b733143
+          tree: 8063887b0c77abbb8fab3cbe0bc10892744adf60
+          parents: bf5aea190027bed2037d878a1835c3fd4163f85f f300b96b2e7541dc8daaea572dfdfc645cf33bdc
+        - lane: upstream-pr
+          sha: 0093fd4ca466268ee266c7729e2f2c48da0c71b3
+          tree: 3b6e63143dd3251fe62b0faeee57137e6ca160f8
+          parents: f300b96b2e7541dc8daaea572dfdfc645cf33bdc
+    env:
+      PJ_LANE: ${{ matrix.lane }}
+      PJ_PRODUCT_SHA: ${{ matrix.sha }}
+      PJ_PRODUCT_TREE: ${{ matrix.tree }}
+      PJ_PRODUCT_PARENTS: ${{ matrix.parents }}
+    steps:
+    - name: Free up runner disk space
+      run: |
+        sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+          /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/lib/node_modules
+        sudo docker image prune --all --force >/dev/null 2>&1 || true
+        df -h /
+    - name: Use HTTPS for github.com submodules
+      run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+    - name: Checkout exact product (not controller)
+      uses: actions/checkout@v6
+      with:
+        ref: ${{ matrix.sha }}
+        submodules: recursive
+        repository: reliable-ly0411/PlotJuggler-zh-CN
+        persist-credentials: false
+    - name: Verify immutable product commit, tree, parents and submodules
+      shell: bash
+      run: |
+        set -euo pipefail
+        test "$(git rev-parse HEAD)" = "$PJ_PRODUCT_SHA"
+        test "$(git rev-parse 'HEAD^{tree}')" = "$PJ_PRODUCT_TREE"
+        actual_parents="$(git cat-file commit HEAD | sed -n 's/^parent //p; /^$/q' | paste -sd ' ' -)"
+        printf 'Exact checkout: SHA=%s tree=%s parents=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$actual_parents"
+        test "$actual_parents" = "$PJ_PRODUCT_PARENTS"
+        mkdir -p candidate-evidence
+        git submodule status --recursive > candidate-evidence/submodules.txt
+        ! grep -Eq '^[-+U]' candidate-evidence/submodules.txt
+        python3 - <<'PY_RECEIPT'
+        import json, os
+        from pathlib import Path
+        record = {n: os.environ[e] for n,e in (
+            ('lane', 'PJ_LANE'), ('source_sha', 'PJ_PRODUCT_SHA'), ('source_tree', 'PJ_PRODUCT_TREE'),
+            ('parents', 'PJ_PRODUCT_PARENTS'), ('controller_sha', 'GITHUB_SHA'),
+            ('repository', 'GITHUB_REPOSITORY'), ('run_id', 'GITHUB_RUN_ID'),
+            ('run_attempt', 'GITHUB_RUN_ATTEMPT'))}
+        assert record['source_sha'] != record['controller_sha']
+        Path('candidate-evidence/identity.json').write_text(json.dumps(record, indent=2)+'\n')
+        print(json.dumps(record, indent=2))
+        PY_RECEIPT
+    - name: Read versions
+      id: versions
+      shell: bash
+      run: |
+        set -euo pipefail
+        source ./versions.env
+        echo "PJ_APP_VERSION=${PJ_APP_VERSION}" >> "${GITHUB_ENV}"
+        echo "PJ_QT_VERSION=${PJ_QT_VERSION}" >> "${GITHUB_ENV}"
+        echo "PJ_APPIMAGE_ARCH=${PJ_APPIMAGE_ARCH}" >> "${GITHUB_ENV}"
+        echo "app_version=${PJ_APP_VERSION}" >> "${GITHUB_OUTPUT}"
+        echo "qt_version=${PJ_QT_VERSION}" >> "${GITHUB_OUTPUT}"
+        echo "appimage_arch=${PJ_APPIMAGE_ARCH}" >> "${GITHUB_OUTPUT}"
+    - uses: conan-io/setup-conan@v1
+      with:
+        cache_packages: false
+    - name: Compute Conan cache hash
+      id: conan_cache
+      shell: bash
+      run: |
+        set -euo pipefail
+        # Hash every conanfile.txt and conan.lock under the tree so the key
+        # invalidates when any of them changes.
+        # "luau-fpic": the conan install below builds luau with -fPIC under its own
+        # package_id; a new key lets the run save the closure that holds it (the
+        # prefix restore still brings back everything else).
+        hash=$( { find . \( -name conanfile.txt -o -name conan.lock \) -not -path './build/*' -not -path './.git/*' \
+                -print0 | sort -z | xargs -0 sha256sum; echo luau-fpic; } | sha256sum | cut -c1-16)
+        echo "hash=${hash}" >> "${GITHUB_OUTPUT}"
+    - name: Restore Conan cache
+      id: conan-gha-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.conan2
+        key: conan-linux-gcc-release-v2-${{ steps.conan_cache.outputs.hash }}
+        restore-keys: |
+          conan-linux-gcc-release-v2-
+    - name: Seed Conan source download cache
+      shell: bash
+      run: |
+        set -euo pipefail
+        cache_dir="${RUNNER_TEMP}/conan-source-cache"
+        mkdir -p "${cache_dir}/s"
+        find .github/conan/source-backup -maxdepth 1 -type f ! -name README.md \
+          -exec cp -f {} "${cache_dir}/s/" \;
+
+        conan_home="$(conan config home)"
+        conf="${conan_home}/global.conf"
+        mkdir -p "${conan_home}"
+        if [[ -f "$conf" ]]; then
+          grep -vE '^core\.sources:(download_cache|download_urls)=' "$conf" > "${conf}.tmp" || true
+          mv "${conf}.tmp" "$conf"
+        fi
+        echo "core.sources:download_cache=${cache_dir}" >> "$conf"
+        # When a recipe's own host refuses a datacenter IP (sourceware.org 403s
+        # for elfutils, zlib.net 415s for minizip), retry through ConanCenter's
+        # sha256-addressed mirror instead of failing the build. 'origin' stays
+        # FIRST deliberately: Conan aborts the whole download if a backup entry
+        # answers 401/403 (only 404 falls through), so a mirror-first list would
+        # put every cold build at the mercy of that one server.
+        echo 'core.sources:download_urls=["origin", "https://c3i.jfrog.io/artifactory/conan-center-backup-sources/"]' >> "$conf"
+        cat "$conf"
+    - name: Cache Qt
+      id: qt-cache
+      uses: actions/cache@v5
+      with:
+        path: .qt
+        key: qt-${{ steps.versions.outputs.qt_version }}-linux-gcc_64
+    - name: Install Qt via aqt
+      if: steps.qt-cache.outputs.cache-hit != 'true'
+      run: ./scripts/install_qt6.sh
+    - name: Install Qt 6 + FFmpeg VAAPI system dependencies
+      run: "sudo apt-get update\n# libva-dev / libdrm-dev are required by the FFmpeg Conan build:\n# with_vaapi=True\
+        \ pulls vaapi/system, whose package_info resolves libva\n# and libva-drm via pkg-config \u2014 they must\
+        \ exist on the build host.\nsudo apt-get install -y \\\n  libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev\
+        \ \\\n  libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \\\n  libxcb-randr0 libxcb-render-util0\
+        \ libxcb-shape0 libxcb-xinerama0 \\\n  libxcb-xkb1 libxkbcommon-x11-0 libfontconfig1 libdbus-1-3 \\\n  libva-dev\
+        \ libdrm-dev \\\n  xvfb ccache zstd locales \\\n  mesa-vulkan-drivers libvulkan-dev\n# A decimal-comma locale:\
+        \ the tests that need one skip themselves without it.\nsudo locale-gen de_DE.UTF-8\n"
+    - name: Configure ccache
+      id: ccache_restore
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.cache/ccache
+        key: ccache-linux-g1-${{ github.ref_name }}-${{ github.sha }}
+        restore-keys: |
+          ccache-linux-g1-${{ github.ref_name }}-
+          ccache-linux-g1-${{ github.head_ref }}-
+          ccache-linux-g1-${{ github.base_ref }}-
+          ccache-linux-g1-main-
+    - name: Set ccache limits
+      run: |
+        ccache --set-config=max_size=2G
+        ccache --set-config=compression=true
+        ccache --set-config=compiler_check=content
+        ccache --set-config=hash_dir=false
+        ccache --set-config=base_dir="${GITHUB_WORKSPACE}"
+        ccache -z
+    - name: Use exact localized SDK bootstrap before the pinned dependency resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+        python3 scripts/bootstrap_host_sdk.py
+      if: matrix.lane == 'localized'
+    - name: Conan install
+      id: conan_install
+      shell: bash
+      run: |
+        set -euo pipefail
+        conan profile detect --force
+        scripts/configure_conan_remote.sh
+        conan_log="${RUNNER_TEMP}/pj4-conan-install.log"
+        # luau: ConanCenter's Release binary is not PIC (no fPIC option); -fPIC in
+        # its package_id makes Conan build it instead. Same flags as build.sh.
+        conan install . --output-folder=build --build=missing -r=plotjuggler-conan -r=conancenter \
+          --lockfile=conan.lock --lockfile-partial \
+          -s build_type=Release -s compiler.cppstd=20 \
+          -c "luau/*:tools.build:cxxflags=['-fPIC']" \
+          -c "luau/*:tools.info.package_id:confs=['tools.build:cxxflags']" \
+          2>&1 | tee "$conan_log"
+        if grep -q "Building from source" "$conan_log"; then
+          echo "::notice::Conan built missing Linux binaries; the cache saves below persist them."
+        fi
+    - name: Configure and build only affected native targets
+      shell: bash
+      run: |
+        set -euo pipefail
+        prefix="$PWD/.qt/$PJ_QT_VERSION/gcc_64"
+        test -d "$prefix"
+        cmake -S . -B build -G Ninja \
+          -DCMAKE_TOOLCHAIN_FILE="$PWD/build/conan_toolchain.cmake" -DCMAKE_PREFIX_PATH="$prefix" \
+          -DCMAKE_BUILD_TYPE=Release -DPJ_BUILD_TESTS=ON -DPJ_BUILD_DEMOS=OFF \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake --build build --parallel 2 --target chunk_test engine_concurrency_test pj_datastore_tests pj_runtime_tests \
+          pj_widgets_tests file_loader_test pj_app_gui_tests pj_app_unit_tests
+    - name: Run exact native storage, ingest, catalog, curve tree and MCP suites
+      shell: bash
+      run: |
+        set -euo pipefail
+        export QT_QPA_PLATFORM=xcb
+        pattern='^(chunk_test|engine_concurrency_test|FileLoaderTest)$|^pj_datastore_tests[.].*(ChunkGrowth|RegressionTest|WriterFlush|IncrementalEngine)|^pj_runtime_tests[.](CatalogModel|AppSession)|^pj_widgets_tests[.]CurveTreeViewTest[.]|^pj_app_gui_tests[.]MainWindowHistoryFixture[.]ATopicTheCatalogListsLaterDuringALoadExtendsTheRange$|^pj_app_unit_tests[.]McpSkills[.]'
+        ctest --test-dir build -R "$pattern" --show-only=json-v1 > candidate-evidence/native-selection.json
+        python3 - <<'PY_SELECTOR'
+        import json
+        from pathlib import Path
+        names=[t['name'] for t in json.loads(Path('candidate-evidence/native-selection.json').read_text())['tests']]
+        for one in ('chunk_test','engine_concurrency_test','FileLoaderTest'):
+            assert one in names, (one, names)
+        for group in ('ChunkGrowth','RegressionTest','WriterFlush','IncrementalEngine','CatalogModel','AppSession','CurveTreeViewTest','ATopicTheCatalogListsLaterDuringALoadExtendsTheRange','McpSkills'):
+            found=[n for n in names if group in n]
+            assert found, (group, names)
+            print(f'{group}: {len(found)} case(s)')
+        PY_SELECTOR
+        xvfb-run -a ctest --test-dir build --output-on-failure --timeout 120 --no-tests=error --parallel 2 \
+          -R "$pattern" --output-junit "$PWD/candidate-evidence/native-regressions.xml" \
+          | tee candidate-evidence/native-regressions.log
+    - name: Retain exact native identity, selection and results
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: pj1745-${{ matrix.lane }}-native-${{ matrix.sha }}-${{ github.run_attempt }}
+        path: candidate-evidence
+        retention-days: 14
+        if-no-files-found: error
