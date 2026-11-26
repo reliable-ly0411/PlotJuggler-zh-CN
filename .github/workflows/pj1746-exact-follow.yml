@@ -233,6 +233,18 @@ jobs:
       run: |
         set -euo pipefail
         source .emsdk/emsdk_env.sh >/dev/null
+        # The full run did this before its production configure. A focused replay
+        # must initialize the same 5.0.5 port on a fresh Emscripten cache itself.
+        sysroot="$EMSDK/upstream/emscripten/cache/sysroot"
+        lib="$sysroot/lib/wasm32-emscripten/libz.a"
+        if [[ -s "$lib" ]]; then
+          echo 'Emscripten zlib port before warm-up: cached'
+        else
+          echo 'Emscripten zlib port before warm-up: absent'
+        fi
+        embuilder build zlib
+        test -s "$lib"
+        grep -E '^#define[[:space:]]+ZLIB_VERSION[[:space:]]+"1[.]3[.]1"$' "$sysroot/include/zlib.h"
         cmake -S . -B build-wasm-probe -G Ninja \
           -DCMAKE_TOOLCHAIN_FILE="${PWD}/.qt-wasm/${PJ_QT_VERSION}/wasm_multithread/lib/cmake/Qt6/qt.toolchain.cmake" \
           -DQT_HOST_PATH="${PWD}/.qt-wasm/${PJ_QT_VERSION}/gcc_64" \
