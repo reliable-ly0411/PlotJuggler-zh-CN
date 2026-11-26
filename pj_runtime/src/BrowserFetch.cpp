@@ -132,7 +132,7 @@ EM_JS(void, pj_browser_fetch_start, (unsigned id, const char* url_utf8, const ch
   let received = 0;
   let timedOut = false;
   let fromCache = false;
-  let servedUrl = '';
+  let servedUrl = "";
   let timer = 0;
   const arm = () => {
     clearTimeout(timer);
@@ -162,7 +162,7 @@ EM_JS(void, pj_browser_fetch_start, (unsigned id, const char* url_utf8, const ch
         }
       }
       httpStatus = response.status;
-      servedUrl = response.url || '';
+      servedUrl = response.url || "";
       if (response.type === 'opaqueredirect') {
         status = kRedirectRefused;
         return;
