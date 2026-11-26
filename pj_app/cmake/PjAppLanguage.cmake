@@ -100,6 +100,8 @@ function(pj_add_app_language_test)
         "${app_dir}/tests/browser_language_test.cpp"
         "${app_dir}/src/BrowserPersistence.cpp")
     set_target_properties(browser_language_test PROPERTIES AUTOMOC ON)
+    # BrowserPersistence shares header-only settings keys without linking pj_runtime.
+    target_include_directories(browser_language_test PRIVATE "${app_dir}/../pj_runtime/include")
     target_link_libraries(browser_language_test PRIVATE pj_app_language Qt6::Xml Qt6::Test)
     if(MSVC)
         target_compile_options(browser_language_test PRIVATE /utf-8)
