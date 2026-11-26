@@ -54,7 +54,9 @@ jobs:
         set -euo pipefail
         test "$(git rev-parse HEAD)" = "$PJ_PRODUCT_SHA"
         test "$(git rev-parse 'HEAD^{tree}')" = "$PJ_PRODUCT_TREE"
-        test "$(git show -s --format=%P HEAD)" = "$PJ_PRODUCT_PARENTS"
+        actual_parents="$(git cat-file commit HEAD | sed -n 's/^parent //p; /^$/q' | paste -sd ' ' -)"
+        printf 'Exact checkout: SHA=%s tree=%s parents=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$actual_parents"
+        test "$actual_parents" = "$PJ_PRODUCT_PARENTS"
         mkdir -p candidate-evidence
         git submodule status --recursive > candidate-evidence/submodules.txt
         ! grep -Eq '^[-+U]' candidate-evidence/submodules.txt
@@ -332,7 +334,9 @@ jobs:
         set -euo pipefail
         test "$(git rev-parse HEAD)" = "$PJ_PRODUCT_SHA"
         test "$(git rev-parse 'HEAD^{tree}')" = "$PJ_PRODUCT_TREE"
-        test "$(git show -s --format=%P HEAD)" = "$PJ_PRODUCT_PARENTS"
+        actual_parents="$(git cat-file commit HEAD | sed -n 's/^parent //p; /^$/q' | paste -sd ' ' -)"
+        printf 'Exact checkout: SHA=%s tree=%s parents=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" "$actual_parents"
+        test "$actual_parents" = "$PJ_PRODUCT_PARENTS"
         mkdir -p candidate-evidence
         git submodule status --recursive > candidate-evidence/submodules.txt
         ! grep -Eq '^[-+U]' candidate-evidence/submodules.txt
