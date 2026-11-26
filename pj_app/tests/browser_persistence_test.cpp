@@ -68,6 +68,7 @@ TEST(BrowserPersistencePolicy, PreferenceEnvelopeRestoresOnlySanitizedValues) {
 TEST(BrowserPersistencePolicy, DurablePreferenceAllowlistIsAnExactClosedSet) {
   const QStringList expected{
       u"StyleSheet::theme"_s,
+      u"Preferences::language"_s,
       u"Preferences::precision"_s,
       u"Preferences::curve_color_global"_s,
       u"Preferences::check_updates_on_startup"_s,
@@ -138,6 +139,25 @@ TEST(BrowserPersistencePolicy, RejectsWrongTypesRangesAndPathShapedIdentifiers) 
       BrowserPersistence::sanitizePreference(u"Preferences::dialog_geometry"_s, QByteArray(4096, 'x')).has_value());
   EXPECT_FALSE(
       BrowserPersistence::sanitizePreference(u"Preferences::dialog_geometry"_s, QByteArray(4097, 'x')).has_value());
+}
+
+TEST(BrowserPersistencePolicy, LanguagePreferenceAcceptsOnlyCanonicalSupportedCodes) {
+  for (const QString& language : {u"zh_CN"_s, u"zh_TW"_s, u"en_US"_s}) {
+    EXPECT_EQ(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, language), QVariant(language));
+    const QByteArray stored = u"{\"version\":1,\"values\":{\"Preferences::language\":\"%1\"}}"_s.arg(language).toUtf8();
+    const auto envelope = BrowserPersistenceTestPeer::decodePreferences(stored);
+    ASSERT_EQ(envelope.status, BrowserPersistenceTestPeer::Status::kValid);
+    EXPECT_EQ(envelope.values.value(u"Preferences::language"_s), QVariant(language));
+  }
+  for (const QString& rejected :
+       {u"zh-CN"_s, u"zh-TW"_s, u"zh_HK"_s, u"zh-Hant"_s, u"fr_FR"_s, u"/private/path"_s, QString{}}) {
+    EXPECT_FALSE(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, rejected).has_value());
+    const QByteArray stored = u"{\"version\":1,\"values\":{\"Preferences::language\":\"%1\"}}"_s.arg(rejected).toUtf8();
+    EXPECT_FALSE(BrowserPersistenceTestPeer::decodePreferences(stored).values.contains(u"Preferences::language"_s));
+  }
+  EXPECT_FALSE(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, true).has_value());
+  EXPECT_FALSE(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, 1).has_value());
+  EXPECT_FALSE(BrowserPersistence::isDurablePreferenceKey(u"Preferences::language/private"_s));
 }
 
 // The value BrowserPersistence keeps for `key`, empty when it keeps none.
