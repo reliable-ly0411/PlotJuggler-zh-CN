@@ -145,7 +145,9 @@ TEST(BrowserPersistencePolicy, LanguagePreferenceAcceptsOnlyCanonicalSupportedCo
   for (const QString& language : {u"zh_CN"_s, u"zh_TW"_s, u"en_US"_s}) {
     EXPECT_EQ(BrowserPersistence::sanitizePreference(u"Preferences::language"_s, language), QVariant(language));
     const QByteArray stored = u"{\"version\":1,\"values\":{\"Preferences::language\":\"%1\"}}"_s.arg(language).toUtf8();
-    EXPECT_EQ(BrowserPersistenceTestPeer::decodeValues(stored).value(u"Preferences::language"_s), QVariant(language));
+    const auto envelope = BrowserPersistenceTestPeer::decodePreferences(stored);
+    ASSERT_EQ(envelope.status, BrowserPersistenceTestPeer::Status::kValid);
+    EXPECT_EQ(envelope.values.value(u"Preferences::language"_s), QVariant(language));
   }
   for (const QString& rejected :
        {u"zh-CN"_s, u"zh-TW"_s, u"zh_HK"_s, u"zh-Hant"_s, u"fr_FR"_s, u"/private/path"_s, QString{}}) {
