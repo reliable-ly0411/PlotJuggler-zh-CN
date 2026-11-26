@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 # Recovery only: exact earlier production evidence, new acceptance build, no product writes.
-name: '#1746 acceptance retry with retained production proof (validation only)'
+name: '#1746 localized acceptance replay with retained production proof (validation only)'
 'on':
   push:
     branches:
@@ -9,7 +9,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: pj1746-acceptance-readback-${{ github.ref }}
+  group: pj1746-localized-acceptance-readback-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   wasm-acceptance-readback:
@@ -20,10 +20,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - lane: upstream-pr
-          sha: 0e65cbd1686c9819327872fe0193767f227ec871
-          tree: 2f537d43f230c2a97c49a20d466b4b14bb1d5427
-          parents: 92a4d31c8a3b66386c17b69ac7515552be028f86
+        - lane: localized
+          sha: bccd67fa5f3ffd7cae8172a058636721bb237908
+          tree: 9aeda9f545b363bc25dcd2ec06a9f9c506e39946
+          parents: bf5aea190027bed2037d878a1835c3fd4163f85f 92a4d31c8a3b66386c17b69ac7515552be028f86
     env:
       PJ_LANE: ${{ matrix.lane }}
       PJ_PRODUCT_SHA: ${{ matrix.sha }}
@@ -110,9 +110,10 @@ jobs:
             'bytes': len(contents), 'sha256': hashlib.sha256(contents).hexdigest(),
         }
         assert json.loads(contents)['bundleId'] == prod['package']['bundle_id']
-        assert hashlib.sha256(contents).hexdigest() == 'ff74f414e7bea1e780158302f635e05f4c4a014af664a18511ef2154774245b5'
-        assert prod['package']['startup_bytes'] == 16664047
-        assert prod['package']['bundle_id'] == 'sha256-ea7fed7672c2669e51363515a1de8019'
+        assert hashlib.sha256(contents).hexdigest() == '5c1c4e9d5fd7fff64f020532e5db1575895367cd44c0151779fde11faef437da'
+        assert prod['package']['startup_bytes'] == 24895060
+        assert prod['package']['total_bytes'] == 25570829
+        assert prod['package']['bundle_id'] == 'sha256-5fc0f1465215ccfdc43dafa442689fa6'
 
         assert 'PJ_WASM_ENABLE_INGRESS_PROBE:BOOL=OFF' in (root/'production-CMakeCache.txt').read_text().splitlines()
         shutil.copyfile(manifest,'build-wasm-prod/deploy/manifest.json')
