@@ -894,7 +894,7 @@
     <message>
         <location line="+1"/>
         <source>Install a plugin from a local ZIP. The archive is not from the registry, so its origin cannot be verified — only that it holds a loadable plugin. Replacing an already-installed extension takes effect on the next restart, unless the archive holds exactly what is already installed, which changes nothing.</source>
-        <translation>从本地 ZIP 压缩包安装插件。压缩包并非来自扩展注册表，因此无法验证其来源，只能检查其中的插件是否能够加载。替换已安装的扩展将在下次重启时生效；如果压缩包内容与已安装版本完全相同，则不会发生变化。</translation>
+        <translation>从本地 ZIP 压缩包安装插件。压缩包并非来自扩展清单，因此无法验证其来源，只能检查其中的插件是否能够加载。替换已安装的扩展将在下次重启时生效；如果压缩包内容与已安装版本完全相同，则不会发生变化。</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -7188,7 +7188,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+134"/>
         <source>Malformed checksum in registry (&quot;%1&quot; has no digest)</source>
-        <translation>注册表中的校验和格式无效（“%1”没有摘要）</translation>
+        <translation>扩展清单中的校验和格式无效（“%1”没有摘要）</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -7316,12 +7316,12 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+6"/>
         <source>Embedded plugin id &quot;%1&quot; does not match registry id &quot;%2&quot;</source>
-        <translation>内嵌插件 ID“%1”与注册表 ID“%2”不一致</translation>
+        <translation>内嵌插件 ID“%1”与扩展清单中的 ID“%2”不一致</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Embedded plugin version &quot;%1&quot; does not match registry version &quot;%2&quot;</source>
-        <translation>内嵌插件版本“%1”与注册表版本“%2”不一致</translation>
+        <translation>内嵌插件版本“%1”与扩展清单中的版本“%2”不一致</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -7332,7 +7332,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+13"/>
         <source>Staged install is missing registry intent</source>
-        <translation>暂存安装缺少注册表意图记录</translation>
+        <translation>暂存安装缺少扩展清单安装记录</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -7342,17 +7342,17 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+8"/>
         <source>Staged install registry intent is invalid</source>
-        <translation>暂存安装的注册表意图记录无效</translation>
+        <translation>暂存安装的扩展清单安装记录无效</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Staged install registry intent has unsafe id: %1</source>
-        <translation>暂存安装的注册表意图记录包含不安全的 ID：%1</translation>
+        <translation>暂存安装的扩展清单安装记录包含不安全的 ID：%1</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Staged install registry intent has unsafe version &quot;%1&quot;</source>
-        <translation>暂存安装的注册表意图记录包含不安全的版本“%1”</translation>
+        <translation>暂存安装的扩展清单安装记录包含不安全的版本“%1”</translation>
     </message>
     <message>
         <location line="+76"/>
@@ -7523,7 +7523,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+25"/>
         <source>Installed version &quot;%1&quot; is newer than registry version &quot;%2&quot;; downgrade is not allowed</source>
-        <translation>已安装版本“%1”比注册表版本“%2”更新；不允许降级</translation>
+        <translation>已安装版本“%1”比扩展清单中的版本“%2”更新；不允许降级</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -7548,7 +7548,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+13"/>
         <source>Staged install directory &quot;%1&quot; does not match registry id &quot;%2&quot;</source>
-        <translation>暂存安装目录“%1”与注册表 ID“%2”不一致</translation>
+        <translation>暂存安装目录“%1”与扩展清单中的 ID“%2”不一致</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -7623,12 +7623,12 @@ for example when the stream is already rectified.</source>
     <message>
         <location filename="../../pj_marketplace/src/core/RegistryManager.cpp" line="+99"/>
         <source>Registry parse error: missing or empty required string field &quot;%1&quot;</source>
-        <translation>注册表解析错误：缺少必需的字符串字段“%1”，或该字段为空</translation>
+        <translation>扩展清单解析错误：缺少必需的字符串字段“%1”，或该字段为空</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Registry parse error: field &quot;%1&quot; must be a string</source>
-        <translation>注册表解析错误：字段“%1”必须是字符串</translation>
+        <translation>扩展清单解析错误：字段“%1”必须是字符串</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -7638,12 +7638,12 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+6"/>
         <source>Registry JSON root must be an object</source>
-        <translation>注册表 JSON 根节点必须是对象</translation>
+        <translation>扩展清单 JSON 根节点必须是对象</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Registry JSON missing &quot;extensions&quot; array</source>
-        <translation>注册表 JSON 缺少“extensions”数组</translation>
+        <translation>扩展清单 JSON 缺少“extensions”数组</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -7653,7 +7653,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+69"/>
         <source>Registry resolution error: %1</source>
-        <translation>注册表解析错误：%1</translation>
+        <translation>扩展清单解析错误：%1</translation>
     </message>
 </context>
 <context>
@@ -7735,12 +7735,12 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
     <message>
         <location line="+5"/>
         <source>Loading registry...</source>
-        <translation>正在加载注册表…</translation>
+        <translation>正在加载扩展清单…</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Failed to load registry</source>
-        <translation>加载注册表失败</translation>
+        <translation>加载扩展清单失败</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -7775,7 +7775,7 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
     <message>
         <location line="+7"/>
         <source>Registry error: %1</source>
-        <translation>注册表错误：%1</translation>
+        <translation>扩展清单错误：%1</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -7968,7 +7968,7 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
     <message>
         <location line="+74"/>
         <source>Installed version is newer than registry version</source>
-        <translation>已安装的版本高于注册表中的版本</translation>
+        <translation>已安装的版本高于扩展清单中的版本</translation>
     </message>
     <message>
         <location line="+34"/>
@@ -8027,12 +8027,12 @@ Details: %1</source>
     <message>
         <location line="+4"/>
         <source>Could not load marketplace registry</source>
-        <translation>无法加载扩展市场注册表</translation>
+        <translation>无法加载扩展清单</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The marketplace registry could not be loaded. Only the extensions already installed on this machine are shown; new extensions and updates are unavailable until it loads correctly.</source>
-        <translation>无法加载扩展市场注册表。当前仅显示本机已安装的扩展；注册表成功加载之前，无法获取新扩展或更新。</translation>
+        <translation>无法加载扩展清单。当前仅显示本机已安装的扩展；扩展清单成功加载之前，无法获取新扩展或更新。</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -9672,7 +9672,7 @@ Details: %1</source>
     <message>
         <location line="+12"/>
         <source>Marketplace registry URL:</source>
-        <translation>扩展市场注册表 URL：</translation>
+        <translation>扩展清单 URL：</translation>
     </message>
     <message>
         <location line="+74"/>

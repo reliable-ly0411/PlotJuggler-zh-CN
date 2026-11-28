@@ -1,12 +1,17 @@
 # Qt Installer Framework Chinese standard-page catalog
 
-This directory redistributes the unmodified `ifw_zh_CN.ts` from Qt Installer
+The Simplified Chinese catalog `ifw_zh_CN.ts` is adapted from Qt Installer
 Framework **4.10.0**, source commit
 `326d161c66eef5b02a54f01867bc593e0c5f41ac`:
 
 https://github.com/qtproject/installer-framework/blob/326d161c66eef5b02a54f01867bc593e0c5f41ac/src/sdk/translations/ifw_zh_CN.ts
 
-SHA-256: `647329c572956c814ba887f291782c6764423e6930467cf672539e91adce1000`.
+Upstream SHA-256: `647329c572956c814ba887f291782c6764423e6930467cf672539e91adce1000`.
+Downstream SHA-256: `067f9d82822a0dee14cc33b8040d5e2464e9ab87eedfb603532f0550ae182306`.
+
+Downstream changes (2026-11-28): correct the protected install-path warning to
+describe what will happen during uninstallation, and restore the HTML line break
+in the component-selection instructions.
 Copyright belongs to the Qt contributors. The accompanying
 `LICENSE.GPL3-EXCEPT` is the upstream license (GPLv3 with Qt Company exceptions).
 The entire unmodified IFW source is available at:

@@ -894,7 +894,7 @@
     <message>
         <location line="+1"/>
         <source>Install a plugin from a local ZIP. The archive is not from the registry, so its origin cannot be verified — only that it holds a loadable plugin. Replacing an already-installed extension takes effect on the next restart, unless the archive holds exactly what is already installed, which changes nothing.</source>
-        <translation>從本機 ZIP 壓縮檔安裝外掛程式。壓縮檔並非來自擴充功能註冊表，因此無法驗證其來源，只能檢查其中的外掛程式是否能夠載入。替換已安裝的擴充功能將在下次重新啟動時生效；如果壓縮檔內容與已安裝版本完全相同，則不會發生變化。</translation>
+        <translation>從本機 ZIP 壓縮檔安裝外掛程式。壓縮檔並非來自擴充功能清單，因此無法驗證其來源，只能檢查其中的外掛程式是否能夠載入。替換已安裝的擴充功能將在下次重新啟動時生效；如果壓縮檔內容與已安裝版本完全相同，則不會發生變化。</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -7188,7 +7188,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+134"/>
         <source>Malformed checksum in registry (&quot;%1&quot; has no digest)</source>
-        <translation>註冊表中的檢查碼格式無效（「%1」沒有摘要）</translation>
+        <translation>擴充功能清單中的檢查碼格式無效（「%1」沒有摘要）</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -7316,12 +7316,12 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+6"/>
         <source>Embedded plugin id &quot;%1&quot; does not match registry id &quot;%2&quot;</source>
-        <translation>內嵌外掛程式 ID「%1」與註冊表 ID「%2」不一致</translation>
+        <translation>內嵌外掛程式 ID「%1」與擴充功能清單中的 ID「%2」不一致</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Embedded plugin version &quot;%1&quot; does not match registry version &quot;%2&quot;</source>
-        <translation>內嵌外掛程式版本「%1」與註冊表版本「%2」不一致</translation>
+        <translation>內嵌外掛程式版本「%1」與擴充功能清單中的版本「%2」不一致</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -7332,7 +7332,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+13"/>
         <source>Staged install is missing registry intent</source>
-        <translation>暫存安裝缺少註冊表意圖記錄</translation>
+        <translation>暫存安裝缺少擴充功能清單安裝記錄</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -7342,17 +7342,17 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+8"/>
         <source>Staged install registry intent is invalid</source>
-        <translation>暫存安裝的註冊表意圖記錄無效</translation>
+        <translation>暫存安裝的擴充功能清單安裝記錄無效</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Staged install registry intent has unsafe id: %1</source>
-        <translation>暫存安裝的註冊表意圖記錄包含不安全的 ID：%1</translation>
+        <translation>暫存安裝的擴充功能清單安裝記錄包含不安全的 ID：%1</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Staged install registry intent has unsafe version &quot;%1&quot;</source>
-        <translation>暫存安裝的註冊表意圖記錄包含不安全的版本「%1」</translation>
+        <translation>暫存安裝的擴充功能清單安裝記錄包含不安全的版本「%1」</translation>
     </message>
     <message>
         <location line="+76"/>
@@ -7523,7 +7523,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+25"/>
         <source>Installed version &quot;%1&quot; is newer than registry version &quot;%2&quot;; downgrade is not allowed</source>
-        <translation>已安裝版本「%1」比註冊表版本「%2」更新；不允許降級</translation>
+        <translation>已安裝版本「%1」比擴充功能清單中的版本「%2」更新；不允許降級</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -7548,7 +7548,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+13"/>
         <source>Staged install directory &quot;%1&quot; does not match registry id &quot;%2&quot;</source>
-        <translation>暫存安裝目錄「%1」與註冊表 ID「%2」不一致</translation>
+        <translation>暫存安裝目錄「%1」與擴充功能清單中的 ID「%2」不一致</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -7623,12 +7623,12 @@ for example when the stream is already rectified.</source>
     <message>
         <location filename="../../pj_marketplace/src/core/RegistryManager.cpp" line="+99"/>
         <source>Registry parse error: missing or empty required string field &quot;%1&quot;</source>
-        <translation>註冊表解析錯誤：缺少必需的字串欄位「%1」，或該欄位為空</translation>
+        <translation>擴充功能清單解析錯誤：缺少必需的字串欄位「%1」，或該欄位為空</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Registry parse error: field &quot;%1&quot; must be a string</source>
-        <translation>註冊表解析錯誤：欄位「%1」必須是字串</translation>
+        <translation>擴充功能清單解析錯誤：欄位「%1」必須是字串</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -7638,12 +7638,12 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+6"/>
         <source>Registry JSON root must be an object</source>
-        <translation>註冊表 JSON 根節點必須是物件</translation>
+        <translation>擴充功能清單 JSON 根節點必須是物件</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Registry JSON missing &quot;extensions&quot; array</source>
-        <translation>註冊表 JSON 缺少「extensions」陣列</translation>
+        <translation>擴充功能清單 JSON 缺少「extensions」陣列</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -7653,7 +7653,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+69"/>
         <source>Registry resolution error: %1</source>
-        <translation>註冊表解析錯誤：%1</translation>
+        <translation>擴充功能清單解析錯誤：%1</translation>
     </message>
 </context>
 <context>
@@ -7735,12 +7735,12 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
     <message>
         <location line="+5"/>
         <source>Loading registry...</source>
-        <translation>正在載入註冊表…</translation>
+        <translation>正在載入擴充功能清單…</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Failed to load registry</source>
-        <translation>載入註冊表失敗</translation>
+        <translation>載入擴充功能清單失敗</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -7775,7 +7775,7 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
     <message>
         <location line="+7"/>
         <source>Registry error: %1</source>
-        <translation>註冊表錯誤：%1</translation>
+        <translation>擴充功能清單錯誤：%1</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -7968,7 +7968,7 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
     <message>
         <location line="+74"/>
         <source>Installed version is newer than registry version</source>
-        <translation>已安裝的版本高於註冊表中的版本</translation>
+        <translation>已安裝的版本高於擴充功能清單中的版本</translation>
     </message>
     <message>
         <location line="+34"/>
@@ -8027,12 +8027,12 @@ Details: %1</source>
     <message>
         <location line="+4"/>
         <source>Could not load marketplace registry</source>
-        <translation>無法載入擴充功能市場註冊表</translation>
+        <translation>無法載入擴充功能清單</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The marketplace registry could not be loaded. Only the extensions already installed on this machine are shown; new extensions and updates are unavailable until it loads correctly.</source>
-        <translation>無法載入擴充功能市場註冊表。目前僅顯示本機已安裝的擴充功能；註冊表成功載入之前，無法取得新擴充功能或更新。</translation>
+        <translation>無法載入擴充功能清單。目前僅顯示本機已安裝的擴充功能；擴充功能清單成功載入之前，無法取得新擴充功能或更新。</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -8247,12 +8247,12 @@ Details: %1</source>
     <message>
         <location line="+13"/>
         <source>Zoom Out Horizontally</source>
-        <translation>水平縮小</translation>
+        <translation>水平縮放至完整範圍</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Zoom Out Vertically</source>
-        <translation>垂直縮小</translation>
+        <translation>垂直縮放至可見資料範圍</translation>
     </message>
     <message>
         <location filename="../tests/wasm_acceptance_probes.inc" line="-10"/>
@@ -9672,7 +9672,7 @@ Details: %1</source>
     <message>
         <location line="+12"/>
         <source>Marketplace registry URL:</source>
-        <translation>擴充功能市場註冊表 URL：</translation>
+        <translation>擴充功能清單 URL：</translation>
     </message>
     <message>
         <location line="+74"/>
