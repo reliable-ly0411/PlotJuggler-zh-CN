@@ -41,8 +41,8 @@ The user is a roboticist scrubbing recorded or live data, with 3D docks next to 
   same dataset (`FixedFrameMemory`, consumed by `Scene3DDockWidget::resolveAutoFixedFrame`), else a
   `map`/`world`/`odom` heuristic; that default stays in auto mode, so it self-heals if the frame disappears.
 - **Follow** is position-only: the camera anchor tracks the followed origin per tracker tick, orbit and zoom stay
-  user-controlled, enabling never jumps, and a recenter button snaps onto the frame. Heading and pose follow are not
-  implemented.
+  user-controlled, enabling it, changing the fixed frame or re-applying the dock's state never jumps and the next
+  move is still followed, and a recenter button snaps onto the frame. Heading and pose follow are not implemented.
 - **Camera gestures** (RViz orbit, ROS Z-up): left-drag rotates, middle-drag or shift+left-drag pans, the wheel
   zooms toward the cursor, right-drag zooms about the focal, Home resets the model's default view (it does not fit
   the scene). Models: Orbit, XYOrbit, Fly (WASD), top-down ortho.
@@ -394,7 +394,10 @@ the pixel reference of `scene3d_rhi_marker_cache_test`.
 
 The cube fill is depth-biased away from the camera so its edge overlay, at exact depth, wins; edges with a
 camera-facing adjacent face draw darker than self-occluded ones. Wireframe draws triangle edges as line lists on
-every backend (WebGL2 has no `NonFillPolygonMode`); back-facing edges show.
+every backend (WebGL2 has no `NonFillPolygonMode`); back-facing edges show. Stream lines and wireframe edges are
+written as whole segments, two consecutive `ColorVertex`es each, so a software rasterizer can draw them one instance
+per segment for the clip behind the eye (`RhiPassSetup::line_segments`, TECHNICAL_NOTES "SwiftShader drops lines that
+cross behind the eye").
 
 **Models (`ModelRhiPass`).** Per-layer GPU meshes, up to five material textures per submesh (budgeted before decode;
 a map longer than the backend limit or `max_model_texture_dimension` decodes scaled down), one material SRB per
@@ -410,7 +413,7 @@ submesh.
   Instance buffers stay Dynamic: animated models rewrite them every TF tick.
 
 Every material takes `model.frag`'s metallic-roughness path (normal, occlusion, emissive maps; key and camera-locked
-fill lights; an analytic ground-to-sky ambient, no HDRI). A URDF box, cylinder, sphere or placeholder draws with the
+fill lights; an analytic ground-to-sky ambient, no HDRI). A URDF box, cylinder or sphere draws with the
 link's colour alone (`use_material` false): their unit meshes carry a material and vertex colour that would apply
 it twice. Alpha follows the material's glTF mode (other formats read as OPAQUE): OPAQUE and MASK write only the
 layer and mesh opacity, ignoring texture and vertex alpha (MASK first discards below the cutoff), since alpha left in
@@ -424,7 +427,9 @@ the shaders add the origin offset, so pan, follow and playback upload nothing, a
 cannot z-fight the fill; an odd division count's half-cell phase travels in the offset's w. Every grid SRB declares
 binding 3 for both stages because QRhi requires the connection lines' SRB layout to match. The TF connection lines
 are arbitrary doubles, so they stay camera-relative in a Dynamic buffer keyed on the TF revision, fixed frame, time
-and render origin.
+and render origin. Grid and connection lines are `LineSegment`s; a software rasterizer draws them one instance per
+segment through `grid_segment.vert.qsb`, which clips an end behind the eye (TECHNICAL_NOTES "SwiftShader drops lines
+that cross behind the eye").
 
 **Poses and TF triads (`PoseRhiPass`).** One unit-arrow mesh, one instanced draw per layer. Pose instances are
 frame-local in a Static buffer, re-uploaded on `geometryRevision()`; the fixed-from-source TF is a uniform, so camera
@@ -445,8 +450,10 @@ conventions").
 `gl_VertexIndex`; two-sided lighting uses a geometric normal-faces-eye test, because a backend's clip-space
 correction can flip `gl_FrontFacing`'s winding.
 
-**Mesh maps (`MeshMapRhiPass`).** Per layer static buffers (positions, one 4-byte attribute, link positions and
-colours) and opaque/translucent triangle and line pipelines. A frame allocates every buffer it writes before
+**Mesh maps (`MeshMapRhiPass`).** Per layer static buffers (positions, one 4-byte attribute, link positions,
+colours; a software rasterizer binds the link buffers per instance, one segment each, for the clip behind the eye
+of `meshmap_segment.vert.qsb`) and
+opaque/translucent triangle and line pipelines. A frame allocates every buffer it writes before
 recording any upload; the row warning clears only after an upload succeeded.
 
 **Trails (`TrailRhiPass`).** One Static ribbon buffer per trail owner, re-uploaded on a rebuild or a render-origin
@@ -507,7 +514,8 @@ dock combines it with the frame-orphan state per row (`updateLayerWarning`).
 ### Shader packs and conventions
 
 `rhi/shaders/bake.sh` bakes every pack for GLSL ES 300, GLSL 330 and 440, HLSL 5.0, MSL 1.2 and SPIR-V. Variants are
-separate bakes (`-DPJ_FLIP_Y` for the fullscreen triangle on D3D/Metal, `-DPJ_GRID_SHADOW`, `-DPJ_POINT_TOPOLOGY`).
+separate bakes (`-DPJ_FLIP_Y` for the fullscreen triangle on D3D/Metal, `-DPJ_GRID_SHADOW`, `-DPJ_POINT_TOPOLOGY`,
+`-DPJ_LINE_SEGMENT` for the software rasterizer's `*_segment.vert.qsb`).
 The WASM configure re-runs the script with the host `qsb` and fails on any byte difference or a pack without a
 source. Shaders never remap clip conventions: the matrices carry them (`rhi_conventions.h`: `clipToTextureMatrix()`,
 `textureVSign()`, `fullscreenNeedsYFlip()`). Every pack's varyings are contiguous from location 0 (TECHNICAL_NOTES
@@ -521,7 +529,7 @@ The browser runs the same view, dock and layers. What differs:
   sample or layer fails closed with a row warning; view budgets retry once they free up.
 - **Depth replay always:** WebGL2 has no multisample textures, and Qt's GLES backend does not resolve a second
   multisample colour attachment reliably, which is why the EDL mask is its own pass.
-- **Loading:** mesh fetches and imports run one at a time (`maxConcurrentMeshLoads()`). Compressed clouds are
+- **Loading:** one mesh import at a time; downloads overlap ("Robot models (`RobotModelLayer`)"). Compressed clouds are
   accepted only with `PJ_WASM_WITH_COMPRESSED_POINTCLOUDS`; classification, acceptance, factory registration,
   deferred restore and XML validation share one feature-gated predicate, because an unsupported topic would reach a
   modal warning that cannot `exec()` in the browser.
@@ -574,8 +582,9 @@ headless.
   ray the same way. A degenerate ray falls back to centre zoom; Fly dollies.
 - **Follow:** `ICamera::followShift(world_delta)` moves the anchor without touching angles or zoom (Orbit and
   top-down the focal, Fly the eye, XYOrbit drops z). `SceneViewWidget::applyFollow` shifts by the followed origin's
-  delta per tracker tick; the first tick after enabling, a fixed-frame change or a lookup gap only seeds the
-  baseline. `followRenderKey(time)` feeds the dock's view key, so a moving target repaints with the triads hidden.
+  delta per tracker tick. Enabling follow, changing the fixed frame or swapping the TF buffer seeds the baseline at
+  the current time; before the view's first tracker time nothing seeds, so that tick only seeds, and after a lookup
+  gap the first tick that resolves seeds it. `followRenderKey(time)` feeds the dock's view key, so a moving target repaints with the triads hidden.
 - **Camera-relative rendering.** At UTM scale float32 keeps decimetres, so each frame picks a render origin (the
   focal, in double), builds the view with `viewMatrixRelativeTo(origin)` (bit-exact `viewMatrix()` at origin 0) and
   subtracts the origin in double before every float cast. Camera state and scene bounds stay absolute.
@@ -775,16 +784,18 @@ An `sdk::MeshMap` (navigation, cost and semantic meshes with named face and vert
 - **Sources:** a `kRobotDescription` topic (decoded through its parser: the payload is CDR-framed, never a string),
   a file or a URL; file and URL layers are dock-local with synthetic ids. A layout stores a file source relative to
   its folder when the URDF lies beneath it (`layout_resources.h`), so a URDF and its meshes move with the layout.
-- **Mesh loading** is async and bounded: each layer's `MeshLoadQueue` runs up to `maxConcurrentMeshLoads()` fetches
-  and assimp imports, each completion repainting; the GUI thread never blocks. The layer keeps the policy (what to
-  load, the remote-fetch gate and size caps, the `kSceneLimits` retained-byte budgets checked on landing). A source
+- **Mesh loading** is async and bounded: each layer's `MeshLoadQueue` overlaps downloads and bounds assimp imports
+  (`mesh_load_queue.h`), each completion repainting; the GUI thread never blocks. The layer keeps the policy (what to
+  load, the remote-fetch setting and size caps, the `kSceneLimits` retained-byte budgets checked on landing). A source
   switch, a replaced model or a dataset replacement cancels its jobs and a cancelled job never reaches the layer; a
   cancelled import keeps its slot until its worker finishes, so rapid replacement never exceeds the bound. Unwanted
   fetches are aborted by retiring the queue's `UrlFetcher`, which stays a child of the layer until deleted later, so
   completions never outlive the layer. assimp covers STL, DAE, OBJ and glTF; `MeshData` carries UV0, tangents and a
   glTF metallic-roughness `Material` per submesh; embedded glTF images are kept as encoded bytes keyed by content
   hash; a map that fails or is over budget leaves its slot empty, never the mesh.
-- **Rendering:** unit primitives scaled by the model matrix; an unresolved mesh draws a magenta unit cube.
+- **Rendering:** unit primitives scaled by the model matrix; a mesh that is loading, unresolved or failed draws
+  nothing (the rest of the robot draws), and the status counts loaded of total mesh references and names the files
+  that failed.
   Collision geometry without a material gets an orange tint, translucent below full opacity.
 - **Time contract:** `timeRange()` returns the inverted sentinel `{Timepoint::max(), Timepoint::min()}`, so a static
   decoration neither widens the timeline nor clamps the playhead; the dock skips inverted ranges.
@@ -795,6 +806,20 @@ One resolver per dock serves its robot models and its SceneEntities models: a mo
 ROS Marker's `mesh_resource`) takes the package chain below with no URDF anchor, and its other URLs keep the marker
 rules (local files load, `http(s)` behind the remote-fetch setting). An unresolved package names itself in the
 layer's notice.
+
+**Remote fetch and network shares.** With `pj_scene3d/allow_remote_model_fetch` off, a model's job requests an
+`http(s)` URL (its mesh or a texture its mesh names) only on an origin its user chose: a robot's URL source (the URL
+entered and the one that served it) or package roots; a SceneEntities model has none. Such a request follows a
+redirect only within the requested URL's origin on the desktop, checked per hop for a redirect the disk cache serves
+too, and none in the browser (`RemoteFetch::kOwnOrigin`). A refused robot mesh fails with a status clause naming the
+setting, a refused texture leaves its slot empty. With the setting on, redirects follow `PJ::RedirectScope::kAnyOrigin`.
+Whatever the setting, a path that model content names on a network share (`file://host/...`, `//host/...`,
+`\\host\...`, `\\?\UNC\...`, `\??\...`, a long drive path with a `..` segment, and on macOS `/net/<host>/...`;
+`local_path.h`) is never opened: a URDF ref resolves with "network share refused", a texture ref stays empty, and
+assimp's file system for a file import refuses it outside the folder of a model that is itself on a share. Content
+text joined onto a folder goes through `joinContentPath`, which checks the cleaned path that is opened. A share the
+user chose is read: a layout or package root there, and the files beside a model on it. An in-memory import opens
+no file at all.
 
 `UrdfPackageResolver` dispatches on the scheme: `file://` absolute; a bare path relative to the URDF (never enters
 the package chain); `http(s)://` only for URL-source layers; `package://pkg/rel` to the model's explicit root for
@@ -836,7 +861,7 @@ source, a local URL source or a `file://` root fails it), and every model gets `
 which the resolver refuses anything on this host even on the desktop; a layout loaded from anywhere else has the
 attribute removed.
 
-Failures are never silent: missing meshes show as magenta cubes with status counts, a wrong folder names the
+Failures are never silent: missing meshes are counted and named in the status (they draw nothing), a wrong folder names the
 package folder it lacks, and a URDF latch not yet received re-checks (throttled) with a permanent "Waiting for …"
 status.
 
@@ -926,6 +951,12 @@ each has a panel row, and clicking it binds the Settings host to the layer's con
 - A SceneEntities mesh model is placed at the cursor, not at its entity's stamp like the entity's primitives: with TF
   faster than the entities, a model and a primitive of one entity drift apart in a world-fixed frame.
 - Movable URDF joints are not articulated from `JointState`; `axis`, `limit` and `mimic` are not parsed.
+- A share the user chose but that is reached through `UrlFetcher` is refused: a robot URL source `file://nas/r.urdf`,
+  a SceneEntities `package://` model under a search root on a share.
+- With remote fetch off, a redirect to another origin the user chose, or an http to https upgrade, is refused (fails
+  closed).
+- `ShareRefusingIOSystem` (file imports) forwards `ComparePaths`, `CreateDirectory`, `ChangeDirectory` and
+  `DeleteFile` unfiltered; no enabled importer uses them.
 - Embedded assets (resolver step 0) are inert in the app: no caller passes a source's asset map to
   `Scene3DDockWidget::setEmbeddedAssets`.
 - Copy/paste and "Apply to family" of a pose layer also turn its trail on or off on the target (a synchronous
@@ -951,3 +982,6 @@ each has a panel row, and clicking it binds the Settings host to the layer's con
 - A `UrlFetcher` request aborts only with its fetcher, so unwanted fetches retire the fetcher and its connections.
 - `drawsFor` is a linear search per slot (O(L²) in the layer count).
 - Pipeline-cache persistence is not reachable through `QRhiWidget`, and packs are not precompiled.
+- Under SwiftShader, a line with one end behind the eye is not drawn by the model wireframe (indexed) or the
+  instanced marker line and cube-edge pipelines: only the non-indexed line lists draw one instance per segment
+  (TECHNICAL_NOTES "SwiftShader drops lines that cross behind the eye").

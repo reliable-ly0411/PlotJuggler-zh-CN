@@ -72,17 +72,17 @@
       "zh_CN": "请重新选择本地 URDF；浏览器布局无法保留对本机文件的访问权限",
       "zh_TW": "請重新選擇本機 URDF；瀏覽器版面配置無法保留對本機檔案的存取權限"
     },
-    "  •  %n mesh load(s) failed (shown as magenta placeholders)": {
-      "zh_CN": "  •  %n 个网格加载失败（以品红色占位对象显示）",
-      "zh_TW": "  •  %n 個網格載入失敗（以品紅色預留位置物件顯示）"
+    "  •  %n mesh load(s) failed (not drawn): %1": {
+      "zh_CN": "  •  %n 个网格加载失败（未绘制）：%1",
+      "zh_TW": "  •  %n 個網格載入失敗（未繪製）：%1"
     },
-    "  •  %1/%1 meshes": {
-      "zh_CN": "  •  %1/%1 个网格",
-      "zh_TW": "  •  %1/%1 個網格"
+    "  •  %1/%2 meshes": {
+      "zh_CN": "  •  %1/%2 个网格",
+      "zh_TW": "  •  %1/%2 個網格"
     },
-    "  •  %n mesh reference(s) unavailable in the browser sandbox (shown as magenta placeholders)": {
-      "zh_CN": "  •  %n 个网格引用在浏览器沙箱中不可用（以品红色占位对象显示）",
-      "zh_TW": "  •  %n 個網格參照在瀏覽器沙箱中不可用（以品紅色預留位置物件顯示）"
+    "  •  %n mesh reference(s) unavailable in the browser sandbox (not drawn)": {
+      "zh_CN": "  •  %n 个网格引用在浏览器沙箱中不可用（未绘制）",
+      "zh_TW": "  •  %n 個網格參照在瀏覽器沙箱中不可用（未繪製）"
     }
   },
   "PJ::StreamingSourceManager": {

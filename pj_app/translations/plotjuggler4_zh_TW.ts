@@ -640,6 +640,10 @@
         <source>&apos;%1&apos;, which the source&apos;s plugin reads, has no content fingerprint: the file changed since it was picked. Open the source again.</source>
         <translation>資料來源外掛讀取的 &apos;%1&apos; 沒有內容指紋：該檔案在選取後已變更。請重新開啟資料來源。</translation>
     </message>
+    <message>
+        <source>&apos;%1&apos; is not a valid PJ4 layout: %2 (line %3, col %4)</source>
+        <translation>「%1」不是有效的 PJ4 版面配置：%2（第 %3 行，第 %4 欄）</translation>
+    </message>
 </context>
 <context>
     <name>LeftPanel</name>
@@ -4761,13 +4765,13 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <location line="-360"/>
         <location line="+390"/>
         <source>Plugin &apos;%1&apos;: service registration failed: %2</source>
-        <translation>外掛程式「%1」：服務註冊失敗：%2</translation>
+        <translation type="vanished">外掛程式「%1」：服務註冊失敗：%2</translation>
     </message>
     <message>
         <location line="-384"/>
         <location line="+392"/>
         <source>Plugin &apos;%1&apos;: bind failed: %2</source>
-        <translation>外掛程式「%1」：繫結失敗：%2</translation>
+        <translation type="vanished">外掛程式「%1」：繫結失敗：%2</translation>
     </message>
     <message>
         <location line="-370"/>
@@ -4890,6 +4894,10 @@ Disable them? Their panels will show a placeholder, and they can be enabled agai
         <location line="+15"/>
         <source>OK</source>
         <translation>確定</translation>
+    </message>
+    <message>
+        <source>Plugin &apos;%1&apos;: %2</source>
+        <translation>外掛程式「%1」：%2</translation>
     </message>
 </context>
 <context>
@@ -5889,7 +5897,7 @@ for example when the stream is already rectified.</source>
         <location line="+10"/>
         <location line="+422"/>
         <source>&apos;%1&apos; is not a valid PJ4 layout: %2 (line %3, col %4)</source>
-        <translation>「%1」不是有效的 PJ4 版面配置：%2（第 %3 行，第 %4 欄）</translation>
+        <translation type="vanished">「%1」不是有效的 PJ4 版面配置：%2（第 %3 行，第 %4 欄）</translation>
     </message>
     <message>
         <location line="-404"/>
@@ -6757,6 +6765,14 @@ for example when the stream is already rectified.</source>
     <message>
         <source>Drop the URDF file onto a 3D view.</source>
         <translation>將 URDF 檔案拖到 3D 視圖上。</translation>
+    </message>
+    <message>
+        <source>Layout &apos;%1&apos; names &apos;%2&apos; relative to its folder, but it has no folder: that data is neither loaded nor bound.</source>
+        <translation>版面配置「%1」以相對路徑參照「%2」，但沒有所在資料夾，因此這份資料未載入，也未繫結。</translation>
+    </message>
+    <message>
+        <source>A layout still waiting for its data was not loaded: another layout load replaced it.</source>
+        <translation>正在等候資料的版面配置未載入：已改為載入另一份版面配置。</translation>
     </message>
 </context>
 <context>
@@ -8066,6 +8082,22 @@ Details: %1</source>
         <source>An AI agent asked you to choose: </source>
         <translation>AI 代理程式要求選擇：</translation>
     </message>
+    <message>
+        <source>Load Layout</source>
+        <translation>載入版面配置</translation>
+    </message>
+    <message>
+        <source>An AI agent wants to load a layout. It replaces your tabs, plots, scenes and derived series.</source>
+        <translation>AI 助理要求載入版面配置，這將取代目前的分頁、圖表、場景與衍生序列。</translation>
+    </message>
+    <message>
+        <source>Replace</source>
+        <translation>取代</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
 </context>
 <context>
     <name>PJ::MediaViewerWidget</name>
@@ -9137,12 +9169,12 @@ Details: %1</source>
     <message>
         <location line="+48"/>
         <source>Plugin &apos;%1&apos;: service registration failed: %2</source>
-        <translation>外掛程式「%1」：服務註冊失敗：%2</translation>
+        <translation type="vanished">外掛程式「%1」：服務註冊失敗：%2</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Plugin &apos;%1&apos;: bind failed: %2</source>
-        <translation>外掛程式「%1」：繫結失敗：%2</translation>
+        <translation type="vanished">外掛程式「%1」：繫結失敗：%2</translation>
     </message>
     <message>
         <location line="+103"/>
@@ -9173,6 +9205,10 @@ Details: %1</source>
         <location line="+6"/>
         <source>[stream] %1</source>
         <translation>[串流] %1</translation>
+    </message>
+    <message>
+        <source>Plugin &apos;%1&apos;: %2</source>
+        <translation>外掛程式「%1」：%2</translation>
     </message>
 </context>
 <context>
@@ -10119,6 +10155,10 @@ Details: %1</source>
     <message>
         <source>Third-party licences</source>
         <translation>第三方授權條款</translation>
+    </message>
+    <message>
+        <source>remote fetch is disabled</source>
+        <translation>遠端擷取已停用</translation>
     </message>
 </context>
 <context>
@@ -11359,9 +11399,9 @@ Details: %1</source>
     </message>
     <message numerus="yes">
         <location line="+61"/>
-        <source>  •  %n mesh load(s) failed (shown as magenta placeholders)</source>
+        <source>  •  %n mesh load(s) failed (not drawn): %1</source>
         <translation>
-            <numerusform>  •  %n 個網格載入失敗（以品紅色預留位置物件顯示）</numerusform>
+            <numerusform>  •  %n 個網格載入失敗（未繪製）：%1</numerusform>
         </translation>
     </message>
     <message>
@@ -11371,8 +11411,8 @@ Details: %1</source>
     </message>
     <message>
         <location line="+5"/>
-        <source>  •  %1/%1 meshes</source>
-        <translation>  •  %1/%1 個網格</translation>
+        <source>  •  %1/%2 meshes</source>
+        <translation>  •  %1/%2 個網格</translation>
     </message>
     <message numerus="yes">
         <location line="+8"/>
@@ -11383,9 +11423,9 @@ Details: %1</source>
     </message>
     <message numerus="yes">
         <location line="+2"/>
-        <source>  •  %n mesh reference(s) unavailable in the browser sandbox (shown as magenta placeholders)</source>
+        <source>  •  %n mesh reference(s) unavailable in the browser sandbox (not drawn)</source>
         <translation>
-            <numerusform>  •  %n 個網格參照在瀏覽器沙箱中不可用（以品紅色預留位置物件顯示）</numerusform>
+            <numerusform>  •  %n 個網格參照在瀏覽器沙箱中不可用（未繪製）</numerusform>
         </translation>
     </message>
     <message>
@@ -11470,6 +11510,18 @@ Details: %1</source>
     <message>
         <source>Select your workspace or the folder that contains your robot packages</source>
         <translation>選取工作區或包含機器人套件的資料夾</translation>
+    </message>
+    <message numerus="yes">
+        <source>  •  %n mesh file(s) on other origins blocked: enable pj_scene3d/allow_remote_model_fetch to allow</source>
+        <translation>
+            <numerusform>  •  已封鎖 %n 個來自其他來源的網格檔案；啟用 pj_scene3d/allow_remote_model_fetch 可允許存取</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>  •  %n network share ref(s) refused</source>
+        <translation>
+            <numerusform>  •  已拒絕 %n 個網路共用參照</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -12063,6 +12115,14 @@ Details: %1</source>
         <location filename="../../pj_scene3D/widgets/src/url_fetcher.cpp" line="+104"/>
         <source>unsupported URL scheme &apos;%1&apos;</source>
         <translation>不支援的 URL 通訊協定「%1」</translation>
+    </message>
+    <message>
+        <source>network share refused: %1</source>
+        <translation>已拒絕網路共用：%1</translation>
+    </message>
+    <message>
+        <source>remote fetch is disabled</source>
+        <translation>遠端擷取已停用</translation>
     </message>
 </context>
 <context>

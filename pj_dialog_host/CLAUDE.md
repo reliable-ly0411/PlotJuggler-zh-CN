@@ -20,6 +20,42 @@ Private links: `pj_plotting` (the full `PlotWidget` for embedded chart frames) a
 
 ## Invariants
 
+- `DialogEngine` runs no nested event loop: `openDialog()` shows the dialog application-modal with `show()`. `open()`
+  would downgrade it to window-modal, which leaves floating dock tool-windows interactive. `showDialog()` is a
+  desktop-only blocking wrapper (refused on WebAssembly): add no caller.
+- Widget callbacks captured by reference are wrapped in `guardedCallback` and severed when the dialog completes: the
+  widgets outlive the engine's coroutine frame, and a late signal would call into a destroyed one.
+- `cancelActiveDialog()` must be called while the plugin context borrowed by the `DialogHandle` is alive; it delivers
+  exactly one `on_rejected`, and afterwards nothing reaches the plugin.
+- Both engines skip a byte-identical widget-data re-read. One-shot requests (accept, sub-dialog, close) change the
+  bytes, and `PanelEngine` clears its memo after consuming one: a plugin answering "" while idle would otherwise
+  leave it on the old request, and an identical request later would be dropped as a repeat.
+- `PanelEngine` neither diffs nor applies a payload that requests its close: the panel is being torn down, and the
+  full-payload parse, diff and apply would hold the main thread in the tick that closes it. A declined close applies
+  that state on the next tick, which diffs against the last applied payload.
+- `PanelEngineConfig` grows by appending members only: callers use positional initializers.
+- Plugin widget data is applied by name to the tree the engine loaded (plus widgets recorded in `pjHoistedWidgets`).
+  A sub-dialog or an injected parser dialog is a separate tree: its field states come from the declarative rules.
+- A table row is identified by its `kPluginRowRole` tag, not its view position or text: with `sortingEnabled` the user
+  re-orders the view, and every index the plugin sends or receives is translated through the tag.
+- A table row the plugin both disables (`disabled_rows`) and selects is locked: its items stay disabled, so clicks,
+  keyboard and selection never reach it and `selectionChanged` carries only rows the user can change (locked rows are
+  the plugin's own), and they carry `kLockedRowRole` (`widget_binding.hpp`). A deletable table's trash icon on a
+  locked row still reaches the plugin. `LockedRowDelegate` (`src/locked_row_delegate.hpp`), the base of every host
+  table delegate, paints a tagged item selected and enabled, so the QSS `::item:selected` accent applies; a new table
+  delegate derives from it or locked rows paint grey; an itemless cell paints with its row's first tagged item. A
+  disabled row the plugin does not select keeps the disabled look and any selection stored for it (Qt hides it until
+  the row is enabled). A row without any item is never locked. The lock pass issues no `select()` unless a lock is
+  released: one without `Current` would finalize the user's in-progress drag or Shift range (deliveries run inside
+  `selectionChanged`). The MCP `ui_tree` reports a tagged disabled row as selected.
+- A lock comes only from the plugin's `disabled_rows` and selection. A delivery missing one of them keeps that aspect's
+  current state (a lock released by `disabled_rows` alone leaves its row selected, and only a delivery carrying
+  `disabled_rows` touches enabled flags); an explicit `disabled_rows`, even empty, enables every row it does not name;
+  a rows rewrite that changes a row's key text (`tableRowKeyText`) clears its lock, other cells keep it.
+- A table column never mixes typed (`TypedTableItem`) and plain cells: the comparison is then not a strict weak
+  ordering and `std::stable_sort` is undefined. Code that writes cells keeps each column homogeneous.
+- The `.ui` contracts name no plugin widget: behaviour comes from properties and protocol keys.
+
 Panel refreshes reuse `WidgetDataView::raw()` for the diff's owned copy rather
 than parsing the same numeric preview payload twice. The SDK normalizes malformed
 JSON to an empty object, so that ambiguous result is separately validated before

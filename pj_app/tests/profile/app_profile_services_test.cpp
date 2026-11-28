@@ -293,7 +293,7 @@ int main(int argc, char* argv[]) {
     {
       pj::scene3d::UrdfPackageResolver resolver;
       resolver.setEmbeddedAssets({{QStringLiteral("package://fixture/mesh.stl"), QByteArray("embedded model")}});
-      const auto resolved = resolver.resolveUri("package://fixture/mesh.stl", "", false);
+      const auto resolved = resolver.resolveUri("package://fixture/mesh.stl", "", /*source_is_url=*/false, {}, /*remote_only=*/false);
       asset = QString::fromStdString(resolved.path);
       require(
           resolved.resolved && inside(profile, asset) && QFileInfo::exists(asset),

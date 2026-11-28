@@ -60,10 +60,12 @@ class UrdfPackageResolver;
 // Coordinate contract: the CPU model is TF-free, one ModelDrawCall per link geometry holding the prefixed link frame
 // plus the link-local <origin> x scale; the view applies TF(fixed <- link), exactly once. URDF fixed joints the data
 // never publishes are bridged into the TF buffer (ensureStaticBridges).
-// Meshes load through a MeshLoadQueue, a few at a time (one in the browser): URL meshes are fetched, then imported off
-// the GUI thread, and each result is admitted against kSceneLimits' retained-byte budgets as it lands. A source switch
-// cancels every queued and running load, so no stale completion lands; a superseded import keeps its concurrency slot
-// until its worker finishes.
+// Meshes load through a MeshLoadQueue (bounds in mesh_load_queue.h): URL meshes are fetched, then imported off
+// the GUI thread, and each result is admitted against kSceneLimits' retained-byte budgets as it lands. The remote-fetch
+// setting (remoteModelFetchAllowed()) gates their requests, with the robot's URL source and package roots as the
+// origins its user chose.
+// A source switch cancels every queued and running load, so no stale completion lands; a superseded import keeps its
+// concurrency slot until its worker finishes.
 // Parser lifetime (kTopic): parsers are NOT cached; every decode resolves a fresh ParserBinding through ctx_.session (a
 // cached pointer dangles after a dataset reload).
 // Bounds-less on purpose: it adds nothing to the camera's scene fit (a robot moved by joints would pull the camera
@@ -160,6 +162,10 @@ class RobotModelLayer : public Scene3DLayer, public ModelRenderable {
   }
   [[nodiscard]] int loadedMeshCount() const {
     return loaded_mesh_count_;
+  }
+  /// Mesh references that draw nothing for good: unresolved, or their load failed (a loading one is not counted).
+  [[nodiscard]] int missingMeshCount() const {
+    return unresolved_mesh_count_ + failed_mesh_count_;
   }
   [[nodiscard]] std::size_t fixedJointBridgeCount() const {
     return static_bridges_.size();
@@ -271,7 +277,9 @@ class RobotModelLayer : public Scene3DLayer, public ModelRenderable {
   bool applyRobotDescription(
       const QString& text, const QString& format, const QString& label, const QString& urdf_dir, bool source_is_url,
       const QUrl& roots_base = {});
-  void queueMeshLoads();
+  // `allowed_origins`: the origins the user chose for this model (its URL source, its package roots), which its meshes
+  // and textures reach whatever the remote-fetch setting.
+  void queueMeshLoads(std::vector<QUrl> allowed_origins);
   void admitMesh(const std::string& key, MeshData mesh);
   void onMeshLoadSettled();
   [[nodiscard]] bool meshReady(const std::string& key) const;
@@ -324,6 +332,7 @@ class RobotModelLayer : public Scene3DLayer, public ModelRenderable {
   int total_mesh_count_{0};
   int unresolved_mesh_count_{0};
   int loaded_mesh_count_{0};
+  int failed_mesh_count_{0};
 
   std::unique_ptr<UrdfPackageResolver> owned_resolver_;
   UrdfPackageResolver* resolver_{nullptr};

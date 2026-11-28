@@ -159,7 +159,8 @@ void checkModelCache(const QString& profile) {
       [&loop, &fetched](pj::scene3d::FetchResult result) {
         fetched = result.ok && result.bytes == "profile-model";
         loop.quit();
-      });
+      },
+      pj::scene3d::RemoteFetch::kOwnOrigin);
   deadline.start(5000);
   loop.exec();
   require(fetched, QStringLiteral("Actual model fetch did not finish"));

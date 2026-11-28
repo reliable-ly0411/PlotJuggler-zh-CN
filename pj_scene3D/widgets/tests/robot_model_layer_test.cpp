@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "mesh_import.h"  // maxConcurrentMeshLoads
+#include "mesh_import.h"  // maxConcurrentMeshImports
 #include "mock_parser_support.h"
 #include "pj_base/time.hpp"
 #include "pj_plugins/host/message_parser_handle.hpp"
@@ -95,6 +95,13 @@ constexpr const char* kUnresolvedMeshUrdf = R"(
 </robot>
 )";
 
+// file:///D:/... on Windows; "file://" + a drive path would make the drive letter the URL's host.
+std::string fixtureMeshUrl(const char* name) {
+  return QUrl::fromLocalFile(QStringLiteral(PJ_SCENE3D_FIXTURES_DIR "/meshes/") + QString::fromLatin1(name))
+      .toString()
+      .toStdString();
+}
+
 // A URDF whose single visual mesh resolves immediately (file:// fixture path), so attach() kicks an async MeshLoader
 // load.
 const std::string& resolvedMeshUrdf() {
@@ -102,8 +109,8 @@ const std::string& resolvedMeshUrdf() {
 <robot name="resolved_mesh_robot">
   <link name="base_link">
     <visual>
-      <geometry><mesh filename="file://)") +
-                                  PJ_SCENE3D_FIXTURES_DIR + R"(/meshes/cube.stl"/></geometry>
+      <geometry><mesh filename=")") +
+                                  fixtureMeshUrl("cube.stl") + R"("/></geometry>
     </visual>
   </link>
 </robot>
@@ -118,8 +125,8 @@ const std::string& resolvedColladaMeshUrdf() {
 <robot name="collada_mesh_robot">
   <link name="base_link">
     <visual>
-      <geometry><mesh filename="file://)") +
-                                  PJ_SCENE3D_FIXTURES_DIR + R"(/meshes/cube.dae"/></geometry>
+      <geometry><mesh filename=")") +
+                                  fixtureMeshUrl("cube.dae") + R"("/></geometry>
     </visual>
   </link>
 </robot>
@@ -301,6 +308,49 @@ class PackageUrlRobotDescriptionParser final : public PJ::MessageParserPluginBas
   }
 };
 
+// A topic URDF whose second package mesh, used by two links, the asset host does not have, beside a mesh it has and a
+// primitive.
+constexpr const char* kPartialPackageUrdf = R"(
+<robot name="partial">
+  <link name="base_link">
+    <visual><geometry><mesh filename="package://pj_url_pkg/meshes/cube.stl"/></geometry></visual>
+  </link>
+  <link name="arm">
+    <visual><geometry><mesh filename="package://pj_url_pkg/meshes/missing.stl"/></geometry></visual>
+  </link>
+  <link name="tool">
+    <visual><geometry><box size="0.1 0.1 0.1"/></geometry></visual>
+  </link>
+  <link name="arm_mirror">
+    <visual><geometry><mesh filename="package://pj_url_pkg/meshes/missing.stl"/></geometry></visual>
+  </link>
+  <joint name="a" type="fixed"><parent link="base_link"/><child link="arm"/></joint>
+  <joint name="b" type="fixed"><parent link="arm"/><child link="tool"/></joint>
+  <joint name="c" type="fixed"><parent link="base_link"/><child link="arm_mirror"/></joint>
+</robot>
+)";
+
+class PartialPackageRobotDescriptionParser final : public PJ::MessageParserPluginBase {
+ public:
+  PartialPackageRobotDescriptionParser() {
+    PJ::sdk::SchemaHandler handler;
+    handler.object_type = PJ::sdk::BuiltinObjectType::kRobotDescription;
+    handler.parse_object = [](PJ::Timestamp ts,
+                              PJ::sdk::PayloadView /*payload*/) -> PJ::Expected<PJ::sdk::ObjectRecord> {
+      return PJ::sdk::ObjectRecord{
+          .ts = std::nullopt,
+          .object = PJ::sdk::BuiltinObject{PJ::sdk::RobotDescription{
+              .timestamp_ns = ts,
+              .topic = "/robot_description",
+              .format = "urdf",
+              .text = kPartialPackageUrdf,
+          }},
+      };
+    };
+    registerSchemaHandler("robot_description", std::move(handler));
+  }
+};
+
 // Rebind-test parse counters: vtableWithCreate() needs a non-capturing create function, so the counting parsers reach
 // them via file scope.
 std::atomic<int> g_first_urdf_parser_calls{0};
@@ -420,6 +470,13 @@ const PJ_message_parser_vtable_t* colladaMeshParserVtable() {
   return vt;
 }
 
+const PJ_message_parser_vtable_t* partialPackageParserVtable() {
+  static const PJ_message_parser_vtable_t* vt = PJ::MessageParserPluginBase::vtableWithCreate(
+      []() noexcept -> void* { return new PartialPackageRobotDescriptionParser(); },
+      R"({"id":"robot-partial-package-test","name":"Robot Partial Package Test","version":"1.0.0","encoding":"test"})");
+  return vt;
+}
+
 const PJ_message_parser_vtable_t* packageUrlParserVtable() {
   static const PJ_message_parser_vtable_t* vt = PJ::MessageParserPluginBase::vtableWithCreate(
       []() noexcept -> void* { return new PackageUrlRobotDescriptionParser(); },
@@ -525,7 +582,7 @@ TEST(RobotModelLayerTest, FormatOtherThanUrdfIsRejectedWithStatus) {
   EXPECT_TRUE(layer.statusText().contains("Format 'sdf' is not supported"_L1));
 }
 
-TEST(RobotModelLayerTest, UnresolvedPackageMeshIsCountedForPlaceholderRendering) {
+TEST(RobotModelLayerTest, UnresolvedPackageMeshIsCountedAndNotDrawn) {
   PJ::SessionManager session;
   const PJ::ObjectTopicId topic_id = registerTopic(session);
   registerParser(session, topic_id, unresolvedMeshParserVtable());
@@ -538,12 +595,14 @@ TEST(RobotModelLayerTest, UnresolvedPackageMeshIsCountedForPlaceholderRendering)
   ASSERT_NE(layer.robotModel(), nullptr);
   EXPECT_EQ(layer.totalMeshCount(), 1);
   EXPECT_EQ(layer.unresolvedMeshCount(), 1);
+  EXPECT_EQ(layer.missingMeshCount(), 1);
+  EXPECT_TRUE(layer.modelDrawCalls().empty()) << "nothing in the unresolved mesh's place";
   EXPECT_TRUE(layer.statusText().contains("packages unresolved"_L1));
 }
 
 // A finished async URDF mesh load must itself request the repaint that consumes it (QFutureWatcher -> pollMeshLoads):
-// the app paints strictly on demand, so a result drained only inside render() would leave the magenta placeholder until
-// the user scrubbed. Only the event loop is pumped after attach() kicks the load.
+// the app paints strictly on demand, so a result drained only inside render() would leave the mesh undrawn until the
+// user scrubbed. Only the event loop is pumped after attach() kicks the load.
 TEST(RobotModelLayerTest, MeshLoadCompletionRequestsRepaintWithoutRender) {
   PJ::SessionManager session;
   const PJ::ObjectTopicId topic_id = registerTopic(session);
@@ -567,6 +626,33 @@ TEST(RobotModelLayerTest, MeshLoadCompletionRequestsRepaintWithoutRender) {
     QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
   }
   EXPECT_GT(repaints, 0) << "finished mesh load did not request a repaint (only render() would have consumed it)";
+}
+
+// A mesh still loading draws nothing, and the status counts it as not loaded yet; it draws once it arrives.
+TEST(RobotModelLayerTest, AMeshStillLoadingDrawsOnceItArrives) {
+  PJ::SessionManager session;
+  const PJ::ObjectTopicId topic_id = registerTopic(session);
+  registerParser(session, topic_id, resolvedMeshParserVtable());
+  pushWireBytes(session, topic_id);
+
+  pj::scene3d::RobotModelLayer layer(topic_id, u"/robot_description"_s);
+  const auto ctx = makeContext(session);
+  ASSERT_TRUE(layer.attach(ctx));
+  ASSERT_EQ(layer.unresolvedMeshCount(), 0) << "fixture mesh must resolve";
+  ASSERT_EQ(layer.loadedMeshCount(), 0) << "the load is asynchronous";
+  EXPECT_TRUE(layer.statusText().contains("0/1 meshes"_L1)) << layer.statusText().toStdString();
+  EXPECT_TRUE(layer.modelDrawCalls().empty()) << "a loading mesh drew something in its place";
+  EXPECT_EQ(layer.missingMeshCount(), 0) << "loading is not missing";
+
+  QElapsedTimer timer;
+  timer.start();
+  while (layer.loadedMeshCount() == 0 && timer.elapsed() < 5000) {
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+  }
+  ASSERT_EQ(layer.loadedMeshCount(), 1);
+  ASSERT_EQ(layer.modelDrawCalls().size(), 1U);
+  EXPECT_TRUE(layer.statusText().contains("1/1 meshes"_L1)) << layer.statusText().toStdString();
+  EXPECT_TRUE(layer.modelDrawCalls().front().mesh_key.ends_with(".stl")) << layer.modelDrawCalls().front().mesh_key;
 }
 
 // The "Ignore COLLADA up_axis" toggle must reload the model (the flip is baked into the loaded MeshData, so a bare
@@ -718,6 +804,102 @@ TEST(RobotModelLayerTest, UrlSourceLoadsAsynchronouslyFromFileUrl) {
                                          << layer.statusText().toStdString();
   EXPECT_EQ(layer.robotModel()->root_link, "base_link");
   EXPECT_FALSE(layer.statusText().contains("Fetching"_L1));
+}
+
+// The remote-fetch setting gates what a robot's content names on other origins, never the robot the user chose: with
+// it off, a URL robot still loads its own meshes and their same-origin textures, while a mesh or a texture on another
+// origin is never requested (that mesh fails, that texture stays empty); with it on, everything loads.
+TEST(RobotModelLayerTest, UrlRobotReachesOtherOriginsOnlyWithRemoteFetch) {
+  using pj::scene3d::test::FileHttpServer;
+  using pj::scene3d::test::readFixtureBytes;
+  const FileHttpServer third_party({
+      {u"/red_4x4.png"_s, readFixtureBytes("red_4x4.png")},
+      {u"/other.stl"_s, readFixtureBytes("cube.stl")},
+  });
+  QByteArray foreign_quad = readFixtureBytes("textured_quad.dae");
+  foreign_quad.replace("red_4x4.png", third_party.url(u"/red_4x4.png"_s).toUtf8());
+  const QString urdf =
+      uR"(<robot name="r"><link name="base_link">
+<visual><geometry><mesh filename="same_origin.dae"/></geometry></visual>
+<visual><geometry><mesh filename="foreign.dae"/></geometry></visual>
+<visual><geometry><mesh filename="%1"/></geometry></visual>
+</link></robot>)"_s.arg(third_party.url(u"/other.stl"_s));
+  const FileHttpServer own({
+      {u"/robot/robot.urdf"_s, urdf.toUtf8()},
+      {u"/robot/same_origin.dae"_s, readFixtureBytes("textured_quad.dae")},
+      {u"/robot/foreign.dae"_s, foreign_quad},
+      {u"/robot/red_4x4.png"_s, readFixtureBytes("red_4x4.png")},
+  });
+  for (const bool allowed : {false, true}) {
+    SCOPED_TRACE(allowed ? "remote fetch on" : "remote fetch off");
+    pj::scene3d::test::setRemoteModelFetch(allowed);
+    pj::scene3d::UrdfPackageResolver resolver;
+    pj::scene3d::RobotModelLayer layer(PJ::ObjectTopicId{.id = 1}, u"robot"_s);
+    layer.setPackageResolver(&resolver);
+    layer.setSourceUrl(own.url(u"/robot/robot.urdf"_s));
+    ASSERT_TRUE(
+        pj::scene3d::test::pumpUntil(
+            [&layer]() {
+              return layer.robotModel() != nullptr && layer.totalMeshCount() == 3 &&
+                     layer.loadedMeshCount() + layer.missingMeshCount() == layer.totalMeshCount();
+            },
+            std::chrono::seconds(10)))
+        << layer.statusText().toStdString();
+    const auto baseColor = [&layer](const QString& url) -> const pj::scene3d::TextureSource* {
+      const auto mesh = layer.modelMeshes().find(url.toStdString());
+      return mesh == layer.modelMeshes().end() || mesh->second->submeshes.empty()
+                 ? nullptr
+                 : &mesh->second->submeshes.front().material->base_color;
+    };
+    const pj::scene3d::TextureSource* same_origin = baseColor(own.url(u"/robot/same_origin.dae"_s));
+    ASSERT_NE(same_origin, nullptr);
+    EXPECT_FALSE(same_origin->bytes.empty()) << "a same-origin texture was not fetched";
+    const pj::scene3d::TextureSource* foreign = baseColor(own.url(u"/robot/foreign.dae"_s));
+    ASSERT_NE(foreign, nullptr);
+    EXPECT_EQ(foreign->bytes.empty(), !allowed);
+    EXPECT_EQ(layer.loadedMeshCount(), allowed ? 3 : 2);
+    EXPECT_EQ(layer.missingMeshCount(), allowed ? 0 : 1);
+    if (!allowed) {
+      pj::scene3d::test::pumpUntil(
+          [&third_party]() { return !third_party.paths().isEmpty(); }, std::chrono::milliseconds(300));
+      EXPECT_TRUE(third_party.paths().isEmpty()) << third_party.paths().join(u',').toStdString();
+      EXPECT_TRUE(layer.statusText().contains("allow_remote_model_fetch"_L1)) << layer.statusText().toStdString();
+    }
+  }
+  EXPECT_EQ(third_party.paths().size(), 2) << third_party.paths().join(u',').toStdString();
+  pj::scene3d::test::setRemoteModelFetch(false);
+}
+
+// The URL the user entered is a chosen origin as much as the one that served the URDF after a redirect: with remote
+// fetch off, meshes on both load.
+TEST(RobotModelLayerTest, EnteredAndServedUrlOriginsAreBothChosen) {
+  using pj::scene3d::test::FileHttpServer;
+  using pj::scene3d::test::readFixtureBytes;
+  FileHttpServer served({{u"/robot/served.stl"_s, readFixtureBytes("cube.stl")}});
+  const FileHttpServer entered(
+      {{u"/meshes/entered.stl"_s, readFixtureBytes("cube.stl")}},
+      {{u"/robot.urdf"_s, served.url(u"/robot/robot.urdf"_s)}});
+  served.serve(
+      u"/robot/robot.urdf"_s,
+      uR"(<robot name="r"><link name="base_link">
+<visual><geometry><mesh filename="served.stl"/></geometry></visual>
+<visual><geometry><mesh filename="%1"/></geometry></visual>
+</link></robot>)"_s.arg(entered.url(u"/meshes/entered.stl"_s))
+          .toUtf8());
+  pj::scene3d::test::setRemoteModelFetch(false);
+  pj::scene3d::UrdfPackageResolver resolver;
+  pj::scene3d::RobotModelLayer layer(PJ::ObjectTopicId{.id = 1}, u"robot"_s);
+  layer.setPackageResolver(&resolver);
+  layer.setSourceUrl(entered.url(u"/robot.urdf"_s));
+  ASSERT_TRUE(
+      pj::scene3d::test::pumpUntil(
+          [&layer]() {
+            return layer.robotModel() != nullptr && layer.totalMeshCount() == 2 &&
+                   layer.loadedMeshCount() + layer.missingMeshCount() == layer.totalMeshCount();
+          },
+          std::chrono::seconds(10)))
+      << layer.statusText().toStdString();
+  EXPECT_EQ(layer.loadedMeshCount(), 2) << layer.statusText().toStdString();
 }
 
 // A kTopic robot layer must persist enough identity (dataset + topic name) that xmlLoadState re-resolves the same
@@ -1161,12 +1343,12 @@ TEST(RobotModelLayerTest, DrawsKeepLinkLocalGeometryAndApplyTfOnce) {
 
 // A source switch while mesh imports run must not stack imports: superseded
 // imports keep their slots until their workers finish, so the imports still
-// running never exceed maxConcurrentMeshLoads(); their results are dropped and
+// running never exceed maxConcurrentMeshImports(); their results are dropped and
 // the new source's meshes all load.
 TEST(RobotModelLayerTest, SourceSwitchKeepsSupersededImportsWithinTheBound) {
   QTemporaryDir dir;
   ASSERT_TRUE(dir.isValid());
-  const std::size_t limit = pj::scene3d::maxConcurrentMeshLoads();
+  const std::size_t limit = pj::scene3d::maxConcurrentMeshImports();
   const int mesh_count = static_cast<int>(limit) + 2;  // more than one wave
   const std::vector<QString> paths = pj::scene3d::test::cubeCopies(dir, mesh_count);
   QString links;
@@ -1265,6 +1447,56 @@ TEST(RobotModelLayerTest, TopicUrdfUsesExplicitUrlRoots) {
   ASSERT_TRUE(restored.xmlLoadState(saved));
   ASSERT_NE(restored.robotModel(), nullptr);
   EXPECT_EQ(restored.unresolvedMeshCount(), 1);
+}
+
+// A mesh the asset host does not have fails alone: the other mesh and the primitive still draw, nothing takes the
+// missing one's place, and the status names the failure. Nothing waits for it.
+TEST(RobotModelLayerTest, AMissingMeshFailsAloneAndTheRestOfTheModelDraws) {
+  const pj::scene3d::test::FileHttpServer assets(
+      {{u"/assets/pj_url_pkg/meshes/cube.stl"_s, pj::scene3d::test::readFixtureBytes("cube.stl")}});
+  PJ::SessionManager session;
+  const PJ::DatasetId dataset_id = createDataset(session, "partial.mcap");
+  const PJ::ObjectTopicId topic_id = registerTopicForDataset(session, dataset_id);
+  registerParser(session, topic_id, partialPackageParserVtable());
+  pushWireBytes(session, topic_id);
+  const auto ctx = makeContext(session);
+  pj::scene3d::UrdfPackageResolver shared;
+
+  QDomDocument doc;
+  QDomElement robot = doc.createElement(u"robot_model"_s);
+  robot.setAttribute(u"source_type"_s, u"topic"_s);
+  robot.setAttribute(u"source_value"_s, u"/robot_description"_s);
+  robot.setAttribute(u"source_topic_name"_s, u"/robot_description"_s);
+  robot.setAttribute(
+      u"package_url_roots"_s,
+      pj::scene3d::serializePackageUrlRoots({{u"pj_url_pkg"_s, QUrl(assets.url(u"/assets/pj_url_pkg/"_s))}}));
+  robot.setAttribute(u"remote_resources_only"_s, u"true"_s);
+
+  pj::scene3d::RobotModelLayer layer(topic_id, u"/robot_description"_s);
+  layer.setPackageResolver(&shared);
+  ASSERT_TRUE(layer.attach(ctx));
+  ASSERT_TRUE(layer.xmlLoadState(robot));
+  ASSERT_NE(layer.robotModel(), nullptr) << layer.statusText().toStdString();
+  ASSERT_EQ(layer.totalMeshCount(), 3);
+  ASSERT_EQ(layer.unresolvedMeshCount(), 0);
+  ASSERT_TRUE(
+      pj::scene3d::test::pumpUntil(
+          [&layer]() { return layer.loadedMeshCount() + layer.missingMeshCount() == layer.totalMeshCount(); },
+          std::chrono::seconds(10)))
+      << layer.statusText().toStdString();
+
+  EXPECT_EQ(layer.loadedMeshCount(), 1);
+  EXPECT_TRUE(layer.statusText().contains("1/3 meshes"_L1)) << layer.statusText().toStdString();
+  std::vector<std::string> keys;
+  for (const auto& call : layer.modelDrawCalls()) {
+    keys.push_back(call.mesh_key);
+  }
+  ASSERT_EQ(keys.size(), 2U) << "the mesh and the box, nothing for the missing one";
+  EXPECT_EQ(
+      std::count_if(keys.begin(), keys.end(), [](const std::string& key) { return key.ends_with("cube.stl"); }), 1);
+  EXPECT_EQ(layer.missingMeshCount(), 2) << "per reference: the shared missing file counts for both links";
+  EXPECT_TRUE(layer.statusText().contains("2 mesh load(s) failed (not drawn): missing.stl"_L1))
+      << layer.statusText().toStdString();
 }
 
 // A robot restored from a web-hosted layout keeps the network-only policy for its URDF's own mesh

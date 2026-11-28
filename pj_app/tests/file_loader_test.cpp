@@ -47,6 +47,7 @@
 #include "LayoutReplayHints.h"
 #include "pj_base/diagnostic_sink.hpp"
 #include "pj_base/sdk/data_source_plugin_base.hpp"
+#include "pj_base/sdk/service_traits.hpp"
 #include "pj_datastore/engine.hpp"
 #include "pj_datastore/reader.hpp"
 #include "pj_datastore/topic_storage.hpp"
@@ -58,6 +59,7 @@
 #include "pj_runtime/DataProcessorService.h"
 #include "pj_runtime/ExtensionCatalogService.h"
 #include "pj_runtime/PlaybackEngine.h"
+#include "pj_runtime/PluginSettingsKeys.h"
 #include "pj_runtime/SessionManager.h"
 #include "pj_widgets/MessageBox.h"
 #include "support/filepath_echo_source.h"
@@ -230,6 +232,24 @@ std::vector<std::string> fanoutProbeControlCallsOffMain() {
   return out;
 }
 
+// The suffix of every probe call in `slot`, in call order.
+std::vector<std::string> fanoutProbeSlotCalls(const std::string& slot) {
+  FanoutProbeState& state = fanoutProbeState();
+  const std::lock_guard lock(state.mutex);
+  std::vector<std::string> out;
+  for (const FanoutProbeCall& call : state.calls) {
+    if (call.slot == slot) {
+      out.push_back(call.suffix);
+    }
+  }
+  return out;
+}
+
+// "<where>:<ok|missing>" per services() lookup the probe made, in call order.
+std::vector<std::string> fanoutProbeServiceLookups() {
+  return fanoutProbeSlotCalls("services");
+}
+
 std::string joinFanoutProbeCalls(const std::vector<std::string>& calls) {
   std::string out;
   for (const std::string& call : calls) {
@@ -255,6 +275,13 @@ class FanoutProbeSource final : public PJ::DataSourcePluginBase {
 
   ~FanoutProbeSource() override {
     recordFanoutProbeCall("destroy", suffix_);
+    if (suffix_ == "services") {
+      recordServicesLookup("destroy");
+      (void)runtimeHost().isStopRequested();
+    }
+    if (suffix_ == "destroy-progress") {
+      (void)runtimeHost().progressStart("fanout-probe:destroyed", 1, false);
+    }
   }
 
   uint64_t capabilities() const override {
@@ -276,6 +303,9 @@ class FanoutProbeSource final : public PJ::DataSourcePluginBase {
     config_.assign(config_json);
     suffix_ = fanoutProbeSuffix(config_json);
     recordFanoutProbeCall("load_config", suffix_);
+    if (suffix_ == "settings") {
+      useSettingsStore();
+    }
     return PJ::okStatus();
   }
 
@@ -298,6 +328,15 @@ class FanoutProbeSource final : public PJ::DataSourcePluginBase {
       if (auto status = runtimeHost().progressStart(title, 3, true); !status) {
         return fail(status.error());
       }
+    }
+
+    // "services" looks a host service up once the test has seen the import begin, and again from the destructor, which
+    // also reads through the runtime host. "destroy-progress" starts a progress report from its destructor.
+    if (suffix_ == "services") {
+      if (!waitForFanoutProbeProgressStep(1)) {
+        return fail("timed out waiting for the services rendezvous");
+      }
+      recordServicesLookup("start");
     }
 
     // Unlike the mock source's fail_start option, this failure happens after progressStart, so FileLoader has already
@@ -388,6 +427,23 @@ class FanoutProbeSource final : public PJ::DataSourcePluginBase {
   }
 
  private:
+  void recordServicesLookup(const std::string& where) const {
+    const bool found = services().get<PJ::sdk::SourceWriteHostService>().has_value();
+    recordFanoutProbeCall("services", where + (found ? ":ok" : ":missing"));
+  }
+
+  // One "settings" call: "unbound" without a pj.settings.v1 store, else "stored" or "failed" for storing
+  // "loaded_<n>", n counting this process's earlier "settings" calls, so every instance writes its own key.
+  void useSettingsStore() const {
+    const auto store = services().get<PJ::sdk::SettingsStoreService>();
+    if (!store.has_value()) {
+      recordFanoutProbeCall("settings", "unbound");
+      return;
+    }
+    const std::string key = "loaded_" + std::to_string(fanoutProbeSlotCalls("settings").size());
+    recordFanoutProbeCall("settings", store->setValue(key, "yes") ? "stored" : "failed");
+  }
+
   std::string config_ = "{}";
   std::string suffix_;
   PJ::DataSourceState state_ = PJ::DataSourceState::kIdle;
@@ -816,6 +872,10 @@ class FileLoaderTest : public ::testing::Test {
     hints.dialog_policy = PJ::DialogPolicy::kPreferPreset;
     hints.require_expected_plugin = true;
     return hints;
+  }
+
+  [[nodiscard]] static QString probeSettingsValue(const QString& key) {
+    return QSettings().value(PJ::pluginSettingsGroup("fanout-probe-source") + u'/' + key).toString();
   }
 
   [[nodiscard]] bool installReloadProbe() {
@@ -2346,6 +2406,82 @@ TEST_F(FileLoaderTest, FanoutTerminalPublicationCanShutDownFromASuspendedFrame) 
   EXPECT_EQ(shutdowns, 1);
   EXPECT_FALSE(session().hasActiveIngests());
   EXPECT_TRUE(loadAndWait(path, fanoutProbeHints(uR"({"display_suffix":"terminal"})"_s)));
+}
+
+TEST_F(FileLoaderTest, SingleLoadKeepsTheServiceRegistryForThePluginsLifetime) {
+  ASSERT_TRUE(installFanoutProbe());
+  const QString path = makeMockFile(u"services.fanoutprobe"_s);
+  // Queued on the GUI thread, so the release lands after the prologue that started the worker has returned.
+  const auto start_connection = QObject::connect(
+      loader_.get(), &PJ::FileLoader::ingestStarted, loader_.get(), [](const QString& title, int, int, bool) {
+        if (title == u"fanout-probe:services"_s) {
+          QTimer::singleShot(0, []() { releaseFanoutProbeProgressStep(1); });
+        }
+      });
+  const bool loaded = loadAndWait(path, fanoutProbeHints(uR"({"display_suffix":"services"})"_s));
+  QObject::disconnect(start_connection);
+
+  ASSERT_TRUE(loaded);
+  const std::vector<std::string> expected{"start:ok", "destroy:ok"};
+  EXPECT_EQ(fanoutProbeServiceLookups(), expected);
+}
+
+TEST_F(FileLoaderTest, FanoutEntriesKeepTheServiceRegistryForThePluginsLifetime) {
+  ASSERT_TRUE(installFanoutProbe());
+  const QString path = makeMockFile(u"services_fanout.fanoutprobe"_s);
+  releaseFanoutProbeProgressStep(1);  // every entry's start() looks its services up at once
+
+  const PJ::LoadHints hints = fanoutProbeHints(
+      uR"({"display_suffix":"services","__pj_fanout":["{\"display_suffix\":\"services\"}","{\"display_suffix\":\"services\"}"]})"_s);
+  ASSERT_TRUE(loadAndWait(path, hints));
+  pj_app_test::flushQueuedEvents(2);
+
+  const std::vector<std::string> lookups = fanoutProbeServiceLookups();
+  // Two started entries, plus the prologue's instance, bound but never started.
+  EXPECT_EQ(std::count(lookups.begin(), lookups.end(), "start:ok"), 2);
+  EXPECT_EQ(std::count(lookups.begin(), lookups.end(), "destroy:ok"), 3);
+  EXPECT_EQ(std::count(lookups.begin(), lookups.end(), "start:missing"), 0);
+  EXPECT_EQ(std::count(lookups.begin(), lookups.end(), "destroy:missing"), 0);
+}
+
+TEST_F(FileLoaderTest, SingleLoadPluginGetsTheStoreOfItsManifestId) {
+  ASSERT_TRUE(installFanoutProbe());
+  QSettings().remove(PJ::pluginSettingsGroup("fanout-probe-source"));
+  const QString path = makeMockFile(u"settings.fanoutprobe"_s);
+
+  ASSERT_TRUE(loadAndWait(path, fanoutProbeHints(uR"({"display_suffix":"settings"})"_s)));
+
+  EXPECT_EQ(fanoutProbeSlotCalls("settings"), std::vector<std::string>{"stored"});
+  EXPECT_EQ(probeSettingsValue(u"loaded_0"_s), u"yes"_s);
+  EXPECT_FALSE(QSettings().contains(u"loaded_0"_s));
+}
+
+TEST_F(FileLoaderTest, FanoutEntriesGetTheStoreOfTheirManifestId) {
+  ASSERT_TRUE(installFanoutProbe());
+  QSettings().remove(PJ::pluginSettingsGroup("fanout-probe-source"));
+  const QString path = makeMockFile(u"settings_fanout.fanoutprobe"_s);
+
+  const PJ::LoadHints hints = fanoutProbeHints(
+      uR"({"display_suffix":"settings","__pj_fanout":["{\"display_suffix\":\"settings\"}","{\"display_suffix\":\"settings\"}"]})"_s);
+  ASSERT_TRUE(loadAndWait(path, hints));
+
+  // Two entries plus the prologue's instance, each in the manifest id's persisted store.
+  EXPECT_EQ(fanoutProbeSlotCalls("settings"), std::vector<std::string>(3, "stored"));
+  for (const QString& key : {u"loaded_0"_s, u"loaded_1"_s, u"loaded_2"_s}) {
+    EXPECT_EQ(probeSettingsValue(key), u"yes"_s) << key.toStdString();
+  }
+}
+
+TEST_F(FileLoaderTest, SingleLoadPluginMayReportProgressFromItsDestructor) {
+  ASSERT_TRUE(installFanoutProbe());
+  const QString path = makeMockFile(u"destroy_progress.fanoutprobe"_s);
+  IngestLifecycleRecorder ingest_lifecycle(session());
+
+  ASSERT_TRUE(loadAndWait(path, fanoutProbeHints(uR"({"display_suffix":"destroy-progress"})"_s)));
+  pj_app_test::flushQueuedEvents(2);
+
+  EXPECT_EQ(ingest_lifecycle.beginForLabel(u"fanout-probe:destroyed"_s), nullptr);
+  EXPECT_FALSE(session().hasActiveIngests());
 }
 
 TEST_F(FileLoaderTest, FailedFirstLoadErasesAbandonedLiveDatasetBeforePreferReuseReload) {
