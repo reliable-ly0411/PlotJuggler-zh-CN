@@ -45,7 +45,7 @@ async function uiTranslations(page) {
 // mesh unit in the active language. Other live/draw/placeholder checks remain
 // at the call sites.
 function completedMeshes(tr, count) {
-  const template = tr('pj::scene3d::RobotModelLayer', '  •  %1/%1 meshes', '@COUNT@').trim();
+  const template = tr('pj::scene3d::RobotModelLayer', '  •  %1/%2 meshes', '@COUNT@', '@COUNT@').trim();
   const escaped = template.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pattern = count === undefined
     ? escaped.replace('@COUNT@', '(\\d+)').replace('@COUNT@', '\\1')

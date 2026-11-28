@@ -106,6 +106,13 @@ async function importFile(page, screen, consoleMessages, file, inDialog = async 
   return loadOkLine(page, consoleMessages);
 }
 
+// Picks one file for a loader that opens no dialog and returns its PJ_FILE_LOAD_OK line.
+async function importFileWithoutDialog(page, screen, consoleMessages, file) {
+  const chooser = await openFileChooser(page, screen);
+  await chooser.setFiles(file);
+  return loadOkLine(page, consoleMessages);
+}
+
 // Waits for the first load outcome and returns it, expecting PJ_FILE_LOAD_OK (a
 // timeout shows the loader's log). The probe records the outcome in the page
 // too: Firefox can drop the console line.
@@ -147,6 +154,7 @@ test('official ULog loader imports a browser-selected log', async ({ page }) => 
   const consoleMessages = [];
   const errors = [];
   const screen = await boot(page, consoleMessages, errors);
+  // This fork's pinned ULog loader still opens its file-information dialog.
   const outcome = await importFile(page, screen, consoleMessages, {
     name: 'flight.ulg',
     mimeType: 'application/octet-stream',

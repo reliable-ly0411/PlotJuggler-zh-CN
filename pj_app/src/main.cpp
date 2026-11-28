@@ -71,7 +71,6 @@
 #include "mcp/McpProtocol.h"
 #endif
 #include "pj_datastore/data_processor.hpp"
-#include "pj_datastore/processor_detail.hpp"
 #include "pj_plotting/PlotWidgetBase.h"
 #ifndef PJ_TARGET_WASM
 #include "pj_runtime/PluginRuntimeCatalog.h"
@@ -79,6 +78,10 @@
 #include "pj_scripting/python_engine.h"
 #endif
 #include "pj_scripting/python_object_script.h"
+#ifdef PJ_TARGET_WASM
+#include "pj_runtime/HttpGet.h"
+#include "pj_widgets/VisualizationPlaceholderWidget.h"
+#endif
 #include "pj_widgets/GraphicsApi.h"
 #ifdef PJ_WITH_SCENE3D
 #include "pj_scene3d_widgets/scene_view_widget.h"
@@ -151,7 +154,7 @@ class T:
     return EXIT_FAILURE;
   }
   const auto out = (*processor)->calculateNextPoint(PJ::proc::Sample::scalar(0, PJ::VarValue{144.0}));
-  if (!out.has_value() || PJ::proc::detail::toDouble(out->value()) != 12.0) {
+  if (!out.has_value() || out->value() != PJ::VarValue{12.0}) {
     std::fprintf(stderr, "[selftest-python] FAILED: sqrt(144) did not yield 12\n");
     return EXIT_FAILURE;
   }
@@ -398,6 +401,17 @@ int main(int argc, char* argv[]) {
   Q_UNUSED(browser_persistence);
   // Before a validate's bounded wait on the Python helper: see prestartPythonHelper().
   PJ::scripting::prestartPythonHelper();
+  // Before the first placeholder arms the idle GIF: without it the browser pool is empty. The files are immutable
+  // under the asset host's v1/ prefix, which sends CORS headers.
+  PJ::setEasterEggFetch([](const QString& name, QObject* context, std::function<void(const QByteArray&)> done) {
+    constexpr qint64 kMaxBytes = 2 * 1024 * 1024;
+    PJ::fetchBytesWithLimit(
+        QUrl(u"https://assets.plotjuggler.io/v1/gif/"_s + name), kMaxBytes, std::chrono::seconds(30), context,
+        [done = std::move(done)](PJ::FetchedBytes fetched) {
+          done(fetched.error.isEmpty() ? fetched.bytes : QByteArray());
+        },
+        PJ::RedirectScope::kAnyOrigin);
+  });
 #endif
 
   // Before any window is built, so every widget and plugin dialog inherits it; the QSS styles only font-size,
@@ -694,6 +708,30 @@ int main(int argc, char* argv[]) {
 
   // Before any layout restore.
   window.reviewUncleanShutdown(/*interactive=*/attended);
+
+  // Composes with --screenshot: whichever quit fires first wins, and only this flag's exit code says whether the
+  // restore committed. Built before the startup load is scheduled: it watches the next load the window starts.
+  if (parser.isSet(exit_after_layout_option)) {
+    const int timeout_s = exit_after_layout_timeout_s;
+    new PJ::LayoutExitWatch(
+        window, std::chrono::seconds(timeout_s),
+        [timeout_s, plot_state_path = parser.value(dump_plot_state_option), &window](int code) {
+          if (code == PJ::LayoutExitWatch::kExitCodeSuccess) {
+            std::printf("[exit-after-layout] layout restore settled: success\n");
+            if (!plot_state_path.isEmpty() &&
+                !PJ::writePlotStateDump(window.findChildren<PJ::PlotWidget*>(), plot_state_path)) {
+              std::fprintf(stderr, "[dump-plot-state] write FAILED: %s\n", qPrintable(plot_state_path));
+              code = EXIT_FAILURE;
+            }
+          } else if (code == PJ::LayoutExitWatch::kExitCodeLoadFailed) {
+            std::fprintf(stderr, "[exit-after-layout] layout load FAILED\n");
+          } else {
+            std::fprintf(stderr, "[exit-after-layout] TIMED OUT after %d s without settlement\n", timeout_s);
+          }
+          QCoreApplication::exit(code);
+        },
+        &window);
+  }
 #endif
 
   // Deferred: the progressive layout restore needs a running event loop.
@@ -721,33 +759,6 @@ int main(int argc, char* argv[]) {
     window.connectMcpRelay(QUrl(relay));
   }
   QTimer::singleShot(0, &window, [&window, page_url]() { window.startBrowserPresets(page_url); });
-#endif
-
-#ifndef PJ_TARGET_WASM
-  // Composes with --screenshot: whichever quit fires first wins, and only this flag's exit code says whether the
-  // restore committed.
-  if (parser.isSet(exit_after_layout_option)) {
-    const int timeout_s = exit_after_layout_timeout_s;
-    const QString plot_state_path = parser.value(dump_plot_state_option);
-    new PJ::LayoutExitWatch(
-        window, std::chrono::seconds(timeout_s),
-        [timeout_s, plot_state_path, &window](int code) {
-          if (code == PJ::LayoutExitWatch::kExitCodeSuccess) {
-            std::printf("[exit-after-layout] layout restore settled: success\n");
-            if (!plot_state_path.isEmpty() &&
-                !PJ::writePlotStateDump(window.findChildren<PJ::PlotWidget*>(), plot_state_path)) {
-              std::fprintf(stderr, "[dump-plot-state] write FAILED: %s\n", qPrintable(plot_state_path));
-              code = EXIT_FAILURE;
-            }
-          } else if (code == PJ::LayoutExitWatch::kExitCodeLoadFailed) {
-            std::fprintf(stderr, "[exit-after-layout] layout load FAILED\n");
-          } else {
-            std::fprintf(stderr, "[exit-after-layout] TIMED OUT after %d s without settlement\n", timeout_s);
-          }
-          QCoreApplication::exit(code);
-        },
-        &window);
-  }
 #endif
 
   // Desktop only: a browser tab is a page view, not an installed user, and cannot self-update. Nor can the
