@@ -71,7 +71,9 @@
   },
   "latest_sync": {
     "upstream_commits_after_release": 0,
-    "package_status": "Exact-tag localization prerelease candidate; package acceptance pending."
+    "package_status": "Exact-tag localization prerelease candidate 4.2.0-zh.1.rc.2; package acceptance pending.",
+    "previous_candidate_version": "4.2.0-zh.1.rc.1",
+    "previous_candidate_source_commit": "c2ae27cb31232d3f3e3f25d3f0039c1c4dc78583"
   },
   "forward_port_source": "0113492d7a7f96e486de1f9adcde6e43893ab630",
   "official_plugin_source_sync": {
