@@ -1564,6 +1564,62 @@
         <source>Compute the frequency-domain amplitude of numeric time series using FFT.</source>
         <translation>使用 FFT 計算數值時間序列的頻域振幅。</translation>
     </message>
+    <message>
+        <source>BLF Loader</source>
+        <translation>BLF 載入器</translation>
+    </message>
+    <message>
+        <source>Data loader for Vector BLF (Binary Logging Format) CAN logs, decoded to signals via DBC.</source>
+        <translation>載入 Vector BLF（二進位記錄檔格式）CAN 記錄檔，並透過 DBC 解碼為訊號。</translation>
+    </message>
+    <message>
+        <source>candump Loader</source>
+        <translation>candump 載入器</translation>
+    </message>
+    <message>
+        <source>Data loader for Linux SocketCAN candump captures (log and screen format), decoded to signals via DBC or an ARUS-style CSV dictionary.</source>
+        <translation>載入 Linux SocketCAN candump 擷取檔案（日誌和畫面格式），透過 DBC 或 ARUS 風格的 CSV 字典將資料解碼為訊號。</translation>
+    </message>
+    <message>
+        <source>InfluxDB Line Protocol Parser</source>
+        <translation>InfluxDB 行協定解析器</translation>
+    </message>
+    <message>
+        <source>Message parser for InfluxDB line protocol, the text format Telegraf and InfluxDB clients send.</source>
+        <translation>解析 InfluxDB 行協定訊息，即 Telegraf 和 InfluxDB 用戶端傳送的文字格式。</translation>
+    </message>
+    <message>
+        <source>MF4/MDF Loader</source>
+        <translation>MF4/MDF 載入器</translation>
+    </message>
+    <message>
+        <source>Data loader for ASAM MDF / MF4 measurement files (automotive, CAN/LIN bus logging).</source>
+        <translation>載入 ASAM MDF / MF4 測量檔案（汽車及 CAN/LIN 匯流排記錄檔）。</translation>
+    </message>
+    <message>
+        <source>NavMap Parser</source>
+        <translation>NavMap 解析器</translation>
+    </message>
+    <message>
+        <source>Shows EasyNavigation NavMap maps (navmap_ros_interfaces/msg/NavMap), the triangle-mesh navigation maps, in the 3D scene with their per-cell layers, and applies the NavMapLayer updates published beside them.</source>
+        <translation>在三維場景中顯示 EasyNavigation NavMap 三角網格導航地圖（navmap_ros_interfaces/msg/NavMap）及其各單元圖層，並套用隨附發布的 NavMapLayer 更新。</translation>
+    </message>
+    <message>
+        <source>Anomaly Detector</source>
+        <translation>異常偵測器</translation>
+    </message>
+    <message>
+        <source>Write Lua anomaly rules over time series and emit plot markers (regions / events) when a rule fires.</source>
+        <translation>為時間序列編寫 Lua 異常規則，規則觸發時產生繪圖標記（區域或事件）。</translation>
+    </message>
+    <message>
+        <source>CSV/Parquet Exporter</source>
+        <translation>CSV/Parquet 匯出器</translation>
+    </message>
+    <message>
+        <source>Export selected time series to CSV or Parquet files.</source>
+        <translation>將選取的時間序列匯出為 CSV 或 Parquet 檔案。</translation>
+    </message>
 </context>
 <context>
     <name>PJ::BundledPlugins</name>
@@ -3806,6 +3862,162 @@ Message: %3</source>
         <location line="+1"/>
         <source>Exported &apos;%1&apos; with frequency_hz and amplitude columns (%2 rows)</source>
         <translation>已匯出「%1」，包含 frequency_hz 和 amplitude 欄（%2 列）</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>來源</translation>
+    </message>
+    <message>
+        <source>Filter series...</source>
+        <translation>篩選序列…</translation>
+    </message>
+    <message>
+        <source>Lua rule</source>
+        <translation>Lua 規則</translation>
+    </message>
+    <message>
+        <source>Timeseries</source>
+        <translation>時間序列</translation>
+    </message>
+    <message>
+        <source>Markers only on the selected source series.</source>
+        <translation>僅在所選來源序列上顯示標記。</translation>
+    </message>
+    <message>
+        <source>Dataset</source>
+        <translation>資料集</translation>
+    </message>
+    <message>
+        <source>Markers on every plot of the active dataset, whatever series it shows.</source>
+        <translation>目前資料集中的每張圖都會顯示標記，不受圖中序列影響。</translation>
+    </message>
+    <message>
+        <source>Global</source>
+        <translation>全域</translation>
+    </message>
+    <message>
+        <source>Markers on every plot of every loaded dataset.</source>
+        <translation>所有已載入資料集中的每張圖都會顯示標記。</translation>
+    </message>
+    <message>
+        <source>Pick a source series and a function (or write your own), then Apply.</source>
+        <translation>選擇來源序列和函式，也可自行撰寫函式，再按「套用」。</translation>
+    </message>
+    <message>
+        <source>Save rule as...</source>
+        <translation>規則另存為…</translation>
+    </message>
+    <message>
+        <source>Save the current rule (script + source) as a portable JSON file</source>
+        <translation>將目前規則（指令碼及來源）另存成可移轉的 JSON 檔案</translation>
+    </message>
+    <message>
+        <source>Load rule...</source>
+        <translation>載入規則…</translation>
+    </message>
+    <message>
+        <source>Open a rule JSON file and load it into the editor</source>
+        <translation>開啟規則 JSON 檔案並載入編輯器</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>套用</translation>
+    </message>
+    <message>
+        <source>Run the Lua rule and apply the emitted markers to the plots. Requires a source series, unless the scope is Dataset or Global.</source>
+        <translation>執行 Lua 規則並將產生的標記加到圖上。資料集或全域範圍不必選來源序列，其餘情況必須選。</translation>
+    </message>
+    <message>
+        <source>Filter...</source>
+        <translation>篩選…</translation>
+    </message>
+    <message>
+        <source>Add all the timeseries stored in PlotJuggler</source>
+        <translation>加入 PlotJuggler 中的所有時間序列</translation>
+    </message>
+    <message>
+        <source>Add all</source>
+        <translation>全部加入</translation>
+    </message>
+    <message>
+        <source>Remove selected rows</source>
+        <translation>移除選取的列</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>移除</translation>
+    </message>
+    <message>
+        <source>Remove all curves from the list</source>
+        <translation>移除清單中的所有曲線</translation>
+    </message>
+    <message>
+        <source>Pull new samples from streaming topics</source>
+        <translation>從串流主題取得新的取樣點</translation>
+    </message>
+    <message>
+        <source>If enabled, one file per group (i.e. "topic" or "channel") will be created in a user provided folder
+</source>
+        <translation>啟用後，每個群組（如主題或通道）會在指定資料夾中各產生一個檔案。
+</translation>
+    </message>
+    <message>
+        <source>One file per group</source>
+        <translation>每組一個檔案</translation>
+    </message>
+    <message>
+        <source>Prefix:</source>
+        <translation>前綴：</translation>
+    </message>
+    <message>
+        <source>The prefix that will be added to the files exported.
+Suffix will be the group name.</source>
+        <translation>加入匯出檔名的前綴。
+檔名後綴為群組名稱。</translation>
+    </message>
+    <message>
+        <source>Export to CSV file</source>
+        <translation>匯出至 CSV 檔案</translation>
+    </message>
+    <message>
+        <source>Export to Arrow Parquet file</source>
+        <translation>匯出至 Arrow Parquet 檔案</translation>
+    </message>
+    <message>
+        <source>Relative</source>
+        <translation>相對時間</translation>
+    </message>
+    <message>
+        <source>Absolute</source>
+        <translation>絕對時間</translation>
+    </message>
+    <message>
+        <source>Export</source>
+        <translation>匯出</translation>
+    </message>
+    <message>
+        <source>Anomaly Detector</source>
+        <translation>異常偵測器</translation>
+    </message>
+    <message>
+        <source>Pick a source series (or drag &amp; drop one), pick a function, then Apply.</source>
+        <translation>選擇或拖入一條來源序列，再選擇函式，然後按「套用」。</translation>
+    </message>
+    <message>
+        <source>Error: unknown exception</source>
+        <translation>錯誤：未知例外</translation>
+    </message>
+    <message>
+        <source>Drag and Drop series from the left panel</source>
+        <translation>從左側面板拖入序列</translation>
+    </message>
+    <message>
+        <source>Select export directory</source>
+        <translation>選擇匯出目錄</translation>
+    </message>
+    <message>
+        <source>Export data</source>
+        <translation>匯出資料</translation>
     </message>
 </context>
 <context>

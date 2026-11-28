@@ -48,6 +48,29 @@ class AppLanguageTest : public QObject {
     }
   }
 
+  void pinnedPluginMetadataAndApbinPreserveExactIdentity() {
+    const QString title = u"Anomaly Detector"_s;
+    const QString apbinDescription =
+        u"ArduPilot DataFlash BIN logs: numeric fields, sensor instances, units, parameters and message timelines."_s;
+    const QString error = u"ArduPilot BIN: no filepath configured"_s;
+    for (const QString& language : {u"zh_CN"_s, u"zh_TW"_s, u"en_US"_s}) {
+      const PJ::AppLanguage selected(*QCoreApplication::instance(), language);
+      const QString display = PJ::bundledPluginText(u"toolbox-anomaly-detector"_s, u"0.2.1"_s, title);
+      const QString desc = PJ::bundledPluginText(u"ardupilot-dataflash"_s, u"1.3.0-pj4.rc.1"_s, apbinDescription);
+      const QString diagnostic = PJ::bundledPluginError(u"ardupilot-dataflash"_s, u"1.3.0-pj4.rc.1"_s, error);
+      QCOMPARE(display == title, language == u"en_US"_s);
+      QCOMPARE(desc == apbinDescription, language == u"en_US"_s);
+      QCOMPARE(diagnostic == error, language == u"en_US"_s);
+      QCOMPARE(PJ::bundledPluginError(u"ardupilot-dataflash"_s, u"1.2.0-pj4.rc.1"_s, error), diagnostic);
+      QCOMPARE(PJ::bundledPluginError(u"ardupilot-dataflash"_s, u"1.3.0-pj4.rc.2"_s, error), error);
+      QCOMPARE(PJ::bundledPluginError(u"other"_s, u"1.3.0-pj4.rc.1"_s, error), error);
+      QCOMPARE(PJ::bundledPluginError(u"ardupilot-dataflash"_s, u"1.3.0-pj4.rc.1"_s, error + u"!"_s), error + u"!"_s);
+      QCOMPARE(PJ::bundledPluginText(u"toolbox-anomaly-detector"_s, u"0.2.2"_s, title), title);
+      QCOMPARE(PJ::bundledPluginText(u"other"_s, u"0.2.1"_s, title), title);
+      QCOMPARE(PJ::bundledPluginText(u"toolbox-anomaly-detector"_s, u"0.2.1"_s, title + u"!"_s), title + u"!"_s);
+    }
+  }
+
   void normalizesSupportedLanguages_data() {
     QTest::addColumn<QString>("requested");
     QTest::addColumn<QString>("expected");
