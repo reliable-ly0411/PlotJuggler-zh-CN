@@ -3,6 +3,12 @@
 #include <QCoreApplication>
 #include <QString>
 namespace PJ {
+// The two pinned APBIN releases ship the same allowlisted presentation strings.
+inline bool matchesKnownApbinPresentationVersion(const QString& id, const QString& version,
+                                                  QLatin1String entryVersion) {
+  return id == QLatin1String("ardupilot-dataflash") && entryVersion == QLatin1String("1.2.0-pj4.rc.1") &&
+         version == QLatin1String("1.3.0-pj4.rc.1");
+}
 // Presentation only. Manifest IDs, names used as legacy identities, and versions remain raw.
 inline QString bundledPluginText(const QString& id, const QString& version, const QString& source) {
   struct Entry {
@@ -122,6 +128,48 @@ inline QString bundledPluginText(const QString& id, const QString& version, cons
            "Receives live H.264 video via standard WHEP (mediamtx, go2rtc, LiveKit, Cloudflare Stream...) and feeds "
            "each stream to PlotJuggler as canonical PJ.VideoFrame messages. One HTTP request per stream, per-camera "
            "reconnect, mediamtx Control API discovery. H.264 pass-through; no transcode.")},
+      {"blf-loader", "0.1.1",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "BLF Loader")},
+      {"blf-loader", "0.1.1",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "Data loader for Vector BLF (Binary Logging Format) CAN logs, decoded to signals via DBC.")},
+      {"candump-loader", "0.1.1",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "candump Loader")},
+      {"candump-loader", "0.1.1",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "Data loader for Linux SocketCAN candump captures (log and screen format), decoded to signals via DBC or an ARUS-style CSV dictionary.")},
+      {"influx-parser", "0.1.0",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "InfluxDB Line Protocol Parser")},
+      {"influx-parser", "0.1.0",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "Message parser for InfluxDB line protocol, the text format Telegraf and InfluxDB clients send.")},
+      {"mf4-loader", "0.1.1",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "MF4/MDF Loader")},
+      {"mf4-loader", "0.1.1",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "Data loader for ASAM MDF / MF4 measurement files (automotive, CAN/LIN bus logging).")},
+      {"navmap-parser", "0.1.0",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "NavMap Parser")},
+      {"navmap-parser", "0.1.0",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "Shows EasyNavigation NavMap maps (navmap_ros_interfaces/msg/NavMap), the triangle-mesh navigation maps, in the 3D scene with their per-cell layers, and applies the NavMapLayer updates published beside them.")},
+      {"toolbox-anomaly-detector", "0.2.1",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "Anomaly Detector")},
+      {"toolbox-anomaly-detector", "0.2.1",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "Write Lua anomaly rules over time series and emit plot markers (regions / events) when a rule fires.")},
+      {"toolbox-data-exporter", "0.114.1",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "CSV/Parquet Exporter")},
+      {"toolbox-data-exporter", "0.114.1",
+       QT_TRANSLATE_NOOP("PJ::BundledPluginMetadata",
+                         "Export selected time series to CSV or Parquet files.")},
       {"ardupilot-dataflash", "1.2.0-pj4.rc.1",
        QT_TRANSLATE_NOOP(
            "PJ::BundledPluginMetadata",
@@ -132,6 +180,7 @@ inline QString bundledPluginText(const QString& id, const QString& version, cons
     // metadata fields; native packages can still carry official 1.0.1.
     const bool known_version =
         version == QLatin1String(entry.version) ||
+        matchesKnownApbinPresentationVersion(id, version, QLatin1String(entry.version)) ||
         (QLatin1String(entry.id) == QLatin1String("dummy-streamer") &&
          QLatin1String(entry.version) == QLatin1String("1.0.1") && version == QLatin1String("1.0.2"));
     if (id == QLatin1String(entry.id) && known_version && source == QString::fromUtf8(entry.source)) {
@@ -171,7 +220,9 @@ inline QString bundledPluginError(const QString& id, const QString& version, con
       {"csv-loader", "1.0.7", QT_TRANSLATE_NOOP("PJ::BundledPluginDiagnostics", "Loading aborted by user")},
   };
   for (const auto& entry : entries) {
-    if (id == QLatin1String(entry.id) && version == QLatin1String(entry.version) &&
+    if (id == QLatin1String(entry.id) &&
+        (version == QLatin1String(entry.version) ||
+         matchesKnownApbinPresentationVersion(id, version, QLatin1String(entry.version))) &&
         source == QString::fromUtf8(entry.source)) {
       return QCoreApplication::translate("PJ::BundledPluginDiagnostics", entry.source);
     }

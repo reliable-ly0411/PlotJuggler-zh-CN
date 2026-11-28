@@ -70,6 +70,22 @@ class InstallerTranslationsTest(unittest.TestCase):
         self.assertIn('qtbase_zh_CN.qm', build)
         self.assertIn('requires Qt Installer Framework 4.10.0', build)
 
+    def test_standard_page_wording_and_format(self):
+        catalog = ET.parse(ROOT / 'packaging/installer/translations/ifw_zh_CN.ts').getroot()
+        for context, source, expected in (
+            ('QInstaller::PackageManagerCore',
+             'As the install directory is completely deleted, installing in %1 is forbidden.',
+             '卸载时会删除整个安装目录，因此不能安装到 %1。'),
+            ('QInstaller::ComponentSelectionPage',
+             'Select the components to install. Deselect installed components to uninstall them.'
+             '<br>Any components already installed will not be updated.',
+             '选择要安装的组件。取消选择已安装的组件即可卸载。<br>已经安装的组件不会更新。'),
+        ):
+            with self.subTest(context=context):
+                messages = catalog.find(f"context[name='{context}']").findall('message')
+                translations = [m.findtext('translation') for m in messages if m.findtext('source') == source]
+                self.assertEqual(translations, [expected])
+
     def test_language_selection_is_registered(self):
         package = ET.parse(META / 'package.xml').getroot()
         self.assertIn('languagewidget.ui', [e.text for e in package.findall('UserInterfaces/UserInterface')])

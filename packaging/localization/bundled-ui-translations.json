@@ -192,6 +192,22 @@
       "path": "toolbox_fft/fft_dialog.ui",
       "sha256": "f7d484492d4b2033fc141c9ea3a9f83e9a976049947ba9dd90079df2d19099c0",
       "context": "FFTDialog"
+    },
+    {
+      "plugin": "toolbox-anomaly-detector",
+      "version": "0.2.1",
+      "tag": "toolbox_anomaly_detector/v0.2.1",
+      "path": "toolbox_anomaly_detector/anomaly_detector_dialog.ui",
+      "sha256": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "context": "AnomalyDetectorDialog"
+    },
+    {
+      "plugin": "toolbox-data-exporter",
+      "version": "0.114.1",
+      "tag": "toolbox_data_exporter/v0.114.1",
+      "path": "toolbox_data_exporter/exporter_dialog.ui",
+      "sha256": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "context": "toolBoxUI"
     }
   ],
   "exact": [
@@ -4037,6 +4053,300 @@
       "property": "text",
       "source": "Error: FFT backend allocation failed",
       "translation": "错误：FFT 后端内存分配失败"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "sourceHeader",
+      "property": "text",
+      "source": "Source",
+      "translation": "来源"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "sourceHeader",
+      "property": "filterPlaceholder",
+      "source": "Filter series...",
+      "translation": "筛选序列…"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "functionHeader",
+      "property": "text",
+      "source": "Function",
+      "translation": "函数"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "editorHeader",
+      "property": "text",
+      "source": "Lua rule",
+      "translation": "Lua 规则"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "scope_timeseries",
+      "property": "text",
+      "source": "Timeseries",
+      "translation": "时间序列"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "scope_timeseries",
+      "property": "toolTip",
+      "source": "Markers only on the selected source series.",
+      "translation": "仅在所选来源序列上显示标记。"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "scope_dataset",
+      "property": "text",
+      "source": "Dataset",
+      "translation": "数据集"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "scope_dataset",
+      "property": "toolTip",
+      "source": "Markers on every plot of the active dataset, whatever series it shows.",
+      "translation": "当前数据集的每张图都显示标记，不受图中序列影响。"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "scope_global",
+      "property": "text",
+      "source": "Global",
+      "translation": "全局"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "scope_global",
+      "property": "toolTip",
+      "source": "Markers on every plot of every loaded dataset.",
+      "translation": "所有已加载数据集的每张图都显示标记。"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "status_label",
+      "property": "text",
+      "source": "Pick a source series and a function (or write your own), then Apply.",
+      "translation": "选择来源序列和函数，也可以自行编写函数，然后点击“应用”。"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "save_rule_button",
+      "property": "text",
+      "source": "Save rule as...",
+      "translation": "规则另存为…"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "save_rule_button",
+      "property": "toolTip",
+      "source": "Save the current rule (script + source) as a portable JSON file",
+      "translation": "将当前规则（脚本和来源）保存为可移用的 JSON 文件"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "load_rule_button",
+      "property": "text",
+      "source": "Load rule...",
+      "translation": "加载规则…"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "load_rule_button",
+      "property": "toolTip",
+      "source": "Open a rule JSON file and load it into the editor",
+      "translation": "打开规则 JSON 文件并载入编辑器"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "apply_button",
+      "property": "text",
+      "source": "Apply",
+      "translation": "应用"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "apply_button",
+      "property": "toolTip",
+      "source": "Run the Lua rule and apply the emitted markers to the plots. Requires a source series, unless the scope is Dataset or Global.",
+      "translation": "运行 Lua 规则并把生成的标记加到图上。数据集或全局范围不必选来源序列，其余情况必须选。"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "searchFilter",
+      "property": "placeholder",
+      "source": "Filter...",
+      "translation": "筛选…"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "buttonAddAllFiles",
+      "property": "toolTip",
+      "source": "Add all the timeseries stored in PlotJuggler",
+      "translation": "添加 PlotJuggler 中的所有时间序列"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "buttonAddAllFiles",
+      "property": "text",
+      "source": "Add all",
+      "translation": "全部添加"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "removeButton",
+      "property": "toolTip",
+      "source": "Remove selected rows",
+      "translation": "移除选中的行"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "removeButton",
+      "property": "text",
+      "source": "Remove",
+      "translation": "移除"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "clearButton",
+      "property": "toolTip",
+      "source": "Remove all curves from the list",
+      "translation": "移除列表中的所有曲线"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "clearButton",
+      "property": "text",
+      "source": "Clear",
+      "translation": "清除"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "refreshButton",
+      "property": "toolTip",
+      "source": "Pull new samples from streaming topics",
+      "translation": "从流式话题获取新的采样点"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "settingsHeader",
+      "property": "text",
+      "source": "Settings",
+      "translation": "设置"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "checkBoxMultifile",
+      "property": "toolTip",
+      "source": "If enabled, one file per group (i.e. \"topic\" or \"channel\") will be created in a user provided folder\n",
+      "translation": "启用后，每个分组（如话题或通道）会在指定文件夹中各生成一个文件。\n"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "checkBoxMultifile",
+      "property": "text",
+      "source": "One file per group",
+      "translation": "每组一个文件"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "labelPrefix",
+      "property": "text",
+      "source": "Prefix:",
+      "translation": "前缀："
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "lineEditPrefix",
+      "property": "toolTip",
+      "source": "The prefix that will be added to the files exported.\nSuffix will be the group name.",
+      "translation": "添加到导出文件名的前缀。\n文件名的后缀是分组名称。"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "csvButton",
+      "property": "toolTip",
+      "source": "Export to CSV file",
+      "translation": "导出为 CSV 文件"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "parquetButton",
+      "property": "toolTip",
+      "source": "Export to Arrow Parquet file",
+      "translation": "导出为 Arrow Parquet 文件"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "radioRelative",
+      "property": "text",
+      "source": "Relative",
+      "translation": "相对时间"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "radioAbsolute",
+      "property": "text",
+      "source": "Absolute",
+      "translation": "绝对时间"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "saveButton",
+      "property": "text",
+      "source": "Export",
+      "translation": "导出"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "AnomalyDetectorDialog",
+      "property": "windowTitle",
+      "source": "Anomaly Detector",
+      "translation": "异常检测器"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "status_label",
+      "property": "text",
+      "source": "Pick a source series (or drag & drop one), pick a function, then Apply.",
+      "translation": "选择或拖入一条源序列，再选择函数，然后点击“应用”。"
+    },
+    {
+      "scope": "ad19cb3dfe16b3b04a3631b5afaaf1f457f8241f2212c231b7c4fb10f442bdd1",
+      "widget": "status_label",
+      "property": "text",
+      "source": "Error: unknown exception",
+      "translation": "错误：未知异常"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "tableWidget",
+      "property": "headerText",
+      "source": "Topic",
+      "translation": "主题"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "tableWidget",
+      "property": "placeholderText",
+      "source": "Drag and Drop series from the left panel",
+      "translation": "从左侧面板拖入序列"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "saveButton",
+      "property": "pickerTitle",
+      "source": "Select export directory",
+      "translation": "选择导出目录"
+    },
+    {
+      "scope": "72451818597141644d69ae581c5d241c2b42aa111e811ec173a50e963eca687d",
+      "widget": "saveButton",
+      "property": "pickerTitle",
+      "source": "Export data",
+      "translation": "导出数据"
     }
   ],
   "templates": [

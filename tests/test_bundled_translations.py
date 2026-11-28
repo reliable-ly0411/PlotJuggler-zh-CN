@@ -52,6 +52,16 @@ class BundledTranslationTest(unittest.TestCase):
                 self.assertEqual([x.split('=', 1)[0] for x in row['source'].split(';')],
                                  [x.split('=', 1)[0] for x in row['translation'].split(';')])
 
+    def test_pinned_toolbox_panels_translate_static_and_runtime_presentation(self):
+        data = json.loads((ROOT / 'packaging/localization/bundled-ui-translations.json').read_text(encoding='utf-8'))
+        scopes = {(ui['plugin'], ui['version']): ui['sha256'] for ui in data['uis']}
+        anomaly = scopes['toolbox-anomaly-detector', '0.2.1']
+        exporter = scopes['toolbox-data-exporter', '0.114.1']
+        keys = {(r['scope'], r['widget'], r['property'], r['source']) for r in data['exact']}
+        self.assertIn((anomaly, 'status_label', 'text', 'Error: unknown exception'), keys)
+        self.assertIn((exporter, 'tableWidget', 'headerText', 'Topic'), keys)
+        self.assertIn((exporter, 'saveButton', 'pickerTitle', 'Export data'), keys)
+
     def test_marketplace_display_keeps_category_identity_and_escapes_details(self):
         source = (ROOT / 'pj_marketplace/src/ui/marketplace_window.cpp').read_text(encoding='utf-8')
         self.assertIn('category_item->setData(kCategoryTokenRole, ext.category)', source)

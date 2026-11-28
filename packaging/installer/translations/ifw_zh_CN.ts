@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
+<!-- Downstream translation corrections, 2026-11-28: preserve component selection
+     line break and clarify protected directories are deleted on uninstall. -->
 <TS version="2.1" language="zh_CN" sourcelanguage="en_GB">
 <context>
     <name>AuthenticationRequiredException</name>
@@ -878,7 +880,7 @@
     </message>
     <message>
         <source>Select the components to install. Deselect installed components to uninstall them.&lt;br&gt;Any components already installed will not be updated.</source>
-        <translation>选择要安装的组件。 取消选择已安装组件以卸载它们。 所有已安装的组件均不会更新。</translation>
+        <translation>选择要安装的组件。取消选择已安装的组件即可卸载。&lt;br&gt;已经安装的组件不会更新。</translation>
     </message>
     <message>
         <source>Mandatory components need to be updated first before you can select other components to update.</source>
@@ -1687,7 +1689,7 @@ Do you want to continue?</source>
     </message>
     <message>
         <source>As the install directory is completely deleted, installing in %1 is forbidden.</source>
-        <translation>由于安装路径已被完全删除，因此无法在 %1 中安装。</translation>
+        <translation>卸载时会删除整个安装目录，因此不能安装到 %1。</translation>
     </message>
     <message>
         <source>The path you have entered is too long, please make sure to specify a valid path.</source>

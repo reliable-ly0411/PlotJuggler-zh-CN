@@ -894,7 +894,7 @@
     <message>
         <location line="+1"/>
         <source>Install a plugin from a local ZIP. The archive is not from the registry, so its origin cannot be verified — only that it holds a loadable plugin. Replacing an already-installed extension takes effect on the next restart, unless the archive holds exactly what is already installed, which changes nothing.</source>
-        <translation>從本機 ZIP 壓縮檔安裝外掛程式。壓縮檔並非來自擴充功能註冊表，因此無法驗證其來源，只能檢查其中的外掛程式是否能夠載入。替換已安裝的擴充功能將在下次重新啟動時生效；如果壓縮檔內容與已安裝版本完全相同，則不會發生變化。</translation>
+        <translation>從本機 ZIP 壓縮檔安裝外掛程式。壓縮檔並非來自擴充功能清單，因此無法驗證其來源，只能檢查其中的外掛程式是否能夠載入。替換已安裝的擴充功能將在下次重新啟動時生效；如果壓縮檔內容與已安裝版本完全相同，則不會發生變化。</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1563,6 +1563,62 @@
         <location line="+2"/>
         <source>Compute the frequency-domain amplitude of numeric time series using FFT.</source>
         <translation>使用 FFT 計算數值時間序列的頻域振幅。</translation>
+    </message>
+    <message>
+        <source>BLF Loader</source>
+        <translation>BLF 載入器</translation>
+    </message>
+    <message>
+        <source>Data loader for Vector BLF (Binary Logging Format) CAN logs, decoded to signals via DBC.</source>
+        <translation>載入 Vector BLF（二進位記錄檔格式）CAN 記錄檔，並透過 DBC 解碼為訊號。</translation>
+    </message>
+    <message>
+        <source>candump Loader</source>
+        <translation>candump 載入器</translation>
+    </message>
+    <message>
+        <source>Data loader for Linux SocketCAN candump captures (log and screen format), decoded to signals via DBC or an ARUS-style CSV dictionary.</source>
+        <translation>載入 Linux SocketCAN candump 擷取檔案（日誌和畫面格式），透過 DBC 或 ARUS 風格的 CSV 字典將資料解碼為訊號。</translation>
+    </message>
+    <message>
+        <source>InfluxDB Line Protocol Parser</source>
+        <translation>InfluxDB 行協定解析器</translation>
+    </message>
+    <message>
+        <source>Message parser for InfluxDB line protocol, the text format Telegraf and InfluxDB clients send.</source>
+        <translation>解析 InfluxDB 行協定訊息，即 Telegraf 和 InfluxDB 用戶端傳送的文字格式。</translation>
+    </message>
+    <message>
+        <source>MF4/MDF Loader</source>
+        <translation>MF4/MDF 載入器</translation>
+    </message>
+    <message>
+        <source>Data loader for ASAM MDF / MF4 measurement files (automotive, CAN/LIN bus logging).</source>
+        <translation>載入 ASAM MDF / MF4 測量檔案（汽車及 CAN/LIN 匯流排記錄檔）。</translation>
+    </message>
+    <message>
+        <source>NavMap Parser</source>
+        <translation>NavMap 解析器</translation>
+    </message>
+    <message>
+        <source>Shows EasyNavigation NavMap maps (navmap_ros_interfaces/msg/NavMap), the triangle-mesh navigation maps, in the 3D scene with their per-cell layers, and applies the NavMapLayer updates published beside them.</source>
+        <translation>在三維場景中顯示 EasyNavigation NavMap 三角網格導航地圖（navmap_ros_interfaces/msg/NavMap）及其各單元圖層，並套用隨附發布的 NavMapLayer 更新。</translation>
+    </message>
+    <message>
+        <source>Anomaly Detector</source>
+        <translation>異常偵測器</translation>
+    </message>
+    <message>
+        <source>Write Lua anomaly rules over time series and emit plot markers (regions / events) when a rule fires.</source>
+        <translation>為時間序列編寫 Lua 異常規則，規則觸發時產生繪圖標記（區域或事件）。</translation>
+    </message>
+    <message>
+        <source>CSV/Parquet Exporter</source>
+        <translation>CSV/Parquet 匯出器</translation>
+    </message>
+    <message>
+        <source>Export selected time series to CSV or Parquet files.</source>
+        <translation>將選取的時間序列匯出為 CSV 或 Parquet 檔案。</translation>
     </message>
 </context>
 <context>
@@ -3806,6 +3862,162 @@ Message: %3</source>
         <location line="+1"/>
         <source>Exported &apos;%1&apos; with frequency_hz and amplitude columns (%2 rows)</source>
         <translation>已匯出「%1」，包含 frequency_hz 和 amplitude 欄（%2 列）</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>來源</translation>
+    </message>
+    <message>
+        <source>Filter series...</source>
+        <translation>篩選序列…</translation>
+    </message>
+    <message>
+        <source>Lua rule</source>
+        <translation>Lua 規則</translation>
+    </message>
+    <message>
+        <source>Timeseries</source>
+        <translation>時間序列</translation>
+    </message>
+    <message>
+        <source>Markers only on the selected source series.</source>
+        <translation>僅在所選來源序列上顯示標記。</translation>
+    </message>
+    <message>
+        <source>Dataset</source>
+        <translation>資料集</translation>
+    </message>
+    <message>
+        <source>Markers on every plot of the active dataset, whatever series it shows.</source>
+        <translation>目前資料集中的每張圖都會顯示標記，不受圖中序列影響。</translation>
+    </message>
+    <message>
+        <source>Global</source>
+        <translation>全域</translation>
+    </message>
+    <message>
+        <source>Markers on every plot of every loaded dataset.</source>
+        <translation>所有已載入資料集中的每張圖都會顯示標記。</translation>
+    </message>
+    <message>
+        <source>Pick a source series and a function (or write your own), then Apply.</source>
+        <translation>選擇來源序列和函式，也可自行撰寫函式，再按「套用」。</translation>
+    </message>
+    <message>
+        <source>Save rule as...</source>
+        <translation>規則另存為…</translation>
+    </message>
+    <message>
+        <source>Save the current rule (script + source) as a portable JSON file</source>
+        <translation>將目前規則（指令碼及來源）另存成可移轉的 JSON 檔案</translation>
+    </message>
+    <message>
+        <source>Load rule...</source>
+        <translation>載入規則…</translation>
+    </message>
+    <message>
+        <source>Open a rule JSON file and load it into the editor</source>
+        <translation>開啟規則 JSON 檔案並載入編輯器</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>套用</translation>
+    </message>
+    <message>
+        <source>Run the Lua rule and apply the emitted markers to the plots. Requires a source series, unless the scope is Dataset or Global.</source>
+        <translation>執行 Lua 規則並將產生的標記加到圖上。資料集或全域範圍不必選來源序列，其餘情況必須選。</translation>
+    </message>
+    <message>
+        <source>Filter...</source>
+        <translation>篩選…</translation>
+    </message>
+    <message>
+        <source>Add all the timeseries stored in PlotJuggler</source>
+        <translation>加入 PlotJuggler 中的所有時間序列</translation>
+    </message>
+    <message>
+        <source>Add all</source>
+        <translation>全部加入</translation>
+    </message>
+    <message>
+        <source>Remove selected rows</source>
+        <translation>移除選取的列</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>移除</translation>
+    </message>
+    <message>
+        <source>Remove all curves from the list</source>
+        <translation>移除清單中的所有曲線</translation>
+    </message>
+    <message>
+        <source>Pull new samples from streaming topics</source>
+        <translation>從串流主題取得新的取樣點</translation>
+    </message>
+    <message>
+        <source>If enabled, one file per group (i.e. "topic" or "channel") will be created in a user provided folder
+</source>
+        <translation>啟用後，每個群組（如主題或通道）會在指定資料夾中各產生一個檔案。
+</translation>
+    </message>
+    <message>
+        <source>One file per group</source>
+        <translation>每組一個檔案</translation>
+    </message>
+    <message>
+        <source>Prefix:</source>
+        <translation>前綴：</translation>
+    </message>
+    <message>
+        <source>The prefix that will be added to the files exported.
+Suffix will be the group name.</source>
+        <translation>加入匯出檔名的前綴。
+檔名後綴為群組名稱。</translation>
+    </message>
+    <message>
+        <source>Export to CSV file</source>
+        <translation>匯出至 CSV 檔案</translation>
+    </message>
+    <message>
+        <source>Export to Arrow Parquet file</source>
+        <translation>匯出至 Arrow Parquet 檔案</translation>
+    </message>
+    <message>
+        <source>Relative</source>
+        <translation>相對時間</translation>
+    </message>
+    <message>
+        <source>Absolute</source>
+        <translation>絕對時間</translation>
+    </message>
+    <message>
+        <source>Export</source>
+        <translation>匯出</translation>
+    </message>
+    <message>
+        <source>Anomaly Detector</source>
+        <translation>異常偵測器</translation>
+    </message>
+    <message>
+        <source>Pick a source series (or drag &amp; drop one), pick a function, then Apply.</source>
+        <translation>選擇或拖入一條來源序列，再選擇函式，然後按「套用」。</translation>
+    </message>
+    <message>
+        <source>Error: unknown exception</source>
+        <translation>錯誤：未知例外</translation>
+    </message>
+    <message>
+        <source>Drag and Drop series from the left panel</source>
+        <translation>從左側面板拖入序列</translation>
+    </message>
+    <message>
+        <source>Select export directory</source>
+        <translation>選擇匯出目錄</translation>
+    </message>
+    <message>
+        <source>Export data</source>
+        <translation>匯出資料</translation>
     </message>
 </context>
 <context>
@@ -7188,7 +7400,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+134"/>
         <source>Malformed checksum in registry (&quot;%1&quot; has no digest)</source>
-        <translation>註冊表中的檢查碼格式無效（「%1」沒有摘要）</translation>
+        <translation>擴充功能清單中的檢查碼格式無效（「%1」沒有摘要）</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -7316,12 +7528,12 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+6"/>
         <source>Embedded plugin id &quot;%1&quot; does not match registry id &quot;%2&quot;</source>
-        <translation>內嵌外掛程式 ID「%1」與註冊表 ID「%2」不一致</translation>
+        <translation>內嵌外掛程式 ID「%1」與擴充功能清單中的 ID「%2」不一致</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Embedded plugin version &quot;%1&quot; does not match registry version &quot;%2&quot;</source>
-        <translation>內嵌外掛程式版本「%1」與註冊表版本「%2」不一致</translation>
+        <translation>內嵌外掛程式版本「%1」與擴充功能清單中的版本「%2」不一致</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -7332,7 +7544,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+13"/>
         <source>Staged install is missing registry intent</source>
-        <translation>暫存安裝缺少註冊表意圖記錄</translation>
+        <translation>暫存安裝缺少擴充功能清單安裝記錄</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -7342,17 +7554,17 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+8"/>
         <source>Staged install registry intent is invalid</source>
-        <translation>暫存安裝的註冊表意圖記錄無效</translation>
+        <translation>暫存安裝的擴充功能清單安裝記錄無效</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Staged install registry intent has unsafe id: %1</source>
-        <translation>暫存安裝的註冊表意圖記錄包含不安全的 ID：%1</translation>
+        <translation>暫存安裝的擴充功能清單安裝記錄包含不安全的 ID：%1</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Staged install registry intent has unsafe version &quot;%1&quot;</source>
-        <translation>暫存安裝的註冊表意圖記錄包含不安全的版本「%1」</translation>
+        <translation>暫存安裝的擴充功能清單安裝記錄包含不安全的版本「%1」</translation>
     </message>
     <message>
         <location line="+76"/>
@@ -7523,7 +7735,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+25"/>
         <source>Installed version &quot;%1&quot; is newer than registry version &quot;%2&quot;; downgrade is not allowed</source>
-        <translation>已安裝版本「%1」比註冊表版本「%2」更新；不允許降級</translation>
+        <translation>已安裝版本「%1」比擴充功能清單中的版本「%2」更新；不允許降級</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -7548,7 +7760,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+13"/>
         <source>Staged install directory &quot;%1&quot; does not match registry id &quot;%2&quot;</source>
-        <translation>暫存安裝目錄「%1」與註冊表 ID「%2」不一致</translation>
+        <translation>暫存安裝目錄「%1」與擴充功能清單中的 ID「%2」不一致</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -7623,12 +7835,12 @@ for example when the stream is already rectified.</source>
     <message>
         <location filename="../../pj_marketplace/src/core/RegistryManager.cpp" line="+99"/>
         <source>Registry parse error: missing or empty required string field &quot;%1&quot;</source>
-        <translation>註冊表解析錯誤：缺少必需的字串欄位「%1」，或該欄位為空</translation>
+        <translation>擴充功能清單解析錯誤：缺少必需的字串欄位「%1」，或該欄位為空</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Registry parse error: field &quot;%1&quot; must be a string</source>
-        <translation>註冊表解析錯誤：欄位「%1」必須是字串</translation>
+        <translation>擴充功能清單解析錯誤：欄位「%1」必須是字串</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -7638,12 +7850,12 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+6"/>
         <source>Registry JSON root must be an object</source>
-        <translation>註冊表 JSON 根節點必須是物件</translation>
+        <translation>擴充功能清單 JSON 根節點必須是物件</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Registry JSON missing &quot;extensions&quot; array</source>
-        <translation>註冊表 JSON 缺少「extensions」陣列</translation>
+        <translation>擴充功能清單 JSON 缺少「extensions」陣列</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -7653,7 +7865,7 @@ for example when the stream is already rectified.</source>
     <message>
         <location line="+69"/>
         <source>Registry resolution error: %1</source>
-        <translation>註冊表解析錯誤：%1</translation>
+        <translation>擴充功能清單解析錯誤：%1</translation>
     </message>
 </context>
 <context>
@@ -7735,12 +7947,12 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
     <message>
         <location line="+5"/>
         <source>Loading registry...</source>
-        <translation>正在載入註冊表…</translation>
+        <translation>正在載入擴充功能清單…</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Failed to load registry</source>
-        <translation>載入註冊表失敗</translation>
+        <translation>載入擴充功能清單失敗</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -7775,7 +7987,7 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
     <message>
         <location line="+7"/>
         <source>Registry error: %1</source>
-        <translation>註冊表錯誤：%1</translation>
+        <translation>擴充功能清單錯誤：%1</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -7968,7 +8180,7 @@ Replace it? The replacement is applied the next time PlotJuggler starts.</source
     <message>
         <location line="+74"/>
         <source>Installed version is newer than registry version</source>
-        <translation>已安裝的版本高於註冊表中的版本</translation>
+        <translation>已安裝的版本高於擴充功能清單中的版本</translation>
     </message>
     <message>
         <location line="+34"/>
@@ -8027,12 +8239,12 @@ Details: %1</source>
     <message>
         <location line="+4"/>
         <source>Could not load marketplace registry</source>
-        <translation>無法載入擴充功能市場註冊表</translation>
+        <translation>無法載入擴充功能清單</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The marketplace registry could not be loaded. Only the extensions already installed on this machine are shown; new extensions and updates are unavailable until it loads correctly.</source>
-        <translation>無法載入擴充功能市場註冊表。目前僅顯示本機已安裝的擴充功能；註冊表成功載入之前，無法取得新擴充功能或更新。</translation>
+        <translation>無法載入擴充功能清單。目前僅顯示本機已安裝的擴充功能；擴充功能清單成功載入之前，無法取得新擴充功能或更新。</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -8247,12 +8459,12 @@ Details: %1</source>
     <message>
         <location line="+13"/>
         <source>Zoom Out Horizontally</source>
-        <translation>水平縮小</translation>
+        <translation>水平縮放至完整範圍</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Zoom Out Vertically</source>
-        <translation>垂直縮小</translation>
+        <translation>垂直縮放至可見資料範圍</translation>
     </message>
     <message>
         <location filename="../tests/wasm_acceptance_probes.inc" line="-10"/>
@@ -9672,7 +9884,7 @@ Details: %1</source>
     <message>
         <location line="+12"/>
         <source>Marketplace registry URL:</source>
-        <translation>擴充功能市場註冊表 URL：</translation>
+        <translation>擴充功能清單 URL：</translation>
     </message>
     <message>
         <location line="+74"/>
